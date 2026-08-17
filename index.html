@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>nxx315 · CloudVIP</title>
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fef9fc;
+            color: #1e1e2a;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 0.5rem 0 1.5rem;
+            border-bottom: 2px solid #ffe2ed;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            background: #ff8aae;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 700;
+            box-shadow: 0 6px 12px rgba(255, 138, 174, 0.25);
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            color: #1e1e2a;
+        }
+
+        .logo-text span {
+            color: #ff6b9d;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-outline-pink {
+            background: transparent;
+            border: 1.5px solid #ff8aae;
+            color: #ff6b9d;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline-pink i {
+            font-size: 0.9rem;
+        }
+
+        .btn-pink {
+            background: #ff6b9d;
+            border: none;
+            color: white;
+            padding: 0.5rem 1.6rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(255, 107, 157, 0.3);
+            transition: 0.2s;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-pink i {
+            font-size: 0.9rem;
+        }
+
+        /* hero */
+        .hero {
+            margin: 2.5rem 0 2rem;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: #ffe2ed;
+            color: #b34a6b;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(145deg, #ff6b9d, #ff8aae);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #44445a;
+            max-width: 600px;
+            margin: 0.8rem auto 1.8rem;
+            line-height: 1.5;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .btn-large-pink {
+            background: #ff6b9d;
+            border: none;
+            padding: 0.9rem 2.5rem;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 8px 18px rgba(255, 107, 157, 0.3);
+            transition: 0.2s;
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-large-outline {
+            background: transparent;
+            border: 1.5px solid #ff8aae;
+            padding: 0.9rem 2.2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #ff6b9d;
+            transition: 0.2s;
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* stats */
+        .stats {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2.5rem;
+            background: #fff5f9;
+            padding: 1.5rem 2rem;
+            border-radius: 60px;
+            margin: 2.5rem auto;
+            max-width: 600px;
+            border: 1px solid #ffdce8;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #ff6b9d;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #5f5f77;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        /* commitment section - MỚI */
+        .commitment {
+            background: #fff5f9;
+            border-radius: 48px;
+            padding: 2.5rem 2rem;
+            margin: 2.5rem 0;
+            border: 1px solid #ffdce8;
+            text-align: center;
+        }
+
+        .commitment h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .commitment h2 span {
+            color: #ff6b9d;
+        }
+
+        .commitment-sub {
+            color: #55556d;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .commit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .commit-item {
+            background: white;
+            padding: 1.8rem 1rem;
+            border-radius: 32px;
+            box-shadow: 0 6px 14px rgba(255, 107, 157, 0.04);
+            border: 1px solid #ffebf1;
+            transition: 0.2s;
+        }
+
+        .commit-item i {
+            font-size: 2.4rem;
+            color: #ff6b9d;
+            margin-bottom: 0.5rem;
+        }
+
+        .commit-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .commit-item p {
+            font-size: 0.9rem;
+            color: #5f5f77;
+        }
+
+        /* features */
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 2.8rem 0 1.5rem;
+            text-align: center;
+        }
+
+        .section-title span {
+            color: #ff6b9d;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem 1.5rem;
+            border-radius: 32px;
+            box-shadow: 0 12px 28px rgba(255, 138, 174, 0.08);
+            border: 1px solid #ffebf1;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .feature-card i {
+            font-size: 2.2rem;
+            color: #ff6b9d;
+            background: #ffeef4;
+            padding: 0.7rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #55556d;
+            line-height: 1.4;
+        }
+
+        /* earn */
+        .earn-section {
+            background: #fff5f9;
+            border-radius: 48px;
+            padding: 2.5rem 2rem;
+            margin: 3rem 0;
+            border: 1px solid #ffdce8;
+        }
+
+        .earn-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .earn-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .earn-header h2 i {
+            color: #ff6b9d;
+            margin-right: 8px;
+        }
+
+        .earn-cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .earn-card {
+            background: white;
+            flex: 1 1 180px;
+            padding: 1.8rem 1rem;
+            border-radius: 28px;
+            box-shadow: 0 6px 14px rgba(255, 107, 157, 0.06);
+            border: 1px solid #ffdce8;
+            text-align: center;
+        }
+
+        .earn-card .platform {
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .earn-card .platform i {
+            color: #ff6b9d;
+        }
+
+        .earn-card .coin {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        .earn-card .desc {
+            font-size: 0.85rem;
+            color: #5f5f77;
+            margin-top: 4px;
+        }
+
+        .earn-card .bonus {
+            background: #ffe2ed;
+            color: #b34a6b;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .earn-action {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        /* steps */
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2.5rem 0 1.5rem;
+        }
+
+        .step {
+            flex: 1 1 180px;
+            background: white;
+            padding: 1.8rem 1.2rem;
+            border-radius: 40px;
+            border: 1px solid #ffebf1;
+            text-align: center;
+            box-shadow: 0 6px 14px rgba(255, 138, 174, 0.04);
+        }
+
+        .step .step-num {
+            background: #ff6b9d;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 0 auto 0.8rem;
+        }
+
+        .step h4 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .step p {
+            font-size: 0.9rem;
+            color: #55556d;
+        }
+
+        .footer-edit {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #ffe2ed;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            align-items: center;
+            color: #7a7a94;
+            font-size: 0.9rem;
+        }
+
+        .footer-edit i {
+            color: #ff6b9d;
+            margin-right: 4px;
+        }
+
+        .footer-edit .love {
+            color: #ff6b9d;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .header-actions .btn-outline-pink,
+            .header-actions .btn-pink {
+                padding: 0.4rem 1rem;
+                font-size: 0.75rem;
+            }
+            .stats {
+                gap: 1.2rem;
+                padding: 1rem 1.5rem;
+            }
+            .section-title {
+                font-size: 1.6rem;
+            }
+            .earn-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+            .earn-card {
+                width: 100%;
+                max-width: 280px;
+            }
+            .commit-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- header -->
+    <header class="header">
+        <div class="logo-area">
+            <div class="logo-icon">n</div>
+            <div class="logo-text">nxx<span>315</span></div>
+        </div>
+        <div class="header-actions">
+            <span class="btn-outline-pink"><i class="fas fa-user"></i> Đăng ký</span>
+            <span class="btn-pink"><i class="fas fa-coins"></i> Kiểm Coin</span>
+        </div>
+    </header>
+
+    <!-- hero -->
+    <section class="hero">
+        <div class="hero-badge"><i class="fas fa-gem" style="margin-right: 6px;"></i> Đổi tài khoản Premium</div>
+        <h1>
+            <span class="highlight">nxx315</span> · Nền tảng<br />
+            kiểm Coin đổi <span class="highlight">Premium</span>
+        </h1>
+        <p>
+            Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi tài khoản Netflix, Spotify, YouTube Premium an toàn 100%.
+        </p>
+        <div class="hero-actions">
+            <span class="btn-large-pink"><i class="fas fa-rocket"></i> Bắt đầu ngay — Miễn phí</span>
+            <span class="btn-large-outline"><i class="fas fa-circle-play"></i> Cách hoạt động</span>
+        </div>
+    </section>
+
+    <!-- stats -->
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-number">10K+</div>
+            <div class="stat-label"><i class="fas fa-user-group" style="margin-right: 4px; color: #ff6b9d;"></i> NGƯỜI DÙNG</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">50K+</div>
+            <div class="stat-label"><i class="fas fa-cart-shopping" style="margin-right: 4px; color: #ff6b9d;"></i> ĐƠN HÀNG</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">99%</div>
+            <div class="stat-label"><i class="fas fa-heart" style="margin-right: 4px; color: #ff6b9d;"></i> HÀI LÒNG</div>
+        </div>
+    </div>
+
+    <!-- === CAM KẾT (COMMITMENT) === -->
+    <div class="commitment">
+        <h2>💖 Cam kết của <span>nxx315</span></h2>
+        <p class="commitment-sub">Chúng tôi luôn đặt uy tín và trải nghiệm của bạn lên hàng đầu</p>
+        <div class="commit-grid">
+            <div class="commit-item">
+                <i class="fas fa-shield-check"></i>
+                <h4>Bảo mật tuyệt đối</h4>
+                <p>Thông tin cá nhân được mã hóa và không chia sẻ với bên thứ ba</p>
+            </div>
+            <div class="commit-item">
+                <i class="fas fa-rotate-left"></i>
+                <h4>Hoàn tiền 100%</h4>
+                <p>Nếu bạn không hài lòng với dịch vụ, chúng tôi hoàn lại toàn bộ Coin</p>
+            </div>
+            <div class="commit-item">
+                <i class="fas fa-headset"></i>
+                <h4>Hỗ trợ 24/7</h4>
+                <p>Đội ngũ CSKH luôn sẵn sàng giải đáp mọi thắc mắc của bạn</p>
+            </div>
+            <div class="commit-item">
+                <i class="fas fa-user-check"></i>
+                <h4>Tài khoản chính chủ</h4>
+                <p>100% tài khoản Premium đều là thật, không dùng chung, không rủi ro</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- tính năng nổi bật -->
+    <h2 class="section-title">✨ Tại sao chọn <span>nxx315</span>?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="fas fa-coins"></i>
+            <h3>Kiểm Coin dễ dàng</h3>
+            <p>Hoàn thành nhiệm vụ đơn giản, nhận Coin ngay vào ví.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-shield-halved"></i>
+            <h3>An toàn & Bảo mật</h3>
+            <p>Hệ thống chống gian lận nâng cao, bảo vệ tài khoản.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-users"></i>
+            <h3>Cộng đồng lớn</h3>
+            <p>Hơn 10,000 người dùng tin tưởng mỗi ngày.</p>
+        </div>
+    </div>
+
+    <!-- kiếm coin -->
+    <div class="earn-section">
+        <div class="earn-header">
+            <h2><i class="fas fa-video"></i> Kiểm Coin từ video TikTok & YouTube</h2>
+            <p style="color: #44445a; max-width: 500px; margin: 0.4rem auto 0;">Quay video giới thiệu, gửi link cho bot tự động đo view/like/comment — admin duyệt và Coin về ví ngay.</p>
+        </div>
+        <div class="earn-cards">
+            <div class="earn-card">
+                <div class="platform"><i class="fab fa-tiktok"></i> TikTok</div>
+                <div class="coin">2.500 Coin</div>
+                <div class="desc">/ 1K view</div>
+            </div>
+            <div class="earn-card">
+                <div class="platform"><i class="fab fa-youtube"></i> YouTube</div>
+                <div class="coin">25.000 Coin</div>
+                <div class="desc">/ 1K view</div>
+            </div>
+            <div class="earn-card">
+                <div class="platform"><i class="fas fa-star"></i> Bonus</div>
+                <div class="coin">+10%</div>
+                <div class="desc">≥5K · +20% ≥10K</div>
+                <span class="bonus"><i class="fas fa-bolt"></i> thưởng thêm</span>
+            </div>
+        </div>
+        <div class="earn-action">
+            <span class="btn-large-pink" style="padding: 0.8rem 2.8rem;"><i class="fas fa-play"></i> Bắt đầu kiểm Coin</span>
+        </div>
+    </div>
+
+    <!-- 3 bước -->
+    <h2 class="section-title">📌 3 BƯỚC ĐƠN GIẢN · <span>Cách hoạt động</span></h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <h4>Đăng ký tài khoản</h4>
+            <p>Tạo tài khoản miễn phí chỉ trong 30 giây</p>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <h4>Làm nhiệm vụ</h4>
+            <p>Chọn nhiệm vụ và hoàn thành để nhận Coin</p>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <h4>Đổi thưởng</h4>
+            <p>Dùng Coin mua tài khoản Premium trong Shop</p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 1rem 0 2rem;">
+        <span class="btn-large-pink" style="padding: 0.9rem 3rem;"><i class="fas fa-arrow-right"></i> Bắt đầu kiểm Coin ngay</span>
+    </div>
+
+    <!-- footer -->
+    <div class="footer-edit">
+        <span><i class="fas fa-pen-fancy"></i> Edit with <strong>Lovable</strong></span>
+        <span><i class="fas fa-heart love"></i> nxx315 · CloudVIP</span>
+    </div>
+
+</div>
+</body>
+  </html>
