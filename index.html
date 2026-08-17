@@ -17,11 +17,12 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #f5f8fc;
-            color: #1a2332;
+            background: #f0f2f5;
+            color: #1a1a2e;
             display: flex;
             justify-content: center;
             padding: 2rem 1rem;
+            min-height: 100vh;
         }
 
         .container {
@@ -36,18 +37,18 @@
             align-items: center;
             flex-wrap: wrap;
             padding: 0.5rem 0 1.5rem;
-            border-bottom: 1px solid #dce4ec;
+            border-bottom: 1px solid #e4e7ec;
         }
 
         .logo-text {
             font-weight: 700;
             font-size: 1.5rem;
             letter-spacing: -0.5px;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .logo-text span {
-            color: #2a7de1;
+            color: #e85d8a;
         }
 
         .header-actions {
@@ -57,9 +58,9 @@
         }
 
         .btn-outline {
-            background: transparent;
-            border: 1.5px solid #c8d4e0;
-            color: #1a2332;
+            background: white;
+            border: 1px solid #e4e7ec;
+            color: #1a1a2e;
             padding: 0.4rem 1.2rem;
             border-radius: 40px;
             font-weight: 600;
@@ -68,14 +69,15 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .btn-outline i {
-            color: #8899aa;
+            color: #888;
         }
 
         .btn-primary {
-            background: #2a7de1;
+            background: #e85d8a;
             border: none;
             color: white;
             padding: 0.4rem 1.6rem;
@@ -86,6 +88,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 4px 12px rgba(232, 93, 138, 0.3);
         }
 
         .btn-primary i {
@@ -100,8 +103,8 @@
 
         .hero-badge {
             display: inline-block;
-            background: #e8eef6;
-            color: #2a5f8a;
+            background: #f0f0f4;
+            color: #555;
             padding: 0.25rem 1rem;
             border-radius: 40px;
             font-weight: 500;
@@ -115,16 +118,16 @@
             font-weight: 700;
             letter-spacing: -1px;
             line-height: 1.2;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .hero h1 .highlight {
-            color: #2a7de1;
+            color: #e85d8a;
         }
 
         .hero p {
             font-size: 1rem;
-            color: #5a6e82;
+            color: #5a5a72;
             max-width: 550px;
             margin: 0.8rem auto 1.8rem;
             line-height: 1.6;
@@ -139,7 +142,7 @@
         }
 
         .btn-large-primary {
-            background: #2a7de1;
+            background: #e85d8a;
             border: none;
             padding: 0.8rem 2.2rem;
             border-radius: 60px;
@@ -150,6 +153,8 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 8px 24px rgba(232, 93, 138, 0.35);
+            transition: 0.2s;
         }
 
         .btn-large-primary i {
@@ -157,20 +162,22 @@
         }
 
         .btn-large-ghost {
-            background: transparent;
-            border: none;
-            padding: 0.8rem 1.2rem;
+            background: white;
+            border: 1px solid #e4e7ec;
+            padding: 0.8rem 1.8rem;
+            border-radius: 60px;
             font-weight: 500;
             font-size: 0.95rem;
-            color: #5a6e82;
+            color: #5a5a72;
             cursor: default;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
         .btn-large-ghost i {
-            color: #8899aa;
+            color: #888;
         }
 
         .hero-features {
@@ -178,7 +185,7 @@
             gap: 1.5rem;
             justify-content: center;
             font-size: 0.85rem;
-            color: #5a6e82;
+            color: #5a5a72;
             margin-top: 1.2rem;
             flex-wrap: wrap;
         }
@@ -190,7 +197,7 @@
         }
 
         .hero-features i {
-            color: #2a7de1;
+            color: #e85d8a;
             font-size: 0.8rem;
         }
 
@@ -200,10 +207,12 @@
             justify-content: center;
             flex-wrap: wrap;
             gap: 2.5rem;
-            padding: 1.5rem 0;
+            padding: 1.5rem 2rem;
             margin: 1.5rem 0 2.5rem;
-            border-top: 1px solid #dce4ec;
-            border-bottom: 1px solid #dce4ec;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            border: 1px solid #f0f2f5;
         }
 
         .stat-item {
@@ -213,12 +222,12 @@
         .stat-number {
             font-weight: 700;
             font-size: 1.5rem;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .stat-label {
             font-size: 0.75rem;
-            color: #7a8a9a;
+            color: #888;
             font-weight: 500;
             letter-spacing: 0.5px;
             display: flex;
@@ -228,7 +237,7 @@
         }
 
         .stat-label i {
-            color: #aabac8;
+            color: #ccc;
             font-size: 0.7rem;
         }
 
@@ -242,15 +251,15 @@
             font-size: 1.8rem;
             font-weight: 700;
             margin-bottom: 0.3rem;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .commitment h2 span {
-            color: #2a7de1;
+            color: #e85d8a;
         }
 
         .commitment-sub {
-            color: #7a8a9a;
+            color: #888;
             margin-bottom: 2rem;
             font-size: 0.9rem;
         }
@@ -265,26 +274,32 @@
             background: white;
             padding: 1.8rem 1.2rem;
             border-radius: 20px;
-            border: 1px solid #dce4ec;
+            border: 1px solid #f0f2f5;
             text-align: center;
-            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+
+        .commit-item:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
         }
 
         .commit-item i {
             font-size: 2rem;
-            color: #1a2332;
+            color: #1a1a2e;
             margin-bottom: 0.5rem;
         }
 
         .commit-item h4 {
             font-size: 1rem;
             margin-bottom: 0.3rem;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .commit-item p {
             font-size: 0.85rem;
-            color: #7a8a9a;
+            color: #888;
             line-height: 1.4;
         }
 
@@ -294,12 +309,12 @@
             font-weight: 700;
             margin: 2.5rem 0 0.5rem;
             text-align: center;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .section-sub {
             text-align: center;
-            color: #7a8a9a;
+            color: #888;
             font-size: 0.95rem;
             margin-bottom: 2rem;
         }
@@ -314,26 +329,32 @@
             background: white;
             padding: 2rem 1.5rem;
             border-radius: 20px;
-            border: 1px solid #dce4ec;
+            border: 1px solid #f0f2f5;
             text-align: center;
-            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
         }
 
         .feature-card i {
             font-size: 2rem;
-            color: #1a2332;
+            color: #1a1a2e;
             margin-bottom: 0.8rem;
         }
 
         .feature-card h3 {
             font-size: 1.1rem;
             margin-bottom: 0.4rem;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .feature-card p {
             font-size: 0.9rem;
-            color: #7a8a9a;
+            color: #888;
             line-height: 1.4;
         }
 
@@ -346,16 +367,16 @@
         .earn-section h2 {
             font-size: 1.6rem;
             font-weight: 700;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .earn-section h2 i {
-            color: #2a7de1;
+            color: #e85d8a;
             margin-right: 6px;
         }
 
         .earn-desc {
-            color: #7a8a9a;
+            color: #888;
             max-width: 500px;
             margin: 0.4rem auto 1.8rem;
             font-size: 0.9rem;
@@ -374,8 +395,15 @@
             flex: 1 1 160px;
             padding: 1.5rem 1rem;
             border-radius: 20px;
-            border: 1px solid #dce4ec;
+            border: 1px solid #f0f2f5;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+
+        .earn-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
         }
 
         .earn-card .platform {
@@ -386,29 +414,29 @@
             justify-content: center;
             gap: 6px;
             margin-bottom: 4px;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .earn-card .platform i {
-            color: #1a2332;
+            color: #1a1a2e;
             font-size: 1rem;
         }
 
         .earn-card .coin {
             font-size: 1.4rem;
             font-weight: 700;
-            color: #2a7de1;
+            color: #e85d8a;
         }
 
         .earn-card .desc {
             font-size: 0.8rem;
-            color: #7a8a9a;
+            color: #888;
             margin-top: 2px;
         }
 
         .earn-card .bonus {
-            background: #e8eef6;
-            color: #2a5f8a;
+            background: #f5f0f2;
+            color: #b34a6b;
             font-size: 0.7rem;
             font-weight: 600;
             padding: 0.15rem 0.6rem;
@@ -435,12 +463,19 @@
             background: white;
             padding: 1.8rem 1.2rem;
             border-radius: 20px;
-            border: 1px solid #dce4ec;
+            border: 1px solid #f0f2f5;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+
+        .step:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
         }
 
         .step .step-num {
-            background: #2a7de1;
+            background: #e85d8a;
             color: white;
             width: 36px;
             height: 36px;
@@ -451,17 +486,18 @@
             font-weight: 700;
             font-size: 1rem;
             margin: 0 auto 0.6rem;
+            box-shadow: 0 4px 12px rgba(232, 93, 138, 0.3);
         }
 
         .step h4 {
             font-size: 1rem;
             margin-bottom: 3px;
-            color: #1a2332;
+            color: #1a1a2e;
         }
 
         .step p {
             font-size: 0.85rem;
-            color: #7a8a9a;
+            color: #888;
             line-height: 1.3;
         }
 
@@ -469,22 +505,22 @@
         .footer-edit {
             margin-top: 2.5rem;
             padding-top: 1.5rem;
-            border-top: 1px solid #dce4ec;
+            border-top: 1px solid #e4e7ec;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
             align-items: center;
-            color: #aabac8;
+            color: #aaa;
             font-size: 0.85rem;
         }
 
         .footer-edit i {
-            color: #aabac8;
+            color: #ccc;
             margin-right: 4px;
         }
 
         .footer-edit .love {
-            color: #2a7de1;
+            color: #e85d8a;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -499,7 +535,7 @@
             }
             .stats {
                 gap: 1.5rem;
-                padding: 1rem 0;
+                padding: 1rem 1.5rem;
             }
             .section-title {
                 font-size: 1.3rem;
@@ -576,7 +612,7 @@
 
     <!-- CAM KẾT -->
     <div class="commitment">
-        <h2> Cam kết của <span>nxx315</span></h2>
+        <h2>💖 Cam kết của <span>nxx315</span></h2>
         <p class="commitment-sub">Chúng tôi luôn đặt uy tín và trải nghiệm của bạn lên hàng đầu</p>
         <div class="commit-grid">
             <div class="commit-item">
@@ -586,7 +622,7 @@
             </div>
             <div class="commit-item">
                 <i class="fas fa-rotate-left"></i>
-                <h4>Hoàn coin 100%</h4>
+                <h4>Hoàn tiền 100%</h4>
                 <p>Nếu bạn không hài lòng, chúng tôi hoàn lại toàn bộ Coin</p>
             </div>
             <div class="commit-item">
@@ -603,7 +639,7 @@
     </div>
 
     <!-- TÍNH NĂNG -->
-    <h2 class="section-title">✨ Tại sao chọn <span style="color:#2a7de1;">nxx315</span>?</h2>
+    <h2 class="section-title">✨ Tại sao chọn <span style="color:#e85d8a;">nxx315</span>?</h2>
     <p class="section-sub">Trải nghiệm đổi thưởng đơn giản, an toàn và đáng tin cậy</p>
     <div class="features-grid">
         <div class="feature-card">
@@ -651,7 +687,7 @@
     </div>
 
     <!-- 3 BƯỚC -->
-    <h2 class="section-title">📌 3 BƯỚC ĐƠN GIẢN · <span style="color:#2a7de1;">Cách hoạt động</span></h2>
+    <h2 class="section-title">📌 3 BƯỚC ĐƠN GIẢN · <span style="color:#e85d8a;">Cách hoạt động</span></h2>
     <div class="steps">
         <div class="step">
             <div class="step-num">1</div>
@@ -671,15 +707,4 @@
     </div>
 
     <div style="text-align: center; margin: 0.5rem 0 1.5rem;">
-        <span class="btn-large-primary" style="padding: 0.8rem 2.8rem;"><i class="fas fa-arrow-right"></i> Bắt đầu kiểm Coin ngay</span>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="footer-edit">
-        <span><i class="fas fa-pen-fancy"></i> Edit with <strong>Lovable</strong></span>
-        <span><i class="fas fa-heart love"></i> nxx315 · CloudVIP</span>
-    </div>
-
-</div>
-</body>
-</html>
+        <span class="btn-large-primary" style="padding: 0.8rem 2.8r
