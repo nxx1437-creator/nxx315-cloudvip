@@ -50,5 +50,3 @@ Nền tảng kiểm Coin đổi tài khoản Premium an toàn, nhanh chóng.
 ---
 
 ⭐ **Đừng quên star repository nếu bạn thấy hữu ích nhé!**
-
-Made with ❤️ by **nxx315**
