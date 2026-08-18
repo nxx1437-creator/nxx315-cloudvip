@@ -1,17 +1,22 @@
 import React, { useState } from "react";
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Loader2 } from "lucide-react";
 import AuthShell from "./components/AuthShell.jsx";
 import { Link } from "react-router-dom";
+import { supabase } from "./lib/supabaseClient.js";
 
 /**
  * Register.jsx
  * -----------------------------------------------------------------
- * UI only — wire `handleSubmit` up to your auth backend (e.g. Supabase
- * `supabase.auth.signUp({ email, password, options: { data: { username } } })`).
- * Social buttons are placeholders; hook them to your OAuth provider calls.
+ * Wired to Supabase Auth. By default Supabase requires email
+ * confirmation before a session is created — if that's on, the user
+ * gets a confirmation email instead of being logged in immediately.
+ * You can turn confirmation off in Supabase Dashboard -> Authentication
+ * -> Providers -> Email -> "Confirm email" while testing.
  * -----------------------------------------------------------------
  */
 export default function Register() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [form, setForm] = useState({
@@ -22,11 +27,17 @@ export default function Register() {
   });
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [confirmSent, setConfirmSent] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.username || !form.email || !form.password || !form.confirmPassword) {
       setError("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("Mật khẩu phải có ít nhất 8 ký tự.");
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -38,10 +49,32 @@ export default function Register() {
       return;
     }
     setError("");
-    // TODO: gọi API đăng ký thật ở đây, ví dụ:
-    // await supabase.auth.signUp({ email: form.email, password: form.password,
-    //   options: { data: { username: form.username } } });
-    console.log("Đăng ký với:", form);
+    setLoading(true);
+    const { data, error: authError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: { data: { username: form.username } },
+    });
+    setLoading(false);
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
+    if (data.session) {
+      navigate("/");
+    } else {
+      // Email confirmation is required before a session exists.
+      setConfirmSent(true);
+    }
+  };
+
+  const handleOAuth = async (provider) => {
+    setError("");
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    });
+    if (authError) setError(authError.message);
   };
 
   return (
@@ -158,12 +191,24 @@ export default function Register() {
         </label>
 
         {error && <p className="text-sm text-rose-400">{error}</p>}
+        {confirmSent && (
+          <p className="text-sm text-emerald-400">
+            Đã gửi email xác nhận tới {form.email}. Kiểm tra hộp thư để hoàn tất đăng ký.
+          </p>
+        )}
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110"
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110 disabled:opacity-60"
         >
-          Đăng ký <ArrowRight size={16} />
+          {loading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <>
+              Đăng ký <ArrowRight size={16} />
+            </>
+          )}
         </button>
 
         <div className="flex items-center gap-3 py-1">
@@ -177,6 +222,7 @@ export default function Register() {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
+            onClick={() => handleOAuth("google")}
             className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-sky-100 transition hover:bg-white/[0.07]"
           >
             <svg width="16" height="16" viewBox="0 0 48 48">
@@ -189,6 +235,7 @@ export default function Register() {
           </button>
           <button
             type="button"
+            onClick={() => handleOAuth("discord")}
             className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-sky-100 transition hover:bg-white/[0.07]"
           >
             <MessageCircle size={16} className="text-indigo-400" />
@@ -198,4 +245,5 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-}
+        }
+            
