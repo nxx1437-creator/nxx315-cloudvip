@@ -19,6 +19,23 @@ cloudvip-landing/
     └── index.css
 ```
 
+## Cấu hình hệ thống Nhiệm vụ (Token-based Validation)
+
+1. Chạy `supabase/schema.sql` trước (nếu chưa chạy).
+2. Chạy tiếp `supabase/schema_tasks.sql` trong SQL Editor — tạo bảng `tasks`, `task_tokens`, `task_completions` và 2 hàm `start_task()` / `consume_task_token()` xử lý toàn bộ luồng Token (sinh token TTL 15 phút → xác thực → khóa token → cộng Coin), có sẵn 3 nhiệm vụ mẫu (LAYMA, LINK4M, TRAFFIC68).
+3. Sửa lại dữ liệu mẫu trong bảng `tasks` (Table Editor) cho đúng nhiệm vụ thật của bạn: `reward_coins`, `daily_limit`, `logo_url`...
+
+### ⚠️ Về bước "vượt link" — cần bạn hoàn thiện thêm
+
+Hiện tại `src/lib/taskProviders.js` đang ở **chế độ test**: bấm "Làm nhiệm vụ" sẽ bỏ qua bước quảng cáo và nhận thưởng ngay, để bạn kiểm tra luồng Token hoạt động đúng trước.
+
+Để bắt buộc người dùng thật sự đi qua quảng cáo của Layma/Link4m/Traffic68 trước khi nhận thưởng, bạn cần:
+1. Đăng ký làm publisher (CTV) trên từng dịch vụ, lấy API Key từ trang "Developers API" của họ.
+2. **Không được gọi API đó thẳng từ trình duyệt** (lộ API Key cho bất kỳ ai xem Network tab). Cần tạo 1 Supabase Edge Function nhỏ giữ API Key ở phía server, nhận `{ provider, longUrl }` và trả về link rút gọn.
+3. Sửa `buildTaskUrl()` trong `taskProviders.js` để gọi Edge Function đó thay vì trả thẳng `callbackUrl`.
+
+Nếu muốn, nhắn để được hướng dẫn viết Edge Function này khi bạn đã có API Key thật trong tay.
+
 ## Cấu hình Supabase (bắt buộc để Đăng nhập/Đăng ký hoạt động)
 
 1. Tạo project miễn phí tại https://supabase.com
