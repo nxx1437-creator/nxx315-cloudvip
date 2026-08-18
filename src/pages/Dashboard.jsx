@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight } from "lucide-react";
+import { Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -55,7 +55,13 @@ export default function Dashboard() {
       `}</style>
 
       {/* TOP BAR */}
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md">
+        <button
+          aria-label="Mở menu"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
+        >
+          <Menu size={19} />
+        </button>
         <button
           onClick={() => navigate("/tasks")}
           className="flex flex-1 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-400"
@@ -67,7 +73,7 @@ export default function Dashboard() {
           <Bell size={16} className="text-slate-600" />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
         </button>
-        <button className="hidden h-9 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm sm:flex">
+        <button className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm">
           <Globe size={15} className="text-slate-500" /> 🇻🇳 VI
         </button>
         <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
@@ -293,7 +299,16 @@ export default function Dashboard() {
       </main>
 
       <BottomNav />
+
+      {/* FLOATING QUICK ACTION BUTTON */}
+      <button
+        aria-label="Mở trò chuyện"
+        onClick={() => navigate("/chat")}
+        className="fixed bottom-24 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-sky-600 shadow-lg shadow-slate-300/50 backdrop-blur-md transition hover:scale-105"
+      >
+        <MessageCircle size={20} />
+      </button>
     </div>
   );
-    }
-          
+        }
+               
