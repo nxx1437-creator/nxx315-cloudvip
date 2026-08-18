@@ -181,12 +181,12 @@ export default function Dashboard() {
         </div>
 
         {/* STREAK CARD */}
-        <div className="flex items-center gap-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4 shadow-sm shadow-orange-100">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/70">
+        <div className="flex items-center gap-4 rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-50">
             <Flame size={22} className="text-orange-500" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-orange-600/80">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
               Giữ lửa
             </p>
             <p className="text-2xl font-bold text-slate-900">
@@ -314,4 +314,4 @@ export default function Dashboard() {
     </div>
   );
         }
-          
+              
