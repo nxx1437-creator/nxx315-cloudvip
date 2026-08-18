@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { User, Lock, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react";
 import AuthShell from "./components/AuthShell.jsx";
+import { Link } from "react-router-dom";
 
 /**
  * Login.jsx
@@ -39,51 +40,51 @@ export default function Login() {
       footer={
         <span>
           Chưa có tài khoản?{" "}
-          <a href="/register" className="font-semibold text-pink-400 hover:underline">
+          <Link to="/register" className="font-semibold text-sky-400 hover:underline">
             Đăng ký ngay
-          </a>
+          </Link>
         </span>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-pink-300/80">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-sky-300/80">
             Tên đăng nhập hoặc Email
           </label>
           <div className="relative">
-            <User size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-300/60" />
+            <User size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-300/60" />
             <input
               type="text"
               value={form.identifier}
               onChange={(e) => setForm({ ...form, identifier: e.target.value })}
               placeholder="Tên đăng nhập hoặc Email"
-              className="w-full rounded-full border border-white/15 bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-pink-50 placeholder:text-pink-200/40 outline-none transition focus:border-pink-400/60 focus:ring-2 focus:ring-pink-400/20"
+              className="w-full rounded-full border border-white/15 bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-sky-50 placeholder:text-sky-200/40 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
             />
           </div>
         </div>
 
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-xs font-semibold uppercase tracking-wide text-pink-300/80">
+            <label className="text-xs font-semibold uppercase tracking-wide text-sky-300/80">
               Mật khẩu
             </label>
-            <a href="/forgot-password" className="text-xs font-medium text-pink-400 hover:underline">
+            <a href="/forgot-password" className="text-xs font-medium text-sky-400 hover:underline">
               Quên mật khẩu?
             </a>
           </div>
           <div className="relative">
-            <Lock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-pink-300/60" />
+            <Lock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-300/60" />
             <input
               type={showPassword ? "text" : "password"}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               placeholder="Mật khẩu"
-              className="w-full rounded-full border border-white/15 bg-white/[0.03] py-3 pl-10 pr-11 text-sm text-pink-50 placeholder:text-pink-200/40 outline-none transition focus:border-pink-400/60 focus:ring-2 focus:ring-pink-400/20"
+              className="w-full rounded-full border border-white/15 bg-white/[0.03] py-3 pl-10 pr-11 text-sm text-sky-50 placeholder:text-sky-200/40 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-pink-300/60 hover:text-pink-200"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sky-300/60 hover:text-sky-200"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -91,16 +92,16 @@ export default function Login() {
           </div>
         </div>
 
-        <label className="flex cursor-pointer items-start gap-2.5 text-sm text-pink-200/80">
+        <label className="flex cursor-pointer items-start gap-2.5 text-sm text-sky-200/80">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded accent-pink-500"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded accent-sky-500"
           />
           <span>
             Bằng việc đăng nhập, bạn đồng ý với{" "}
-            <a href="/terms" className="font-medium text-pink-400 hover:underline">
+            <a href="/terms" className="font-medium text-sky-400 hover:underline">
               Điều khoản sử dụng
             </a>
           </span>
@@ -110,14 +111,14 @@ export default function Login() {
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-pink-400 to-fuchsia-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:shadow-pink-500/50 hover:brightness-110"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110"
         >
           Đăng nhập <ArrowRight size={16} />
         </button>
 
         <div className="flex items-center gap-3 py-1">
           <div className="h-px flex-1 bg-white/10" />
-          <span className="text-[11px] font-medium uppercase tracking-wide text-pink-300/50">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-sky-300/50">
             Hoặc tiếp tục với
           </span>
           <div className="h-px flex-1 bg-white/10" />
@@ -126,7 +127,7 @@ export default function Login() {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-pink-100 transition hover:bg-white/[0.07]"
+            className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-sky-100 transition hover:bg-white/[0.07]"
           >
             <svg width="16" height="16" viewBox="0 0 48 48">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
@@ -138,7 +139,7 @@ export default function Login() {
           </button>
           <button
             type="button"
-            className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-pink-100 transition hover:bg-white/[0.07]"
+            className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-sky-100 transition hover:bg-white/[0.07]"
           >
             <MessageCircle size={16} className="text-indigo-400" />
             Discord
@@ -147,4 +148,4 @@ export default function Login() {
       </form>
     </AuthShell>
   );
-        }
+}
