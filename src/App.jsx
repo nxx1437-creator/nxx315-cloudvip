@@ -4,6 +4,8 @@ import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./Login.jsx";
 import Register from "./Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Tasks from "./pages/Tasks.jsx";
+import TaskCallback from "./pages/TaskCallback.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
@@ -17,6 +19,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute>
+            <Tasks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/task/callback"
+        element={
+          <ProtectedRoute>
+            <TaskCallback />
           </ProtectedRoute>
         }
       />
