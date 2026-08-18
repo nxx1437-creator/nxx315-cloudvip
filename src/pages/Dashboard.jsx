@@ -1,9 +1,10 @@
-import React, { useMemo } from "react";
-import { Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu, MessageCircle } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import BottomNav from "../components/BottomNav.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
 const WEEKDAYS = ["Thứ 7", "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
 
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const displayName =
     profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
@@ -58,6 +60,7 @@ export default function Dashboard() {
       <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md">
         <button
           aria-label="Mở menu"
+          onClick={() => setSidebarOpen(true)}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
         >
           <Menu size={19} />
@@ -300,15 +303,15 @@ export default function Dashboard() {
 
       <BottomNav />
 
-      {/* FLOATING QUICK ACTION BUTTON */}
-      <button
-        aria-label="Mở trò chuyện"
-        onClick={() => navigate("/chat")}
-        className="fixed bottom-24 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-sky-600 shadow-lg shadow-slate-300/50 backdrop-blur-md transition hover:scale-105"
-      >
-        <MessageCircle size={20} />
-      </button>
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        displayName={displayName}
+        initial={initial}
+        coins={profile.coins}
+        level={profile.level}
+      />
     </div>
   );
-        }
-               
+            }
+            
