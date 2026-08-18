@@ -1,52 +1,48 @@
-# 🌸 nxx315 · CloudVIP
+# CloudVIP Landing Page
 
-Nền tảng kiểm Coin đổi tài khoản Premium an toàn, nhanh chóng.
+Trang giới thiệu cho nền tảng kiếm Coin đổi Robux chính hãng (nạp qua tài khoản VNG).
 
-## 🚀 Giới thiệu
+## Cấu trúc file (đặt đúng tên khi tạo trên GitHub)
 
-**nxx315** là nền tảng giúp bạn kiếm Coin thông qua các nhiệm vụ đơn giản và đổi lấy tài khoản Premium của:
-- 🎬 **Netflix**
-- 🎵 **Spotify**
-- ▶️ **YouTube Premium**
+```
+cloudvip-landing/
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── index.html
+├── README.md
+└── src/
+    ├── main.jsx
+    ├── App.jsx
+    ├── CloudVIPLanding.jsx
+    └── index.css
+```
 
-## ✨ Tính năng nổi bật
+## Chạy thử ở máy local
 
-| Tính năng | Mô tả |
-|-----------|-------|
-| 🪙 Kiểm Coin dễ dàng | Hoàn thành nhiệm vụ, nhận Coin ngay vào ví |
-| 🔒 An toàn & Bảo mật | Hệ thống chống gian lận, bảo vệ tài khoản |
-| 👥 Cộng đồng lớn | Hơn 10.000 người dùng tin tưởng mỗi ngày |
+```bash
+npm install
+npm run dev
+```
 
-## 💖 Cam kết của nxx315
+Mở http://localhost:5173
 
-- 🔐 **Bảo mật tuyệt đối** – Mã hóa thông tin cá nhân
-- 🔄 **Hoàn tiền 100%** – Nếu không hài lòng
-- 🎧 **Hỗ trợ 24/7** – Luôn sẵn sàng giải đáp
-- ✅ **Tài khoản chính chủ** – 100% thật, không dùng chung
+## Đưa lên GitHub
 
-## 📊 Thống kê
+```bash
+git init
+git add .
+git commit -m "CloudVIP landing page"
+git branch -M main
+git remote add origin <URL_repo_cua_ban>
+git push -u origin main
+```
 
-- **10K+** Người dùng
-- **50K+** Đơn hàng
-- **99%** Hài lòng
+## Build production
 
-## 🛠️ Công nghệ sử dụng
+```bash
+npm run build
+```
 
-- HTML5, CSS3
-- Font Awesome 6 (icon đen trắng)
-- Deploy trên Vercel
-
-## 🚧 Hướng phát triển
-
-- [ ] Tích hợp đăng nhập/đăng ký
-- [ ] Hệ thống ví Coin
-- [ ] Shop đổi thưởng
-- [ ] Bot tự động kiểm tra nhiệm vụ
-
-## 📬 Liên hệ
-
-- **Website:** nxx315-cloudvip.vercel.app
-- **Email:** nxx315hub@gmail.com
----
-
-⭐ **Đừng quên star repository nếu bạn thấy hữu ích nhé!**
+File build nằm trong thư mục `dist/`, có thể deploy lên Vercel, Netlify, hoặc GitHub Pages.
