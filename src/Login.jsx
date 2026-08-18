@@ -48,14 +48,14 @@ export default function Login() {
       );
       return;
     }
-    navigate("/");
+    navigate("/dashboard");
   };
 
   const handleOAuth = async (provider) => {
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     if (authError) setError(authError.message);
   };
@@ -184,4 +184,4 @@ export default function Login() {
       </form>
     </AuthShell>
   );
-}
+            }
