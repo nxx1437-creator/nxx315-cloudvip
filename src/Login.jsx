@@ -1,23 +1,29 @@
 import React, { useState } from "react";
-import { User, Lock, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Loader2 } from "lucide-react";
 import AuthShell from "./components/AuthShell.jsx";
 import { Link } from "react-router-dom";
+import { supabase } from "./lib/supabaseClient.js";
 
 /**
  * Login.jsx
  * -----------------------------------------------------------------
- * UI only — wire `handleSubmit` up to your auth backend (e.g. Supabase
- * `supabase.auth.signInWithPassword({ email, password })`). Social
- * buttons are placeholders; hook them to your OAuth provider calls.
+ * Wired to Supabase Auth. Note: Supabase's built-in auth identifies
+ * users by EMAIL (not a custom username), so the "Tên đăng nhập hoặc
+ * Email" field here is sent as an email. If you want real username
+ * login, you'd need a `profiles` table mapping username -> email and
+ * look that up before calling signInWithPassword.
  * -----------------------------------------------------------------
  */
 export default function Login() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [agreed, setAgreed] = useState(true);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.identifier || !form.password) {
       setError("Vui lòng nhập đầy đủ tên đăng nhập/email và mật khẩu.");
@@ -28,9 +34,30 @@ export default function Login() {
       return;
     }
     setError("");
-    // TODO: gọi API đăng nhập thật ở đây, ví dụ:
-    // await supabase.auth.signInWithPassword({ email: form.identifier, password: form.password });
-    console.log("Đăng nhập với:", form);
+    setLoading(true);
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: form.identifier,
+      password: form.password,
+    });
+    setLoading(false);
+    if (authError) {
+      setError(
+        authError.message === "Invalid login credentials"
+          ? "Email hoặc mật khẩu không đúng."
+          : authError.message
+      );
+      return;
+    }
+    navigate("/");
+  };
+
+  const handleOAuth = async (provider) => {
+    setError("");
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    });
+    if (authError) setError(authError.message);
   };
 
   return (
@@ -111,9 +138,16 @@ export default function Login() {
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110"
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110 disabled:opacity-60"
         >
-          Đăng nhập <ArrowRight size={16} />
+          {loading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <>
+              Đăng nhập <ArrowRight size={16} />
+            </>
+          )}
         </button>
 
         <div className="flex items-center gap-3 py-1">
@@ -127,6 +161,7 @@ export default function Login() {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
+            onClick={() => handleOAuth("google")}
             className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-sky-100 transition hover:bg-white/[0.07]"
           >
             <svg width="16" height="16" viewBox="0 0 48 48">
@@ -139,6 +174,7 @@ export default function Login() {
           </button>
           <button
             type="button"
+            onClick={() => handleOAuth("discord")}
             className="flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] py-2.5 text-sm font-medium text-sky-100 transition hover:bg-white/[0.07]"
           >
             <MessageCircle size={16} className="text-indigo-400" />
