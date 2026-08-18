@@ -17,7 +17,7 @@ function getGreeting() {
 
 function StatCard({ icon: Icon, iconBg, iconColor, value, label }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70 transition hover:shadow-md">
       <div className="flex items-start justify-between">
         <span className="text-2xl font-bold text-slate-900">{value}</span>
         <span className={`flex h-8 w-8 items-center justify-center rounded-full ${iconBg}`}>
@@ -50,36 +50,36 @@ export default function Dashboard() {
   const todayTasksTotal = 3;
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] pb-24 font-[Be_Vietnam_Pro]">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
       {/* TOP BAR */}
-      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-gradient-to-b from-sky-50/80 to-white/90 px-4 py-3 shadow-sm backdrop-blur-md">
         <button
           aria-label="Mở menu"
           onClick={() => setSidebarOpen(true)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
         >
           <Menu size={19} />
         </button>
         <button
           onClick={() => navigate("/tasks")}
-          className="flex flex-1 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-400"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm"
         >
-          <Search size={15} />
-          Tìm kiếm...
+          <Search size={15} className="shrink-0" />
+          <span className="truncate whitespace-nowrap">Tìm kiếm</span>
         </button>
-        <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
+        <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
           <Bell size={16} className="text-slate-600" />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
         </button>
-        <button className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm">
+        <button className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm shadow-sm">
           <Globe size={15} className="text-slate-500" /> 🇻🇳 VI
         </button>
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-md shadow-sky-500/30">
           {initial}
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
         </div>
@@ -87,8 +87,8 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
         {/* HERO / GREETING CARD */}
-        <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-6">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+        <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">
             ✨ Hoàn thành nhiệm vụ hôm nay để nhận thưởng bonus
           </span>
 
@@ -110,19 +110,19 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => navigate("/invite")}
-              className="flex items-center gap-2 rounded-full bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:shadow-md"
             >
               <Gift size={15} /> Mời bạn
             </button>
           </div>
 
           {/* BALANCE CARD */}
-          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="mt-5 rounded-2xl border border-white bg-white p-4 shadow-md shadow-sky-100">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 Số dư
               </span>
-              <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">
+              <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600 shadow-sm">
                 <Crown size={12} /> LV {profile.level}
               </span>
             </div>
@@ -181,7 +181,7 @@ export default function Dashboard() {
         </div>
 
         {/* STREAK CARD */}
-        <div className="flex items-center gap-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
+        <div className="flex items-center gap-4 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4 shadow-sm shadow-orange-100">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/70">
             <Flame size={22} className="text-orange-500" />
           </div>
@@ -199,7 +199,7 @@ export default function Dashboard() {
         </div>
 
         {/* TASK STREAK MILESTONES */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
               ✨ Chuỗi nhiệm vụ hôm nay
@@ -224,7 +224,7 @@ export default function Dashboard() {
         </div>
 
         {/* 7-DAY COIN CHART */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
               <TrendingUp size={15} className="text-sky-500" /> Coin 7 ngày qua
@@ -250,7 +250,7 @@ export default function Dashboard() {
         </div>
 
         {/* TODAY PROGRESS RING */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center">
+        <div className="rounded-2xl border border-white bg-white p-5 text-center shadow-sm shadow-slate-200/70">
           <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-900">
             <CheckSquare size={15} className="text-sky-500" /> Tiến độ hôm nay
           </span>
@@ -281,7 +281,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate("/tasks")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white py-5 text-sm font-medium text-slate-700 transition hover:border-sky-200 hover:bg-sky-50/50"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50">
                 <CheckSquare size={18} className="text-sky-500" />
@@ -290,7 +290,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => navigate("/store")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white py-5 text-sm font-medium text-slate-700 transition hover:border-sky-200 hover:bg-sky-50/50"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
                 <Gift size={18} className="text-blue-500" />
@@ -313,5 +313,5 @@ export default function Dashboard() {
       />
     </div>
   );
-            }
-            
+        }
+          
