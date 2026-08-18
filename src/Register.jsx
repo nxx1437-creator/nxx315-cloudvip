@@ -61,7 +61,7 @@ export default function Register() {
       return;
     }
     if (data.session) {
-      navigate("/");
+      navigate("/dashboard");
     } else {
       // Email confirmation is required before a session exists.
       setConfirmSent(true);
@@ -72,7 +72,7 @@ export default function Register() {
     setError("");
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     if (authError) setError(authError.message);
   };
@@ -245,5 +245,5 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-        }
-            
+               }
+              
