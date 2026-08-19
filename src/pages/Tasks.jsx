@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -89,9 +89,8 @@ export default function Tasks() {
     }
 
     window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-    // Khi người dùng quay lại tab này, làm mới số liệu (lượt còn lại có thể
-    // đã thay đổi nếu họ hoàn thành ở tab kia rồi bấm quay lại trước khi trang tự reload).
-    reload();
+    // Số liệu sẽ tự làm mới khi bạn quay lại tab này (useTasks lắng nghe sự
+    // kiện focus/visibilitychange), không cần gọi reload() ngay lúc này.
   };
 
   return (
