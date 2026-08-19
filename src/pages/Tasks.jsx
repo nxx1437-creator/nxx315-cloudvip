@@ -68,10 +68,26 @@ export default function Tasks() {
       body: { task_id: task.id },
     });
     setStartingTaskId(null);
-    if (error || data?.error) {
-      alert(data?.error || error?.message || "Không thể bắt đầu nhiệm vụ.");
+
+    if (error) {
+      // supabase-js không tự đọc nội dung JSON khi function trả về lỗi (4xx/5xx),
+      // phải tự đọc từ error.context (Response gốc) để lấy đúng thông báo lỗi thật.
+      let message = error.message;
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // giữ nguyên error.message nếu không đọc được JSON
+      }
+      alert(message);
       return;
     }
+
+    if (data?.error) {
+      alert(data.error);
+      return;
+    }
+
     window.open(data.shortUrl, "_blank", "noopener,noreferrer");
     // Khi người dùng quay lại tab này, làm mới số liệu (lượt còn lại có thể
     // đã thay đổi nếu họ hoàn thành ở tab kia rồi bấm quay lại trước khi trang tự reload).
@@ -288,5 +304,4 @@ export default function Tasks() {
       />
     </div>
   );
-              }
-          
+}
