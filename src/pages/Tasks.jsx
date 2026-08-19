@@ -16,7 +16,6 @@ import {
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import useTasks from "../hooks/useTasks.js";
-import { buildTaskUrl } from "../lib/taskProviders.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { supabase } from "../lib/supabaseClient.js";
@@ -65,15 +64,15 @@ export default function Tasks() {
 
   const handleStart = async (task) => {
     setStartingTaskId(task.id);
-    const { data, error } = await supabase.rpc("start_task", { p_task_id: task.id });
+    const { data, error } = await supabase.functions.invoke("start-task", {
+      body: { task_id: task.id },
+    });
     setStartingTaskId(null);
-    if (error) {
-      alert(error.message);
+    if (error || data?.error) {
+      alert(data?.error || error?.message || "Không thể bắt đầu nhiệm vụ.");
       return;
     }
-    const { token } = data[0];
-    const url = await buildTaskUrl(task, token);
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(data.shortUrl, "_blank", "noopener,noreferrer");
     // Khi người dùng quay lại tab này, làm mới số liệu (lượt còn lại có thể
     // đã thay đổi nếu họ hoàn thành ở tab kia rồi bấm quay lại trước khi trang tự reload).
     reload();
@@ -289,5 +288,5 @@ export default function Tasks() {
       />
     </div>
   );
-    }
-            
+              }
+          
