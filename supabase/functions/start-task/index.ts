@@ -4,18 +4,21 @@
 // 1. Gọi RPC start_task() (đã có sẵn trong schema_tasks.sql) bằng chính JWT
 //    của người dùng đang gọi -> sinh Token TTL 15 phút, đúng người, đúng nhiệm vụ.
 // 2. Ghép Token vào URL callback của app (/task/callback?token=...).
-// 3. Gọi API Link4M để rút gọn URL đó -> trả link rút gọn về cho frontend.
-//    Link4M chỉ đưa trình duyệt tới URL đích (callback có Token) SAU KHI
-//    người dùng thực sự hoàn thành bước quảng cáo -> đó chính là bằng chứng
-//    "đã vượt link", không cần Link4M gửi thêm chữ ký gì khác.
+// 3. Gọi API của provider (LINK4M / LAYMA / TRAFFIC68) để rút gọn URL đó ->
+//    trả link rút gọn về cho frontend. Provider chỉ đưa trình duyệt tới URL
+//    đích (callback có Token) SAU KHI người dùng thực sự hoàn thành bước
+//    quảng cáo -> đó chính là bằng chứng "đã vượt link", không cần provider
+//    gửi thêm chữ ký gì khác.
 //
 // TRIỂN KHAI (không cần cài Supabase CLI):
 //   Supabase Dashboard -> Edge Functions -> Create a new function
 //   -> đặt tên đúng "start-task" -> dán toàn bộ nội dung file này -> Deploy
 //
 // SECRETS cần thêm (Supabase Dashboard -> Edge Functions -> Manage secrets):
-//   LINK4M_API_KEY = <API Key của bạn, KHÔNG để trong code/GitHub>
-//   SITE_URL       = https://nxx315-cloudvip.vercel.app   (domain thật của bạn)
+//   LINK4M_API_KEY    = API Key Link4M của bạn (KHÔNG để trong code/GitHub)
+//   LAYMA_API_KEY     = API Key (tokenUser) của Layma
+//   TRAFFIC68_API_KEY = API Key của Traffic68 (khi có)
+//   SITE_URL          = https://nxx315-cloudvip.vercel.app   (domain thật của bạn)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -37,7 +40,7 @@ function json(body: unknown, status = 200) {
 
 /**
  * Rút gọn URL qua nhà cung cấp tương ứng.
- * Chỉ LINK4M đã có API Key thật; các provider khác tạm thời bỏ qua bước
+ * LINK4M và LAYMA đã có API Key thật. TRAFFIC68 tạm thời bỏ qua bước
  * quảng cáo (trả thẳng URL gốc) cho tới khi bạn gửi API Key của họ.
  */
 async function shortenLink(provider: string, longUrl: string): Promise<string> {
@@ -53,6 +56,41 @@ async function shortenLink(provider: string, longUrl: string): Promise<string> {
       throw new Error(data.message || "Link4M trả về lỗi không xác định");
     }
     return data.shortenedUrl;
+  }
+
+  if (provider === "LAYMA") {
+    const apiKey = Deno.env.get("LAYMA_API_KEY");
+    if (!apiKey) throw new Error("Thiếu secret LAYMA_API_KEY trong Supabase Edge Functions");
+
+    const apiUrl =
+      `https://api.layma.net/api/admin/shortlink/quicklink` +
+      `?tokenUser=${apiKey}` +
+      `&format=json` +
+      `&url=${encodeURIComponent(longUrl)}` +
+      `&link_du_phong=${encodeURIComponent(longUrl)}`;
+
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+
+    // ⚠️ Layma chưa công bố rõ tên field trả về trong tài liệu bạn gửi.
+    // Dò vài field phổ biến của các dịch vụ rút gọn link VN; nếu Layma
+    // dùng tên khác, báo lỗi kèm nguyên văn response để mình sửa lại đúng.
+    const shortUrl =
+      data.shortenlink ||
+      data.shortenedUrl ||
+      data.shorten_url ||
+      data.short_url ||
+      data.data?.shortenlink ||
+      data.data?.url ||
+      data.url;
+
+    if (!shortUrl) {
+      throw new Error(
+        "Layma: không tìm thấy link rút gọn trong phản hồi. Response thật: " +
+          JSON.stringify(data)
+      );
+    }
+    return shortUrl;
   }
 
   console.warn(
@@ -104,4 +142,3 @@ Deno.serve(async (req) => {
     return json({ error: String(err instanceof Error ? err.message : err) }, 500);
   }
 });
-  
