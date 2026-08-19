@@ -72,7 +72,7 @@ create or replace function public.start_task(p_task_id uuid)
 returns table(token text, expires_at timestamptz, reward_coins integer)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_task record;
@@ -95,7 +95,7 @@ begin
     raise exception 'Bạn đã hết lượt cho nhiệm vụ này hôm nay';
   end if;
 
-  v_token := encode(gen_random_bytes(16), 'hex');
+  v_token := encode(extensions.gen_random_bytes(16), 'hex');
   v_expires := now() + interval '15 minutes';
 
   insert into public.task_tokens (user_id, task_id, token, expires_at)
@@ -111,7 +111,7 @@ create or replace function public.consume_task_token(p_token text)
 returns table(success boolean, message text, reward_coins integer)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_row public.task_tokens;
@@ -162,4 +162,3 @@ values
   ('LINK4M', null, 360, 2, true, 2),
   ('TRAFFIC68', null, 320, 2, true, 3)
 on conflict do nothing;
-    
