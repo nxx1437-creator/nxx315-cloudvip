@@ -8,7 +8,8 @@ import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-
+import Admin from "./pages/Admin.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 export default function App() {
   return (
     <Routes>
@@ -47,6 +48,13 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+    <Route
+  path="/admin"
+  element={
+    <AdminRoute>
+      <Admin />
+    </AdminRoute>
+  }
+/>
   );
 }
