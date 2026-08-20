@@ -48,7 +48,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-    <Route
+    <Routes><Route>
   path="/admin"
   element={
     <AdminRoute>
