@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
@@ -44,7 +45,7 @@ export default function Login() {
     }
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     if (authError) setError(authError.message);
   };
