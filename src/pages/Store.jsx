@@ -3,7 +3,7 @@ import {
   Gift, Sparkles, Zap, Shield, Trophy, Coins, Check,
   Loader2, MessageCircle, Phone, PlayCircle,
 } from "lucide-react";
-import { useProfile } from "../hooks/useProfile.js";
+import useProfile from "../hooks/useProfile.js";
 import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 
