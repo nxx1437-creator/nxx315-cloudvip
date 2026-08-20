@@ -6,10 +6,10 @@ import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
-import TaskCallback from "./pages/TaskCallback.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Admin from "./pages/Admin.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
+import TaskCallback from "./pages/TaskCallback.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 export default function App() {
   return (
     <Routes>
