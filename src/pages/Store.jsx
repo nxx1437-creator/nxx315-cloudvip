@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from "react";
 import {
   Gift, Sparkles, Zap, Shield, Trophy, Coins, Check,
-  Loader2, MessageCircle, Phone, PlayCircle,
+  Loader2, MessageCircle, Phone, PlayCircle, Gamepad2,
 } from "lucide-react";
 import useProfile from "../hooks/useProfile.js";
 import useSession from "../hooks/useSession.js";
 import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
+import BottomNav from "../components/BottomNav.jsx";
 
 const STATUS_LABEL = {
   pending: { text: "Chờ xử lý", cls: "bg-amber-100 text-amber-700" },
@@ -29,10 +30,10 @@ export default function Store() {
 
   const [selectedId, setSelectedId] = useState(null);
   const [robloxUsername, setRobloxUsername] = useState("");
-  const [receiveMethod, setReceiveMethod] = useState(""); // 'discord' | 'zalo'
+  const [receiveMethod, setReceiveMethod] = useState("");
   const [contactValue, setContactValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState(null); // { ok, message }
+  const [feedback, setFeedback] = useState(null);
 
   const selectedPkg = useMemo(
     () => packages.find((p) => p.id === selectedId) ?? null,
@@ -95,46 +96,57 @@ export default function Store() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5FAFF] pb-24 text-sky-950">
+    <div className="min-h-screen bg-gradient-to-b from-[#0B1230] via-[#0E1442] to-[#131A55] pb-24 font-[Be_Vietnam_Pro] text-white">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+        .font-display { font-family: 'Baloo 2', sans-serif; }
+      `}</style>
+
       <div className="mx-auto max-w-md px-4 pt-5">
-        {/* Header */}
-        <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-600">
+        {/* Header — gradient tím-hồng nổi bật kiểu game */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-violet-600 to-indigo-700 p-6 shadow-xl shadow-fuchsia-900/40">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-cyan-400/20 blur-2xl" />
+
+          <span className="relative inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
             <Gift size={13} /> TRUNG TÂM ĐỔI THƯỞNG
           </span>
-          <h1 className="mt-3 flex items-center gap-1.5 text-2xl font-extrabold leading-tight">
-            <Sparkles size={20} className="text-amber-400" /> Đổi Coin lấy quà game cực dễ
+          <h1 className="font-display relative mt-3 flex items-center gap-1.5 text-2xl font-extrabold leading-tight text-white">
+            <Sparkles size={20} className="text-amber-300" /> Đổi Coin lấy quà game cực dễ
           </h1>
-          <p className="mt-2 text-sm text-sky-900/60">
+          <p className="relative mt-2 text-sm text-white/70">
             Robux Roblox — admin xử lý nhanh, hoàn Coin nếu đơn bị hủy.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="flex items-center gap-1 rounded-full border border-sky-100 px-3 py-1 text-xs text-sky-800/70">
-              <Zap size={12} /> Giao trong vài phút
+          <div className="relative mt-3 flex flex-wrap gap-2">
+            <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
+              <Zap size={12} className="text-amber-300" /> Giao trong vài phút
             </span>
-            <span className="flex items-center gap-1 rounded-full border border-sky-100 px-3 py-1 text-xs text-sky-800/70">
-              <Shield size={12} /> Bảo hành / hoàn Coin
+            <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
+              <Shield size={12} className="text-emerald-300" /> Bảo hành / hoàn Coin
             </span>
-            <span className="flex items-center gap-1 rounded-full border border-sky-100 px-3 py-1 text-xs text-sky-800/70">
-              <Trophy size={12} /> Giá tốt nhất
+            <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
+              <Trophy size={12} className="text-cyan-300" /> Giá tốt nhất
             </span>
           </div>
 
-          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 p-3.5">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100">
-              <Coins size={20} className="text-amber-500" />
+          <div className="relative mt-4 flex items-center gap-3 rounded-2xl bg-white/95 p-3.5 shadow-lg">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 to-orange-500 shadow-md shadow-amber-500/30">
+              <Coins size={20} className="text-white" />
             </span>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-sky-800/50">Số dư của bạn</p>
-              <p className="text-xl font-extrabold text-amber-500">
-                {(profile?.coins ?? 0).toLocaleString("vi-VN")} <span className="text-sm font-semibold text-sky-900/50">Coin</span>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Số dư của bạn</p>
+              <p className="text-xl font-extrabold text-orange-500">
+                {(profile?.coins ?? 0).toLocaleString("vi-VN")} <span className="text-sm font-semibold text-slate-400">Coin</span>
               </p>
             </div>
           </div>
         </div>
 
         {/* Gói VNG */}
-        <p className="mb-2 mt-6 text-xs font-bold uppercase tracking-wide text-sky-800/40">Phiên bản VNG</p>
+        <div className="mb-2 mt-6 flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+          <p className="text-xs font-bold uppercase tracking-wide text-cyan-300">Phiên bản VNG</p>
+        </div>
         <div className="space-y-3">
           {vngPackages.map((pkg) => (
             <PackageCard key={pkg.id} pkg={pkg} selected={selectedId === pkg.id} onClick={() => handleSelect(pkg)} />
@@ -142,7 +154,10 @@ export default function Store() {
         </div>
 
         {/* Gói Quốc tế */}
-        <p className="mb-2 mt-6 text-xs font-bold uppercase tracking-wide text-sky-800/40">Phiên bản Quốc tế</p>
+        <div className="mb-2 mt-6 flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-400" />
+          <p className="text-xs font-bold uppercase tracking-wide text-fuchsia-300">Phiên bản Quốc tế</p>
+        </div>
         <div className="space-y-3">
           {quocTePackages.map((pkg) => (
             <PackageCard key={pkg.id} pkg={pkg} selected={selectedId === pkg.id} onClick={() => handleSelect(pkg)} />
@@ -151,35 +166,38 @@ export default function Store() {
 
         {/* Form đặt đơn */}
         {selectedPkg && (
-          <div className="mt-6 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm">
+          <div className="mt-6 rounded-3xl bg-white p-5 text-slate-900 shadow-xl">
             <h2 className="text-base font-bold">Thông tin nhận {selectedPkg.name}</h2>
-            <p className="mt-0.5 text-xs text-sky-800/50">
-              Phiên bản: <span className="font-semibold text-sky-600">{selectedPkg.version === "VNG" ? "VNG" : "Quốc tế"}</span>
+            <p className="mt-0.5 text-xs text-slate-400">
+              Phiên bản:{" "}
+              <span className="font-semibold text-violet-600">
+                {selectedPkg.version === "VNG" ? "VNG" : "Quốc tế"}
+              </span>
             </p>
 
             <div className="mt-4 space-y-3">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-sky-800/70">Username Roblox</label>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-500">Username Roblox</label>
                 <input
                   value={robloxUsername}
                   onChange={(e) => setRobloxUsername(e.target.value)}
                   placeholder="VD: PlayerName123"
-                  className="w-full rounded-xl border border-sky-100 bg-sky-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20"
                 />
               </div>
 
               {selectedPkg.version === "QUOC_TE" && (
                 <>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-sky-800/70">Cách nhận code</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Cách nhận code</label>
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
                         type="button"
                         onClick={() => { setReceiveMethod("discord"); setContactValue(""); }}
-                        className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium transition ${
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-semibold transition ${
                           receiveMethod === "discord"
-                            ? "border-sky-400 bg-sky-50 text-sky-700"
-                            : "border-sky-100 text-sky-800/60"
+                            ? "border-transparent bg-gradient-to-r from-violet-500 to-indigo-600 text-white shadow-md"
+                            : "border-slate-200 text-slate-500"
                         }`}
                       >
                         <MessageCircle size={15} /> Discord
@@ -188,10 +206,10 @@ export default function Store() {
                       <button
                         type="button"
                         onClick={() => { setReceiveMethod("zalo"); setContactValue(""); }}
-                        className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium transition ${
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-semibold transition ${
                           receiveMethod === "zalo"
-                            ? "border-sky-400 bg-sky-50 text-sky-700"
-                            : "border-sky-100 text-sky-800/60"
+                            ? "border-transparent bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md"
+                            : "border-slate-200 text-slate-500"
                         }`}
                       >
                         <Phone size={15} /> Zalo
@@ -202,14 +220,14 @@ export default function Store() {
 
                   {receiveMethod && (
                     <div>
-                      <label className="mb-1.5 block text-xs font-semibold text-sky-800/70">
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-500">
                         {receiveMethod === "zalo" ? "Số điện thoại Zalo" : "Tên Discord"}
                       </label>
                       <input
                         value={contactValue}
                         onChange={(e) => setContactValue(e.target.value)}
                         placeholder={receiveMethod === "zalo" ? "VD: 0912345678" : "VD: username#0000"}
-                        className="w-full rounded-xl border border-sky-100 bg-sky-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20"
                       />
                     </div>
                   )}
@@ -218,13 +236,15 @@ export default function Store() {
             </div>
 
             {feedback && (
-              <p className={`mt-3 text-sm ${feedback.ok ? "text-emerald-600" : "text-rose-500"}`}>{feedback.message}</p>
+              <p className={`mt-3 text-sm font-medium ${feedback.ok ? "text-emerald-600" : "text-rose-500"}`}>
+                {feedback.message}
+              </p>
             )}
 
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:brightness-110 disabled:opacity-60"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:brightness-110 disabled:opacity-60"
             >
               {submitting ? <Loader2 size={16} className="animate-spin" /> : <Coins size={16} />}
               Đặt đơn — trừ {selectedPkg.coin_cost.toLocaleString("vi-VN")} Coin
@@ -233,13 +253,13 @@ export default function Store() {
         )}
 
         {/* Hướng dẫn nhận quà */}
-        <div className="mt-6 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm">
-          <h2 className="flex items-center gap-1.5 text-sm font-bold">
-            <Sparkles size={15} className="text-sky-400" /> Hướng dẫn nhận quà
+        <div className="mt-6 rounded-3xl bg-white/[0.06] p-5 backdrop-blur-sm">
+          <h2 className="flex items-center gap-1.5 text-sm font-bold text-white">
+            <Sparkles size={15} className="text-amber-300" /> Hướng dẫn nhận quà
           </h2>
-          <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-sky-200 bg-sky-50/40 text-sm text-sky-800/40">
+          <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/[0.04] text-sm text-white/40">
             <div className="flex flex-col items-center gap-1.5">
-              <PlayCircle size={26} className="text-sky-300" />
+              <PlayCircle size={26} className="text-white/30" />
               Video hướng dẫn sẽ được cập nhật sau
             </div>
           </div>
@@ -247,11 +267,11 @@ export default function Store() {
 
         {/* Lịch sử đơn */}
         <div className="mt-6">
-          <h2 className="mb-2 text-sm font-bold">Lịch sử đơn</h2>
+          <h2 className="mb-2 text-sm font-bold text-white">Lịch sử đơn</h2>
           {loading ? (
-            <p className="text-sm text-sky-800/40">Đang tải...</p>
+            <p className="text-sm text-white/40">Đang tải...</p>
           ) : orders.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-sky-200 bg-white p-5 text-center text-sm text-sky-800/40">
+            <p className="rounded-2xl border border-dashed border-white/20 bg-white/[0.04] p-5 text-center text-sm text-white/40">
               Bạn chưa có đơn nào.
             </p>
           ) : (
@@ -259,11 +279,11 @@ export default function Store() {
               {orders.map((o) => {
                 const st = STATUS_LABEL[o.status];
                 return (
-                  <div key={o.id} className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+                  <div key={o.id} className="rounded-2xl bg-white p-4 text-slate-900 shadow-md">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="text-sm font-bold">{o.package_name}</p>
-                        <p className="text-xs text-sky-800/50">
+                        <p className="text-xs text-slate-400">
                           {o.roblox_username} • {fmtTime(o.created_at)}
                         </p>
                       </div>
@@ -291,6 +311,8 @@ export default function Store() {
           )}
         </div>
       </div>
+
+      <BottomNav />
     </div>
   );
 }
@@ -299,31 +321,33 @@ function PackageCard({ pkg, selected, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3.5 rounded-2xl border p-4 text-left transition ${
+      className={`flex w-full items-center gap-3.5 rounded-2xl p-4 text-left transition ${
         selected
-          ? "border-transparent bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg shadow-sky-500/25"
-          : "border-sky-100 bg-white"
+          ? "bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-900/40"
+          : "bg-white/[0.07] text-white backdrop-blur-sm hover:bg-white/[0.11]"
       }`}
     >
       <span
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-          selected ? "bg-white/20" : "bg-sky-50"
+          selected ? "bg-white/25" : "bg-gradient-to-br from-amber-300 to-orange-500"
         }`}
       >
-        <Coins size={20} className={selected ? "text-white" : "text-sky-500"} />
+        {selected ? <Coins size={20} className="text-white" /> : <Gamepad2 size={20} className="text-white" />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold">{pkg.name}</p>
-        <p className={`text-xs ${selected ? "text-white/70" : "text-sky-800/50"}`}>
+        <p className={`text-xs ${selected ? "text-white/75" : "text-white/50"}`}>
           {pkg.coin_cost.toLocaleString("vi-VN")} Coin
           {pkg.original_price_text && ` • Giá gốc ${pkg.original_price_text}`}
         </p>
       </div>
       {pkg.is_promo && !selected && (
-        <span className="shrink-0 rounded-full bg-rose-50 px-2 py-1 text-[10px] font-bold text-rose-500">KM</span>
+        <span className="shrink-0 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white shadow shadow-rose-500/40">
+          KM
+        </span>
       )}
       {selected && (
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/25">
           <Check size={14} />
         </span>
       )}
