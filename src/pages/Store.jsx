@@ -4,6 +4,7 @@ import {
   Loader2, MessageCircle, Phone, PlayCircle,
 } from "lucide-react";
 import useProfile from "../hooks/useProfile.js";
+import useSession from "../hooks/useSession.js";
 import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -21,8 +22,10 @@ function fmtTime(iso) {
 }
 
 export default function Store() {
-  const { profile } = useProfile();
-  const { packages, orders, loading, refetch } = useStoreData(profile?.id);
+  const { session } = useSession();
+  const userId = session?.user?.id;
+  const { profile } = useProfile(userId);
+  const { packages, orders, loading, refetch } = useStoreData(userId);
 
   const [selectedId, setSelectedId] = useState(null);
   const [robloxUsername, setRobloxUsername] = useState("");
