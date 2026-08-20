@@ -6,7 +6,6 @@ import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
-<Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
 import TaskCallback from "./pages/TaskCallback.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
@@ -29,6 +28,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Tasks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/store"
+        element={
+          <ProtectedRoute>
+            <Store />
           </ProtectedRoute>
         }
       />
