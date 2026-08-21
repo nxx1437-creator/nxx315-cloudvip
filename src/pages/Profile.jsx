@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
-  QrCode, ShieldAlert, Crown, Camera, ChevronRight 
+  QrCode, ShieldAlert, Camera, ChevronRight, Smartphone, Plus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
@@ -23,7 +23,9 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   
+  // Trạng thái MFA & Số lượng thiết bị
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
+  const [factorCount, setFactorCount] = useState(0);
   const [activeSection, setActiveSection] = useState("info"); // "info" hoặc "security"
 
   const displayName = profile.username || "Thành viên";
@@ -31,8 +33,10 @@ export default function ProfilePage() {
 
   const checkMFAStatus = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
-    const verifiedFactor = data.totp?.find(f => f.status === 'verified');
-    setIsMFAEnabled(!!verifiedFactor);
+    const verifiedFactors = data.totp?.filter(f => f.status === 'verified');
+    
+    setIsMFAEnabled(!!verifiedFactors?.length);
+    setFactorCount(verifiedFactors?.length || 0); // Đếm số thiết bị đã bật
   };
 
   useEffect(() => {
@@ -44,6 +48,7 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
+  // Bắt đầu đăng ký Authenticator (Dùng cho cả thiết bị chính lẫn dự phòng)
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -71,7 +76,7 @@ export default function ProfilePage() {
     });
     if (error) { setError("Mã không đúng hoặc đã hết hạn."); return; }
     
-    setSuccess("Xác minh 2 bước đã được bật thành công!");
+    setSuccess("Thiết bị đã được thêm thành công!");
     setVerifyCode("");
     setShowMFA(false);
     checkMFAStatus();
@@ -91,10 +96,9 @@ export default function ProfilePage() {
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
         
-        {/* KHUNG AVATAR, VIP VÀ SỐ DƯ (GIỐNG ẢNH CŨ) */}
+        {/* KHUNG AVATAR, VIP VÀ SỐ DƯ */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col items-center">
-            {/* Avatar */}
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-sky-100 bg-gradient-to-br from-sky-400 to-blue-600 text-4xl font-bold text-white shadow-md">
                 {initial}
@@ -113,7 +117,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* VIP Card */}
           <div className="mt-5 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -214,6 +217,7 @@ export default function ProfilePage() {
         {activeSection === "security" && (
           <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
             <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
+            
             <button
               onClick={handleStartMFA}
               className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100"
@@ -229,16 +233,33 @@ export default function ProfilePage() {
                 {isMFAEnabled ? "Đã bật" : "Chưa bật"}
               </span>
             </button>
+
+            {/* Hiện nút thêm thiết bị dự phòng khi đã bật MFA */}
+            {isMFAEnabled && (
+              <button
+                onClick={handleStartMFA}
+                className="mt-3 flex w-full items-center justify-between rounded-2xl bg-sky-50 p-4 text-left transition hover:bg-sky-100"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500"><Smartphone size={18} /></span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Thêm thiết bị dự phòng</p>
+                    <p className="text-xs text-slate-400">Dùng khi mất điện thoại (Đã có: {factorCount}/10)</p>
+                  </div>
+                </div>
+                <Plus size={18} className="text-sky-500" />
+              </button>
+            )}
           </div>
         )}
       </main>
 
-      {/* Modal đăng ký Authenticator */}
+      {/* Modal đăng ký Authenticator (Cho cả thiết bị chính và dự phòng) */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
-            <h3 className="font-display text-lg font-bold text-slate-900">Bật Xác minh 2 bước</h3>
-            <p className="mt-2 text-sm text-slate-500">Mở ứng dụng Google Authenticator và quét mã QR bên dưới:</p>
+            <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
+            <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator (hoặc Authy) và quét mã QR bên dưới:</p>
             
             {qrCode && (
               <img src={`data:image/svg+xml;base64,${btoa(qrCode)}`} alt="QR Code" className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" />
@@ -284,4 +305,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-}
+  }
