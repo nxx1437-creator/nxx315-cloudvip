@@ -23,16 +23,13 @@ export default function Login() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Kiểm tra xem user đã bật MFA chưa
     const { data: mfaData } = await supabase.auth.mfa.listFactors();
     const verifiedFactors = mfaData.totp?.filter(f => f.status === 'verified');
 
     if (verifiedFactors && verifiedFactors.length > 0) {
-      // Nếu có MFA, hiện màn hình nhập mã
       setMfaFactorId(verifiedFactors[0].id);
       setShowMFA(true);
     } else {
-      // Nếu không có MFA, vào thẳng
       navigate("/dashboard");
     }
   };
@@ -58,7 +55,7 @@ export default function Login() {
       );
       return;
     }
-    await handlePostLogin(); // Kiểm tra MFA sau khi đăng nhập
+    await handlePostLogin();
   };
 
   const handleSocial = async (provider, supported) => {
@@ -69,7 +66,8 @@ export default function Login() {
     }
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      // 👇 ĐỔI THÀNH /login ĐỂ NÓ QUAY LẠI KIỂM TRA MFA
+      options: { redirectTo: `${window.location.origin}/login` }, 
     });
     if (authError) setError(authError.message);
   };
@@ -215,4 +213,4 @@ export default function Login() {
       </form>
     </AuthShell>
   );
-      }
+    }
