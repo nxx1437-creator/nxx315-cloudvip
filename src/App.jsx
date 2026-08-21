@@ -1,3 +1,7 @@
+import useSession from "./hooks/useSession.js";
+import LoadingScreen from "./components/LoadingScreen.jsx";
+const { loading: sessionLoading } = useSession();
+if (sessionLoading) return <LoadingScreen />;
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
