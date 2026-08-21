@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const DEFAULT_PROFILE = {
@@ -18,7 +18,6 @@ const DEFAULT_PROFILE = {
 export function useProfile() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [loading, setLoading] = useState(true);
-  const session = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
