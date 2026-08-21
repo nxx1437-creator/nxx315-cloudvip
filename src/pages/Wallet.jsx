@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Coins, ArrowDownLeft, ArrowUpRight, Wallet, Gift, Plus } from "lucide-react";
+import { Coins, ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, Gift, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -34,7 +34,7 @@ export default function Wallet() {
         <div className="rounded-3xl bg-gradient-to-br from-sky-400 to-blue-600 p-6 text-white shadow-lg shadow-blue-500/30">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-white/80">Số dư khả dụng</span>
-            <Wallet size={20} className="text-white/80" />
+            <WalletIcon size={20} className="text-white/80" />
           </div>
           <div className="mt-2 flex items-center gap-2">
             <Coins size={32} className="text-amber-300" />
@@ -84,4 +84,4 @@ export default function Wallet() {
       <BottomNav />
     </div>
   );
-        }
+      }
