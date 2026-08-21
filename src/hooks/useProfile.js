@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient.js";
-import { useGlobalLoading } from "../context/LoadingContext.jsx";
 
 const DEFAULT_PROFILE = {
   username: "",
