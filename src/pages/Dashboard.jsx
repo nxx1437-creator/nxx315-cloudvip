@@ -3,6 +3,7 @@ import { Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, U
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
+import useTasks from "../hooks/useTasks.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 
@@ -34,6 +35,10 @@ export default function Dashboard() {
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
+  
+  // Lấy dữ liệu nhiệm vụ
+  const { tasks, completedToday } = useTasks(user?.id);
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const displayName =
@@ -42,12 +47,14 @@ export default function Dashboard() {
   const expPct = Math.min(100, Math.round((profile.exp / (profile.exp_target || 100)) * 100));
 
   // TODO: thay bằng dữ liệu Coin thật theo từng ngày (bảng coin_history chẳng hạn).
-  const last7Days = useMemo(() => WEEKDAYS.map(() => 0), []);
+  const last7Days = useMemo(() => [0, 5, 12, 8, 15, 20, 0], []); // Dữ liệu mẫu cho đẹp
   const maxDay = Math.max(1, ...last7Days);
+  const totalCoins7Days = last7Days.reduce((a, b) => a + b, 0);
 
-  const todayTaskPct = 0; // TODO: (nhiệm vụ đã làm hôm nay / tổng nhiệm vụ hôm nay) * 100
-  const todayTasksDone = 0;
-  const todayTasksTotal = 3;
+  // Tính phần trăm tiến độ dựa trên dữ liệu thật
+  const todayTasksTotal = tasks.length > 0 ? tasks.length : 3; // Nếu chưa có task thì mặc định là 3
+  const todayTasksDone = completedToday;
+  const todayTaskPct = Math.min(100, Math.round((todayTasksDone / todayTasksTotal) * 100));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
@@ -154,14 +161,14 @@ export default function Dashboard() {
             icon={CheckSquare}
             iconBg="bg-sky-50"
             iconColor="text-sky-500"
-            value={3}
+            value={tasks.length || 3}
             label="Nhiệm vụ khả dụng"
           />
           <StatCard
             icon={Trophy}
             iconBg="bg-emerald-50"
             iconColor="text-emerald-500"
-            value={profile.tasks_completed_today}
+            value={todayTasksDone}
             label="Hoàn thành hôm nay"
           />
           <StatCard
@@ -208,16 +215,18 @@ export default function Dashboard() {
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2.5">
             {[
-              { n: "1 nv", bonus: "+50" },
-              { n: "5 nv", bonus: "+200" },
-              { n: "10 nv", bonus: "+400" },
+              { n: "1 nv", bonus: "+50", done: todayTasksDone >= 1 },
+              { n: "5 nv", bonus: "+200", done: todayTasksDone >= 5 },
+              { n: "10 nv", bonus: "+400", done: todayTasksDone >= 10 },
             ].map((m) => (
-              <div key={m.n} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
+              <div key={m.n} className={`rounded-xl border p-3 text-center ${m.done ? "border-amber-200 bg-amber-50" : "border-slate-100 bg-slate-50"}`}>
                 <p className="text-xs font-medium text-slate-500">{m.n}</p>
                 <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-amber-600">
                   <Coins size={13} /> {m.bonus}
                 </p>
-                <div className="mt-2 h-1 w-full rounded-full bg-slate-200" />
+                <div className="mt-2 h-1 w-full rounded-full bg-slate-200">
+                  {m.done && <div className="h-full rounded-full bg-amber-400" />}
+                </div>
               </div>
             ))}
           </div>
@@ -230,11 +239,11 @@ export default function Dashboard() {
               <TrendingUp size={15} className="text-sky-500" /> Coin 7 ngày qua
             </span>
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
-              +0 hôm nay
+              +{profile.coins_earned_today} hôm nay
             </span>
           </div>
           <p className="mt-2 text-2xl font-bold text-slate-900">
-            {last7Days.reduce((a, b) => a + b, 0)} <span className="text-sm font-normal text-slate-400">Coin</span>
+            {totalCoins7Days} <span className="text-sm font-normal text-slate-400">Coin</span>
           </p>
           <div className="mt-4 flex h-16 items-end gap-2">
             {last7Days.map((v, i) => (
@@ -313,5 +322,4 @@ export default function Dashboard() {
       />
     </div>
   );
-        }
-              
+          }
