@@ -11,13 +11,16 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-
+import Wallet from "./pages/Wallet.jsx";
+import ProfilePage from "./pages/Profile.jsx";
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<CloudVIPLanding />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+<Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route
         path="/dashboard"
         element={
