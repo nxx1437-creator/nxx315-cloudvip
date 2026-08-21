@@ -336,3 +336,206 @@ function TasksTab() {
     </div>
   );
               }
+function PackagesTab() {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
+    setPackages(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPackages(); }, []);
+
+  const updateField = (id, field, value) => setPackages((ps) => ps.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+
+  const handleSave = async (pkg) => {
+    setSavingId(pkg.id);
+    const { error } = await supabase.from("redemption_packages").update({
+      coin_cost: Number(pkg.coin_cost),
+      original_price_text: pkg.original_price_text,
+      is_promo: pkg.is_promo,
+      active: pkg.active,
+    }).eq("id", pkg.id);
+    setSavingId(null);
+    if (error) alert(error.message);
+  };
+
+  if (loading) return <p className="py-8 text-center text-sm text-slate-400">Loading packages...</p>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900">Manage Packages</h2>
+        <span className="rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-600">{packages.length} Packages</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {packages.map((p) => (
+          <div key={p.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg">
+            <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-blue-50 transition group-hover:scale-125" />
+            <div className="relative">
+              <p className="text-lg font-extrabold text-slate-900">{p.name}</p>
+              <p className="text-xs font-medium text-slate-400">Version: {p.version}</p>
+
+              <div className="mt-5 flex items-end gap-1">
+                <span className="text-3xl font-extrabold text-blue-600">{Number(p.coin_cost).toLocaleString()}</span>
+                <span className="mb-1 text-sm font-medium text-slate-400">Coins</span>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <label className="block">
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Coin Cost</span>
+                  <input
+                    type="number"
+                    value={p.coin_cost}
+                    onChange={(e) => updateField(p.id, "coin_cost", e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Original Price</span>
+                  <input
+                    value={p.original_price_text ?? ""}
+                    onChange={(e) => updateField(p.id, "original_price_text", e.target.value)}
+                    placeholder="14.000d"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input type="checkbox" checked={p.is_promo} onChange={(e) => updateField(p.id, "is_promo", e.target.checked)} className="h-4 w-4 accent-rose-500" />
+                  Promo (KM)
+                </label>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input type="checkbox" checked={p.active} onChange={(e) => updateField(p.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" />
+                  Active
+                </label>
+              </div>
+
+              <button
+                onClick={() => handleSave(p)}
+                disabled={savingId === p.id}
+                className="mt-5 w-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:opacity-90 disabled:opacity-60"
+              >
+                {savingId === p.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Save Package"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [adjustAmount, setAdjustAmount] = useState({});
+  const [savingId, setSavingId] = useState(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
+    setUsers(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const handleAdjustCoins = async (u) => {
+    const amount = Number(adjustAmount[u.id] ?? 0);
+    if (!amount) return;
+    setSavingId(u.id);
+    const { error } = await supabase.from("profiles").update({ coins: u.coins + amount }).eq("id", u.id);
+    setSavingId(null);
+    if (error) return alert(error.message);
+    setAdjustAmount((a) => ({ ...a, [u.id]: "" }));
+    fetchUsers();
+  };
+
+  const toggleAdmin = async (u) => {
+    await supabase.from("profiles").update({ is_admin: !u.is_admin }).eq("id", u.id);
+    fetchUsers();
+  };
+
+  if (loading) return <p className="py-8 text-center text-sm text-slate-400">Loading users...</p>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900">Manage Users</h2>
+        <span className="rounded-full bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-600">{users.length} Accounts</span>
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[800px] text-left text-sm">
+          <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="px-6 py-4">User</th>
+              <th className="px-6 py-4">Level</th>
+              <th className="px-6 py-4">Coins</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {users.map((u) => (
+              <tr key={u.id} className="transition hover:bg-blue-50/40">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
+                      {(u.username || "U").charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900">{u.username || "No name"}</p>
+                      <p className="text-xs text-slate-400">ID: {u.id.slice(0, 8)}...</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 font-semibold text-slate-700">Lv. {u.level || 1}</td>
+                <td className="px-6 py-4">
+                  <span className="text-base font-extrabold text-blue-600">{u.coins.toLocaleString()}</span>
+                </td>
+                <td className="px-6 py-4">
+                  {u.is_admin && <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-600">ADMIN</span>}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-end gap-2">
+                    <input
+                      type="number"
+                      value={adjustAmount[u.id] ?? ""}
+                      onChange={(e) => setAdjustAmount((a) => ({ ...a, [u.id]: e.target.value }))}
+                      placeholder="+/- Coins"
+                      className="w-24 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                    />
+                    <button
+                      onClick={() => handleAdjustCoins(u)}
+                      disabled={savingId === u.id}
+                      className="rounded-full bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition disabled:opacity-60"
+                    >
+                      {savingId === u.id ? <Loader2 size={12} className="animate-spin" /> : "Adjust"}
+                    </button>
+                    <button
+                      onClick={() => toggleAdmin(u)}
+                      className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                        u.is_admin ? "border-rose-200 text-rose-600 hover:bg-rose-50" : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                      }`}
+                    >
+                      {u.is_admin ? "Remove Admin" : "Set Admin"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+              }
