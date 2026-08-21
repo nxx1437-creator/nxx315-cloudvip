@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
@@ -12,6 +11,31 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // State cho màn hình MFA
+  const [showMFA, setShowMFA] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
+
+  // Hàm kiểm tra và xử lý MFA sau khi đăng nhập thành công
+  const handlePostLogin = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Kiểm tra xem user đã bật MFA chưa
+    const { data: mfaData } = await supabase.auth.mfa.listFactors();
+    const verifiedFactors = mfaData.totp?.filter(f => f.status === 'verified');
+
+    if (verifiedFactors && verifiedFactors.length > 0) {
+      // Nếu có MFA, hiện màn hình nhập mã
+      setMfaFactorId(verifiedFactors[0].id);
+      setShowMFA(true);
+    } else {
+      // Nếu không có MFA, vào thẳng
+      navigate("/dashboard");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -34,7 +58,7 @@ export default function Login() {
       );
       return;
     }
-    navigate("/dashboard");
+    await handlePostLogin(); // Kiểm tra MFA sau khi đăng nhập
   };
 
   const handleSocial = async (provider, supported) => {
@@ -50,6 +74,83 @@ export default function Login() {
     if (authError) setError(authError.message);
   };
 
+  // Xác nhận mã MFA
+  const handleVerifyMFA = async (e) => {
+    e?.preventDefault();
+    if (!mfaCode || mfaCode.length !== 6) {
+      setError("Vui lòng nhập đúng mã 6 số.");
+      return;
+    }
+    setError("");
+    setMfaLoading(true);
+
+    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+      factorId: mfaFactorId,
+    });
+
+    if (challengeError) {
+      setMfaLoading(false);
+      setError("Lỗi xác minh: " + challengeError.message);
+      return;
+    }
+
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId: mfaFactorId,
+      challengeId: challengeData.id,
+      code: mfaCode,
+    });
+
+    setMfaLoading(false);
+    if (verifyError) {
+      setError("Mã xác minh không đúng hoặc đã hết hạn.");
+      return;
+    }
+
+    navigate("/dashboard");
+  };
+
+  // Nếu đang ở màn hình MFA, hiển thị form nhập mã
+  if (showMFA) {
+    return (
+      <AuthShell
+        title="Xác minh 2 bước"
+        subtitle="Nhập mã từ ứng dụng Google Authenticator"
+        promo={{
+          heading: "Bảo mật nâng cao",
+          body: "Tài khoản của bạn đang được bảo vệ bằng xác minh 2 bước.",
+          ctaLabel: "Quay lại đăng nhập",
+          ctaHref: "/login",
+        }}
+      >
+        <form onSubmit={handleVerifyMFA} className="mt-6 space-y-4">
+          <div className="relative">
+            <ShieldCheck size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+            <input
+              type="text"
+              value={mfaCode}
+              onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="Mã 6 số"
+              maxLength={6}
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-center text-lg tracking-[0.5em] text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+            />
+          </div>
+
+          {error && <p className="text-sm text-rose-400">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={mfaLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:opacity-60"
+          >
+            {mfaLoading ? <Loader2 size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
+            Xác nhận và đăng nhập
+          </button>
+        </form>
+      </AuthShell>
+    );
+  }
+
+  // Giao diện đăng nhập thông thường
   return (
     <AuthShell
       title="Đăng nhập"
@@ -114,4 +215,4 @@ export default function Login() {
       </form>
     </AuthShell>
   );
-}
+      }
