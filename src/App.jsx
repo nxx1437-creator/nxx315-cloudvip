@@ -1,7 +1,3 @@
-import useSession from "./hooks/useSession.js";
-import LoadingScreen from "./components/LoadingScreen.jsx";
-const { loading: sessionLoading } = useSession();
-if (sessionLoading) return <LoadingScreen />;
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
@@ -15,10 +11,13 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-// ...
-<Route path="*" element={<NotFoundPage />} />
+import LoadingScreen from "./components/LoadingScreen.jsx";
+import useSession from "./hooks/useSession.js";
 
 export default function App() {
+  const { loading: sessionLoading } = useSession();
+  if (sessionLoading) return <LoadingScreen />;
+
   return (
     <Routes>
       <Route path="/" element={<CloudVIPLanding />} />
@@ -64,6 +63,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
