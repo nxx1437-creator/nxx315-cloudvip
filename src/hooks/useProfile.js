@@ -15,7 +15,7 @@ const DEFAULT_PROFILE = {
   is_admin: false,
 };
 
-export function useProfile() {
+export default function useProfile() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [loading, setLoading] = useState(true);
 
