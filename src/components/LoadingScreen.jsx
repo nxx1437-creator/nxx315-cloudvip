@@ -10,7 +10,7 @@ import React from "react";
 
 export default function LoadingScreen() {
   return (
-    // Đổi màu nền từ #A8D5E2 (xanh pastel) sang #2196F3 hoặc #1976D2 (xanh nước biển)
+    // Đổi màu nền từ #A8D5E2 (xanh pastel) sang #1E88E5 (xanh nước biển)
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1E88E5] px-6 text-white">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
@@ -62,7 +62,7 @@ export default function LoadingScreen() {
         }
       `}</style>
 
-      {/* Background decoration (đổi độ trong suốt cho hợp màu nền) */}
+      {/* Background decoration */}
       <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
@@ -101,28 +101,23 @@ export default function LoadingScreen() {
 
         {/* GIF nhân vật - CÓ BO TRÒN VÀ VIỀN TRẮNG */}
         <div className="relative z-10 h-[280px] w-[280px] overflow-hidden rounded-[40px] border-4 border-white bg-white p-3 shadow-[0_12px_25px_rgba(0,0,0,0.2)] sm:h-[320px] sm:w-[320px] flex items-center justify-center">
-            {/* 
-                MẸO SỬA LỖI ẢNH BỊ TRẮNG:
-                Nếu không tìm thấy file /loading-character.gif, hệ thống sẽ hiện ảnh mặc định.
-                Để chắc chắn ảnh hiện, bạn hãy đặt file ảnh vào thư mục public và đổi lại đường dẫn cho đúng.
-            */}
-             <img src="https://pin.it/2VjKKT14J/loading.gif" 
-  alt="Đang tải..."
-  ...
-/>
+            {/* Đã sửa lại đoạn img bị lỗi */}
+            <img
+              src="https://pin.it/2VjKKT14J/loading.gif" 
+              alt="Đang tải..."
               className="h-full w-full object-contain"
               style={{
                 animation: "floatCharacter 3s ease-in-out infinite",
               }}
               onError={(e) => {
-                 // Nếu ảnh bị lỗi, thay bằng ảnh dự phòng (bạn có thể dùng emoji hoặc ảnh mặc định)
+                 // Nếu ảnh chính bị lỗi, tự động thay bằng ảnh dự phòng
                  e.target.src = "https://media.tenor.com/0AVbKGY_MxMAAAAi/loading-buffering.gif"; 
               }}
             />
         </div>
       </div>
 
-      {/* Text (Đổi màu chữ thành trắng để nổi trên nền xanh đậm) */}
+      {/* Text */}
       <div className="relative z-10 mt-4 text-center">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
           Đợi xíu nhe... ♡
@@ -133,7 +128,7 @@ export default function LoadingScreen() {
         </p>
       </div>
 
-      {/* Loading dots (Màu trắng) */}
+      {/* Loading dots */}
       <div className="mt-6 flex items-center gap-2">
         <span
           className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
