@@ -17,8 +17,7 @@ export default function ProfilePage() {
   const [showLogout, setShowLogout] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   
-  // State lưu dữ liệu QR
-  const [qrCodeSvg, setQrCodeSvg] = useState("");
+  // State lưu dữ liệu
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
@@ -48,7 +47,7 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // Hàm tạo mới QR (Đã sửa lỗi hiển thị SVG)
+  // Hàm tạo mới: Chỉ hiển thị Secret, KHÔNG hiển thị QR
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -59,18 +58,9 @@ export default function ProfilePage() {
       return; 
     }
     
-    // Lưu SVG string trực tiếp để nhúng vào JSX
-    const qrSvgString = data?.totp?.qr_code;
-    if (qrSvgString) {
-      const decodedSvg = atob(qrSvgString); // Giải mã base64 thành mã SVG
-      setQrCodeSvg(decodedSvg); // Lưu trực tiếp vào state
-    } else {
-      setQrCodeSvg("");
-    }
-    
     setSecret(data?.totp?.secret || "");
     setFactorId(data?.id || "");
-    setShowMFA(true);
+    setShowMFA(true); // Hiện modal
   };
 
   const handleVerifyMFA = async (e) => {
@@ -241,22 +231,18 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Modal hiển thị QR (Đã sửa bằng SVG trực tiếp) */}
+      {/* Modal hiển thị Secret (Thay cho QR) */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
-            <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator (hoặc Authy) và quét mã QR bên dưới:</p>
+            <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator, chọn "Nhập mã thiết lập" và nhập chuỗi bên dưới:</p>
             
-            {/* Hiển thị SVG QR trực tiếp */}
-            {qrCodeSvg && (
-              <div 
-                className="mx-auto mt-4 h-48 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white"
-                dangerouslySetInnerHTML={{ __html: qrCodeSvg }} 
-              />
-            )}
-            
-            <p className="mt-2 text-xs text-slate-400">Hoặc nhập mã: <span className="font-mono font-bold text-slate-600">{secret || "..."}</span></p>
+            {/* Hiển thị Secret Key */}
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-bold uppercase text-slate-400">Mã bí mật (Secret Key)</p>
+              <p className="mt-2 break-all font-mono text-lg font-bold text-blue-600">{secret}</p>
+            </div>
 
             <form onSubmit={handleVerifyMFA} className="mt-4">
               <input
