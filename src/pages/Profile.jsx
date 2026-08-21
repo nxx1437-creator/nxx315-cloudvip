@@ -19,7 +19,6 @@ export default function ProfilePage() {
   
   // State lưu dữ liệu
   const [secret, setSecret] = useState("");
-  const [qrCodeSvg, setQrCodeSvg] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
   const [error, setError] = useState("");
@@ -56,7 +55,7 @@ export default function ProfilePage() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Hàm tạo mới: Hiển thị Secret + QR chuẩn
+  // Hàm tạo mới: Chỉ hiển thị Secret, KHÔNG hiển thị QR (Tránh lỗi 100%)
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -65,15 +64,6 @@ export default function ProfilePage() {
     if (error) { 
       setError("Lỗi khởi tạo: " + error.message); 
       return; 
-    }
-    
-    // Xử lý QR: Giải mã SVG từ base64
-    const qrString = data?.totp?.qr_code;
-    if (qrString) {
-      const decodedSvg = atob(qrString);
-      setQrCodeSvg(decodedSvg);
-    } else {
-      setQrCodeSvg("");
     }
     
     setSecret(data?.totp?.secret || "");
@@ -250,20 +240,12 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Modal hiển thị QR + Secret + Copy */}
+      {/* Modal hiển thị Secret + Copy (KHÔNG QR) */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
-            <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator, quét mã QR hoặc nhập mã bí mật:</p>
-            
-            {/* Hiển thị QR (Dùng SVG trực tiếp) */}
-            {qrCodeSvg && (
-              <div 
-                className="mx-auto mt-4 h-48 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white"
-                dangerouslySetInnerHTML={{ __html: qrCodeSvg }} 
-              />
-            )}
+            <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator, chọn "Nhập mã thiết lập" và nhập chuỗi bên dưới:</p>
             
             {/* Hiển thị Secret + Nút Copy */}
             <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
