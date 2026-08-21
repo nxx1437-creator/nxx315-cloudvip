@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const DEFAULT_PROFILE = {
-  username: "",
+  username: "Khách",
   coins: 0,
   level: 1,
   exp: 0,
@@ -23,7 +23,8 @@ export default function useProfile() {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setProfile(DEFAULT_PROFILE);
+        // Nếu chưa có user, hiện dữ liệu mẫu để trang không bị trống
+        setProfile({ ...DEFAULT_PROFILE, username: "Khách", coins: 1250, streak_days: 3 });
         setLoading(false);
         return;
       }
@@ -36,6 +37,9 @@ export default function useProfile() {
 
       if (data) {
         setProfile(data);
+      } else {
+        // Nếu user mới đăng ký chưa có data, hiện dữ liệu mẫu
+        setProfile({ ...DEFAULT_PROFILE, username: "Thành viên mới", coins: 500, streak_days: 1 });
       }
       setLoading(false);
     };
