@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient.js";
+import { useGlobalLoading } from "../context/LoadingContext.jsx";
 
 const DEFAULT_PROFILE = {
   username: "",
@@ -16,14 +17,15 @@ const DEFAULT_PROFILE = {
 
 /**
  * useProfile — fetches the `profiles` row for a given user id.
- * Requires the `supabase/schema.sql` migration to have been run.
- *
- * Tự động tải lại mỗi khi tab được focus lại (vd: người dùng làm nhiệm vụ
- * ở tab mới rồi quay lại tab này) để Coin/EXP luôn hiện đúng số mới nhất.
+ * Chỉ hiện màn hình chờ toàn màn hình ở LẦN TẢI ĐẦU TIÊN (lúc vừa
+ * vào trang). Những lần tải lại sau đó (quay lại tab, focus...) chạy
+ * âm thầm phía sau, không che màn hình — tránh làm phiền người dùng.
  */
 export default function useProfile(userId) {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [loading, setLoading] = useState(true);
+  const { beginLoad, endLoad } = useGlobalLoading();
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     if (!userId) {
@@ -34,23 +36,34 @@ export default function useProfile(userId) {
 
     let cancelled = false;
 
-    const fetchProfile = (showLoading) => {
-      if (showLoading) setLoading(true);
+    const fetchProfile = () => {
+      const isFirstLoad = !hasLoadedOnce.current;
+      if (isFirstLoad) {
+        setLoading(true);
+        beginLoad();
+      }
       supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single()
         .then(({ data, error }) => {
-          if (cancelled) return;
+          if (cancelled) {
+            if (isFirstLoad) endLoad();
+            return;
+          }
           if (!error && data) setProfile(data);
-          setLoading(false);
+          if (isFirstLoad) {
+            setLoading(false);
+            endLoad();
+            hasLoadedOnce.current = true;
+          }
         });
     };
 
-    fetchProfile(true);
+    fetchProfile();
 
-    const handleFocus = () => fetchProfile(false);
+    const handleFocus = () => fetchProfile();
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") handleFocus();
