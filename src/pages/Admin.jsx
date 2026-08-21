@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save
+  ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -16,7 +16,6 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#F0F6FF] pb-16">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-blue-100 bg-white/90 px-6 py-4 backdrop-blur-xl shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
@@ -28,7 +27,6 @@ export default function Admin() {
               <p className="text-xs font-medium text-slate-500">Quản trị hệ thống Rewards</p>
             </div>
           </div>
-          
           <div className="hidden items-center gap-2 md:flex">
             <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
               <span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500"></span> Hệ thống đang hoạt động
@@ -37,7 +35,6 @@ export default function Admin() {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
       <div className="mx-auto max-w-7xl px-6 pt-6">
         <div className="flex flex-wrap gap-3">
           {TABS.map((t) => (
@@ -60,7 +57,6 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Main Content */}
       <main className="mx-auto max-w-7xl px-6 py-6">
         <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-blue-50">
           {tab === "orders" && <OrdersTab />}
@@ -436,4 +432,5 @@ function PackagesTab() {
               </div>
 
               <button
-     
+                onClick={() => handleSave(p)}
+                disabled={savingId === p.i
