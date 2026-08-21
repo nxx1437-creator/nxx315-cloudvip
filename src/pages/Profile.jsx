@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { User, Mail, Phone, Calendar, Medal, ShieldCheck, Coins, LogOut, QrCode, ShieldAlert } from "lucide-react";
+import { 
+  User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
+  QrCode, ShieldAlert, Crown, Camera, ChevronRight 
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -20,18 +23,16 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   
-  // Trạng thái MFA (Đã bật / Chưa bật)
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
+  const [activeSection, setActiveSection] = useState("info"); // "info" hoặc "security"
 
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
 
-  // 1. Kiểm tra trạng thái MFA
   const checkMFAStatus = async () => {
-    const { data, error } = await supabase.auth.mfa.listFactors();
-    if (error) return;
+    const { data } = await supabase.auth.mfa.listFactors();
     const verifiedFactor = data.totp?.find(f => f.status === 'verified');
-    setIsMFAEnabled(!!verifiedFactor); // Nếu có factor verified => true
+    setIsMFAEnabled(!!verifiedFactor);
   };
 
   useEffect(() => {
@@ -43,7 +44,6 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // 2. Bắt đầu đăng ký Authenticator
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -56,7 +56,6 @@ export default function ProfilePage() {
     setShowMFA(true);
   };
 
-  // 3. Xác minh mã OTP
   const handleVerifyMFA = async (e) => {
     e.preventDefault();
     setError("");
@@ -75,7 +74,7 @@ export default function ProfilePage() {
     setSuccess("Xác minh 2 bước đã được bật thành công!");
     setVerifyCode("");
     setShowMFA(false);
-    checkMFAStatus(); // Cập nhật lại nút hiển thị
+    checkMFAStatus();
   };
 
   return (
@@ -92,42 +91,46 @@ export default function ProfilePage() {
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
         
-        {/* THÔNG TIN TÀI KHOẢN */}
+        {/* KHUNG AVATAR, VIP VÀ SỐ DƯ (GIỐNG ẢNH CŨ) */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold text-slate-900">Thông tin tài khoản</h2>
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><User size={18} /></span>
-            <div>
-              <p className="text-xs uppercase text-slate-400">Họ tên</p>
-              <p className="text-sm font-semibold text-slate-800">{displayName}</p>
+          <div className="flex flex-col items-center">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-sky-100 bg-gradient-to-br from-sky-400 to-blue-600 text-4xl font-bold text-white shadow-md">
+                {initial}
+              </div>
+              <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-white shadow">
+                <Camera size={14} />
+              </button>
+            </div>
+            <h2 className="mt-3 text-xl font-bold text-slate-900">{displayName}</h2>
+            <p className="text-xs text-slate-400">{session?.user?.email}</p>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">Lv.{profile.level || 1}</span>
+              <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-600">
+                <ShieldCheck size={12} /> Active
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-3 border-b border-slate-100 py-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Mail size={18} /></span>
-            <div>
-              <p className="text-xs uppercase text-slate-400">Email</p>
-              <p className="text-sm font-semibold text-slate-800">{session?.user?.email}</p>
+
+          {/* VIP Card */}
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award size={24} className="text-amber-500" />
+                <div>
+                  <p className="text-xs uppercase text-amber-600">Cấp VIP</p>
+                  <p className="text-lg font-bold text-amber-700">Đồng</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-amber-600">Ưu đãi</p>
+                <p className="text-sm font-semibold text-amber-700">-0% shop • +0% task</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3 border-b border-slate-100 py-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Phone size={18} /></span>
-            <div>
-              <p className="text-xs uppercase text-slate-400">SĐT</p>
-              <p className="text-sm font-semibold text-slate-800">-</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 border-b border-slate-100 py-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Calendar size={18} /></span>
-            <div>
-              <p className="text-xs uppercase text-slate-400">Ngày tham gia</p>
-              <p className="text-sm font-semibold text-slate-800">{session?.user?.created_at ? new Date(session.user.created_at).toLocaleDateString('vi-VN') : '-'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 py-4">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Medal size={18} /></span>
-            <div>
-              <p className="text-xs uppercase text-slate-400">Kinh nghiệm</p>
-              <p className="text-sm font-semibold text-slate-800">{profile.exp || 0} Exp</p>
+            <div className="mt-3 flex items-center justify-between border-t border-amber-200/50 pt-2 text-xs text-amber-600">
+              <span>0 coin lifetime</span>
+              <span>→ Bạc: 5.000</span>
             </div>
           </div>
         </div>
@@ -146,30 +149,88 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* CÀI ĐẶT BẢO MẬT */}
-        <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
-          
-          <button
-            onClick={handleStartMFA}
-            className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100"
+        {/* MENU CHUYỂN TAB */}
+        <div className="space-y-2">
+          <button 
+            onClick={() => setActiveSection("info")}
+            className={`flex w-full items-center justify-between rounded-2xl p-4 transition ${activeSection === "info" ? "bg-white shadow-sm border border-sky-100" : "bg-transparent"}`}
           >
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-                <ShieldAlert size={18} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Xác minh 2 bước (Google Authenticator)</p>
-                <p className="text-xs text-slate-400">Tăng cường bảo mật tài khoản</p>
-              </div>
-            </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              isMFAEnabled ? "bg-emerald-50 text-emerald-600" : "bg-slate-200 text-slate-600"
-            }`}>
-              {isMFAEnabled ? "Đã bật" : "Chưa bật"}
-            </span>
+            <span className={`text-sm font-semibold ${activeSection === "info" ? "text-slate-800" : "text-slate-500"}`}>Thông tin</span>
+            <ChevronRight size={16} className="text-slate-300" />
+          </button>
+          <button 
+            onClick={() => setActiveSection("security")}
+            className={`flex w-full items-center justify-between rounded-2xl p-4 transition ${activeSection === "security" ? "bg-white shadow-sm border border-sky-100" : "bg-transparent"}`}
+          >
+            <span className={`text-sm font-semibold ${activeSection === "security" ? "text-slate-800" : "text-slate-500"}`}>Bảo mật</span>
+            <ChevronRight size={16} className="text-slate-300" />
           </button>
         </div>
+
+        {/* NỘI DUNG THÔNG TIN */}
+        {activeSection === "info" && (
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-bold text-slate-900">Thông tin tài khoản</h2>
+            
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><User size={18} /></span>
+              <div>
+                <p className="text-xs uppercase text-slate-400">Họ tên</p>
+                <p className="text-sm font-semibold text-slate-800">{displayName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 border-b border-slate-100 py-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Mail size={18} /></span>
+              <div>
+                <p className="text-xs uppercase text-slate-400">Email</p>
+                <p className="text-sm font-semibold text-slate-800">{session?.user?.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 border-b border-slate-100 py-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Phone size={18} /></span>
+              <div>
+                <p className="text-xs uppercase text-slate-400">SĐT</p>
+                <p className="text-sm font-semibold text-slate-800">-</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 border-b border-slate-100 py-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Calendar size={18} /></span>
+              <div>
+                <p className="text-xs uppercase text-slate-400">Ngày tham gia</p>
+                <p className="text-sm font-semibold text-slate-800">{session?.user?.created_at ? new Date(session.user.created_at).toLocaleDateString('vi-VN') : '-'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-4">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Award size={18} /></span>
+              <div>
+                <p className="text-xs uppercase text-slate-400">Kinh nghiệm</p>
+                <p className="text-sm font-semibold text-slate-800">{profile.exp || 0} Exp</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NỘI DUNG BẢO MẬT */}
+        {activeSection === "security" && (
+          <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
+            <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
+            <button
+              onClick={handleStartMFA}
+              className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500"><ShieldAlert size={18} /></span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Xác minh 2 bước (Google Authenticator)</p>
+                  <p className="text-xs text-slate-400">Tăng cường bảo mật tài khoản</p>
+                </div>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-50 text-emerald-600" : "bg-slate-200 text-slate-600"}`}>
+                {isMFAEnabled ? "Đã bật" : "Chưa bật"}
+              </span>
+            </button>
+          </div>
+        )}
       </main>
 
       {/* Modal đăng ký Authenticator */}
@@ -180,11 +241,7 @@ export default function ProfilePage() {
             <p className="mt-2 text-sm text-slate-500">Mở ứng dụng Google Authenticator và quét mã QR bên dưới:</p>
             
             {qrCode && (
-              <img
-                src={`data:image/svg+xml;base64,${btoa(qrCode)}`}
-                alt="QR Code"
-                className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200"
-              />
+              <img src={`data:image/svg+xml;base64,${btoa(qrCode)}`} alt="QR Code" className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" />
             )}
             
             <p className="mt-2 text-xs text-slate-400">Hoặc nhập mã: <span className="font-mono font-bold text-slate-600">{secret || "..."}</span></p>
@@ -227,4 +284,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-      }
+}
