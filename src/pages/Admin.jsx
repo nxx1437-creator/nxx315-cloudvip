@@ -178,3 +178,161 @@ const STATUS_OPTIONS = [
   { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancel (Refund)" },
 ];
+function TasksTab() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+  const [showNew, setShowNew] = useState(false);
+  const [newTask, setNewTask] = useState({ provider: "", reward_coins: 0, daily_limit: 1, is_hot: false });
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
+    setTasks(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTasks(); }, []);
+
+  const updateField = (id, field, value) => setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
+
+  const handleSave = async (task) => {
+    setSavingId(task.id);
+    const { error } = await supabase.from("tasks").update({
+      reward_coins: Number(task.reward_coins),
+      daily_limit: Number(task.daily_limit),
+      is_hot: task.is_hot,
+      active: task.active,
+    }).eq("id", task.id);
+    setSavingId(null);
+    if (error) alert(error.message);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Delete this task?")) return;
+    await supabase.from("tasks").delete().eq("id", id);
+    fetchTasks();
+  };
+
+  const handleCreate = async () => {
+    if (!newTask.provider.trim()) return alert("Provider name required.");
+    const { error } = await supabase.from("tasks").insert({
+      provider: newTask.provider.trim().toUpperCase(),
+      reward_coins: Number(newTask.reward_coins),
+      daily_limit: Number(newTask.daily_limit),
+      is_hot: newTask.is_hot,
+      active: true,
+      sort_order: tasks.length + 1,
+    });
+    if (error) return alert(error.message);
+    setNewTask({ provider: "", reward_coins: 0, daily_limit: 1, is_hot: false });
+    setShowNew(false);
+    fetchTasks();
+  };
+
+  if (loading) return <p className="py-8 text-center text-sm text-slate-400">Loading tasks...</p>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900">Manage Tasks</h2>
+        <button
+          onClick={() => setShowNew((s) => !s)}
+          className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 hover:opacity-90"
+        >
+          <Plus size={16} /> Add Task
+        </button>
+      </div>
+
+      {showNew && (
+        <div className="rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <input
+              value={newTask.provider}
+              onChange={(e) => setNewTask((n) => ({ ...n, provider: e.target.value }))}
+              placeholder="Provider (LINK4M)"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+            />
+            <input
+              type="number"
+              value={newTask.reward_coins}
+              onChange={(e) => setNewTask((n) => ({ ...n, reward_coins: e.target.value }))}
+              placeholder="Reward Coins"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+            />
+            <input
+              type="number"
+              value={newTask.daily_limit}
+              onChange={(e) => setNewTask((n) => ({ ...n, daily_limit: e.target.value }))}
+              placeholder="Daily Limit"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+            />
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" checked={newTask.is_hot} onChange={(e) => setNewTask((n) => ({ ...n, is_hot: e.target.checked }))} className="h-4 w-4" />
+              Mark HOT
+            </label>
+          </div>
+          <button onClick={handleCreate} className="mt-4 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+            Create Task
+          </button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {tasks.map((t) => (
+          <div key={t.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-base font-extrabold text-slate-900">{t.provider}</span>
+                {t.is_hot && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-600">HOT</span>}
+              </div>
+              <button onClick={() => handleDelete(t.id)} className="text-rose-400 hover:text-rose-600 transition">
+                <Trash2 size={18} />
+              </button>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-[11px] font-bold uppercase text-slate-400">Coin per turn</span>
+                <input
+                  type="number"
+                  value={t.reward_coins}
+                  onChange={(e) => updateField(t.id, "reward_coins", e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[11px] font-bold uppercase text-slate-400">Daily Limit</span>
+                <input
+                  type="number"
+                  value={t.daily_limit}
+                  onChange={(e) => updateField(t.id, "daily_limit", e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 flex items-center gap-6 border-t border-slate-100 pt-4 text-sm text-slate-600">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" checked={t.is_hot} onChange={(e) => updateField(t.id, "is_hot", e.target.checked)} className="h-4 w-4 accent-blue-500" />
+                HOT
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" checked={t.active} onChange={(e) => updateField(t.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" />
+                Active
+              </label>
+            </div>
+
+            <button
+              onClick={() => handleSave(t)}
+              disabled={savingId === t.id}
+              className="mt-4 w-full rounded-full bg-blue-50 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-100 transition disabled:opacity-60"
+            >
+              {savingId === t.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Save Settings"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+              }
