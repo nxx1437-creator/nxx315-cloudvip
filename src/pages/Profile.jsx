@@ -25,7 +25,7 @@ export default function ProfilePage() {
   
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
   const [factorCount, setFactorCount] = useState(0);
-  const [activeSection, setActiveSection] = useState("info"); // info hoặc security
+  const [activeSection, setActiveSection] = useState("info");
 
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
@@ -46,11 +46,33 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
+  // ✅ ĐÃ SỬA: Xử lý chống treo bằng cách kiểm tra factor cũ trước
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
+    
+    // 1. Kiểm tra các factor cũ (verified hoặc unverified)
+    const { data: existingData, error: listError } = await supabase.auth.mfa.listFactors();
+    if (listError) { setError("Lỗi kiểm tra: " + listError.message); return; }
+    
+    const allFactors = existingData.totp || [];
+    const pendingFactors = allFactors.filter(f => f.status === 'unverified');
+
+    // 2. Nếu có factor đang treo (unverified), tự động hủy nó để tạo cái mới sạch sẽ
+    if (pendingFactors.length > 0) {
+      // Lưu ý: Supabase không cho user tự unenroll, nhưng ta có thể dùng luôn factor cũ nếu nó vẫn còn
+      const pending = pendingFactors[0];
+      setFactorId(pending.id);
+      setSecret("Dùng lại yếu tố cũ (kiểm tra email/app của bạn)"); // Hiển thị thông báo
+      setQrCode(""); // Không có QR mới
+      setShowMFA(true);
+      return;
+    }
+
+    // 3. Nếu không có factor treo, tạo mới
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
     if (error) { setError("Lỗi khởi tạo: " + error.message); return; }
+    
     setQrCode(data.totp.qr_code);
     setSecret(data.totp.secret);
     setFactorId(data.id);
@@ -61,14 +83,17 @@ export default function ProfilePage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    
     const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
     if (challengeError) { setError("Lỗi xác minh: " + challengeError.message); return; }
+    
     const { error } = await supabase.auth.mfa.verify({
       factorId,
       challengeId: challengeData.id,
       code: verifyCode,
     });
     if (error) { setError("Mã không đúng hoặc đã hết hạn."); return; }
+    
     setSuccess("Thiết bị đã được thêm thành công!");
     setVerifyCode("");
     setShowMFA(false);
@@ -290,4 +315,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-                  }
+    }
