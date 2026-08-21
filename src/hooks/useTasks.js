@@ -1,24 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabaseClient.js";
-import { useGlobalLoading } from "../context/LoadingContext.jsx";
 
 /**
  * useTasks — loads active tasks + how many times the current user
- * has completed each one today. Chỉ hiện màn hình chờ toàn màn hình
- * ở lần tải đầu tiên; các lần tải lại sau (quay lại tab...) chạy
- * âm thầm, không che màn hình.
+ * has completed each one today. Tự động tải lại khi quay lại tab.
  */
 export default function useTasks(userId) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { beginLoad, endLoad } = useGlobalLoading();
   const hasLoadedOnce = useRef(false);
 
   const reload = useCallback(async () => {
     const isFirstLoad = !hasLoadedOnce.current;
     if (isFirstLoad) {
       setLoading(true);
-      beginLoad();
     }
     try {
       const { data: taskRows } = await supabase
@@ -58,7 +53,6 @@ export default function useTasks(userId) {
     } finally {
       if (isFirstLoad) {
         setLoading(false);
-        endLoad();
         hasLoadedOnce.current = true;
       }
     }
@@ -75,4 +69,4 @@ export default function useTasks(userId) {
   }, [reload]);
 
   return { tasks, loading, reload };
-}
+  }
