@@ -69,14 +69,6 @@ export default function Admin() {
   );
 }
 
-/* ============================== ĐƠN HÀNG ============================== */
-
-const STATUS_OPTIONS = [
-  { value: "pending", label: "Chờ xử lý" },
-  { value: "delivered", label: "Đã giao" },
-  { value: "cancelled", label: "Hủy (tự hoàn Coin)" },
-];
-
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,10 +115,7 @@ function OrdersTab() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="rounded-lg bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-600">ID: {o.id.slice(0, 6)}</span>
-                  <span className={`rounded-lg px-2 py-1 text-[11px] font-bold ${
-                    o.status === 'delivered' ? 'bg-emerald-50 text-emerald-600' : 
-                    o.status === 'cancelled' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
-                  }`}>
+                  <span className={`rounded-lg px-2 py-1 text-[11px] font-bold ${o.status === 'delivered' ? 'bg-emerald-50 text-emerald-600' : o.status === 'cancelled' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}`}>
                     {o.status === 'pending' ? 'Chờ xử lý' : o.status === 'delivered' ? 'Hoàn thành' : 'Đã huỷ'}
                   </span>
                 </div>
@@ -135,9 +124,7 @@ function OrdersTab() {
                   <span className="font-semibold text-slate-700">{o.roblox_username}</span> • {new Date(o.created_at).toLocaleString("vi-VN")}
                 </p>
               </div>
-              <span className="shrink-0 text-lg font-extrabold text-rose-500">
-                -{o.coins_charged.toLocaleString("vi-VN")}
-              </span>
+              <span className="shrink-0 text-lg font-extrabold text-rose-500">-{o.coins_charged.toLocaleString("vi-VN")}</span>
             </div>
 
             {o.receive_method && (
@@ -186,7 +173,11 @@ function OrdersTab() {
   );
 }
 
-/* ============================== NHIỆM VỤ ============================== */
+const STATUS_OPTIONS = [
+  { value: "pending", label: "Chờ xử lý" },
+  { value: "delivered", label: "Đã giao" },
+  { value: "cancelled", label: "Hủy (tự hoàn Coin)" },
+];
 
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
@@ -347,8 +338,6 @@ function TasksTab() {
   );
 }
 
-/* ============================== GÓI ROBUX ============================== */
-
 function PackagesTab() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -433,4 +422,7 @@ function PackagesTab() {
 
               <button
                 onClick={() => handleSave(p)}
-                disabled={savingId === p.i
+                disabled={savingId === p.id}
+                className="mt-5 w-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:opacity-90 disabled:opacity-60"
+              >
+                {savingId === p.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Lư
