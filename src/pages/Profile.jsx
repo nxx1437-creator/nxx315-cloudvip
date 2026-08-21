@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
-  Camera, ShieldAlert, Smartphone, Plus, ChevronRight, QrCode
+  Camera, ShieldAlert, Smartphone, Plus, ChevronRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const [showMFA, setShowMFA] = useState(false);
   
   // State lưu dữ liệu QR
-  const [qrImage, setQrImage] = useState("");
+  const [qrCodeSvg, setQrCodeSvg] = useState("");
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
@@ -48,7 +48,7 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // Hàm tạo mới QR (Đã sửa lỗi useState)
+  // Hàm tạo mới QR (Đã sửa lỗi hiển thị SVG)
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -59,12 +59,13 @@ export default function ProfilePage() {
       return; 
     }
     
-    // Lưu dữ liệu vào state (Đây là cách đúng)
-    const qrCode = data?.totp?.qr_code;
-    if (qrCode) {
-      setQrImage(`data:image/svg+xml;base64,${qrCode}`);
+    // Lưu SVG string trực tiếp để nhúng vào JSX
+    const qrSvgString = data?.totp?.qr_code;
+    if (qrSvgString) {
+      const decodedSvg = atob(qrSvgString); // Giải mã base64 thành mã SVG
+      setQrCodeSvg(decodedSvg); // Lưu trực tiếp vào state
     } else {
-      setQrImage("");
+      setQrCodeSvg("");
     }
     
     setSecret(data?.totp?.secret || "");
@@ -240,18 +241,18 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Modal hiển thị QR (Đã sửa bằng useState) */}
+      {/* Modal hiển thị QR (Đã sửa bằng SVG trực tiếp) */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
             <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator (hoặc Authy) và quét mã QR bên dưới:</p>
             
-            {qrImage && (
-              <img 
-                src={qrImage} 
-                alt="QR Code" 
-                className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" 
+            {/* Hiển thị SVG QR trực tiếp */}
+            {qrCodeSvg && (
+              <div 
+                className="mx-auto mt-4 h-48 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white"
+                dangerouslySetInnerHTML={{ __html: qrCodeSvg }} 
               />
             )}
             
@@ -295,4 +296,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-}
+  }
