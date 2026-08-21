@@ -1,36 +1,49 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
+import { useGlobalLoading } from "../context/LoadingContext.jsx";
 
 /**
- * useStoreData
- * -----------------------------------------------------------------
- * Lấy danh sách gói Robux đang bán + lịch sử đơn của người dùng.
- * Tự refetch khi tab được focus lại (đồng bộ với useProfile/useTasks).
- * -----------------------------------------------------------------
+ * useStoreData — lấy danh sách gói Robux đang bán + lịch sử đơn.
+ * Chỉ hiện màn hình chờ toàn màn hình ở lần tải đầu tiên; các lần
+ * tải lại sau (quay lại tab...) chạy âm thầm, không che màn hình.
  */
 export function useStoreData(userId) {
   const [packages, setPackages] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { beginLoad, endLoad } = useGlobalLoading();
+  const hasLoadedOnce = useRef(false);
 
   const fetchAll = useCallback(async () => {
-    const [{ data: pkgs }, { data: ords }] = await Promise.all([
-      supabase
-        .from("redemption_packages")
-        .select("*")
-        .eq("active", true)
-        .order("sort_order", { ascending: true }),
-      userId
-        ? supabase
-            .from("redemption_orders")
-            .select("*")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [] }),
-    ]);
-    setPackages(pkgs ?? []);
-    setOrders(ords ?? []);
-    setLoading(false);
+    const isFirstLoad = !hasLoadedOnce.current;
+    if (isFirstLoad) {
+      setLoading(true);
+      beginLoad();
+    }
+    try {
+      const [{ data: pkgs }, { data: ords }] = await Promise.all([
+        supabase
+          .from("redemption_packages")
+          .select("*")
+          .eq("active", true)
+          .order("sort_order", { ascending: true }),
+        userId
+          ? supabase
+              .from("redemption_orders")
+              .select("*")
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+      ]);
+      setPackages(pkgs ?? []);
+      setOrders(ords ?? []);
+    } finally {
+      if (isFirstLoad) {
+        setLoading(false);
+        endLoad();
+        hasLoadedOnce.current = true;
+      }
+    }
   }, [userId]);
 
   useEffect(() => {
