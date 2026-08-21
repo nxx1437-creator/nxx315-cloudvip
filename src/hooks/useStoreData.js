@@ -1,24 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient.js";
-import { useGlobalLoading } from "../context/LoadingContext.jsx";
 
 /**
  * useStoreData — lấy danh sách gói Robux đang bán + lịch sử đơn.
- * Chỉ hiện màn hình chờ toàn màn hình ở lần tải đầu tiên; các lần
- * tải lại sau (quay lại tab...) chạy âm thầm, không che màn hình.
+ * Tự động tải lại khi quay lại tab.
  */
 export function useStoreData(userId) {
   const [packages, setPackages] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { beginLoad, endLoad } = useGlobalLoading();
   const hasLoadedOnce = useRef(false);
 
   const fetchAll = useCallback(async () => {
     const isFirstLoad = !hasLoadedOnce.current;
     if (isFirstLoad) {
       setLoading(true);
-      beginLoad();
     }
     try {
       const [{ data: pkgs }, { data: ords }] = await Promise.all([
@@ -40,7 +36,6 @@ export function useStoreData(userId) {
     } finally {
       if (isFirstLoad) {
         setLoading(false);
-        endLoad();
         hasLoadedOnce.current = true;
       }
     }
