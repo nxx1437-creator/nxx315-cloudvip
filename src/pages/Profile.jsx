@@ -46,37 +46,19 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // ✅ ĐÃ SỬA: Xử lý chống treo bằng cách kiểm tra factor cũ trước
+  // ✅ SỬA Ở ĐÂY: Luôn luôn tạo mới để hiện QR
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
     
-    // 1. Kiểm tra các factor cũ (verified hoặc unverified)
-    const { data: existingData, error: listError } = await supabase.auth.mfa.listFactors();
-    if (listError) { setError("Lỗi kiểm tra: " + listError.message); return; }
-    
-    const allFactors = existingData.totp || [];
-    const pendingFactors = allFactors.filter(f => f.status === 'unverified');
-
-    // 2. Nếu có factor đang treo (unverified), tự động hủy nó để tạo cái mới sạch sẽ
-    if (pendingFactors.length > 0) {
-      // Lưu ý: Supabase không cho user tự unenroll, nhưng ta có thể dùng luôn factor cũ nếu nó vẫn còn
-      const pending = pendingFactors[0];
-      setFactorId(pending.id);
-      setSecret("Dùng lại yếu tố cũ (kiểm tra email/app của bạn)"); // Hiển thị thông báo
-      setQrCode(""); // Không có QR mới
-      setShowMFA(true);
-      return;
-    }
-
-    // 3. Nếu không có factor treo, tạo mới
+    // 1. Luôn luôn gọi enroll để tạo factor mới và nhận QR
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
     if (error) { setError("Lỗi khởi tạo: " + error.message); return; }
     
-    setQrCode(data.totp.qr_code);
-    setSecret(data.totp.secret);
-    setFactorId(data.id);
-    setShowMFA(true);
+    setQrCode(data.totp.qr_code); // Nhận mã QR
+    setSecret(data.totp.secret); // Nhận secret
+    setFactorId(data.id); // Nhận factor ID
+    setShowMFA(true); // Hiện modal
   };
 
   const handleVerifyMFA = async (e) => {
@@ -315,4 +297,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-    }
+      }
