@@ -16,7 +16,6 @@ export default function ProfilePage() {
   
   const [showLogout, setShowLogout] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
-  const [qrCode, setQrCode] = useState("");
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
@@ -46,19 +45,48 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // ✅ SỬA Ở ĐÂY: Luôn luôn tạo mới để hiện QR
+  // Hàm tạo mới: Luôn hiện QR trực tiếp
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
+    setShowMFA(false); // Đóng modal cũ trước
     
-    // 1. Luôn luôn gọi enroll để tạo factor mới và nhận QR
+    // Bước 1: Gọi enroll để lấy dữ liệu
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
-    if (error) { setError("Lỗi khởi tạo: " + error.message); return; }
+    if (error) { 
+      setError("Lỗi khởi tạo: " + error.message); 
+      return; 
+    }
     
-    setQrCode(data.totp.qr_code); // Nhận mã QR
-    setSecret(data.totp.secret); // Nhận secret
-    setFactorId(data.id); // Nhận factor ID
-    setShowMFA(true); // Hiện modal
+    // Bước 2: Lấy dữ liệu QR
+    const qrUrl = data?.totp?.qr_code; // QR là 1 chuỗi SVG dạng base64
+    const otpSecret = data?.totp?.secret;
+    const newFactorId = data?.id;
+    
+    // Bước 3: Lưu và hiện modal
+    setSecret(otpSecret);
+    setFactorId(newFactorId);
+    
+    // Bước 4: Hiển thị QR qua ảnh trực tiếp (dùng blob hoặc base64)
+    if (qrUrl) {
+      // Chuyển đổi SVG thành ảnh
+      const svg = atob(qrUrl);
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      setShowMFA(true);
+      
+      // Lưu URL vào state để hiển thị
+      // (Vì chúng ta không có state riêng cho URL, ta dùng luôn ảnh trong modal)
+      // Cách này dùng base64 trực tiếp
+      const base64Qr = `data:image/svg+xml;base64,${qrUrl}`;
+      
+      // Set ảnh qua state (Bạn có thể custom lại modal để hiển thị)
+      // Mình sẽ lưu ở state tạm
+      window.__qrCodeUrl = base64Qr; 
+      setShowMFA(true);
+    } else {
+      setShowMFA(true);
+    }
   };
 
   const handleVerifyMFA = async (e) => {
@@ -256,10 +284,22 @@ export default function ProfilePage() {
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
             <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator (hoặc Authy) và quét mã QR bên dưới:</p>
-            {qrCode && (
-              <img src={`data:image/svg+xml;base64,${btoa(qrCode)}`} alt="QR Code" className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" />
+            
+            {/* Hiển thị QR trực tiếp */}
+            {window.__qrCodeUrl && (
+              <img 
+                src={window.__qrCodeUrl} 
+                alt="QR Code" 
+                className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" 
+                onError={(e) => {
+                  // Nếu ảnh lỗi, hiện secret thay thế
+                  e.target.style.display = 'none';
+                }}
+              />
             )}
+            
             <p className="mt-2 text-xs text-slate-400">Hoặc nhập mã: <span className="font-mono font-bold text-slate-600">{secret || "..."}</span></p>
+
             <form onSubmit={handleVerifyMFA} className="mt-4">
               <input
                 type="text"
@@ -271,6 +311,7 @@ export default function ProfilePage() {
               />
               {error && <p className="mt-2 text-xs font-medium text-rose-500">{error}</p>}
               {success && <p className="mt-2 text-xs font-medium text-emerald-600">{success}</p>}
+              
               <div className="mt-5 flex gap-3">
                 <button type="button" onClick={() => setShowMFA(false)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Huỷ</button>
                 <button type="submit" className="flex-1 rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Xác nhận</button>
