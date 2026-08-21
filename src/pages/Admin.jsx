@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, LayoutDashboard, Store, Gift, UserCog
+  ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -433,4 +433,7 @@ function PackagesTab() {
                   <input type="checkbox" checked={p.active} onChange={(e) => updateField(p.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" />
                   Đang bán
                 </label>
-          
+              </div>
+
+              <button
+     
