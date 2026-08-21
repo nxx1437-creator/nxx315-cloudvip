@@ -3,18 +3,12 @@ import { Navigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 
-/**
- * AdminRoute — tự truy vấn is_admin trực tiếp (không qua useProfile) để
- * tránh bị nuốt lỗi âm thầm. Nếu Supabase trả lỗi thật, hiện ra màn hình
- * luôn thay vì đá về Dashboard trong im lặng — giúp debug dễ hơn.
- */
 export default function AdminRoute({ children }) {
   const { session, loading: sessionLoading } = useSession();
   const userId = session?.user?.id;
 
   const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [queryError, setQueryError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     if (!userId) {
@@ -24,15 +18,11 @@ export default function AdminRoute({ children }) {
     setChecking(true);
     supabase
       .from("profiles")
-      .select("is_admin")
+      .select("id, username, is_admin")
       .eq("id", userId)
       .single()
       .then(({ data, error }) => {
-        if (error) {
-          setQueryError(error.message);
-        } else {
-          setIsAdmin(!!data?.is_admin);
-        }
+        setDebugInfo({ userId, data, error: error?.message ?? null });
         setChecking(false);
       });
   }, [userId]);
@@ -47,16 +37,24 @@ export default function AdminRoute({ children }) {
 
   if (!session) return <Navigate to="/login" replace />;
 
-  if (queryError) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-2 px-6 text-center">
-        <p className="font-bold text-rose-500">Lỗi khi kiểm tra quyền admin:</p>
-        <p className="text-sm text-slate-600">{queryError}</p>
-      </div>
-    );
-  }
+  // TẠM THỜI: luôn hiện debug info thay vì tự đá đi, để xác định lỗi
+  const isAdmin = !!debugInfo?.data?.is_admin;
 
-  if (!isAdmin) return <Navigate to="/dashboard" replace />;
-
-  return children;
+  return (
+    <div className="min-h-screen bg-slate-950 p-5 font-mono text-xs text-lime-400">
+      <p className="mb-3 text-sm font-bold text-white">🔍 DEBUG AdminRoute</p>
+      <pre className="whitespace-pre-wrap break-all rounded-lg bg-black/40 p-3">
+{JSON.stringify(debugInfo, null, 2)}
+      </pre>
+      <p className="mt-3 text-white">isAdmin tính được: <span className={isAdmin ? "text-emerald-400" : "text-rose-400"}>{String(isAdmin)}</span></p>
+      {isAdmin ? (
+        <div className="mt-4 rounded-lg bg-emerald-950 p-3 text-emerald-300">
+          ✅ Là admin — nội dung trang Admin thật sẽ hiện dưới đây:
+          <div className="mt-3 rounded-lg bg-white p-2 text-black">{children}</div>
+        </div>
+      ) : (
+        <p className="mt-4 text-rose-400">❌ Không phải admin theo dữ liệu trên.</p>
+      )}
+    </div>
+  );
 }
