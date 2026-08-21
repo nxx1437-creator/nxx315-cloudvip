@@ -7,7 +7,7 @@ const TABS = [
   { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
   { path: "/store", label: "Cửa hàng", icon: Store },
   { path: "/wallet", label: "Ví", icon: Wallet },
-  { path: "/me", label: "Tôi", icon: User },
+  { path: "/profile", label: "Tôi", icon: User }, // Đã đổi từ /me thành /profile
 ];
 
 export default function BottomNav() {
