@@ -106,9 +106,10 @@ export default function LoadingScreen() {
                 Nếu không tìm thấy file /loading-character.gif, hệ thống sẽ hiện ảnh mặc định.
                 Để chắc chắn ảnh hiện, bạn hãy đặt file ảnh vào thư mục public và đổi lại đường dẫn cho đúng.
             */}
-            <img
-              src="/loading-character.gif"
-              alt="Đang tải..."
+             <img src="https://pin.it/2VjKKT14J/loading.gif" 
+  alt="Đang tải..."
+  ...
+/>
               className="h-full w-full object-contain"
               style={{
                 animation: "floatCharacter 3s ease-in-out infinite",
