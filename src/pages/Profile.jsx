@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
-  QrCode, ShieldAlert, Camera, ChevronRight, Smartphone, Plus
+  Camera, ShieldAlert, Smartphone, Plus, ChevronRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
@@ -23,10 +23,9 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   
-  // Trạng thái MFA & Số lượng thiết bị
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
   const [factorCount, setFactorCount] = useState(0);
-  const [activeSection, setActiveSection] = useState("info"); // "info" hoặc "security"
+  const [activeSection, setActiveSection] = useState("info"); // info hoặc security
 
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
@@ -34,9 +33,8 @@ export default function ProfilePage() {
   const checkMFAStatus = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
     const verifiedFactors = data.totp?.filter(f => f.status === 'verified');
-    
     setIsMFAEnabled(!!verifiedFactors?.length);
-    setFactorCount(verifiedFactors?.length || 0); // Đếm số thiết bị đã bật
+    setFactorCount(verifiedFactors?.length || 0);
   };
 
   useEffect(() => {
@@ -48,13 +46,11 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // Bắt đầu đăng ký Authenticator (Dùng cho cả thiết bị chính lẫn dự phòng)
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
     if (error) { setError("Lỗi khởi tạo: " + error.message); return; }
-    
     setQrCode(data.totp.qr_code);
     setSecret(data.totp.secret);
     setFactorId(data.id);
@@ -65,17 +61,14 @@ export default function ProfilePage() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    
     const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
     if (challengeError) { setError("Lỗi xác minh: " + challengeError.message); return; }
-    
     const { error } = await supabase.auth.mfa.verify({
       factorId,
       challengeId: challengeData.id,
       code: verifyCode,
     });
     if (error) { setError("Mã không đúng hoặc đã hết hạn."); return; }
-    
     setSuccess("Thiết bị đã được thêm thành công!");
     setVerifyCode("");
     setShowMFA(false);
@@ -89,14 +82,12 @@ export default function ProfilePage() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
-      {/* Header */}
       <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-4 backdrop-blur-md">
         <h1 className="font-display text-xl font-bold text-slate-900">Tài khoản</h1>
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        
-        {/* KHUNG AVATAR, VIP VÀ SỐ DƯ */}
+        {/* KHUNG AVATAR + VIP + SỐ DƯ */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col items-center">
             <div className="relative">
@@ -152,29 +143,28 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* MENU CHUYỂN TAB */}
+        {/* MENU DUY NHẤT: Thông tin & Bảo mật */}
         <div className="space-y-2">
           <button 
             onClick={() => setActiveSection("info")}
-            className={`flex w-full items-center justify-between rounded-2xl p-4 transition ${activeSection === "info" ? "bg-white shadow-sm border border-sky-100" : "bg-transparent"}`}
+            className={`flex w-full items-center justify-between rounded-2xl border p-4 transition ${activeSection === "info" ? "border-sky-100 bg-white shadow-sm" : "border-transparent"}`}
           >
             <span className={`text-sm font-semibold ${activeSection === "info" ? "text-slate-800" : "text-slate-500"}`}>Thông tin</span>
             <ChevronRight size={16} className="text-slate-300" />
           </button>
           <button 
             onClick={() => setActiveSection("security")}
-            className={`flex w-full items-center justify-between rounded-2xl p-4 transition ${activeSection === "security" ? "bg-white shadow-sm border border-sky-100" : "bg-transparent"}`}
+            className={`flex w-full items-center justify-between rounded-2xl border p-4 transition ${activeSection === "security" ? "border-sky-100 bg-white shadow-sm" : "border-transparent"}`}
           >
             <span className={`text-sm font-semibold ${activeSection === "security" ? "text-slate-800" : "text-slate-500"}`}>Bảo mật</span>
             <ChevronRight size={16} className="text-slate-300" />
           </button>
         </div>
 
-        {/* NỘI DUNG THÔNG TIN */}
+        {/* NỘI DUNG TAB THÔNG TIN */}
         {activeSection === "info" && (
           <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-bold text-slate-900">Thông tin tài khoản</h2>
-            
             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><User size={18} /></span>
               <div>
@@ -213,7 +203,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* NỘI DUNG BẢO MẬT */}
+        {/* NỘI DUNG TAB BẢO MẬT */}
         {activeSection === "security" && (
           <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
             <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
@@ -234,7 +224,6 @@ export default function ProfilePage() {
               </span>
             </button>
 
-            {/* Hiện nút thêm thiết bị dự phòng khi đã bật MFA */}
             {isMFAEnabled && (
               <button
                 onClick={handleStartMFA}
@@ -254,19 +243,16 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Modal đăng ký Authenticator (Cho cả thiết bị chính và dự phòng) */}
+      {/* Modal đăng ký Authenticator */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
             <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator (hoặc Authy) và quét mã QR bên dưới:</p>
-            
             {qrCode && (
               <img src={`data:image/svg+xml;base64,${btoa(qrCode)}`} alt="QR Code" className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" />
             )}
-            
             <p className="mt-2 text-xs text-slate-400">Hoặc nhập mã: <span className="font-mono font-bold text-slate-600">{secret || "..."}</span></p>
-
             <form onSubmit={handleVerifyMFA} className="mt-4">
               <input
                 type="text"
@@ -278,7 +264,6 @@ export default function ProfilePage() {
               />
               {error && <p className="mt-2 text-xs font-medium text-rose-500">{error}</p>}
               {success && <p className="mt-2 text-xs font-medium text-emerald-600">{success}</p>}
-              
               <div className="mt-5 flex gap-3">
                 <button type="button" onClick={() => setShowMFA(false)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Huỷ</button>
                 <button type="submit" className="flex-1 rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Xác nhận</button>
@@ -305,4 +290,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-  }
+                  }
