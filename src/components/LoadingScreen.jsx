@@ -2,7 +2,7 @@ import React from "react";
 
 /**
  * LoadingScreen.jsx
- * Cute pastel loading screen
+ * Cute pastel loading screen (Blue & White Theme)
  *
  * Đặt file GIF nhân vật vào:
  * public/loading-character.gif
@@ -10,7 +10,7 @@ import React from "react";
 
 export default function LoadingScreen() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#f6a6aa] px-6 text-[#704b4d]">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#A8D5E2] px-6 text-[#2C3E50]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
 
@@ -62,82 +62,84 @@ export default function LoadingScreen() {
       `}</style>
 
       {/* Background decoration */}
-      <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+      <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
 
       {/* Cute sparkles */}
       <div
-        className="absolute left-[18%] top-[22%] text-3xl"
+        className="absolute left-[18%] top-[22%] text-3xl text-white/80"
         style={{ animation: "sparkle 2s ease-in-out infinite" }}
       >
         ✦
       </div>
 
       <div
-        className="absolute right-[20%] top-[30%] text-2xl"
+        className="absolute right-[20%] top-[30%] text-2xl text-white/80"
         style={{ animation: "sparkle 2.4s ease-in-out infinite .4s" }}
       >
         ♡
       </div>
 
       <div
-        className="absolute bottom-[25%] left-[25%] text-xl"
+        className="absolute bottom-[25%] left-[25%] text-xl text-white/80"
         style={{ animation: "sparkle 2.2s ease-in-out infinite .8s" }}
       >
         ✦
       </div>
 
       {/* Character */}
-      <div className="relative flex h-[300px] w-[300px] items-center justify-center sm:h-[340px] sm:w-[340px]">
+      <div className="relative flex h-[320px] w-[320px] items-center justify-center sm:h-[360px] sm:w-[360px]">
         {/* Soft glow behind character */}
         <div
-          className="absolute h-64 w-64 rounded-full bg-white/30 blur-3xl"
+          className="absolute h-64 w-64 rounded-full bg-white/40 blur-3xl"
           style={{ animation: "softPulse 3s ease-in-out infinite" }}
         />
 
-        {/* Character shadow */}
-        <div className="absolute bottom-8 h-8 w-40 rounded-full bg-[#9b6063]/15 blur-xl" />
+        {/* Character shadow (màu xanh đậm hơn) */}
+        <div className="absolute bottom-8 h-8 w-40 rounded-full bg-[#2C3E50]/15 blur-xl" />
 
-        {/* GIF nhân vật */}
-        <img
-          src="/loading-character.gif"
-          alt="Đang tải..."
-          className="relative z-10 h-[270px] w-[270px] object-contain drop-shadow-[0_12px_15px_rgba(112,75,77,0.12)] sm:h-[310px] sm:w-[310px]"
-          style={{
-            animation: "floatCharacter 3s ease-in-out infinite",
-          }}
-        />
+        {/* GIF nhân vật - CÓ BO TRÒN VÀ VIỀN TRẮNG */}
+        <div className="relative z-10 h-[280px] w-[280px] overflow-hidden rounded-[40px] border-4 border-white bg-white p-3 shadow-[0_12px_25px_rgba(44,62,80,0.15)] sm:h-[320px] sm:w-[320px]">
+            <img
+              src="/loading-character.gif"
+              alt="Đang tải..."
+              className="h-full w-full object-contain"
+              style={{
+                animation: "floatCharacter 3s ease-in-out infinite",
+              }}
+            />
+        </div>
       </div>
 
       {/* Text */}
-      <div className="relative z-10 mt-2 text-center">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-[#704b4d]">
+      <div className="relative z-10 mt-4 text-center">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">
           Đợi xíu nhe... ♡
         </h1>
 
-        <p className="font-display mt-1 text-base font-medium text-[#80595b]/80">
+        <p className="font-display mt-1 text-base font-medium text-[#2C3E50]/80">
           Đang chuẩn bị mọi thứ thật xinh cho bạn
         </p>
       </div>
 
-      {/* Loading dots */}
+      {/* Loading dots (Màu trắng) */}
       <div className="mt-6 flex items-center gap-2">
         <span
-          className="h-2.5 w-2.5 rounded-full bg-white"
+          className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
           style={{
             animation: "dotBounce 1.2s ease-in-out infinite",
           }}
         />
 
         <span
-          className="h-2.5 w-2.5 rounded-full bg-white"
+          className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
           style={{
             animation: "dotBounce 1.2s ease-in-out infinite .15s",
           }}
         />
 
         <span
-          className="h-2.5 w-2.5 rounded-full bg-white"
+          className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
           style={{
             animation: "dotBounce 1.2s ease-in-out infinite .3s",
           }}
@@ -145,8 +147,8 @@ export default function LoadingScreen() {
       </div>
 
       {/* Bottom loading pill */}
-      <div className="mt-5 rounded-full border border-white/30 bg-white/20 px-5 py-2 backdrop-blur-md">
-        <span className="font-display text-sm font-semibold text-[#704b4d]/75">
+      <div className="mt-5 rounded-full border border-white/40 bg-white/30 px-5 py-2 backdrop-blur-md shadow-sm">
+        <span className="font-display text-sm font-semibold text-[#2C3E50]/80">
           Loading...
         </span>
       </div>
