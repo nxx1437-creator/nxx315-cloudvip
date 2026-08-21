@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
-  Camera, ShieldAlert, Smartphone, Plus, ChevronRight
+  Camera, ShieldAlert, Smartphone, Plus, ChevronRight, QrCode
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
@@ -16,6 +16,9 @@ export default function ProfilePage() {
   
   const [showLogout, setShowLogout] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
+  
+  // State lưu dữ liệu QR
+  const [qrImage, setQrImage] = useState("");
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
@@ -45,48 +48,28 @@ export default function ProfilePage() {
     navigate("/login");
   };
 
-  // Hàm tạo mới: Luôn hiện QR trực tiếp
+  // Hàm tạo mới QR (Đã sửa lỗi useState)
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
-    setShowMFA(false); // Đóng modal cũ trước
     
-    // Bước 1: Gọi enroll để lấy dữ liệu
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
     if (error) { 
       setError("Lỗi khởi tạo: " + error.message); 
       return; 
     }
     
-    // Bước 2: Lấy dữ liệu QR
-    const qrUrl = data?.totp?.qr_code; // QR là 1 chuỗi SVG dạng base64
-    const otpSecret = data?.totp?.secret;
-    const newFactorId = data?.id;
-    
-    // Bước 3: Lưu và hiện modal
-    setSecret(otpSecret);
-    setFactorId(newFactorId);
-    
-    // Bước 4: Hiển thị QR qua ảnh trực tiếp (dùng blob hoặc base64)
-    if (qrUrl) {
-      // Chuyển đổi SVG thành ảnh
-      const svg = atob(qrUrl);
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      setShowMFA(true);
-      
-      // Lưu URL vào state để hiển thị
-      // (Vì chúng ta không có state riêng cho URL, ta dùng luôn ảnh trong modal)
-      // Cách này dùng base64 trực tiếp
-      const base64Qr = `data:image/svg+xml;base64,${qrUrl}`;
-      
-      // Set ảnh qua state (Bạn có thể custom lại modal để hiển thị)
-      // Mình sẽ lưu ở state tạm
-      window.__qrCodeUrl = base64Qr; 
-      setShowMFA(true);
+    // Lưu dữ liệu vào state (Đây là cách đúng)
+    const qrCode = data?.totp?.qr_code;
+    if (qrCode) {
+      setQrImage(`data:image/svg+xml;base64,${qrCode}`);
     } else {
-      setShowMFA(true);
+      setQrImage("");
     }
+    
+    setSecret(data?.totp?.secret || "");
+    setFactorId(data?.id || "");
+    setShowMFA(true);
   };
 
   const handleVerifyMFA = async (e) => {
@@ -122,7 +105,7 @@ export default function ProfilePage() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* KHUNG AVATAR + VIP + SỐ DƯ */}
+        {/* Khung Avatar + VIP */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col items-center">
             <div className="relative">
@@ -142,29 +125,9 @@ export default function ProfilePage() {
               </span>
             </div>
           </div>
-
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Award size={24} className="text-amber-500" />
-                <div>
-                  <p className="text-xs uppercase text-amber-600">Cấp VIP</p>
-                  <p className="text-lg font-bold text-amber-700">Đồng</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-amber-600">Ưu đãi</p>
-                <p className="text-sm font-semibold text-amber-700">-0% shop • +0% task</p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between border-t border-amber-200/50 pt-2 text-xs text-amber-600">
-              <span>0 coin lifetime</span>
-              <span>→ Bạc: 5.000</span>
-            </div>
-          </div>
         </div>
 
-        {/* SỐ DƯ & ĐĂNG XUẤT */}
+        {/* Số dư & Đăng xuất */}
         <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
           <div className="text-center">
             <p className="text-xs uppercase tracking-wide text-slate-400">Số dư</p>
@@ -178,7 +141,7 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* MENU DUY NHẤT: Thông tin & Bảo mật */}
+        {/* Menu chuyển tab */}
         <div className="space-y-2">
           <button 
             onClick={() => setActiveSection("info")}
@@ -196,7 +159,7 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* NỘI DUNG TAB THÔNG TIN */}
+        {/* Nội dung tab Thông tin */}
         {activeSection === "info" && (
           <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-bold text-slate-900">Thông tin tài khoản</h2>
@@ -238,11 +201,10 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* NỘI DUNG TAB BẢO MẬT */}
+        {/* Nội dung tab Bảo mật */}
         {activeSection === "security" && (
           <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
             <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
-            
             <button
               onClick={handleStartMFA}
               className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100"
@@ -278,23 +240,18 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Modal đăng ký Authenticator */}
+      {/* Modal hiển thị QR (Đã sửa bằng useState) */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
             <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator (hoặc Authy) và quét mã QR bên dưới:</p>
             
-            {/* Hiển thị QR trực tiếp */}
-            {window.__qrCodeUrl && (
+            {qrImage && (
               <img 
-                src={window.__qrCodeUrl} 
+                src={qrImage} 
                 alt="QR Code" 
                 className="mx-auto mt-4 h-48 w-48 rounded-xl border border-slate-200" 
-                onError={(e) => {
-                  // Nếu ảnh lỗi, hiện secret thay thế
-                  e.target.style.display = 'none';
-                }}
               />
             )}
             
@@ -338,4 +295,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-      }
+}
