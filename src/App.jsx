@@ -10,6 +10,9 @@ import Admin from "./pages/Admin.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
+// ...
+<Route path="*" element={<NotFoundPage />} />
 
 export default function App() {
   return (
