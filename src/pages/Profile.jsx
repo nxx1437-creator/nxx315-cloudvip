@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
-  Camera, ShieldAlert, Smartphone, Plus, ChevronRight, Copy, Check
+  Camera, ShieldAlert, KeyRound, Plus, ChevronRight, Copy, Check
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
@@ -16,17 +16,17 @@ export default function ProfilePage() {
   
   const [showLogout, setShowLogout] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   
-  // State lưu dữ liệu
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
   
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
-  const [factorCount, setFactorCount] = useState(0);
   const [activeSection, setActiveSection] = useState("info");
 
   const displayName = profile.username || "Thành viên";
@@ -36,26 +36,28 @@ export default function ProfilePage() {
     const { data } = await supabase.auth.mfa.listFactors();
     const verifiedFactors = data.totp?.filter(f => f.status === 'verified');
     setIsMFAEnabled(!!verifiedFactors?.length);
-    setFactorCount(verifiedFactors?.length || 0);
   };
 
   useEffect(() => {
     checkMFAStatus();
-  }, []);
+    // Lấy mã dự phòng đã lưu
+    if (profile?.recovery_codes && profile.recovery_codes.length > 0) {
+      setRecoveryCodes(profile.recovery_codes);
+    }
+  }, [profile]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
   };
 
-  // Sao chép Secret Key
   const handleCopySecret = () => {
     navigator.clipboard.writeText(secret);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Hàm tạo mới: Chỉ hiển thị Secret, KHÔNG hiển thị QR (Tránh lỗi 100%)
+  // Hàm tạo MFA
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -87,10 +89,38 @@ export default function ProfilePage() {
     });
     if (error) { setError("Mã không đúng hoặc đã hết hạn."); return; }
     
-    setSuccess("Thiết bị đã được thêm thành công!");
+    setSuccess("Xác minh 2 bước đã được bật thành công!");
     setVerifyCode("");
     setShowMFA(false);
     checkMFAStatus();
+  };
+
+  // Hàm tạo mã dự phòng
+  const generateRecoveryCodes = async () => {
+    // Sinh 10 mã ngẫu nhiên (định dạng: XXXX-XXXX)
+    const codes = Array.from({ length: 10 }, () => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "";
+      for (let i = 0; i < 8; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+        if (i === 3) code += "-";
+      }
+      return code;
+    });
+
+    // Lưu vào database
+    const { error } = await supabase
+      .from("profiles")
+      .update({ recovery_codes: codes })
+      .eq("id", session?.user?.id);
+
+    if (error) {
+      alert("Lỗi lưu mã: " + error.message);
+      return;
+    }
+
+    setRecoveryCodes(codes);
+    setShowRecovery(true);
   };
 
   return (
@@ -105,7 +135,7 @@ export default function ProfilePage() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* Khung Avatar + VIP */}
+        {/* Avatar */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col items-center">
             <div className="relative">
@@ -221,33 +251,31 @@ export default function ProfilePage() {
               </span>
             </button>
 
-            {isMFAEnabled && (
-              <button
-                onClick={handleStartMFA}
-                className="mt-3 flex w-full items-center justify-between rounded-2xl bg-sky-50 p-4 text-left transition hover:bg-sky-100"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500"><Smartphone size={18} /></span>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Thêm thiết bị dự phòng</p>
-                    <p className="text-xs text-slate-400">Dùng khi mất điện thoại (Đã có: {factorCount}/10)</p>
-                  </div>
+            {/* Nút Tạo mã dự phòng */}
+            <button
+              onClick={generateRecoveryCodes}
+              className="mt-3 flex w-full items-center justify-between rounded-2xl bg-sky-50 p-4 text-left transition hover:bg-sky-100"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500"><KeyRound size={18} /></span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Mã dự phòng</p>
+                  <p className="text-xs text-slate-400">Dùng khi mất điện thoại (Số mã: {recoveryCodes.length}/10)</p>
                 </div>
-                <Plus size={18} className="text-sky-500" />
-              </button>
-            )}
+              </div>
+              <Plus size={18} className="text-sky-500" />
+            </button>
           </div>
         )}
       </main>
 
-      {/* Modal hiển thị Secret + Copy (KHÔNG QR) */}
+      {/* Modal hiển thị Secret */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
             <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator, chọn "Nhập mã thiết lập" và nhập chuỗi bên dưới:</p>
             
-            {/* Hiển thị Secret + Nút Copy */}
             <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <div className="text-left">
                 <p className="text-xs font-bold uppercase text-slate-400">Mã bí mật</p>
@@ -282,6 +310,37 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Modal hiển thị Mã dự phòng */}
+      {showRecovery && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
+            <h3 className="font-display text-lg font-bold text-slate-900">Mã dự phòng của bạn</h3>
+            <p className="mt-2 text-sm text-slate-500">Lưu lại những mã này ở nơi an toàn. Mỗi mã chỉ dùng được 1 lần.</p>
+            
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {recoveryCodes.map((code, idx) => (
+                <div key={idx} className="rounded-lg bg-slate-50 p-2 font-mono text-xs font-bold text-slate-700">
+                  {code}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 flex gap-3">
+              <button onClick={() => setShowRecovery(false)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Đã lưu</button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(recoveryCodes.join("\n"));
+                  alert("Đã sao chép toàn bộ mã!");
+                }}
+                className="flex-1 rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                Sao chép tất cả
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Logout */}
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -299,4 +358,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-      }
+                             }
