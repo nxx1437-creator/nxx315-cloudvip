@@ -2,16 +2,12 @@ import React from "react";
 
 /**
  * LoadingScreen.jsx
- * Cute pastel loading screen (Deep Blue & White Theme)
- *
- * Đặt file GIF nhân vật vào:
- * public/loading-character.gif
+ * Cute Cloud Loading Screen (Blue Theme)
  */
 
 export default function LoadingScreen() {
   return (
-    // Đổi màu nền từ #A8D5E2 (xanh pastel) sang #1E88E5 (xanh nước biển)
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1E88E5] px-6 text-white">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#5BA8F5] px-6 text-white">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
 
@@ -19,23 +15,28 @@ export default function LoadingScreen() {
           font-family: 'Baloo 2', sans-serif;
         }
 
-        @keyframes floatCharacter {
+        /* Hiệu ứng đám mây lơ lửng */
+        @keyframes floatCloud {
           0%, 100% {
             transform: translateY(0px);
           }
           50% {
-            transform: translateY(-8px);
+            transform: translateY(-12px);
           }
         }
 
-        @keyframes softPulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: .45;
+        /* Hiệu ứng mưa tim rơi */
+        @keyframes rainHeart {
+          0% {
+            transform: translateY(0) scale(0.8);
+            opacity: 0;
           }
-          50% {
-            transform: scale(1.08);
-            opacity: .7;
+          20% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(130px) scale(1);
+            opacity: 0;
           }
         }
 
@@ -67,62 +68,55 @@ export default function LoadingScreen() {
       <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
       {/* Cute sparkles */}
-      <div
-        className="absolute left-[18%] top-[22%] text-3xl text-white/90"
-        style={{ animation: "sparkle 2s ease-in-out infinite" }}
-      >
-        ✦
-      </div>
+      <div className="absolute left-[18%] top-[22%] text-3xl text-white/90" style={{ animation: "sparkle 2s ease-in-out infinite" }}>✦</div>
+      <div className="absolute right-[20%] top-[30%] text-2xl text-white/90" style={{ animation: "sparkle 2.4s ease-in-out infinite .4s" }}>♡</div>
+      <div className="absolute bottom-[25%] left-[25%] text-xl text-white/90" style={{ animation: "sparkle 2.2s ease-in-out infinite .8s" }}>✦</div>
 
-      <div
-        className="absolute right-[20%] top-[30%] text-2xl text-white/90"
-        style={{ animation: "sparkle 2.4s ease-in-out infinite .4s" }}
-      >
-        ♡
-      </div>
+      {/* ĐÁM MÂY */}
+      <div className="relative flex h-[300px] w-[320px] items-center justify-center">
+        
+        {/* Mưa tim rơi quanh mây */}
+        <div className="absolute top-10 left-8 text-xl" style={{ animation: "rainHeart 1.5s linear infinite" }}>💗</div>
+        <div className="absolute top-0 right-10 text-lg" style={{ animation: "rainHeart 1.8s linear infinite .3s" }}>💙</div>
+        <div className="absolute top-12 right-4 text-sm" style={{ animation: "rainHeart 2s linear infinite .6s" }}>💗</div>
+        <div className="absolute top-5 left-20 text-sm" style={{ animation: "rainHeart 2.2s linear infinite .9s" }}>💙</div>
 
-      <div
-        className="absolute bottom-[25%] left-[25%] text-xl text-white/90"
-        style={{ animation: "sparkle 2.2s ease-in-out infinite .8s" }}
-      >
-        ✦
-      </div>
+        {/* Quầng sáng mờ phía sau */}
+        <div className="absolute h-56 w-56 rounded-full bg-white/20 blur-3xl" style={{ animation: "softPulse 3s ease-in-out infinite" }} />
 
-      {/* Character */}
-      <div className="relative flex h-[320px] w-[320px] items-center justify-center sm:h-[360px] sm:w-[360px]">
-        {/* Soft glow behind character */}
-        <div
-          className="absolute h-64 w-64 rounded-full bg-white/20 blur-3xl"
-          style={{ animation: "softPulse 3s ease-in-out infinite" }}
-        />
+        {/* Hình dáng đám mây (CSS thuần) */}
+        <div 
+          className="relative z-10"
+          style={{ animation: "floatCloud 3s ease-in-out infinite" }}
+        >
+          {/* Thân mây */}
+          <div className="relative h-[120px] w-[220px] rounded-full bg-white shadow-[0_15px_25px_rgba(0,0,0,0.15)]">
+            
+            {/* Các khối tròn tạo thành mây */}
+            <div className="absolute -top-10 -left-8 h-[90px] w-[90px] rounded-full bg-white" />
+            <div className="absolute -top-14 left-10 h-[110px] w-[110px] rounded-full bg-white" />
+            <div className="absolute -top-8 right-0 h-[80px] w-[80px] rounded-full bg-white" />
+            
+            {/* Mắt, miệng và má hồng */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="flex gap-5">
+                <div className="h-3 w-3 rounded-full bg-[#704b4d]"></div>
+                <div className="h-3 w-3 rounded-full bg-[#704b4d]"></div>
+              </div>
+              <div className="mt-1.5 h-1.5 w-5 rounded-full border-b-2 border-[#704b4d]"></div>
+            </div>
+            <div className="absolute bottom-2 left-8 h-4 w-6 rounded-full bg-pink-200/80"></div>
+            <div className="absolute bottom-2 right-8 h-4 w-6 rounded-full bg-pink-200/80"></div>
 
-        {/* Character shadow */}
-        <div className="absolute bottom-8 h-8 w-40 rounded-full bg-black/20 blur-xl" />
-
-        {/* GIF nhân vật - CÓ BO TRÒN VÀ VIỀN TRẮNG */}
-        <div className="relative z-10 h-[280px] w-[280px] overflow-hidden rounded-[40px] border-4 border-white bg-white p-3 shadow-[0_12px_25px_rgba(0,0,0,0.2)] sm:h-[320px] sm:w-[320px] flex items-center justify-center">
-            {/* Đã sửa lại đoạn img bị lỗi */}
-            <img
-              src="https://pin.it/2VjKKT14J/loading.gif" 
-              alt="Đang tải..."
-              className="h-full w-full object-contain"
-              style={{
-                animation: "floatCharacter 3s ease-in-out infinite",
-              }}
-              onError={(e) => {
-                 // Nếu ảnh chính bị lỗi, tự động thay bằng ảnh dự phòng
-                 e.target.src = "https://media.tenor.com/0AVbKGY_MxMAAAAi/loading-buffering.gif"; 
-              }}
-            />
+          </div>
         </div>
       </div>
 
       {/* Text */}
-      <div className="relative z-10 mt-4 text-center">
+      <div className="relative z-10 mt-2 text-center">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
           Đợi xíu nhe... ♡
         </h1>
-
         <p className="font-display mt-1 text-base font-medium text-white/90 drop-shadow-sm">
           Đang chuẩn bị mọi thứ thật xinh cho bạn
         </p>
@@ -130,26 +124,9 @@ export default function LoadingScreen() {
 
       {/* Loading dots */}
       <div className="mt-6 flex items-center gap-2">
-        <span
-          className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
-          style={{
-            animation: "dotBounce 1.2s ease-in-out infinite",
-          }}
-        />
-
-        <span
-          className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
-          style={{
-            animation: "dotBounce 1.2s ease-in-out infinite .15s",
-          }}
-        />
-
-        <span
-          className="h-2.5 w-2.5 rounded-full bg-white shadow-sm"
-          style={{
-            animation: "dotBounce 1.2s ease-in-out infinite .3s",
-          }}
-        />
+        <span className="h-2.5 w-2.5 rounded-full bg-white shadow-sm" style={{ animation: "dotBounce 1.2s ease-in-out infinite" }} />
+        <span className="h-2.5 w-2.5 rounded-full bg-white shadow-sm" style={{ animation: "dotBounce 1.2s ease-in-out infinite .15s" }} />
+        <span className="h-2.5 w-2.5 rounded-full bg-white shadow-sm" style={{ animation: "dotBounce 1.2s ease-in-out infinite .3s" }} />
       </div>
 
       {/* Bottom loading pill */}
@@ -160,4 +137,4 @@ export default function LoadingScreen() {
       </div>
     </div>
   );
-}
+        }
