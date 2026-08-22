@@ -1,3 +1,4 @@
+import Marketing from "./pages/Marketing.jsx";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
