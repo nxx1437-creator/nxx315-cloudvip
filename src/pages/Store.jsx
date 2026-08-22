@@ -377,4 +377,46 @@ export default function Store() {
 
               <div className="flex gap-2">
                 <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
-                <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 
+                <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
+              </div>
+
+              <input
+                type="text"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder={redeemMethod === "zalo" ? "Số điện thoại Zalo" : "Tên Discord (VD: username#0000)"}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setSelectedPkg(null)}
+                className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-600"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleRedeem}
+                disabled={isRedeeming}
+                className="flex-1 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 disabled:opacity-60"
+              >
+                {isRedeeming ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Đặt đơn"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg ${
+          toast.type === "error" ? "bg-rose-500" : "bg-emerald-500"
+        }`}>
+          {toast.message}
+        </div>
+      )}
+
+      <BottomNav />
+    </div>
+  );
+}
