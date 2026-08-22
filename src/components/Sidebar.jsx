@@ -18,9 +18,9 @@ const MENU_GROUPS = [
     label: "Kiếm Coin",
     items: [
       { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-      { path: "/marketing", label: "Marketing Video", icon: Megaphone, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
+      { label: "Marketing Video", icon: Megaphone, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
       { label: "Buff MXH Free", icon: Rocket, badge: "FREE", badgeColor: "bg-teal-100 text-teal-600" },
-      { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeColor: "bg-amber-100 text-amber-600" }
+      { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeColor: "bg-amber-100 text-amber-600" },
       { label: "Bảng xếp hạng", icon: Trophy, badge: "NEW", badgeColor: "bg-emerald-100 text-emerald-600" },
     ],
   },
@@ -60,7 +60,7 @@ const MENU_GROUPS = [
 export default function Sidebar({ open, onClose, displayName, initial, coins, level }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [openGroups, setOpenGroups] = useState(["Tổng quan", "Kiếm Coin", "Cửa hàng", "Ví & Nạp"]); // Mặc định mở nhóm đầu tiên
+  const [openGroups, setOpenGroups] = useState(["Tổng quan", "Kiếm Coin", "Cửa hàng", "Ví & Nạp"]);
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
@@ -74,6 +74,7 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
 
   const handleNavigate = (path) => {
     if (path) navigate(path);
+    else navigate("/nonexistent-page-404");
     onClose();
   };
 
@@ -103,7 +104,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
         {/* Header */}
         <div className="relative flex items-center justify-between px-5 pb-6 pt-7">
           <div className="flex items-center gap-3">
-            {/* Logo to */}
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-blue-500/40">
               <span>{initial}</span>
             </div>
@@ -152,7 +152,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
         <div className="flex-1 overflow-y-auto px-3 pb-6">
           {MENU_GROUPS.map((group) => (
             <div key={group.label} className="mb-2">
-              {/* Tiêu đề nhóm + nút mũi tên */}
               <button
                 onClick={() => toggleGroup(group.label)}
                 className="flex w-full items-center gap-2 px-3 py-3 text-left"
@@ -167,7 +166,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
                 />
               </button>
 
-              {/* Các mục trong nhóm - Chỉ hiện khi mở */}
               {openGroups.includes(group.label) && (
                 <div className="space-y-1.5">
                   {group.items.map((item) => {
@@ -198,7 +196,7 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
           ))}
         </div>
 
-        {/* Đăng xuất - Cố định dưới cùng */}
+        {/* Đăng xuất */}
         <div className="border-t border-slate-100 bg-white p-4">
           <button
             onClick={handleLogout}
@@ -210,4 +208,4 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
       </aside>
     </>
   );
-                                 }
+      }
