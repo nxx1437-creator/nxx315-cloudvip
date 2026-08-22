@@ -12,14 +12,10 @@ import {
   Megaphone,
   CheckCircle2,
   XCircle,
-  ExternalLink,
-  Coins,
+  Clock3,
+  RefreshCw,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-
-/* =========================================================
-   ADMIN TABS
-========================================================= */
 
 const TABS = [
   {
@@ -54,9 +50,11 @@ const TABS = [
   },
 ];
 
-/* =========================================================
-   MAIN ADMIN
-========================================================= */
+const STATUS_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancel" },
+];
 
 export default function Admin() {
   const [tab, setTab] = useState("orders");
@@ -64,7 +62,7 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#F0F6FF] pb-16">
       {/* HEADER */}
-      <header className="sticky top-0 z-10 border-b border-blue-100 bg-white/90 px-4 py-4 shadow-sm backdrop-blur-xl md:px-6">
+      <header className="sticky top-0 z-20 border-b border-blue-100 bg-white/90 px-4 py-4 shadow-sm backdrop-blur-xl md:px-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
@@ -72,7 +70,7 @@ export default function Admin() {
             </div>
 
             <div>
-              <h1 className="text-xl font-extrabold text-slate-900">
+              <h1 className="text-lg font-extrabold text-slate-900 md:text-xl">
                 Nxx315 Admin Panel
               </h1>
               <p className="text-xs font-medium text-slate-500">
@@ -82,7 +80,7 @@ export default function Admin() {
           </div>
 
           <div className="hidden items-center gap-2 md:flex">
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-600">
+            <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-600">
               <span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" />
               System Online
             </span>
@@ -91,38 +89,36 @@ export default function Admin() {
       </header>
 
       {/* TABS */}
-      <div className="mx-auto max-w-7xl px-4 pt-6 md:px-6">
-        <div className="flex flex-wrap gap-3">
-          {TABS.map((t) => {
-            const Icon = t.icon;
+      <div className="mx-auto max-w-7xl px-4 pt-5 md:px-6 md:pt-6">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {TABS.map((item) => {
+            const Icon = item.icon;
+            const active = tab === item.key;
 
             return (
               <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200 ${
-                  tab === t.key
-                    ? "scale-105 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-blue-500/30"
+                key={item.key}
+                type="button"
+                onClick={() => setTab(item.key)}
+                className={`flex min-w-max items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200 ${
+                  active
+                    ? "scale-[1.02] bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-blue-500/30"
                     : "border border-blue-100 bg-white text-slate-600 shadow-sm hover:bg-blue-50 hover:text-blue-600"
                 }`}
               >
                 <Icon
                   size={20}
-                  className={
-                    tab === t.key ? "text-white" : "text-blue-500"
-                  }
+                  className={active ? "text-white" : "text-blue-500"}
                 />
 
                 <div>
-                  <div className="text-sm font-bold">{t.label}</div>
+                  <div className="text-sm font-bold">{item.label}</div>
                   <div
                     className={`text-[11px] ${
-                      tab === t.key
-                        ? "text-white/80"
-                        : "text-slate-400"
+                      active ? "text-white/80" : "text-slate-400"
                     }`}
                   >
-                    {t.desc}
+                    {item.desc}
                   </div>
                 </div>
               </button>
@@ -132,7 +128,7 @@ export default function Admin() {
       </div>
 
       {/* CONTENT */}
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+      <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
         <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-blue-50 md:p-6">
           {tab === "orders" && <OrdersTab />}
           {tab === "tasks" && <TasksTab />}
@@ -149,12 +145,6 @@ export default function Admin() {
    ORDERS
 ========================================================= */
 
-const STATUS_OPTIONS = [
-  { value: "pending", label: "Pending" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancel (Refund)" },
-];
-
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -170,11 +160,12 @@ function OrdersTab() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
       alert(error.message);
+      setOrders([]);
+    } else {
+      setOrders(data ?? []);
     }
 
-    setOrders(data ?? []);
     setLoading(false);
   };
 
@@ -182,11 +173,14 @@ function OrdersTab() {
     fetchOrders();
   }, []);
 
-  const getDraft = (order) =>
-    drafts[order.id] ?? {
-      status: order.status,
-      admin_note: order.admin_note ?? "",
-    };
+  const getDraft = (order) => {
+    return (
+      drafts[order.id] ?? {
+        status: order.status,
+        admin_note: order.admin_note ?? "",
+      }
+    );
+  };
 
   const handleSave = async (order) => {
     const draft = getDraft(order);
@@ -209,155 +203,152 @@ function OrdersTab() {
     }
 
     await fetchOrders();
+
+    setDrafts((current) => {
+      const next = { ...current };
+      delete next[order.id];
+      return next;
+    });
   };
 
   if (loading) {
-    return (
-      <LoadingBox text="Loading orders..." />
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <EmptyBox
-        icon={Package}
-        title="No orders yet"
-        text="Orders will appear here when users redeem rewards."
-      />
-    );
+    return <Loading text="Loading orders..." />;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-      {orders.map((o) => {
-        const draft = getDraft(o);
+    <div className="space-y-5">
+      <SectionHeader
+        title="Manage Orders"
+        count={`${orders.length} Orders`}
+        onRefresh={fetchOrders}
+      />
 
-        const dirty =
-          draft.status !== o.status ||
-          draft.admin_note !== (o.admin_note ?? "");
+      {orders.length === 0 ? (
+        <EmptyState text="No orders yet." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {orders.map((order) => {
+            const draft = getDraft(order);
 
-        return (
-          <div
-            key={o.id}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-lg bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-600">
-                    ID: {String(o.id).slice(0, 6)}
-                  </span>
+            const dirty =
+              draft.status !== order.status ||
+              draft.admin_note !== (order.admin_note ?? "");
 
-                  <span
-                    className={`rounded-lg px-2 py-1 text-[11px] font-bold ${
-                      o.status === "delivered"
-                        ? "bg-emerald-50 text-emerald-600"
-                        : o.status === "cancelled"
-                        ? "bg-rose-50 text-rose-600"
-                        : "bg-amber-50 text-amber-600"
-                    }`}
-                  >
-                    {o.status === "pending"
-                      ? "Pending"
-                      : o.status === "delivered"
-                      ? "Done"
-                      : "Cancelled"}
+            return (
+              <div
+                key={order.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-lg bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-600">
+                        ID: {String(order.id).slice(0, 8)}
+                      </span>
+
+                      <OrderStatus status={order.status} />
+                    </div>
+
+                    <p className="mt-3 truncate text-sm font-bold text-slate-900">
+                      {order.package_name ?? "Robux Package"}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      <span className="font-semibold text-slate-700">
+                        {order.roblox_username ?? "Unknown user"}
+                      </span>
+                    </p>
+
+                    {order.created_at && (
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        {new Date(order.created_at).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <span className="shrink-0 text-lg font-extrabold text-rose-500">
+                    -{Number(order.coins_charged ?? 0).toLocaleString()}
                   </span>
                 </div>
 
-                <p className="mt-2 text-sm font-bold text-slate-900">
-                  {o.package_name ?? "Robux Package"}
-                </p>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  <span className="font-semibold text-slate-700">
-                    {o.roblox_username ?? "Unknown"}
-                  </span>{" "}
-                  •{" "}
-                  {o.created_at
-                    ? new Date(o.created_at).toLocaleString()
-                    : ""}
-                </p>
-              </div>
-
-              <span className="shrink-0 text-lg font-extrabold text-rose-500">
-                -{Number(o.coins_charged ?? 0).toLocaleString()}
-              </span>
-            </div>
-
-            {o.receive_method && (
-              <div className="mt-3 rounded-xl bg-slate-50 p-2.5 text-xs text-slate-600">
-                Via{" "}
-                <span className="font-bold">
-                  {o.receive_method === "zalo"
-                    ? "Zalo"
-                    : "Discord"}
-                </span>
-                : {o.contact_value}
-              </div>
-            )}
-
-            <div className="mt-3 space-y-2">
-              <select
-                value={draft.status}
-                onChange={(e) =>
-                  setDrafts((d) => ({
-                    ...d,
-                    [o.id]: {
-                      ...draft,
-                      status: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                value={draft.admin_note}
-                onChange={(e) =>
-                  setDrafts((d) => ({
-                    ...d,
-                    [o.id]: {
-                      ...draft,
-                      admin_note: e.target.value,
-                    },
-                  }))
-                }
-                placeholder="Admin note..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
-              />
-            </div>
-
-            {Number(o.coins_refunded ?? 0) > 0 && (
-              <p className="mt-2 text-xs font-semibold text-emerald-600">
-                Refunded:{" "}
-                {Number(o.coins_refunded).toLocaleString()} Coins
-              </p>
-            )}
-
-            {dirty && (
-              <button
-                onClick={() => handleSave(o)}
-                disabled={savingId === o.id}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition hover:opacity-90 disabled:opacity-60"
-              >
-                {savingId === o.id ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Save size={16} />
+                {order.receive_method && (
+                  <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+                    Via{" "}
+                    <span className="font-bold">
+                      {order.receive_method === "zalo"
+                        ? "Zalo"
+                        : order.receive_method === "discord"
+                        ? "Discord"
+                        : order.receive_method}
+                    </span>
+                    {order.contact_value ? `: ${order.contact_value}` : ""}
+                  </div>
                 )}
-                Save Changes
-              </button>
-            )}
-          </div>
-        );
-      })}
+
+                <div className="mt-4 space-y-2">
+                  <select
+                    value={draft.status}
+                    onChange={(e) =>
+                      setDrafts((current) => ({
+                        ...current,
+                        [order.id]: {
+                          ...draft,
+                          status: e.target.value,
+                        },
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <input
+                    value={draft.admin_note}
+                    onChange={(e) =>
+                      setDrafts((current) => ({
+                        ...current,
+                        [order.id]: {
+                          ...draft,
+                          admin_note: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Admin note..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                {Number(order.coins_refunded ?? 0) > 0 && (
+                  <p className="mt-2 text-xs font-semibold text-emerald-600">
+                    Refunded:{" "}
+                    {Number(order.coins_refunded).toLocaleString()} Coins
+                  </p>
+                )}
+
+                {dirty && (
+                  <button
+                    type="button"
+                    onClick={() => handleSave(order)}
+                    disabled={savingId === order.id}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition hover:opacity-90 disabled:opacity-60"
+                  >
+                    {savingId === order.id ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Save size={16} />
+                    )}
+                    Save Changes
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -389,9 +380,11 @@ function TasksTab() {
 
     if (error) {
       alert(error.message);
+      setTasks([]);
+    } else {
+      setTasks(data ?? []);
     }
 
-    setTasks(data ?? []);
     setLoading(false);
   };
 
@@ -402,9 +395,7 @@ function TasksTab() {
   const updateField = (id, field, value) => {
     setTasks((current) =>
       current.map((task) =>
-        task.id === id
-          ? { ...task, [field]: value }
-          : task
+        task.id === id ? { ...task, [field]: value } : task
       )
     );
   };
@@ -445,7 +436,7 @@ function TasksTab() {
       return;
     }
 
-    fetchTasks();
+    await fetchTasks();
   };
 
   const handleCreate = async () => {
@@ -454,16 +445,14 @@ function TasksTab() {
       return;
     }
 
-    const { error } = await supabase
-      .from("tasks")
-      .insert({
-        provider: newTask.provider.trim().toUpperCase(),
-        reward_coins: Number(newTask.reward_coins),
-        daily_limit: Number(newTask.daily_limit),
-        is_hot: Boolean(newTask.is_hot),
-        active: true,
-        sort_order: tasks.length + 1,
-      });
+    const { error } = await supabase.from("tasks").insert({
+      provider: newTask.provider.trim().toUpperCase(),
+      reward_coins: Number(newTask.reward_coins),
+      daily_limit: Number(newTask.daily_limit),
+      is_hot: Boolean(newTask.is_hot),
+      active: true,
+      sort_order: tasks.length + 1,
+    });
 
     if (error) {
       alert(error.message);
@@ -478,37 +467,38 @@ function TasksTab() {
     });
 
     setShowNew(false);
-    fetchTasks();
+    await fetchTasks();
   };
 
   if (loading) {
-    return <LoadingBox text="Loading tasks..." />;
+    return <Loading text="Loading tasks..." />;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">
-          Manage Tasks
-        </h2>
+      <SectionHeader
+        title="Manage Tasks"
+        count={`${tasks.length} Tasks`}
+        onRefresh={fetchTasks}
+      />
 
-        <button
-          onClick={() => setShowNew((s) => !s)}
-          className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 hover:opacity-90"
-        >
-          <Plus size={16} />
-          Add Task
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setShowNew((value) => !value)}
+        className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition hover:opacity-90"
+      >
+        <Plus size={16} />
+        Add Task
+      </button>
 
       {showNew && (
-        <div className="rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-6">
+        <div className="rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <input
               value={newTask.provider}
               onChange={(e) =>
-                setNewTask((n) => ({
-                  ...n,
+                setNewTask((current) => ({
+                  ...current,
                   provider: e.target.value,
                 }))
               }
@@ -520,8 +510,8 @@ function TasksTab() {
               type="number"
               value={newTask.reward_coins}
               onChange={(e) =>
-                setNewTask((n) => ({
-                  ...n,
+                setNewTask((current) => ({
+                  ...current,
                   reward_coins: e.target.value,
                 }))
               }
@@ -533,8 +523,8 @@ function TasksTab() {
               type="number"
               value={newTask.daily_limit}
               onChange={(e) =>
-                setNewTask((n) => ({
-                  ...n,
+                setNewTask((current) => ({
+                  ...current,
                   daily_limit: e.target.value,
                 }))
               }
@@ -542,25 +532,26 @@ function TasksTab() {
               className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400"
             />
 
-            <label className="flex items-center gap-2 text-sm text-slate-600">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
               <input
                 type="checkbox"
                 checked={newTask.is_hot}
                 onChange={(e) =>
-                  setNewTask((n) => ({
-                    ...n,
+                  setNewTask((current) => ({
+                    ...current,
                     is_hot: e.target.checked,
                   }))
                 }
-                className="h-4 w-4"
+                className="h-4 w-4 accent-blue-500"
               />
               Mark HOT
             </label>
           </div>
 
           <button
+            type="button"
             onClick={handleCreate}
-            className="mt-4 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            className="mt-4 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             Create Task
           </button>
@@ -568,25 +559,21 @@ function TasksTab() {
       )}
 
       {tasks.length === 0 ? (
-        <EmptyBox
-          icon={ListChecks}
-          title="No tasks"
-          text="Create your first task."
-        />
+        <EmptyState text="No tasks found." />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {tasks.map((t) => (
+          {tasks.map((task) => (
             <div
-              key={t.id}
+              key={task.id}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-base font-extrabold text-slate-900">
-                    {t.provider}
+                    {task.provider}
                   </span>
 
-                  {t.is_hot && (
+                  {task.is_hot && (
                     <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-600">
                       HOT
                     </span>
@@ -594,7 +581,8 @@ function TasksTab() {
                 </div>
 
                 <button
-                  onClick={() => handleDelete(t.id)}
+                  type="button"
+                  onClick={() => handleDelete(task.id)}
                   className="text-rose-400 transition hover:text-rose-600"
                 >
                   <Trash2 size={18} />
@@ -602,17 +590,17 @@ function TasksTab() {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <label className="block">
+                <label>
                   <span className="text-[11px] font-bold uppercase text-slate-400">
                     Coin per turn
                   </span>
 
                   <input
                     type="number"
-                    value={t.reward_coins}
+                    value={task.reward_coins}
                     onChange={(e) =>
                       updateField(
-                        t.id,
+                        task.id,
                         "reward_coins",
                         e.target.value
                       )
@@ -621,17 +609,17 @@ function TasksTab() {
                   />
                 </label>
 
-                <label className="block">
+                <label>
                   <span className="text-[11px] font-bold uppercase text-slate-400">
                     Daily Limit
                   </span>
 
                   <input
                     type="number"
-                    value={t.daily_limit}
+                    value={task.daily_limit}
                     onChange={(e) =>
                       updateField(
-                        t.id,
+                        task.id,
                         "daily_limit",
                         e.target.value
                       )
@@ -645,13 +633,9 @@ function TasksTab() {
                 <label className="flex cursor-pointer items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={Boolean(t.is_hot)}
+                    checked={Boolean(task.is_hot)}
                     onChange={(e) =>
-                      updateField(
-                        t.id,
-                        "is_hot",
-                        e.target.checked
-                      )
+                      updateField(task.id, "is_hot", e.target.checked)
                     }
                     className="h-4 w-4 accent-blue-500"
                   />
@@ -661,19 +645,11 @@ function TasksTab() {
                 <label className="flex cursor-pointer items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={Boolean(t.active)}
+                    checked={Boolean(task.active)}
                     onChange={(e) =>
-                      updateField(
-                        t.id,
-                        "active",
-                        e.target.checked
-                      )
+                      updateField(task.id, "active", e.target.checked)
                     }
                     className="h-4 w-4 accent-blue-500"
                   />
                   Active
-                </label>
-              </div>
-
-              <button
-    
+      
