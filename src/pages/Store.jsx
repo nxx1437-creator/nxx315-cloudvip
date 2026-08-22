@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, ArrowRightLeft } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User, ArrowRightLeft, Ban } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import { useStoreData } from "../hooks/useStoreData.js"; // 👈 ĐÃ SỬA: Giữ nguyên kiểu { useStoreData }
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-
-// Các category chính
-const CATEGORIES = [
-  { key: "roblox", label: "Robux Roblox", desc: "Nhận qua Gamepass", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
-  { key: "freefire", label: "Kim cương Free Fire", desc: "Nạp thẳng vào UID", icon: Flame, color: "from-red-500 to-orange-500", iconBg: "bg-red-500/20" },
-  { key: "lienquan", label: "Quân Huy Liên Quân", desc: "Nạp thẳng vào ID", icon: Swords, color: "from-amber-400 to-yellow-500", iconBg: "bg-amber-500/20" },
-];
 
 export default function Store() {
   const navigate = useNavigate();
@@ -20,14 +13,18 @@ export default function Store() {
   const { profile } = useProfile();
   const { packages } = useStoreData();
   const [toast, setToast] = useState(null);
-  const [activeCategory, setActiveCategory] = useState("roblox");
+  const [activeCategory, setActiveCategory] = useState("roblox"); // Chỉ giữ Roblox
   
-  const [robloxMethod, setRobloxMethod] = useState("auto"); // auto / creator
+  // Version VNG / Quốc tế
+  const [version, setVersion] = useState("vng"); // vng / quoc_te
+  
+  // State cho tra cứu & giao hàng
   const [username, setUsername] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [gamepassLink, setGamepassLink] = useState("");
   
+  // State cho đặt hàng
   const [selectedPkg, setSelectedPkg] = useState(null);
   const [redeemMethod, setRedeemMethod] = useState("discord");
   const [contact, setContact] = useState("");
@@ -43,15 +40,11 @@ export default function Store() {
     fetchHistory();
   }, [session]);
 
-  const isVietnamPackage = (pkgName) => {
-    return pkgName.includes("40") || pkgName.includes("80") || pkgName.includes("500");
-  };
-
+  // Lọc theo phiên bản
   const filteredPackages = packages.filter(pkg => {
     const name = pkg.name.toLowerCase();
-    if (activeCategory === "roblox") return name.includes("robux");
-    if (activeCategory === "freefire") return name.includes("kim cương") || name.includes("free fire");
-    if (activeCategory === "lienquan") return name.includes("quân huy") || name.includes("liên quân");
+    if (version === "vng") return name.includes("40") || name.includes("80");
+    if (version === "quoc_te") return name.includes("100");
     return true;
   });
 
@@ -69,17 +62,14 @@ export default function Store() {
         body: JSON.stringify({ usernames: [username.trim()] }),
       });
       const userData = await userRes.json();
-      
       if (!userData.data || userData.data.length === 0) {
         setToast({ message: "Không tìm thấy tài khoản!", type: "error" });
         setIsSearching(false);
         return;
       }
-
       const user = userData.data[0];
       const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-bust?userIds=${user.id}&size=150x150&format=Png`);
       const avatarData = await avatarRes.json();
-
       setSearchResult({
         name: user.displayName || user.name,
         avatar: avatarData.data?.[0]?.imageUrl || "",
@@ -88,7 +78,6 @@ export default function Store() {
     } catch (error) {
       setToast({ message: "Lỗi tra cứu!", type: "error" });
     }
-    
     setIsSearching(false);
   };
 
@@ -101,8 +90,7 @@ export default function Store() {
       setToast({ message: "Vui lòng nhập Username!", type: "error" });
       return;
     }
-    
-    if (!isVietnamPackage(selectedPkg.name) && !contact.trim()) {
+    if (version === "quoc_te" && !contact.trim()) {
       setToast({ message: "Vui lòng nhập thông tin liên hệ!", type: "error" });
       return;
     }
@@ -112,11 +100,11 @@ export default function Store() {
       user_id: session.user.id,
       package_name: selectedPkg.name,
       coins_charged: selectedPkg.coin_cost,
-      receive_method: isVietnamPackage(selectedPkg.name) ? "roblox_username" : redeemMethod,
-      contact_value: isVietnamPackage(selectedPkg.name) ? username.trim() : contact,
+      receive_method: version === "vng" ? "roblox_username" : redeemMethod,
+      contact_value: version === "vng" ? username.trim() : contact,
       target_username: searchResult?.name || username.trim(),
       target_uid: searchResult?.id || username.trim(),
-      status: "processing"
+      status: "processing" // Chờ xử lý
     });
 
     setIsRedeeming(false);
@@ -130,17 +118,16 @@ export default function Store() {
     setUsername("");
     setSearchResult(null);
     setGamepassLink("");
-    setToast({ message: "Đã tạo đơn đổi thưởng thành công!", type: "success" });
+    setToast({ message: "Đã tạo đơn thành công! Chờ admin xử lý.", type: "success" });
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
   };
 
   const getStatus = (status) => {
     const config = {
-      processing: { label: "Đang xử lý", color: "bg-amber-50 text-amber-600" },
-      sent: { label: "Đã gửi", color: "bg-blue-50 text-blue-600" },
-      completed: { label: "Đã giao", color: "bg-emerald-50 text-emerald-600" },
-      failed: { label: "Thất bại", color: "bg-rose-50 text-rose-500" },
+      processing: { label: "Chờ xử lý", color: "bg-amber-50 text-amber-600" },
+      delivered: { label: "Đã giao", color: "bg-emerald-50 text-emerald-600" },
+      cancelled: { label: "Đã hủy", color: "bg-rose-50 text-rose-500" },
     };
     return config[status] || config.processing;
   };
@@ -155,19 +142,13 @@ export default function Store() {
       <main className="mx-auto max-w-md px-4 py-5">
         {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sky-600 shadow-sm"><Gift size={16} /></span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-sky-600">TRUNG TÂM ĐỔI THƯỞNG</span>
-          </div>
           <h1 className="mt-3 text-2xl font-bold text-slate-900">Đổi Coin lấy quà game cực dễ</h1>
-          <p className="mt-2 text-sm text-slate-500">Robux Roblox · Kim Cương Free Fire · Quân Huy Liên Quân — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
-          
+          <p className="mt-2 text-sm text-slate-500">Robux Roblox — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-sky-600 shadow-sm"><Zap size={12} /> Giao trong vài phút</span>
             <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-emerald-600 shadow-sm"><ShieldCheck size={12} /> Bảo hành / hoàn coin</span>
             <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm"><Trophy size={12} /> Giá tốt nhất</span>
           </div>
-
           <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500"><Coins size={24} /></span>
             <div>
@@ -177,67 +158,41 @@ export default function Store() {
           </div>
         </div>
 
-        {/* CATEGORIES */}
-        <div className="space-y-3 mb-6 mt-6">
-          {CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat.key;
-            const Icon = cat.icon;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => { setActiveCategory(cat.key); setSearchResult(null); setUsername(""); }}
-                className={`flex w-full items-center justify-between rounded-2xl p-4 text-left transition-all ${
-                  isActive ? `bg-gradient-to-r ${cat.color} text-white shadow-lg` : "bg-white text-slate-700 shadow-sm hover:shadow-md"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl text-white ${isActive ? "bg-white/20" : cat.iconBg}`}>
-                    <Icon size={24} />
-                  </span>
-                  <div>
-                    <p className="font-bold">{cat.label}</p>
-                    <p className={`text-xs ${isActive ? "text-white/80" : "text-slate-400"}`}>{cat.desc}</p>
-                  </div>
-                </div>
-                <span className={`flex h-8 w-8 items-center justify-center rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-400"}`}>
-                  {isActive ? <CheckCircle2 size={18} /> : <ExternalLink size={16} />}
-                </span>
-              </button>
-            );
-          })}
+        {/* Chọn phiên bản */}
+        <div className="mb-6 mt-6 flex gap-2">
+          <button
+            onClick={() => { setVersion("vng"); setSelectedPkg(null); }}
+            className={`flex-1 rounded-full py-3 text-sm font-bold transition ${
+              version === "vng" ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg" : "bg-white text-slate-600 shadow-sm"
+            }`}
+          >
+            Phiên bản VNG
+          </button>
+          <button
+            onClick={() => { setVersion("quoc_te"); setSelectedPkg(null); }}
+            className={`flex-1 rounded-full py-3 text-sm font-bold transition ${
+              version === "quoc_te" ? "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg" : "bg-white text-slate-600 shadow-sm"
+            }`}
+          >
+            Phiên bản Quốc tế
+          </button>
         </div>
 
-        {/* LƯU Ý */}
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-500"><Sparkles size={20} /></span>
-            <div>
-              <p className="text-sm font-bold text-amber-700">Lưu ý quan trọng trước khi đặt đơn</p>
-              <p className="mt-1 text-xs leading-relaxed text-amber-600">Vui lòng xem video hướng dẫn ở phía dưới để tạo Gamepass đúng cách. Đặt sai giá / sai cài đặt sẽ bị hủy đơn và không được hoàn coin nhanh.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* PACKAGES */}
+        {/* Chọn gói */}
         <div className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "Kim Cương Free Fire" : "Quân Huy Liên Quân"}</h2>
-          
+          <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Robux</h2>
           <div className="space-y-4">
             {filteredPackages.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-sm"><p className="text-sm text-slate-400">Chưa có gói nào.</p></div>
+              <div className="rounded-2xl bg-white p-8 text-center shadow-sm"><p className="text-sm text-slate-400">Chưa có gói nào cho phiên bản này.</p></div>
             ) : filteredPackages.map((pkg) => {
               const discount = pkg.original_price_text ? Math.round((1 - (pkg.coin_cost / parseFloat(pkg.original_price_text.replace(/\D/g, '')))) * 100) : 0;
               const isSelected = selectedPkg?.id === pkg.id;
-              const isVNG = isVietnamPackage(pkg.name);
-              
               return (
                 <div key={pkg.id} onClick={() => setSelectedPkg(pkg)}
                   className={`p-5 rounded-2xl relative cursor-pointer transition-all ${
                     isSelected ? "border-2 border-sky-400 bg-sky-50 shadow-lg" : "border border-white bg-white shadow-sm hover:shadow-md"
                   }`}
                 >
-                  {!isVNG && <span className="absolute left-3 top-3 rounded-full bg-blue-500 px-2 py-1 text-[10px] font-bold text-white">Quốc tế</span>}
-                  {isVNG && <span className="absolute left-3 top-3 rounded-full bg-green-500 px-2 py-1 text-[10px] font-bold text-white">VNG</span>}
                   {discount > 0 && <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white">-{discount}%</span>}
                   <div className="text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50">
@@ -255,27 +210,17 @@ export default function Store() {
           </div>
         </div>
 
-        {/* ĐẶT HÀNG - THÔNG TIN GIAO HÀNG */}
+        {/* Thông tin giao hàng - Theo phiên bản */}
         <div className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Đặt đơn {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "KC" : "QH"}</h2>
-          
-          <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm mb-4">
-            <h3 className="text-base font-bold text-slate-900">Thông tin giao hàng</h3>
-            
-            <p className="mt-4 text-xs text-slate-500">Username Roblox</p>
-            
-            <div className="mt-2 flex gap-2 rounded-full bg-slate-100 p-1">
-              <button onClick={() => setRobloxMethod("auto")} className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${robloxMethod === "auto" ? "bg-blue-500 text-white" : "text-slate-500"}`}>Tự động</button>
-              <button onClick={() => setRobloxMethod("creator")} className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${robloxMethod === "creator" ? "bg-blue-500 text-white" : "text-slate-500"}`}>Theo Creator ID</button>
-            </div>
-
-            <div className="mt-3 flex items-center gap-2">
+          <h2 className="mb-3 text-lg font-bold text-slate-900">Thông tin giao hàng</h2>
+          <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <p className="text-xs text-slate-500">Username Roblox</p>
+            <div className="mt-2 flex gap-2">
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="VD: PlayerName123" className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
               <button onClick={handleSearch} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white">
                 {isSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               </button>
             </div>
-
             {searchResult && (
               <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3">
                 <img src={searchResult.avatar} alt="avatar" className="h-12 w-12 rounded-full" />
@@ -285,7 +230,6 @@ export default function Store() {
                 </div>
               </div>
             )}
-
             <p className="mt-4 text-xs text-slate-500">Link hoặc ID Gamepass</p>
             <div className="mt-2 flex items-center gap-2">
               <input type="text" value={gamepassLink} onChange={(e) => setGamepassLink(e.target.value)} placeholder="https://www.roblox.com/game-pass/..." className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
@@ -293,56 +237,79 @@ export default function Store() {
             </div>
           </div>
 
-          {selectedPkg && !isVietnamPackage(selectedPkg.name) && (
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm mb-4">
+          {/* Nếu là Quốc tế, hiện phương thức nhận code */}
+          {version === "quoc_te" && (
+            <div className="mt-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
               <p className="text-xs uppercase tracking-wider text-slate-400">Phương thức nhận code</p>
               <div className="mt-3 flex gap-2">
                 <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
                 <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
               </div>
-              <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder={`Nhập ${redeemMethod === "discord" ? "Discord" : "Zalo"} của bạn...`} className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
+              <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder={`Nhập ${redeemMethod === "discord" ? "Discord" : "SĐT Zalo"} của bạn...`} className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
             </div>
           )}
 
-          {selectedPkg && (
-            <div className="mb-4 rounded-2xl bg-sky-50 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Đã chọn</p>
-              <p className="mt-1 text-sm font-bold text-slate-900">{selectedPkg.name}</p>
-              <p className="mt-1 text-lg font-bold text-amber-500">{selectedPkg.coin_cost} Coin {selectedPkg.original_price_text && <span className="ml-2 text-xs font-normal text-slate-400 line-through">{selectedPkg.original_price_text}</span>}</p>
-            </div>
-          )}
-
-          <button onClick={handleRedeem} disabled={isRedeeming || !selectedPkg} className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 disabled:opacity-50">
-            {isRedeeming ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Đặt đơn"}
-          </button>
-          <p className="mt-2 text-center text-xs text-slate-400">Số dư: {profile.coins} Coin</p>
-        </div>
-
-        {/* HISTORY */}
-        <div>
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Lịch sử đơn hàng</h2>
-          <div className="space-y-3">
-            {history.length === 0 ? (
-              <div className="rounded-2xl bg-white p-8 text-center shadow-sm"><p className="text-sm text-slate-400">Chưa có đơn hàng nào.</p></div>
-            ) : history.map((order) => {
-              const statusConfig = getStatus(order.status);
-              return (
-                <div key={order.id} className="rounded-2xl border border-white bg-white p-4 shadow-sm">
-                  <p className="font-bold text-slate-900">{order.package_name}</p>
-                  <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "—"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
-                  <p className="mt-1 text-xs text-slate-400">Gamepass <ExternalLink size={12} className="inline" /></p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusConfig.color}`}>{statusConfig.label}</span>
-                    <span className="font-bold text-amber-500">-{order.coins_charged} Coin</span>
-                  </div>
-                </div>
-              );
-            })}
+          {/* Hướng dẫn từng bước */}
+          <div className="mt-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <p className="text-sm font-bold text-slate-800">Hướng dẫn đặt Robux {version === "vng" ? "VNG" : "Quốc tế"}</p>
+            <ol className="mt-3 list-decimal list-inside space-y-2 text-sm text-slate-600">
+              <li>Chọn gói Robux mà bạn muốn.</li>
+              <li>Nhập Username Roblox của bạn.</li>
+              <li>Kiểm tra tên và ảnh đại diện, sau đó đặt đơn.</li>
+              {version === "vng" ? (
+                <li>Sau khi đặt đơn, admin sẽ nạp trực tiếp vào tài khoản VNG của bạn.</li>
+              ) : (
+                <li>Sau khi đặt đơn, admin sẽ gửi code qua {redeemMethod === "discord" ? "Discord" : "Zalo"} cho bạn.</li>
+              )}
+            </ol>
           </div>
         </div>
+
+        {/* Đã chọn & Đặt đơn */}
+        {selectedPkg && (
+          <div className="mb-4 rounded-2xl bg-sky-50 p-4">
+            <p className="text-xs uppercase tracking-wider text-slate-400">Đã chọn</p>
+            <p className="mt-1 text-sm font-bold text-slate-900">{selectedPkg.name}</p>
+            <p className="mt-1 text-lg font-bold text-amber-500">{selectedPkg.coin_cost} Coin {selectedPkg.original_price_text && <span className="ml-2 text-xs font-normal text-slate-400 line-through">{selectedPkg.original_price_text}</span>}</p>
+          </div>
+        )}
+
+        <button onClick={handleRedeem} disabled={isRedeeming || !selectedPkg} className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 disabled:opacity-50">
+          {isRedeeming ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Đặt đơn"}
+        </button>
+        <p className="mt-2 text-center text-xs text-slate-400">Số dư: {profile.coins} Coin</p>
       </main>
+
+      {/* Lịch sử đơn hàng */}
+      <div className="px-4 pb-5">
+        <h2 className="mb-3 text-lg font-bold text-slate-900">Lịch sử đơn hàng</h2>
+        <div className="space-y-3">
+          {history.length === 0 ? (
+            <div className="rounded-2xl bg-white p-8 text-center shadow-sm"><p className="text-sm text-slate-400">Chưa có đơn hàng nào.</p></div>
+          ) : history.map((order) => {
+            const statusConfig = getStatus(order.status);
+            return (
+              <div key={order.id} className="rounded-2xl border border-white bg-white p-4 shadow-sm">
+                <p className="font-bold text-slate-900">{order.package_name}</p>
+                <p className="mt-1 text-xs text-slate-400">Thời gian: {new Date(order.created_at).toLocaleString("vi-VN")}</p>
+                <p className="mt-1 text-xs text-slate-400">Username: {order.target_username || order.contact_value}</p>
+                <p className="mt-1 text-xs text-slate-400">ID Đơn: {order.id}</p>
+                {order.receive_method === "discord" && <p className="mt-1 text-xs text-slate-400">Nhận qua Discord: {order.contact_value}</p>}
+                {order.receive_method === "zalo" && <p className="mt-1 text-xs text-slate-400">Nhận qua Zalo: {order.contact_value}</p>}
+                <div className="mt-3 flex items-center justify-between">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusConfig.color}`}>{statusConfig.label}</span>
+                  <span className="font-bold text-amber-500">-{order.coins_charged} Coin</span>
+                </div>
+                {order.admin_note && (
+                  <p className="mt-2 rounded-lg bg-slate-50 p-3 text-xs italic text-slate-500">Ghi chú: {order.admin_note}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <BottomNav />
     </div>
   );
-    }
+        }
