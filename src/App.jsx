@@ -39,6 +39,14 @@ export default function App() {
         }
       />
       <Route
+  path="/marketing"
+  element={
+    <ProtectedRoute>
+      <Marketing />
+    </ProtectedRoute>
+  }
+/>
+      <Route
         path="/store"
         element={
           <ProtectedRoute>
