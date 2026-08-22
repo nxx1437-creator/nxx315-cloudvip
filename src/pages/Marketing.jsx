@@ -129,7 +129,6 @@ export default function Marketing() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* ===== 1. VÍ MARKETING ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Wallet size={20} className="text-blue-500" /> Ví Marketing</h2>
@@ -140,7 +139,6 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* Tab chức năng */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           {TABS.map((tab) => (
             <button
@@ -207,7 +205,6 @@ export default function Marketing() {
           </>
         )}
 
-        {/* ===== 2. GIỚI THIỆU ===== */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-6 shadow-sm">
           <div className="flex items-start gap-3">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-500"><Megaphone size={24} /></span>
@@ -237,7 +234,6 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* ===== 2.5 BẢNG TÍNH COIN THEO MỐC VIEW ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h3 className="text-base font-bold text-slate-900">Ước tính Coin theo mốc view</h3>
           <div className="mt-3 flex gap-2">
@@ -268,7 +264,6 @@ export default function Marketing() {
           </p>
         </div>
 
-        {/* ===== 3. GỬI LINK ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Gửi link video của bạn</h2>
           <form onSubmit={handleSubmit} className="mt-4">
@@ -279,7 +274,6 @@ export default function Marketing() {
           </form>
         </div>
 
-        {/* ===== 3.5 THỐNG KÊ VIDEO ===== */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
             <p className="text-xs text-slate-400">Tổng video</p>
@@ -301,7 +295,6 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* ===== 4. DANH SÁCH VIDEO ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Video của bạn</h2>
 
@@ -357,4 +350,7 @@ export default function Marketing() {
                   <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">View</p><p className="text-sm font-bold text-slate-800">{video.view_count || "—"}</p></div>
                   <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">Like</p><p className="text-sm font-bold text-slate-800">{video.like_count || "—"}</p></div>
                   <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">Cmt</p><p className="text-sm font-bold text-slate-800">{video.comment_count || "—"}</p></div>
-  
+                  <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">CTR</p><p className="text-sm font-bold text-slate-800">{video.ctr || "0%"}</p></div>
+                </div>
+
+                {video.admin_note && <p className="mt-3 rounded-lg bg-slate-50 p-3 text-
