@@ -77,10 +77,7 @@ export default function Admin() {
   );
 }
 
-/* =========================================================
-   ORDERS
-========================================================= */
-
+/* ===== ORDERS ===== */
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -166,10 +163,7 @@ function OrdersTab() {
   );
 }
 
-/* =========================================================
-   TASKS
-========================================================= */
-
+/* ===== TASKS ===== */
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -275,68 +269,4 @@ function TasksTab() {
       )}
     </div>
   );
-}
-
-/* =========================================================
-   PACKAGES
-========================================================= */
-
-function PackagesTab() {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState(null);
-
-  const fetchPackages = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
-    if (error) { alert(error.message); setPackages([]); } else { setPackages(data ?? []); }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchPackages(); }, []);
-
-  const updateField = (id, field, value) => setPackages((current) => current.map((pkg) => pkg.id === id ? { ...pkg, [field]: value } : pkg));
-  const handleSave = async (pkg) => {
-    setSavingId(pkg.id);
-    const { error } = await supabase.from("redemption_packages").update({ coin_cost: Number(pkg.coin_cost), original_price_text: pkg.original_price_text, is_promo: Boolean(pkg.is_promo), active: Boolean(pkg.active) }).eq("id", pkg.id);
-    setSavingId(null);
-    if (error) { alert(error.message); return; }
-    alert("Package saved!");
-  };
-
-  if (loading) return <Loading text="Loading packages..." />;
-
-  return (
-    <div className="space-y-6">
-      <SectionHeader title="Manage Packages" count={`${packages.length} Packages`} onRefresh={fetchPackages} />
-      {packages.length === 0 ? <EmptyState text="No packages found." /> : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {packages.map((pkg) => (
-            <div key={pkg.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg">
-              <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-blue-50 transition group-hover:scale-125" />
-              <div className="relative">
-                <p className="text-lg font-extrabold text-slate-900">{pkg.name}</p>
-                <p className="text-xs font-medium text-slate-400">Version: {pkg.version}</p>
-                <div className="mt-5 flex items-end gap-1">
-                  <span className="text-3xl font-extrabold text-blue-600">{Number(pkg.coin_cost).toLocaleString()}</span>
-                  <span className="mb-1 text-sm font-medium text-slate-400">Coins</span>
-                </div>
-                <div className="mt-5 space-y-3">
-                  <label>
-                    <span className="text-[11px] font-bold uppercase text-slate-400">Coin Cost</span>
-                    <input type="number" value={pkg.coin_cost} onChange={(e) => updateField(pkg.id, "coin_cost", e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
-                  </label>
-                  <label>
-                    <span className="text-[11px] font-bold uppercase text-slate-400">Original Price</span>
-                    <input value={pkg.original_price_text ?? ""} onChange={(e) => updateField(pkg.id, "original_price_text", e.target.value)} placeholder="14.000d" className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
-                  </label>
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input type="checkbox" checked={Boolean(pkg.is_promo)} onChange={(e) => updateField(pkg.id, "is_promo", e.target.checked)} className="h-4 w-4 accent-rose-500" /> Promo (KM)
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input type="checkbox" checked={Boolean(pkg.active)} onChange={(e) => updateField(pkg.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" /> Active
-                  </label>
-                </div>
-                <butt
+    }
