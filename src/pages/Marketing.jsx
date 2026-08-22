@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
-  Megaphone, Music, Youtube, Sparkles, Send, Coins, 
-  Clock, CheckCircle2, XCircle, Loader2, ShieldCheck
+  Megaphone, Music, Youtube, Sparkles, Send, Coins, Loader2
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import useSession from "../hooks/useSession.js";
-import useProfile from "../hooks/useProfile.js";
 import BottomNav from "../components/BottomNav.jsx";
 
 // Dữ liệu mẫu (Sau này thay bằng API thật từ Supabase)
@@ -22,31 +18,13 @@ const MOCK_VIDEOS = [
     view: 1004, like: 61, cmt: 12, ctr: "0%", 
     note: "Admin: video đã ẩn hoặc bị xóa nên sẽ không được cập nhật coin mới"
   },
-  { 
-    id: 3, platform: "YouTube", title: "Rồi sao phải như vậ...", 
-    coin: 2670, status: "rejected", date: "21:54:44 21/5/2026", 
-    view: 500, like: 50, cmt: 10, ctr: "0%", 
-    note: "Admin: video đã ẩn hoặc bị xóa nên sẽ không được cập nhật coin mới"
-  },
-];
-
-// Các mốc view
-const VIEW_TIERS = [
-  { view: "1.000", coin: "2.268" },
-  { view: "5.000", coin: "12.474" },
-  { view: "10.000", coin: "27.216" },
-  { view: "50.000", coin: "136.080" },
 ];
 
 export default function Marketing() {
-  const navigate = useNavigate();
-  const { session } = useSession();
-  const { profile } = useProfile();
-  
   const [link, setLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("all"); // all, pending, approved, rejected, paid
-  const [videos, setVideos] = useState(MOCK_VIDEOS); // Dữ liệu mẫu
+  const [activeTab, setActiveTab] = useState("all");
+  const [videos] = useState(MOCK_VIDEOS);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,9 +32,7 @@ export default function Marketing() {
       alert("Vui lòng nhập link video!");
       return;
     }
-    
     setIsSubmitting(true);
-    // TODO: Gọi API lên Supabase để gửi link lên admin duyệt
     setTimeout(() => {
       setIsSubmitting(false);
       setLink("");
@@ -86,7 +62,8 @@ export default function Marketing() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* 1. Giới thiệu */}
+        
+        {/* 1. GIỚI THIỆU */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-6 shadow-sm">
           <div className="flex items-center gap-4">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-500">
@@ -142,10 +119,9 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* 2. Gửi link video */}
+        {/* 2. GỬI LINK */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Gửi link video của bạn</h2>
-          
           <form onSubmit={handleSubmit} className="mt-4">
             <input
               type="text"
@@ -154,7 +130,6 @@ export default function Marketing() {
               placeholder="Dán link TikTok / YouTube v..."
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400"
             />
-            
             <button
               type="submit"
               disabled={isSubmitting}
@@ -164,20 +139,9 @@ export default function Marketing() {
               Gửi duyệt
             </button>
           </form>
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {VIEW_TIERS.map((tier) => (
-              <div key={tier.view} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">{tier.view} view</p>
-                <p className="mt-1 flex items-center gap-1 text-sm font-bold text-amber-600">
-                  <Coins size={14} /> {tier.coin}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* 3. Thống kê */}
+        {/* 3. THỐNG KÊ */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-white bg-white p-4 text-center shadow-sm">
             <p className="text-xs text-slate-400">Tổng video</p>
@@ -199,7 +163,7 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* 4. Danh sách video */}
+        {/* 4. VIDEO CỦA BẠN (NẰM DƯỚI CÙNG) */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Video của bạn</h2>
           
@@ -241,7 +205,6 @@ export default function Marketing() {
           <div className="mt-5 space-y-4">
             {filteredVideos.map((video) => (
               <div key={video.id} className="rounded-2xl border border-slate-100 p-4">
-                {/* Platform & Coin */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${video.platform === "TikTok" ? "bg-slate-100 text-slate-700" : "bg-red-50 text-red-600"}`}>
@@ -255,7 +218,6 @@ export default function Marketing() {
                   </p>
                 </div>
 
-                {/* Status */}
                 <div className="mt-2">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${video.status === "rejected" ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-600"}`}>
                     {video.status === "rejected" ? "Từ chối" : "Đã duyệt"}
@@ -263,10 +225,8 @@ export default function Marketing() {
                   <p className="mt-1 text-xs text-slate-400">{video.date}</p>
                 </div>
 
-                {/* Title */}
                 <p className="mt-2 text-sm font-medium text-blue-500">{video.title}</p>
 
-                {/* Stats */}
                 <div className="mt-3 grid grid-cols-4 gap-2">
                   <div className="rounded-lg bg-slate-50 p-2 text-center">
                     <p className="text-[10px] text-slate-400">View</p>
@@ -286,7 +246,6 @@ export default function Marketing() {
                   </div>
                 </div>
 
-                {/* Admin note */}
                 {video.note && (
                   <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs italic text-slate-500">
                     {video.note}
@@ -301,4 +260,4 @@ export default function Marketing() {
       <BottomNav />
     </div>
   );
-         }
+  }
