@@ -14,7 +14,7 @@ import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
 import Marketing from "./pages/Marketing.jsx";
 import MarketingWallet from "./pages/MarketingWallet.jsx";
-import Invite from "./pages/Invite.jsx"; // 👈 Thêm import này
+import Invite from "./pages/Invite.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -103,7 +103,7 @@ export default function App() {
       />
 
       <Route
-        path="/invite" // 👈 Thêm route này
+        path="/invite"
         element={
           <ProtectedRoute>
             <Invite />
