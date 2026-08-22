@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
 // Các category chính
 const CATEGORIES = [
-  { key: "roblox", label: "Robux Roblox", desc: "nạp thẳng vào ID hoặc code", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
+  { key: "roblox", label: "Robux Roblox", desc: "Nhận qua Gamepass", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
   { key: "freefire", label: "Kim cương Free Fire", desc: "Nạp thẳng vào UID", icon: Flame, color: "from-red-500 to-orange-500", iconBg: "bg-red-500/20" },
   { key: "lienquan", label: "Quân Huy Liên Quân", desc: "Nạp thẳng vào ID", icon: Swords, color: "from-amber-400 to-yellow-500", iconBg: "bg-amber-500/20" },
 ];
@@ -17,8 +17,8 @@ const CATEGORIES = [
 export default function Store() {
   const navigate = useNavigate();
   const { session } = useSession();
-  const { profile } = useProfile(session?.user?.id);
-  const { packages } = useStoreData(session?.user?.id);
+  const { profile } = useProfile();
+  const { packages } = useStoreData();
   const [toast, setToast] = useState(null);
   const [activeCategory, setActiveCategory] = useState("roblox");
   
@@ -92,8 +92,8 @@ export default function Store() {
       setToast({ message: "Vui lòng chọn gói trước!", type: "error" });
       return;
     }
-    if (!searchResult) {
-      setToast({ message: "Vui lòng tra cứu tài khoản trước!", type: "error" });
+    if (!username.trim()) {
+      setToast({ message: "Vui lòng nhập Username/ID!", type: "error" });
       return;
     }
     if (!contact.trim()) {
@@ -108,8 +108,8 @@ export default function Store() {
       coins_charged: selectedPkg.coin_cost,
       receive_method: redeemMethod,
       contact_value: contact,
-      target_username: searchResult.name,
-      target_uid: searchResult.id,
+      target_username: username.trim(),
+      target_uid: searchResult?.id || username.trim(),
       status: "processing"
     });
 
@@ -208,7 +208,7 @@ export default function Store() {
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-500"><Sparkles size={20} /></span>
             <div>
               <p className="text-sm font-bold text-amber-700">Lưu ý quan trọng trước khi đặt đơn</p>
-              <p className="mt-1 text-xs leading-relaxed text-amber-600">Vui lòng xem cung cấp đúng thông tin. Để sai thông tin/ sai phương thức liên lạc sẽ bị hủy đơn và không được hoàn coin nhanh.</p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-600">Vui lòng xem video hướng dẫn ở phía dưới để tạo Gamepass đúng cách. Đặt sai giá / sai cài đặt sẽ bị hủy đơn và không được hoàn coin nhanh.</p>
             </div>
           </div>
         </div>
@@ -217,14 +217,6 @@ export default function Store() {
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "Kim Cương Free Fire" : "Quân Huy Liên Quân"}</h2>
           
-          {selectedPkg && (
-            <div className="mb-4 rounded-2xl bg-sky-50 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Đã chọn</p>
-              <p className="mt-1 text-sm font-bold text-slate-900">{selectedPkg.name}</p>
-              <p className="mt-1 text-lg font-bold text-amber-500">{selectedPkg.coin_cost} Coin {selectedPkg.original_price_text && <span className="ml-2 text-xs font-normal text-slate-400 line-through">{selectedPkg.original_price_text}</span>}</p>
-            </div>
-          )}
-
           <div className="space-y-4">
             {filteredPackages.length === 0 ? (
               <div className="rounded-2xl bg-white p-8 text-center shadow-sm"><p className="text-sm text-slate-400">Chưa có gói nào.</p></div>
@@ -257,47 +249,15 @@ export default function Store() {
           </div>
         </div>
 
-        {/* HƯỚNG DẪN */}
+        {/* ĐẶT HÀNG */}
         <div className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Hướng dẫn</h2>
-          <div className="rounded-2xl border border-white bg-white p-6 shadow-sm">
-            <ol className="list-decimal list-inside space-y-2 text-sm text-slate-600">
-              {activeCategory === "roblox" && (
-                <>
-                  <li>Chọn gói Robux bạn muốn nhận.</li>
-                  <li>Nhập Username Roblox và nhấn "Tra cứu" để xác nhận đúng tài khoản.</li>
-                  <li>Kiểm tra tên &amp; ảnh đại diện hiển thị, sau đó nhấn "Đặt đơn".</li>
-                  <li>Admin sẽ gửi Gamepass vào tài khoản của bạn trong thời gian ngắn.</li>
-                </>
-              )}
-              {activeCategory === "freefire" && (
-                <>
-                  <li>Chọn gói KC bạn muốn nhận.</li>
-                  <li>Nhập ID Free Fire (UID) và nhấn "Tra cứu" để xác nhận đúng tài khoản.</li>
-                  <li>Kiểm tra tên &amp; ảnh đại diện hiển thị, sau đó nhấn "Đặt đơn".</li>
-                  <li>Admin sẽ nạp trực tiếp vào tài khoản game của bạn trong thời gian ngắn.</li>
-                </>
-              )}
-              {activeCategory === "lienquan" && (
-                <>
-                  <li>Chọn gói QH bạn muốn nhận.</li>
-                  <li>Nhập ID Liên Quân Mobile và nhấn "Tra cứu" để xác nhận đúng tài khoản.</li>
-                  <li>Kiểm tra tên &amp; ảnh đại diện hiển thị, sau đó nhấn "Đặt đơn".</li>
-                  <li>Admin sẽ nạp trực tiếp vào tài khoản game của bạn trong thời gian ngắn.</li>
-                </>
-              )}
-            </ol>
-          </div>
-        </div>
-
-        {/* THÔNG TIN TÀI KHOẢN GAME */}
-        <div className="mb-6">
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Thông tin tài khoản game</h2>
-          <div className="rounded-2xl border border-white bg-white p-5 shadow-sm">
+          <h2 className="mb-3 text-lg font-bold text-slate-900">Đặt đơn {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "KC" : "QH"}</h2>
+          
+          <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
             <p className="text-xs uppercase tracking-wider text-slate-400">
               {activeCategory === "roblox" ? "Username Roblox" : activeCategory === "freefire" ? "ID Free Fire (UID)" : "ID Liên Quân Mobile"}
             </p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <input
                 type="text"
                 value={username}
@@ -305,9 +265,9 @@ export default function Store() {
                 placeholder={activeCategory === "roblox" ? "VD: PlayerName123" : activeCategory === "freefire" ? "VD: 123456789" : "VD: 87654321"}
                 className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
               />
-              <button onClick={handleSearch} className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white">
-                {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                Tra cứu
+              {/* Nút tra cứu nhỏ (kính lúp) */}
+              <button onClick={handleSearch} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white">
+                {isSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               </button>
             </div>
 
@@ -321,6 +281,29 @@ export default function Store() {
               </div>
             )}
           </div>
+
+          <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
+            <p className="text-xs uppercase tracking-wider text-slate-400">Phương thức nhận</p>
+            <div className="mt-3 flex gap-2">
+              <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
+              <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
+            </div>
+            <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder={`Nhập ${redeemMethod === "discord" ? "Discord" : "Zalo"} của bạn...`} className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
+          </div>
+
+          {/* Đã chọn */}
+          {selectedPkg && (
+            <div className="mb-4 rounded-2xl bg-sky-50 p-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400">Đã chọn</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{selectedPkg.name}</p>
+              <p className="mt-1 text-lg font-bold text-amber-500">{selectedPkg.coin_cost} Coin {selectedPkg.original_price_text && <span className="ml-2 text-xs font-normal text-slate-400 line-through">{selectedPkg.original_price_text}</span>}</p>
+            </div>
+          )}
+
+          <button onClick={handleRedeem} disabled={isRedeeming || !selectedPkg} className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 disabled:opacity-50">
+            {isRedeeming ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Đặt đơn"}
+          </button>
+          <p className="mt-2 text-center text-xs text-slate-400">Số dư: {profile.coins} Coin</p>
         </div>
 
         {/* HISTORY */}
@@ -347,76 +330,7 @@ export default function Store() {
         </div>
       </main>
 
-      {/* MODAL XÁC NHẬN ĐỔI */}
-      {selectedPkg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-3xl border border-white bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Xác nhận đổi thưởng</h2>
-            <p className="mt-2 text-sm text-slate-500">Bạn đang đổi <span className="font-bold text-slate-900">{selectedPkg.name}</span> với giá <span className="font-bold text-amber-500">{selectedPkg.coin_cost} Coin</span></p>
-
-            <div className="mt-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{activeCategory === "roblox" ? "Username Roblox" : activeCategory === "freefire" ? "ID Free Fire (UID)" : "ID Liên Quân Mobile"}</p>
-              
-              <div className="flex gap-2">
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder={activeCategory === "roblox" ? "VD: PlayerName123" : activeCategory === "freefire" ? "VD: 123456789" : "VD: 87654321"} className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
-                <button onClick={handleSearch} className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white">
-                  {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                  Tra cứu
-                </button>
-              </div>
-
-              {searchResult && (
-                <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-3">
-                  <img src={searchResult.avatar} alt="avatar" className="h-12 w-12 rounded-full" />
-                  <div>
-                    <p className="text-sm font-bold text-emerald-700">{searchResult.name}</p>
-                    <p className="text-xs text-emerald-600">ID: {searchResult.id}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
-                <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
-              </div>
-
-              <input
-                type="text"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder={redeemMethod === "zalo" ? "Số điện thoại Zalo" : "Tên Discord (VD: username#0000)"}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="mt-5 flex gap-2">
-              <button
-                onClick={() => setSelectedPkg(null)}
-                className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-600"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleRedeem}
-                disabled={isRedeeming}
-                className="flex-1 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 disabled:opacity-60"
-              >
-                {isRedeeming ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Đặt đơn"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {toast && (
-        <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg ${
-          toast.type === "error" ? "bg-rose-500" : "bg-emerald-500"
-        }`}>
-          {toast.message}
-        </div>
-      )}
-
       <BottomNav />
     </div>
   );
-}
+  }
