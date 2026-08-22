@@ -60,7 +60,37 @@ export default function Marketing() {
           </div>
         </div>
       </main>
+<div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h3 className="flex items-center gap-2 text-base font-bold text-slate-900"><Info size={18} className="text-blue-500" /> Quy tắc thanh toán</h3>
+          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-600">
+            <li>• <strong className="text-slate-900">1 Marketing Coin = 1 VND</strong> khi rút tiền.</li>
+            <li>• Đổi sang <strong className="text-slate-900">Main coin</strong>: 1.000 mkt → 900 main (phí sàn 10%).</li>
+            <li>• Rút <strong className="text-slate-900">thẻ cào</strong>: <strong className="text-emerald-600">miễn phí</strong> (rút 100.000 – nhận thẻ 100.000).</li>
+            <li>• Rút <strong className="text-slate-900">bank/ví</strong>: phí 20% (rút 100.000 – nhận 80.000 VND).</li>
+            <li>• Tối thiểu mỗi lần rút: <strong className="text-slate-900">10.000 VND</strong>.</li>
+            <li>• Marketing Coin <strong className="text-slate-900">tách riêng</strong> khỏi Main coin — không gộp.</li>
+          </ul>
+        </div>
 
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {[
+            { key: "main", label: "Đổi Main", icon: ArrowRightLeft },
+            { key: "card", label: "Rút thẻ", icon: CreditCard },
+            { key: "bank", label: "Rút bank", icon: Landmark },
+          ].map((btn) => (
+            <button
+              key={btn.key}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600"
+            >
+              <btn.icon size={15} /> {btn.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h3 className="flex items-center gap-2 text-base font-bold text-slate-900"><History size={18} className="text-slate-400" /> Lịch sử rút</h3>
+          <p className="mt-3 text-center text-sm text-slate-400">Chưa có giao dịch rút tiền.</p>
+        </div>
       <BottomNav />
     </div>
   );
