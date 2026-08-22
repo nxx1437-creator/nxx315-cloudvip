@@ -42,6 +42,11 @@ export default function Store() {
     fetchHistory();
   }, [session]);
 
+  // Nhận diện loại gói (VNG / Quốc tế) dựa trên tên gói
+  const isVietnamPackage = (pkgName) => {
+    return pkgName.includes("40") || pkgName.includes("80") || pkgName.includes("500");
+  };
+
   const filteredPackages = packages.filter(pkg => {
     const name = pkg.name.toLowerCase();
     if (activeCategory === "roblox") return name.includes("robux");
@@ -96,7 +101,9 @@ export default function Store() {
       setToast({ message: "Vui lòng nhập Username/ID!", type: "error" });
       return;
     }
-    if (!contact.trim()) {
+    
+    // Kiểm tra thêm nếu là gói Quốc tế (100rb)
+    if (!isVietnamPackage(selectedPkg.name) && !contact.trim()) {
       setToast({ message: "Vui lòng nhập thông tin liên hệ!", type: "error" });
       return;
     }
@@ -106,8 +113,8 @@ export default function Store() {
       user_id: session.user.id,
       package_name: selectedPkg.name,
       coins_charged: selectedPkg.coin_cost,
-      receive_method: redeemMethod,
-      contact_value: contact,
+      receive_method: isVietnamPackage(selectedPkg.name) ? "roblox_username" : redeemMethod,
+      contact_value: isVietnamPackage(selectedPkg.name) ? username.trim() : contact,
       target_username: username.trim(),
       target_uid: searchResult?.id || username.trim(),
       status: "processing"
@@ -223,6 +230,7 @@ export default function Store() {
             ) : filteredPackages.map((pkg) => {
               const discount = pkg.original_price_text ? Math.round((1 - (pkg.coin_cost / parseFloat(pkg.original_price_text.replace(/\D/g, '')))) * 100) : 0;
               const isSelected = selectedPkg?.id === pkg.id;
+              const isVNG = isVietnamPackage(pkg.name);
               
               return (
                 <div
@@ -232,6 +240,14 @@ export default function Store() {
                     isSelected ? "border-2 border-sky-400 bg-sky-50 shadow-lg" : "border border-white bg-white shadow-sm hover:shadow-md"
                   }`}
                 >
+                  {/* Badge VNG / Quốc tế */}
+                  {!isVNG && (
+                    <span className="absolute left-3 top-3 rounded-full bg-blue-500 px-2 py-1 text-[10px] font-bold text-white">Quốc tế</span>
+                  )}
+                  {isVNG && (
+                    <span className="absolute left-3 top-3 rounded-full bg-green-500 px-2 py-1 text-[10px] font-bold text-white">VNG</span>
+                  )}
+
                   {discount > 0 && <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white">-{discount}%</span>}
                   <div className="text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50">
@@ -253,6 +269,7 @@ export default function Store() {
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Đặt đơn {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "KC" : "QH"}</h2>
           
+          {/* Thông tin giao hàng */}
           <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
             <p className="text-xs uppercase tracking-wider text-slate-400">
               {activeCategory === "roblox" ? "Username Roblox" : activeCategory === "freefire" ? "ID Free Fire (UID)" : "ID Liên Quân Mobile"}
@@ -282,14 +299,17 @@ export default function Store() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
-            <p className="text-xs uppercase tracking-wider text-slate-400">Phương thức nhận</p>
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
-              <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
+          {/* Chỉ hiện phương thức nhận cho gói Quốc tế */}
+          {selectedPkg && !isVietnamPackage(selectedPkg.name) && (
+            <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400">Phương thức nhận code</p>
+              <div className="mt-3 flex gap-2">
+                <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
+                <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
+              </div>
+              <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder={`Nhập ${redeemMethod === "discord" ? "Discord" : "Zalo"} của bạn...`} className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
             </div>
-            <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder={`Nhập ${redeemMethod === "discord" ? "Discord" : "Zalo"} của bạn...`} className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
-          </div>
+          )}
 
           {/* Đã chọn */}
           {selectedPkg && (
@@ -333,4 +353,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-  }
+        }
