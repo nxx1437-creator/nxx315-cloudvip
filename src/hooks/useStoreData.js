@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient.js";
  * useStoreData — lấy danh sách gói Robux đang bán + lịch sử đơn.
  * Tự động tải lại khi quay lại tab.
  */
-export function useStoreData(userId) {
+export default function useStoreData(userId) {
   const [packages, setPackages] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
