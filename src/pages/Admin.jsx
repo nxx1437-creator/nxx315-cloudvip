@@ -447,8 +447,30 @@ function MarketingTab() {
     const coin = Number(coins[video.id] || 0);
     if (coin <= 0) { alert("Vui lòng nhập số coin thưởng!"); return; }
     setSavingId(video.id);
-    const { error } = await supabase.from("marketing_videos").update({ status: "approved", coin_awarded: coin, admin_note: notes[video.id] || "" }).eq("id", video.id);
+    
+    const { error } = await supabase
+      .from("marketing_videos")
+      .update({ status: "approved", coin_awarded: coin, admin_note: notes[video.id] || "" })
+      .eq("id", video.id);
     if (error) { alert(error.message); setSavingId(null); return; }
+
+    // Cộng MARKETING Coin vào bảng profiles (KHÔNG cộng vào Main coin!)
+    const { data: userData } = await supabase
+      .from("profiles")
+      .select("marketing_coins, coins")
+      .eq("id", video.user_id)
+      .single();
+
+    if (userData) {
+      await supabase
+        .from("profiles")
+        .update({ marketing_coins: (userData.marketing_coins || 0) + coin })
+        .eq("id", video.user_id);
+    }
+
+    setSavingId(null);
+    await fetchVideos();
+};
     const { data: userData } = await supabase.from("profiles").select("coins").eq("id", video.user_id).single();
     if (userData) {
       await supabase.from("profiles").update({ coins: userData.coins + coin }).eq("id", video.user_id);
