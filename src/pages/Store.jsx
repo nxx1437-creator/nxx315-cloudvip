@@ -50,16 +50,44 @@ export default function Store() {
     return true;
   });
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!username.trim()) {
-      setToast({ message: "Vui lòng nhập Username/ID!", type: "error" });
+      setToast({ message: "Vui lòng nhập Username!", type: "error" });
       return;
     }
     setIsSearching(true);
-    setTimeout(() => {
-      setSearchResult({ name: username.trim(), avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username.trim()}`, id: "123456789" });
-      setIsSearching(false);
-    }, 1000);
+    
+    try {
+      // Gọi trực tiếp API Roblox
+      const userRes = await fetch("https://users.roblox.com/v1/usernames/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernames: [username.trim()] }),
+      });
+      const userData = await userRes.json();
+      
+      if (!userData.data || userData.data.length === 0) {
+        setToast({ message: "Không tìm thấy tài khoản!", type: "error" });
+        setIsSearching(false);
+        return;
+      }
+
+      const user = userData.data[0];
+      
+      // Lấy Avatar
+      const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-bust?userIds=${user.id}&size=150x150&format=Png`);
+      const avatarData = await avatarRes.json();
+
+      setSearchResult({
+        name: user.displayName || user.name,
+        avatar: avatarData.data?.[0]?.imageUrl || "",
+        id: String(user.id)
+      });
+    } catch (error) {
+      setToast({ message: "Lỗi tra cứu!", type: "error" });
+    }
+    
+    setIsSearching(false);
   };
 
   const handleRedeem = async () => {
@@ -306,4 +334,4 @@ export default function Store() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
-            }
+        }
