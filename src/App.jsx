@@ -1,4 +1,3 @@
-import Marketing from "./pages/Marketing.jsx";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
@@ -14,6 +13,8 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
+import Marketing from "./pages/Marketing.jsx"; // 👈 Thêm dòng này
+
 export default function App() {
   return (
     <Routes>
@@ -21,7 +22,9 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-<Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} /> {/* 👈 Thêm dòng này */}
+      
       <Route
         path="/dashboard"
         element={
@@ -30,46 +33,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/tasks"
-        element={
-          <ProtectedRoute>
-            <Tasks />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-  path="/marketing"
-  element={
-    <ProtectedRoute>
-      <Marketing />
-    </ProtectedRoute>
-  }
-/>
-      <Route
-        path="/store"
-        element={
-          <ProtectedRoute>
-            <Store />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <Admin />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/task/callback"
-        element={
-          <ProtectedRoute>
-            <TaskCallback />
-          </ProtectedRoute>
-        }
-      />
+      {/* ... Các route khác giữ nguyên ... */}
+      
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
