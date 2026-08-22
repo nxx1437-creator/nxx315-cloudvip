@@ -3,13 +3,13 @@ import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, 
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
 // Các category chính
 const CATEGORIES = [
-  { key: "roblox", label: "Robux Roblox", desc: "Nhận qua Gamepass", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
+  { key: "roblox", label: "Robux Roblox", desc: "nạp thẳng vào ID hoặc code", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
   { key: "freefire", label: "Kim cương Free Fire", desc: "Nạp thẳng vào UID", icon: Flame, color: "from-red-500 to-orange-500", iconBg: "bg-red-500/20" },
   { key: "lienquan", label: "Quân Huy Liên Quân", desc: "Nạp thẳng vào ID", icon: Swords, color: "from-amber-400 to-yellow-500", iconBg: "bg-amber-500/20" },
 ];
@@ -58,7 +58,6 @@ export default function Store() {
     setIsSearching(true);
     
     try {
-      // Gọi trực tiếp API Roblox
       const userRes = await fetch("https://users.roblox.com/v1/usernames/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,8 +72,6 @@ export default function Store() {
       }
 
       const user = userData.data[0];
-      
-      // Lấy Avatar
       const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-bust?userIds=${user.id}&size=150x150&format=Png`);
       const avatarData = await avatarRes.json();
 
@@ -211,7 +208,7 @@ export default function Store() {
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-500"><Sparkles size={20} /></span>
             <div>
               <p className="text-sm font-bold text-amber-700">Lưu ý quan trọng trước khi đặt đơn</p>
-              <p className="mt-1 text-xs leading-relaxed text-amber-600">Vui lòng xem video hướng dẫn ở phía dưới để tạo Gamepass đúng cách. Đặt sai giá / sai cài đặt sẽ bị hủy đơn và không được hoàn coin nhanh.</p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-600">Vui lòng xem cung cấp đúng thông tin. Để sai thông tin/ sai phương thức liên lạc sẽ bị hủy đơn và không được hoàn coin nhanh.</p>
             </div>
           </div>
         </div>
@@ -257,6 +254,72 @@ export default function Store() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* HƯỚNG DẪN */}
+        <div className="mb-6">
+          <h2 className="mb-3 text-lg font-bold text-slate-900">Hướng dẫn</h2>
+          <div className="rounded-2xl border border-white bg-white p-6 shadow-sm">
+            <ol className="list-decimal list-inside space-y-2 text-sm text-slate-600">
+              {activeCategory === "roblox" && (
+                <>
+                  <li>Chọn gói Robux bạn muốn nhận.</li>
+                  <li>Nhập Username Roblox và nhấn "Tra cứu" để xác nhận đúng tài khoản.</li>
+                  <li>Kiểm tra tên &amp; ảnh đại diện hiển thị, sau đó nhấn "Đặt đơn".</li>
+                  <li>Admin sẽ gửi Gamepass vào tài khoản của bạn trong thời gian ngắn.</li>
+                </>
+              )}
+              {activeCategory === "freefire" && (
+                <>
+                  <li>Chọn gói KC bạn muốn nhận.</li>
+                  <li>Nhập ID Free Fire (UID) và nhấn "Tra cứu" để xác nhận đúng tài khoản.</li>
+                  <li>Kiểm tra tên &amp; ảnh đại diện hiển thị, sau đó nhấn "Đặt đơn".</li>
+                  <li>Admin sẽ nạp trực tiếp vào tài khoản game của bạn trong thời gian ngắn.</li>
+                </>
+              )}
+              {activeCategory === "lienquan" && (
+                <>
+                  <li>Chọn gói QH bạn muốn nhận.</li>
+                  <li>Nhập ID Liên Quân Mobile và nhấn "Tra cứu" để xác nhận đúng tài khoản.</li>
+                  <li>Kiểm tra tên &amp; ảnh đại diện hiển thị, sau đó nhấn "Đặt đơn".</li>
+                  <li>Admin sẽ nạp trực tiếp vào tài khoản game của bạn trong thời gian ngắn.</li>
+                </>
+              )}
+            </ol>
+          </div>
+        </div>
+
+        {/* THÔNG TIN TÀI KHOẢN GAME */}
+        <div className="mb-6">
+          <h2 className="mb-3 text-lg font-bold text-slate-900">Thông tin tài khoản game</h2>
+          <div className="rounded-2xl border border-white bg-white p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-slate-400">
+              {activeCategory === "roblox" ? "Username Roblox" : activeCategory === "freefire" ? "ID Free Fire (UID)" : "ID Liên Quân Mobile"}
+            </p>
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={activeCategory === "roblox" ? "VD: PlayerName123" : activeCategory === "freefire" ? "VD: 123456789" : "VD: 87654321"}
+                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
+              />
+              <button onClick={handleSearch} className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white">
+                {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                Tra cứu
+              </button>
+            </div>
+
+            {searchResult && (
+              <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald-50 p-3">
+                <img src={searchResult.avatar} alt="avatar" className="h-12 w-12 rounded-full" />
+                <div>
+                  <p className="text-sm font-bold text-emerald-700">{searchResult.name}</p>
+                  <p className="text-xs text-emerald-600">ID: {searchResult.id}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -314,24 +377,4 @@ export default function Store() {
 
               <div className="flex gap-2">
                 <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
-                <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "zalo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Zalo</button>
-              </div>
-
-              <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder={`Nhập ${redeemMethod === "discord" ? "Discord" : "Zalo"} của bạn...`} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setSelectedPkg(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-200">Huỷ</button>
-              <button onClick={handleRedeem} disabled={isRedeeming} className="flex-1 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
-                {isRedeeming ? <Loader2 size={16} className="animate-spin" /> : "Xác nhận đổi"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <BottomNav />
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-    </div>
-  );
-        }
+                <button onClick={() => setRedeemMethod("zalo")} className={`flex-1 rounded-xl px-4 
