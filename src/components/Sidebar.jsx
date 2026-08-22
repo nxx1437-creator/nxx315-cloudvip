@@ -1,198 +1,181 @@
-import React, { useEffect } from "react";
-import { 
-  LayoutDashboard, User, ListChecks, Megaphone, Rocket, Gift, 
-  Trophy, Store, ShoppingBag, Wallet, CreditCard, FileText, 
-  History, Coins, Mail, Download, FileWarning, LifeBuoy, X, LogOut, Search, Crown
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  X, Search, Coins, Crown, LayoutGrid, User, CheckSquare, Trophy,
+  Gift, ShoppingBag, Wallet, CreditCard, LogOut, ChevronDown,
 } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient.js";
 
-const MENU_GROUPS = [
-  {
-    label: "Tổng quan",
-    items: [
-      { path: "/dashboard", label: "Trang chính", icon: LayoutDashboard },
-      { path: "/profile", label: "Hồ sơ", icon: User },
-    ],
-  },
-  {
-    label: "Kiếm Coin",
-    items: [
-      { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-      { label: "Marketing Video", icon: Megaphone, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
-      { label: "Buff MXH Free", icon: Rocket, badge: "FREE", badgeColor: "bg-teal-100 text-teal-600" },
-      { label: "Mời bạn", icon: Gift, badge: "+200", badgeColor: "bg-amber-100 text-amber-600" },
-      { label: "Bảng xếp hạng", icon: Trophy, badge: "NEW", badgeColor: "bg-emerald-100 text-emerald-600" },
-    ],
-  },
-  {
-    label: "Cửa hàng",
-    items: [
-      { path: "/store", label: "Chợ", icon: Store, badge: "NEW", badgeColor: "bg-emerald-100 text-emerald-600" },
-      { path: "/store", label: "Mua Robux", icon: ShoppingBag, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
-      { path: "/store", label: "Cửa hàng", icon: Wallet },
-    ],
-  },
-  {
-    label: "Ví & Nạp",
-    items: [
-      { path: "/wallet", label: "Nạp thẻ", icon: CreditCard, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
-      { label: "Đơn hàng", icon: FileText },
-      { label: "Lịch sử", icon: History },
-      { label: "Lịch sử Coin", icon: Coins },
-    ],
-  },
-  {
-    label: "Tiện ích",
-    items: [
-      { label: "Đọc Mail", icon: Mail, badge: "NEW", badgeColor: "bg-emerald-100 text-emerald-600" },
-      { label: "Tải xuống", icon: Download, badge: "FREE", badgeColor: "bg-teal-100 text-teal-600" },
-    ],
-  },
-  {
-    label: "Hỗ trợ",
-    items: [
-      { label: "Quy định", icon: FileWarning },
-      { label: "Hỗ trợ", icon: LifeBuoy },
-    ],
-  },
-];
-
-export default function Sidebar({ open, onClose, displayName, initial, coins, level }) {
+/**
+ * Sidebar.jsx
+ * -----------------------------------------------------------------
+ * Menu trượt ra từ trái. Giữ nguyên interface props cũ để không phải
+ * sửa chỗ gọi ở Dashboard.jsx / Tasks.jsx:
+ *   <Sidebar open={..} onClose={..} displayName={..} initial={..} coins={..} level={..} />
+ *
+ * Mục nào CHƯA có trang thật trong app (Bảng xếp hạng, Nạp thẻ...)
+ * sẽ hiện toast "Sắp ra mắt" thay vì dẫn tới link lỗi.
+ * -----------------------------------------------------------------
+ */
+export default function Sidebar({ open, onClose, displayName, initial, coins = 0, level = 1 }) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [comingSoon, setComingSoon] = useState(null);
 
-  useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "auto";
-    return () => { document.body.style.overflow = "auto"; };
-  }, [open]);
+  if (!open) return null;
 
-  const handleNavigate = (path) => {
-    if (path) navigate(path);
-    onClose();
+  const handleComingSoon = (label) => {
+    setComingSoon(label);
+    setTimeout(() => setComingSoon(null), 1800);
   };
 
   const handleLogout = async () => {
-    const { supabase } = await import("../lib/supabaseClient.js");
     await supabase.auth.signOut();
+    onClose?.();
     navigate("/login");
-    onClose();
   };
 
-  return (
-    <>
-      {/* Overlay mờ */}
-      <div
-        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        onClick={onClose}
-      />
+  const NAV_GROUPS = [
+    {
+      title: "Tổng quan",
+      items: [
+        { icon: LayoutGrid, label: "Trang chính", to: "/dashboard" },
+        { icon: User, label: "Hồ sơ", soon: true },
+      ],
+    },
+    {
+      title: "Kiếm Coin",
+      items: [
+        { icon: CheckSquare, label: "Nhiệm vụ", to: "/tasks" },
+        { icon: Trophy, label: "Bảng xếp hạng", badge: "MỚI", badgeCls: "bg-emerald-100 text-emerald-600", soon: true },
+        { icon: Gift, label: "Mời bạn", badge: "+200", badgeCls: "bg-amber-100 text-amber-600", soon: true },
+      ],
+    },
+    {
+      title: "Cửa hàng",
+      items: [
+        { icon: ShoppingBag, label: "Đổi Robux", badge: "HOT", badgeCls: "bg-rose-100 text-rose-600", to: "/store" },
+      ],
+    },
+    {
+      title: "Ví & Nạp",
+      items: [
+        { icon: Wallet, label: "Ví của tôi", soon: true },
+        { icon: CreditCard, label: "Nạp thẻ", badge: "HOT", badgeCls: "bg-rose-100 text-rose-600", soon: true },
+      ],
+    },
+  ];
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[85%] max-w-[320px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Header - Flex cân đối */}
-        <div className="flex items-center justify-between px-5 pb-5 pt-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
-              <span className="text-xl font-bold">{initial}</span>
-            </div>
-            <div className="flex flex-col">
-              <h2 className="font-display text-lg font-bold leading-tight text-slate-900">
-                Nxx315 Studio
-                <br />
-                Rewards
-              </h2>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
-                Premium Hub
-              </p>
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      {/* Nền mờ phía sau */}
+      <div className="flex-1 bg-black/40 backdrop-blur-[2px] transition-opacity" onClick={onClose} />
+
+      {/* Panel menu */}
+      <div className="flex w-[84%] max-w-xs flex-col bg-white shadow-2xl animate-[slideIn_0.22s_ease-out]">
+        <style>{`
+          @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        `}</style>
+
+        {/* Header thương hiệu */}
+        <div className="flex items-center justify-between px-4 pt-5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-md shadow-sky-500/30">
+              <Coins size={18} className="text-white" />
+            </span>
+            <div>
+              <p className="text-sm font-extrabold leading-tight text-slate-900">Nxx315 Studio</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-500">Rewards</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 active:scale-90"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Tìm kiếm */}
-        <div className="px-5 pb-4">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-3">
+        {/* Ô tìm kiếm (trang trí, chưa có tính năng lọc) */}
+        <div className="mt-4 px-4">
+          <div className="flex items-center gap-2 rounded-2xl bg-slate-100 px-3.5 py-2.5">
             <Search size={16} className="text-slate-400" />
             <input
-              type="text"
+              disabled
               placeholder="Tìm kiếm..."
-              className="w-full bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-400"
+              className="w-full bg-transparent text-sm text-slate-400 outline-none"
             />
           </div>
         </div>
 
-        {/* Card số dư */}
-        <div className="mx-5 mb-6 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-blue-50 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Số dư khả dụng</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {coins} <span className="text-sm font-medium text-amber-500">Coin</span>
-              </p>
-              <p className="mt-1 text-[10px] text-slate-400">0 MEME</p>
-            </div>
-            <div className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">
-              <Crown size={12} /> VIP Đồng
-            </div>
-          </div>
+        {/* Thẻ số dư */}
+        <div className="mx-4 mt-3 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Số dư khả dụng</p>
+          <p className="mt-1 text-2xl font-extrabold text-slate-900">
+            {coins.toLocaleString("vi-VN")} <span className="text-base font-bold text-amber-500">Coin</span>
+          </p>
+          <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-600">
+            <Crown size={12} /> Level {level}
+          </span>
         </div>
 
-        {/* Menu cuộn */}
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
-          {MENU_GROUPS.map((group) => (
-            <div key={group.label} className="mb-6">
-              <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {group.label}
-              </p>
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const isActive = item.path && location.pathname === item.path;
-                  return (
-                    <button
-                      key={item.label}
-                      onClick={() => handleNavigate(item.path)}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
-                        isActive
-                          ? "border border-sky-100 bg-sky-50 text-sky-600"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      <item.icon size={19} className={isActive ? "text-sky-500" : "text-slate-400"} />
-                      <span className="flex-1 text-sm font-medium">{item.label}</span>
-                      {item.badge && (
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeColor}`}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+        {/* Danh sách menu — cuộn được */}
+        <div className="mt-2 flex-1 overflow-y-auto px-2 pb-2">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title} className="mt-3">
+              <div className="flex items-center justify-between px-3 py-1">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{group.title}</p>
+                <ChevronDown size={13} className="text-slate-300" />
               </div>
+              {group.items.map((item) => {
+                const content = (
+                  <>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-500 transition group-hover:bg-sky-50 group-hover:text-sky-600">
+                      <item.icon size={17} />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold text-slate-700">{item.label}</span>
+                    {item.badge && (
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeCls}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </>
+                );
+
+                const rowCls =
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 active:scale-[0.97] hover:bg-sky-50/70";
+
+                return item.soon ? (
+                  <button key={item.label} onClick={() => handleComingSoon(item.label)} className={`${rowCls} w-full text-left`}>
+                    {content}
+                  </button>
+                ) : (
+                  <Link key={item.label} to={item.to} onClick={onClose} className={rowCls}>
+                    {content}
+                  </Link>
+                );
+              })}
             </div>
           ))}
         </div>
 
-        {/* Đăng xuất - Nằm gọn cuối trang, không đè lên menu */}
-        <div className="border-t border-slate-100 bg-white p-4">
+        {/* Toast "sắp ra mắt" */}
+        {comingSoon && (
+          <div className="mx-4 mb-2 animate-[fadeIn_0.15s_ease-out] rounded-xl bg-slate-900 px-3.5 py-2 text-center text-xs font-medium text-white">
+            "{comingSoon}" sắp ra mắt nhé 🚀
+          </div>
+        )}
+
+        {/* Đăng xuất */}
+        <div className="border-t border-slate-100 p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-rose-50 py-3 text-sm font-semibold text-rose-500 transition hover:bg-rose-100"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-bold text-rose-500 transition-all duration-150 hover:bg-rose-50 active:scale-[0.97]"
           >
-            <LogOut size={16} /> Đăng xuất
+            <LogOut size={17} /> Đăng xuất
           </button>
         </div>
-      </aside>
-    </>
+      </div>
+    </div>
   );
         }
+                          
