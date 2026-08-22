@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { 
   LayoutDashboard, User, ListChecks, Megaphone, Rocket, Gift, 
   Trophy, Store, ShoppingBag, Wallet, CreditCard, FileText, 
-  History, Coins, Mail, Download, FileWarning, LifeBuoy, X, LogOut, Search
+  History, Coins, Mail, Download, FileWarning, LifeBuoy, X, LogOut, Search, Crown
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -61,22 +61,14 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Khóa cuộn trang khi mở sidebar
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "auto";
+    return () => { document.body.style.overflow = "auto"; };
   }, [open]);
 
   const handleNavigate = (path) => {
-    if (path) {
-      navigate(path);
-    }
+    if (path) navigate(path);
     onClose();
   };
 
@@ -89,7 +81,7 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
 
   return (
     <>
-      {/* Overlay mờ phía sau */}
+      {/* Overlay mờ */}
       <div
         className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
@@ -97,35 +89,41 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
         onClick={onClose}
       />
 
-      {/* Sidebar trượt từ trái */}
+      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 z-50 flex h-full w-[85%] max-w-[320px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Header */}
-        <div className="relative flex items-center justify-between px-5 pb-4 pt-6">
+        {/* Header - Flex cân đối */}
+        <div className="flex items-center justify-between px-5 pb-5 pt-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
-              <span className="text-lg font-bold">{initial}</span>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
+              <span className="text-xl font-bold">{initial}</span>
             </div>
-            <div>
-              <h2 className="font-display text-lg font-bold leading-tight text-slate-900">Nxx315 Studio Rewards</h2>
-              <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">Premium Hub</p>
+            <div className="flex flex-col">
+              <h2 className="font-display text-lg font-bold leading-tight text-slate-900">
+                Nxx315 Studio
+                <br />
+                Rewards
+              </h2>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+                Premium Hub
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Thanh tìm kiếm */}
+        {/* Tìm kiếm */}
         <div className="px-5 pb-4">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2.5">
-            <Search size={15} className="text-slate-400" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-3">
+            <Search size={16} className="text-slate-400" />
             <input
               type="text"
               placeholder="Tìm kiếm..."
@@ -135,25 +133,25 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
         </div>
 
         {/* Card số dư */}
-        <div className="mx-5 mb-4 rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 p-4 shadow-sm">
-          <div className="flex items-center justify-between">
+        <div className="mx-5 mb-6 rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-blue-50 p-5 shadow-sm">
+          <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Số dư khả dụng</p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
+              <p className="mt-2 text-2xl font-bold text-slate-900">
                 {coins} <span className="text-sm font-medium text-amber-500">Coin</span>
               </p>
-              <p className="text-[10px] text-slate-400">0 MEME</p>
+              <p className="mt-1 text-[10px] text-slate-400">0 MEME</p>
             </div>
             <div className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">
-              <span>👑</span> VIP Đồng
+              <Crown size={12} /> VIP Đồng
             </div>
           </div>
         </div>
 
         {/* Menu cuộn */}
-        <div className="flex-1 overflow-y-auto px-3 pb-20">
+        <div className="flex-1 overflow-y-auto px-4 pb-6">
           {MENU_GROUPS.map((group) => (
-            <div key={group.label} className="mb-5">
+            <div key={group.label} className="mb-6">
               <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {group.label}
               </p>
@@ -164,13 +162,13 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
                     <button
                       key={item.label}
                       onClick={() => handleNavigate(item.path)}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
                         isActive
                           ? "border border-sky-100 bg-sky-50 text-sky-600"
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                       }`}
                     >
-                      <item.icon size={18} className={isActive ? "text-sky-500" : "text-slate-400"} />
+                      <item.icon size={19} className={isActive ? "text-sky-500" : "text-slate-400"} />
                       <span className="flex-1 text-sm font-medium">{item.label}</span>
                       {item.badge && (
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeColor}`}>
@@ -185,8 +183,8 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
           ))}
         </div>
 
-        {/* Nút đăng xuất */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white p-4">
+        {/* Đăng xuất - Nằm gọn cuối trang, không đè lên menu */}
+        <div className="border-t border-slate-100 bg-white p-4">
           <button
             onClick={handleLogout}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-100 bg-rose-50 py-3 text-sm font-semibold text-rose-500 transition hover:bg-rose-100"
@@ -197,4 +195,4 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
       </aside>
     </>
   );
-      }
+        }
