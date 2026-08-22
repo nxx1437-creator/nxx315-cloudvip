@@ -1,14 +1,13 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu,
-  Zap, ShoppingBag, Wallet, MessageCircle, ArrowUpRight, ArrowDownRight
+  ChevronRight, Zap, ShoppingBag, Wallet, MessageCircle, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
-import { supabase } from "../lib/supabaseClient.js";
 
 const WEEKDAYS = ["Thứ 7", "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
 
@@ -35,65 +34,21 @@ function StatCard({ icon: Icon, iconBg, iconColor, value, label }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [pressedQuick, setPressedQuick] = useState(null);
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // State cho dữ liệu thật
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [tasksAvailable, setTasksAvailable] = useState(0);
-
   const displayName = profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
   const initial = displayName.charAt(0).toUpperCase();
   const expPct = Math.min(100, Math.round((profile.exp / (profile.exp_target || 100)) * 100));
 
-  // Lấy dữ liệu thật từ Supabase
-  useEffect(() => {
-    const fetchActivities = async () => {
-      if (!user?.id) return;
-
-      // Lấy lịch sử đổi quà (redemption_orders)
-      const { data: orders } = await supabase
-        .from("redemption_orders")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      // Lấy số nhiệm vụ khả dụng
-      const { data: allTasks } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("active", true);
-      
-      if (allTasks) setTasksAvailable(allTasks.length);
-
-      // Tạo danh sách hoạt động gần đây
-      if (orders && orders.length > 0) {
-        const activityList = orders.map((order) => ({
-          id: order.id,
-          type: "spend", // Đổi quà là trừ coin
-          title: `Mua: ${order.package_name || "Phần thưởng"}`,
-          date: new Date(order.created_at).toLocaleString("vi-VN"),
-        }));
-        setRecentActivities(activityList);
-      } else {
-        setRecentActivities([]);
-      }
-    };
-
-    fetchActivities();
-  }, [user?.id]);
-
-  // TODO: thay bằng dữ liệu Coin thật theo từng ngày (bảng coin_history chẳng hạn).
   const last7Days = useMemo(() => [0, 5, 12, 8, 15, 20, 0], []);
   const maxDay = Math.max(1, ...last7Days);
   const totalCoins7Days = last7Days.reduce((a, b) => a + b, 0);
 
   const todayTasksDone = profile.tasks_completed_today || 0;
-  const todayTasksTotal = tasksAvailable > 0 ? tasksAvailable : 3;
+  const todayTasksTotal = 3;
   const todayTaskPct = Math.min(100, Math.round((todayTasksDone / todayTasksTotal) * 100));
 
   return (
@@ -201,7 +156,7 @@ export default function Dashboard() {
             icon={CheckSquare}
             iconBg="bg-sky-50"
             iconColor="text-sky-500"
-            value={tasksAvailable}
+            value={3}
             label="Nhiệm vụ khả dụng"
           />
           <StatCard
@@ -325,64 +280,45 @@ export default function Dashboard() {
         </div>
 
         {/* QUICK ACTIONS */}
-        {/* QUICK ACTIONS */}
         <div>
           <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hành động nhanh</h3>
           <div className="grid grid-cols-2 gap-3">
-            {[
-              { key: "tasks", path: "/tasks", label: "Nhiệm vụ", icon: Zap, bg: "bg-sky-50", color: "text-sky-500", pressBg: "bg-sky-100" },
-              { key: "store", path: "/store", label: "Cửa hàng", icon: ShoppingBag, bg: "bg-blue-50", color: "text-blue-500", pressBg: "bg-blue-100" },
-              { key: "wallet", path: "/wallet", label: "Nạp / Rút", icon: Wallet, bg: "bg-amber-50", color: "text-amber-500", pressBg: "bg-amber-100" },
-              { key: "profile", path: "/profile", label: "Hỗ trợ", icon: MessageCircle, bg: "bg-emerald-50", color: "text-emerald-500", pressBg: "bg-emerald-100" },
-            ].map((btn) => {
-              const isPressed = pressedQuick === btn.key;
-              return (
-                <button
-                  key={btn.key}
-                  onClick={() => navigate(btn.path)}
-                  onTouchStart={() => setPressedQuick(btn.key)}
-                  onTouchEnd={() => setPressedQuick(null)}
-                  onMouseDown={() => setPressedQuick(btn.key)}
-                  onMouseUp={() => setPressedQuick(null)}
-                  onMouseLeave={() => setPressedQuick(null)}
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                  className={`flex flex-col items-center gap-2 rounded-full border py-5 text-sm font-medium transition-all duration-100 ${
-                    isPressed
-                      ? `scale-95 border-transparent ${btn.pressBg} ${btn.color}`
-                      : "border-white bg-white text-slate-700 shadow-sm shadow-slate-200/70"
-                  }`}
-                >
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${isPressed ? "bg-white/60" : btn.bg}`}>
-                    <btn.icon size={18} className={btn.color} />
-                  </span>
-                  {btn.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        
-        {/* RECENT ACTIVITIES */}
-        <div>
-          <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hoạt động gần đây</h3>
-          <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
-            <div className="space-y-3">
-              {recentActivities.length === 0 ? (
-                <p className="py-4 text-center text-sm text-slate-400">Chưa có hoạt động nào.</p>
-              ) : recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-3">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                    activity.type === "earn" ? "bg-emerald-50 text-emerald-500" : "bg-rose-50 text-rose-500"
-                  }`}>
-                    {activity.type === "earn" ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{activity.title}</p>
-                    <p className="text-xs text-slate-400">{activity.date}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={() => navigate("/tasks")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50">
+                <Zap size={18} className="text-sky-500" />
+              </span>
+              Nhiệm vụ
+            </button>
+            <button
+              onClick={() => navigate("/store")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
+                <ShoppingBag size={18} className="text-blue-500" />
+              </span>
+              Cửa hàng
+            </button>
+            <button
+              onClick={() => navigate("/wallet")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
+                <Wallet size={18} className="text-amber-500" />
+              </span>
+              Nạp / Rút
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                <MessageCircle size={18} className="text-emerald-500" />
+              </span>
+              Hỗ trợ
+            </button>
           </div>
         </div>
       </main>
@@ -399,4 +335,4 @@ export default function Dashboard() {
       />
     </div>
   );
-    }
+                  }
