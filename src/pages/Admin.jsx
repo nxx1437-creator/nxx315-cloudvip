@@ -539,3 +539,53 @@ function UsersTab() {
     </div>
   );
               }
+// Thêm icon
+import { Megaphone } from "lucide-react"; 
+
+// Thêm vào TABS
+const TABS = [
+  // ... các tab cũ
+  { key: "marketing", label: "Marketing", icon: Megaphone, desc: "Duyệt video TikTok/YouTube" },
+];
+
+// Thêm component MarketingTab vào cuối file (hoặc cạnh các tab khác)
+function MarketingTab() {
+  const { videos, fetchVideos } = useMarketing(null, true); // Lấy tất cả video
+  const [notes, setNotes] = useState({});
+  const [coins, setCoins] = useState({});
+
+  const handleApprove = async (video) => {
+    const coin = Number(coins[video.id] || 0);
+    const note = notes[video.id] || "";
+    await supabase.from("marketing_videos").update({ status: "approved", coin_awarded: coin, admin_note: note }).eq("id", video.id);
+    // Cộng coin cho user
+    await supabase.rpc("add_coins", { user_id: video.user_id, amount: coin }); // Cần tạo function add_coins trong SQL
+    fetchVideos();
+  };
+
+  const handleReject = async (video) => {
+    const note = notes[video.id] || "";
+    await supabase.from("marketing_videos").update({ status: "rejected", admin_note: note }).eq("id", video.id);
+    fetchVideos();
+  };
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold">Marketing Videos</h2>
+      {videos.map((video) => (
+        <div key={video.id} className="rounded-xl border p-4">
+          <p className="text-sm font-bold">{video.platform} - {video.link}</p>
+          <p className="text-xs text-slate-400">User: {video.user_id}</p>
+          <div className="mt-2 flex gap-2">
+            <input type="number" placeholder="Coin thưởng" value={coins[video.id] || ""} onChange={(e) => setCoins({...coins, [video.id]: e.target.value})} className="w-20 rounded border px-2 py-1" />
+            <input type="text" placeholder="Lời nhắc" value={notes[video.id] || ""} onChange={(e) => setNotes({...notes, [video.id]: e.target.value})} className="flex-1 rounded border px-2 py-1" />
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button onClick={() => handleApprove(video)} className="rounded-full bg-emerald-500 px-4 py-1 text-xs text-white">Duyệt</button>
+            <button onClick={() => handleReject(video)} className="rounded-full bg-rose-500 px-4 py-1 text-xs text-white">Từ chối</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
