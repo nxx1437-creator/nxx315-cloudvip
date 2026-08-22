@@ -19,6 +19,23 @@ export default function Marketing() {
   const [videos, setVideos] = useState([]);
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [activeVideoTab, setActiveVideoTab] = useState("all");
+  const [calcPlatform, setCalcPlatform] = useState("tiktok");
+
+  const PLATFORM_RATES = [
+    { key: "tiktok", label: "TikTok", ratePer1K: 2500 },
+    { key: "yt_long", label: "YT Long", ratePer1K: 25000 },
+    { key: "yt_short", label: "YT Short", ratePer1K: 10000 },
+  ];
+  const MILESTONES = [1000, 5000, 10000, 50000];
+
+  const estimateCoins = (platformKey, views) => {
+    const platform = PLATFORM_RATES.find((p) => p.key === platformKey);
+    if (!platform) return 0;
+    let base = (views / 1000) * platform.ratePer1K;
+    if (views >= 10000) base *= 1.2;
+    else if (views >= 5000) base *= 1.1;
+    return Math.round(base);
+  };
 
   const isValidLink = (url) => {
     try {
@@ -189,13 +206,30 @@ export default function Marketing() {
                 <Info size={18} className="text-sky-500" /> Quy tắc thanh toán
               </h3>
               <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-600">
-                <li>• 1 Marketing Coin = 1 VND khi rút tiền.</li>
-                <li>• Đổi sang Main coin: 1.000 mkt → 900 main (phí sàn 10%).</li>
-                <li>• Rút thẻ cào: miễn phí (rút 100.000 – nhận thẻ 100.000).</li>
-                <li>• Rút bank/ví: phí 20% (rút 100.000 – nhận 80.000 VND).</li>
-                <li>• Tối thiểu mỗi lần rút: 10.000 VND.</li>
-                <li>• Marketing Coin tách riêng khỏi Main coin — không gộp.</li>
+                <li>• <strong className="text-slate-900">1 Marketing Coin = 1 VND</strong> khi rút tiền.</li>
+                <li>• Đổi sang <strong className="text-slate-900">Main coin</strong>: 1.000 mkt → 900 main (phí sàn 10%).</li>
+                <li>• Rút <strong className="text-slate-900">thẻ cào</strong>: <strong className="text-emerald-600">miễn phí</strong> (rút 100.000 – nhận thẻ 100.000).</li>
+                <li>• Rút <strong className="text-slate-900">bank/ví</strong>: phí 20% (rút 100.000 – nhận 80.000 VND).</li>
+                <li>• Tối thiểu mỗi lần rút: <strong className="text-slate-900">10.000 VND</strong>.</li>
+                <li>• Marketing Coin <strong className="text-slate-900">tách riêng</strong> khỏi Main coin — không gộp.</li>
               </ul>
+            </div>
+
+            {/* Nút thao tác nhanh */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {[
+                { key: "main", label: "Đổi Main", icon: ArrowRightLeft },
+                { key: "card", label: "Rút thẻ", icon: CreditCard },
+                { key: "bank", label: "Rút bank", icon: Landmark },
+              ].map((btn) => (
+                <button
+                  key={btn.key}
+                  onClick={() => setActiveTab(btn.key)}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-sky-200 bg-white px-4 py-2.5 text-sm font-semibold text-sky-700 transition-all duration-150 active:scale-95 hover:bg-sky-50"
+                >
+                  <btn.icon size={15} /> {btn.label}
+                </button>
+              ))}
             </div>
 
             <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
@@ -241,7 +275,36 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* ===== 3. GỬI LINK ===== */}
+        {/* ===== 2.5 BẢNG TÍNH COIN THEO MỐC VIEW ===== */}
+        <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-bold text-slate-900">Ước tính Coin theo mốc view</h3>
+          <div className="mt-3 flex gap-2">
+            {PLATFORM_RATES.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setCalcPlatform(p.key)}
+                className={`flex-1 rounded-xl py-2 text-xs font-semibold transition ${
+                  calcPlatform === p.key ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-sm" : "bg-sky-50 text-sky-700"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            {MILESTONES.map((m) => (
+              <div key={m} className="rounded-xl border border-sky-100 bg-sky-50/40 p-3">
+                <p className="text-xs text-slate-400">{m.toLocaleString("vi-VN")} view</p>
+                <p className="mt-1 flex items-center gap-1 text-base font-extrabold text-amber-500">
+                  <Coins size={14} /> {estimateCoins(calcPlatform, m).toLocaleString("vi-VN")}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-slate-400">
+            *Tính theo tỉ lệ 1K view + bonus mốc (≥5K +10%, ≥10K +20%). Số coin thực tế do admin duyệt.
+          </p>
+        </div>
         <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Gửi link video của bạn</h2>
           <form onSubmit={handleSubmit} className="mt-4">
@@ -262,6 +325,28 @@ export default function Marketing() {
           </form>
         </div>
 
+        {/* ===== 3.5 THỐNG KÊ VIDEO ===== */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Tổng video</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{videos.length}</p>
+          </div>
+          <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Chờ duyệt</p>
+            <p className="mt-1 text-2xl font-bold text-amber-500">{videos.filter((v) => v.status === "pending").length}</p>
+          </div>
+          <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Đã duyệt</p>
+            <p className="mt-1 text-2xl font-bold text-sky-500">{videos.filter((v) => v.status === "approved").length}</p>
+          </div>
+          <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Coin đã nhận</p>
+            <p className="mt-1 flex items-center gap-1 text-2xl font-bold text-emerald-600">
+              <Coins size={16} /> {totalCoins.toLocaleString("vi-VN")}
+            </p>
+          </div>
+        </div>
+
         {/* ===== 4. DANH SÁCH VIDEO ===== */}
         <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Video của bạn</h2>
@@ -271,6 +356,7 @@ export default function Marketing() {
               { key: "all", label: "Tất cả" },
               { key: "pending", label: "Chờ duyệt" },
               { key: "approved", label: "Đã duyệt" },
+              { key: "paid", label: "Đã trả coin" },
               { key: "rejected", label: "Từ chối" },
             ].map((tab) => (
               <button
@@ -303,55 +389,4 @@ export default function Marketing() {
                         video.platform === "TikTok" ? "bg-slate-100 text-slate-700" : "bg-red-50 text-red-600"
                       }`}
                     >
-                      {video.platform === "TikTok" ? <Music size={12} /> : <Youtube size={12} />} {video.platform}
-                    </span>
-                    <p className="flex items-center gap-1 text-sm font-bold text-amber-500">
-                      <Coins size={14} /> {video.coin_awarded || 0}
-                    </p>
-                  </div>
-                  <div className="mt-2">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        video.status === "rejected"
-                          ? "bg-rose-50 text-rose-500"
-                          : video.status === "approved"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-amber-50 text-amber-600"
-                      }`}
-                    >
-                      {video.status === "pending" ? "Chờ duyệt" : video.status === "approved" ? "Đã duyệt" : "Từ chối"}
-                    </span>
-                    <p className="mt-1 text-xs text-slate-400">{new Date(video.created_at).toLocaleString("vi-VN")}</p>
-                  </div>
-
-                  <a
-                    href={video.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 block break-all text-sm font-medium text-sky-600 hover:underline"
-                  >
-                    {video.title || video.link}
-                  </a>
-
-                  <div className="mt-3 grid grid-cols-4 gap-2">
-                    <div className="rounded-lg bg-sky-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">View</p><p className="text-sm font-bold text-slate-800">{video.view_count || "—"}</p></div>
-                    <div className="rounded-lg bg-sky-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">Like</p><p className="text-sm font-bold text-slate-800">{video.like_count || "—"}</p></div>
-                    <div className="rounded-lg bg-sky-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">Cmt</p><p className="text-sm font-bold text-slate-800">{video.comment_count || "—"}</p></div>
-                    <div className="rounded-lg bg-sky-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">CTR</p><p className="text-sm font-bold text-slate-800">{video.ctr || "0%"}</p></div>
-                  </div>
-
-                  {video.admin_note && (
-                    <p className="mt-3 rounded-lg bg-sky-50/60 p-3 text-xs italic text-slate-500">Admin: {video.admin_note}</p>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </main>
-
-      <BottomNav />
-    </div>
-  );
-                }
-              
+                      {video.platform === "TikTok" ? <Music size={12} /> : <Youtube size={12} />} {
