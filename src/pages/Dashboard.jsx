@@ -325,48 +325,43 @@ export default function Dashboard() {
         </div>
 
         {/* QUICK ACTIONS */}
+        {/* QUICK ACTIONS */}
         <div>
           <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hành động nhanh</h3>
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate("/tasks")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50">
-                <Zap size={18} className="text-sky-500" />
-              </span>
-              Nhiệm vụ
-            </button>
-            <button
-              onClick={() => navigate("/store")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
-                <ShoppingBag size={18} className="text-blue-500" />
-              </span>
-              Cửa hàng
-            </button>
-            <button
-              onClick={() => navigate("/wallet")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
-                <Wallet size={18} className="text-amber-500" />
-              </span>
-              Nạp / Rút
-            </button>
-            <button
-              onClick={() => navigate("/profile")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
-                <MessageCircle size={18} className="text-emerald-500" />
-              </span>
-              Hỗ trợ
-            </button>
+            {[
+              { key: "tasks", path: "/tasks", label: "Nhiệm vụ", icon: Zap, bg: "bg-sky-50", color: "text-sky-500", pressBg: "bg-sky-100" },
+              { key: "store", path: "/store", label: "Cửa hàng", icon: ShoppingBag, bg: "bg-blue-50", color: "text-blue-500", pressBg: "bg-blue-100" },
+              { key: "wallet", path: "/wallet", label: "Nạp / Rút", icon: Wallet, bg: "bg-amber-50", color: "text-amber-500", pressBg: "bg-amber-100" },
+              { key: "profile", path: "/profile", label: "Hỗ trợ", icon: MessageCircle, bg: "bg-emerald-50", color: "text-emerald-500", pressBg: "bg-emerald-100" },
+            ].map((btn) => {
+              const isPressed = pressedQuick === btn.key;
+              return (
+                <button
+                  key={btn.key}
+                  onClick={() => navigate(btn.path)}
+                  onTouchStart={() => setPressedQuick(btn.key)}
+                  onTouchEnd={() => setPressedQuick(null)}
+                  onMouseDown={() => setPressedQuick(btn.key)}
+                  onMouseUp={() => setPressedQuick(null)}
+                  onMouseLeave={() => setPressedQuick(null)}
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  className={`flex flex-col items-center gap-2 rounded-full border py-5 text-sm font-medium transition-all duration-100 ${
+                    isPressed
+                      ? `scale-95 border-transparent ${btn.pressBg} ${btn.color}`
+                      : "border-white bg-white text-slate-700 shadow-sm shadow-slate-200/70"
+                  }`}
+                >
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${isPressed ? "bg-white/60" : btn.bg}`}>
+                    <btn.icon size={18} className={btn.color} />
+                  </span>
+                  {btn.label}
+                </button>
+              );
+            })}
           </div>
         </div>
-
+        
         {/* RECENT ACTIVITIES */}
         <div>
           <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hoạt động gần đây</h3>
