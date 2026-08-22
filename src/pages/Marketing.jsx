@@ -20,6 +20,7 @@ export default function Marketing() {
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [activeVideoTab, setActiveVideoTab] = useState("all");
 
+  // Hàm lọc link hợp lệ
   const isValidLink = (url) => {
     try {
       const parsed = new URL(url);
@@ -28,6 +29,7 @@ export default function Marketing() {
     } catch { return false; }
   };
 
+  // Lấy danh sách video của user
   const fetchVideos = async () => {
     if (!session?.user?.id) return;
     setLoadingVideos(true);
@@ -38,17 +40,32 @@ export default function Marketing() {
 
   useEffect(() => { fetchVideos(); }, [session]);
 
+  // Hàm gửi link video (Có tự lấy Title)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!link.trim()) { alert("Vui lòng nhập link video!"); return; }
     if (!isValidLink(link)) { alert("Link không hợp lệ! Vui lòng chỉ dán link TikTok hoặc YouTube."); return; }
 
     setIsSubmitting(true);
+
+    // Tự lấy tiêu đề video từ noembed (không cần API Key, không bị CORS)
+    let fetchedTitle = "";
+    try {
+      const noembed = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(link)}`);
+      const noembedData = await noembed.json();
+      if (noembedData.title) fetchedTitle = noembedData.title;
+    } catch (err) { /* Bỏ qua nếu lỗi */ }
+
     const { error } = await supabase.from("marketing_videos").insert({
       user_id: session.user.id,
       link: link.trim(),
+      title: fetchedTitle,
       platform: link.includes("tiktok.com") ? "TikTok" : "YouTube",
-      status: "pending"
+      status: "pending",
+      view_count: 0,
+      like_count: 0,
+      comment_count: 0,
+      ctr: "0%"
     });
     setIsSubmitting(false);
 
@@ -62,6 +79,7 @@ export default function Marketing() {
   const totalVideos = videos.length;
   const pendingVideos = videos.filter(v => v.status === "pending").length;
   const rejectedVideos = videos.filter(v => v.status === "rejected").length;
+  const totalCoins = videos.reduce((sum, v) => sum + (v.coin_awarded || 0), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
@@ -75,12 +93,13 @@ export default function Marketing() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* Ví Marketing */}
+        
+        {/* ===== 1. VÍ MARKETING ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900"><Wallet size={20} className="text-blue-500" /> Ví Marketing</h2>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-blue-500 px-3 py-1 text-xs font-bold text-white">Marketing: 0</span>
+              <span className="rounded-full bg-blue-500 px-3 py-1 text-xs font-bold text-white">Marketing: {profile.marketing_coins ?? 0}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Main: {profile.coins ?? 0}</span>
             </div>
           </div>
@@ -108,15 +127,15 @@ export default function Marketing() {
             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-2 text-sm text-slate-500"><ShieldCheck size={16} className="text-blue-500" /> Số dư Marketing Coin của bạn</div>
               <div className="mt-3 flex items-center gap-2">
-                <span className="text-4xl font-bold text-blue-500">0</span>
-                <span className="text-sm text-slate-400">≈ 0 VND (trước phí)</span>
+                <span className="text-4xl font-bold text-blue-500">{profile.marketing_coins ?? 0}</span>
+                <span className="text-sm text-slate-400">≈ {profile.marketing_coins ?? 0} VND (trước phí)</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="flex items-center gap-1.5 text-xs text-slate-400"><Clock size={14} /> Đã hoàn tất</p><p className="mt-2 text-2xl font-bold text-slate-900">0</p></div>
-              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="flex items-center gap-1.5 text-xs text-slate-400"><CheckCircle2 size={14} /> Đang chờ</p><p className="mt-2 text-2xl font-bold text-slate-900">0</p></div>
-              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="flex items-center gap-1.5 text-xs text-slate-400"><TrendingUp size={14} /> Tổng nhận VND</p><p className="mt-2 text-2xl font-bold text-slate-900">0</p></div>
+              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="flex items-center gap-1.5 text-xs text-slate-400"><CheckCircle2 size={14} /> Đang chờ</p><p className="mt-2 text-2xl font-bold text-slate-900">{pendingVideos}</p></div>
+              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="flex items-center gap-1.5 text-xs text-slate-400"><TrendingUp size={14} /> Tổng nhận VND</p><p className="mt-2 text-2xl font-bold text-slate-900">{totalCoins}</p></div>
               <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="flex items-center gap-1.5 text-xs text-slate-400"><ArrowRightLeft size={14} /> Đã đổi Main</p><p className="mt-2 text-2xl font-bold text-slate-900">0</p></div>
             </div>
 
@@ -139,7 +158,7 @@ export default function Marketing() {
           </>
         )}
 
-        {/* ===== GIỚI THIỆU ===== */}
+        {/* ===== 2. GIỚI THIỆU ===== */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-6 shadow-sm">
           <div className="flex items-start gap-3">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-500"><Megaphone size={24} /></span>
@@ -169,7 +188,7 @@ export default function Marketing() {
           </div>
         </div>
 
-        {/* ===== GỬI LINK ===== */}
+        {/* ===== 3. GỬI LINK ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Gửi link video của bạn</h2>
           <form onSubmit={handleSubmit} className="mt-4">
@@ -180,7 +199,7 @@ export default function Marketing() {
           </form>
         </div>
 
-        {/* ===== DANH SÁCH VIDEO ===== */}
+        {/* ===== 4. DANH SÁCH VIDEO ===== */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900">Video của bạn</h2>
           
@@ -229,22 +248,10 @@ export default function Marketing() {
 
                 {/* Các số liệu */}
                 <div className="mt-3 grid grid-cols-4 gap-2">
-                  <div className="rounded-lg bg-slate-50 p-2 text-center">
-                    <p className="text-[10px] text-slate-400">View</p>
-                    <p className="text-sm font-bold text-slate-800">{video.view_count || "—"}</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-2 text-center">
-                    <p className="text-[10px] text-slate-400">Like</p>
-                    <p className="text-sm font-bold text-slate-800">{video.like_count || "—"}</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-2 text-center">
-                    <p className="text-[10px] text-slate-400">Cmt</p>
-                    <p className="text-sm font-bold text-slate-800">{video.comment_count || "—"}</p>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-2 text-center">
-                    <p className="text-[10px] text-slate-400">CTR</p>
-                    <p className="text-sm font-bold text-slate-800">{video.ctr || "0%"}</p>
-                  </div>
+                  <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">View</p><p className="text-sm font-bold text-slate-800">{video.view_count || "—"}</p></div>
+                  <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">Like</p><p className="text-sm font-bold text-slate-800">{video.like_count || "—"}</p></div>
+                  <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">Cmt</p><p className="text-sm font-bold text-slate-800">{video.comment_count || "—"}</p></div>
+                  <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">CTR</p><p className="text-sm font-bold text-slate-800">{video.ctr || "0%"}</p></div>
                 </div>
 
                 {video.admin_note && <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs italic text-slate-500">Admin: {video.admin_note}</p>}
@@ -257,4 +264,4 @@ export default function Marketing() {
       <BottomNav />
     </div>
   );
-                                                              }
+}
