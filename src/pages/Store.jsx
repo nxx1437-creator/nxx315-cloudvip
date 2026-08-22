@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User, ArrowRightLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
 // Các category chính
 const CATEGORIES = [
-  { key: "roblox", label: "Robux Roblox", desc: "Nhận qua Gamepass", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
+  { key: "roblox", label: "Robux Roblox", desc: "Nạp thẳng vào Id hoặc code", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
   { key: "freefire", label: "Kim cương Free Fire", desc: "Nạp thẳng vào UID", icon: Flame, color: "from-red-500 to-orange-500", iconBg: "bg-red-500/20" },
   { key: "lienquan", label: "Quân Huy Liên Quân", desc: "Nạp thẳng vào ID", icon: Swords, color: "from-amber-400 to-yellow-500", iconBg: "bg-amber-500/20" },
 ];
@@ -22,15 +22,20 @@ export default function Store() {
   const [toast, setToast] = useState(null);
   const [activeCategory, setActiveCategory] = useState("roblox");
   
+  // State cho tra cứu
+  const [robloxMethod, setRobloxMethod] = useState("auto"); // auto / creator
   const [username, setUsername] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [gamepassLink, setGamepassLink] = useState("");
   
+  // State cho đặt hàng
   const [selectedPkg, setSelectedPkg] = useState(null);
   const [redeemMethod, setRedeemMethod] = useState("discord");
   const [contact, setContact] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
   
+  // Lịch sử
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -42,7 +47,7 @@ export default function Store() {
     fetchHistory();
   }, [session]);
 
-  // Nhận diện loại gói (VNG / Quốc tế) dựa trên tên gói
+  // Nhận diện loại gói (VNG / Quốc tế)
   const isVietnamPackage = (pkgName) => {
     return pkgName.includes("40") || pkgName.includes("80") || pkgName.includes("500");
   };
@@ -98,7 +103,7 @@ export default function Store() {
       return;
     }
     if (!username.trim()) {
-      setToast({ message: "Vui lòng nhập Username/ID!", type: "error" });
+      setToast({ message: "Vui lòng nhập Username!", type: "error" });
       return;
     }
     
@@ -115,7 +120,7 @@ export default function Store() {
       coins_charged: selectedPkg.coin_cost,
       receive_method: isVietnamPackage(selectedPkg.name) ? "roblox_username" : redeemMethod,
       contact_value: isVietnamPackage(selectedPkg.name) ? username.trim() : contact,
-      target_username: username.trim(),
+      target_username: searchResult?.name || username.trim(),
       target_uid: searchResult?.id || username.trim(),
       status: "processing"
     });
@@ -130,6 +135,7 @@ export default function Store() {
     setContact("");
     setUsername("");
     setSearchResult(null);
+    setGamepassLink("");
     setToast({ message: "Đã tạo đơn đổi thưởng thành công!", type: "success" });
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
@@ -240,14 +246,12 @@ export default function Store() {
                     isSelected ? "border-2 border-sky-400 bg-sky-50 shadow-lg" : "border border-white bg-white shadow-sm hover:shadow-md"
                   }`}
                 >
-                  {/* Badge VNG / Quốc tế */}
                   {!isVNG && (
                     <span className="absolute left-3 top-3 rounded-full bg-blue-500 px-2 py-1 text-[10px] font-bold text-white">Quốc tế</span>
                   )}
                   {isVNG && (
                     <span className="absolute left-3 top-3 rounded-full bg-green-500 px-2 py-1 text-[10px] font-bold text-white">VNG</span>
                   )}
-
                   {discount > 0 && <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white">-{discount}%</span>}
                   <div className="text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50">
@@ -269,21 +273,41 @@ export default function Store() {
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Đặt đơn {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "KC" : "QH"}</h2>
           
-          {/* Thông tin giao hàng */}
-          <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
-            <p className="text-xs uppercase tracking-wider text-slate-400">
-              {activeCategory === "roblox" ? "Username Roblox" : activeCategory === "freefire" ? "ID Free Fire (UID)" : "ID Liên Quân Mobile"}
-            </p>
+          {/* THÔNG TIN GIAO HÀNG (GIỐNG ẢNH 2) */}
+          <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm mb-4">
+            <h3 className="text-base font-bold text-slate-900">Thông tin giao hàng</h3>
+            
+            <p className="mt-4 text-xs text-slate-500">Username Roblox</p>
+            
+            {/* Tab Tự động / Theo Creator ID */}
+            <div className="mt-2 flex gap-2 rounded-full bg-slate-100 p-1">
+              <button
+                onClick={() => setRobloxMethod("auto")}
+                className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${
+                  robloxMethod === "auto" ? "bg-blue-500 text-white" : "text-slate-500"
+                }`}
+              >
+                Tự động
+              </button>
+              <button
+                onClick={() => setRobloxMethod("creator")}
+                className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${
+                  robloxMethod === "creator" ? "bg-blue-500 text-white" : "text-slate-500"
+                }`}
+              >
+                Theo Creator ID
+              </button>
+            </div>
+
             <div className="mt-3 flex items-center gap-2">
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder={activeCategory === "roblox" ? "VD: PlayerName123" : activeCategory === "freefire" ? "VD: 123456789" : "VD: 87654321"}
+                placeholder="VD: PlayerName123"
                 className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
               />
-              {/* Nút tra cứu nhỏ (kính lúp) */}
-              <button onClick={handleSearch} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white">
+              <button onClick={handleSearch} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white">
                 {isSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               </button>
             </div>
@@ -297,11 +321,26 @@ export default function Store() {
                 </div>
               </div>
             )}
+
+            {/* Link hoặc ID Gamepass */}
+            <p className="mt-4 text-xs text-slate-500">Link hoặc ID Gamepass</p>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                value={gamepassLink}
+                onChange={(e) => setGamepassLink(e.target.value)}
+                placeholder="https://www.roblox.com/game-pass/..."
+                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
+              />
+              <button className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                <ArrowRightLeft size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Chỉ hiện phương thức nhận cho gói Quốc tế */}
           {selectedPkg && !isVietnamPackage(selectedPkg.name) && (
-            <div className="rounded-2xl border border-white bg-white p-5 shadow-sm mb-4">
+            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm mb-4">
               <p className="text-xs uppercase tracking-wider text-slate-400">Phương thức nhận code</p>
               <div className="mt-3 flex gap-2">
                 <button onClick={() => setRedeemMethod("discord")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${redeemMethod === "discord" ? "bg-cyan-50 text-cyan-600" : "bg-slate-50 text-slate-400"}`}>Discord</button>
@@ -340,17 +379,4 @@ export default function Store() {
                   <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "—"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
                   <p className="mt-1 text-xs text-slate-400">Gamepass <ExternalLink size={12} className="inline" /></p>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusConfig.color}`}>{statusConfig.label}</span>
-                    <span className="font-bold text-amber-500">-{order.coins_charged} Coin</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </main>
-
-      <BottomNav />
-    </div>
-  );
-        }
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${s
