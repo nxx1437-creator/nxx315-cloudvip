@@ -77,7 +77,10 @@ export default function Admin() {
   );
 }
 
-/* ===== ORDERS ===== */
+/* =========================================================
+   ORDERS
+========================================================= */
+
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,8 +164,12 @@ function OrdersTab() {
       )}
     </div>
   );
-    }
-/* ===== TASKS ===== */
+}
+
+/* =========================================================
+   TASKS
+========================================================= */
+
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -270,7 +277,10 @@ function TasksTab() {
   );
 }
 
-/* ===== PACKAGES ===== */
+/* =========================================================
+   PACKAGES
+========================================================= */
+
 function PackagesTab() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -329,255 +339,4 @@ function PackagesTab() {
                     <input type="checkbox" checked={Boolean(pkg.active)} onChange={(e) => updateField(pkg.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" /> Active
                   </label>
                 </div>
-                <button type="button" onClick={() => handleSave(pkg)} disabled={savingId === pkg.id} className="mt-5 w-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:opacity-90 disabled:opacity-60">
-                  {savingId === pkg.id ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Save Package"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-  }
-/* ===== USERS ===== */
-function UsersTab() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [adjustAmount, setAdjustAmount] = useState({});
-  const [savingId, setSavingId] = useState(null);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
-    if (error) { alert(error.message); setUsers([]); } else { setUsers(data ?? []); }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchUsers(); }, []);
-
-  const handleAdjustCoins = async (u) => {
-    const amount = Number(adjustAmount[u.id] ?? 0);
-    if (!amount) return;
-    setSavingId(u.id);
-    const { error } = await supabase.from("profiles").update({ coins: u.coins + amount }).eq("id", u.id);
-    setSavingId(null);
-    if (error) { alert(error.message); return; }
-    setAdjustAmount((current) => ({ ...current, [u.id]: "" }));
-    await fetchUsers();
-  };
-
-  const toggleAdmin = async (u) => {
-    const { error } = await supabase.from("profiles").update({ is_admin: !u.is_admin }).eq("id", u.id);
-    if (error) { alert(error.message); return; }
-    await fetchUsers();
-  };
-
-  if (loading) return <Loading text="Loading users..." />;
-
-  return (
-    <div className="space-y-6">
-      <SectionHeader title="Manage Users" count={`${users.length} Accounts`} onRefresh={fetchUsers} />
-      {users.length === 0 ? <EmptyState text="No users found." /> : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[800px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-6 py-4">User</th>
-                <th className="px-6 py-4">Level</th>
-                <th className="px-6 py-4">Coins</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {users.map((u) => (
-                <tr key={u.id} className="transition hover:bg-blue-50/40">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">{(u.username || "U").charAt(0).toUpperCase()}</div>
-                      <div>
-                        <p className="font-bold text-slate-900">{u.username || "No name"}</p>
-                        <p className="text-xs text-slate-400">ID: {String(u.id).slice(0, 8)}...</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-semibold text-slate-700">Lv. {u.level || 1}</td>
-                  <td className="px-6 py-4"><span className="text-base font-extrabold text-blue-600">{u.coins.toLocaleString()}</span></td>
-                  <td className="px-6 py-4">{u.is_admin && <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-600">ADMIN</span>}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <input type="number" value={adjustAmount[u.id] ?? ""} onChange={(e) => setAdjustAmount((current) => ({ ...current, [u.id]: e.target.value }))} placeholder="+/- Coins" className="w-24 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
-                      <button type="button" onClick={() => handleAdjustCoins(u)} disabled={savingId === u.id} className="rounded-full bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-100 disabled:opacity-60">
-                        {savingId === u.id ? <Loader2 size={12} className="animate-spin" /> : "Adjust"}
-                      </button>
-                      <button type="button" onClick={() => toggleAdmin(u)} className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${u.is_admin ? "border-rose-200 text-rose-600 hover:bg-rose-50" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
-                        {u.is_admin ? "Remove Admin" : "Set Admin"}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ===== MARKETING ===== */
-function MarketingTab() {
-  const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [notes, setNotes] = useState({});
-  const [coins, setCoins] = useState({});
-  const [savingId, setSavingId] = useState(null);
-
-  const fetchVideos = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("marketing_videos").select("*").order("created_at", { ascending: false });
-    if (error) { setVideos([]); } else { setVideos(data ?? []); }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchVideos(); }, []);
-
-  const handleApprove = async (video) => {
-    const coin = Number(coins[video.id] || 0);
-    if (coin <= 0) { alert("Vui lòng nhập số coin thưởng!"); return; }
-    setSavingId(video.id);
-    
-    const { error } = await supabase
-      .from("marketing_videos")
-      .update({ status: "approved", coin_awarded: coin, admin_note: notes[video.id] || "" })
-      .eq("id", video.id);
-    if (error) { alert(error.message); setSavingId(null); return; }
-
-    // Cộng MARKETING Coin vào bảng profiles (KHÔNG cộng vào Main coin!)
-    const { data: userData } = await supabase
-      .from("profiles")
-      .select("marketing_coins, coins")
-      .eq("id", video.user_id)
-      .single();
-
-    if (userData) {
-      await supabase
-        .from("profiles")
-        .update({ marketing_coins: (userData.marketing_coins || 0) + coin })
-        .eq("id", video.user_id);
-    }
-
-    setSavingId(null);
-    await fetchVideos();
-};
-    const { data: userData } = await supabase.from("profiles").select("coins").eq("id", video.user_id).single();
-    if (userData) {
-      await supabase.from("profiles").update({ coins: userData.coins + coin }).eq("id", video.user_id);
-    }
-    setSavingId(null);
-    await fetchVideos();
-  };
-
-  const handleReject = async (video) => {
-    const note = notes[video.id] || "";
-    setSavingId(video.id);
-    const { error } = await supabase.from("marketing_videos").update({ status: "rejected", admin_note: note }).eq("id", video.id);
-    if (error) { alert(error.message); setSavingId(null); return; }
-    setSavingId(null);
-    await fetchVideos();
-  };
-
-  if (loading) return <Loading text="Loading videos..." />;
-
-  return (
-    <div className="space-y-6">
-      <SectionHeader title="Review Marketing Videos" count={`${videos.length} Videos`} onRefresh={fetchVideos} />
-      {videos.length === 0 ? <EmptyState text="No videos submitted." /> : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {videos.map((video) => (
-            <div key={video.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
-                      {video.platform === "TikTok" ? <Music size={12} className="inline" /> : <Youtube size={12} className="inline" />}
-                      {video.platform}
-                    </span>
-                    <span className="text-xs text-slate-400">{new Date(video.created_at).toLocaleString()}</span>
-                  </div>
-                  <a href={video.link} target="_blank" rel="noopener noreferrer" className="mt-3 block break-all text-sm font-bold text-blue-500 hover:underline">
-                    {video.title || video.link}
-                  </a>
-                  <p className="mt-1 text-xs text-slate-400">User ID: {String(video.user_id).slice(0, 8)}...</p>
-                </div>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${video.status === "approved" ? "bg-emerald-50 text-emerald-600" : video.status === "rejected" ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"}`}>
-                  {video.status === "approved" ? "Approved" : video.status === "rejected" ? "Rejected" : "Pending"}
-                </span>
-              </div>
-
-              <div className="mt-4 grid grid-cols-4 gap-2">
-                <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">View</p><p className="text-sm font-bold text-slate-800">{video.view_count || "—"}</p></div>
-                <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">Like</p><p className="text-sm font-bold text-slate-800">{video.like_count || "—"}</p></div>
-                <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">Cmt</p><p className="text-sm font-bold text-slate-800">{video.comment_count || "—"}</p></div>
-                <div className="rounded-lg bg-slate-50 p-2 text-center"><p className="text-[10px] text-slate-400">CTR</p><p className="text-sm font-bold text-slate-800">{video.ctr || "0%"}</p></div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <input type="number" value={coins[video.id] ?? ""} onChange={(e) => setCoins({ ...coins, [video.id]: e.target.value })} placeholder="Coin Award" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
-                <input type="text" value={notes[video.id] ?? ""} onChange={(e) => setNotes({ ...notes, [video.id]: e.target.value })} placeholder="Admin note" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <button type="button" onClick={() => handleApprove(video)} disabled={savingId === video.id} className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60">
-                  {savingId === video.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />} Approve
-                </button>
-                <button type="button" onClick={() => handleReject(video)} disabled={savingId === video.id} className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60">
-                  {savingId === video.id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />} Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ===== SHARED ===== */
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        <p className="text-sm text-slate-400">{count}</p>
-      </div>
-      <button type="button" onClick={onRefresh} className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200">
-        <RefreshCw size={14} /> Refresh
-      </button>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return <div className="py-12 text-center"><p className="text-sm text-slate-400">{text}</p></div>;
-}
-
-function Loading({ text }) {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 size={24} className="animate-spin text-slate-400" />
-      <span className="ml-2 text-sm text-slate-400">{text}</span>
-    </div>
-  );
-}
-
-function OrderStatus({ status }) {
-  const config = {
-    pending: { label: "Pending", color: "bg-amber-50 text-amber-600" },
-    delivered: { label: "Delivered", color: "bg-emerald-50 text-emerald-600" },
-    cancelled: { label: "Cancelled", color: "bg-rose-50 text-rose-600" },
-  };
-  const current = config[status] || config.pending;
-  return <span className={`rounded-lg px-2 py-1 text-[11px] font-bold ${current.color}`}>{current.label}</span>;
-}
+                <butt
