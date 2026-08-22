@@ -3,7 +3,7 @@ import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, 
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import { useStoreData } from "../hooks/useStoreData.js";
+import useStoreData from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import AppBackground from "../components/AppBackground.jsx";
 import GlassCard from "../components/GlassCard.jsx";
