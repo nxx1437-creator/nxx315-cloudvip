@@ -162,3 +162,181 @@ function OrdersTab() {
     </div>
   );
     }
+/* ===== TASKS ===== */
+function TasksTab() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+  const [showNew, setShowNew] = useState(false);
+  const [newTask, setNewTask] = useState({ provider: "", reward_coins: 0, daily_limit: 1, is_hot: false });
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
+    if (error) { alert(error.message); setTasks([]); } else { setTasks(data ?? []); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTasks(); }, []);
+
+  const updateField = (id, field, value) => setTasks((current) => current.map((task) => task.id === id ? { ...task, [field]: value } : task));
+
+  const handleSave = async (task) => {
+    setSavingId(task.id);
+    const { error } = await supabase.from("tasks").update({ reward_coins: Number(task.reward_coins), daily_limit: Number(task.daily_limit), is_hot: Boolean(task.is_hot), active: Boolean(task.active) }).eq("id", task.id);
+    setSavingId(null);
+    if (error) { alert(error.message); return; }
+    alert("Task saved!");
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
+    const { error } = await supabase.from("tasks").delete().eq("id", id);
+    if (error) { alert(error.message); return; }
+    await fetchTasks();
+  };
+
+  const handleCreate = async () => {
+    if (!newTask.provider.trim()) { alert("Provider name required."); return; }
+    const { error } = await supabase.from("tasks").insert({ provider: newTask.provider.trim().toUpperCase(), reward_coins: Number(newTask.reward_coins), daily_limit: Number(newTask.daily_limit), is_hot: Boolean(newTask.is_hot), active: true, sort_order: tasks.length + 1 });
+    if (error) { alert(error.message); return; }
+    setNewTask({ provider: "", reward_coins: 0, daily_limit: 1, is_hot: false });
+    setShowNew(false); await fetchTasks();
+  };
+
+  if (loading) return <Loading text="Loading tasks..." />;
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Manage Tasks" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
+      <button type="button" onClick={() => setShowNew((value) => !value)} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 transition hover:opacity-90">
+        <Plus size={16} /> Add Task
+      </button>
+
+      {showNew && (
+        <div className="rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <input value={newTask.provider} onChange={(e) => setNewTask((current) => ({ ...current, provider: e.target.value }))} placeholder="Provider (LINK4M)" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400" />
+            <input type="number" value={newTask.reward_coins} onChange={(e) => setNewTask((current) => ({ ...current, reward_coins: e.target.value }))} placeholder="Reward Coins" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400" />
+            <input type="number" value={newTask.daily_limit} onChange={(e) => setNewTask((current) => ({ ...current, daily_limit: e.target.value }))} placeholder="Daily Limit" className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-400" />
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+              <input type="checkbox" checked={newTask.is_hot} onChange={(e) => setNewTask((current) => ({ ...current, is_hot: e.target.checked }))} className="h-4 w-4 accent-blue-500" /> Mark HOT
+            </label>
+          </div>
+          <button type="button" onClick={handleCreate} className="mt-4 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">Create Task</button>
+        </div>
+      )}
+
+      {tasks.length === 0 ? <EmptyState text="No tasks found." /> : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {tasks.map((task) => (
+            <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-extrabold text-slate-900">{task.provider}</span>
+                  {task.is_hot && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-600">HOT</span>}
+                </div>
+                <button type="button" onClick={() => handleDelete(task.id)} className="text-rose-400 transition hover:text-rose-600"><Trash2 size={18} /></button>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <label>
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Coin per turn</span>
+                  <input type="number" value={task.reward_coins} onChange={(e) => updateField(task.id, "reward_coins", e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                </label>
+                <label>
+                  <span className="text-[11px] font-bold uppercase text-slate-400">Daily Limit</span>
+                  <input type="number" value={task.daily_limit} onChange={(e) => updateField(task.id, "daily_limit", e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                </label>
+              </div>
+
+              <div className="mt-4 flex items-center gap-6 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input type="checkbox" checked={Boolean(task.is_hot)} onChange={(e) => updateField(task.id, "is_hot", e.target.checked)} className="h-4 w-4 accent-blue-500" /> HOT
+                </label>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input type="checkbox" checked={Boolean(task.active)} onChange={(e) => updateField(task.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" /> Active
+                </label>
+              </div>
+
+              <button type="button" onClick={() => handleSave(task)} disabled={savingId === task.id} className="mt-4 w-full rounded-full bg-blue-50 py-2.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-100 disabled:opacity-60">
+                {savingId === task.id ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Save Settings"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== PACKAGES ===== */
+function PackagesTab() {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
+    if (error) { alert(error.message); setPackages([]); } else { setPackages(data ?? []); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPackages(); }, []);
+
+  const updateField = (id, field, value) => setPackages((current) => current.map((pkg) => pkg.id === id ? { ...pkg, [field]: value } : pkg));
+  const handleSave = async (pkg) => {
+    setSavingId(pkg.id);
+    const { error } = await supabase.from("redemption_packages").update({ coin_cost: Number(pkg.coin_cost), original_price_text: pkg.original_price_text, is_promo: Boolean(pkg.is_promo), active: Boolean(pkg.active) }).eq("id", pkg.id);
+    setSavingId(null);
+    if (error) { alert(error.message); return; }
+    alert("Package saved!");
+  };
+
+  if (loading) return <Loading text="Loading packages..." />;
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Manage Packages" count={`${packages.length} Packages`} onRefresh={fetchPackages} />
+      {packages.length === 0 ? <EmptyState text="No packages found." /> : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {packages.map((pkg) => (
+            <div key={pkg.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg">
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-blue-50 transition group-hover:scale-125" />
+              <div className="relative">
+                <p className="text-lg font-extrabold text-slate-900">{pkg.name}</p>
+                <p className="text-xs font-medium text-slate-400">Version: {pkg.version}</p>
+                <div className="mt-5 flex items-end gap-1">
+                  <span className="text-3xl font-extrabold text-blue-600">{Number(pkg.coin_cost).toLocaleString()}</span>
+                  <span className="mb-1 text-sm font-medium text-slate-400">Coins</span>
+                </div>
+                <div className="mt-5 space-y-3">
+                  <label>
+                    <span className="text-[11px] font-bold uppercase text-slate-400">Coin Cost</span>
+                    <input type="number" value={pkg.coin_cost} onChange={(e) => updateField(pkg.id, "coin_cost", e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                  </label>
+                  <label>
+                    <span className="text-[11px] font-bold uppercase text-slate-400">Original Price</span>
+                    <input value={pkg.original_price_text ?? ""} onChange={(e) => updateField(pkg.id, "original_price_text", e.target.value)} placeholder="14.000d" className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                  </label>
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={Boolean(pkg.is_promo)} onChange={(e) => updateField(pkg.id, "is_promo", e.target.checked)} className="h-4 w-4 accent-rose-500" /> Promo (KM)
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={Boolean(pkg.active)} onChange={(e) => updateField(pkg.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" /> Active
+                  </label>
+                </div>
+                <button type="button" onClick={() => handleSave(pkg)} disabled={savingId === pkg.id} className="mt-5 w-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:opacity-90 disabled:opacity-60">
+                  {savingId === pkg.id ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Save Package"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+  }
