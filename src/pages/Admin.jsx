@@ -1,3 +1,16 @@
+async function fetchVideoMeta(url) {
+  try {
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+      const data = await res.json();
+      return { title: data.title || "Video", view: "—", like: "—", comment: "—" };
+    } else if (url.includes("tiktok.com")) {
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      return { title: data.title || "TikTok Video", view: "—", like: "—", comment: "—" };
+    }
+  } catch { return { title: "Không xác định", view: "—", like: "—", comment: "—" }; }
+}
 import React, { useEffect, useState } from "react";
 import {
   ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save,
