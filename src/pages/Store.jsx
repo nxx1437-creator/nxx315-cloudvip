@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User, ArrowRightLeft } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, ArrowRightLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
 // Các category chính
 const CATEGORIES = [
-  { key: "roblox", label: "Robux Roblox", desc: "Nạp thẳng vào Id hoặc code", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
+  { key: "roblox", label: "Robux Roblox", desc: "Nhận qua Gamepass", icon: Gamepad2, color: "from-purple-500 to-pink-500", iconBg: "bg-purple-500/20" },
   { key: "freefire", label: "Kim cương Free Fire", desc: "Nạp thẳng vào UID", icon: Flame, color: "from-red-500 to-orange-500", iconBg: "bg-red-500/20" },
   { key: "lienquan", label: "Quân Huy Liên Quân", desc: "Nạp thẳng vào ID", icon: Swords, color: "from-amber-400 to-yellow-500", iconBg: "bg-amber-500/20" },
 ];
@@ -22,20 +22,16 @@ export default function Store() {
   const [toast, setToast] = useState(null);
   const [activeCategory, setActiveCategory] = useState("roblox");
   
-  // State cho tra cứu
   const [robloxMethod, setRobloxMethod] = useState("auto"); // auto / creator
   const [username, setUsername] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [gamepassLink, setGamepassLink] = useState("");
   
-  // State cho đặt hàng
   const [selectedPkg, setSelectedPkg] = useState(null);
   const [redeemMethod, setRedeemMethod] = useState("discord");
   const [contact, setContact] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
-  
-  // Lịch sử
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -47,7 +43,6 @@ export default function Store() {
     fetchHistory();
   }, [session]);
 
-  // Nhận diện loại gói (VNG / Quốc tế)
   const isVietnamPackage = (pkgName) => {
     return pkgName.includes("40") || pkgName.includes("80") || pkgName.includes("500");
   };
@@ -107,7 +102,6 @@ export default function Store() {
       return;
     }
     
-    // Kiểm tra thêm nếu là gói Quốc tế (100rb)
     if (!isVietnamPackage(selectedPkg.name) && !contact.trim()) {
       setToast({ message: "Vui lòng nhập thông tin liên hệ!", type: "error" });
       return;
@@ -193,9 +187,7 @@ export default function Store() {
                 key={cat.key}
                 onClick={() => { setActiveCategory(cat.key); setSearchResult(null); setUsername(""); }}
                 className={`flex w-full items-center justify-between rounded-2xl p-4 text-left transition-all ${
-                  isActive
-                    ? `bg-gradient-to-r ${cat.color} text-white shadow-lg`
-                    : "bg-white text-slate-700 shadow-sm hover:shadow-md"
+                  isActive ? `bg-gradient-to-r ${cat.color} text-white shadow-lg` : "bg-white text-slate-700 shadow-sm hover:shadow-md"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -239,19 +231,13 @@ export default function Store() {
               const isVNG = isVietnamPackage(pkg.name);
               
               return (
-                <div
-                  key={pkg.id}
-                  onClick={() => setSelectedPkg(pkg)}
+                <div key={pkg.id} onClick={() => setSelectedPkg(pkg)}
                   className={`p-5 rounded-2xl relative cursor-pointer transition-all ${
                     isSelected ? "border-2 border-sky-400 bg-sky-50 shadow-lg" : "border border-white bg-white shadow-sm hover:shadow-md"
                   }`}
                 >
-                  {!isVNG && (
-                    <span className="absolute left-3 top-3 rounded-full bg-blue-500 px-2 py-1 text-[10px] font-bold text-white">Quốc tế</span>
-                  )}
-                  {isVNG && (
-                    <span className="absolute left-3 top-3 rounded-full bg-green-500 px-2 py-1 text-[10px] font-bold text-white">VNG</span>
-                  )}
+                  {!isVNG && <span className="absolute left-3 top-3 rounded-full bg-blue-500 px-2 py-1 text-[10px] font-bold text-white">Quốc tế</span>}
+                  {isVNG && <span className="absolute left-3 top-3 rounded-full bg-green-500 px-2 py-1 text-[10px] font-bold text-white">VNG</span>}
                   {discount > 0 && <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-bold text-white">-{discount}%</span>}
                   <div className="text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50">
@@ -269,44 +255,22 @@ export default function Store() {
           </div>
         </div>
 
-        {/* ĐẶT HÀNG */}
+        {/* ĐẶT HÀNG - THÔNG TIN GIAO HÀNG */}
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Đặt đơn {activeCategory === "roblox" ? "Robux" : activeCategory === "freefire" ? "KC" : "QH"}</h2>
           
-          {/* THÔNG TIN GIAO HÀNG (GIỐNG ẢNH 2) */}
           <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm mb-4">
             <h3 className="text-base font-bold text-slate-900">Thông tin giao hàng</h3>
             
             <p className="mt-4 text-xs text-slate-500">Username Roblox</p>
             
-            {/* Tab Tự động / Theo Creator ID */}
             <div className="mt-2 flex gap-2 rounded-full bg-slate-100 p-1">
-              <button
-                onClick={() => setRobloxMethod("auto")}
-                className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${
-                  robloxMethod === "auto" ? "bg-blue-500 text-white" : "text-slate-500"
-                }`}
-              >
-                Tự động
-              </button>
-              <button
-                onClick={() => setRobloxMethod("creator")}
-                className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${
-                  robloxMethod === "creator" ? "bg-blue-500 text-white" : "text-slate-500"
-                }`}
-              >
-                Theo Creator ID
-              </button>
+              <button onClick={() => setRobloxMethod("auto")} className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${robloxMethod === "auto" ? "bg-blue-500 text-white" : "text-slate-500"}`}>Tự động</button>
+              <button onClick={() => setRobloxMethod("creator")} className={`flex-1 rounded-full py-2 text-xs font-semibold transition ${robloxMethod === "creator" ? "bg-blue-500 text-white" : "text-slate-500"}`}>Theo Creator ID</button>
             </div>
 
             <div className="mt-3 flex items-center gap-2">
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="VD: PlayerName123"
-                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
-              />
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="VD: PlayerName123" className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
               <button onClick={handleSearch} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white">
                 {isSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
               </button>
@@ -322,23 +286,13 @@ export default function Store() {
               </div>
             )}
 
-            {/* Link hoặc ID Gamepass */}
             <p className="mt-4 text-xs text-slate-500">Link hoặc ID Gamepass</p>
             <div className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                value={gamepassLink}
-                onChange={(e) => setGamepassLink(e.target.value)}
-                placeholder="https://www.roblox.com/game-pass/..."
-                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400"
-              />
-              <button className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-                <ArrowRightLeft size={18} />
-              </button>
+              <input type="text" value={gamepassLink} onChange={(e) => setGamepassLink(e.target.value)} placeholder="https://www.roblox.com/game-pass/..." className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400" />
+              <button className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><ArrowRightLeft size={18} /></button>
             </div>
           </div>
 
-          {/* Chỉ hiện phương thức nhận cho gói Quốc tế */}
           {selectedPkg && !isVietnamPackage(selectedPkg.name) && (
             <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm mb-4">
               <p className="text-xs uppercase tracking-wider text-slate-400">Phương thức nhận code</p>
@@ -350,7 +304,6 @@ export default function Store() {
             </div>
           )}
 
-          {/* Đã chọn */}
           {selectedPkg && (
             <div className="mb-4 rounded-2xl bg-sky-50 p-4">
               <p className="text-xs uppercase tracking-wider text-slate-400">Đã chọn</p>
@@ -379,4 +332,17 @@ export default function Store() {
                   <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "—"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
                   <p className="mt-1 text-xs text-slate-400">Gamepass <ExternalLink size={12} className="inline" /></p>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${s
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusConfig.color}`}>{statusConfig.label}</span>
+                    <span className="font-bold text-amber-500">-{order.coins_charged} Coin</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+        }
