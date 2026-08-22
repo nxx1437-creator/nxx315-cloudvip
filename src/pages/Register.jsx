@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, MailCheck } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, MailCheck, Gift } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
@@ -8,10 +8,20 @@ import { supabase } from "../lib/supabaseClient.js";
 export default function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({ username: "", email: "", password: "", referralCode: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmSent, setConfirmSent] = useState(false);
+
+  // Hàm sinh mã giới thiệu ngẫu nhiên 8 ký tự
+  const generateReferralCode = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
+    for (let i = 0; i < 8; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return code;
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -25,16 +35,57 @@ export default function Register() {
     }
     setError("");
     setLoading(true);
+
+    // Tạo mã giới thiệu riêng cho user mới
+    const newReferralCode = generateReferralCode();
+
     const { data, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { username: form.username } },
+      options: { 
+        data: { 
+          username: form.username,
+          referral_code: newReferralCode
+        } 
+      },
     });
+    
     setLoading(false);
     if (authError) {
       setError(authError.message);
       return;
     }
+
+    // Lưu mã giới thiệu vào bảng profiles sau khi tạo user
+    if (data.user) {
+      await supabase.from("profiles").update({ referral_code: newReferralCode }).eq("id", data.user.id);
+    }
+
+    // Xử lý mã giới thiệu (nếu user nhập mã)
+    if (form.referralCode && data.user) {
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("referral_code", form.referralCode.toUpperCase())
+        .single();
+
+      if (referrer) {
+        // Lưu lịch sử giới thiệu
+        await supabase.from("referrals").insert({
+          referrer_id: referrer.id,
+          referred_id: data.user.id,
+          code: form.referralCode.toUpperCase(),
+        });
+
+        // Cộng 200 Coin cho người được giới thiệu
+        await supabase.from("profiles").update({ coins: 200 }).eq("id", data.user.id);
+
+        // Cộng 15% hoa hồng cho chủ mã (tạm thời là 0 vì người mới chưa làm nhiệm vụ)
+        // Phần này sẽ được xử lý khi họ làm nhiệm vụ trong Tasks.jsx
+        // await supabase.from("profiles").update({ coins: 0 }).eq("id", referrer.id);
+      }
+    }
+
     if (data.session) {
       navigate("/dashboard");
     } else {
@@ -139,6 +190,18 @@ export default function Register() {
           </button>
         </div>
 
+        {/* Ô nhập mã giới thiệu */}
+        <div className="relative">
+          <Gift size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+          <input
+            type="text"
+            value={form.referralCode}
+            onChange={(e) => setForm({ ...form, referralCode: e.target.value.toUpperCase() })}
+            placeholder="Mã giới thiệu (nếu có)"
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+          />
+        </div>
+
         {error && <p className="text-sm text-rose-400">{error}</p>}
 
         <p className="text-center text-xs text-sky-200/40">
@@ -149,4 +212,4 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-}
+      }
