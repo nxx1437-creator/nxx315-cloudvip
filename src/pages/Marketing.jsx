@@ -1,5 +1,5 @@
-import AppHeader from "../components/AppHeader.jsx";
 import React, { useState, useEffect } from "react";
+import AppHeader from "../components/AppHeader.jsx";
 import {
   Wallet, ShieldCheck, Clock, CheckCircle2, TrendingUp, ArrowRightLeft, CreditCard, Landmark,
   History, Info, Megaphone, Music, Youtube, Sparkles, Send, Coins, Loader2,
