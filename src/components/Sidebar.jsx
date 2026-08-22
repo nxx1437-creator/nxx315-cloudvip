@@ -20,6 +20,7 @@ import { supabase } from "../lib/supabaseClient.js";
 export default function Sidebar({ open, onClose, displayName, initial, coins = 0, level = 1 }) {
   const navigate = useNavigate();
   const [comingSoon, setComingSoon] = useState(null);
+  const [pressedKey, setPressedKey] = useState(null);
 
   if (!open) return null;
 
@@ -33,6 +34,15 @@ export default function Sidebar({ open, onClose, displayName, initial, coins = 0
     onClose?.();
     navigate("/login");
   };
+
+  const pressHandlers = (key) => ({
+    onTouchStart: () => setPressedKey(key),
+    onTouchEnd: () => setPressedKey(null),
+    onTouchCancel: () => setPressedKey(null),
+    onMouseDown: () => setPressedKey(key),
+    onMouseUp: () => setPressedKey(null),
+    onMouseLeave: () => setPressedKey(null),
+  });
 
   const NAV_GROUPS = [
     {
@@ -127,12 +137,20 @@ export default function Sidebar({ open, onClose, displayName, initial, coins = 0
                 <ChevronDown size={13} className="text-slate-300" />
               </div>
               {group.items.map((item) => {
+                const key = item.label;
+                const isPressed = pressedKey === key;
                 const content = (
                   <>
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-500 transition group-hover:bg-sky-50 group-hover:text-sky-600">
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors duration-100 ${
+                        isPressed ? "bg-sky-500 text-white" : "bg-slate-50 text-slate-500"
+                      }`}
+                    >
                       <item.icon size={17} />
                     </span>
-                    <span className="flex-1 text-sm font-semibold text-slate-700">{item.label}</span>
+                    <span className={`flex-1 text-sm font-semibold transition-colors duration-100 ${isPressed ? "text-sky-600" : "text-slate-700"}`}>
+                      {item.label}
+                    </span>
                     {item.badge && (
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeCls}`}>
                         {item.badge}
@@ -141,15 +159,29 @@ export default function Sidebar({ open, onClose, displayName, initial, coins = 0
                   </>
                 );
 
-                const rowCls =
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 active:scale-[0.97] hover:bg-sky-50/70";
+                const rowCls = `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-100 ${
+                  isPressed ? "scale-[0.96] bg-sky-100" : "bg-transparent"
+                }`;
 
                 return item.soon ? (
-                  <button key={item.label} onClick={() => handleComingSoon(item.label)} className={`${rowCls} w-full text-left`}>
+                  <button
+                    key={key}
+                    onClick={() => handleComingSoon(item.label)}
+                    {...pressHandlers(key)}
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    className={`${rowCls} w-full text-left`}
+                  >
                     {content}
                   </button>
                 ) : (
-                  <Link key={item.label} to={item.to} onClick={onClose} className={rowCls}>
+                  <Link
+                    key={key}
+                    to={item.to}
+                    onClick={onClose}
+                    {...pressHandlers(key)}
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    className={rowCls}
+                  >
                     {content}
                   </Link>
                 );
@@ -169,7 +201,11 @@ export default function Sidebar({ open, onClose, displayName, initial, coins = 0
         <div className="border-t border-slate-100 p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-bold text-rose-500 transition-all duration-150 hover:bg-rose-50 active:scale-[0.97]"
+            {...pressHandlers("logout")}
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-bold text-rose-500 transition-all duration-100 ${
+              pressedKey === "logout" ? "scale-[0.96] bg-rose-100" : ""
+            }`}
           >
             <LogOut size={17} /> Đăng xuất
           </button>
@@ -177,5 +213,4 @@ export default function Sidebar({ open, onClose, displayName, initial, coins = 0
       </div>
     </div>
   );
-        }
-                          
+                                                                                         }
