@@ -281,3 +281,159 @@ function TasksTab() {
     </div>
   );
     }
+/* ===== PACKAGES ===== */
+function PackagesTab() {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
+    if (error) { alert(error.message); setPackages([]); } else { setPackages(data ?? []); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPackages(); }, []);
+
+  const updateField = (id, field, value) => setPackages((current) => current.map((pkg) => pkg.id === id ? { ...pkg, [field]: value } : pkg));
+  const handleSave = async (pkg) => {
+    setSavingId(pkg.id);
+    const { error } = await supabase.from("redemption_packages").update({ coin_cost: Number(pkg.coin_cost), original_price_text: pkg.original_price_text, is_promo: Boolean(pkg.is_promo), active: Boolean(pkg.active) }).eq("id", pkg.id);
+    setSavingId(null);
+    if (error) { alert(error.message); return; }
+    alert("Package saved!");
+  };
+
+  if (loading) return <Loading text="Loading packages..." />;
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Manage Packages" count={`${packages.length} Packages`} onRefresh={fetchPackages} />
+      {packages.length === 0 ? <EmptyState text="No packages found." /> : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {packages.map((pkg) => (
+            <div key={pkg.id} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-lg">
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-blue-50 transition group-hover:scale-125" />
+              <div className="relative">
+                <p className="text-lg font-extrabold text-slate-900">{pkg.name}</p>
+                <p className="text-xs font-medium text-slate-400">Version: {pkg.version}</p>
+                <div className="mt-5 flex items-end gap-1">
+                  <span className="text-3xl font-extrabold text-blue-600">{Number(pkg.coin_cost).toLocaleString()}</span>
+                  <span className="mb-1 text-sm font-medium text-slate-400">Coins</span>
+                </div>
+                <div className="mt-5 space-y-3">
+                  <label>
+                    <span className="text-[11px] font-bold uppercase text-slate-400">Coin Cost</span>
+                    <input type="number" value={pkg.coin_cost} onChange={(e) => updateField(pkg.id, "coin_cost", e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                  </label>
+                  <label>
+                    <span className="text-[11px] font-bold uppercase text-slate-400">Original Price</span>
+                    <input value={pkg.original_price_text ?? ""} onChange={(e) => updateField(pkg.id, "original_price_text", e.target.value)} placeholder="14.000d" className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                  </label>
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-600">
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={Boolean(pkg.is_promo)} onChange={(e) => updateField(pkg.id, "is_promo", e.target.checked)} className="h-4 w-4 accent-rose-500" /> Promo (KM)
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={Boolean(pkg.active)} onChange={(e) => updateField(pkg.id, "active", e.target.checked)} className="h-4 w-4 accent-blue-500" /> Active
+                  </label>
+                </div>
+                <button type="button" onClick={() => handleSave(pkg)} disabled={savingId === pkg.id} className="mt-5 w-full rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:opacity-90 disabled:opacity-60">
+                  {savingId === pkg.id ? <Loader2 size={16} className="mx-auto animate-spin" /> : "Save Package"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== USERS ===== */
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [adjustAmount, setAdjustAmount] = useState({});
+  const [savingId, setSavingId] = useState(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
+    if (error) { alert(error.message); setUsers([]); } else { setUsers(data ?? []); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const handleAdjustCoins = async (u) => {
+    const amount = Number(adjustAmount[u.id] ?? 0);
+    if (!amount) return;
+    setSavingId(u.id);
+    const { error } = await supabase.from("profiles").update({ coins: u.coins + amount }).eq("id", u.id);
+    setSavingId(null);
+    if (error) { alert(error.message); return; }
+    setAdjustAmount((current) => ({ ...current, [u.id]: "" }));
+    await fetchUsers();
+  };
+
+  const toggleAdmin = async (u) => {
+    const { error } = await supabase.from("profiles").update({ is_admin: !u.is_admin }).eq("id", u.id);
+    if (error) { alert(error.message); return; }
+    await fetchUsers();
+  };
+
+  if (loading) return <Loading text="Loading users..." />;
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Manage Users" count={`${users.length} Accounts`} onRefresh={fetchUsers} />
+      {users.length === 0 ? <EmptyState text="No users found." /> : (
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <table className="w-full min-w-[800px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-6 py-4">User</th>
+                <th className="px-6 py-4">Level</th>
+                <th className="px-6 py-4">Coins</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {users.map((u) => (
+                <tr key={u.id} className="transition hover:bg-blue-50/40">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">{(u.username || "U").charAt(0).toUpperCase()}</div>
+                      <div>
+                        <p className="font-bold text-slate-900">{u.username || "No name"}</p>
+                        <p className="text-xs text-slate-400">ID: {String(u.id).slice(0, 8)}...</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 font-semibold text-slate-700">Lv. {u.level || 1}</td>
+                  <td className="px-6 py-4"><span className="text-base font-extrabold text-blue-600">{u.coins.toLocaleString()}</span></td>
+                  <td className="px-6 py-4">{u.is_admin && <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-600">ADMIN</span>}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <input type="number" value={adjustAmount[u.id] ?? ""} onChange={(e) => setAdjustAmount((current) => ({ ...current, [u.id]: e.target.value }))} placeholder="+/- Coins" className="w-24 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                      <button type="button" onClick={() => handleAdjustCoins(u)} disabled={savingId === u.id} className="rounded-full bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-100 disabled:opacity-60">
+                        {savingId === u.id ? <Loader2 size={12} className="animate-spin" /> : "Adjust"}
+                      </button>
+                      <button type="button" onClick={() => toggleAdmin(u)} className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${u.is_admin ? "border-rose-200 text-rose-600 hover:bg-rose-50" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
+                        {u.is_admin ? "Remove Admin" : "Set Admin"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+                    }
