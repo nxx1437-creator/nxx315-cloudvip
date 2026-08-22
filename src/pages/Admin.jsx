@@ -437,3 +437,129 @@ function UsersTab() {
     </div>
   );
                     }
+/* ===== MARKETING ===== */
+function MarketingTab() {
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notes, setNotes] = useState({});
+  const [coins, setCoins] = useState({});
+  const [savingId, setSavingId] = useState(null);
+
+  const fetchVideos = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("marketing_videos").select("*").order("created_at", { ascending: false });
+    if (error) { alert(error.message); setVideos([]); } else { setVideos(data ?? []); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchVideos(); }, []);
+
+  const handleApprove = async (video) => {
+    const coin = Number(coins[video.id] || 0);
+    const note = notes[video.id] || "";
+    if (coin <= 0) { alert("Vui lòng nhập số coin thưởng!"); return; }
+    setSavingId(video.id);
+    const { error: videoError } = await supabase.from("marketing_videos").update({ status: "approved", coin_awarded: coin, admin_note: note }).eq("id", video.id);
+    if (videoError) { alert(videoError.message); setSavingId(null); return; }
+    const { data: userData } = await supabase.from("profiles").select("coins").eq("id", video.user_id).single();
+    if (userData) {
+      const { error: userError } = await supabase.from("profiles").update({ coins: userData.coins + coin }).eq("id", video.user_id);
+      if (userError) alert(userError.message);
+    }
+    setSavingId(null);
+    setNotes((current) => ({ ...current, [video.id]: "" }));
+    setCoins((current) => ({ ...current, [video.id]: "" }));
+    await fetchVideos();
+  };
+
+  const handleReject = async (video) => {
+    const note = notes[video.id] || "";
+    setSavingId(video.id);
+    const { error } = await supabase.from("marketing_videos").update({ status: "rejected", admin_note: note }).eq("id", video.id);
+    if (error) { alert(error.message); setSavingId(null); return; }
+    setSavingId(null);
+    setNotes((current) => ({ ...current, [video.id]: "" }));
+    await fetchVideos();
+  };
+
+  if (loading) return <Loading text="Loading videos..." />;
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Review Marketing Videos" count={`${videos.length} Videos`} onRefresh={fetchVideos} />
+      {videos.length === 0 ? <EmptyState text="No videos submitted." /> : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {videos.map((video) => (
+            <div key={video.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">{video.platform}</span>
+                    <span className="text-xs text-slate-400">{new Date(video.created_at).toLocaleString()}</span>
+                  </div>
+                  <p className="mt-3 break-all text-sm font-bold text-slate-900">{video.link}</p>
+                  <p className="mt-1 text-xs text-slate-400">User ID: {String(video.user_id).slice(0, 8)}...</p>
+                </div>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${video.status === "approved" ? "bg-emerald-50 text-emerald-600" : video.status === "rejected" ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"}`}>
+                  {video.status === "approved" ? "Approved" : video.status === "rejected" ? "Rejected" : "Pending"}
+                </span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <input type="number" value={coins[video.id] ?? ""} onChange={(e) => setCoins((current) => ({ ...current, [video.id]: e.target.value }))} placeholder="Coin Award" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+                <input type="text" value={notes[video.id] ?? ""} onChange={(e) => setNotes((current) => ({ ...current, [video.id]: e.target.value }))} placeholder="Admin note" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <button type="button" onClick={() => handleApprove(video)} disabled={savingId === video.id} className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60">
+                  {savingId === video.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />} Approve
+                </button>
+                <button type="button" onClick={() => handleReject(video)} disabled={savingId === video.id} className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60">
+                  {savingId === video.id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />} Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== SHARED ===== */
+function SectionHeader({ title, count, onRefresh }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+        <p className="text-sm text-slate-400">{count}</p>
+      </div>
+      <button type="button" onClick={onRefresh} className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200">
+        <RefreshCw size={14} /> Refresh
+      </button>
+    </div>
+  );
+}
+
+function EmptyState({ text }) {
+  return <div className="py-12 text-center"><p className="text-sm text-slate-400">{text}</p></div>;
+}
+
+function Loading({ text }) {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 size={24} className="animate-spin text-slate-400" />
+      <span className="ml-2 text-sm text-slate-400">{text}</span>
+    </div>
+  );
+}
+
+function OrderStatus({ status }) {
+  const config = {
+    pending: { label: "Pending", color: "bg-amber-50 text-amber-600" },
+    delivered: { label: "Delivered", color: "bg-emerald-50 text-emerald-600" },
+    cancelled: { label: "Cancelled", color: "bg-rose-50 text-rose-600" },
+  };
+  const current = config[status] || config.pending;
+  return <span className={`rounded-lg px-2 py-1 text-[11px] font-bold ${current.color}`}>{current.label}</span>;
+  }
