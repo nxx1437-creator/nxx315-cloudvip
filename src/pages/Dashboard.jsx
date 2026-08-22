@@ -1,24 +1,16 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { 
   Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu,
-  ChevronRight, Zap, ShoppingBag, Wallet, MessageCircle, ArrowUpRight, ArrowDownRight, HelpCircle
+  Zap, ShoppingBag, Wallet, MessageCircle, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
+import { supabase } from "../lib/supabaseClient.js";
 
 const WEEKDAYS = ["Thứ 7", "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
-
-// Dữ liệu mẫu cho hoạt động gần đây
-const RECENT_ACTIVITIES = [
-  { id: 1, type: "earn", title: "Hoàn thành nhiệm vụ: LINK4M", date: "10:54:43 11/8/2026" },
-  { id: 2, type: "spend", title: "Mua: RANDOM ACC LIÊN QUÂN SCAN", date: "18:55:35 25/6/2026" },
-  { id: 3, type: "earn", title: "Hoa hồng 15% từ nhiệm vụ của người được giới thiệu", date: "15:24:20 18/6/2026" },
-  { id: 4, type: "earn", title: "Hoa hồng 15% từ nhiệm vụ của người được giới thiệu", date: "15:21:33 18/6/2026" },
-  { id: 5, type: "earn", title: "Hoa hồng 15% từ nhiệm vụ của người được giới thiệu", date: "07:21:23 2/6/2026" },
-];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -48,9 +40,51 @@ export default function Dashboard() {
   const { profile } = useProfile(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // State cho dữ liệu thật
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [tasksAvailable, setTasksAvailable] = useState(0);
+
   const displayName = profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
   const initial = displayName.charAt(0).toUpperCase();
   const expPct = Math.min(100, Math.round((profile.exp / (profile.exp_target || 100)) * 100));
+
+  // Lấy dữ liệu thật từ Supabase
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!user?.id) return;
+
+      // Lấy lịch sử đổi quà (redemption_orders)
+      const { data: orders } = await supabase
+        .from("redemption_orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      // Lấy số nhiệm vụ khả dụng
+      const { data: allTasks } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("active", true);
+      
+      if (allTasks) setTasksAvailable(allTasks.length);
+
+      // Tạo danh sách hoạt động gần đây
+      if (orders && orders.length > 0) {
+        const activityList = orders.map((order) => ({
+          id: order.id,
+          type: "spend", // Đổi quà là trừ coin
+          title: `Mua: ${order.package_name || "Phần thưởng"}`,
+          date: new Date(order.created_at).toLocaleString("vi-VN"),
+        }));
+        setRecentActivities(activityList);
+      } else {
+        setRecentActivities([]);
+      }
+    };
+
+    fetchActivities();
+  }, [user?.id]);
 
   // TODO: thay bằng dữ liệu Coin thật theo từng ngày (bảng coin_history chẳng hạn).
   const last7Days = useMemo(() => [0, 5, 12, 8, 15, 20, 0], []);
@@ -58,7 +92,7 @@ export default function Dashboard() {
   const totalCoins7Days = last7Days.reduce((a, b) => a + b, 0);
 
   const todayTasksDone = profile.tasks_completed_today || 0;
-  const todayTasksTotal = 3; // Mặc định 3 nhiệm vụ
+  const todayTasksTotal = tasksAvailable > 0 ? tasksAvailable : 3;
   const todayTaskPct = Math.min(100, Math.round((todayTasksDone / todayTasksTotal) * 100));
 
   return (
@@ -166,7 +200,7 @@ export default function Dashboard() {
             icon={CheckSquare}
             iconBg="bg-sky-50"
             iconColor="text-sky-500"
-            value={3}
+            value={tasksAvailable}
             label="Nhiệm vụ khả dụng"
           />
           <StatCard
@@ -337,7 +371,9 @@ export default function Dashboard() {
           <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hoạt động gần đây</h3>
           <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
             <div className="space-y-3">
-              {RECENT_ACTIVITIES.map((activity) => (
+              {recentActivities.length === 0 ? (
+                <p className="py-4 text-center text-sm text-slate-400">Chưa có hoạt động nào.</p>
+              ) : recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-center gap-3">
                   <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                     activity.type === "earn" ? "bg-emerald-50 text-emerald-500" : "bg-rose-50 text-rose-500"
