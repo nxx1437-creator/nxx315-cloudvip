@@ -25,22 +25,77 @@ export default function useTasks(userId) {
           { id: "demo-2", title: "Làm 5 nhiệm vụ", provider: "Demo", reward_coins: 200, daily_limit: 5, completedToday: 3, remainingToday: 2 },
           { id: "demo-3", title: "Làm 10 nhiệm vụ", provider: "Demo", reward_coins: 400, daily_limit: 10, completedToday: 8, remainingToday: 2 },
         ]);
-        setCompletedToday(3); // Hiện 3/5 đã làm
+        setCompletedToday(3); 
         return;
       }
 
       let doneMap = {};
       let completed = 0;
+      
       if (userId) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
+        
+        // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
+        const { data: allCompletions } = await supabase
+          .from("task_completions")
+          .select("completed_at")
+          .eq("user_id", userId)
+          .order("completed_at", { ascending: false });
+
+        // Tính số lượng hoàn thành hôm nay
+        const todayCompletions = (allCompletions || []).filter(c => 
+          new Date(c.completed_at) >= startOfDay
+        );
+        completed = todayCompletions.length;
+
+        // Tính streak (chuỗi ngày liên tiếp)
+        const uniqueDays = new Set(
+          (allCompletions || []).map(c => new Date(c.completed_at).toDateString())
+        );
+        
+        let streak = 0;
+        let currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        
+        // Nếu hôm nay CHƯA làm, bắt đầu kiểm tra từ hôm qua (vì có thể hôm nay chưa làm nhưng hôm qua đã làm)
+        if (!uniqueDays.has(currentDate.toDateString())) {
+          currentDate.setDate(currentDate.getDate() - 1);
+        }
+        
+        // Đếm số ngày liên tiếp có hoàn thành nhiệm vụ
+        while (uniqueDays.has(currentDate.toDateString())) {
+          streak++;
+          currentDate.setDate(currentDate.getDate() - 1);
+        }
+
+        // Tự động cập nhật streak vào database (nếu có thay đổi)
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("streak_days, streak_record")
+          .eq("id", userId)
+          .single();
+
+        if (profileData) {
+          // Nếu chuỗi hiện tại lớn hơn chuỗi cũ, cập nhật
+          if (streak !== profileData.streak_days || streak > profileData.streak_record) {
+            await supabase
+              .from("profiles")
+              .update({ 
+                streak_days: streak, 
+                streak_record: Math.max(streak, profileData.streak_record || 0) 
+              })
+              .eq("id", userId);
+          }
+        }
+
+        // Lấy dữ liệu task theo ngày hôm nay
         const { data: completions } = await supabase
           .from("task_completions")
           .select("task_id")
           .eq("user_id", userId)
           .gte("completed_at", startOfDay.toISOString());
 
-        completed = completions?.length || 0;
         doneMap = (completions || []).reduce((acc, c) => {
           acc[c.task_id] = (acc[c.task_id] || 0) + 1;
           return acc;
@@ -74,4 +129,4 @@ export default function useTasks(userId) {
   }, [reload]);
 
   return { tasks, loading, completedToday, reload };
-}
+    }
