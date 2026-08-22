@@ -13,7 +13,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [confirmSent, setConfirmSent] = useState(false);
 
-  // Hàm sinh mã giới thiệu ngẫu nhiên 8 ký tự
   const generateReferralCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -36,7 +35,6 @@ export default function Register() {
     setError("");
     setLoading(true);
 
-    // Tạo mã giới thiệu riêng cho user mới
     const newReferralCode = generateReferralCode();
 
     const { data, error: authError } = await supabase.auth.signUp({
@@ -56,33 +54,32 @@ export default function Register() {
       return;
     }
 
-    // Lưu mã giới thiệu vào bảng profiles sau khi tạo user
+    // Lưu mã giới thiệu vào bảng profiles
     if (data.user) {
       await supabase.from("profiles").update({ referral_code: newReferralCode }).eq("id", data.user.id);
     }
 
-    // Xử lý mã giới thiệu (nếu user nhập mã)
+    // Xử lý mã giới thiệu (nếu user nhập mã) - Đây là lúc cộng 200 điểm + 15%
     if (form.referralCode && data.user) {
       const { data: referrer } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, coins")
         .eq("referral_code", form.referralCode.toUpperCase())
         .single();
 
       if (referrer) {
-        // Lưu lịch sử giới thiệu
+        // 1. Lưu lịch sử giới thiệu vào bảng referrals
         await supabase.from("referrals").insert({
           referrer_id: referrer.id,
           referred_id: data.user.id,
           code: form.referralCode.toUpperCase(),
         });
 
-        // Cộng 200 Coin cho người được giới thiệu
+        // 2. Cộng 200 coin cho NGƯỜI ĐƯỢC GIỚI THIỆU (user vừa đăng ký)
         await supabase.from("profiles").update({ coins: 200 }).eq("id", data.user.id);
 
-        // Cộng 15% hoa hồng cho chủ mã (tạm thời là 0 vì người mới chưa làm nhiệm vụ)
-        // Phần này sẽ được xử lý khi họ làm nhiệm vụ trong Tasks.jsx
-        // await supabase.from("profiles").update({ coins: 0 }).eq("id", referrer.id);
+        // 3. Cộng THƯỞNG cho CHỦ MÃ (15% của 200 = 30 coin)
+        await supabase.from("profiles").update({ coins: referrer.coins + 30 }).eq("id", referrer.id);
       }
     }
 
@@ -212,4 +209,4 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-      }
+        }
