@@ -3,7 +3,7 @@ import { Coins, Gift, Loader2, CheckCircle2, XCircle, CreditCard } from "lucide-
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import AppBackground from "../components/AppBackground.jsx";
 import GlassCard from "../components/GlassCard.jsx";
 import GlowButton from "../components/GlowButton.jsx";
