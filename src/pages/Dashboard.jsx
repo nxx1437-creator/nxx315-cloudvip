@@ -35,6 +35,7 @@ function StatCard({ icon: Icon, iconBg, iconColor, value, label }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [pressedQuick, setPressedQuick] = useState(null);
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
