@@ -20,7 +20,7 @@ const MENU_GROUPS = [
       { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
       { path: "/marketing", label: "Marketing Video", icon: Megaphone, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
       { label: "Buff MXH Free", icon: Rocket, badge: "FREE", badgeColor: "bg-teal-100 text-teal-600" },
-      { label: "Mời bạn", icon: Gift, badge: "+200", badgeColor: "bg-amber-100 text-amber-600" },
+      { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeColor: "bg-amber-100 text-amber-600" }
       { label: "Bảng xếp hạng", icon: Trophy, badge: "NEW", badgeColor: "bg-emerald-100 text-emerald-600" },
     ],
   },
