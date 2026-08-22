@@ -1,20 +1,24 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
+
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
-import Admin from "./pages/Admin.jsx";
-import AdminRoute from "./components/AdminRoute.jsx";
-import TaskCallback from "./pages/TaskCallback.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import NotFoundPage from "./pages/NotFoundPage.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
-import Marketing from "./pages/Marketing.jsx"; // 👈 Thêm dòng này
+import Marketing from "./pages/Marketing.jsx";
+import MarketingWallet from "./pages/MarketingWallet.jsx";
 
+import Admin from "./pages/Admin.jsx";
+import TaskCallback from "./pages/TaskCallback.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
+
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 export default function App() {
   return (
     <Routes>
@@ -39,3 +43,20 @@ export default function App() {
     </Routes>
   );
 }
+<Route
+  path="/marketing"
+  element={
+    <ProtectedRoute>
+      <Marketing />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/marketing-wallet"
+  element={
+    <ProtectedRoute>
+      <MarketingWallet />
+    </ProtectedRoute>
+  }
+/>
