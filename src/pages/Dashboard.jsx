@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight, Gift as GiftIcon } from "lucide-react";
+import { Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight, Search, Bell, Globe, Menu, Rocket, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -102,7 +102,7 @@ export default function Dashboard() {
           onClick={() => setSidebarOpen(true)}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
         >
-          <GiftIcon size={19} />
+          <Menu size={19} />
         </button>
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
           <Search size={15} className="shrink-0" />
@@ -149,7 +149,9 @@ export default function Dashboard() {
           {/* BALANCE CARD */}
           <div className="mt-5 rounded-2xl border border-white bg-white p-4 shadow-md shadow-sky-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Số dư</span>
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Số dư
+              </span>
               <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600 shadow-sm">
                 <Crown size={12} /> LV {profile.level}
               </span>
@@ -162,10 +164,15 @@ export default function Dashboard() {
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span>EXP</span>
-                <span>{profile.exp}/{profile.exp_target}</span>
+                <span>
+                  {profile.exp}/{profile.exp_target}
+                </span>
               </div>
               <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${expPct}%` }} />
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600"
+                  style={{ width: `${expPct}%` }}
+                />
               </div>
             </div>
           </div>
@@ -211,16 +218,24 @@ export default function Dashboard() {
             <Flame size={22} className="text-orange-500" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Giữ lửa</p>
-            <p className="text-2xl font-bold text-slate-900">{profile.streak_days} <span className="text-sm font-medium text-slate-500">ngày</span></p>
-            <p className="text-xs text-slate-500">Kỷ lục: <span className="font-semibold text-orange-600">{profile.streak_record}</span></p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Giữ lửa
+            </p>
+            <p className="text-2xl font-bold text-slate-900">
+              {profile.streak_days} <span className="text-sm font-medium text-slate-500">ngày</span>
+            </p>
+            <p className="text-xs text-slate-500">
+              Kỷ lục: <span className="font-semibold text-orange-600">{profile.streak_record}</span>
+            </p>
           </div>
         </div>
 
         {/* TASK STREAK MILESTONES */}
         <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">✨ Chuỗi nhiệm vụ hôm nay</span>
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+              ✨ Chuỗi nhiệm vụ hôm nay
+            </span>
             <span className="text-xs text-slate-400">Đã làm: {todayTasksDone}</span>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2.5">
@@ -231,8 +246,12 @@ export default function Dashboard() {
             ].map((m) => (
               <div key={m.n} className={`rounded-xl border p-3 text-center ${m.done ? "border-amber-200 bg-amber-50" : "border-slate-100 bg-slate-50"}`}>
                 <p className="text-xs font-medium text-slate-500">{m.n}</p>
-                <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-amber-600"><Coins size={13} /> {m.bonus}</p>
-                <div className="mt-2 h-1 w-full rounded-full bg-slate-200">{m.done && <div className="h-full rounded-full bg-amber-400" />}</div>
+                <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-amber-600">
+                  <Coins size={13} /> {m.bonus}
+                </p>
+                <div className="mt-2 h-1 w-full rounded-full bg-slate-200">
+                  {m.done && <div className="h-full rounded-full bg-amber-400" />}
+                </div>
               </div>
             ))}
           </div>
@@ -241,14 +260,23 @@ export default function Dashboard() {
         {/* 7-DAY COIN CHART */}
         <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900"><TrendingUp size={15} className="text-sky-500" /> Coin 7 ngày qua</span>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">+{profile.coins_earned_today || 0} hôm nay</span>
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+              <TrendingUp size={15} className="text-sky-500" /> Coin 7 ngày qua
+            </span>
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
+              +{profile.coins_earned_today || 0} hôm nay
+            </span>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{totalCoins7Days} <span className="text-sm font-normal text-slate-400">Coin</span></p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">
+            {totalCoins7Days} <span className="text-sm font-normal text-slate-400">Coin</span>
+          </p>
           <div className="mt-4 flex h-16 items-end gap-2">
             {last7Days.map((v, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                <div className="w-full rounded-t-md bg-gradient-to-t from-sky-400 to-blue-500" style={{ height: `${Math.max(4, (v / maxDay) * 100)}%` }} />
+                <div
+                  className="w-full rounded-t-md bg-gradient-to-t from-sky-400 to-blue-500"
+                  style={{ height: `${Math.max(4, (v / maxDay) * 100)}%` }}
+                />
                 <span className="text-[10px] text-slate-400">{WEEKDAYS[i]}</span>
               </div>
             ))}
@@ -257,18 +285,32 @@ export default function Dashboard() {
 
         {/* TODAY PROGRESS RING */}
         <div className="rounded-2xl border border-white bg-white p-5 text-center shadow-sm shadow-slate-200/70">
-          <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-900"><CheckSquare size={15} className="text-sky-500" /> Tiến độ hôm nay</span>
-          <div className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full" style={{ background: `conic-gradient(#38bdf8 ${todayTaskPct * 3.6}deg, #e2e8f0 0deg)` }}>
+          <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-900">
+            <CheckSquare size={15} className="text-sky-500" /> Tiến độ hôm nay
+          </span>
+          <div
+            className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full"
+            style={{
+              background: `conic-gradient(#38bdf8 ${todayTaskPct * 3.6}deg, #e2e8f0 0deg)`,
+            }}
+          >
             <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white">
               <span className="text-2xl font-bold text-slate-900">{todayTaskPct}%</span>
-              <span className="text-xs text-slate-400">{todayTasksDone}/{todayTasksTotal}</span>
+              <span className="text-xs text-slate-400">
+                {todayTasksDone}/{todayTasksTotal}
+              </span>
             </div>
           </div>
-          <button onClick={() => navigate("/tasks")} className="mx-auto mt-4 flex items-center gap-1.5 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200">Đi đến nhiệm vụ <ArrowRight size={14} /></button>
+          <button
+            onClick={() => navigate("/tasks")}
+            className="mx-auto mt-4 flex items-center gap-1.5 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+          >
+            Đi đến nhiệm vụ <ArrowRight size={14} />
+          </button>
         </div>
       </main>
 
       <BottomNav />
     </div>
   );
-      }
+                }
