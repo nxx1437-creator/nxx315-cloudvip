@@ -37,7 +37,7 @@ export default function Tasks() {
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
-  const { tasks, loading, reload } = useTasks(user?.id);
+  const { tasks, loading, reload, startTask, claimTask } = useTasks(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
@@ -67,29 +67,35 @@ export default function Tasks() {
 
   // Bước 1: Bắt đầu nhiệm vụ
   const handleStart = async (task) => {
-    setStartingTaskId(task.id);
-    const { data, error } = await supabase.functions.invoke("start-task", {
-      body: { task_id: task.id, provider: task.provider }
-    });
-    setStartingTaskId(null);
+  setStartingTaskId(task.id);
+  const data = await startTask(task.id); // Gọi hàm trong hook
+  setStartingTaskId(null);
 
-    if (error) {
-      let message = error.message;
-      try {
-        const body = await error.context.json();
-        if (body?.error) message = body.error;
-      } catch {}
-      alert(message);
-      return;
-    }
+  if (data?.error) {
+    alert(data.error);
+    return;
+  }
 
-    if (data?.error) {
-      alert(data.error);
-      return;
-    }
+  window.open(data.shortUrl, "_blank", "noopener,noreferrer");
+};
 
-    window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-  };
+const handleClaim = async () => {
+  if (!tokenInput.trim()) {
+    alert("Vui lòng nhập Token!");
+    return;
+  }
+
+  const result = await claimTask(tokenInput); // Gọi hàm trong hook
+  setTokenInput("");
+
+  if (result?.error) {
+    alert(result.error);
+    return;
+  }
+
+  alert(`Bạn đã nhận ${result.coins_earned} Coin!`);
+  reload();
+};
 
   // Bước 2: Người dùng bấm vào ô reCAPTCHA
   const handleCaptcha = () => {
@@ -105,35 +111,36 @@ export default function Tasks() {
 
   // Bước 3: Xác nhận và nhận Coin (đã có cả reCAPTCHA)
   const handleClaim = async () => {
-    if (!tokenInput.trim()) {
-      alert("Vui lòng nhập Token!");
-      return;
-    }
-    if (!captchaToken) {
-      alert("Vui lòng xác thực reCAPTCHA trước!");
-      return;
-    }
+  const handleStart = async (task) => {
+  setStartingTaskId(task.id);
+  const data = await startTask(task.id); // Gọi hàm trong hook
+  setStartingTaskId(null);
 
-    const { data, error } = await supabase.functions.invoke("claim-task", {
-      body: { token: tokenInput, recaptcha_token: captchaToken }
-    });
+  if (data?.error) {
+    alert(data.error);
+    return;
+  }
 
-    if (error) {
-      let message = error.message;
-      try {
-        const body = await error.context.json();
-        if (body?.error) message = body.error;
-      } catch {}
-      alert(message);
-      return;
-    }
+  window.open(data.shortUrl, "_blank", "noopener,noreferrer");
+};
 
-    setCaptchaToken(null);
-    setTokenInput("");
-    alert(`Bạn đã nhận ${data.coins_earned} Coin!`);
-    reload();
-  };
+const handleClaim = async () => {
+  if (!tokenInput.trim()) {
+    alert("Vui lòng nhập Token!");
+    return;
+  }
 
+  const result = await claimTask(tokenInput); // Gọi hàm trong hook
+  setTokenInput("");
+
+  if (result?.error) {
+    alert(result.error);
+    return;
+  }
+
+  alert(`Bạn đã nhận ${result.coins_earned} Coin!`);
+  reload();
+};
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
