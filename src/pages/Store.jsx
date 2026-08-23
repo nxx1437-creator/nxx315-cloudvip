@@ -3,7 +3,7 @@ import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, 
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
@@ -275,7 +275,7 @@ export default function Store() {
           )}
         </div>
 
-        {/* Đã chọn & Đặt đơn */}
+        {/* Đã chọn */}
         {selectedPkg && (
           <div className="mb-4 rounded-2xl bg-sky-50 p-4">
             <p className="text-xs uppercase tracking-wider text-slate-400">Đã chọn</p>
@@ -284,7 +284,8 @@ export default function Store() {
           </div>
         )}
 
-        <button onClick={handleRedeem} disabled={isRedeeming || !selectedPkg} className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 disabled:opacity-50">
+        {/* Nút Đặt đơn - LUÔN SÁNG, bấm được (không disabled) */}
+        <button onClick={handleRedeem} disabled={isRedeeming} className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 disabled:opacity-50">
           {isRedeeming ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Đặt đơn"}
         </button>
         <p className="mt-2 text-center text-xs text-slate-400">Số dư: {profile.coins} Coin</p>
@@ -337,4 +338,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-      }
+                                                                     }
