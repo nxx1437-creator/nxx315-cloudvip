@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight,
-  Search, Bell, Globe, Menu, Rocket, Crown
+import React, { useMemo, useState } from "react";
+import { 
+  Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu,
+  ChevronRight, Zap, ShoppingBag, Wallet, MessageCircle, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 
@@ -39,51 +38,12 @@ export default function Dashboard() {
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [marketingCode, setMarketingCode] = useState("");
-  const [refMessage, setRefMessage] = useState(null);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const refFromUrl = urlParams.get("ref");
-    if (refFromUrl) {
-      setMarketingCode(refFromUrl);
-    }
-  }, []);
-
-  const handleSubmitCode = async () => {
-    if (!marketingCode.trim()) {
-      setRefMessage({ type: "error", text: "Vui lòng nhập mã!" });
-      return;
-    }
-
-    const { data: campaign } = await supabase
-      .from("marketing_campaigns")
-      .select("id")
-      .eq("marketing_code", marketingCode.trim().toUpperCase())
-      .single();
-
-    if (!campaign) {
-      setRefMessage({ type: "error", text: "Mã không hợp lệ!" });
-      return;
-    }
-
-    const sessionHash = Math.random().toString(36).substring(2);
-    await supabase.from("marketing_sessions").insert({
-      campaign_id: campaign.id,
-      visitor_hash: sessionHash,
-      session_hash: sessionHash,
-      status: "pending"
-    });
-
-    setRefMessage({ type: "success", text: "Đã ghi nhận lượt giới thiệu!" });
-    setMarketingCode("");
-  };
 
   const displayName = profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
   const initial = displayName.charAt(0).toUpperCase();
   const expPct = Math.min(100, Math.round((profile.exp / (profile.exp_target || 100)) * 100));
 
-  const last7Days = [0, 5, 12, 8, 15, 20, 0];
+  const last7Days = useMemo(() => [0, 5, 12, 8, 15, 20, 0], []);
   const maxDay = Math.max(1, ...last7Days);
   const totalCoins7Days = last7Days.reduce((a, b) => a + b, 0);
 
@@ -98,6 +58,7 @@ export default function Dashboard() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
+      {/* TOP BAR */}
       <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-gradient-to-b from-sky-50/80 to-white/90 px-4 py-3 shadow-sm backdrop-blur-md">
         <button
           aria-label="Mở menu"
@@ -106,10 +67,13 @@ export default function Dashboard() {
         >
           <Menu size={19} />
         </button>
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
+        <button
+          onClick={() => navigate("/tasks")}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm"
+        >
           <Search size={15} className="shrink-0" />
-          <span className="truncate">Tìm kiếm</span>
-        </div>
+          <span className="truncate whitespace-nowrap">Tìm kiếm</span>
+        </button>
         <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
           <Bell size={16} className="text-slate-600" />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
@@ -124,7 +88,7 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* HERO */}
+        {/* HERO / GREETING CARD */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">
             ✨ Hoàn thành nhiệm vụ hôm nay để nhận thưởng bonus
@@ -140,10 +104,16 @@ export default function Dashboard() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2.5">
-            <button onClick={() => navigate("/tasks")} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110">
+            <button
+              onClick={() => navigate("/tasks")}
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
+            >
               <Rocket size={15} /> Bắt đầu nhiệm vụ
             </button>
-            <button onClick={() => navigate("/invite")} className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:shadow-md">
+            <button
+              onClick={() => navigate("/invite")}
+              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:shadow-md"
+            >
               <Gift size={15} /> Mời bạn
             </button>
           </div>
@@ -180,38 +150,36 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* NHẬP MÃ MARKETING */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-slate-700 mb-2">🎁 Bạn có mã Marketing?</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={marketingCode}
-              onChange={(e) => setMarketingCode(e.target.value)}
-              placeholder="Nhập mã..."
-              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-            />
-            <button
-              onClick={handleSubmitCode}
-              className="rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              Nhập
-            </button>
-          </div>
-          {refMessage && (
-            <p className={`mt-2 text-xs ${refMessage.type === "success" ? "text-emerald-600" : "text-rose-500"}`}>
-              {refMessage.text}
-            </p>
-          )}
-          <p className="mt-2 text-[11px] text-slate-400">Nhập mã để ghi nhận lượt truy cập cho người giới thiệu.</p>
-        </div>
-
         {/* STATS GRID */}
         <div className="grid grid-cols-2 gap-3">
-          <StatCard icon={CheckSquare} iconBg="bg-sky-50" iconColor="text-sky-500" value={3} label="Nhiệm vụ khả dụng" />
-          <StatCard icon={Trophy} iconBg="bg-emerald-50" iconColor="text-emerald-500" value={todayTasksDone} label="Hoàn thành hôm nay" />
-          <StatCard icon={Coins} iconBg="bg-amber-50" iconColor="text-amber-500" value={profile.coins_earned_today || 0} label="Coin kiếm hôm nay" />
-          <StatCard icon={Users} iconBg="bg-blue-50" iconColor="text-blue-500" value={profile.referrals_count || 0} label="Bạn đã mời" />
+          <StatCard
+            icon={CheckSquare}
+            iconBg="bg-sky-50"
+            iconColor="text-sky-500"
+            value={3}
+            label="Nhiệm vụ khả dụng"
+          />
+          <StatCard
+            icon={Trophy}
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-500"
+            value={todayTasksDone}
+            label="Hoàn thành hôm nay"
+          />
+          <StatCard
+            icon={Coins}
+            iconBg="bg-amber-50"
+            iconColor="text-amber-500"
+            value={profile.coins_earned_today || 0}
+            label="Coin kiếm hôm nay"
+          />
+          <StatCard
+            icon={Users}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-500"
+            value={profile.referrals_count || 0}
+            label="Bạn đã mời"
+          />
         </div>
 
         {/* STREAK CARD */}
@@ -310,9 +278,53 @@ export default function Dashboard() {
             Đi đến nhiệm vụ <ArrowRight size={14} />
           </button>
         </div>
+
+        {/* QUICK ACTIONS */}
+        <div>
+          <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hành động nhanh</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => navigate("/tasks")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50">
+                <Zap size={18} className="text-sky-500" />
+              </span>
+              Nhiệm vụ
+            </button>
+            <button
+              onClick={() => navigate("/store")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
+                <ShoppingBag size={18} className="text-blue-500" />
+              </span>
+              Cửa hàng
+            </button>
+            <button
+              onClick={() => navigate("/wallet")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
+                <Wallet size={18} className="text-amber-500" />
+              </span>
+              Nạp / Rút
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                <MessageCircle size={18} className="text-emerald-500" />
+              </span>
+              Hỗ trợ
+            </button>
+          </div>
+        </div>
       </main>
 
       <BottomNav />
+
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
