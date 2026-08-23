@@ -51,7 +51,11 @@ export default function TaskCallback() {
     });
 
     if (verifyError || !verifyData?.success) {
-      setState({ status: "error", message: "Xác minh captcha thất bại, vui lòng thử lại.", reward: 0 });
+      setState({
+        status: "error",
+        message: "DEBUG: " + JSON.stringify({ verifyError, verifyData }),
+        reward: 0,
+      });
       return;
     }
 
