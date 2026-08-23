@@ -12,7 +12,7 @@ import Admin from "./pages/Admin.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
-import MarketingWallet from "./pages/MarketingWallet.jsx";
+import Marketing from "./pages/Marketing.jsx";
 import Invite from "./pages/Invite.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import Support from "./pages/Support.jsx";
@@ -95,13 +95,13 @@ export default function App() {
       />
 
       <Route
-        path="/marketing-wallet"
-        element={
-          <ProtectedRoute>
-            <MarketingWallet />
-          </ProtectedRoute>
-        }
-      />
+  path="/marketing"
+  element={
+    <ProtectedRoute>
+      <Marketing />
+    </ProtectedRoute>
+  }
+/>
 
       <Route
         path="/invite"
