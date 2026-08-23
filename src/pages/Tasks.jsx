@@ -65,37 +65,19 @@ export default function Tasks() {
   const totalRemaining = tasks.reduce((sum, t) => sum + (t.remainingToday || 0), 0);
   const availableCount = tasks.filter((t) => (t.remainingToday || 0) > 0).length;
 
-  // Bước 1: Bắt đầu nhiệm vụ
+  // Bước 1: Bắt đầu nhiệm vụ (Gọi hàm startTask trong hook)
   const handleStart = async (task) => {
-  setStartingTaskId(task.id);
-  const data = await startTask(task.id); // Gọi hàm trong hook
-  setStartingTaskId(null);
+    setStartingTaskId(task.id);
+    const data = await startTask(task.id);
+    setStartingTaskId(null);
 
-  if (data?.error) {
-    alert(data.error);
-    return;
-  }
+    if (data?.error) {
+      alert(data.error);
+      return;
+    }
 
-  window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-};
-
-const handleClaim = async () => {
-  if (!tokenInput.trim()) {
-    alert("Vui lòng nhập Token!");
-    return;
-  }
-
-  const result = await claimTask(tokenInput); // Gọi hàm trong hook
-  setTokenInput("");
-
-  if (result?.error) {
-    alert(result.error);
-    return;
-  }
-
-  alert(`Bạn đã nhận ${result.coins_earned} Coin!`);
-  reload();
-};
+    window.open(data.shortUrl, "_blank", "noopener,noreferrer");
+  };
 
   // Bước 2: Người dùng bấm vào ô reCAPTCHA
   const handleCaptcha = () => {
@@ -109,38 +91,30 @@ const handleClaim = async () => {
     }
   };
 
-  // Bước 3: Xác nhận và nhận Coin (đã có cả reCAPTCHA)
+  // Bước 3: Xác nhận và nhận Coin (Gọi hàm claimTask trong hook)
   const handleClaim = async () => {
-  const handleStart = async (task) => {
-  setStartingTaskId(task.id);
-  const data = await startTask(task.id); // Gọi hàm trong hook
-  setStartingTaskId(null);
+    if (!tokenInput.trim()) {
+      alert("Vui lòng nhập Token!");
+      return;
+    }
+    if (!captchaToken) {
+      alert("Vui lòng xác thực reCAPTCHA trước!");
+      return;
+    }
 
-  if (data?.error) {
-    alert(data.error);
-    return;
-  }
+    const result = await claimTask(tokenInput);
+    setTokenInput("");
+    setCaptchaToken(null);
 
-  window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-};
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
 
-const handleClaim = async () => {
-  if (!tokenInput.trim()) {
-    alert("Vui lòng nhập Token!");
-    return;
-  }
+    alert(`Bạn đã nhận ${result.coins_earned} Coin!`);
+    reload();
+  };
 
-  const result = await claimTask(tokenInput); // Gọi hàm trong hook
-  setTokenInput("");
-
-  if (result?.error) {
-    alert(result.error);
-    return;
-  }
-
-  alert(`Bạn đã nhận ${result.coins_earned} Coin!`);
-  reload();
-};
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
