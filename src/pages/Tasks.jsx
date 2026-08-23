@@ -37,7 +37,7 @@ export default function Tasks() {
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
-  const { tasks, loading, reload, startTask, claimTask } = useTasks(user?.id);
+  const { tasks, loading, reload } = useTasks(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
@@ -57,14 +57,13 @@ export default function Tasks() {
     profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
   const initial = displayName.charAt(0).toUpperCase();
 
-  const filteredTasks = useMemo(
-    () =>
-      tasks.filter((t) => t.provider.toLowerCase().includes(query.trim().toLowerCase())),
-    [tasks, query]
-  );
+  const filteredTasks = tasks.filter((t) => {
+    const name = t.provider || "";
+    return name.toLowerCase().includes(query.trim().toLowerCase());
+  });
 
-  const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
-  const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
+  const totalRemaining = tasks.reduce((sum, t) => sum + (t.remainingToday || 0), 0);
+  const availableCount = tasks.filter((t) => (t.remainingToday || 0) > 0).length;
 
   // Bước 1: Bắt đầu nhiệm vụ
   const handleStart = async (task) => {
@@ -250,29 +249,19 @@ export default function Tasks() {
 
         <div className="space-y-4">
           {filteredTasks.map((task) => {
-            const progressPct = Math.min(
-              100,
-              Math.round((task.completedToday / task.daily_limit) * 100)
-            );
-            const isDone = task.remainingToday <= 0;
+            const progressPct = Math.min(100, Math.round(((task.completedToday || 0) / (task.daily_limit || 1)) * 100));
+            const isDone = (task.remainingToday || 0) <= 0;
             return (
-              <div
-                key={task.id}
-                className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70"
-              >
+              <div key={task.id} className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
                 <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {task.logo_url ? (
-                        <img
-                          src={task.logo_url}
-                          alt={task.provider}
-                          className="h-11 w-11 rounded-xl object-cover"
-                        />
+                        <img src={task.logo_url} alt={task.provider} className="h-11 w-11 rounded-xl object-cover" />
                       ) : (
                         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white">
-                          {task.provider.slice(0, 2)}
+                          {task.provider?.slice(0, 2)}
                         </div>
                       )}
                       <span className="text-base font-bold text-slate-900">{task.provider}</span>
@@ -286,12 +275,9 @@ export default function Tasks() {
 
                   <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
                     <div>
-                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                        Phần thưởng
-                      </p>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">Phần thưởng</p>
                       <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
-                        <Coins size={15} /> {task.reward_coins}{" "}
-                        <span className="text-xs font-normal text-slate-400">/lượt</span>
+                        <Coins size={15} /> {task.reward_coins} <span className="text-xs font-normal text-slate-400">/lượt</span>
                       </p>
                     </div>
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
@@ -302,15 +288,10 @@ export default function Tasks() {
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>Hôm nay</span>
-                      <span>
-                        {task.completedToday}/{task.daily_limit}
-                      </span>
+                      <span>{task.completedToday}/{task.daily_limit}</span>
                     </div>
                     <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600"
-                        style={{ width: `${progressPct}%` }}
-                      />
+                      <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${progressPct}%` }} />
                     </div>
                   </div>
 
@@ -320,11 +301,7 @@ export default function Tasks() {
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ExternalLink size={15} />
-                    {isDone
-                      ? "Đã hết lượt hôm nay"
-                      : startingTaskId === task.id
-                      ? "Đang mở..."
-                      : "Làm nhiệm vụ"}
+                    {isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
                   </button>
                 </div>
               </div>
@@ -343,7 +320,6 @@ export default function Tasks() {
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm mb-3"
           />
 
-          {/* Nút reCAPTCHA */}
           <button
             onClick={handleCaptcha}
             className="w-full rounded-xl bg-slate-100 py-3 text-sm font-medium text-slate-600 mb-3"
