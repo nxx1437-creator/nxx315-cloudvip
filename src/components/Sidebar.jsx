@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { 
   LayoutDashboard, User, ListChecks, Megaphone, Rocket, Gift, 
   Trophy, Store, ShoppingBag, Wallet, CreditCard, FileText, 
-  History, Coins, Mail, Download, FileWarning, LifeBuoy, X, LogOut, Search, Crown, ChevronDown
+  History, Coins, Mail, Download, FileWarning, LifeBuoy, X, LogOut, Search, ChevronDown
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -143,7 +143,7 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
               <p className="mt-1 text-[10px] text-slate-400">0 MEME</p>
             </div>
             <div className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600">
-              <Crown size={12} /> VIP Đồng
+              👑 VIP Đồng
             </div>
           </div>
         </div>
@@ -208,4 +208,4 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
       </aside>
     </>
   );
-                }
+                                                                                       }
