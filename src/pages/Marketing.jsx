@@ -225,3 +225,14 @@ export default function Marketing() {
     </div>
   );
               }
+{/* Link giới thiệu */}
+<div className="mt-3 rounded-2xl bg-slate-50 px-4 py-3">
+  <p className="text-xs text-slate-500">Link giới thiệu</p>
+  <p className="mt-1 truncate text-sm font-medium text-blue-600">nxx315-cloudvip.vercel.app/?ref={marketingCode}</p>
+  <button 
+    onClick={() => navigator.clipboard.writeText(`https://nxx315-cloudvip.vercel.app/?ref=${marketingCode}`)}
+    className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-blue-500 py-2 text-xs font-semibold text-white"
+  >
+    <Copy size={12} /> Sao chép link
+  </button>
+</div>
