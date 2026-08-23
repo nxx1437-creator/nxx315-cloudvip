@@ -304,3 +304,45 @@ export default function Tasks() {
     </div>
   );
                           }
+import ReCAPTCHA from "react-google-recaptcha";
+
+// 1. Khai báo Site Key lấy từ Google
+const RECAPTCHA_SITE_KEY = "YOUR_SITE_KEY_HERE";
+
+// 2. Thêm state để lưu trạng thái xác thực
+const [captchaToken, setCaptchaToken] = useState(null);
+
+// 3. Thêm hàm onChange khi người dùng bấm vào ô
+const handleCaptchaChange = (token) => {
+  setCaptchaToken(token); // Lưu token reCAPTCHA
+};
+
+// 4. Sửa lại hàm handleClaim (hoặc khi người dùng xác nhận):
+const handleClaim = async () => {
+  if (!captchaToken) {
+    alert("Vui lòng xác thực reCAPTCHA trước!");
+    return;
+  }
+  
+  // Gọi API với cả Token nhiệm vụ và Token reCAPTCHA
+  const { data, error } = await supabase.functions.invoke('claim-task', {
+    body: { token: tokenInput, recaptcha_token: captchaToken }
+  });
+
+  if (error) {
+    // Xử lý lỗi
+    return;
+  }
+
+  alert(`Bạn đã nhận ${data.coins_earned} Coin!`);
+  // Reset reCAPTCHA sau khi nhận thưởng
+  setCaptchaToken(null);
+};
+
+// 5. Trong phần render, thêm ô reCAPTCHA dưới ô nhập Token:
+<div className="mt-4">
+  <ReCAPTCHA
+    sitekey={RECAPTCHA_SITE_KEY}
+    onChange={handleCaptchaChange}
+  />
+</div>
