@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Coins } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
@@ -53,106 +53,126 @@ export default function Admin() {
   );
 }
 
-/* ===== ORDERS TAB (Có nhập ghi chú, phân biệt màu, nút hoạt động) ===== */
+/* ===== ORDERS TAB (Đúng luồng, có modal từ chối) ===== */
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
-  const [notes, setNotes] = useState({}); // Lưu ghi chú cho từng đơn
+  const [rejectModal, setRejectModal] = useState(null); // Đơn đang chọn để từ chối
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchOrders = async () => {
     setLoading(true);
     const { data } = await supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
-    setOrders(data ?? []);
+    // Chỉ hiển thị những đơn PENDING (chờ xử lý)
+    setOrders((data ?? []).filter(o => o.status === "pending"));
     setLoading(false);
   };
 
   useEffect(() => { fetchOrders(); }, []);
 
-  const handleAction = async (order, status) => {
-    const adminNote = notes[order.id] || "";
+  const handleDelivered = async (order) => {
     setSavingId(order.id);
     
+    // Cập nhật trạng thái trên Database
     const { error } = await supabase.from("redemption_orders").update({
-      status,
-      admin_note: adminNote
+      status: "delivered",
+      processed_at: new Date().toISOString()
     }).eq("id", order.id);
-    
+
     setSavingId(null);
     if (error) { alert(error.message); return; }
     await fetchOrders();
   };
 
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      alert("Vui lòng nhập lý do từ chối!");
+      return;
+    }
+
+    setSavingId(rejectModal.id);
+    
+    // Gọi RPC an toàn để hoàn điểm (Không cho Frontend tự cộng)
+    const { error } = await supabase.rpc("refund_order_points", {
+      p_order_id: rejectModal.id,
+      p_reason: rejectReason.trim()
+    });
+
+    setSavingId(null);
+    if (error) { alert(error.message); return; }
+
+    setRejectModal(null);
+    setRejectReason("");
+    await fetchOrders();
+  };
+
   if (loading) return <Loading text="Loading orders..." />;
-  if (orders.length === 0) return <EmptyState text="Chưa có đơn nào." />;
+  if (orders.length === 0) return <EmptyState text="Chưa có đơn hàng chờ xử lý." />;
 
   return (
     <div className="space-y-4">
-      <SectionHeader title="Đơn hàng" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
+      <SectionHeader title="Đơn hàng chờ xử lý" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
+      
       {orders.map((order) => (
-        <div 
-          key={order.id} 
-          className={`rounded-2xl border p-5 shadow-sm ${
-            order.status === "delivered" 
-              ? "border-emerald-200 bg-emerald-50/50" // Đơn đã giao: nền xanh nhạt
-              : order.status === "cancelled"
-                ? "border-rose-200 bg-rose-50/50" // Đơn hủy: nền đỏ nhạt
-                : "border-slate-200 bg-white" // Đơn chờ xử lý: nền trắng
-          }`}
-        >
+        <div key={order.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-bold text-slate-900">{order.package_name}</p>
-              <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
+              <p className="font-bold text-slate-900">Mã đơn: #{String(order.id).slice(0, 8)}</p>
+              <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || order.contact_value || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
+              <p className="mt-1 text-xs text-slate-400">Gói: {order.package_name}</p>
             </div>
-            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-              order.status === "delivered" ? "bg-emerald-100 text-emerald-600" :
-              order.status === "cancelled" ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
-            }`}>
-              {order.status === "delivered" ? "Đã giao" : order.status === "cancelled" ? "Đã hủy" : "Chờ xử lý"}
-            </span>
+            <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-600">Đang xử lý</span>
           </div>
 
-          {/* Ô nhập ghi chú */}
-          <div className="mt-4">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Ghi chú (Admin)</label>
-            <input 
-              type="text" 
-              value={notes[order.id] || order.admin_note || ""}
-              onChange={(e) => setNotes((prev) => ({ ...prev, [order.id]: e.target.value }))}
-              placeholder="Nhập ghi chú cho đơn hàng..."
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-400"
-            />
+          <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
+            <span className="text-sm font-bold text-slate-700">Số điểm đã trừ:</span>
+            <span className="text-lg font-bold text-amber-500">-{order.coins_charged} Coin</span>
           </div>
 
-          {/* Nút hành động */}
           <div className="mt-4 flex gap-2">
-            {order.status !== "delivered" && (
-              <button 
-                onClick={() => handleAction(order, "delivered")} 
-                disabled={savingId === order.id}
-                className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
-              >
-                <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
-              </button>
-            )}
-            {order.status !== "cancelled" && (
-              <button 
-                onClick={() => handleAction(order, "cancelled")} 
-                disabled={savingId === order.id}
-                className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50"
-              >
-                <XCircle size={14} className="inline mr-1" /> Hủy đơn
-              </button>
-            )}
+            <button 
+              onClick={() => handleDelivered(order)} 
+              disabled={savingId === order.id}
+              className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+            >
+              <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
+            </button>
+            <button 
+              onClick={() => setRejectModal(order)} 
+              disabled={savingId === order.id}
+              className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50"
+            >
+              <XCircle size={14} className="inline mr-1" /> Từ chối
+            </button>
           </div>
-
-          {/* Hiện ghi chú đã lưu */}
-          {order.admin_note && (
-            <p className="mt-3 rounded-xl bg-slate-100 p-3 text-xs italic text-slate-500">Ghi chú: {order.admin_note}</p>
-          )}
         </div>
       ))}
+
+      {/* Modal từ chối */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-slate-900">Từ chối đơn hàng</h2>
+            <p className="mt-2 text-sm text-slate-500">Vui lòng nhập lý do từ chối. Điểm sẽ được hoàn lại cho người dùng.</p>
+            
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              placeholder="Nhập ghi chú của admin..."
+              className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400"
+            />
+
+            <div className="mt-5 flex gap-3">
+              <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
+              <button onClick={() => handleReject()} disabled={savingId === rejectModal.id} className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50">
+                {savingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn điểm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -363,4 +383,4 @@ function EmptyState({ text }) {
 
 function Loading({ text }) {
   return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-                                                    }
+          }
