@@ -219,5 +219,88 @@ export default function Marketing() {
           </div>
         </div>
     </div>
+    <div className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">Video của bạn</h2>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              { key: "all", label: "Tất cả" },
+              { key: "pending", label: "Chờ duyệt" },
+              { key: "approved", label: "Đã duyệt" },
+              { key: "paid", label: "Đã trả Cookies" },
+              { key: "rejected", label: "Từ chối" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveVideoTab(tab.key)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                  activeVideoTab === tab.key ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white" : "bg-amber-50 text-amber-700"
+                }`}
+              >
+                {tab.label} <span className="ml-1">{videos.filter((v) => (tab.key === "all" ? true : v.status === tab.key)).length}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {loadingVideos ? (
+              <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
+            ) : filteredVideos.length === 0 ? (
+              <div className="py-10 text-center">
+                <Megaphone size={40} className="mx-auto text-amber-100" />
+                <p className="mt-3 text-sm font-medium text-slate-500">Bắt đầu ngay để kiếm Cookies nào!</p>
+                <p className="mt-1 text-xs text-slate-400">Quay video và gửi link đầu tiên của bạn</p>
+              </div>
+            ) : (
+              filteredVideos.map((video) => (
+                <div key={video.id} className="rounded-2xl border border-amber-100 p-4">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        video.platform === "TikTok" ? "bg-slate-100 text-slate-700" : "bg-red-50 text-red-600"
+                      }`}
+                    >
+                      {video.platform === "TikTok" ? <Music size={12} /> : <Youtube size={12} />} {video.platform}
+                    </span>
+                    <p className="flex items-center gap-1 text-sm font-bold text-amber-500">
+                      <Cookie size={14} /> {video.coin_awarded || 0}
+                    </p>
+                  </div>
+                  <div className="mt-2">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        video.status === "rejected"
+                          ? "bg-rose-50 text-rose-500"
+                          : video.status === "paid"
+                          ? "bg-emerald-50 text-emerald-600"
+                          : video.status === "approved"
+                          ? "bg-orange-50 text-orange-600"
+                          : "bg-amber-50 text-amber-600"
+                      }`}
+                    >
+                      {video.status === "pending" ? "Chờ duyệt" : video.status === "approved" ? "Đã duyệt" : video.status === "paid" ? "Đã trả Cookies" : "Từ chối"}
+                    </span>
+                    <p className="mt-1 text-xs text-slate-400">{new Date(video.created_at).toLocaleString("vi-VN")}</p>
+                  </div>
+
+                  <a href={video.link} target="_blank" rel="noopener noreferrer" className="mt-2 block break-all text-sm font-medium text-amber-600 hover:underline">
+                    {video.title || video.link}
+                  </a>
+
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    <div className="rounded-lg bg-amber-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">View</p><p className="text-sm font-bold text-slate-800">{video.view_count || "—"}</p></div>
+                    <div className="rounded-lg bg-amber-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">Like</p><p className="text-sm font-bold text-slate-800">{video.like_count || "—"}</p></div>
+                    <div className="rounded-lg bg-amber-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">Cmt</p><p className="text-sm font-bold text-slate-800">{video.comment_count || "—"}</p></div>
+                    <div className="rounded-lg bg-amber-50/60 p-2 text-center"><p className="text-[10px] text-slate-400">CTR</p><p className="text-sm font-bold text-slate-800">{video.ctr || "0%"}</p></div>
+                  </div>
+
+                  {video.admin_note && (
+                    <p className="mt-3 rounded-lg bg-amber-50/60 p-3 text-xs italic text-slate-500">Admin: {video.admin_note}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
   );
               }
