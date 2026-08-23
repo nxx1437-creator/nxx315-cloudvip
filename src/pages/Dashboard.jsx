@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight,
-  Search, Bell, Globe, Menu, Rocket, Crown, Menu as MenuIcon
+  Search, Bell, Globe, Menu, Rocket, Crown
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
@@ -104,7 +104,7 @@ export default function Dashboard() {
           onClick={() => setSidebarOpen(true)}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
         >
-          <MenuIcon size={19} />
+          <Menu size={19} />
         </button>
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
           <Search size={15} className="shrink-0" />
@@ -323,4 +323,4 @@ export default function Dashboard() {
       />
     </div>
   );
-                                          }
+          }
