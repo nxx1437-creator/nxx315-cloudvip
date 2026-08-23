@@ -46,19 +46,32 @@ export default function TaskCallback() {
   const handleCaptchaSolved = async (captchaToken) => {
     setState({ status: "verifying", message: "", reward: 0 });
 
-    const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-recaptcha", {
-      body: { captchaToken },
-    });
+    let verifyData = null;
+    let verifyErrorText = null;
+    try {
+      const res = await fetch("https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/verify-recaptcha", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          "apikey": supabase.supabaseKey,
+        },
+        body: JSON.stringify({ captchaToken }),
+      });
+      verifyErrorText = `HTTP ${res.status}`;
+      verifyData = await res.json();
+    } catch (fetchErr) {
+      verifyErrorText = "FETCH THREW: " + String(fetchErr);
+    }
 
-    if (verifyError || !verifyData?.success) {
+    if (!verifyData?.success) {
       setState({
         status: "error",
-        message: "DEBUG: " + JSON.stringify({ verifyError, verifyData }),
+        message: "DEBUG2: " + JSON.stringify({ verifyErrorText, verifyData }),
         reward: 0,
       });
       return;
     }
-
     const { data, error } = await supabase.rpc("consume_task_token", { p_token: token });
     if (error) {
       setState({ status: "error", message: error.message, reward: 0 });
