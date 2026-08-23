@@ -127,3 +127,15 @@ export default function App() {
     </Routes>
   );
 }
+// 1. Thêm import (ở đầu file)
+import TaskCallback from "./pages/TaskCallback.jsx";
+
+// 2. Thêm route (cạnh các route khác)
+<Route
+  path="/task/callback"
+  element={
+    <ProtectedRoute>
+      <TaskCallback />
+    </ProtectedRoute>
+  }
+/>
