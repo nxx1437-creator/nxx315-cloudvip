@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, Coins } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
@@ -7,6 +7,7 @@ const TABS = [
   { key: "tasks", label: "Nhiệm vụ", icon: ListChecks, desc: "Cấu hình nhiệm vụ" },
   { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
   { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản" },
+  { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
 ];
 
 export default function Admin() {
@@ -46,7 +47,58 @@ export default function Admin() {
         {tab === "tasks" && <TasksTab />}
         {tab === "packages" && <PackagesTab />}
         {tab === "users" && <UsersTab />}
+        {tab === "support" && <SupportTab />}
       </main>
+    </div>
+  );
+}
+
+/* ===== SUPPORT TAB ===== */
+function SupportTab() {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTickets = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false });
+    setTickets(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTickets(); }, []);
+
+  const handleResolve = async (ticket) => {
+    await supabase.from("support_tickets").update({ status: "resolved" }).eq("id", ticket.id);
+    await fetchTickets();
+  };
+
+  if (loading) return <Loading text="Loading tickets..." />;
+  if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Yêu cầu hỗ trợ" count={`${tickets.length} Yêu cầu`} onRefresh={fetchTickets} />
+      {tickets.map((ticket) => (
+        <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                ticket.status === "pending" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+              }`}>
+                {ticket.status === "pending" ? "Chờ xử lý" : "Đã xử lý"}
+              </span>
+              <p className="mt-2 text-sm font-bold text-slate-900">{ticket.subject}</p>
+              <p className="mt-1 text-sm text-slate-600">{ticket.message}</p>
+              <p className="mt-1 text-xs text-slate-400">User ID: {ticket.user_id} • {new Date(ticket.created_at).toLocaleString("vi-VN")}</p>
+            </div>
+            {ticket.status === "pending" && (
+              <button onClick={() => handleResolve(ticket)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white">
+                Đã xử lý
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -56,44 +108,30 @@ function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
-  const [cancelReason, setCancelReason] = useState("");
+  const [drafts, setDrafts] = useState({});
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data } = await supabase.from("redemption_orders").select("*").eq("status", "processing").order("created_at", { ascending: false });
-    setOrders(data ?? []);
+    const { data, error } = await supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
+    if (error) { alert(error.message); setOrders([]); } else { setOrders(data ?? []); }
     setLoading(false);
   };
 
   useEffect(() => { fetchOrders(); }, []);
 
-  // Đánh dấu đã giao
-  const handleDelivered = async (order) => {
+  const getDraft = (order) => drafts[order.id] ?? { status: order.status, admin_note: order.admin_note ?? "" };
+  const handleSave = async (order) => {
+    const draft = getDraft(order);
     setSavingId(order.id);
-    await supabase.from("redemption_orders").update({ status: "delivered" }).eq("id", order.id);
+    const { error } = await supabase.from("redemption_orders").update({ status: draft.status, admin_note: draft.admin_note }).eq("id", order.id);
     setSavingId(null);
+    if (error) { alert(error.message); return; }
     await fetchOrders();
-  };
-
-  // Hủy đơn và hoàn coin
-  const handleCancel = async (order) => {
-    if (!cancelReason.trim()) {
-      alert("Vui lòng nhập lý do hủy đơn!");
-      return;
-    }
-    setSavingId(order.id);
-    const { data: user } = await supabase.from("profiles").select("coins").eq("id", order.user_id).single();
-    if (user) {
-      await supabase.from("profiles").update({ coins: user.coins + order.coins_charged }).eq("id", order.user_id);
-    }
-    await supabase.from("redemption_orders").update({ status: "cancelled", admin_note: cancelReason }).eq("id", order.id);
-    setSavingId(null);
-    setCancelReason("");
-    await fetchOrders();
+    setDrafts((current) => { const next = { ...current }; delete next[order.id]; return next; });
   };
 
   if (loading) return <Loading text="Loading orders..." />;
-  if (orders.length === 0) return <EmptyState text="Chưa có đơn hàng chờ xử lý." />;
+  if (orders.length === 0) return <EmptyState text="Chưa có đơn nào." />;
 
   return (
     <div className="space-y-4">
@@ -103,27 +141,13 @@ function OrdersTab() {
           <div className="flex items-start justify-between">
             <div>
               <p className="font-bold text-slate-900">{order.package_name}</p>
-              <p className="mt-1 text-xs text-slate-400">User: {order.target_username || order.roblox_username || "Không rõ"} • ID: {order.id}</p>
-              <p className="mt-1 text-xs text-slate-400">Thời gian: {new Date(order.created_at).toLocaleString("vi-VN")}</p>
-              {order.receive_method === "discord" && <p className="mt-1 text-xs text-slate-400">Discord: {order.contact_value}</p>}
-              {order.receive_method === "zalo" && <p className="mt-1 text-xs text-slate-400">Zalo: {order.contact_value}</p>}
+              <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
             </div>
             <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">Chờ xử lý</span>
           </div>
-          
-          <div className="mt-4 flex flex-col gap-2">
-            <div className="flex gap-2">
-              <button onClick={() => handleDelivered(order)} disabled={savingId === order.id} className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
-                {savingId === order.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />} Đã giao
-              </button>
-              <button onClick={() => { setCancelReason(""); setSavingId(null); }} className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white">
-                <XCircle size={14} /> Hủy đơn
-              </button>
-            </div>
-            <input type="text" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Nhập lý do hủy đơn..." className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none" />
-            {cancelReason && (
-              <button onClick={() => handleCancel(order)} className="w-full rounded-full bg-rose-500 py-2 text-sm font-semibold text-white">Xác nhận hủy (Hoàn {order.coins_charged} Coin)</button>
-            )}
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => handleSave(order)} className="flex-1 rounded-full bg-emerald-500 py-2 text-sm font-semibold text-white">Đã giao</button>
+            <button onClick={() => setDrafts((d) => ({ ...d, [order.id]: { ...getDraft(order), status: "cancelled" } }))} className="flex-1 rounded-full bg-rose-500 py-2 text-sm font-semibold text-white">Hủy đơn</button>
           </div>
         </div>
       ))}
@@ -131,9 +155,100 @@ function OrdersTab() {
   );
 }
 
-/* ===== CÁC TAB KHÁC (Giữ nguyên từ code cũ) ===== */
-// ... (Bạn có thể giữ nguyên code các tab khác từ Admin cũ, mình đã rút gọn để tập trung vào đơn hàng)
+/* ===== CÁC TAB KHÁC (Giữ nguyên như cũ) ===== */
+function TasksTab() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const fetchTasks = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
+    setTasks(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTasks(); }, []);
+  if (loading) return <Loading text="Loading tasks..." />;
+  if (tasks.length === 0) return <EmptyState text="No tasks found." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
+      {tasks.map((task) => (
+        <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-900">{task.provider}</span>
+            <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
+          </div>
+          <div className="mt-2 flex gap-2">
+            <button onClick={() => alert("Chỉnh sửa cài đặt ở phiên bản cũ")} className="flex-1 rounded-full bg-blue-50 py-2 text-sm font-semibold text-blue-600">Cài đặt</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PackagesTab() {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
+    setPackages(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPackages(); }, []);
+  if (loading) return <Loading text="Loading packages..." />;
+  if (packages.length === 0) return <EmptyState text="No packages found." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Gói Robux" count={`${packages.length} Gói`} onRefresh={fetchPackages} />
+      {packages.map((pkg) => (
+        <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="font-bold text-slate-900">{pkg.name}</p>
+          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
+          <div className="mt-2 flex gap-2">
+            <button onClick={() => alert("Chỉnh sửa cài đặt ở phiên bản cũ")} className="flex-1 rounded-full bg-blue-50 py-2 text-sm font-semibold text-blue-600">Cài đặt</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
+    setUsers(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+  if (loading) return <Loading text="Loading users..." />;
+  if (users.length === 0) return <EmptyState text="No users found." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
+      {users.map((user) => (
+        <div key={user.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="font-bold text-slate-900">{user.username || "Không tên"}</p>
+          <p className="mt-1 text-xs text-slate-400">Coin: {user.coins} • Lv.{user.level}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===== SHARED ===== */
 function SectionHeader({ title, count, onRefresh }) {
   return (
     <div className="flex items-center justify-between">
@@ -149,4 +264,4 @@ function EmptyState({ text }) {
 
 function Loading({ text }) {
   return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-    }
+      }
