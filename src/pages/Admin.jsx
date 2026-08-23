@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Coins } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
   { key: "orders", label: "Đơn hàng", icon: Package, desc: "Quản lý đơn đổi thưởng" },
   { key: "tasks", label: "Nhiệm vụ", icon: ListChecks, desc: "Cấu hình nhiệm vụ" },
   { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
-  { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản" },
+  { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản & Ban" },
   { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
 ];
 
@@ -49,6 +49,81 @@ export default function Admin() {
         {tab === "users" && <UsersTab />}
         {tab === "support" && <SupportTab />}
       </main>
+    </div>
+  );
+}
+
+/* ===== USERS TAB (Thêm cơ chế Ban) ===== */
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
+    setUsers(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const handleBan = async (user) => {
+    await supabase.from("profiles").update({ is_banned: true }).eq("id", user.id);
+    await fetchUsers();
+  };
+
+  const handleUnban = async (user) => {
+    await supabase.from("profiles").update({ is_banned: false }).eq("id", user.id);
+    await fetchUsers();
+  };
+
+  if (loading) return <Loading text="Loading users..." />;
+  if (users.length === 0) return <EmptyState text="No users found." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
+
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[800px] text-left text-sm">
+          <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="px-6 py-4">Username</th>
+              <th className="px-6 py-4">Level</th>
+              <th className="px-6 py-4">Coins</th>
+              <th className="px-6 py-4">Trạng thái</th>
+              <th className="px-6 py-4 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {users.map((user) => (
+              <tr key={user.id} className="transition hover:bg-blue-50/40">
+                <td className="px-6 py-4 font-bold text-slate-900">{user.username || "Không tên"}</td>
+                <td className="px-6 py-4">Lv.{user.level}</td>
+                <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
+                <td className="px-6 py-4">
+                  {user.is_banned ? (
+                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
+                  ) : (
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 text-right">
+                  {user.is_banned ? (
+                    <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white">
+                      <Undo2 size={12} className="inline mr-1" /> Mở khóa
+                    </button>
+                  ) : (
+                    <button onClick={() => handleBan(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white">
+                      <Ban size={12} className="inline mr-1" /> Ban
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -159,7 +234,7 @@ function OrdersTab() {
   );
 }
 
-/* ===== CÁC TAB KHÁC (Giữ nguyên như cũ) ===== */
+/* ===== CÁC TAB KHÁC ===== */
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -224,34 +299,6 @@ function PackagesTab() {
   );
 }
 
-function UsersTab() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
-    setUsers(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchUsers(); }, []);
-  if (loading) return <Loading text="Loading users..." />;
-  if (users.length === 0) return <EmptyState text="No users found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
-      {users.map((user) => (
-        <div key={user.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="font-bold text-slate-900">{user.username || "Không tên"}</p>
-          <p className="mt-1 text-xs text-slate-400">Coin: {user.coins} • Lv.{user.level}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ===== SHARED ===== */
 function SectionHeader({ title, count, onRefresh }) {
   return (
@@ -268,4 +315,4 @@ function EmptyState({ text }) {
 
 function Loading({ text }) {
   return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-            }
+                  }
