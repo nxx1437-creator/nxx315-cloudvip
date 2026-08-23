@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User, ArrowRightLeft, Ban, XCircle } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, User, ArrowRightLeft, Ban, XCircle, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useStoreData from "../hooks/useStoreData.js";
+import { useStoreData } from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
@@ -143,83 +143,58 @@ export default function Store() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
         .font-display { font-family: 'Baloo 2', sans-serif; }
-        
-        /* Các class Neumorphic */
-        .neu-flat {
-          background: #F0F4F8;
-          box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff;
-        }
-        .neu-flat-lg {
-          background: #F0F4F8;
-          box-shadow: 12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff;
-        }
-        .neu-inset {
-          background: #F0F4F8;
-          box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
-        }
-        
-        /* Input focus */
+        .neu-flat { background: #F0F4F8; box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff; }
+        .neu-flat-lg { background: #F0F4F8; box-shadow: 12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff; }
+        .neu-inset { background: #F0F4F8; box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff; }
         .input-neu:focus {
           outline: none;
           border: 1.5px solid #3B82F6;
           box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff, 0 0 0 3px rgba(59, 130, 246, 0.15);
           transition: all 0.3s ease;
         }
-        
-        /* Radio button tùy chỉnh */
         .radio-neu {
-          appearance: none;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
+          appearance: none; width: 20px; height: 20px; border-radius: 50%;
           background: #F0F4F8;
           box-shadow: inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff;
-          display: inline-block;
-          cursor: pointer;
-          position: relative;
+          display: inline-block; cursor: pointer; position: relative;
         }
         .radio-neu:checked::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #3B82F6;
+          content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+          width: 10px; height: 10px; border-radius: 50%; background: #3B82F6;
         }
       `}</style>
 
       <main className="mx-auto max-w-md px-5 py-5">
-        {/* HERO */}
+        {/* ===== HERO GIỐNG ẢNH 2 ===== */}
         <div className="neu-flat-lg rounded-[32px] p-6 mb-6">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30">
-              <Gift size={20} />
-            </span>
-            <div>
-              <h1 className="font-display text-xl font-bold text-slate-900">Đổi Coin lấy quà</h1>
-              <p className="text-xs text-slate-500">Robux Roblox — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 shadow-sm"><Gift size={16} /></span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">TRUNG TÂM ĐỔI THƯỞNG</span>
           </div>
           
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-white/70 px-3 py-1.5 text-xs font-medium text-sky-600 shadow-sm"><Zap size={12} /> Giao trong vài phút</span>
-            <span className="flex items-center gap-1 rounded-full bg-white/70 px-3 py-1.5 text-xs font-medium text-emerald-600 shadow-sm"><ShieldCheck size={12} /> Bảo hành / hoàn coin</span>
-            <span className="flex items-center gap-1 rounded-full bg-white/70 px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm"><Trophy size={12} /> Giá tốt nhất</span>
+          <div className="mt-3 flex items-start gap-2">
+            <Sparkles size={28} className="mt-1 text-amber-500" />
+            <h1 className="text-3xl font-bold leading-tight text-slate-900">Đổi Coin lấy quà game cực dễ</h1>
+          </div>
+          
+          <p className="mt-2 text-sm text-slate-500">Robux Roblox · Kim Cương Free Fire · Quân Huy Liên Quân — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
+          
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-sky-600 shadow-sm"><Zap size={12} /> Giao trong vài phút</span>
+            <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-emerald-600 shadow-sm"><ShieldCheck size={12} /> Bảo hành / hoàn coin</span>
+            <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm"><Trophy size={12} /> Giá tốt nhất</span>
           </div>
 
-          <div className="mt-5 flex items-center gap-3 rounded-3xl bg-white/60 p-4 shadow-sm">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-500"><Coins size={24} /></span>
+          <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500"><Wallet size={24} /></span>
             <div>
-              <p className="text-xs text-slate-500">Số dư của bạn</p>
+              <p className="text-xs text-slate-400">Số dư của bạn</p>
               <p className="text-xl font-bold text-amber-500">{profile.coins} <span className="text-sm font-normal text-slate-400">Coin</span></p>
             </div>
           </div>
         </div>
 
-        {/* Header & Tab */}
+        {/* ===== HEADER & TAB ===== */}
         <div className="neu-flat rounded-[28px] p-2 mb-6">
           <div className="flex gap-2">
             <button onClick={() => { setVersion("vng"); setSelectedPkg(null); setRedeemMethod(""); }}
@@ -237,7 +212,7 @@ export default function Store() {
           </div>
         </div>
 
-        {/* Chọn gói */}
+        {/* ===== CHỌN GÓI ===== */}
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-slate-800">Chọn gói Robux</h2>
           <div className="space-y-4">
@@ -269,7 +244,7 @@ export default function Store() {
           </div>
         </div>
 
-        {/* Thông tin giao hàng */}
+        {/* ===== THÔNG TIN GIAO HÀNG ===== */}
         <div className="neu-flat-lg rounded-[32px] p-6 mb-6">
           <h2 className="text-xl font-bold text-slate-800 mb-4">Thông tin giao hàng</h2>
           
@@ -319,7 +294,6 @@ export default function Store() {
             )}
           </div>
 
-          {/* Đã chọn */}
           {selectedPkg && (
             <div className="mt-5 rounded-3xl bg-sky-50 p-4 border border-sky-100">
               <p className="text-xs uppercase tracking-wider text-slate-500">Đã chọn</p>
@@ -334,7 +308,7 @@ export default function Store() {
           <p className="mt-2 text-center text-xs text-slate-500">Số dư: {profile.coins} Coin</p>
         </div>
 
-        {/* Hướng dẫn */}
+        {/* ===== HƯỚNG DẪN ===== */}
         <div className="neu-flat rounded-[32px] p-6 mb-6">
           <p className="text-base font-bold text-slate-800 mb-4">Hướng dẫn đặt Robux {version === "vng" ? "VNG" : "Quốc tế"}</p>
           <div className="space-y-3">
@@ -352,7 +326,7 @@ export default function Store() {
           </div>
         </div>
 
-        {/* Lịch sử đơn hàng */}
+        {/* ===== LỊCH SỬ ĐƠN HÀNG ===== */}
         <div className="mb-6">
           <h2 className="mb-3 text-lg font-bold text-slate-800">Lịch sử đơn hàng</h2>
           <div className="space-y-3">
@@ -388,4 +362,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-            }
+              }
