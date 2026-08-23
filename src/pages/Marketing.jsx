@@ -5,6 +5,21 @@ import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
+// 🛡️ Hàm kiểm tra link hợp lệ (Chỉ cho TikTok, YouTube, Short)
+const isValidLink = (url) => {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    return (
+      host.includes("tiktok.com") ||
+      host.includes("youtube.com") ||
+      host.includes("youtu.be")
+    );
+  } catch {
+    return false;
+  }
+};
+
 export default function Marketing() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -30,14 +45,30 @@ export default function Marketing() {
   }, [session]);
 
   const handleSubmit = async () => {
+    // ✅ Bộ lọc link
     if (!link.trim()) {
       alert("Vui lòng nhập link video!");
       return;
     }
+    if (!isValidLink(link)) {
+      alert("Link không hợp lệ! Vui lòng chỉ nhập link TikTok hoặc YouTube.");
+      return;
+    }
+
     setIsSubmitting(true);
+
+    // ✅ Tự động lấy tiêu đề video (nếu có)
+    let fetchedTitle = "";
+    try {
+      const noembed = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(link)}`);
+      const noembedData = await noembed.json();
+      if (noembedData.title) fetchedTitle = noembedData.title;
+    } catch {}
+
     const { error } = await supabase.from("marketing_videos").insert({
       user_id: session.user.id,
       link: link.trim(),
+      title: fetchedTitle,
       platform: link.includes("tiktok.com") ? "TikTok" : "YouTube",
       status: "pending"
     });
@@ -144,7 +175,7 @@ export default function Marketing() {
               {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </button>
           </div>
-          <p className="mt-2 text-xs text-slate-400">Vui lòng chỉ gửi link TikTok hoặc YouTube hợp lệ.</p>
+          <p className="mt-2 text-xs text-slate-400">⚠️ Vui lòng chỉ gửi link TikTok hoặc YouTube hợp lệ. Link không hợp lệ sẽ bị từ chối.</p>
         </div>
 
         {/* LỊCH SỬ VIDEO */}
@@ -181,7 +212,7 @@ export default function Marketing() {
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusConfig.color}`}>{statusConfig.label}</span>
                     <p className="mt-1 text-xs text-slate-400">{new Date(video.created_at).toLocaleString("vi-VN")}</p>
                   </div>
-                  <p className="mt-2 break-all text-sm font-medium text-blue-500">{video.link}</p>
+                  <p className="mt-2 break-all text-sm font-medium text-blue-500">{video.title || video.link}</p>
                   {video.admin_note && <p className="mt-2 rounded-lg bg-slate-50 p-3 text-xs italic text-slate-500">Admin: {video.admin_note}</p>}
                 </div>
               );
@@ -193,4 +224,4 @@ export default function Marketing() {
       <BottomNav />
     </div>
   );
-    }
+                                                                                                                                       }
