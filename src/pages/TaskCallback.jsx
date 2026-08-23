@@ -21,22 +21,23 @@ export default function TaskCallback() {
     }
 
     const renderWidget = () => {
-      if (window.grecaptcha && document.getElementById("recaptcha-box") && widgetIdRef.current === null) {
-        widgetIdRef.current = window.grecaptcha.render("recaptcha-box", {
-          sitekey: RECAPTCHA_SITE_KEY,
-          callback: handleCaptchaSolved,
-        });
-      }
+      window.grecaptcha.ready(() => {
+        if (document.getElementById("recaptcha-box") && widgetIdRef.current === null) {
+          widgetIdRef.current = window.grecaptcha.render("recaptcha-box", {
+            sitekey: RECAPTCHA_SITE_KEY,
+            callback: handleCaptchaSolved,
+          });
+        }
+      });
     };
 
-    if (window.grecaptcha && window.grecaptcha.render) {
+    if (window.grecaptcha) {
       renderWidget();
     } else {
       const script = document.createElement("script");
       script.src = "https://www.google.com/recaptcha/api.js";
       script.async = true;
       script.defer = true;
-      window.onRecaptchaLoad = renderWidget;
       script.onload = renderWidget;
       document.body.appendChild(script);
     }
