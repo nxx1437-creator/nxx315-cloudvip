@@ -56,21 +56,16 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Route Support đã sửa đúng cú pháp */}
       <Route
-
-/>
-
-path="/support"
-
-element={
-
-}
-
-<ProtectedRoute>
-
-<Support />
-
-</ProtectedRoute>
+        path="/support"
+        element={
+          <ProtectedRoute>
+            <Support />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/store"
