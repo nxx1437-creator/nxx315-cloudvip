@@ -1,13 +1,10 @@
-import React, { useMemo, useState } from "react";
-import { 
-  Bell, Search, Globe, Rocket, Gift, Crown, Coins, CheckSquare, Trophy, Users, Flame, TrendingUp, ArrowRight, Menu,
-  ChevronRight, Zap, ShoppingBag, Wallet, MessageCircle, ArrowUpRight, ArrowDownRight
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight, Gift as GiftIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
+import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-import Sidebar from "../components/Sidebar.jsx";
 
 const WEEKDAYS = ["Thứ 7", "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
 
@@ -38,12 +35,53 @@ export default function Dashboard() {
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [marketingCode, setMarketingCode] = useState("");
+  const [refMessage, setRefMessage] = useState(null);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refFromUrl = urlParams.get("ref");
+    if (refFromUrl) {
+      setMarketingCode(refFromUrl);
+    }
+  }, []);
+
+  const handleSubmitCode = async () => {
+    if (!marketingCode.trim()) {
+      setRefMessage({ type: "error", text: "Vui lòng nhập mã!" });
+      return;
+    }
+    
+    // Tìm campaign theo mã
+    const { data: campaign } = await supabase
+      .from("marketing_campaigns")
+      .select("id")
+      .eq("marketing_code", marketingCode.trim().toUpperCase())
+      .single();
+
+    if (!campaign) {
+      setRefMessage({ type: "error", text: "Mã không hợp lệ!" });
+      return;
+    }
+
+    // Tạo session ghi nhận
+    const sessionHash = Math.random().toString(36).substring(2);
+    await supabase.from("marketing_sessions").insert({
+      campaign_id: campaign.id,
+      visitor_hash: sessionHash,
+      session_hash: sessionHash,
+      status: "pending"
+    });
+
+    setRefMessage({ type: "success", text: "Đã ghi nhận lượt giới thiệu!" });
+    setMarketingCode("");
+  };
 
   const displayName = profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
   const initial = displayName.charAt(0).toUpperCase();
   const expPct = Math.min(100, Math.round((profile.exp / (profile.exp_target || 100)) * 100));
 
-  const last7Days = useMemo(() => [0, 5, 12, 8, 15, 20, 0], []);
+  const last7Days = [0, 5, 12, 8, 15, 20, 0];
   const maxDay = Math.max(1, ...last7Days);
   const totalCoins7Days = last7Days.reduce((a, b) => a + b, 0);
 
@@ -58,22 +96,18 @@ export default function Dashboard() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
-      {/* TOP BAR */}
       <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-gradient-to-b from-sky-50/80 to-white/90 px-4 py-3 shadow-sm backdrop-blur-md">
         <button
           aria-label="Mở menu"
           onClick={() => setSidebarOpen(true)}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
         >
-          <Menu size={19} />
+          <GiftIcon size={19} />
         </button>
-        <button
-          onClick={() => navigate("/tasks")}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm"
-        >
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
           <Search size={15} className="shrink-0" />
-          <span className="truncate whitespace-nowrap">Tìm kiếm</span>
-        </button>
+          <span className="truncate">Tìm kiếm</span>
+        </div>
         <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
           <Bell size={16} className="text-slate-600" />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
@@ -88,7 +122,7 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* HERO / GREETING CARD */}
+        {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">
             ✨ Hoàn thành nhiệm vụ hôm nay để nhận thưởng bonus
@@ -104,16 +138,10 @@ export default function Dashboard() {
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2.5">
-            <button
-              onClick={() => navigate("/tasks")}
-              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
-            >
+            <button onClick={() => navigate("/tasks")} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110">
               <Rocket size={15} /> Bắt đầu nhiệm vụ
             </button>
-            <button
-              onClick={() => navigate("/invite")}
-              className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:shadow-md"
-            >
+            <button onClick={() => navigate("/invite")} className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:shadow-md">
               <Gift size={15} /> Mời bạn
             </button>
           </div>
@@ -121,9 +149,7 @@ export default function Dashboard() {
           {/* BALANCE CARD */}
           <div className="mt-5 rounded-2xl border border-white bg-white p-4 shadow-md shadow-sky-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                Số dư
-              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-400">Số dư</span>
               <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-600 shadow-sm">
                 <Crown size={12} /> LV {profile.level}
               </span>
@@ -136,50 +162,47 @@ export default function Dashboard() {
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span>EXP</span>
-                <span>
-                  {profile.exp}/{profile.exp_target}
-                </span>
+                <span>{profile.exp}/{profile.exp_target}</span>
               </div>
               <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600"
-                  style={{ width: `${expPct}%` }}
-                />
+                <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${expPct}%` }} />
               </div>
             </div>
           </div>
         </div>
 
+        {/* NHẬP MÃ MARKETING */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold text-slate-700 mb-2">🎁 Bạn có mã Marketing?</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={marketingCode}
+              onChange={(e) => setMarketingCode(e.target.value)}
+              placeholder="Nhập mã..."
+              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-blue-400"
+            />
+            <button
+              onClick={handleSubmitCode}
+              className="rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white"
+            >
+              Nhập
+            </button>
+          </div>
+          {refMessage && (
+            <p className={`mt-2 text-xs ${refMessage.type === "success" ? "text-emerald-600" : "text-rose-500"}`}>
+              {refMessage.text}
+            </p>
+          )}
+          <p className="mt-2 text-[11px] text-slate-400">Nhập mã để ghi nhận lượt truy cập cho người giới thiệu.</p>
+        </div>
+
         {/* STATS GRID */}
         <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            icon={CheckSquare}
-            iconBg="bg-sky-50"
-            iconColor="text-sky-500"
-            value={3}
-            label="Nhiệm vụ khả dụng"
-          />
-          <StatCard
-            icon={Trophy}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-500"
-            value={todayTasksDone}
-            label="Hoàn thành hôm nay"
-          />
-          <StatCard
-            icon={Coins}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-500"
-            value={profile.coins_earned_today || 0}
-            label="Coin kiếm hôm nay"
-          />
-          <StatCard
-            icon={Users}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-500"
-            value={profile.referrals_count || 0}
-            label="Bạn đã mời"
-          />
+          <StatCard icon={CheckSquare} iconBg="bg-sky-50" iconColor="text-sky-500" value={3} label="Nhiệm vụ khả dụng" />
+          <StatCard icon={Trophy} iconBg="bg-emerald-50" iconColor="text-emerald-500" value={todayTasksDone} label="Hoàn thành hôm nay" />
+          <StatCard icon={Coins} iconBg="bg-amber-50" iconColor="text-amber-500" value={profile.coins_earned_today || 0} label="Coin kiếm hôm nay" />
+          <StatCard icon={Users} iconBg="bg-blue-50" iconColor="text-blue-500" value={profile.referrals_count || 0} label="Bạn đã mời" />
         </div>
 
         {/* STREAK CARD */}
@@ -188,24 +211,16 @@ export default function Dashboard() {
             <Flame size={22} className="text-orange-500" />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Giữ lửa
-            </p>
-            <p className="text-2xl font-bold text-slate-900">
-              {profile.streak_days} <span className="text-sm font-medium text-slate-500">ngày</span>
-            </p>
-            <p className="text-xs text-slate-500">
-              Kỷ lục: <span className="font-semibold text-orange-600">{profile.streak_record}</span>
-            </p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Giữ lửa</p>
+            <p className="text-2xl font-bold text-slate-900">{profile.streak_days} <span className="text-sm font-medium text-slate-500">ngày</span></p>
+            <p className="text-xs text-slate-500">Kỷ lục: <span className="font-semibold text-orange-600">{profile.streak_record}</span></p>
           </div>
         </div>
 
         {/* TASK STREAK MILESTONES */}
         <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-              ✨ Chuỗi nhiệm vụ hôm nay
-            </span>
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">✨ Chuỗi nhiệm vụ hôm nay</span>
             <span className="text-xs text-slate-400">Đã làm: {todayTasksDone}</span>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-2.5">
@@ -216,12 +231,8 @@ export default function Dashboard() {
             ].map((m) => (
               <div key={m.n} className={`rounded-xl border p-3 text-center ${m.done ? "border-amber-200 bg-amber-50" : "border-slate-100 bg-slate-50"}`}>
                 <p className="text-xs font-medium text-slate-500">{m.n}</p>
-                <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-amber-600">
-                  <Coins size={13} /> {m.bonus}
-                </p>
-                <div className="mt-2 h-1 w-full rounded-full bg-slate-200">
-                  {m.done && <div className="h-full rounded-full bg-amber-400" />}
-                </div>
+                <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-amber-600"><Coins size={13} /> {m.bonus}</p>
+                <div className="mt-2 h-1 w-full rounded-full bg-slate-200">{m.done && <div className="h-full rounded-full bg-amber-400" />}</div>
               </div>
             ))}
           </div>
@@ -230,23 +241,14 @@ export default function Dashboard() {
         {/* 7-DAY COIN CHART */}
         <div className="rounded-2xl border border-white bg-white p-4 shadow-sm shadow-slate-200/70">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-              <TrendingUp size={15} className="text-sky-500" /> Coin 7 ngày qua
-            </span>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
-              +{profile.coins_earned_today || 0} hôm nay
-            </span>
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900"><TrendingUp size={15} className="text-sky-500" /> Coin 7 ngày qua</span>
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">+{profile.coins_earned_today || 0} hôm nay</span>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
-            {totalCoins7Days} <span className="text-sm font-normal text-slate-400">Coin</span>
-          </p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{totalCoins7Days} <span className="text-sm font-normal text-slate-400">Coin</span></p>
           <div className="mt-4 flex h-16 items-end gap-2">
             {last7Days.map((v, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                <div
-                  className="w-full rounded-t-md bg-gradient-to-t from-sky-400 to-blue-500"
-                  style={{ height: `${Math.max(4, (v / maxDay) * 100)}%` }}
-                />
+                <div className="w-full rounded-t-md bg-gradient-to-t from-sky-400 to-blue-500" style={{ height: `${Math.max(4, (v / maxDay) * 100)}%` }} />
                 <span className="text-[10px] text-slate-400">{WEEKDAYS[i]}</span>
               </div>
             ))}
@@ -255,84 +257,18 @@ export default function Dashboard() {
 
         {/* TODAY PROGRESS RING */}
         <div className="rounded-2xl border border-white bg-white p-5 text-center shadow-sm shadow-slate-200/70">
-          <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-900">
-            <CheckSquare size={15} className="text-sky-500" /> Tiến độ hôm nay
-          </span>
-          <div
-            className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full"
-            style={{
-              background: `conic-gradient(#38bdf8 ${todayTaskPct * 3.6}deg, #e2e8f0 0deg)`,
-            }}
-          >
+          <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-900"><CheckSquare size={15} className="text-sky-500" /> Tiến độ hôm nay</span>
+          <div className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full" style={{ background: `conic-gradient(#38bdf8 ${todayTaskPct * 3.6}deg, #e2e8f0 0deg)` }}>
             <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white">
               <span className="text-2xl font-bold text-slate-900">{todayTaskPct}%</span>
-              <span className="text-xs text-slate-400">
-                {todayTasksDone}/{todayTasksTotal}
-              </span>
+              <span className="text-xs text-slate-400">{todayTasksDone}/{todayTasksTotal}</span>
             </div>
           </div>
-          <button
-            onClick={() => navigate("/tasks")}
-            className="mx-auto mt-4 flex items-center gap-1.5 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
-          >
-            Đi đến nhiệm vụ <ArrowRight size={14} />
-          </button>
-        </div>
-
-        {/* QUICK ACTIONS */}
-        <div>
-          <h3 className="mb-2.5 text-sm font-semibold text-slate-900">Hành động nhanh</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate("/tasks")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50">
-                <Zap size={18} className="text-sky-500" />
-              </span>
-              Nhiệm vụ
-            </button>
-            <button
-              onClick={() => navigate("/store")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
-                <ShoppingBag size={18} className="text-blue-500" />
-              </span>
-              Cửa hàng
-            </button>
-            <button
-              onClick={() => navigate("/wallet")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
-                <Wallet size={18} className="text-amber-500" />
-              </span>
-              Nạp / Rút
-            </button>
-            <button
-              onClick={() => navigate("/profile")}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-white bg-white py-5 text-sm font-medium text-slate-700 shadow-sm shadow-slate-200/70 transition hover:border-sky-200 hover:bg-sky-50/50 hover:shadow-md"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
-                <MessageCircle size={18} className="text-emerald-500" />
-              </span>
-              Hỗ trợ
-            </button>
-          </div>
+          <button onClick={() => navigate("/tasks")} className="mx-auto mt-4 flex items-center gap-1.5 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200">Đi đến nhiệm vụ <ArrowRight size={14} /></button>
         </div>
       </main>
 
       <BottomNav />
-
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        displayName={displayName}
-        initial={initial}
-        coins={profile.coins}
-        level={profile.level}
-      />
     </div>
   );
-                  }
+      }
