@@ -4,7 +4,7 @@ import { CheckCircle2, XCircle, Loader2, Coins, ShieldCheck } from "lucide-react
 import { supabase } from "../lib/supabaseClient.js";
 
 // Site Key CÔNG KHAI của reCAPTCHA — an toàn khi để lộ trong code frontend.
-const RECAPTCHA_SITE_KEY = "6LeWCZQtAAAAAHFMcZ7gCgrmRvkuiIrqWq7Odmrm";
+const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
 
 export default function TaskCallback() {
   const [params] = useSearchParams();
