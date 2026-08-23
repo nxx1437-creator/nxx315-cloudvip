@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from "react";
+ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Bell, Search, Globe, Menu, Sparkles, Zap, Trophy, Coins, Clock, Flame, ExternalLink, Loader2
+  Bell,
+  Search,
+  Globe,
+  Menu,
+  Sparkles,
+  Zap,
+  Trophy,
+  Coins,
+  Clock,
+  Flame,
+  ExternalLink,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -9,9 +19,6 @@ import useTasks from "../hooks/useTasks.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-
-// Đọc Site Key từ biến môi trường (Vercel)
-const SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY; 
 
 function hoursUntilMidnight() {
   const now = new Date();
@@ -37,39 +44,44 @@ export default function Tasks() {
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
-  const { tasks, loading, reload, startTask, claimTask } = useTasks(user?.id);
+  const { tasks, loading, reload } = useTasks(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const [tokenInput, setTokenInput] = useState("");
-
-  // Load thẻ script reCAPTCHA khi trang load
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-  }, []);
 
   const displayName =
     profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
   const initial = displayName.charAt(0).toUpperCase();
 
-  const filteredTasks = tasks.filter((t) => {
-    const name = t.provider || "";
-    return name.toLowerCase().includes(query.trim().toLowerCase());
-  });
+  const filteredTasks = useMemo(
+    () =>
+      tasks.filter((t) => t.provider.toLowerCase().includes(query.trim().toLowerCase())),
+    [tasks, query]
+  );
 
-  const totalRemaining = tasks.reduce((sum, t) => sum + (t.remainingToday || 0), 0);
-  const availableCount = tasks.filter((t) => (t.remainingToday || 0) > 0).length;
+  const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
+  const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
-  // Bước 1: Bắt đầu nhiệm vụ (Gọi hàm startTask trong hook)
   const handleStart = async (task) => {
     setStartingTaskId(task.id);
-    const data = await startTask(task.id);
+    const { data, error } = await supabase.functions.invoke("start-task", {
+      body: { task_id: task.id },
+    });
     setStartingTaskId(null);
+
+    if (error) {
+      // supabase-js không tự đọc nội dung JSON khi function trả về lỗi (4xx/5xx),
+      // phải tự đọc từ error.context (Response gốc) để lấy đúng thông báo lỗi thật.
+      let message = error.message;
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // giữ nguyên error.message nếu không đọc được JSON
+      }
+      alert(message);
+      return;
+    }
 
     if (data?.error) {
       alert(data.error);
@@ -77,42 +89,8 @@ export default function Tasks() {
     }
 
     window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-  };
-
-  // Bước 2: Người dùng bấm vào ô reCAPTCHA
-  const handleCaptcha = () => {
-    if (window.grecaptcha) {
-      window.grecaptcha.ready(() => {
-        window.grecaptcha.execute(SITE_KEY, { action: "submit" }).then((token) => {
-          setCaptchaToken(token);
-          alert("Xác thực reCAPTCHA thành công!");
-        });
-      });
-    }
-  };
-
-  // Bước 3: Xác nhận và nhận Coin (Gọi hàm claimTask trong hook)
-  const handleClaim = async () => {
-    if (!tokenInput.trim()) {
-      alert("Vui lòng nhập Token!");
-      return;
-    }
-    if (!captchaToken) {
-      alert("Vui lòng xác thực reCAPTCHA trước!");
-      return;
-    }
-
-    const result = await claimTask(tokenInput);
-    setTokenInput("");
-    setCaptchaToken(null);
-
-    if (result?.error) {
-      alert(result.error);
-      return;
-    }
-
-    alert(`Bạn đã nhận ${result.coins_earned} Coin!`);
-    reload();
+    // Số liệu sẽ tự làm mới khi bạn quay lại tab này (useTasks lắng nghe sự
+    // kiện focus/visibilitychange), không cần gọi reload() ngay lúc này.
   };
 
   return (
@@ -230,19 +208,29 @@ export default function Tasks() {
 
         <div className="space-y-4">
           {filteredTasks.map((task) => {
-            const progressPct = Math.min(100, Math.round(((task.completedToday || 0) / (task.daily_limit || 1)) * 100));
-            const isDone = (task.remainingToday || 0) <= 0;
+            const progressPct = Math.min(
+              100,
+              Math.round((task.completedToday / task.daily_limit) * 100)
+            );
+            const isDone = task.remainingToday <= 0;
             return (
-              <div key={task.id} className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
+              <div
+                key={task.id}
+                className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70"
+              >
                 <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {task.logo_url ? (
-                        <img src={task.logo_url} alt={task.provider} className="h-11 w-11 rounded-xl object-cover" />
+                        <img
+                          src={task.logo_url}
+                          alt={task.provider}
+                          className="h-11 w-11 rounded-xl object-cover"
+                        />
                       ) : (
                         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white">
-                          {task.provider?.slice(0, 2)}
+                          {task.provider.slice(0, 2)}
                         </div>
                       )}
                       <span className="text-base font-bold text-slate-900">{task.provider}</span>
@@ -256,9 +244,12 @@ export default function Tasks() {
 
                   <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
                     <div>
-                      <p className="text-[11px] uppercase tracking-wide text-slate-400">Phần thưởng</p>
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Phần thưởng
+                      </p>
                       <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
-                        <Coins size={15} /> {task.reward_coins} <span className="text-xs font-normal text-slate-400">/lượt</span>
+                        <Coins size={15} /> {task.reward_coins}{" "}
+                        <span className="text-xs font-normal text-slate-400">/lượt</span>
                       </p>
                     </div>
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
@@ -269,10 +260,15 @@ export default function Tasks() {
                   <div className="mt-3">
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>Hôm nay</span>
-                      <span>{task.completedToday}/{task.daily_limit}</span>
+                      <span>
+                        {task.completedToday}/{task.daily_limit}
+                      </span>
                     </div>
                     <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${progressPct}%` }} />
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600"
+                        style={{ width: `${progressPct}%` }}
+                      />
                     </div>
                   </div>
 
@@ -282,38 +278,16 @@ export default function Tasks() {
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ExternalLink size={15} />
-                    {isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
+                    {isDone
+                      ? "Đã hết lượt hôm nay"
+                      : startingTaskId === task.id
+                      ? "Đang mở..."
+                      : "Làm nhiệm vụ"}
                   </button>
                 </div>
               </div>
             );
           })}
-        </div>
-
-        {/* XÁC NHẬN NHIỆM VỤ (Nhập Token + reCAPTCHA) */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <p className="text-sm font-bold text-slate-800 mb-2">Xác nhận nhiệm vụ</p>
-          
-          <input
-            value={tokenInput}
-            onChange={(e) => setTokenInput(e.target.value)}
-            placeholder="Nhập Token từ link quảng cáo..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm mb-3"
-          />
-
-          <button
-            onClick={handleCaptcha}
-            className="w-full rounded-xl bg-slate-100 py-3 text-sm font-medium text-slate-600 mb-3"
-          >
-            Tôi không phải là người máy
-          </button>
-
-          <button
-            onClick={handleClaim}
-            className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white"
-          >
-            Xác nhận & Nhận Coin
-          </button>
         </div>
       </main>
 
@@ -329,4 +303,4 @@ export default function Tasks() {
       />
     </div>
   );
-}
+      }
