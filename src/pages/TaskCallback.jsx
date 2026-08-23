@@ -1,67 +1,83 @@
 import React, { useEffect, useState } from "react";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle2, XCircle, Loader2, Coins } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function TaskCallback() {
-  const [params] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [state, setState] = useState({ status: "loading", message: "", reward: 0 });
+  const [status, setStatus] = useState("loading");
+  const [message, setMessage] = useState("");
+
+  const token = searchParams.get("token"); // Token từ link callback
 
   useEffect(() => {
-    const token = params.get("token");
-    if (!token) {
-      setState({ status: "error", message: "Thiếu mã Token trong đường dẫn.", reward: 0 });
-      return;
-    }
-
-    supabase.rpc("consume_task_token", { p_token: token }).then(({ data, error }) => {
-      if (error) {
-        setState({ status: "error", message: error.message, reward: 0 });
+    const verifyToken = async () => {
+      if (!token) {
+        setStatus("error");
+        setMessage("Thiếu Token xác thực!");
         return;
       }
-      const row = data?.[0];
-      if (row?.success) {
-        setState({ status: "success", message: row.message, reward: row.reward_coins });
-      } else {
-        setState({ status: "error", message: row?.message || "Xác thực thất bại.", reward: 0 });
+
+      const { data, error } = await supabase.functions.invoke("claim-task", {
+        body: { token },
+      });
+
+      if (error) {
+        let errMsg = error.message;
+        try {
+          const body = await error.context.json();
+          if (body?.error) errMsg = body.error;
+        } catch {}
+        setStatus("error");
+        setMessage(errMsg);
+        return;
       }
-    });
-  }, [params]);
+
+      if (data?.success) {
+        setStatus("success");
+        setMessage(`Bạn đã nhận ${data.coins_earned} Coin!`);
+      } else {
+        setStatus("error");
+        setMessage(data?.error || "Token không hợp lệ!");
+      }
+    };
+
+    verifyToken();
+  }, [token]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center font-[Be_Vietnam_Pro]">
-      {state.status === "loading" && (
-        <>
-          <Loader2 size={36} className="animate-spin text-sky-500" />
-          <p className="mt-4 text-sm text-slate-500">Đang xác thực Token...</p>
-        </>
-      )}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-4">
+      <div className="max-w-sm w-full rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-lg">
+        {status === "loading" && (
+          <>
+            <Loader2 size={40} className="mx-auto animate-spin text-sky-500" />
+            <p className="mt-4 text-sm font-medium text-slate-600">Đang xác thực Token...</p>
+          </>
+        )}
 
-      {state.status === "success" && (
-        <>
-          <CheckCircle2 size={48} className="text-emerald-500" />
-          <h1 className="mt-4 text-xl font-bold text-slate-900">{state.message}</h1>
-          <p className="mt-2 flex items-center gap-1.5 text-lg font-semibold text-amber-600">
-            <Coins size={18} /> +{state.reward} Coin
-          </p>
-        </>
-      )}
+        {status === "success" && (
+          <>
+            <CheckCircle2 size={40} className="mx-auto text-emerald-500" />
+            <h1 className="mt-4 text-lg font-bold text-slate-900">Xác thực thành công!</h1>
+            <p className="mt-2 text-sm text-emerald-600">{message}</p>
+            <button onClick={() => navigate("/tasks")} className="mt-6 w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white">
+              Về trang nhiệm vụ
+            </button>
+          </>
+        )}
 
-      {state.status === "error" && (
-        <>
-          <XCircle size={48} className="text-rose-500" />
-          <h1 className="mt-4 text-xl font-bold text-slate-900">Không thể nhận thưởng</h1>
-          <p className="mt-2 text-sm text-slate-500">{state.message}</p>
-        </>
-      )}
-
-      <button
-        onClick={() => navigate("/tasks")}
-        className="mt-8 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30"
-      >
-        Quay lại Nhiệm vụ
-      </button>
+        {status === "error" && (
+          <>
+            <XCircle size={40} className="mx-auto text-rose-500" />
+            <h1 className="mt-4 text-lg font-bold text-slate-900">Xác thực thất bại!</h1>
+            <p className="mt-2 text-sm text-rose-500">{message}</p>
+            <button onClick={() => navigate("/tasks")} className="mt-6 w-full rounded-xl bg-gradient-to-r from-rose-400 to-rose-600 py-3 text-sm font-semibold text-white">
+              Về trang nhiệm vụ
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
-}
+    }
