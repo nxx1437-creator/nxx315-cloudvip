@@ -72,7 +72,72 @@ export default function Marketing() {
           </div>
         </div>
       </main>
+<div className="rounded-3xl border border-amber-100 bg-gradient-to-b from-amber-50 to-white p-6 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/30">
+              <Megaphone size={22} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-base font-bold leading-snug text-slate-900">Marketing Video — Kiếm Cookies từ TikTok / YouTube</h2>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">Quay video giới thiệu trang web, đăng lên TikTok hoặc YouTube, gửi link tại đây — admin duyệt và trả Cookies theo số lượt xem.</p>
+            </div>
+          </div>
 
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-white p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-500"><Music size={16} /></span>
+              <div><p className="text-[11px] text-slate-400">TikTok</p><p className="text-sm font-bold text-slate-800">1K view = 2.500 Cookies</p></div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-white p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500"><Youtube size={16} /></span>
+              <div><p className="text-[11px] text-slate-400">YouTube Long</p><p className="text-sm font-bold text-slate-800">1K view = 25.000 Cookies</p></div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-white p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500"><Youtube size={16} /></span>
+              <div><p className="text-[11px] text-slate-400">YouTube Short</p><p className="text-sm font-bold text-slate-800">1K view = 10.000 Cookies</p></div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-100/50 p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-600"><Sparkles size={16} /></span>
+              <div><p className="text-[11px] text-amber-600">Bonus theo view</p><p className="text-sm font-bold text-amber-700">≥5K +10% • ≥10K +20%</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
+          <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+            <Info size={18} className="text-amber-500" /> Quy tắc thanh toán
+          </h3>
+          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-600">
+            <li>• <strong className="text-slate-900">1 Cookie = 1 VND</strong> khi rút tiền.</li>
+            <li>• Đổi sang <strong className="text-slate-900">Main Coin</strong>: 1.000 Cookies → 900 Coin (phí sàn 10%).</li>
+            <li>• Rút <strong className="text-slate-900">thẻ cào</strong>: <strong className="text-emerald-600">miễn phí</strong> (rút 100.000 – nhận thẻ 100.000).</li>
+            <li>• Rút <strong className="text-slate-900">bank/ví</strong>: phí 20% (rút 100.000 – nhận 80.000 VND).</li>
+            <li>• Tối thiểu mỗi lần rút: <strong className="text-slate-900">10.000 VND</strong>.</li>
+            <li>• Cookies <strong className="text-slate-900">tách riêng hoàn toàn</strong> khỏi Coin làm nhiệm vụ — không tự gộp.</li>
+          </ul>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {[
+            { key: "main", label: "Đổi Main", icon: ArrowRightLeft },
+            { key: "card", label: "Rút thẻ", icon: CreditCard },
+            { key: "bank", label: "Rút bank", icon: Landmark },
+          ].map((btn) => (
+            <button
+              key={btn.key}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-white px-4 py-2.5 text-sm font-semibold text-amber-700"
+            >
+              <btn.icon size={15} /> {btn.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
+          <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+            <History size={18} className="text-slate-400" /> Lịch sử rút
+          </h3>
+          <p className="mt-3 text-center text-sm text-slate-400">Chưa có giao dịch rút tiền.</p>
+        </div>
       <BottomNav />
     </div>
   );
