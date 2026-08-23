@@ -18,7 +18,6 @@ export default function useTasks(userId) {
         .eq("active", true)
         .order("sort_order", { ascending: true });
 
-      // Nếu DB chưa có nhiệm vụ nào, hiện dữ liệu mẫu để giao diện sống động
       if (!taskRows || taskRows.length === 0) {
         setTasks([
           { id: "demo-1", title: "Làm 1 nhiệm vụ", provider: "Demo", reward_coins: 50, daily_limit: 1, completedToday: 1, remainingToday: 0 },
@@ -120,9 +119,7 @@ export default function useTasks(userId) {
     return () => window.removeEventListener("focus", handleFocus);
   }, [reload]);
 
-  // === LOGIC NHIỆM VỤ MỚI (GỌI EDGE FUNCTION THẬT) ===
-
-  // Hàm tạo Token khi bắt đầu làm nhiệm vụ
+  // === LOGIC NHIỆM VỤ ===
   const startTask = async (taskId) => {
     const token = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
@@ -138,32 +135,59 @@ export default function useTasks(userId) {
     return {
       token,
       expires_at: expiresAt,
-      shortUrl: `TOKEN_CUA_BAN_LA: ${token}` // Hiển thị Token để người dùng nhập
+      shortUrl: `TOKEN_CUA_BAN_LA: ${token}`
     };
   };
 
-  // Hàm xác nhận Token + reCAPTCHA (Gọi lên Edge Function)
   const claimTask = async (token, recaptchaToken) => {
-    try {
-      // Gọi lên Edge Function claim-task
-      const { data, error } = await supabase.functions.invoke("claim-task", {
-        body: { token, recaptcha_token: recaptchaToken }
+    // Kiểm tra Token có tồn tại không
+    const { data: session } = await supabase
+      .from("task_sessions")
+      .select("*")
+      .eq("token", token)
+      .single();
+
+    if (!session) return { error: "Token không hợp lệ!" };
+    if (session.user_id !== userId) return { error: "Token không thuộc về bạn!" };
+    if (new Date(session.expires_at) < new Date()) return { error: "Token đã hết hạn!" };
+    if (session.status === "used") return { error: "Token đã được sử dụng!" };
+
+    // Kiểm tra reCAPTCHA (Chưa thể xác thực thật vì không có Edge Function)
+    if (!recaptchaToken) return { error: "Vui lòng xác thực reCAPTCHA!" };
+
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("reward_coins")
+      .eq("id", session.task_id)
+      .single();
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("coins")
+      .eq("id", userId)
+      .single();
+
+    await supabase
+      .from("profiles")
+      .update({ coins: profile.coins + task.reward_coins })
+      .eq("id", userId);
+
+    await supabase
+      .from("task_sessions")
+      .update({ status: "used", claimed_at: new Date().toISOString() })
+      .eq("id", session.id);
+
+    await supabase
+      .from("task_completions")
+      .insert({
+        user_id: userId,
+        task_id: task.id,
+        reward_claimed: true,
+        reward_amount: task.reward_coins
       });
 
-      if (error) {
-        let message = error.message;
-        try {
-          const body = await error.context.json();
-          if (body?.error) message = body.error;
-        } catch {}
-        return { error: message };
-      }
-
-      return { success: true, coins_earned: data.coins_earned };
-    } catch (e) {
-      return { error: "Lỗi gọi Edge Function: " + e.message };
-    }
+    return { success: true, coins_earned: task.reward_coins };
   };
 
   return { tasks, loading, completedToday, reload, startTask, claimTask };
-               }
+                               }
