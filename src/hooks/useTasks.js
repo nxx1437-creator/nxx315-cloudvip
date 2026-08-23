@@ -128,5 +128,87 @@ export default function useTasks(userId) {
     return () => window.removeEventListener("focus", handleFocus);
   }, [reload]);
 
-  return { tasks, loading, completedToday, reload };
-    }
+  // === LOGIC NHIỆM VỤ MỚI (Không cần Edge Function) ===
+
+  // Hàm tạo Token khi bắt đầu làm nhiệm vụ
+  const startTask = async (taskId) => {
+    const token = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 phút
+
+    // Lưu phiên làm nhiệm vụ
+    await supabase.from("task_sessions").insert({
+      user_id: userId,
+      task_id: taskId,
+      token,
+      expires_at: expiresAt,
+      status: "pending"
+    });
+
+    // Trả về Token + link vượt
+    return {
+      token,
+      expires_at: expiresAt,
+      shortUrl: `https://link4m.io/your-short-link?token=${token}`
+    };
+  };
+
+  // Hàm xác nhận Token để nhận thưởng
+  const claimTask = async (token) => {
+    // 1. Kiểm tra Token có tồn tại không
+    const { data: session } = await supabase
+      .from("task_sessions")
+      .select("*")
+      .eq("token", token)
+      .single();
+
+    if (!session) return { error: "Token không hợp lệ!" };
+
+    // 2. Kiểm tra Token có thuộc về user này không
+    if (session.user_id !== userId) return { error: "Token không thuộc về bạn!" };
+
+    // 3. Kiểm tra hạn sử dụng
+    if (new Date(session.expires_at) < new Date()) return { error: "Token đã hết hạn!" };
+
+    // 4. Kiểm tra đã dùng chưa
+    if (session.status === "used") return { error: "Token đã được sử dụng!" };
+
+    // 5. Lấy thông tin nhiệm vụ
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("reward_coins")
+      .eq("id", session.task_id)
+      .single();
+
+    // 6. Cộng coin cho user
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("coins")
+      .eq("id", userId)
+      .single();
+
+    await supabase
+      .from("profiles")
+      .update({ coins: profile.coins + task.reward_coins })
+      .eq("id", userId);
+
+    // 7. Đánh dấu Token đã dùng
+    await supabase
+      .from("task_sessions")
+      .update({ status: "used", claimed_at: new Date().toISOString() })
+      .eq("id", session.id);
+
+    // 8. Lưu lịch sử hoàn thành
+    await supabase
+      .from("task_completions")
+      .insert({
+        user_id: userId,
+        task_id: task.id,
+        reward_claimed: true,
+        reward_amount: task.reward_coins
+      });
+
+    return { success: true, coins_earned: task.reward_coins };
+  };
+
+  return { tasks, loading, completedToday, reload, startTask, claimTask };
+                                              }
