@@ -1,125 +1,119 @@
-import React, { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { CheckCircle2, XCircle, Loader2, Coins, ShieldCheck } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
+// Site Key CÔNG KHAI của reCAPTCHA — an toàn khi để lộ trong code frontend.
+const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
+
 export default function TaskCallback() {
-  const [searchParams] = useSearchParams();
+  const [params] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState("loading");
-  const [message, setMessage] = useState("");
+  const [state, setState] = useState({ status: "captcha", message: "", reward: 0 });
+  const widgetIdRef = useRef(null);
+  const token = params.get("token");
 
-  const token = searchParams.get("token");
-
+  // Tải script reCAPTCHA của Google và vẽ ô checkbox
   useEffect(() => {
-    const verifyToken = async () => {
-      if (!token) {
-        setStatus("error");
-        setMessage("Thiếu Token xác thực!");
-        return;
-      }
+    if (!token) {
+      setState({ status: "error", message: "Thiếu mã Token trong đường dẫn.", reward: 0 });
+      return;
+    }
 
-      // 1. Kiểm tra Token
-      const { data: session } = await supabase
-        .from("task_sessions")
-        .select("*")
-        .eq("token", token)
-        .single();
-
-      if (!session) {
-        setStatus("error");
-        setMessage("Token không hợp lệ!");
-        return;
-      }
-
-      // 2. Kiểm tra hạn sử dụng
-      if (new Date(session.expires_at) < new Date()) {
-        setStatus("error");
-        setMessage("Token đã hết hạn!");
-        return;
-      }
-
-      // 3. Kiểm tra đã dùng chưa
-      if (session.status === "used") {
-        setStatus("error");
-        setMessage("Token đã được sử dụng!");
-        return;
-      }
-
-      // 4. Lấy nhiệm vụ
-      const { data: task } = await supabase
-        .from("tasks")
-        .select("reward_coins")
-        .eq("id", session.task_id)
-        .single();
-
-      // 5. Cộng coin
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("coins")
-        .eq("id", session.user_id)
-        .single();
-
-      await supabase
-        .from("profiles")
-        .update({ coins: profile.coins + task.reward_coins })
-        .eq("id", session.user_id);
-
-      // 6. Đánh dấu đã dùng
-      await supabase
-        .from("task_sessions")
-        .update({ status: "used", claimed_at: new Date().toISOString() })
-        .eq("id", session.id);
-
-      // 7. Lưu lịch sử
-      await supabase
-        .from("task_completions")
-        .insert({
-          user_id: session.user_id,
-          task_id: task.id,
-          reward_claimed: true,
-          reward_amount: task.reward_coins
-        });
-
-      setStatus("success");
-      setMessage(`Bạn đã nhận ${task.reward_coins} Coin!`);
+    const renderWidget = () => {
+      window.grecaptcha.ready(() => {
+        if (document.getElementById("recaptcha-box") && widgetIdRef.current === null) {
+          widgetIdRef.current = window.grecaptcha.render("recaptcha-box", {
+            sitekey: RECAPTCHA_SITE_KEY,
+            callback: handleCaptchaSolved,
+          });
+        }
+      });
     };
 
-    verifyToken();
+    if (window.grecaptcha) {
+      renderWidget();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://www.google.com/recaptcha/api.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = renderWidget;
+      document.body.appendChild(script);
+    }
   }, [token]);
 
+  const handleCaptchaSolved = async (captchaToken) => {
+    setState({ status: "verifying", message: "", reward: 0 });
+
+    const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-recaptcha", {
+      body: { captchaToken },
+    });
+
+    if (verifyError || !verifyData?.success) {
+      setState({
+        status: "error",
+        message: "DEBUG: " + JSON.stringify({ verifyError, verifyData }),
+        reward: 0,
+      });
+      return;
+    }
+
+    const { data, error } = await supabase.rpc("consume_task_token", { p_token: token });
+    if (error) {
+      setState({ status: "error", message: error.message, reward: 0 });
+      return;
+    }
+    const row = data?.[0];
+    if (row?.success) {
+      setState({ status: "success", message: row.message, reward: row.reward_coins });
+    } else {
+      setState({ status: "error", message: row?.message || "Xác thực thất bại.", reward: 0 });
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-4">
-      <div className="max-w-sm w-full rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-lg">
-        {status === "loading" && (
-          <>
-            <Loader2 size={40} className="mx-auto animate-spin text-sky-500" />
-            <p className="mt-4 text-sm font-medium text-slate-600">Đang xác thực Token...</p>
-          </>
-        )}
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center font-[Be_Vietnam_Pro]">
+      {state.status === "captcha" && (
+        <>
+          <ShieldCheck size={36} className="text-sky-500" />
+          <h1 className="mt-4 text-lg font-bold text-slate-900">Xác nhận bạn không phải bot</h1>
+          <p className="mt-1.5 text-sm text-slate-500">Tick vào ô bên dưới để nhận thưởng nhé</p>
+          <div id="recaptcha-box" className="mt-5" />
+        </>
+      )}
 
-        {status === "success" && (
-          <>
-            <CheckCircle2 size={40} className="mx-auto text-emerald-500" />
-            <h1 className="mt-4 text-lg font-bold text-slate-900">Xác thực thành công!</h1>
-            <p className="mt-2 text-sm text-emerald-600">{message}</p>
-            <button onClick={() => navigate("/tasks")} className="mt-6 w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white">
-              Về trang nhiệm vụ
-            </button>
-          </>
-        )}
+      {state.status === "verifying" && (
+        <>
+          <Loader2 size={36} className="animate-spin text-sky-500" />
+          <p className="mt-4 text-sm text-slate-500">Đang xác thực...</p>
+        </>
+      )}
 
-        {status === "error" && (
-          <>
-            <XCircle size={40} className="mx-auto text-rose-500" />
-            <h1 className="mt-4 text-lg font-bold text-slate-900">Xác thực thất bại!</h1>
-            <p className="mt-2 text-sm text-rose-500">{message}</p>
-            <button onClick={() => navigate("/tasks")} className="mt-6 w-full rounded-xl bg-gradient-to-r from-rose-400 to-rose-600 py-3 text-sm font-semibold text-white">
-              Về trang nhiệm vụ
-            </button>
-          </>
-        )}
-      </div>
+      {state.status === "success" && (
+        <>
+          <CheckCircle2 size={48} className="text-emerald-500" />
+          <h1 className="mt-4 text-xl font-bold text-slate-900">{state.message}</h1>
+          <p className="mt-2 flex items-center gap-1.5 text-lg font-semibold text-amber-600">
+            <Coins size={18} /> +{state.reward} Coin
+          </p>
+        </>
+      )}
+
+      {state.status === "error" && (
+        <>
+          <XCircle size={48} className="text-rose-500" />
+          <h1 className="mt-4 text-xl font-bold text-slate-900">Không thể nhận thưởng</h1>
+          <p className="mt-2 text-sm text-slate-500">{state.message}</p>
+        </>
+      )}
+
+      <button
+        onClick={() => navigate("/tasks")}
+        className="mt-8 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30"
+      >
+        Quay lại Nhiệm vụ
+      </button>
     </div>
   );
 }
