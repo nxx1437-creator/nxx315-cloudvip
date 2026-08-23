@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Coins } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
@@ -92,7 +92,7 @@ function SupportTab() {
               <p className="mt-1 text-xs text-slate-400">User ID: {ticket.user_id} • {new Date(ticket.created_at).toLocaleString("vi-VN")}</p>
             </div>
             {ticket.status === "pending" && (
-              <button onClick={() => handleResolve(ticket)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white">
+              <button onClick={() => handleResolve(ticket)} className="shrink-0 rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-600">
                 Đã xử lý
               </button>
             )}
@@ -143,11 +143,15 @@ function OrdersTab() {
               <p className="font-bold text-slate-900">{order.package_name}</p>
               <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
             </div>
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">Chờ xử lý</span>
+            <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">Chờ xử lý</span>
           </div>
           <div className="mt-4 flex gap-2">
-            <button onClick={() => handleSave(order)} className="flex-1 rounded-full bg-emerald-500 py-2 text-sm font-semibold text-white">Đã giao</button>
-            <button onClick={() => setDrafts((d) => ({ ...d, [order.id]: { ...getDraft(order), status: "cancelled" } }))} className="flex-1 rounded-full bg-rose-500 py-2 text-sm font-semibold text-white">Hủy đơn</button>
+            <button onClick={() => { setDrafts((d) => ({ ...d, [order.id]: { ...getDraft(order), status: "delivered" } })); handleSave(order); }} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600">
+              <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
+            </button>
+            <button onClick={() => { setDrafts((d) => ({ ...d, [order.id]: { ...getDraft(order), status: "cancelled" } })); handleSave(order); }} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600">
+              <XCircle size={14} className="inline mr-1" /> Hủy đơn
+            </button>
           </div>
         </div>
       ))}
@@ -264,4 +268,4 @@ function EmptyState({ text }) {
 
 function Loading({ text }) {
   return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-      }
+            }
