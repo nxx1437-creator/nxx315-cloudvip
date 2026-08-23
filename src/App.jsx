@@ -15,6 +15,7 @@ import ProfilePage from "./pages/Profile.jsx";
 import MarketingWallet from "./pages/MarketingWallet.jsx";
 import Invite from "./pages/Invite.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import Support from "./pages/Support.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
@@ -55,6 +56,21 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+
+/>
+
+path="/support"
+
+element={
+
+}
+
+<ProtectedRoute>
+
+<Support />
+
+</ProtectedRoute>
 
       <Route
         path="/store"
