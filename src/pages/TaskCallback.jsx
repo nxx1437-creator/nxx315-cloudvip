@@ -19,28 +19,70 @@ export default function TaskCallback() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("claim-task", {
-        body: { token },
-      });
+      // Gọi trực tiếp Supabase thay vì Edge Function
+      const { data: session } = await supabase
+        .from("task_sessions")
+        .select("*")
+        .eq("token", token)
+        .single();
 
-      if (error) {
-        let errMsg = error.message;
-        try {
-          const body = await error.context.json();
-          if (body?.error) errMsg = body.error;
-        } catch {}
+      if (!session) {
         setStatus("error");
-        setMessage(errMsg);
+        setMessage("Token không hợp lệ!");
         return;
       }
 
-      if (data?.success) {
-        setStatus("success");
-        setMessage(`Bạn đã nhận ${data.coins_earned} Coin!`);
-      } else {
+      // Kiểm tra hạn sử dụng
+      if (new Date(session.expires_at) < new Date()) {
         setStatus("error");
-        setMessage(data?.error || "Token không hợp lệ!");
+        setMessage("Token đã hết hạn!");
+        return;
       }
+
+      // Kiểm tra đã dùng chưa
+      if (session.status === "used") {
+        setStatus("error");
+        setMessage("Token đã được sử dụng!");
+        return;
+      }
+
+      // Lấy thông tin nhiệm vụ
+      const { data: task } = await supabase
+        .from("tasks")
+        .select("reward_coins")
+        .eq("id", session.task_id)
+        .single();
+
+      // Cộng coin cho user
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("coins")
+        .eq("id", session.user_id)
+        .single();
+
+      await supabase
+        .from("profiles")
+        .update({ coins: profile.coins + task.reward_coins })
+        .eq("id", session.user_id);
+
+      // Đánh dấu Token đã dùng
+      await supabase
+        .from("task_sessions")
+        .update({ status: "used", claimed_at: new Date().toISOString() })
+        .eq("id", session.id);
+
+      // Lưu lịch sử
+      await supabase
+        .from("task_completions")
+        .insert({
+          user_id: session.user_id,
+          task_id: task.id,
+          reward_claimed: true,
+          reward_amount: task.reward_coins
+        });
+
+      setStatus("success");
+      setMessage(`Bạn đã nhận ${task.reward_coins} Coin!`);
     };
 
     verifyToken();
@@ -80,4 +122,4 @@ export default function TaskCallback() {
       </div>
     </div>
   );
-    }
+}
