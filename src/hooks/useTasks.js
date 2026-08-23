@@ -18,6 +18,7 @@ export default function useTasks(userId) {
         .eq("active", true)
         .order("sort_order", { ascending: true });
 
+      // Nếu DB chưa có nhiệm vụ nào, hiện dữ liệu mẫu để giao diện sống động
       if (!taskRows || taskRows.length === 0) {
         setTasks([
           { id: "demo-1", title: "Làm 1 nhiệm vụ", provider: "Demo", reward_coins: 50, daily_limit: 1, completedToday: 1, remainingToday: 0 },
@@ -35,17 +36,20 @@ export default function useTasks(userId) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         
+        // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
         const { data: allCompletions } = await supabase
           .from("task_completions")
           .select("completed_at")
           .eq("user_id", userId)
           .order("completed_at", { ascending: false });
 
+        // Tính số lượng hoàn thành hôm nay
         const todayCompletions = (allCompletions || []).filter(c => 
           new Date(c.completed_at) >= startOfDay
         );
         completed = todayCompletions.length;
 
+        // Tính streak (chuỗi ngày liên tiếp)
         const uniqueDays = new Set(
           (allCompletions || []).map(c => new Date(c.completed_at).toDateString())
         );
@@ -54,15 +58,18 @@ export default function useTasks(userId) {
         let currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
         
+        // Nếu hôm nay CHƯA làm, bắt đầu kiểm tra từ hôm qua (vì có thể hôm nay chưa làm nhưng hôm qua đã làm)
         if (!uniqueDays.has(currentDate.toDateString())) {
           currentDate.setDate(currentDate.getDate() - 1);
         }
         
+        // Đếm số ngày liên tiếp có hoàn thành nhiệm vụ
         while (uniqueDays.has(currentDate.toDateString())) {
           streak++;
           currentDate.setDate(currentDate.getDate() - 1);
         }
 
+        // Tự động cập nhật streak vào database (nếu có thay đổi)
         const { data: profileData } = await supabase
           .from("profiles")
           .select("streak_days, streak_record")
@@ -70,6 +77,7 @@ export default function useTasks(userId) {
           .single();
 
         if (profileData) {
+          // Nếu chuỗi hiện tại lớn hơn chuỗi cũ, cập nhật
           if (streak !== profileData.streak_days || streak > profileData.streak_record) {
             await supabase
               .from("profiles")
@@ -81,6 +89,7 @@ export default function useTasks(userId) {
           }
         }
 
+        // Lấy dữ liệu task theo ngày hôm nay
         const { data: completions } = await supabase
           .from("task_completions")
           .select("task_id")
@@ -119,101 +128,5 @@ export default function useTasks(userId) {
     return () => window.removeEventListener("focus", handleFocus);
   }, [reload]);
 
-  // === LOGIC NHIỆM VỤ ===
-
-  const startTask = async (taskId) => {
-    const token = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    
-    await supabase.from("task_sessions").insert({
-      user_id: userId,
-      task_id: taskId,
-      token,
-      expires_at: expiresAt,
-      status: "pending"
-    });
-
-    // Gọi API từ Vercel
-    const apiKey = import.meta.env.VITE_LINK4M_API_KEY;
-    const callbackUrl = `${window.location.origin}/task/callback?token=${token}`;
-
-    let generatedLink = "";
-    try {
-      const response = await fetch("https://api.link4m.io/api/v1/links", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          target_url: callbackUrl,
-          domain: "link4m.io"
-        })
-      });
-
-      const data = await response.json();
-      
-      if (response.ok && data.short_url) {
-        generatedLink = data.short_url;
-      } else {
-        generatedLink = `TOKEN_CUA_BAN_LA: ${token}`;
-      }
-    } catch (error) {
-      generatedLink = `TOKEN_CUA_BAN_LA: ${token}`;
-    }
-
-    return {
-      token,
-      expires_at: expiresAt,
-      shortUrl: generatedLink
-    };
-  };
-
-  const claimTask = async (token) => {
-    const { data: session } = await supabase
-      .from("task_sessions")
-      .select("*")
-      .eq("token", token)
-      .single();
-
-    if (!session) return { error: "Token không hợp lệ!" };
-    if (session.user_id !== userId) return { error: "Token không thuộc về bạn!" };
-    if (new Date(session.expires_at) < new Date()) return { error: "Token đã hết hạn!" };
-    if (session.status === "used") return { error: "Token đã được sử dụng!" };
-
-    const { data: task } = await supabase
-      .from("tasks")
-      .select("reward_coins")
-      .eq("id", session.task_id)
-      .single();
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("coins")
-      .eq("id", userId)
-      .single();
-
-    await supabase
-      .from("profiles")
-      .update({ coins: profile.coins + task.reward_coins })
-      .eq("id", userId);
-
-    await supabase
-      .from("task_sessions")
-      .update({ status: "used", claimed_at: new Date().toISOString() })
-      .eq("id", session.id);
-
-    await supabase
-      .from("task_completions")
-      .insert({
-        user_id: userId,
-        task_id: task.id,
-        reward_claimed: true,
-        reward_amount: task.reward_coins
-      });
-
-    return { success: true, coins_earned: task.reward_coins };
-  };
-
-  return { tasks, loading, completedToday, reload, startTask, claimTask };
-                            }
+  return { tasks, loading, completedToday, reload };
+              }
