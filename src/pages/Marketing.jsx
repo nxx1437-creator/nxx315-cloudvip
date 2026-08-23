@@ -11,11 +11,12 @@ export default function Marketing() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
-  const [showRewardTable, setShowRewardTable] = useState(false); // Ẩn/Hiện bảng thưởng
+  const [showRewardTable, setShowRewardTable] = useState(false);
 
-  // Wallet + Code
+  // Wallet + Code + Campaigns
   const [marketingCode, setMarketingCode] = useState("NXX315-DEFAULT");
   const [wallet, setWallet] = useState(null);
+  const [campaigns, setCampaigns] = useState([]);
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,14 @@ export default function Marketing() {
         setMarketingCode(profileData.marketing_code);
       }
 
+      // Lấy campaigns
+      const { data: campaignData } = await supabase
+        .from("marketing_campaigns")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+      setCampaigns(campaignData ?? []);
+
       // Lấy video
       const { data: videoData } = await supabase
         .from("marketing_videos")
@@ -57,12 +66,6 @@ export default function Marketing() {
     navigator.clipboard.writeText(marketingCode);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
-  };
-
-  const handleSubmit = async () => {
-    // Logic gửi video (giữ nguyên)
-    // Bạn có thể thêm lại input ở dưới nếu cần, nhưng mình gợi ý đặt nó ở phần Nội dung
-    // Để gọn, mình sẽ thêm một nút mở popup gửi link ở dưới
   };
 
   const getStatus = (status) => {
@@ -144,28 +147,22 @@ export default function Marketing() {
           </button>
 
           {showRewardTable && (
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <div className="rounded-2xl bg-slate-50 p-3 text-center">
-                <Music size={18} className="mx-auto text-rose-500" />
-                <p className="mt-1 text-xs text-slate-500">TikTok</p>
-                <p className="text-sm font-bold text-slate-800">2.5K/1K</p>
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
+                <span className="font-bold text-slate-700">1.000 lượt truy cập hợp lệ</span>
+                <span className="font-bold text-blue-600">500 coin</span>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3 text-center">
-                <Youtube size={18} className="mx-auto text-red-500" />
-                <p className="mt-1 text-xs text-slate-500">YouTube</p>
-                <p className="text-sm font-bold text-slate-800">25K/1K</p>
+              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
+                <span className="font-bold text-slate-700">10.000 lượt truy cập hợp lệ</span>
+                <span className="font-bold text-blue-600">5.000 coin</span>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-3 text-center">
-                <Youtube size={18} className="mx-auto text-red-500" />
-                <p className="mt-1 text-xs text-slate-500">Short</p>
-                <p className="text-sm font-bold text-slate-800">10K/1K</p>
-              </div>
+              <p className="mt-2 text-xs text-slate-400">
+                <Info size={12} className="inline" /> Mức thưởng: 0.5 coin / valid visit. Chỉ lượt truy cập hợp lệ mới được tính.
+              </p>
             </div>
           )}
 
-          <p className="mt-2 flex items-center gap-1 text-[11px] text-slate-400">
-            <Info size={12} /> Chỉ lượt truy cập hợp lệ mới được tính. Phí 5%.
-          </p>
+          <p className="mt-2 text-[11px] text-slate-400">Phí 5% khi rút hoặc đổi xu.</p>
         </div>
 
         {/* 4. NỘI DUNG CỦA BẠN */}
@@ -227,4 +224,4 @@ export default function Marketing() {
       <BottomNav />
     </div>
   );
-            }
+              }
