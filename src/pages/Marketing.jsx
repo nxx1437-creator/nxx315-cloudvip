@@ -139,6 +139,85 @@ export default function Marketing() {
           <p className="mt-3 text-center text-sm text-slate-400">Chưa có giao dịch rút tiền.</p>
         </div>
       <BottomNav />
+      <div className="rounded-3xl border border-amber-100 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">Gửi link video của bạn</h2>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!link.trim()) return alert("Vui lòng nhập link video!");
+              const isValid = (() => {
+                try {
+                  const host = new URL(link).hostname;
+                  return host.includes("tiktok.com") || host.includes("youtube.com") || host.includes("youtu.be");
+                } catch {
+                  return false;
+                }
+              })();
+              if (!isValid) return alert("Link không hợp lệ! Chỉ nhận link TikTok hoặc YouTube.");
+              setIsSubmitting(true);
+              let fetchedTitle = "";
+              try {
+                const noembed = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(link)}`);
+                const noembedData = await noembed.json();
+                if (noembedData.title) fetchedTitle = noembedData.title;
+              } catch {}
+              const { error } = await supabase.from("marketing_videos").insert({
+                user_id: session.user.id,
+                link: link.trim(),
+                title: fetchedTitle,
+                platform: link.includes("tiktok.com") ? "TikTok" : "YouTube",
+                status: "pending",
+                view_count: 0,
+                like_count: 0,
+                comment_count: 0,
+                ctr: "0%",
+              });
+              setIsSubmitting(false);
+              if (error) return alert("Lỗi gửi video: " + error.message);
+              alert("Đã gửi video thành công! Chờ admin duyệt nhé!");
+              setLink("");
+              const { data } = await supabase.from("marketing_videos").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
+              setVideos(data ?? []);
+            }}
+            className="mt-4"
+          >
+            <input
+              type="text"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="Dán link TikTok / YouTube..."
+              className="w-full rounded-xl border border-amber-100 bg-amber-50/40 px-4 py-3 text-sm outline-none focus:border-amber-400"
+            />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 disabled:opacity-60"
+            >
+              {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} Gửi duyệt
+            </button>
+          </form>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Tổng video</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{videos.length}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Chờ duyệt</p>
+            <p className="mt-1 text-2xl font-bold text-amber-500">{pendingVideos}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Đã duyệt</p>
+            <p className="mt-1 text-2xl font-bold text-orange-500">{videos.filter((v) => v.status === "approved").length}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
+            <p className="text-xs text-slate-400">Cookies đã nhận</p>
+            <p className="mt-1 flex items-center gap-1 text-2xl font-bold text-emerald-600">
+              <Cookie size={16} /> {totalCookiesEarned.toLocaleString("vi-VN")}
+            </p>
+          </div>
+        </div>
     </div>
   );
               }
