@@ -36,20 +36,17 @@ export default function useTasks(userId) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         
-        // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
         const { data: allCompletions } = await supabase
           .from("task_completions")
           .select("completed_at")
           .eq("user_id", userId)
           .order("completed_at", { ascending: false });
 
-        // Tính số lượng hoàn thành hôm nay
         const todayCompletions = (allCompletions || []).filter(c => 
           new Date(c.completed_at) >= startOfDay
         );
         completed = todayCompletions.length;
 
-        // Tính streak (chuỗi ngày liên tiếp)
         const uniqueDays = new Set(
           (allCompletions || []).map(c => new Date(c.completed_at).toDateString())
         );
@@ -58,18 +55,15 @@ export default function useTasks(userId) {
         let currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
         
-        // Nếu hôm nay CHƯA làm, bắt đầu kiểm tra từ hôm qua (vì có thể hôm nay chưa làm nhưng hôm qua đã làm)
         if (!uniqueDays.has(currentDate.toDateString())) {
           currentDate.setDate(currentDate.getDate() - 1);
         }
         
-        // Đếm số ngày liên tiếp có hoàn thành nhiệm vụ
         while (uniqueDays.has(currentDate.toDateString())) {
           streak++;
           currentDate.setDate(currentDate.getDate() - 1);
         }
 
-        // Tự động cập nhật streak vào database (nếu có thay đổi)
         const { data: profileData } = await supabase
           .from("profiles")
           .select("streak_days, streak_record")
@@ -77,7 +71,6 @@ export default function useTasks(userId) {
           .single();
 
         if (profileData) {
-          // Nếu chuỗi hiện tại lớn hơn chuỗi cũ, cập nhật
           if (streak !== profileData.streak_days || streak > profileData.streak_record) {
             await supabase
               .from("profiles")
@@ -89,7 +82,6 @@ export default function useTasks(userId) {
           }
         }
 
-        // Lấy dữ liệu task theo ngày hôm nay
         const { data: completions } = await supabase
           .from("task_completions")
           .select("task_id")
@@ -128,5 +120,50 @@ export default function useTasks(userId) {
     return () => window.removeEventListener("focus", handleFocus);
   }, [reload]);
 
-  return { tasks, loading, completedToday, reload };
-              }
+  // === LOGIC NHIỆM VỤ MỚI (GỌI EDGE FUNCTION THẬT) ===
+
+  // Hàm tạo Token khi bắt đầu làm nhiệm vụ
+  const startTask = async (taskId) => {
+    const token = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    await supabase.from("task_sessions").insert({
+      user_id: userId,
+      task_id: taskId,
+      token,
+      expires_at: expiresAt,
+      status: "pending"
+    });
+
+    return {
+      token,
+      expires_at: expiresAt,
+      shortUrl: `TOKEN_CUA_BAN_LA: ${token}` // Hiển thị Token để người dùng nhập
+    };
+  };
+
+  // Hàm xác nhận Token + reCAPTCHA (Gọi lên Edge Function)
+  const claimTask = async (token, recaptchaToken) => {
+    try {
+      // Gọi lên Edge Function claim-task
+      const { data, error } = await supabase.functions.invoke("claim-task", {
+        body: { token, recaptcha_token: recaptchaToken }
+      });
+
+      if (error) {
+        let message = error.message;
+        try {
+          const body = await error.context.json();
+          if (body?.error) message = body.error;
+        } catch {}
+        return { error: message };
+      }
+
+      return { success: true, coins_earned: data.coins_earned };
+    } catch (e) {
+      return { error: "Lỗi gọi Edge Function: " + e.message };
+    }
+  };
+
+  return { tasks, loading, completedToday, reload, startTask, claimTask };
+               }
