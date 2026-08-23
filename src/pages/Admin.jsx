@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2 } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Coins } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
@@ -53,7 +53,161 @@ export default function Admin() {
   );
 }
 
-/* ===== USERS TAB (Thêm cơ chế Ban) ===== */
+/* ===== ORDERS TAB (Có nhập ghi chú, phân biệt màu, nút hoạt động) ===== */
+function OrdersTab() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+  const [notes, setNotes] = useState({}); // Lưu ghi chú cho từng đơn
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
+    setOrders(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchOrders(); }, []);
+
+  const handleAction = async (order, status) => {
+    const adminNote = notes[order.id] || "";
+    setSavingId(order.id);
+    
+    const { error } = await supabase.from("redemption_orders").update({
+      status,
+      admin_note: adminNote
+    }).eq("id", order.id);
+    
+    setSavingId(null);
+    if (error) { alert(error.message); return; }
+    await fetchOrders();
+  };
+
+  if (loading) return <Loading text="Loading orders..." />;
+  if (orders.length === 0) return <EmptyState text="Chưa có đơn nào." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Đơn hàng" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
+      {orders.map((order) => (
+        <div 
+          key={order.id} 
+          className={`rounded-2xl border p-5 shadow-sm ${
+            order.status === "delivered" 
+              ? "border-emerald-200 bg-emerald-50/50" // Đơn đã giao: nền xanh nhạt
+              : order.status === "cancelled"
+                ? "border-rose-200 bg-rose-50/50" // Đơn hủy: nền đỏ nhạt
+                : "border-slate-200 bg-white" // Đơn chờ xử lý: nền trắng
+          }`}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-bold text-slate-900">{order.package_name}</p>
+              <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
+            </div>
+            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
+              order.status === "delivered" ? "bg-emerald-100 text-emerald-600" :
+              order.status === "cancelled" ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
+            }`}>
+              {order.status === "delivered" ? "Đã giao" : order.status === "cancelled" ? "Đã hủy" : "Chờ xử lý"}
+            </span>
+          </div>
+
+          {/* Ô nhập ghi chú */}
+          <div className="mt-4">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Ghi chú (Admin)</label>
+            <input 
+              type="text" 
+              value={notes[order.id] || order.admin_note || ""}
+              onChange={(e) => setNotes((prev) => ({ ...prev, [order.id]: e.target.value }))}
+              placeholder="Nhập ghi chú cho đơn hàng..."
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-400"
+            />
+          </div>
+
+          {/* Nút hành động */}
+          <div className="mt-4 flex gap-2">
+            {order.status !== "delivered" && (
+              <button 
+                onClick={() => handleAction(order, "delivered")} 
+                disabled={savingId === order.id}
+                className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
+              >
+                <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
+              </button>
+            )}
+            {order.status !== "cancelled" && (
+              <button 
+                onClick={() => handleAction(order, "cancelled")} 
+                disabled={savingId === order.id}
+                className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50"
+              >
+                <XCircle size={14} className="inline mr-1" /> Hủy đơn
+              </button>
+            )}
+          </div>
+
+          {/* Hiện ghi chú đã lưu */}
+          {order.admin_note && (
+            <p className="mt-3 rounded-xl bg-slate-100 p-3 text-xs italic text-slate-500">Ghi chú: {order.admin_note}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===== SUPPORT TAB ===== */
+function SupportTab() {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTickets = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false });
+    setTickets(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTickets(); }, []);
+
+  const handleResolve = async (ticket) => {
+    await supabase.from("support_tickets").update({ status: "resolved" }).eq("id", ticket.id);
+    await fetchTickets();
+  };
+
+  if (loading) return <Loading text="Loading tickets..." />;
+  if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Yêu cầu hỗ trợ" count={`${tickets.length} Yêu cầu`} onRefresh={fetchTickets} />
+      {tickets.map((ticket) => (
+        <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                ticket.status === "pending" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+              }`}>
+                {ticket.status === "pending" ? "Chờ xử lý" : "Đã xử lý"}
+              </span>
+              <p className="mt-2 text-sm font-bold text-slate-900">{ticket.subject}</p>
+              <p className="mt-1 text-sm text-slate-600">{ticket.message}</p>
+              <p className="mt-1 text-xs text-slate-400">User ID: {ticket.user_id} • {new Date(ticket.created_at).toLocaleString("vi-VN")}</p>
+            </div>
+            {ticket.status === "pending" && (
+              <button onClick={() => handleResolve(ticket)} className="shrink-0 rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-600">
+                Đã xử lý
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ===== USERS TAB ===== */
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,112 +278,6 @@ function UsersTab() {
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-/* ===== SUPPORT TAB ===== */
-function SupportTab() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchTickets = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false });
-    setTickets(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchTickets(); }, []);
-
-  const handleResolve = async (ticket) => {
-    await supabase.from("support_tickets").update({ status: "resolved" }).eq("id", ticket.id);
-    await fetchTickets();
-  };
-
-  if (loading) return <Loading text="Loading tickets..." />;
-  if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Yêu cầu hỗ trợ" count={`${tickets.length} Yêu cầu`} onRefresh={fetchTickets} />
-      {tickets.map((ticket) => (
-        <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${
-                ticket.status === "pending" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
-              }`}>
-                {ticket.status === "pending" ? "Chờ xử lý" : "Đã xử lý"}
-              </span>
-              <p className="mt-2 text-sm font-bold text-slate-900">{ticket.subject}</p>
-              <p className="mt-1 text-sm text-slate-600">{ticket.message}</p>
-              <p className="mt-1 text-xs text-slate-400">User ID: {ticket.user_id} • {new Date(ticket.created_at).toLocaleString("vi-VN")}</p>
-            </div>
-            {ticket.status === "pending" && (
-              <button onClick={() => handleResolve(ticket)} className="shrink-0 rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-600">
-                Đã xử lý
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ===== ORDERS TAB ===== */
-function OrdersTab() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState(null);
-  const [drafts, setDrafts] = useState({});
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
-    if (error) { alert(error.message); setOrders([]); } else { setOrders(data ?? []); }
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchOrders(); }, []);
-
-  const getDraft = (order) => drafts[order.id] ?? { status: order.status, admin_note: order.admin_note ?? "" };
-  const handleSave = async (order) => {
-    const draft = getDraft(order);
-    setSavingId(order.id);
-    const { error } = await supabase.from("redemption_orders").update({ status: draft.status, admin_note: draft.admin_note }).eq("id", order.id);
-    setSavingId(null);
-    if (error) { alert(error.message); return; }
-    await fetchOrders();
-    setDrafts((current) => { const next = { ...current }; delete next[order.id]; return next; });
-  };
-
-  if (loading) return <Loading text="Loading orders..." />;
-  if (orders.length === 0) return <EmptyState text="Chưa có đơn nào." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Đơn hàng chờ xử lý" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
-      {orders.map((order) => (
-        <div key={order.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-bold text-slate-900">{order.package_name}</p>
-              <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
-            </div>
-            <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">Chờ xử lý</span>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <button onClick={() => { setDrafts((d) => ({ ...d, [order.id]: { ...getDraft(order), status: "delivered" } })); handleSave(order); }} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600">
-              <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
-            </button>
-            <button onClick={() => { setDrafts((d) => ({ ...d, [order.id]: { ...getDraft(order), status: "cancelled" } })); handleSave(order); }} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600">
-              <XCircle size={14} className="inline mr-1" /> Hủy đơn
-            </button>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
@@ -315,4 +363,4 @@ function EmptyState({ text }) {
 
 function Loading({ text }) {
   return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-                  }
+                                                    }
