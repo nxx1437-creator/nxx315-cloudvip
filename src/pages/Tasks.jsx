@@ -307,7 +307,7 @@ export default function Tasks() {
 import ReCAPTCHA from "react-google-recaptcha";
 
 // 1. Khai báo Site Key lấy từ Google
-const RECAPTCHA_SITE_KEY = "6LeWCZQtAAAAAHFMcZ7gCgrmRvkuiIrqWq7Odmrm";
+const RECAPTCHA_SITE_KEY = "cailon";
 
 // 2. Thêm state để lưu trạng thái xác thực
 const [captchaToken, setCaptchaToken] = useState(null);
