@@ -52,7 +52,7 @@ const MENU_GROUPS = [
     label: "Hỗ trợ",
     items: [
       { label: "Quy định", icon: FileWarning },
-      { label: "Hỗ trợ", icon: LifeBuoy },
+      { path: "/support", label: "Hỗ trợ", icon: LifeBuoy },
     ],
   },
 ];
@@ -208,4 +208,4 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
       </aside>
     </>
   );
-      }
+                }
