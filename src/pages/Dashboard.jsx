@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight, Search, Bell, Globe, Menu, Rocket, Crown } from "lucide-react";
+import {
+  Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight,
+  Search, Bell, Globe, Menu, Rocket, Crown, Menu as MenuIcon
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
 const WEEKDAYS = ["Thứ 7", "CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
 
@@ -51,8 +55,7 @@ export default function Dashboard() {
       setRefMessage({ type: "error", text: "Vui lòng nhập mã!" });
       return;
     }
-    
-    // Tìm campaign theo mã
+
     const { data: campaign } = await supabase
       .from("marketing_campaigns")
       .select("id")
@@ -64,7 +67,6 @@ export default function Dashboard() {
       return;
     }
 
-    // Tạo session ghi nhận
     const sessionHash = Math.random().toString(36).substring(2);
     await supabase.from("marketing_sessions").insert({
       campaign_id: campaign.id,
@@ -102,7 +104,7 @@ export default function Dashboard() {
           onClick={() => setSidebarOpen(true)}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
         >
-          <Menu size={19} />
+          <MenuIcon size={19} />
         </button>
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
           <Search size={15} className="shrink-0" />
@@ -311,6 +313,14 @@ export default function Dashboard() {
       </main>
 
       <BottomNav />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        displayName={displayName}
+        initial={initial}
+        coins={profile.coins}
+        level={profile.level}
+      />
     </div>
   );
-                }
+          }
