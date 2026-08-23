@@ -1,17 +1,7 @@
- import React, { useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Bell,
-  Search,
-  Globe,
-  Menu,
-  Sparkles,
-  Zap,
-  Trophy,
-  Coins,
-  Clock,
-  Flame,
-  ExternalLink,
+  Bell, Search, Globe, Menu, Sparkles, Zap, Trophy, Coins, Clock, Flame, ExternalLink, Loader2
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -19,6 +9,9 @@ import useTasks from "../hooks/useTasks.js";
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+
+// Đọc Site Key từ biến môi trường (Vercel)
+const SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY; 
 
 function hoursUntilMidnight() {
   const now = new Date();
@@ -44,10 +37,21 @@ export default function Tasks() {
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile(user?.id);
-  const { tasks, loading, reload } = useTasks(user?.id);
+  const { tasks, loading, reload, startTask, claimTask } = useTasks(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [tokenInput, setTokenInput] = useState("");
+
+  // Load thẻ script reCAPTCHA khi trang load
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
 
   const displayName =
     profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
@@ -62,23 +66,20 @@ export default function Tasks() {
   const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
+  // Bước 1: Bắt đầu nhiệm vụ
   const handleStart = async (task) => {
     setStartingTaskId(task.id);
     const { data, error } = await supabase.functions.invoke("start-task", {
-      body: { task_id: task.id },
+      body: { task_id: task.id, provider: task.provider }
     });
     setStartingTaskId(null);
 
     if (error) {
-      // supabase-js không tự đọc nội dung JSON khi function trả về lỗi (4xx/5xx),
-      // phải tự đọc từ error.context (Response gốc) để lấy đúng thông báo lỗi thật.
       let message = error.message;
       try {
         const body = await error.context.json();
         if (body?.error) message = body.error;
-      } catch {
-        // giữ nguyên error.message nếu không đọc được JSON
-      }
+      } catch {}
       alert(message);
       return;
     }
@@ -89,8 +90,49 @@ export default function Tasks() {
     }
 
     window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-    // Số liệu sẽ tự làm mới khi bạn quay lại tab này (useTasks lắng nghe sự
-    // kiện focus/visibilitychange), không cần gọi reload() ngay lúc này.
+  };
+
+  // Bước 2: Người dùng bấm vào ô reCAPTCHA
+  const handleCaptcha = () => {
+    if (window.grecaptcha) {
+      window.grecaptcha.ready(() => {
+        window.grecaptcha.execute(SITE_KEY, { action: "submit" }).then((token) => {
+          setCaptchaToken(token);
+          alert("Xác thực reCAPTCHA thành công!");
+        });
+      });
+    }
+  };
+
+  // Bước 3: Xác nhận và nhận Coin (đã có cả reCAPTCHA)
+  const handleClaim = async () => {
+    if (!tokenInput.trim()) {
+      alert("Vui lòng nhập Token!");
+      return;
+    }
+    if (!captchaToken) {
+      alert("Vui lòng xác thực reCAPTCHA trước!");
+      return;
+    }
+
+    const { data, error } = await supabase.functions.invoke("claim-task", {
+      body: { token: tokenInput, recaptcha_token: captchaToken }
+    });
+
+    if (error) {
+      let message = error.message;
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch {}
+      alert(message);
+      return;
+    }
+
+    setCaptchaToken(null);
+    setTokenInput("");
+    alert(`Bạn đã nhận ${data.coins_earned} Coin!`);
+    reload();
   };
 
   return (
@@ -289,6 +331,33 @@ export default function Tasks() {
             );
           })}
         </div>
+
+        {/* XÁC NHẬN NHIỆM VỤ (Nhập Token + reCAPTCHA) */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <p className="text-sm font-bold text-slate-800 mb-2">Xác nhận nhiệm vụ</p>
+          
+          <input
+            value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)}
+            placeholder="Nhập Token từ link quảng cáo..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm mb-3"
+          />
+
+          {/* Nút reCAPTCHA */}
+          <button
+            onClick={handleCaptcha}
+            className="w-full rounded-xl bg-slate-100 py-3 text-sm font-medium text-slate-600 mb-3"
+          >
+            Tôi không phải là người máy
+          </button>
+
+          <button
+            onClick={handleClaim}
+            className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white"
+          >
+            Xác nhận & Nhận Coin
+          </button>
+        </div>
       </main>
 
       <BottomNav />
@@ -303,46 +372,4 @@ export default function Tasks() {
       />
     </div>
   );
-                          }
-import ReCAPTCHA from "react-google-recaptcha";
-
-// 1. Khai báo Site Key lấy từ Google
-const RECAPTCHA_SITE_KEY = "cailon";
-
-// 2. Thêm state để lưu trạng thái xác thực
-const [captchaToken, setCaptchaToken] = useState(null);
-
-// 3. Thêm hàm onChange khi người dùng bấm vào ô
-const handleCaptchaChange = (token) => {
-  setCaptchaToken(token); // Lưu token reCAPTCHA
-};
-
-// 4. Sửa lại hàm handleClaim (hoặc khi người dùng xác nhận):
-const handleClaim = async () => {
-  if (!captchaToken) {
-    alert("Vui lòng xác thực reCAPTCHA trước!");
-    return;
-  }
-  
-  // Gọi API với cả Token nhiệm vụ và Token reCAPTCHA
-  const { data, error } = await supabase.functions.invoke('claim-task', {
-    body: { token: tokenInput, recaptcha_token: captchaToken }
-  });
-
-  if (error) {
-    // Xử lý lỗi
-    return;
-  }
-
-  alert(`Bạn đã nhận ${data.coins_earned} Coin!`);
-  // Reset reCAPTCHA sau khi nhận thưởng
-  setCaptchaToken(null);
-};
-
-// 5. Trong phần render, thêm ô reCAPTCHA dưới ô nhập Token:
-<div className="mt-4">
-  <ReCAPTCHA
-    sitekey={RECAPTCHA_SITE_KEY}
-    onChange={handleCaptchaChange}
-  />
-</div>
+}
