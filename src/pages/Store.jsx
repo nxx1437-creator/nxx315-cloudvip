@@ -62,7 +62,23 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 1. Trừ Coin trực tiếp (KHÔNG dùng RPC)
+    // BƯỚC 1: Tạo đơn hàng TRƯỚC
+    const { error } = await supabase.from("redemption_orders").insert({
+      user_id: session.user.id,
+      package_name: selectedPkg.name,
+      coins_charged: selectedPkg.coin_cost,
+      delivery_method: deliveryMethod,
+      delivery_target: deliveryInfo.trim(),
+      status: "pending"
+    });
+
+    if (error) {
+      setToast({ message: "Lỗi tạo đơn: " + error.message, type: "error" });
+      setIsRedeeming(false);
+      return;
+    }
+
+    // BƯỚC 2: Trừ Coin SAU (chỉ khi đơn đã tạo thành công)
     const { error: deductError } = await supabase
       .from("profiles")
       .update({ coins: profile.coins - selectedPkg.coin_cost })
@@ -74,22 +90,7 @@ export default function Store() {
       return;
     }
 
-    // 2. Tạo đơn hàng (KIỂM TRA RLS - Nếu không được thì báo lỗi)
-    const { error } = await supabase.from("redemption_orders").insert({
-      user_id: session.user.id,
-      package_name: selectedPkg.name,
-      coins_charged: selectedPkg.coin_cost,
-      delivery_method: deliveryMethod,
-      delivery_target: deliveryInfo.trim(),
-      status: "pending"
-    });
-
     setIsRedeeming(false);
-    if (error) {
-      setToast({ message: "Lỗi tạo đơn: " + error.message, type: "error" });
-      return;
-    }
-
     setSelectedPkg(null);
     setDeliveryInfo("");
     setDeliveryMethod("username");
@@ -347,4 +348,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-      }
+  }
