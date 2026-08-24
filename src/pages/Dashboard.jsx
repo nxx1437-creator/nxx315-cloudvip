@@ -40,8 +40,6 @@ export default function Dashboard() {
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [marketingCode, setMarketingCode] = useState("");
-  const [refMessage, setRefMessage] = useState(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -177,31 +175,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-slate-700 mb-2">🎁 Bạn có mã Marketing?</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={marketingCode}
-              onChange={(e) => setMarketingCode(e.target.value)}
-              placeholder="Nhập mã..."
-              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-            />
-            <button
-              onClick={handleSubmitCode}
-              className="rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              Nhập
-            </button>
-          </div>
-          {refMessage && (
-            <p className={`mt-2 text-xs ${refMessage.type === "success" ? "text-emerald-600" : "text-rose-500"}`}>
-              {refMessage.text}
-            </p>
-          )}
-          <p className="mt-2 text-[11px] text-slate-400">Nhập mã để ghi nhận lượt truy cập cho người giới thiệu.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
