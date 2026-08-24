@@ -43,13 +43,14 @@ export default function Admin() {
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
-        {tab === "orders" && <OrdersTab />}
-        {tab === "tasks" && <TasksTab />}
-        {tab === "packages" && <PackagesTab />}
-        {tab === "users" && <UsersTab />}
-        {tab === "support" && <SupportTab />}
-      </main>
+    <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
+       {tab === "orders" && <OrdersTab />}
+       {tab === "tasks" && <TasksTab />}
+       {tab === "packages" && <PackagesTab />}
+       {tab === "users" && <UsersTab />}
+       {tab === "support" && <SupportTab />}
+       {tab === "notices" && <NoticesTab />} {/* 👈 Thêm dòng này */}
+   </main>
     </div>
   );
 }
