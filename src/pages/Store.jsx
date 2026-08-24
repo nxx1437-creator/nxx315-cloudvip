@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Coins, Gift, Loader2, Send, Gamepad2, Swords, Zap, ShieldCheck, Trophy, MessageCircle, Phone, Check } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import { useStoreData } from "../hooks/useStoreData.js";
+import useStoreData from "../hooks/useStoreData.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
