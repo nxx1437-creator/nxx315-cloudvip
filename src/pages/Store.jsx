@@ -366,4 +366,4 @@ export default function Store() {
                   <p className="mt-1 text-xs text-slate-400">Phương thức: {order.delivery_method || "Nạp thẳng"}</p>
                   <p className="mt-1 text-xs text-slate-400">Thông tin nhận: {order.delivery_target || order.target_username || "—"}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="font-bold text-amb          
+                    <span className="font-bold text-amb
