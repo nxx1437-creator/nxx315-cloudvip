@@ -55,7 +55,6 @@ export default function Store() {
       return;
     }
 
-    // 1. Kiểm tra số dư
     if (profile.coins < selectedPkg.coin_cost) {
       setToast({ message: "Số dư không đủ! Vui lòng kiểm tra lại.", type: "error" });
       return;
@@ -63,22 +62,35 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 2. Gọi RPC (Tạo đơn + Trừ coin trên Server)
-    const { error } = await supabase.rpc("create_redeem_order", {
-      p_user_id: session.user.id,
-      p_package_name: selectedPkg.name,
-      p_coin_cost: selectedPkg.coin_cost,
-      p_delivery_method: deliveryMethod,
-      p_delivery_target: deliveryInfo.trim()
+    // 1. Tạo đơn hàng TRƯỚC (Nếu lỗi thì dừng)
+    const { error } = await supabase.from("redemption_orders").insert({
+      user_id: session.user.id,
+      package_name: selectedPkg.name,
+      coins_charged: selectedPkg.coin_cost,
+      delivery_method: deliveryMethod,
+      delivery_target: deliveryInfo.trim(),
+      status: "pending"
     });
 
-    setIsRedeeming(false);
     if (error) {
-      setToast({ message: "Lỗi đặt hàng: " + error.message, type: "error" });
+      setToast({ message: "Lỗi tạo đơn: " + error.message, type: "error" });
+      setIsRedeeming(false);
       return;
     }
 
-    // 3. Thành công
+    // 2. Trừ Coin SAU (Chỉ trừ khi đơn tạo thành công)
+    const { error: deductError } = await supabase
+      .from("profiles")
+      .update({ coins: profile.coins - selectedPkg.coin_cost })
+      .eq("id", session.user.id);
+
+    if (deductError) {
+      setToast({ message: "Lỗi trừ Coin: " + deductError.message, type: "error" });
+      setIsRedeeming(false);
+      return;
+    }
+
+    setIsRedeeming(false);
     setSelectedPkg(null);
     setDeliveryInfo("");
     setDeliveryMethod("username");
