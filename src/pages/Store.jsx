@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet, Info, ArrowRight } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet, Info, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -62,7 +62,7 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 1. Trừ Coin trực tiếp (Cách đơn giản)
+    // 1. Trừ Coin trực tiếp (An toàn, không cần RPC)
     const { error: deductError } = await supabase
       .from("profiles")
       .update({ coins: profile.coins - selectedPkg.coin_cost })
@@ -117,7 +117,7 @@ export default function Store() {
       `}</style>
 
       <main className="mx-auto max-w-md px-4 py-5">
-        {/* HERO GIỚI THIỆU (Pastel) */}
+        {/* HERO GIỚI THIỆU */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 shadow-sm"><Gift size={16} /></span>
@@ -253,7 +253,6 @@ export default function Store() {
             <h2 className="text-lg font-bold text-slate-900">Thông tin giao hàng</h2>
             <p className="mt-1 text-sm text-slate-500">Bạn đang chọn: <span className="font-bold text-slate-900">{selectedPkg.name}</span></p>
             
-            {/* HƯỚNG DẪN */}
             <div className="mt-4 rounded-2xl bg-slate-50 p-4">
               <p className="text-sm font-bold text-slate-800">📌 Hướng dẫn</p>
               <ol className="mt-2 list-decimal list-inside space-y-1 text-xs text-slate-600">
@@ -266,7 +265,6 @@ export default function Store() {
               </ol>
             </div>
 
-            {/* Thông tin nhận */}
             <div className="mt-4 space-y-3">
               {shopTab === "robux" && version === "vng" && (
                 <>
@@ -349,4 +347,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-              }
+                                                                                                                                                                                         }
