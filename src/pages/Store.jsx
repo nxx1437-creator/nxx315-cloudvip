@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet, Info, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -17,8 +17,9 @@ export default function Store() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   
+  // Trạng thái đặt hàng (Thay vì Modal, dùng Form chi tiết)
   const [selectedPkg, setSelectedPkg] = useState(null);
-  const [deliveryMethod, setDeliveryMethod] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState(""); // discord / zalo / username / uid
   const [deliveryInfo, setDeliveryInfo] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
 
@@ -127,8 +128,8 @@ export default function Store() {
         {/* TAB CHÍNH */}
         <div className="mt-6 rounded-full bg-slate-100 p-1">
           <div className="flex gap-2">
-            <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>🎮 Robux</button>
-            <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>⚔️ Quân Huy</button>
+            <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>🎮 Robux</button>
+            <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>⚔️ Quân Huy</button>
           </div>
         </div>
 
@@ -136,13 +137,13 @@ export default function Store() {
         {shopTab === "robux" && (
           <div className="mt-3 rounded-full bg-slate-100 p-1">
             <div className="flex gap-2">
-              <button onClick={() => { setVersion("vng"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500"}`}>🇻🇳 VNG</button>
-              <button onClick={() => { setVersion("quocTe"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "quocTe" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg" : "text-slate-500"}`}>🌎 Quốc tế</button>
+              <button onClick={() => { setVersion("vng"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500"}`}>🇻🇳 VNG</button>
+              <button onClick={() => { setVersion("quocTe"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "quocTe" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg" : "text-slate-500"}`}>🌎 Quốc tế</button>
             </div>
           </div>
         )}
 
-        {/* DANH SÁCH GÓI ROBUX - DẠNG CARD TRUNG TÂM */}
+        {/* DANH SÁCH GÓI ROBUX */}
         {shopTab === "robux" && (
           <div className="mt-6">
             <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Robux</h2>
@@ -152,26 +153,19 @@ export default function Store() {
               ) : filteredPackages.length === 0 ? (
                 <div className="py-8 text-center text-sm text-slate-400">Chưa có gói nào cho loại này.</div>
               ) : filteredPackages.map((pkg) => {
-                // Tính phần trăm giảm giá
                 const originalPrice = pkg.original_price_text ? parseInt(pkg.original_price_text.replace(/\D/g, "")) : 0;
                 const discount = originalPrice > 0 ? Math.round((1 - (pkg.coin_cost / originalPrice)) * 100) : 0;
                 
                 return (
                   <div key={pkg.id} className="relative rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-sm transition hover:shadow-md">
-                    {/* Badge giảm giá */}
                     {discount > 0 && (
                       <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-orange-400 to-red-500 px-2.5 py-1 text-xs font-bold text-white">
                         -{discount}%
                       </span>
                     )}
                     
-                    {/* Icon Robux */}
                     <div className="mx-auto flex h-20 w-20 items-center justify-center">
-                      {version === "quocTe" ? (
-                        <Gamepad2 size={48} className="text-orange-500" />
-                      ) : (
-                        <Gamepad2 size={48} className="text-purple-500" />
-                      )}
+                      {version === "quocTe" ? <Gamepad2 size={48} className="text-orange-500" /> : <Gamepad2 size={48} className="text-purple-500" />}
                     </div>
                     
                     <p className="mt-4 text-sm font-medium text-slate-500">{pkg.name}</p>
@@ -180,13 +174,12 @@ export default function Store() {
                       <p className="text-xs text-slate-400">Coin</p>
                     </div>
                     
-                    {/* Gạch ngang giá gốc */}
                     {originalPrice > 0 && (
                       <p className="mt-2 text-xs text-slate-400 line-through">{originalPrice.toLocaleString()}đ</p>
                     )}
                     
                     <button 
-                      onClick={() => setSelectedPkg(pkg)} 
+                      onClick={() => { setSelectedPkg(pkg); setDeliveryInfo(""); setDeliveryMethod(""); }} 
                       className="mt-6 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25"
                     >
                       Đổi ngay
@@ -198,7 +191,7 @@ export default function Store() {
           </div>
         )}
 
-        {/* DANH SÁCH GÓI QUÂN HUY - DẠNG CARD ĐƠN GIẢN */}
+        {/* DANH SÁCH GÓI QUÂN HUY */}
         {shopTab === "quanHuy" && (
           <div className="mt-6">
             <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Quân Huy</h2>
@@ -221,7 +214,7 @@ export default function Store() {
                       <p className="text-lg font-bold text-amber-500">{pkg.coin_cost} <span className="text-xs text-slate-400">Coin</span></p>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedPkg(pkg)} className="mt-4 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
+                  <button onClick={() => { setSelectedPkg(pkg); setDeliveryInfo(""); setDeliveryMethod(""); }} className="mt-4 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
                     Đổi ngay
                   </button>
                 </div>
@@ -230,50 +223,62 @@ export default function Store() {
           </div>
         )}
 
-        {/* MODAL XÁC NHẬN ĐỔI */}
+        {/* FORM ĐẶT HÀNG CHI TIẾT */}
         {selectedPkg && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-              <h2 className="text-lg font-bold text-slate-900">{selectedPkg.name}</h2>
-              <p className="mt-2 text-sm text-slate-500">Số coin cần: <span className="font-bold text-amber-500">{selectedPkg.coin_cost}</span></p>
-              
-              <div className="mt-4 space-y-3">
-                {shopTab === "robux" && version === "vng" && (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tài khoản Roblox</p>
-                    <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="Username Roblox" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
-                    <p className="text-xs text-amber-600">⚠️ Chỉ nhập thông tin cần thiết. Không yêu cầu mật khẩu.</p>
-                  </>
-                )}
-
-                {shopTab === "robux" && version === "quocTe" && (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức nhận</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => { setDeliveryMethod("discord"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "discord" ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-slate-50 text-slate-500"}`}>Discord</button>
-                      <button onClick={() => { setDeliveryMethod("zalo"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "zalo" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-slate-50 text-slate-500"}`}>Zalo</button>
-                    </div>
-                    {deliveryMethod === "discord" && <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="@username..." className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />}
-                    {deliveryMethod === "zalo" && <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="Số điện thoại Zalo" className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />}
-                  </>
-                )}
-
-                {shopTab === "quanHuy" && (
-                  <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">ID tài khoản Liên Quân</p>
-                    <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="UID + Server" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
-                    <p className="text-xs text-amber-600">⚠️ Chỉ nhập UID. Không yêu cầu mật khẩu.</p>
-                  </>
-                )}
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                <button onClick={() => setSelectedPkg(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
-                <button onClick={handleRedeem} disabled={isRedeeming} className="flex-1 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-50">
-                  {isRedeeming ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Xác nhận đổi"}
-                </button>
-              </div>
+          <div className="mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900">Thông tin giao hàng</h2>
+            <p className="mt-1 text-sm text-slate-500">Bạn đang chọn: <span className="font-bold text-slate-900">{selectedPkg.name}</span></p>
+            
+            {/* HƯỚNG DẪN */}
+            <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-bold text-slate-800">📌 Hướng dẫn</p>
+              <ol className="mt-2 list-decimal list-inside space-y-1 text-xs text-slate-600">
+                <li>Chọn gói mà bạn muốn nhận.</li>
+                {shopTab === "robux" && version === "quocTe" && <li>Chọn phương thức nhận code (Discord hoặc Zalo).</li>}
+                {shopTab === "quanHuy" && <li>Nhập ID Liên Quân Mobile (UID).</li>}
+                {shopTab === "robux" && version === "vng" && <li>Nhập Username Roblox.</li>}
+                <li>Kiểm tra thông tin, sau đó đặt đơn.</li>
+                <li>Admin sẽ xử lý trong thời gian ngắn.</li>
+              </ol>
             </div>
+
+            {/* Thông tin nhận */}
+            <div className="mt-4 space-y-3">
+              {shopTab === "robux" && version === "vng" && (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tài khoản Roblox</p>
+                  <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="Username Roblox" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+                </>
+              )}
+
+              {shopTab === "robux" && version === "quocTe" && (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức nhận code</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setDeliveryMethod("discord"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "discord" ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-slate-50 text-slate-500"}`}>Discord</button>
+                    <button onClick={() => { setDeliveryMethod("zalo"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "zalo" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-slate-50 text-slate-500"}`}>Zalo</button>
+                  </div>
+                  {deliveryMethod === "discord" && <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="@username..." className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />}
+                  {deliveryMethod === "zalo" && <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="Số điện thoại Zalo" className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />}
+                </>
+              )}
+
+              {shopTab === "quanHuy" && (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">ID tài khoản Liên Quân</p>
+                  <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="UID + Server" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+                </>
+              )}
+            </div>
+
+            <button 
+              onClick={handleRedeem} 
+              disabled={isRedeeming} 
+              className="mt-6 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 disabled:opacity-50"
+            >
+              {isRedeeming ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Đặt đơn"}
+            </button>
+            <p className="mt-2 text-center text-xs text-slate-400">Số dư: {profile.coins} Coin</p>
           </div>
         )}
 
@@ -319,4 +324,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-    }
+      }
