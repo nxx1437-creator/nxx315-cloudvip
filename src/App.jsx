@@ -1,3 +1,4 @@
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -20,6 +21,7 @@ import AdminRoute from "./components/AdminRoute.jsx";
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <Routes>
       <Route path="/" element={<CloudVIPLanding />} />
       <Route path="/login" element={<Login />} />
@@ -37,5 +39,7 @@ export default function App() {
       <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </ErrorBoundary>
+  );
   );
 }
