@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -95,27 +95,33 @@ export default function Store() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
-      {/* HERO GIỚI THIỆU CỬA HÀNG */}
-      <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 pb-20 text-white">
-        <div className="mx-auto max-w-md px-4 pt-8 pb-8">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
-            <Gift size={12} /> TRUNG TÂM ĐỔI THƯỞNG
-          </span>
-          <h1 className="font-display mt-4 text-3xl font-bold leading-tight">Cửa hàng</h1>
-          <p className="mt-2 text-sm text-white/80">Đổi Coin lấy phần thưởng. Nhanh chóng • Minh bạch • Theo dõi đơn hàng</p>
-        </div>
-      </div>
-
-      <main className="mx-auto max-w-md px-4">
-        {/* SỐ DƯ COIN */}
-        <div className="-mt-10 rounded-3xl bg-white p-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">💰 Số dư của bạn</span>
-            <Coins size={20} className="text-amber-400" />
+      <main className="mx-auto max-w-md px-4 py-5">
+        {/* HERO GIỚI THIỆU (Pastel, giống ảnh 2) */}
+        <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 shadow-sm"><Gift size={16} /></span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">TRUNG TÂM ĐỔI THƯỞNG</span>
           </div>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="font-display text-4xl font-bold text-slate-900">{profile.coins}</span>
-            <span className="text-lg font-medium text-slate-400">Coin</span>
+          
+          <div className="mt-3 flex items-start gap-2">
+            <Sparkles size={28} className="mt-1 text-amber-500" />
+            <h1 className="font-display text-3xl font-bold leading-tight text-slate-900">Đổi Coin lấy quà game cực dễ</h1>
+          </div>
+          
+          <p className="mt-2 text-sm text-slate-500">Robux Roblox · Kim Cương Free Fire · Quân Huy Liên Quân — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
+          
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-emerald-600 shadow-sm"><ShieldCheck size={12} /> Bảo hành / hoàn coin</span>
+            <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm"><Trophy size={12} /> Giá tốt nhất</span>
+          </div>
+
+          {/* SỐ DƯ */}
+          <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500"><Wallet size={24} /></span>
+            <div>
+              <p className="text-xs text-slate-400">Số dư của bạn</p>
+              <p className="text-xl font-bold text-amber-500">{profile.coins} <span className="text-sm font-normal text-slate-400">Coin</span></p>
+            </div>
           </div>
         </div>
 
@@ -258,4 +264,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-                                                                                }
+      }
