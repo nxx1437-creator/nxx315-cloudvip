@@ -31,6 +31,38 @@ export default function Store() {
   const [contactValue, setContactValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [searchResult, setSearchResult] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearchRoblox = async () => {
+    if (!robloxUsername.trim()) return;
+    setIsSearching(true);
+    setSearchResult(null);
+    try {
+      const userRes = await fetch("https://users.roblox.com/v1/usernames/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernames: [robloxUsername.trim()] }),
+      });
+      const userData = await userRes.json();
+      if (!userData.data || userData.data.length === 0) {
+        setFeedback({ ok: false, message: "Không tìm thấy tài khoản Roblox này." });
+        setIsSearching(false);
+        return;
+      }
+      const user = userData.data[0];
+      const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-bust?userIds=${user.id}&size=150x150&format=Png`);
+      const avatarData = await avatarRes.json();
+      setSearchResult({
+        name: user.displayName || user.name,
+        avatar: avatarData.data?.[0]?.imageUrl || "",
+        id: String(user.id),
+      });
+    } catch {
+      setFeedback({ ok: false, message: "Lỗi tra cứu, thử lại sau." });
+    }
+    setIsSearching(false);
+  };
 
   const robuxPackages = packages.filter((p) => (p.category ?? "robux") === "robux" && p.version === subTab);
   const quanHuyPackages = packages.filter((p) => p.category === "quanhuy");
