@@ -18,7 +18,7 @@ const MENU_GROUPS = [
     label: "Kiếm Coin",
     items: [
       { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-      { label: "Marketing Video", icon: Megaphone, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
+      { path: "/marketing", label: "Marketing Video", icon: Megaphone, badge: "HOT", badgeColor: "bg-rose-100 text-rose-500" },
       { label: "Buff MXH Free", icon: Rocket, badge: "FREE", badgeColor: "bg-teal-100 text-teal-600" },
       { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeColor: "bg-amber-100 text-amber-600" },
       { label: "Bảng xếp hạng", icon: Trophy, badge: "NEW", badgeColor: "bg-emerald-100 text-emerald-600" },
@@ -87,7 +87,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
 
   return (
     <>
-      {/* Overlay mờ */}
       <div
         className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
@@ -95,13 +94,11 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
         onClick={onClose}
       />
 
-      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 z-50 flex h-full w-[88%] max-w-[340px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="relative flex items-center justify-between px-5 pb-6 pt-7">
           <div className="flex items-center gap-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-blue-500/40">
@@ -120,7 +117,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
           </button>
         </div>
 
-        {/* Tìm kiếm */}
         <div className="px-5 pb-4">
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-3">
             <Search size={16} className="text-slate-400" />
@@ -132,7 +128,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
           </div>
         </div>
 
-        {/* Card số dư */}
         <div className="mx-5 mb-4 rounded-2xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
@@ -148,7 +143,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
           </div>
         </div>
 
-        {/* Menu cuộn */}
         <div className="flex-1 overflow-y-auto px-3 pb-6">
           {MENU_GROUPS.map((group) => (
             <div key={group.label} className="mb-2">
@@ -196,7 +190,6 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
           ))}
         </div>
 
-        {/* Đăng xuất */}
         <div className="border-t border-slate-100 bg-white p-4">
           <button
             onClick={handleLogout}
@@ -208,4 +201,4 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
       </aside>
     </>
   );
-                                                                                       }
+                  }
