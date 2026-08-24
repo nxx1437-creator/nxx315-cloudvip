@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Coins, Gift, Loader2, Send, Gamepad2, Swords, Zap, ShieldCheck, Trophy, MessageCircle, Phone, Check } from "lucide-react";
+import { Coins, Gift, Loader2, Send, Gamepad2, Swords, Zap, ShieldCheck, Trophy, MessageCircle, Phone, Check, Search } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import useStoreData from "../hooks/useStoreData.js";
@@ -196,22 +196,54 @@ export default function Store() {
             ))
           )}
         </div>
-{selectedPkg && (
-          <div className="mt-6 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm">
-            <h2 className="text-base font-bold text-slate-900">Thông tin nhận {selectedPkg.name}</h2>
-
-            <div className="mt-4 space-y-3">
-              {selectedPkg.category === "robux" && (
+{selectedPkg.category === "robux" && (
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-slate-500">Tài khoản Roblox</label>
-                  <input
-                    value={robloxUsername}
-                    onChange={(e) => setRobloxUsername(e.target.value)}
-                    placeholder="VD: PlayerName123"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-sky-400"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      value={robloxUsername}
+                      onChange={(e) => { setRobloxUsername(e.target.value); setSearchResult(null); }}
+                      placeholder="VD: PlayerName123"
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-sky-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearchRoblox}
+                      disabled={isSearching}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-md disabled:opacity-60"
+                    >
+                      {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                    </button>
+                  </div>
                   <p className="mt-1.5 text-[11px] text-slate-400">
                     ⚠️ Chỉ nhập thông tin cần thiết để xác định tài khoản. Không yêu cầu mật khẩu.
+                  </p>
+
+                  {searchResult && (
+                    <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                      {searchResult.avatar && (
+                        <img src={searchResult.avatar} alt="avatar" className="h-12 w-12 rounded-full border-2 border-white shadow-sm" />
+                      )}
+                      <div>
+                        <p className="text-sm font-bold text-emerald-700">{searchResult.name}</p>
+                        <p className="text-xs text-emerald-600">ID: {searchResult.id}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedPkg.category === "quanhuy" && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-500">ID/UID Liên Quân Mobile</label>
+                  <input
+                    value={targetAccount}
+                    onChange={(e) => setTargetAccount(e.target.value)}
+                    placeholder="VD: 123456789"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-sky-400"
+                  />
+                  <p className="mt-1.5 text-[11px] text-amber-600">
+                    ⓘ Liên Quân Mobile hiện chưa hỗ trợ tự động tra cứu tên/ảnh (VNG không có API công khai). Vui lòng nhập chính xác ID.
                   </p>
                 </div>
               )}
