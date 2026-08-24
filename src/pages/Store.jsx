@@ -9,7 +9,7 @@ import BottomNav from "../components/BottomNav.jsx";
 export default function Store() {
   const navigate = useNavigate();
   const { session } = useSession();
-  const { profile } = useProfile();
+  const { profile, setProfile } = useProfile();
   const [toast, setToast] = useState(null);
   const [shopTab, setShopTab] = useState("robux");
   const [version, setVersion] = useState("vng");
@@ -62,7 +62,7 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 1. Tạo đơn hàng TRƯỚC (Nếu lỗi thì dừng)
+    // 1. Tạo đơn hàng
     const { error } = await supabase.from("redemption_orders").insert({
       user_id: session.user.id,
       package_name: selectedPkg.name,
@@ -78,26 +78,20 @@ export default function Store() {
       return;
     }
 
-    // 2. Trừ Coin SAU (Chỉ trừ khi đơn tạo thành công)
-    const { error: deductError } = await supabase
-      .from("profiles")
-      .update({ coins: profile.coins - selectedPkg.coin_cost })
-      .eq("id", session.user.id);
+    // 2. Cập nhật số dư trong Profile (Trực tiếp)
+    await setProfile((prev) => ({ ...prev, coins: prev.coins - selectedPkg.coin_cost }));
 
-    if (deductError) {
-      setToast({ message: "Lỗi trừ Coin: " + deductError.message, type: "error" });
-      setIsRedeeming(false);
-      return;
-    }
-
+    // 3. Cập nhật lịch sử
+    const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
+    setHistory(newOrders ?? []);
+    
     setIsRedeeming(false);
     setSelectedPkg(null);
     setDeliveryInfo("");
     setDeliveryMethod("username");
     setToast({ message: "Đơn hàng đã được tạo thành công! Admin sẽ duyệt đơn trong vòng ít phút.", type: "success" });
     
-    const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
-    setHistory(newOrders ?? []);
+    // Cuối cùng gọi reload để cập nhật lại tất cả
     window.location.reload();
   };
 
@@ -118,6 +112,7 @@ export default function Store() {
       `}</style>
 
       <main className="mx-auto max-w-md px-4 py-5">
+        {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             <Gift size={12} /> TRUNG TÂM ĐỔI THƯỞNG
@@ -329,4 +324,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-    }
+}
