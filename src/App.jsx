@@ -12,8 +12,6 @@ import Admin from "./pages/Admin.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
-import Marketing from "./pages/Marketing.jsx";
-import MarketingWallet from "./pages/MarketingWallet.jsx";
 import Invite from "./pages/Invite.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
