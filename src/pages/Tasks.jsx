@@ -1,5 +1,5 @@
 import Footer from "../components/Footer.jsx";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -17,6 +17,7 @@ import {
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import useTasks from "../hooks/useTasks.js";
+import useFraud from "../hooks/useFraud.js"; // 👈 Import hook fraud
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { supabase } from "../lib/supabaseClient.js";
@@ -46,9 +47,23 @@ export default function Tasks() {
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const { tasks, loading, reload } = useTasks(user?.id);
+  const { risk, checkTask, logAction } = useFraud(user?.id); // 👈 Hook fraud
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
+  const [fraudBlocked, setFraudBlocked] = useState(false);
+
+  // Kiểm tra fraud khi vào trang
+  useEffect(() => {
+    if (user?.id) {
+      checkTask().then(result => {
+        if (!result.allowed) {
+          setFraudBlocked(true);
+          logAction('task_view', 'blocked', { reason: result.reason });
+        }
+      });
+    }
+  }, [user?.id]);
 
   const displayName =
     profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
@@ -64,6 +79,28 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
+    if (!user?.id) {
+      alert("Vui lòng đăng nhập để làm nhiệm vụ!");
+      return;
+    }
+
+    // 👉 FRAUD CHECK trước khi làm task
+    const fraudCheck = await checkTask();
+    if (!fraudCheck.allowed) {
+      await logAction('task_start', 'blocked', { 
+        task_id: task.id, 
+        reason: fraudCheck.reason,
+        risk: fraudCheck.risk 
+      });
+      alert(`⚠️ ${fraudCheck.reason}`);
+      return;
+    }
+
+    if (risk?.level === 'danger') {
+      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên hệ hỗ trợ!");
+      return;
+    }
+
     setStartingTaskId(task.id);
     const { data, error } = await supabase.functions.invoke("start-task", {
       body: { task_id: task.id },
@@ -71,14 +108,12 @@ export default function Tasks() {
     setStartingTaskId(null);
 
     if (error) {
-      // supabase-js không tự đọc nội dung JSON khi function trả về lỗi (4xx/5xx),
-      // phải tự đọc từ error.context (Response gốc) để lấy đúng thông báo lỗi thật.
       let message = error.message;
       try {
         const body = await error.context.json();
         if (body?.error) message = body.error;
       } catch {
-        // giữ nguyên error.message nếu không đọc được JSON
+        // giữ nguyên
       }
       alert(message);
       return;
@@ -89,9 +124,13 @@ export default function Tasks() {
       return;
     }
 
+    // Log thành công
+    await logAction('task_start', 'success', { 
+      task_id: task.id,
+      provider: task.provider 
+    });
+
     window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-    // Số liệu sẽ tự làm mới khi bạn quay lại tab này (useTasks lắng nghe sự
-    // kiện focus/visibilitychange), không cần gọi reload() ngay lúc này.
   };
 
   return (
@@ -153,6 +192,19 @@ export default function Tasks() {
             </div>
           </div>
 
+          {/* 👉 Risk Badge */}
+          {risk && (
+            <div className={`mt-3 rounded-xl px-3 py-2 text-xs font-semibold ${
+              risk.level === 'safe' ? 'bg-emerald-100 text-emerald-700' :
+              risk.level === 'warning' ? 'bg-amber-100 text-amber-700' : 
+              'bg-rose-100 text-rose-700'
+            }`}>
+              {risk.level === 'safe' ? '✅' : risk.level === 'warning' ? '⚠️' : '🚫'} 
+              Rủi ro: {risk.score}/100
+              {risk.level === 'danger' && ' — Tài khoản bị hạn chế làm nhiệm vụ'}
+            </div>
+          )}
+
           <div className="mt-4 grid grid-cols-2 gap-2.5">
             <MiniStat
               value={availableCount}
@@ -200,6 +252,14 @@ export default function Tasks() {
           />
         </div>
 
+        {/* Fraud blocked banner */}
+        {fraudBlocked && (
+          <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4 text-center">
+            <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
+            <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
+          </div>
+        )}
+
         {/* TASK LIST */}
         {loading && <p className="py-8 text-center text-sm text-slate-400">Đang tải nhiệm vụ...</p>}
 
@@ -214,6 +274,8 @@ export default function Tasks() {
               Math.round((task.completedToday / task.daily_limit) * 100)
             );
             const isDone = task.remainingToday <= 0;
+            const isBlocked = fraudBlocked || risk?.level === 'danger';
+            
             return (
               <div
                 key={task.id}
@@ -275,11 +337,13 @@ export default function Tasks() {
 
                   <button
                     onClick={() => handleStart(task)}
-                    disabled={isDone || startingTaskId === task.id}
+                    disabled={isDone || startingTaskId === task.id || isBlocked}
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ExternalLink size={15} />
-                    {isDone
+                    {isBlocked
+                      ? "🚫 Tài khoản bị khóa"
+                      : isDone
                       ? "Đã hết lượt hôm nay"
                       : startingTaskId === task.id
                       ? "Đang mở..."
@@ -291,9 +355,6 @@ export default function Tasks() {
           })}
         </div>
       </main>
-<Footer />
-<BottomNav />
-      <BottomNav />
 
       <Sidebar
         open={sidebarOpen}
@@ -305,4 +366,4 @@ export default function Tasks() {
       />
     </div>
   );
-      }
+              }
