@@ -96,7 +96,7 @@ export default function Store() {
       `}</style>
 
       <main className="mx-auto max-w-md px-4 py-5">
-        {/* HERO GIỚI THIỆU (Pastel, giống ảnh 2) */}
+        {/* HERO GIỚI THIỆU (Pastel) */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 shadow-sm"><Gift size={16} /></span>
@@ -115,7 +115,6 @@ export default function Store() {
             <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm"><Trophy size={12} /> Giá tốt nhất</span>
           </div>
 
-          {/* SỐ DƯ */}
           <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500"><Wallet size={24} /></span>
             <div>
@@ -143,37 +142,93 @@ export default function Store() {
           </div>
         )}
 
-        {/* DANH SÁCH GÓI */}
-        <div className="mt-6">
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói</h2>
-          <div className="space-y-4">
-            {loading ? (
-              <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
-            ) : filteredPackages.length === 0 ? (
-              <div className="py-8 text-center text-sm text-slate-400">Chưa có gói nào cho loại này.</div>
-            ) : filteredPackages.map((pkg) => (
-              <div key={pkg.id} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-500">
-                      {shopTab === "robux" ? <Gamepad2 size={20} /> : <Swords size={20} />}
-                    </span>
-                    <div>
-                      <p className="font-bold text-slate-900">{pkg.name}</p>
-                      <p className="text-xs text-slate-400">{pkg.version === "vng" ? "Nạp trực tiếp" : pkg.version === "quocTe" ? "Nhận mã" : "Nạp trực tiếp"}</p>
+        {/* DANH SÁCH GÓI ROBUX - DẠNG CARD TRUNG TÂM */}
+        {shopTab === "robux" && (
+          <div className="mt-6">
+            <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Robux</h2>
+            <div className="space-y-6">
+              {loading ? (
+                <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
+              ) : filteredPackages.length === 0 ? (
+                <div className="py-8 text-center text-sm text-slate-400">Chưa có gói nào cho loại này.</div>
+              ) : filteredPackages.map((pkg) => {
+                // Tính phần trăm giảm giá
+                const originalPrice = pkg.original_price_text ? parseInt(pkg.original_price_text.replace(/\D/g, "")) : 0;
+                const discount = originalPrice > 0 ? Math.round((1 - (pkg.coin_cost / originalPrice)) * 100) : 0;
+                
+                return (
+                  <div key={pkg.id} className="relative rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-sm transition hover:shadow-md">
+                    {/* Badge giảm giá */}
+                    {discount > 0 && (
+                      <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-orange-400 to-red-500 px-2.5 py-1 text-xs font-bold text-white">
+                        -{discount}%
+                      </span>
+                    )}
+                    
+                    {/* Icon Robux */}
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center">
+                      {version === "quocTe" ? (
+                        <Gamepad2 size={48} className="text-orange-500" />
+                      ) : (
+                        <Gamepad2 size={48} className="text-purple-500" />
+                      )}
+                    </div>
+                    
+                    <p className="mt-4 text-sm font-medium text-slate-500">{pkg.name}</p>
+                    <div className="mt-2">
+                      <p className="text-4xl font-bold text-slate-900">{pkg.coin_cost}</p>
+                      <p className="text-xs text-slate-400">Coin</p>
+                    </div>
+                    
+                    {/* Gạch ngang giá gốc */}
+                    {originalPrice > 0 && (
+                      <p className="mt-2 text-xs text-slate-400 line-through">{originalPrice.toLocaleString()}đ</p>
+                    )}
+                    
+                    <button 
+                      onClick={() => setSelectedPkg(pkg)} 
+                      className="mt-6 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25"
+                    >
+                      Đổi ngay
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* DANH SÁCH GÓI QUÂN HUY - DẠNG CARD ĐƠN GIẢN */}
+        {shopTab === "quanHuy" && (
+          <div className="mt-6">
+            <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Quân Huy</h2>
+            <div className="space-y-4">
+              {loading ? (
+                <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
+              ) : filteredPackages.length === 0 ? (
+                <div className="py-8 text-center text-sm text-slate-400">Chưa có gói nào cho loại này.</div>
+              ) : filteredPackages.map((pkg) => (
+                <div key={pkg.id} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Swords size={24} /></span>
+                      <div>
+                        <p className="font-bold text-slate-900">{pkg.name}</p>
+                        <p className="text-xs text-slate-400">Nạp trực tiếp</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-amber-500">{pkg.coin_cost} <span className="text-xs text-slate-400">Coin</span></p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-amber-500">{pkg.coin_cost} <span className="text-xs text-slate-400">Coin</span></p>
-                  </div>
+                  <button onClick={() => setSelectedPkg(pkg)} className="mt-4 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
+                    Đổi ngay
+                  </button>
                 </div>
-                <button onClick={() => setSelectedPkg(pkg)} className="mt-4 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
-                  Đổi ngay
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* MODAL XÁC NHẬN ĐỔI */}
         {selectedPkg && (
@@ -264,4 +319,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-      }
+    }
