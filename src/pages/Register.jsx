@@ -4,6 +4,7 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, MailCheck, Gift } f
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+import { generateFingerprint, getPublicIP } from "../lib/fraud/fingerprint.js";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -12,6 +13,19 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmSent, setConfirmSent] = useState(false);
+  const [fingerprint, setFingerprint] = useState(null);
+  const [ip, setIp] = useState(null);
+
+  // Khởi tạo fingerprint khi component mount
+  React.useEffect(() => {
+    const initFingerprint = async () => {
+      const fp = await generateFingerprint();
+      setFingerprint(fp);
+      const publicIP = await getPublicIP();
+      setIp(publicIP);
+    };
+    initFingerprint();
+  }, []);
 
   const generateReferralCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -37,13 +51,16 @@ export default function Register() {
 
     const newReferralCode = generateReferralCode();
 
+    // 1. Đăng ký user
     const { data, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: { 
         data: { 
           username: form.username,
-          referral_code: newReferralCode
+          referral_code: newReferralCode,
+          device_id: fingerprint?.deviceId || null,
+          fingerprint: fingerprint?.fingerprint || null
         } 
       },
     });
@@ -54,12 +71,29 @@ export default function Register() {
       return;
     }
 
-    // Lưu mã giới thiệu vào bảng profiles
-    if (data.user) {
-      await supabase.from("profiles").update({ referral_code: newReferralCode }).eq("id", data.user.id);
+    if (!data.user) {
+      setError("Đăng ký thất bại, vui lòng thử lại.");
+      return;
     }
 
-    // Xử lý mã giới thiệu (nếu user nhập mã) - Đây là lúc cộng 200 điểm + 15%
+    // 2. Lưu fingerprint vào bảng devices
+    if (fingerprint) {
+      await supabase.from("devices").insert({
+        user_id: data.user.id,
+        device_id: fingerprint.deviceId,
+        fingerprint: fingerprint.fingerprint,
+        fingerprint_components: fingerprint.components,
+        ip: ip || null,
+        user_agent: navigator.userAgent
+      });
+    }
+
+    // 3. Cập nhật referral_code vào profiles
+    await supabase.from("profiles").update({ 
+      referral_code: newReferralCode 
+    }).eq("id", data.user.id);
+
+    // 4. Xử lý mã giới thiệu
     if (form.referralCode && data.user) {
       const { data: referrer } = await supabase
         .from("profiles")
@@ -68,20 +102,30 @@ export default function Register() {
         .single();
 
       if (referrer) {
-        // 1. Lưu lịch sử giới thiệu vào bảng referrals
         await supabase.from("referrals").insert({
           referrer_id: referrer.id,
           referred_id: data.user.id,
           code: form.referralCode.toUpperCase(),
         });
 
-        // 2. Cộng 200 coin cho NGƯỜI ĐƯỢC GIỚI THIỆU (user vừa đăng ký)
         await supabase.from("profiles").update({ coins: 200 }).eq("id", data.user.id);
-
-        // 3. Cộng THƯỞNG cho CHỦ MÃ (15% của 200 = 30 coin)
         await supabase.from("profiles").update({ coins: referrer.coins + 30 }).eq("id", referrer.id);
       }
     }
+
+    // 5. Log đăng ký
+    await supabase.from("fraud_logs").insert({
+      user_id: data.user.id,
+      action: "register",
+      result: "success",
+      device_id: fingerprint?.deviceId || null,
+      fingerprint: fingerprint?.fingerprint || null,
+      ip: ip || null,
+      metadata: {
+        username: form.username,
+        has_referral: !!form.referralCode
+      }
+    });
 
     if (data.session) {
       navigate("/dashboard");
@@ -209,4 +253,4 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-        }
+      }
