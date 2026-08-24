@@ -62,11 +62,11 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 1. Trừ Coin (Gọi RPC an toàn)
-    const { error: deductError } = await supabase.rpc("deduct_coins", {
-      p_user_id: session.user.id,
-      p_amount: selectedPkg.coin_cost
-    });
+    // 1. Trừ Coin trực tiếp (Cách đơn giản)
+    const { error: deductError } = await supabase
+      .from("profiles")
+      .update({ coins: profile.coins - selectedPkg.coin_cost })
+      .eq("id", session.user.id);
 
     if (deductError) {
       setToast({ message: "Lỗi trừ Coin: " + deductError.message, type: "error" });
@@ -97,7 +97,7 @@ export default function Store() {
     
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
-    window.location.reload(); // Reload để cập nhật số dư Coin trên giao diện
+    window.location.reload(); // Reload để cập nhật số dư Coin
   };
 
   const getStatus = (status) => {
@@ -349,4 +349,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-      }
+              }
