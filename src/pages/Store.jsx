@@ -3,7 +3,7 @@ import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, S
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useFraud from "../hooks/useFraud.js"; // 👈 Import hook fraud
+import useFraud from "../hooks/useFraud.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
@@ -11,7 +11,7 @@ export default function Store() {
   const navigate = useNavigate();
   const { session } = useSession();
   const { profile, setProfile } = useProfile();
-  const { risk, checkRedeem, logAction } = useFraud(session?.user?.id); // 👈 Hook fraud
+  const { risk, checkRedeem, logAction } = useFraud(session?.user?.id);
   const [toast, setToast] = useState(null);
   const [shopTab, setShopTab] = useState("robux");
   const [version, setVersion] = useState("vng");
@@ -37,7 +37,6 @@ export default function Store() {
     fetchData();
   }, [session]);
 
-  // Lọc gói theo tab
   const filteredPackages = packages.filter(pkg => {
     const name = pkg.name.toLowerCase();
     if (shopTab === "quanHuy") return name.includes("quân huy") || name.includes("qh");
@@ -63,7 +62,6 @@ export default function Store() {
       return;
     }
 
-    // 👉 FRAUD CHECK: Kiểm tra trước khi đổi
     const fraudCheck = await checkRedeem();
     if (!fraudCheck.allowed) {
       await logAction('redeem', 'blocked', { 
@@ -75,7 +73,6 @@ export default function Store() {
       return;
     }
 
-    // Kiểm tra risk level
     if (risk?.level === 'danger') {
       setToast({ 
         message: "⚠️ Tài khoản có dấu hiệu bất thường, vui lòng liên hệ hỗ trợ!", 
@@ -91,7 +88,6 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 1. Tạo đơn hàng
     const { data: order, error } = await supabase.from("redemption_orders").insert({
       user_id: session.user.id,
       package_name: selectedPkg.name,
@@ -99,7 +95,7 @@ export default function Store() {
       delivery_method: deliveryMethod,
       delivery_target: deliveryInfo.trim(),
       status: "pending",
-      risk_score: risk?.score || 0, // 👈 Lưu risk score vào đơn hàng
+      risk_score: risk?.score || 0,
     }).select().single();
 
     if (error) {
@@ -108,17 +104,14 @@ export default function Store() {
       return;
     }
 
-    // 2. Cập nhật số dư
     await setProfile((prev) => ({ ...prev, coins: prev.coins - selectedPkg.coin_cost }));
 
-    // 3. Log fraud
     await logAction('redeem', 'success', {
       package: selectedPkg.name,
       order_id: order.id,
       risk: risk?.score
     });
 
-    // 4. Cập nhật lịch sử
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
     
@@ -154,7 +147,6 @@ export default function Store() {
           <h1 className="font-display mt-3 text-3xl font-bold leading-tight text-slate-900">Đổi Coin lấy quà game cực dễ</h1>
           <p className="mt-2 text-sm text-slate-500">Robux Roblox · Kim Cương Free Fire · Quân Huy Liên Quân — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
           
-          {/* 👉 Risk Badge */}
           {risk && (
             <div className={`mt-3 rounded-2xl p-3 text-sm ${
               risk.level === 'safe' ? 'bg-emerald-100 text-emerald-700' :
@@ -183,7 +175,6 @@ export default function Store() {
           </div>
         </div>
 
-        {/* Toast message */}
         {toast && (
           <div className={`mt-4 rounded-2xl p-4 ${
             toast.type === 'success' ? 'bg-emerald-50 border border-emerald-200' :
@@ -216,7 +207,7 @@ export default function Store() {
           </div>
         )}
 
-        {/* DANH SÁCH GÓI - giữ nguyên */}
+        {/* DANH SÁCH GÓI ROBUX */}
         {shopTab === "robux" && (
           <div className="mt-6">
             <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói</h2>
@@ -269,7 +260,7 @@ export default function Store() {
           </div>
         )}
 
-        {/* DANH SÁCH GÓI QUÂN HUY - giữ nguyên */}
+        {/* DANH SÁCH GÓI QUÂN HUY */}
         {shopTab === "quanHuy" && (
           <div className="mt-6">
             <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Quân Huy</h2>
@@ -305,7 +296,7 @@ export default function Store() {
           </div>
         )}
 
-        {/* FORM ĐẶT HÀNG CHI TIẾT - giữ nguyên */}
+        {/* FORM ĐẶT HÀNG CHI TIẾT */}
         {selectedPkg && (
           <div className="mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-slate-900">Thông tin giao hàng</h2>
@@ -353,7 +344,7 @@ export default function Store() {
           </div>
         )}
 
-        {/* LỊCH SỬ ĐỔI THƯỞNG - giữ nguyên */}
+        {/* LỊCH SỬ ĐỔI THƯỞNG */}
         <div className="mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-slate-900">Lịch sử đổi thưởng</h2>
           <div className="space-y-3">
@@ -372,4 +363,7 @@ export default function Store() {
                   </div>
                   <p className="mt-1 text-xs text-slate-400">Mã đơn: <span className="font-bold text-slate-600">#{String(order.id).slice(0, 8)}</span></p>
                   <p className="mt-1 text-xs text-slate-400">Ngày: {new Date(order.created_at).toLocaleString("vi-VN")}</p>
-           
+                  <p className="mt-1 text-xs text-slate-400">Phương thức: {order.delivery_method || "Nạp thẳng"}</p>
+                  <p className="mt-1 text-xs text-slate-400">Thông tin nhận: {order.delivery_target || order.target_username || "—"}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="font-bold text-amb          
