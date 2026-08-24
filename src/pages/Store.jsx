@@ -62,7 +62,7 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // 1. Trừ Coin trực tiếp (An toàn, không cần RPC)
+    // 1. Trừ Coin trực tiếp (KHÔNG dùng RPC)
     const { error: deductError } = await supabase
       .from("profiles")
       .update({ coins: profile.coins - selectedPkg.coin_cost })
@@ -74,7 +74,7 @@ export default function Store() {
       return;
     }
 
-    // 2. Tạo đơn hàng
+    // 2. Tạo đơn hàng (KIỂM TRA RLS - Nếu không được thì báo lỗi)
     const { error } = await supabase.from("redemption_orders").insert({
       user_id: session.user.id,
       package_name: selectedPkg.name,
@@ -347,4 +347,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-                                                                                                                                                                                         }
+      }
