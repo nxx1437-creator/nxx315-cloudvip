@@ -1,4 +1,5 @@
- import React, { useMemo, useState } from "react";
+import Footer from "../components/Footer.jsx";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -290,7 +291,8 @@ export default function Tasks() {
           })}
         </div>
       </main>
-
+<Footer />
+<BottomNav />
       <BottomNav />
 
       <Sidebar
