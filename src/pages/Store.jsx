@@ -110,3 +110,57 @@ export default function Store() {
             </button>
           ))}
         </div>
+{mainTab === "robux" && (
+          <div className="mt-3 flex gap-2">
+            {[
+              { key: "VNG", label: "🇻🇳 VNG" },
+              { key: "QUOC_TE", label: "🌎 Quốc tế" },
+            ].map((t) => (
+              <button
+                key={t.key}
+                onClick={() => { setSubTab(t.key); setSelectedId(null); }}
+                className={`flex-1 rounded-full py-2 text-sm font-semibold transition ${
+                  subTab === t.key ? "bg-sky-100 text-sky-700 border border-sky-300" : "bg-white text-slate-400 border border-slate-100"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 space-y-3">
+          {visiblePackages.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-sky-200 bg-white p-6 text-center text-sm text-slate-400">
+              Chưa có gói nào trong mục này.
+            </p>
+          ) : (
+            visiblePackages.map((pkg) => (
+              <button
+                key={pkg.id}
+                onClick={() => handleSelect(pkg)}
+                className={`flex w-full items-center gap-3.5 rounded-2xl p-4 text-left transition ${
+                  selectedId === pkg.id
+                    ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg"
+                    : "border border-sky-100 bg-white text-slate-900"
+                }`}
+              >
+                <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${selectedId === pkg.id ? "bg-white/20" : "bg-sky-50"}`}>
+                  {mainTab === "robux" ? <Gamepad2 size={20} className={selectedId === pkg.id ? "text-white" : "text-sky-500"} /> : <Swords size={20} className={selectedId === pkg.id ? "text-white" : "text-sky-500"} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">{pkg.name}</p>
+                  <p className={`text-xs ${selectedId === pkg.id ? "text-white/80" : "text-slate-400"}`}>
+                    {pkg.coin_cost.toLocaleString("vi-VN")} Coin
+                    {pkg.original_price_text && ` • Giá gốc ${pkg.original_price_text}`}
+                  </p>
+                </div>
+                {selectedId === pkg.id && (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+                    <Check size={14} />
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
