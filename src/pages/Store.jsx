@@ -729,3 +729,7 @@ export default function Store() {
                 className="group rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex items-center
+            <BottomNav />
+        </div>
+     );
+          }
