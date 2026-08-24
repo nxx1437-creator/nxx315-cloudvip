@@ -62,6 +62,7 @@ export default function Store() {
 
     setIsRedeeming(true);
 
+    // Tạo đơn hàng TRƯỚC
     const { error } = await supabase.from("redemption_orders").insert({
       user_id: session.user.id,
       package_name: selectedPkg.name,
@@ -77,6 +78,7 @@ export default function Store() {
       return;
     }
 
+    // Trừ Coin SAU
     const { error: deductError } = await supabase
       .from("profiles")
       .update({ coins: profile.coins - selectedPkg.coin_cost })
@@ -157,7 +159,7 @@ export default function Store() {
         {/* DANH SÁCH GÓI ROBUX */}
         {shopTab === "robux" && (
           <div className="mt-6">
-            <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Robux</h2>
+            <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói</h2>
             <div className="space-y-6">
               {loading ? (
                 <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
