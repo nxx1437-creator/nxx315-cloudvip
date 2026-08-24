@@ -196,7 +196,12 @@ export default function Store() {
             ))
           )}
         </div>
-{selectedPkg.category === "robux" && (
+    {selectedPkg && (
+          <div className="mt-6 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-slate-900">Thông tin nhận {selectedPkg.name}</h2>
+
+            <div className="mt-4 space-y-3">
+              {selectedPkg.category === "robux" && (
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-slate-500">Tài khoản Roblox</label>
                   <div className="flex gap-2">
@@ -247,6 +252,64 @@ export default function Store() {
                   </p>
                 </div>
               )}
+
+              {selectedPkg.category === "robux" && selectedPkg.version === "QUOC_TE" && (
+                <>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-500">Phương thức nhận</label>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => { setReceiveMethod("discord"); setContactValue(""); }}
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-semibold transition ${
+                          receiveMethod === "discord" ? "border-sky-400 bg-sky-50 text-sky-700" : "border-slate-200 text-slate-500"
+                        }`}
+                      >
+                        <MessageCircle size={15} /> Discord
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setReceiveMethod("zalo"); setContactValue(""); }}
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-semibold transition ${
+                          receiveMethod === "zalo" ? "border-sky-400 bg-sky-50 text-sky-700" : "border-slate-200 text-slate-500"
+                        }`}
+                      >
+                        <Phone size={15} /> Zalo
+                      </button>
+                    </div>
+                  </div>
+
+                  {receiveMethod && (
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-500">
+                        {receiveMethod === "zalo" ? "Số Zalo" : "Discord của bạn"}
+                      </label>
+                      <input
+                        value={contactValue}
+                        onChange={(e) => setContactValue(e.target.value)}
+                        placeholder={receiveMethod === "zalo" ? "0xxxxxxxxx" : "@username"}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-sky-400"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {feedback && (
+              <p className={`mt-3 text-sm font-medium ${feedback.ok ? "text-emerald-600" : "text-rose-500"}`}>{feedback.message}</p>
+            )}
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-bold text-white shadow-lg disabled:opacity-60"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              Xác nhận đổi — trừ {selectedPkg.coin_cost.toLocaleString("vi-VN")} Coin
+            </button>
+          </div>
+        )}
 
               {selectedPkg.category === "quanhuy" && (
                 <div>
