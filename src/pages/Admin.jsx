@@ -62,6 +62,7 @@ function OrdersTab() {
   const [detailOrder, setDetailOrder] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [confirmModal, setConfirmModal] = useState(null);
   const [savingId, setSavingId] = useState(null);
 
   const fetchOrders = async () => {
@@ -78,8 +79,7 @@ function OrdersTab() {
     const matchSearch = search.trim() === "" ? true : (
       o.package_name?.toLowerCase().includes(search.trim().toLowerCase()) || 
       o.delivery_target?.toLowerCase().includes(search.trim().toLowerCase()) ||
-      String(o.id).toLowerCase().includes(search.trim().toLowerCase()) || // Tìm theo ID
-      String(o.user_id).toLowerCase().includes(search.trim().toLowerCase()) // Tìm theo User ID
+      String(o.id).toLowerCase().includes(search.trim().toLowerCase())
     );
     return matchFilter && matchSearch;
   });
@@ -88,12 +88,17 @@ function OrdersTab() {
   const deliveredCount = orders.filter(o => o.status === "delivered").length;
   const rejectedCount = orders.filter(o => o.status === "rejected").length;
 
-  const handleDelivered = async (order) => {
-    if (!confirm("Xác nhận giao hàng? Đơn sẽ chuyển sang Đã giao và không thể xử lý lại.")) return;
-    setSavingId(order.id);
-    const { error } = await supabase.from("redemption_orders").update({ status: "delivered", processed_at: new Date().toISOString() }).eq("id", order.id);
+  // ✅ Dùng update trực tiếp thay vì RPC
+  const handleDelivered = async () => {
+    if (!confirmModal) return;
+    setSavingId(confirmModal.id);
+    const { error } = await supabase.from("redemption_orders").update({
+      status: "delivered",
+      processed_at: new Date().toISOString()
+    }).eq("id", confirmModal.id);
     setSavingId(null);
     if (error) { alert(error.message); return; }
+    setConfirmModal(null);
     await fetchOrders();
   };
 
@@ -103,10 +108,11 @@ function OrdersTab() {
       return;
     }
     setSavingId(rejectModal.id);
-    const { error } = await supabase.rpc("refund_order_points", {
-      p_order_id: rejectModal.id,
-      p_reason: rejectReason.trim()
-    });
+    const { error } = await supabase.from("redemption_orders").update({
+      status: "rejected",
+      admin_note: rejectReason.trim(),
+      processed_at: new Date().toISOString()
+    }).eq("id", rejectModal.id);
     setSavingId(null);
     if (error) { alert(error.message); return; }
     setRejectModal(null);
@@ -162,7 +168,7 @@ function OrdersTab() {
               <button onClick={() => setDetailOrder(order)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600"><Eye size={14} className="inline mr-1" /> Xem chi tiết</button>
               {order.status === "pending" && (
                 <>
-                  <button onClick={() => handleDelivered(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                  <button onClick={() => setConfirmModal(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
                     <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
                   </button>
                   <button onClick={() => setRejectModal(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
@@ -203,6 +209,21 @@ function OrdersTab() {
         </div>
       )}
 
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-slate-900">Xác nhận giao hàng?</h2>
+            <p className="mt-2 text-sm text-slate-500">Sau khi xác nhận, đơn sẽ chuyển sang Đã giao và không thể xử lý lại.</p>
+            <div className="mt-6 flex gap-3">
+              <button onClick={() => setConfirmModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
+              <button onClick={handleDelivered} disabled={savingId === confirmModal.id} className="flex-1 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-white disabled:opacity-50">
+                {savingId === confirmModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Xác nhận đã giao"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
@@ -221,28 +242,24 @@ function OrdersTab() {
     </div>
   );
 }
-/* ===== SUPPORT TAB ===== */
+
+/* ===== CÁC TAB KHÁC ===== */
 function SupportTab() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const fetchTickets = async () => {
     setLoading(true);
     const { data } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false });
     setTickets(data ?? []);
     setLoading(false);
   };
-
   useEffect(() => { fetchTickets(); }, []);
-
   const handleResolve = async (ticket) => {
     await supabase.from("support_tickets").update({ status: "resolved" }).eq("id", ticket.id);
     await fetchTickets();
   };
-
   if (loading) return <Loading text="Loading tickets..." />;
   if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
-
   return (
     <div className="space-y-4">
       <SectionHeader title="Yêu cầu hỗ trợ" count={`${tickets.length} Yêu cầu`} onRefresh={fetchTickets} />
@@ -263,33 +280,26 @@ function SupportTab() {
   );
 }
 
-/* ===== USERS TAB ===== */
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const fetchUsers = async () => {
     setLoading(true);
     const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
     setUsers(data ?? []);
     setLoading(false);
   };
-
   useEffect(() => { fetchUsers(); }, []);
-
   const handleBan = async (user) => {
     await supabase.from("profiles").update({ is_banned: true }).eq("id", user.id);
     await fetchUsers();
   };
-
   const handleUnban = async (user) => {
     await supabase.from("profiles").update({ is_banned: false }).eq("id", user.id);
     await fetchUsers();
   };
-
   if (loading) return <Loading text="Loading users..." />;
   if (users.length === 0) return <EmptyState text="No users found." />;
-
   return (
     <div className="space-y-4">
       <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
@@ -310,9 +320,7 @@ function UsersTab() {
                 <td className="px-6 py-4 font-bold text-slate-900">{user.username || "Không tên"}</td>
                 <td className="px-6 py-4">Lv.{user.level}</td>
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
-                <td className="px-6 py-4">
-                  {user.is_banned ? <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span> : <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>}
-                </td>
+                <td className="px-6 py-4">{user.is_banned ? <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span> : <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>}</td>
                 <td className="px-6 py-4 text-right">
                   {user.is_banned ? <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button> : <button onClick={() => handleBan(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>}
                 </td>
@@ -325,22 +333,18 @@ function UsersTab() {
   );
 }
 
-/* ===== CÁC TAB KHÁC ===== */
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const fetchTasks = async () => {
     setLoading(true);
     const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
     setTasks(data ?? []);
     setLoading(false);
   };
-
   useEffect(() => { fetchTasks(); }, []);
   if (loading) return <Loading text="Loading tasks..." />;
   if (tasks.length === 0) return <EmptyState text="No tasks found." />;
-
   return (
     <div className="space-y-4">
       <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
@@ -356,48 +360,4 @@ function TasksTab() {
   );
 }
 
-function PackagesTab() {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchPackages = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
-    setPackages(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchPackages(); }, []);
-  if (loading) return <Loading text="Loading packages..." />;
-  if (packages.length === 0) return <EmptyState text="No packages found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Gói Robux" count={`${packages.length} Gói`} onRefresh={fetchPackages} />
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="font-bold text-slate-900">{pkg.name}</p>
-          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ===== SHARED ===== */
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div><h2 className="text-lg font-bold text-slate-900">{title}</h2><p className="text-sm text-slate-400">{count}</p></div>
-      <button onClick={onRefresh} className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600"><RefreshCw size={14} /> Refresh</button>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return <div className="py-12 text-center"><p className="text-sm text-slate-400">{text}</p></div>;
-}
-
-function Loading({ text }) {
-  return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-            }
+function Pack
