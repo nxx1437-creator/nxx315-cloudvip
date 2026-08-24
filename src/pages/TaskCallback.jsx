@@ -49,7 +49,7 @@ export default function TaskCallback() {
     let verifyData = null;
     let verifyErrorText = null;
     try {
-      const res = await fetch("https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/verify-recaptcha", {
+      const res = await fetch("https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/rapid-handler", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
