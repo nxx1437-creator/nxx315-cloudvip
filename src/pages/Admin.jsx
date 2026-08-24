@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
@@ -53,33 +53,40 @@ export default function Admin() {
   );
 }
 
-/* ===== ORDERS TAB (Đúng luồng, có modal từ chối) ===== */
+/* ===== ORDERS TAB ===== */
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState(null);
-  const [rejectModal, setRejectModal] = useState(null); // Đơn đang chọn để từ chối
+  const [filter, setFilter] = useState("all"); // all, pending, delivered, rejected
+  const [search, setSearch] = useState("");
+  const [detailOrder, setDetailOrder] = useState(null);
+  const [rejectModal, setRejectModal] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [savingId, setSavingId] = useState(null);
 
   const fetchOrders = async () => {
     setLoading(true);
     const { data } = await supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
-    // Chỉ hiển thị những đơn PENDING (chờ xử lý)
-    setOrders((data ?? []).filter(o => o.status === "pending"));
+    setOrders(data ?? []);
     setLoading(false);
   };
 
   useEffect(() => { fetchOrders(); }, []);
 
-  const handleDelivered = async (order) => {
-    setSavingId(order.id);
-    
-    // Cập nhật trạng thái trên Database
-    const { error } = await supabase.from("redemption_orders").update({
-      status: "delivered",
-      processed_at: new Date().toISOString()
-    }).eq("id", order.id);
+  const filteredOrders = orders.filter(o => {
+    const matchFilter = filter === "all" ? true : o.status === filter;
+    const matchSearch = search.trim() === "" ? true : (o.package_name?.toLowerCase().includes(search.trim().toLowerCase()) || o.delivery_target?.toLowerCase().includes(search.trim().toLowerCase()));
+    return matchFilter && matchSearch;
+  });
 
+  const pendingCount = orders.filter(o => o.status === "pending").length;
+  const deliveredCount = orders.filter(o => o.status === "delivered").length;
+  const rejectedCount = orders.filter(o => o.status === "rejected").length;
+
+  const handleDelivered = async (order) => {
+    if (!confirm("Xác nhận giao hàng? Đơn sẽ chuyển sang Đã giao và không thể xử lý lại.")) return;
+    setSavingId(order.id);
+    const { error } = await supabase.from("redemption_orders").update({ status: "delivered", processed_at: new Date().toISOString() }).eq("id", order.id);
     setSavingId(null);
     if (error) { alert(error.message); return; }
     await fetchOrders();
@@ -90,84 +97,125 @@ function OrdersTab() {
       alert("Vui lòng nhập lý do từ chối!");
       return;
     }
-
     setSavingId(rejectModal.id);
-    
-    // Gọi RPC an toàn để hoàn điểm (Không cho Frontend tự cộng)
     const { error } = await supabase.rpc("refund_order_points", {
       p_order_id: rejectModal.id,
       p_reason: rejectReason.trim()
     });
-
     setSavingId(null);
     if (error) { alert(error.message); return; }
-
     setRejectModal(null);
     setRejectReason("");
     await fetchOrders();
   };
 
   if (loading) return <Loading text="Loading orders..." />;
-  if (orders.length === 0) return <EmptyState text="Chưa có đơn hàng chờ xử lý." />;
 
   return (
-    <div className="space-y-4">
-      <SectionHeader title="Đơn hàng chờ xử lý" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
-      
-      {orders.map((order) => (
-        <div key={order.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-bold text-slate-900">Mã đơn: #{String(order.id).slice(0, 8)}</p>
-              <p className="mt-1 text-xs text-slate-400">User: {order.roblox_username || order.contact_value || "Không rõ"} • {new Date(order.created_at).toLocaleString("vi-VN")}</p>
-              <p className="mt-1 text-xs text-slate-400">Gói: {order.package_name}</p>
+    <div className="space-y-5">
+      <SectionHeader title="Đơn đổi thưởng" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
+
+      {/* Thống kê nhanh */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-2xl bg-amber-50 p-4 text-center"><p className="text-2xl font-bold text-amber-600">{pendingCount}</p><p className="text-xs text-amber-600">Chờ xử lý</p></div>
+        <div className="rounded-2xl bg-emerald-50 p-4 text-center"><p className="text-2xl font-bold text-emerald-600">{deliveredCount}</p><p className="text-xs text-emerald-600">Đã giao</p></div>
+        <div className="rounded-2xl bg-rose-50 p-4 text-center"><p className="text-2xl font-bold text-rose-600">{rejectedCount}</p><p className="text-xs text-rose-600">Từ chối</p></div>
+      </div>
+
+      {/* Tìm kiếm */}
+      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <Search size={16} className="text-slate-400" />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm mã đơn / username..." className="w-full bg-transparent text-sm outline-none" />
+      </div>
+
+      {/* Bộ lọc trạng thái */}
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {["all", "pending", "delivered", "rejected"].map((f) => (
+          <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-full text-xs font-semibold ${filter === f ? "bg-blue-500 text-white" : "bg-white text-slate-500"}`}>
+            {f === "all" ? "Tất cả" : f === "pending" ? "Chờ xử lý" : f === "delivered" ? "Đã giao" : "Từ chối"}
+          </button>
+        ))}
+      </div>
+
+      {/* Danh sách đơn */}
+      <div className="space-y-4">
+        {filteredOrders.length === 0 ? <EmptyState text="Không tìm thấy đơn hàng." /> : filteredOrders.map((order) => (
+          <div key={order.id} className={`rounded-2xl border p-5 shadow-sm ${order.status === "delivered" ? "bg-emerald-50/30 border-emerald-100" : order.status === "rejected" ? "bg-rose-50/30 border-rose-100" : "bg-white border-slate-200"}`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-bold text-slate-900">{order.package_name} • #{String(order.id).slice(0, 8)}</p>
+                <p className="mt-1 text-xs text-slate-400">Người dùng: {order.delivery_target || order.user_id}</p>
+                <p className="mt-1 text-xs text-slate-400">Ngày: {new Date(order.created_at).toLocaleString("vi-VN")}</p>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${order.status === "pending" ? "bg-amber-50 text-amber-600" : order.status === "delivered" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                {order.status === "pending" ? "Chờ xử lý" : order.status === "delivered" ? "Đã giao" : "Từ chối"}
+              </span>
             </div>
-            <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-600">Đang xử lý</span>
-          </div>
 
-          <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
-            <span className="text-sm font-bold text-slate-700">Số điểm đã trừ:</span>
-            <span className="text-lg font-bold text-amber-500">-{order.coins_charged} Coin</span>
-          </div>
+            {/* Thông tin nhận thưởng */}
+            <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm">
+              <p><span className="font-bold">Phương thức:</span> {order.delivery_method || "Nạp thẳng"}</p>
+              <p><span className="font-bold">Thông tin nhận:</span> {order.delivery_target || order.target_username || "—"}</p>
+            </div>
 
-          <div className="mt-4 flex gap-2">
-            <button 
-              onClick={() => handleDelivered(order)} 
-              disabled={savingId === order.id}
-              className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
-            >
-              <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
-            </button>
-            <button 
-              onClick={() => setRejectModal(order)} 
-              disabled={savingId === order.id}
-              className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50"
-            >
-              <XCircle size={14} className="inline mr-1" /> Từ chối
-            </button>
+            {/* Nút hành động */}
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => setDetailOrder(order)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600"><Eye size={14} className="inline mr-1" /> Xem chi tiết</button>
+              {order.status === "pending" && (
+                <>
+                  <button onClick={() => handleDelivered(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                    <CheckCircle2 size={14} className="inline mr-1" /> Đã giao
+                  </button>
+                  <button onClick={() => setRejectModal(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                    <XCircle size={14} className="inline mr-1" /> Từ chối
+                  </button>
+                </>
+              )}
+            </div>
+
+            {order.admin_note && <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs italic text-slate-500">Lý do: {order.admin_note}</p>}
+          </div>
+        ))}
+      </div>
+
+      {/* Modal Chi tiết đơn */}
+      {detailOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-slate-900">Đơn #{String(detailOrder.id).slice(0, 8)}</h2>
+            <p className="mt-1 text-sm text-slate-500">{detailOrder.package_name} • {detailOrder.coins_charged} Coin</p>
+            <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
+              <p><span className="font-bold">Người dùng:</span> {detailOrder.user_id}</p>
+              <p><span className="font-bold">Phương thức:</span> {detailOrder.delivery_method || "—"}</p>
+              <p><span className="font-bold">Thông tin nhận:</span> {detailOrder.delivery_target || "—"}</p>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-slate-700">Lịch sử xử lý</p>
+            <div className="mt-2 space-y-2 text-xs">
+              <p><span className="text-amber-500">🟡</span> {new Date(detailOrder.created_at).toLocaleString("vi-VN")} - Đơn được tạo</p>
+              {detailOrder.status === "delivered" && <p><span className="text-emerald-500">🟢</span> {new Date(detailOrder.processed_at).toLocaleString("vi-VN")} - Đã giao</p>}
+              {detailOrder.status === "rejected" && (
+                <>
+                  <p><span className="text-rose-500">🔴</span> {new Date(detailOrder.processed_at).toLocaleString("vi-VN")} - Bị từ chối</p>
+                  <p className="text-emerald-600">🪙 Hoàn {detailOrder.coins_charged} coin</p>
+                </>
+              )}
+            </div>
+            <button onClick={() => setDetailOrder(null)} className="mt-6 w-full rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Đóng</button>
           </div>
         </div>
-      ))}
+      )}
 
-      {/* Modal từ chối */}
+      {/* Modal Từ chối */}
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Từ chối đơn hàng</h2>
-            <p className="mt-2 text-sm text-slate-500">Vui lòng nhập lý do từ chối. Điểm sẽ được hoàn lại cho người dùng.</p>
-            
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              rows={3}
-              placeholder="Nhập ghi chú của admin..."
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400"
-            />
-
-            <div className="mt-5 flex gap-3">
+            <h2 className="text-lg font-bold text-slate-900">Từ chối đơn #{String(rejectModal.id).slice(0, 8)}</h2>
+            <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="Lý do từ chối..." className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+            <p className="mt-2 text-sm font-semibold text-emerald-600">💰 Coin sẽ được hoàn: {rejectModal.coins_charged} coin</p>
+            <div className="mt-6 flex gap-3">
               <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
-              <button onClick={() => handleReject()} disabled={savingId === rejectModal.id} className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white hover:bg-rose-600 disabled:opacity-50">
-                {savingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn điểm"}
+              <button onClick={handleReject} disabled={savingId === rejectModal.id} className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white disabled:opacity-50">
+                {savingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn coin"}
               </button>
             </div>
           </div>
@@ -206,20 +254,12 @@ function SupportTab() {
         <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${
-                ticket.status === "pending" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
-              }`}>
-                {ticket.status === "pending" ? "Chờ xử lý" : "Đã xử lý"}
-              </span>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${ticket.status === "pending" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>{ticket.status === "pending" ? "Chờ xử lý" : "Đã xử lý"}</span>
               <p className="mt-2 text-sm font-bold text-slate-900">{ticket.subject}</p>
               <p className="mt-1 text-sm text-slate-600">{ticket.message}</p>
               <p className="mt-1 text-xs text-slate-400">User ID: {ticket.user_id} • {new Date(ticket.created_at).toLocaleString("vi-VN")}</p>
             </div>
-            {ticket.status === "pending" && (
-              <button onClick={() => handleResolve(ticket)} className="shrink-0 rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-600">
-                Đã xử lý
-              </button>
-            )}
+            {ticket.status === "pending" && <button onClick={() => handleResolve(ticket)} className="shrink-0 rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white">Đã xử lý</button>}
           </div>
         </div>
       ))}
@@ -257,7 +297,6 @@ function UsersTab() {
   return (
     <div className="space-y-4">
       <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
-
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[800px] text-left text-sm">
           <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -276,22 +315,10 @@ function UsersTab() {
                 <td className="px-6 py-4">Lv.{user.level}</td>
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
                 <td className="px-6 py-4">
-                  {user.is_banned ? (
-                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
-                  ) : (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
-                  )}
+                  {user.is_banned ? <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span> : <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  {user.is_banned ? (
-                    <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white">
-                      <Undo2 size={12} className="inline mr-1" /> Mở khóa
-                    </button>
-                  ) : (
-                    <button onClick={() => handleBan(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white">
-                      <Ban size={12} className="inline mr-1" /> Ban
-                    </button>
-                  )}
+                  {user.is_banned ? <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button> : <button onClick={() => handleBan(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>}
                 </td>
               </tr>
             ))}
@@ -327,9 +354,6 @@ function TasksTab() {
             <span className="font-bold text-slate-900">{task.provider}</span>
             <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
           </div>
-          <div className="mt-2 flex gap-2">
-            <button onClick={() => alert("Chỉnh sửa cài đặt ở phiên bản cũ")} className="flex-1 rounded-full bg-blue-50 py-2 text-sm font-semibold text-blue-600">Cài đặt</button>
-          </div>
         </div>
       ))}
     </div>
@@ -357,30 +381,4 @@ function PackagesTab() {
       {packages.map((pkg) => (
         <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="font-bold text-slate-900">{pkg.name}</p>
-          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
-          <div className="mt-2 flex gap-2">
-            <button onClick={() => alert("Chỉnh sửa cài đặt ở phiên bản cũ")} className="flex-1 rounded-full bg-blue-50 py-2 text-sm font-semibold text-blue-600">Cài đặt</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ===== SHARED ===== */
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div><h2 className="text-lg font-bold text-slate-900">{title}</h2><p className="text-sm text-slate-400">{count}</p></div>
-      <button onClick={onRefresh} className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600"><RefreshCw size={14} /> Refresh</button>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return <div className="py-12 text-center"><p className="text-sm text-slate-400">{text}</p></div>;
-}
-
-function Loading({ text }) {
-  return <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-slate-400" /><span className="ml-2 text-sm text-slate-400">{text}</span></div>;
-          }
+  
