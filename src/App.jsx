@@ -23,117 +23,21 @@ import AdminRoute from "./components/AdminRoute.jsx";
 export default function App() {
   return (
     <Routes>
-
-      <Route
-        path="/"
-        element={<CloudVIPLanding />}
-      />
-
-      <Route
-        path="/login"
-        element={<Login />}
-      />
-
-      <Route
-        path="/register"
-        element={<Register />}
-      />
-
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/tasks"
-        element={
-          <ProtectedRoute>
-            <Tasks />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/store"
-        element={
-          <ProtectedRoute>
-            <Store />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/wallet"
-        element={
-          <ProtectedRoute>
-            <Wallet />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/marketing"
-        element={
-          <ProtectedRoute>
-            <Marketing />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/marketing-wallet"
-        element={
-          <ProtectedRoute>
-            <MarketingWallet />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/invite"
-        element={
-          <ProtectedRoute>
-            <Invite />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/task/callback"
-        element={
-          <ProtectedRoute>
-            <TaskCallback />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <Admin />
-          </AdminRoute>
-        }
-      />
-
-      <Route
-        path="*"
-        element={<NotFoundPage />}
-      />
-
+      <Route path="/" element={<CloudVIPLanding />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+      <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
+      <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
+      <Route path="/marketing-wallet" element={<ProtectedRoute><MarketingWallet /></ProtectedRoute>} />
+      <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
+      <Route path="/task/callback" element={<ProtectedRoute><TaskCallback /></ProtectedRoute>} />
+      <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
