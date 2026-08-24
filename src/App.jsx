@@ -9,6 +9,7 @@ import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
+import Marketing from "./pages/Marketing.jsx";
 import Admin from "./pages/Admin.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import Wallet from "./pages/Wallet.jsx";
