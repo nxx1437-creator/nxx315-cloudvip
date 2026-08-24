@@ -1,3 +1,4 @@
+import Footer from "../components/Footer.jsx";
 import React, { useState, useEffect } from "react";
 import {
   Coins, Gift, Loader2, TrendingUp, Zap, Trophy, CheckSquare, Users, Flame, ArrowRight,
@@ -303,7 +304,8 @@ export default function Dashboard() {
           </button>
         </div>
       </main>
-
+<Footer />
+<BottomNav />
       <BottomNav />
       <Sidebar
         open={sidebarOpen}
