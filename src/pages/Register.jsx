@@ -254,3 +254,34 @@ export default function Register() {
     </AuthShell>
   );
       }
+// Thêm vào sau khi tạo user
+const handleSubmit = async (e) => {
+  // ... existing code ...
+
+  // 🔥 KIỂM TRA CLUSTER TRƯỚC KHI CHO ĐĂNG KÝ
+  if (fingerprint) {
+    const existingDevices = await supabase
+      .from('devices')
+      .select('user_id, users!inner(username)')
+      .eq('fingerprint', fingerprint.fingerprint);
+    
+    if (existingDevices.data && existingDevices.data.length >= 5) {
+      setError(`⚠️ Phát hiện ${existingDevices.data.length} tài khoản trên thiết bị này. 
+                Vui lòng liên hệ hỗ trợ để được giải quyết.`);
+      setLoading(false);
+      return;
+    }
+
+    // Nếu có từ 3-4 account → cảnh báo
+    if (existingDevices.data && existingDevices.data.length >= 3) {
+      console.warn(`⚠️ Cảnh báo: ${existingDevices.data.length} accounts trên cùng thiết bị`);
+      // Có thể cho đăng ký nhưng đánh dấu suspicious
+      await supabase
+        .from('users')
+        .update({ risk_level: 'warning' })
+        .eq('id', data.user.id);
+    }
+  }
+
+  // ... tiếp tục code đăng ký ...
+};
