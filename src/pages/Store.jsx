@@ -55,47 +55,29 @@ export default function Store() {
       return;
     }
 
-    if (profile.coins < selectedPkg.coin_cost) {
-      setToast({ message: "Số dư không đủ! Vui lòng kiểm tra lại.", type: "error" });
-      return;
-    }
-
     setIsRedeeming(true);
 
-    // 1. Tạo đơn hàng TRƯỚC
-    const { error } = await supabase.from("redemption_orders").insert({
-      user_id: session.user.id,
-      package_name: selectedPkg.name,
-      coins_charged: selectedPkg.coin_cost,
-      delivery_method: deliveryMethod,
-      delivery_target: deliveryInfo.trim(),
-      status: "pending"
+    // GỌI RPC DUY NHẤT (Tạo đơn + Trừ coin) - KHÔNG LO LỖI RLS
+    const { data, error } = await supabase.rpc("create_redeem_order", {
+      p_user_id: session.user.id,
+      p_package_name: selectedPkg.name,
+      p_coin_cost: selectedPkg.coin_cost,
+      p_delivery_method: deliveryMethod,
+      p_delivery_target: deliveryInfo.trim()
     });
 
-    if (error) {
-      setToast({ message: "Lỗi tạo đơn: " + error.message, type: "error" });
-      setIsRedeeming(false);
-      return;
-    }
-
-    // 2. Trừ Coin SAU (chỉ khi đơn tạo thành công)
-    const { error: deductError } = await supabase
-      .from("profiles")
-      .update({ coins: profile.coins - selectedPkg.coin_cost })
-      .eq("id", session.user.id);
-
-    if (deductError) {
-      setToast({ message: "Lỗi trừ Coin: " + deductError.message, type: "error" });
-      setIsRedeeming(false);
-      return;
-    }
-
     setIsRedeeming(false);
+    if (error) {
+      setToast({ message: "Lỗi đặt hàng: " + error.message, type: "error" });
+      return;
+    }
+
     setSelectedPkg(null);
     setDeliveryInfo("");
     setDeliveryMethod("username");
-    setToast({ message: "Đã tạo đơn thành công! Coin đã được trừ.", type: "success" });
+    setToast({ message: "Đơn hàng đã được tạo thành công!", type: "success" });
     
+    // Cập nhật lại lịch sử
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
     window.location.reload();
@@ -330,4 +312,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-    }
+      }
