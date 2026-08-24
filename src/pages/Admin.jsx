@@ -75,7 +75,12 @@ function OrdersTab() {
 
   const filteredOrders = orders.filter(o => {
     const matchFilter = filter === "all" ? true : o.status === filter;
-    const matchSearch = search.trim() === "" ? true : (o.package_name?.toLowerCase().includes(search.trim().toLowerCase()) || o.delivery_target?.toLowerCase().includes(search.trim().toLowerCase()));
+    const matchSearch = search.trim() === "" ? true : (
+      o.package_name?.toLowerCase().includes(search.trim().toLowerCase()) || 
+      o.delivery_target?.toLowerCase().includes(search.trim().toLowerCase()) ||
+      String(o.id).toLowerCase().includes(search.trim().toLowerCase()) || // Tìm theo ID
+      String(o.user_id).toLowerCase().includes(search.trim().toLowerCase()) // Tìm theo User ID
+    );
     return matchFilter && matchSearch;
   });
 
