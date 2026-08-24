@@ -330,4 +330,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-            }
+  }
