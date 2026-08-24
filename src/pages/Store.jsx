@@ -18,7 +18,7 @@ export default function Store() {
   const [history, setHistory] = useState([]);
   
   const [selectedPkg, setSelectedPkg] = useState(null);
-  const [deliveryMethod, setDeliveryMethod] = useState("username"); // Mặc định là username
+  const [deliveryMethod, setDeliveryMethod] = useState("username");
   const [deliveryInfo, setDeliveryInfo] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
 
@@ -54,16 +54,15 @@ export default function Store() {
       setToast({ message: "Vui lòng nhập thông tin nhận thưởng!", type: "error" });
       return;
     }
-    
-    // Kiểm tra số dư trước khi trừ
+
     if (profile.coins < selectedPkg.coin_cost) {
       setToast({ message: "Số dư không đủ! Vui lòng kiểm tra lại.", type: "error" });
       return;
     }
 
     setIsRedeeming(true);
-    
-    // 1. Trừ coin (Gọi RPC an toàn, không cho frontend tự trừ)
+
+    // 1. Trừ Coin (Gọi RPC an toàn)
     const { error: deductError } = await supabase.rpc("deduct_coins", {
       p_user_id: session.user.id,
       p_amount: selectedPkg.coin_cost
@@ -96,34 +95,9 @@ export default function Store() {
     setDeliveryMethod("username");
     setToast({ message: "Đã tạo đơn thành công! Coin đã được trừ.", type: "success" });
     
-    // Lấy lại lịch sử và cập nhật số dư
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
     window.location.reload(); // Reload để cập nhật số dư Coin trên giao diện
-  };
-    
-    setIsRedeeming(true);
-    const { error } = await supabase.from("redemption_orders").insert({
-      user_id: session.user.id,
-      package_name: selectedPkg.name,
-      coins_charged: selectedPkg.coin_cost,
-      delivery_method: deliveryMethod,
-      delivery_target: deliveryInfo.trim(),
-      status: "pending"
-    });
-
-    setIsRedeeming(false);
-    if (error) {
-      setToast({ message: "Lỗi tạo đơn: " + error.message, type: "error" });
-      return;
-    }
-
-    setSelectedPkg(null);
-    setDeliveryInfo("");
-    setDeliveryMethod("username");
-    setToast({ message: "Đã tạo đơn thành công! Chờ admin xử lý.", type: "success" });
-    const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
-    setHistory(newOrders ?? []);
   };
 
   const getStatus = (status) => {
@@ -375,4 +349,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-    }
+      }
