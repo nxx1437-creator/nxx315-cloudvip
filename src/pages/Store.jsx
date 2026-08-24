@@ -11,25 +11,23 @@ export default function Store() {
   const { session } = useSession();
   const { profile } = useProfile();
   const [toast, setToast] = useState(null);
-  const [shopTab, setShopTab] = useState("robux"); // robux / quanHuy
-  const [version, setVersion] = useState("vng"); // vng / quocTe
+  const [shopTab, setShopTab] = useState("robux");
+  const [version, setVersion] = useState("vng");
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   
   const [selectedPkg, setSelectedPkg] = useState(null);
-  const [deliveryMethod, setDeliveryMethod] = useState(""); // discord / zalo / username / uid
+  const [deliveryMethod, setDeliveryMethod] = useState("");
   const [deliveryInfo, setDeliveryInfo] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!session?.user?.id) return;
-      // Lấy gói
       const { data: pkgData } = await supabase.from("redemption_packages").select("*").eq("active", true).order("sort_order", { ascending: true });
       setPackages(pkgData ?? []);
       
-      // Lấy lịch sử đổi thưởng
       const { data: orderData } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       setHistory(orderData ?? []);
       setLoading(false);
@@ -97,26 +95,32 @@ export default function Store() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
-      <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-4 backdrop-blur-md">
-        <h1 className="font-display text-xl font-bold text-slate-900">Cửa hàng</h1>
-        <p className="text-xs text-slate-500">Đổi coin lấy phần thưởng</p>
-      </header>
+      {/* HERO GIỚI THIỆU CỬA HÀNG */}
+      <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 pb-20 text-white">
+        <div className="mx-auto max-w-md px-4 pt-8 pb-8">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+            <Gift size={12} /> TRUNG TÂM ĐỔI THƯỞNG
+          </span>
+          <h1 className="font-display mt-4 text-3xl font-bold leading-tight">Cửa hàng</h1>
+          <p className="mt-2 text-sm text-white/80">Đổi Coin lấy phần thưởng. Nhanh chóng • Minh bạch • Theo dõi đơn hàng</p>
+        </div>
+      </div>
 
-      <main className="mx-auto max-w-md px-4 py-5">
-        {/* SỐ DƯ */}
-        <div className="mb-6 rounded-3xl bg-gradient-to-br from-sky-400 to-blue-600 p-6 text-white shadow-lg shadow-blue-500/30">
+      <main className="mx-auto max-w-md px-4">
+        {/* SỐ DƯ COIN */}
+        <div className="-mt-10 rounded-3xl bg-white p-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80">💰 Số dư của bạn</span>
-            <Coins size={20} className="text-amber-300" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">💰 Số dư của bạn</span>
+            <Coins size={20} className="text-amber-400" />
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="font-display text-4xl font-bold">{profile.coins}</span>
-            <span className="text-lg text-white/80">Coin</span>
+            <span className="font-display text-4xl font-bold text-slate-900">{profile.coins}</span>
+            <span className="text-lg font-medium text-slate-400">Coin</span>
           </div>
         </div>
 
         {/* TAB CHÍNH */}
-        <div className="mb-6 rounded-full bg-slate-100 p-1">
+        <div className="mt-6 rounded-full bg-slate-100 p-1">
           <div className="flex gap-2">
             <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>🎮 Robux</button>
             <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>⚔️ Quân Huy</button>
@@ -125,7 +129,7 @@ export default function Store() {
 
         {/* TAB PHỤ ROBUX */}
         {shopTab === "robux" && (
-          <div className="mb-6 rounded-full bg-slate-100 p-1">
+          <div className="mt-3 rounded-full bg-slate-100 p-1">
             <div className="flex gap-2">
               <button onClick={() => { setVersion("vng"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500"}`}>🇻🇳 VNG</button>
               <button onClick={() => { setVersion("quocTe"); setSelectedPkg(null); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "quocTe" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg" : "text-slate-500"}`}>🌎 Quốc tế</button>
@@ -134,7 +138,7 @@ export default function Store() {
         )}
 
         {/* DANH SÁCH GÓI */}
-        <div className="mb-6">
+        <div className="mt-6">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói</h2>
           <div className="space-y-4">
             {loading ? (
@@ -173,7 +177,6 @@ export default function Store() {
               <p className="mt-2 text-sm text-slate-500">Số coin cần: <span className="font-bold text-amber-500">{selectedPkg.coin_cost}</span></p>
               
               <div className="mt-4 space-y-3">
-                {/* VNG: Username Roblox */}
                 {shopTab === "robux" && version === "vng" && (
                   <>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tài khoản Roblox</p>
@@ -182,7 +185,6 @@ export default function Store() {
                   </>
                 )}
 
-                {/* Quốc tế: Discord / Zalo */}
                 {shopTab === "robux" && version === "quocTe" && (
                   <>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức nhận</p>
@@ -195,7 +197,6 @@ export default function Store() {
                   </>
                 )}
 
-                {/* Quân Huy: UID */}
                 {shopTab === "quanHuy" && (
                   <>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">ID tài khoản Liên Quân</p>
@@ -257,4 +258,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-            }
+                                                                                }
