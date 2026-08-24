@@ -118,7 +118,6 @@ export default function Store() {
       `}</style>
 
       <main className="mx-auto max-w-md px-4 py-5">
-        {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             <Gift size={12} /> TRUNG TÂM ĐỔI THƯỞNG
@@ -330,4 +329,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-        }
+    }
