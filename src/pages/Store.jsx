@@ -17,9 +17,8 @@ export default function Store() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   
-  // Trạng thái đặt hàng (Thay vì Modal, dùng Form chi tiết)
   const [selectedPkg, setSelectedPkg] = useState(null);
-  const [deliveryMethod, setDeliveryMethod] = useState(""); // discord / zalo / username / uid
+  const [deliveryMethod, setDeliveryMethod] = useState("username"); // Mặc định là username
   const [deliveryInfo, setDeliveryInfo] = useState("");
   const [isRedeeming, setIsRedeeming] = useState(false);
 
@@ -74,7 +73,7 @@ export default function Store() {
 
     setSelectedPkg(null);
     setDeliveryInfo("");
-    setDeliveryMethod("");
+    setDeliveryMethod("username");
     setToast({ message: "Đã tạo đơn thành công! Chờ admin xử lý.", type: "success" });
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
@@ -128,8 +127,8 @@ export default function Store() {
         {/* TAB CHÍNH */}
         <div className="mt-6 rounded-full bg-slate-100 p-1">
           <div className="flex gap-2">
-            <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>🎮 Robux</button>
-            <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>⚔️ Quân Huy</button>
+            <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); setDeliveryMethod("username"); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>🎮 Robux</button>
+            <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); setDeliveryMethod("uid"); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>⚔️ Quân Huy</button>
           </div>
         </div>
 
@@ -137,7 +136,7 @@ export default function Store() {
         {shopTab === "robux" && (
           <div className="mt-3 rounded-full bg-slate-100 p-1">
             <div className="flex gap-2">
-              <button onClick={() => { setVersion("vng"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500"}`}>🇻🇳 VNG</button>
+              <button onClick={() => { setVersion("vng"); setSelectedPkg(null); setDeliveryMethod("username"); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500"}`}>🇻🇳 VNG</button>
               <button onClick={() => { setVersion("quocTe"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "quocTe" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg" : "text-slate-500"}`}>🌎 Quốc tế</button>
             </div>
           </div>
@@ -179,7 +178,11 @@ export default function Store() {
                     )}
                     
                     <button 
-                      onClick={() => { setSelectedPkg(pkg); setDeliveryInfo(""); setDeliveryMethod(""); }} 
+                      onClick={() => { 
+                        setSelectedPkg(pkg); 
+                        setDeliveryInfo(""); 
+                        setDeliveryMethod(version === "vng" ? "username" : "");
+                      }} 
                       className="mt-6 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25"
                     >
                       Đổi ngay
@@ -214,7 +217,7 @@ export default function Store() {
                       <p className="text-lg font-bold text-amber-500">{pkg.coin_cost} <span className="text-xs text-slate-400">Coin</span></p>
                     </div>
                   </div>
-                  <button onClick={() => { setSelectedPkg(pkg); setDeliveryInfo(""); setDeliveryMethod(""); }} className="mt-4 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
+                  <button onClick={() => { setSelectedPkg(pkg); setDeliveryInfo(""); setDeliveryMethod("uid"); }} className="mt-4 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25">
                     Đổi ngay
                   </button>
                 </div>
@@ -299,6 +302,7 @@ export default function Store() {
                       <StatusIcon size={12} /> {statusConfig.label}
                     </span>
                   </div>
+                  <p className="mt-1 text-xs text-slate-400">Mã đơn: <span className="font-bold text-slate-600">#{String(order.id).slice(0, 8)}</span></p>
                   <p className="mt-1 text-xs text-slate-400">Ngày: {new Date(order.created_at).toLocaleString("vi-VN")}</p>
                   <p className="mt-1 text-xs text-slate-400">Phương thức: {order.delivery_method || "Nạp thẳng"}</p>
                   <p className="mt-1 text-xs text-slate-400">Thông tin nhận: {order.delivery_target || order.target_username || "—"}</p>
@@ -324,4 +328,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-      }
+    }
