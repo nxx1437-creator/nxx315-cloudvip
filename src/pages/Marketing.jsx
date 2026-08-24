@@ -13,7 +13,6 @@ export default function Marketing() {
   const [activeTab, setActiveTab] = useState("all");
   const [showRewardTable, setShowRewardTable] = useState(false);
 
-  // Wallet + Code + Campaigns
   const [marketingCode, setMarketingCode] = useState("NXX315-DEFAULT");
   const [wallet, setWallet] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
@@ -22,40 +21,16 @@ export default function Marketing() {
   useEffect(() => {
     const fetchData = async () => {
       if (!session?.user?.id) return;
-
-      // Lấy ví marketing
-      const { data: walletData } = await supabase
-        .from("marketing_wallets")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
+      
+      const { data: walletData } = await supabase.from("marketing_wallets").select("*").eq("user_id", session.user.id).single();
       setWallet(walletData);
 
-      // Lấy mã marketing
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("marketing_code")
-        .eq("id", session.user.id)
-        .single();
-      
+      const { data: profileData } = await supabase.from("profiles").select("marketing_code").eq("id", session.user.id).single();
       if (profileData?.marketing_code) {
         setMarketingCode(profileData.marketing_code);
       }
 
-      // Lấy campaigns
-      const { data: campaignData } = await supabase
-        .from("marketing_campaigns")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
-      setCampaigns(campaignData ?? []);
-
-      // Lấy video
-      const { data: videoData } = await supabase
-        .from("marketing_videos")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
+      const { data: videoData } = await supabase.from("marketing_videos").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       setVideos(videoData ?? []);
       setLoading(false);
     };
@@ -86,7 +61,6 @@ export default function Marketing() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
-      {/* HEADER NHỎ */}
       <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div>
@@ -156,6 +130,10 @@ export default function Marketing() {
                 <span className="font-bold text-slate-700">10.000 lượt truy cập hợp lệ</span>
                 <span className="font-bold text-blue-600">5.000 coin</span>
               </div>
+              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
+                <span className="font-bold text-slate-700">100.000 lượt truy cập hợp lệ</span>
+                <span className="font-bold text-blue-600">50.000 coin</span>
+              </div>
               <p className="mt-2 text-xs text-slate-400">
                 <Info size={12} className="inline" /> Mức thưởng: 0.5 coin / valid visit. Chỉ lượt truy cập hợp lệ mới được tính.
               </p>
@@ -172,7 +150,6 @@ export default function Marketing() {
             <button className="text-xs font-semibold text-blue-600">Xem tất cả</button>
           </div>
 
-          {/* Tab lọc */}
           <div className="mb-4 flex gap-2">
             <button onClick={() => setActiveTab("all")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "all" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Tất cả</button>
             <button onClick={() => setActiveTab("pending")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "pending" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Chờ</button>
@@ -180,7 +157,6 @@ export default function Marketing() {
             <button onClick={() => setActiveTab("rejected")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "rejected" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Từ chối</button>
           </div>
 
-          {/* Danh sách video compact */}
           <div className="space-y-3">
             {loading ? (
               <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
@@ -224,15 +200,4 @@ export default function Marketing() {
       <BottomNav />
     </div>
   );
-              }
-{/* Link giới thiệu */}
-<div className="mt-3 rounded-2xl bg-slate-50 px-4 py-3">
-  <p className="text-xs text-slate-500">Link giới thiệu</p>
-  <p className="mt-1 truncate text-sm font-medium text-blue-600">nxx315-cloudvip.vercel.app/?ref={marketingCode}</p>
-  <button 
-    onClick={() => navigator.clipboard.writeText(`https://nxx315-cloudvip.vercel.app/?ref=${marketingCode}`)}
-    className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-blue-500 py-2 text-xs font-semibold text-white"
-  >
-    <Copy size={12} /> Sao chép link
-  </button>
-</div>
+            }
