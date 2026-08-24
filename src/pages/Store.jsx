@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet, Info, ArrowRight, Lock } from "lucide-react";
+import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, Sparkles, Zap, ShieldCheck, Trophy, ExternalLink, Search, Tag, Clock, Wallet, Info, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -62,7 +62,6 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // BƯỚC 1: Tạo đơn hàng TRƯỚC
     const { error } = await supabase.from("redemption_orders").insert({
       user_id: session.user.id,
       package_name: selectedPkg.name,
@@ -78,7 +77,6 @@ export default function Store() {
       return;
     }
 
-    // BƯỚC 2: Trừ Coin SAU (chỉ khi đơn đã tạo thành công)
     const { error: deductError } = await supabase
       .from("profiles")
       .update({ coins: profile.coins - selectedPkg.coin_cost })
@@ -98,7 +96,7 @@ export default function Store() {
     
     const { data: newOrders } = await supabase.from("redemption_orders").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
     setHistory(newOrders ?? []);
-    window.location.reload(); // Reload để cập nhật số dư Coin
+    window.location.reload();
   };
 
   const getStatus = (status) => {
@@ -118,25 +116,17 @@ export default function Store() {
       `}</style>
 
       <main className="mx-auto max-w-md px-4 py-5">
-        {/* HERO GIỚI THIỆU */}
+        {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 shadow-sm"><Gift size={16} /></span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">TRUNG TÂM ĐỔI THƯỞNG</span>
-          </div>
-          
-          <div className="mt-3 flex items-start gap-2">
-            <Sparkles size={28} className="mt-1 text-amber-500" />
-            <h1 className="font-display text-3xl font-bold leading-tight text-slate-900">Đổi Coin lấy quà game cực dễ</h1>
-          </div>
-          
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
+            <Gift size={12} /> TRUNG TÂM ĐỔI THƯỞNG
+          </span>
+          <h1 className="font-display mt-3 text-3xl font-bold leading-tight text-slate-900">Đổi Coin lấy quà game cực dễ</h1>
           <p className="mt-2 text-sm text-slate-500">Robux Roblox · Kim Cương Free Fire · Quân Huy Liên Quân — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
-          
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-emerald-600 shadow-sm"><ShieldCheck size={12} /> Bảo hành / hoàn coin</span>
             <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-amber-600 shadow-sm"><Trophy size={12} /> Giá tốt nhất</span>
           </div>
-
           <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-500"><Wallet size={24} /></span>
             <div>
@@ -253,30 +243,19 @@ export default function Store() {
           <div className="mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-slate-900">Thông tin giao hàng</h2>
             <p className="mt-1 text-sm text-slate-500">Bạn đang chọn: <span className="font-bold text-slate-900">{selectedPkg.name}</span></p>
-            
-            <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-              <p className="text-sm font-bold text-slate-800">📌 Hướng dẫn</p>
-              <ol className="mt-2 list-decimal list-inside space-y-1 text-xs text-slate-600">
-                <li>Chọn gói mà bạn muốn nhận.</li>
-                {shopTab === "robux" && version === "quocTe" && <li>Chọn phương thức nhận code (Discord hoặc Zalo).</li>}
-                {shopTab === "quanHuy" && <li>Nhập ID Liên Quân Mobile (UID).</li>}
-                {shopTab === "robux" && version === "vng" && <li>Nhập Username Roblox.</li>}
-                <li>Kiểm tra thông tin, sau đó đặt đơn.</li>
-                <li>Admin sẽ xử lý trong thời gian ngắn.</li>
-              </ol>
-            </div>
 
             <div className="mt-4 space-y-3">
               {shopTab === "robux" && version === "vng" && (
                 <>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tài khoản Roblox</p>
                   <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="Username Roblox" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+                  <p className="text-xs text-amber-600">⚠️ Chỉ nhập thông tin cần thiết. Không yêu cầu mật khẩu.</p>
                 </>
               )}
 
               {shopTab === "robux" && version === "quocTe" && (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức nhận code</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức nhận</p>
                   <div className="flex gap-2">
                     <button onClick={() => { setDeliveryMethod("discord"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "discord" ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-slate-50 text-slate-500"}`}>Discord</button>
                     <button onClick={() => { setDeliveryMethod("zalo"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "zalo" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-slate-50 text-slate-500"}`}>Zalo</button>
@@ -290,6 +269,7 @@ export default function Store() {
                 <>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">ID tài khoản Liên Quân</p>
                   <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="UID + Server" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+                  <p className="text-xs text-amber-600">⚠️ Chỉ nhập UID. Không yêu cầu mật khẩu.</p>
                 </>
               )}
             </div>
@@ -348,4 +328,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-  }
+        }
