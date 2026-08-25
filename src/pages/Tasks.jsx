@@ -97,7 +97,7 @@ export default function Tasks() {
     }
 
     if (risk?.level === 'danger') {
-      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên hệ hỗ trợ!");
+      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên email nxx315hub@gmail.com để được hỗ trợ!");
       return;
     }
 
