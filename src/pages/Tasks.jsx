@@ -17,7 +17,7 @@ import {
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import useTasks from "../hooks/useTasks.js";
-import useFraud from "../hooks/useFraud.js"; // 👈 Import hook fraud
+import { useFraud }from "../hooks/useFraud.js"; // 👈 Import hook fraud
 import BottomNav from "../components/BottomNav.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { supabase } from "../lib/supabaseClient.js";
