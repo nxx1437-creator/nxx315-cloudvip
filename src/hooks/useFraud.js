@@ -1,8 +1,36 @@
 import { useState, useEffect } from 'react';
-const getFingerprint = () => {
-  return Math.random().toString(36).substring(2, 15);
-};
 import { RiskEngine } from '../lib/fraud/riskEngine';
+
+// Hàm tạo fingerprint đơn giản
+const generateFingerprint = () => {
+  // Không cần async/await vì là sync
+  const components = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width,
+    screen.height,
+    new Date().getTimezoneOffset()
+  ];
+  const str = components.join('|||');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString();
+};
+
+// Hàm lấy IP public (nếu không có thì dùng fallback)
+const getPublicIP = async () => {
+  try {
+    const res = await fetch('https://api.ipify.org?format=json');
+    const data = await res.json();
+    return data.ip || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+};
 
 export const useFraud = (userId) => {
   const [fingerprint, setFingerprint] = useState(null);
@@ -13,7 +41,7 @@ export const useFraud = (userId) => {
   // Khởi tạo fingerprint
   useEffect(() => {
     const init = async () => {
-      const fp = await generateFingerprint();
+      const fp = generateFingerprint(); // ❌ Bỏ await vì sync
       setFingerprint(fp);
       
       const publicIP = await getPublicIP();
@@ -29,8 +57,12 @@ export const useFraud = (userId) => {
     if (!userId) return;
     
     const checkRisk = async () => {
-      const result = await RiskEngine.calculateRisk(userId);
-      setRisk(result);
+      try {
+        const result = await RiskEngine.calculateRisk(userId);
+        setRisk(result);
+      } catch (error) {
+        console.error('Risk check error:', error);
+      }
     };
     
     checkRisk();
@@ -39,21 +71,34 @@ export const useFraud = (userId) => {
   // Kiểm tra redeem
   const checkRedeem = async () => {
     if (!userId) return { allowed: false, reason: 'Chưa đăng nhập' };
-    return await RiskEngine.canRedeem(userId);
+    try {
+      return await RiskEngine.canRedeem(userId);
+    } catch {
+      return { allowed: false, reason: 'Lỗi hệ thống' };
+    }
   };
 
   // Kiểm tra task
   const checkTask = async () => {
     if (!userId) return { allowed: false, reason: 'Chưa đăng nhập' };
-    return await RiskEngine.canDoTask(userId);
+    try {
+      return await RiskEngine.canDoTask(userId);
+    } catch {
+      return { allowed: false, reason: 'Lỗi hệ thống' };
+    }
   };
 
   // Log action
   const logAction = async (action, result, metadata = {}) => {
-    await RiskEngine.logAction(userId, action, result, {
-      ...metadata,
-      ip
-    });
+    try {
+      await RiskEngine.logAction(userId, action, result, {
+        ...metadata,
+        fingerprint,
+        ip
+      });
+    } catch (error) {
+      console.error('Log action error:', error);
+    }
   };
 
   return {
