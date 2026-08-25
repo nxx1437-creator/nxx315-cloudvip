@@ -354,15 +354,15 @@ export default function Store() {
                       </span>
                     )}
                   </div>
-{order.status === "pending" && <span className="text-amber-500">⏳ Đang xử lý</span>}
-{order.status === "delivered" && <span className="text-emerald-500">✅ Đã giao</span>}
-{order.status === "rejected" && <span className="text-rose-500">❌ Đã hủy</span>}
-
-              </div>  
-            </div>   
-          </div>      
-        </div>       
+                  {order.status === "pending" && <span className="text-amber-500">⏳ Đang xử lý</span>}
+                  {order.status === "delivered" && <span className="text-emerald-500">✅ Đã giao</span>}
+                  {order.status === "rejected" && <span className="text-rose-500">❌ Đã hủy</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </main>
     </div>
   );
-              }
+}
