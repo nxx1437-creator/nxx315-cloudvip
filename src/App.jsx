@@ -8,7 +8,7 @@ import Tasks from './pages/Tasks.jsx';
 import Store from './pages/Store.jsx';
 import Admin from './pages/Admin.jsx';
 import Login from './pages/Login.jsx';
-import Signup from './pages/Signup.jsx';
+import Signup from './pages/Register.jsx';
 import Terms from './pages/Terms.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Fraud from './pages/Fraud.jsx';
