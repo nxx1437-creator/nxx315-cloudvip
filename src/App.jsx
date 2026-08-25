@@ -1,6 +1,6 @@
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-// import ProtectedRoute from './components/ProtectedRoute.jsx';  // 👈 Comment lại
+// import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 import Home from './CloudVIPLanding.jsx';
 import Tasks from './pages/Tasks.jsx';
@@ -19,21 +19,18 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
-        {/* Public routes */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/store" element={<Store />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/fraud" element={<Fraud />} />
         <Route path="/redemption-policy" element={<RedemptionPolicy />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
-
-        {/* Routes tạm thời không cần login để test */}
-        <Route path="/" element={<Home />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/admin" element={<Admin />} />
       </Routes>
     </HashRouter>
   );
