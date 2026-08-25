@@ -1,7 +1,7 @@
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-// import ProtectedRoute from './components/ProtectedRoute.jsx';  // 👈 Comment lại
 
+// Pages
 import Home from './CloudVIPLanding.jsx';
 import Tasks from './pages/Tasks.jsx';
 import Store from './pages/Store.jsx';
@@ -14,12 +14,15 @@ import Fraud from './pages/Fraud.jsx';
 import RedemptionPolicy from './pages/RedemptionPolicy.jsx';
 import Contact from './pages/Contact.jsx';
 import HelpCenter from './pages/HelpCenter.jsx';
+import Profile from './pages/Profile.jsx';
+import Wallet from './pages/Wallet.jsx';
+import Support from './pages/Support.jsx';
 
 export default function App() {
   return (
     <HashRouter>
       <Routes>
-        {/* Public routes */}
+        {/* Public routes - không cần login */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/signup" element={<Register />} />
@@ -30,11 +33,14 @@ export default function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
 
-        {/* 👉 Bỏ ProtectedRoute, để nguyên component */}
+        {/* Các trang chính - đã bỏ ProtectedRoute để test */}
         <Route path="/" element={<Home />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/store" element={<Store />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/support" element={<Support />} />
       </Routes>
     </HashRouter>
   );
