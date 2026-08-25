@@ -18,6 +18,24 @@ import {
   Gift,
 } from "lucide-react";
 
+/**
+ * CloudVIP — Landing Page
+ * -----------------------------------------------------------------
+ * Reward model: users complete admin-approved tasks -> earn Coin ->
+ * redeem Coin for GENUINE Robux, topped up directly into their
+ * linked VNG (Roblox VN publisher) account. No premium-account
+ * trading, no bot/engagement-farming features.
+ *
+ * Text color: every text element sets an explicit sky shade
+ * (never inherits "currentColor"/white), so nothing goes invisible
+ * against light or dark backgrounds.
+ *
+ * NOTE ON STATS: "10K+ users / 50K+ orders / 99% satisfied" style
+ * numbers are placeholders ("—") on purpose. Fill in TRUST_STATS
+ * below with real figures once you have them.
+ * -----------------------------------------------------------------
+ */
+
 const TRUST_STATS = [
   { icon: Users, value: "—", label: "Người dùng" },
   { icon: Gift, value: "—", label: "Robux đã nạp" },
@@ -152,6 +170,8 @@ export default function CloudVIPLanding() {
     document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Explicit sky text colors for every state — never left to inherit,
+  // so text never renders white-on-white or blends into the background.
   const bg = dark ? "bg-[#050B18] text-sky-100" : "bg-[#F5FAFF] text-sky-950";
   const cardBg = dark
     ? "bg-white/[0.04] border-white/10 backdrop-blur-xl"
@@ -451,4 +471,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-                       }
+            }
+                  
