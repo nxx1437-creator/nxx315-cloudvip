@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { generateFingerprint, getPublicIP } from '../lib/fraud/fingerprint';
+const getFingerprint = () => {
+  return Math.random().toString(36).substring(2, 15);
+};
 import { RiskEngine } from '../lib/fraud/riskEngine';
 
 export const useFraud = (userId) => {
