@@ -21,6 +21,8 @@ import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Fraud from "./pages/Fraud.jsx";
 import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
+import Contact from "./pages/Contact.jsx";
+import HelpCenter from "./pages/HelpCenter.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
@@ -48,6 +50,8 @@ export default function App() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/fraud" element={<Fraud />} />
       <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/help" element={<HelpCenter />} />
     </Routes>
     </ErrorBoundary>
   );
