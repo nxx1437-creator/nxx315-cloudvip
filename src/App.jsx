@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 // Pages
-import Home from './CloudVIPLanding.jsx';
+import Home from './CloudVIPLanding.jsx';  // ← File cùng cấp với App.jsx
 import Tasks from './pages/Tasks.jsx';
 import Store from './pages/Store.jsx';
 import Admin from './pages/Admin.jsx';
@@ -20,7 +20,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes - không cần login */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
@@ -30,7 +30,7 @@ export default function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
 
-        {/* Protected routes - cần login + xác nhận điều khoản */}
+        {/* Protected routes */}
         <Route path="/" element={
           <ProtectedRoute>
             <Home />
