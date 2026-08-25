@@ -401,7 +401,7 @@ function SectionHeader({ title, count, onRefresh }) {
 
 function Loading({ text }) {
   return (
-    <div className="flex items-center justify-center py-12">
+    <div className="flex items-center justify-between">
       <Loader2 size={24} className="animate-spin text-blue-500" />
       <p className="ml-3 text-sm text-slate-500">{text}</p>
     </div>
