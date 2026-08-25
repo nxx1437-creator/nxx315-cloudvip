@@ -415,3 +415,34 @@ function EmptyState({ text }) {
     </div>
   );
 }
+/* ===== SHARED COMPONENTS ===== */
+function SectionHeader({ title, count, onRefresh }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+        <span className="text-sm font-semibold text-slate-400">{count}</span>
+      </div>
+      <button onClick={onRefresh} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100">
+        <RefreshCw size={16} />
+      </button>
+    </div>
+  );
+}
+
+function Loading({ text }) {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 size={24} className="animate-spin text-blue-500" />
+      <p className="ml-3 text-sm text-slate-500">{text}</p>
+    </div>
+  );
+}
+
+function EmptyState({ text }) {
+  return (
+    <div className="py-12 text-center">
+      <p className="text-sm text-slate-400">{text}</p>
+    </div>
+  );
+}
