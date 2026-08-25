@@ -358,10 +358,10 @@ export default function Store() {
 {order.status === "delivered" && <span className="text-emerald-500">✅ Đã giao</span>}
 {order.status === "rejected" && <span className="text-rose-500">❌ Đã hủy</span>}
 
-              </div>  {/* Đóng div chứa order info */}
-            </div>    {/* Đóng div của từng order */}
-          </div>      {/* Đóng div history */}
-        </div>        {/* Đóng div chính Store */}
+              </div>  
+            </div>   
+          </div>      
+        </div>       
       </main>
     </div>
   );
