@@ -69,7 +69,7 @@ export default function Store() {
         risk: fraudCheck.risk,
         package: selectedPkg.name 
       });
-      setToast({ message: `⚠️ ${fraudCheck.reason}`, type: "error" });
+      setToast({ message: "⚠️ " + fraudCheck.reason, type: "error" });
       return;
     }
 
@@ -139,7 +139,6 @@ export default function Store() {
       `}</style>
 
       <main className="mx-auto max-w-md px-4 py-5">
-        {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-100 via-sky-50 to-white p-6 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             <Gift size={12} /> TRUNG TÂM ĐỔI THƯỞNG
@@ -148,11 +147,7 @@ export default function Store() {
           <p className="mt-2 text-sm text-slate-500">Robux Roblox · Kim Cương Free Fire · Quân Huy Liên Quân — admin xử lý nhanh, hoàn coin nếu lỗi.</p>
           
           {risk && (
-            <div className={`mt-3 rounded-2xl p-3 text-sm ${
-              risk.level === 'safe' ? 'bg-emerald-100 text-emerald-700' :
-              risk.level === 'warning' ? 'bg-amber-100 text-amber-700' : 
-              'bg-rose-100 text-rose-700'
-            }`}>
+            <div className={"mt-3 rounded-2xl p-3 text-sm " + (risk.level === 'safe' ? 'bg-emerald-100 text-emerald-700' : risk.level === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')}>
               <span className="font-semibold">
                 {risk.level === 'safe' ? '✅' : risk.level === 'warning' ? '⚠️' : '🚫'} 
                 Rủi ro: {risk.score}/100
@@ -176,38 +171,27 @@ export default function Store() {
         </div>
 
         {toast && (
-          <div className={`mt-4 rounded-2xl p-4 ${
-            toast.type === 'success' ? 'bg-emerald-50 border border-emerald-200' :
-            toast.type === 'error' ? 'bg-rose-50 border border-rose-200' :
-            'bg-amber-50 border border-amber-200'
-          }`}>
-            <p className={`text-sm ${
-              toast.type === 'success' ? 'text-emerald-700' :
-              toast.type === 'error' ? 'text-rose-700' :
-              'text-amber-700'
-            }`}>{toast.message}</p>
+          <div className={"mt-4 rounded-2xl p-4 " + (toast.type === 'success' ? 'bg-emerald-50 border border-emerald-200' : toast.type === 'error' ? 'bg-rose-50 border border-rose-200' : 'bg-amber-50 border border-amber-200')}>
+            <p className={"text-sm " + (toast.type === 'success' ? 'text-emerald-700' : toast.type === 'error' ? 'text-rose-700' : 'text-amber-700')}>{toast.message}</p>
           </div>
         )}
 
-        {/* TAB CHÍNH */}
         <div className="mt-6 rounded-full bg-slate-100 p-1">
           <div className="flex gap-2">
-            <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); setDeliveryMethod("username"); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>🎮 Robux</button>
-            <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); setDeliveryMethod("uid"); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500"}`}>⚔️ Quân Huy</button>
+            <button onClick={() => { setShopTab("robux"); setSelectedPkg(null); setDeliveryMethod("username"); }} className={"flex-1 rounded-full py-2.5 text-sm font-semibold transition " + (shopTab === "robux" ? "bg-white text-sky-600 shadow-md" : "text-slate-500")}>🎮 Robux</button>
+            <button onClick={() => { setShopTab("quanHuy"); setSelectedPkg(null); setDeliveryMethod("uid"); }} className={"flex-1 rounded-full py-2.5 text-sm font-semibold transition " + (shopTab === "quanHuy" ? "bg-white text-sky-600 shadow-md" : "text-slate-500")}>⚔️ Quân Huy</button>
           </div>
         </div>
 
-        {/* TAB PHỤ ROBUX */}
         {shopTab === "robux" && (
           <div className="mt-3 rounded-full bg-slate-100 p-1">
             <div className="flex gap-2">
-              <button onClick={() => { setVersion("vng"); setSelectedPkg(null); setDeliveryMethod("username"); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500"}`}>🇻🇳 VNG</button>
-              <button onClick={() => { setVersion("quocTe"); setSelectedPkg(null); setDeliveryMethod(""); }} className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition ${version === "quocTe" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg" : "text-slate-500"}`}>🌎 Quốc tế</button>
+              <button onClick={() => { setVersion("vng"); setSelectedPkg(null); setDeliveryMethod("username"); }} className={"flex-1 rounded-full py-2.5 text-sm font-semibold transition " + (version === "vng" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : "text-slate-500")}>🇻🇳 VNG</button>
+              <button onClick={() => { setVersion("quocTe"); setSelectedPkg(null); setDeliveryMethod(""); }} className={"flex-1 rounded-full py-2.5 text-sm font-semibold transition " + (version === "quocTe" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg" : "text-slate-500")}>🌎 Quốc tế</button>
             </div>
           </div>
         )}
 
-        {/* DANH SÁCH GÓI ROBUX */}
         {shopTab === "robux" && (
           <div className="mt-6">
             <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói</h2>
@@ -260,7 +244,6 @@ export default function Store() {
           </div>
         )}
 
-        {/* DANH SÁCH GÓI QUÂN HUY */}
         {shopTab === "quanHuy" && (
           <div className="mt-6">
             <h2 className="mb-3 text-lg font-bold text-slate-900">Chọn gói Quân Huy</h2>
@@ -296,7 +279,6 @@ export default function Store() {
           </div>
         )}
 
-        {/* FORM ĐẶT HÀNG CHI TIẾT */}
         {selectedPkg && (
           <div className="mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-slate-900">Thông tin giao hàng</h2>
@@ -315,8 +297,8 @@ export default function Store() {
                 <>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức nhận</p>
                   <div className="flex gap-2">
-                    <button onClick={() => { setDeliveryMethod("discord"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "discord" ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-slate-50 text-slate-500"}`}>Discord</button>
-                    <button onClick={() => { setDeliveryMethod("zalo"); setDeliveryInfo(""); }} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${deliveryMethod === "zalo" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-slate-50 text-slate-500"}`}>Zalo</button>
+                    <button onClick={() => { setDeliveryMethod("discord"); setDeliveryInfo(""); }} className={"flex-1 rounded-xl px-4 py-3 text-sm font-semibold " + (deliveryMethod === "discord" ? "bg-cyan-50 text-cyan-700 border border-cyan-200" : "bg-slate-50 text-slate-500")}>Discord</button>
+                    <button onClick={() => { setDeliveryMethod("zalo"); setDeliveryInfo(""); }} className={"flex-1 rounded-xl px-4 py-3 text-sm font-semibold " + (deliveryMethod === "zalo" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-slate-50 text-slate-500")}>Zalo</button>
                   </div>
                   {deliveryMethod === "discord" && <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="@username..." className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />}
                   {deliveryMethod === "zalo" && <input type="text" value={deliveryInfo} onChange={(e) => setDeliveryInfo(e.target.value)} placeholder="Số điện thoại Zalo" className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />}
@@ -344,7 +326,6 @@ export default function Store() {
           </div>
         )}
 
-        {/* LỊCH SỬ ĐỔI THƯỞNG */}
         <div className="mt-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-slate-900">Lịch sử đổi thưởng</h2>
           <div className="space-y-3">
@@ -357,7 +338,7 @@ export default function Store() {
                 <div key={order.id} className="rounded-2xl border border-slate-100 p-4">
                   <div className="flex items-center justify-between">
                     <p className="font-bold text-slate-900">{order.package_name}</p>
-                    <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${statusConfig.color}`}>
+                    <span className={"flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold " + statusConfig.color}>
                       <StatusIcon size={12} /> {statusConfig.label}
                     </span>
                   </div>
@@ -366,4 +347,11 @@ export default function Store() {
                   <p className="mt-1 text-xs text-slate-400">Phương thức: {order.delivery_method || "Nạp thẳng"}</p>
                   <p className="mt-1 text-xs text-slate-400">Thông tin nhận: {order.delivery_target || order.target_username || "—"}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="font-bold text-amb
+                    <span className="font-bold text-amber-500">-{order.coins_charged} Coin</span>
+                    {order.risk_score > 0 && (
+                      <span className={"text-xs " + (order.risk_score > 60 ? 'text-rose-500' : 'text-slate-400')}>
+                        Risk: {order.risk_score}
+                      </span>
+                    )}
+                  </div>
+                  {order.status === "
