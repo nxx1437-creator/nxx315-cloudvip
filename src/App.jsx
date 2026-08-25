@@ -17,6 +17,7 @@ import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
 import Invite from "./pages/Invite.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import Terms from "./pages/Terms.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/task/callback" element={<ProtectedRoute><TaskCallback /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       <Route path="*" element={<NotFoundPage />} />
+      <Route path="/terms" element={<Terms />} />
     </Routes>
     </ErrorBoundary>
   );
