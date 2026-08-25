@@ -8,7 +8,7 @@ import Tasks from './pages/Tasks.jsx';
 import Store from './pages/Store.jsx';
 import Admin from './pages/Admin.jsx';
 import Login from './pages/Login.jsx';
-import Signup from './pages/Signup.jsx';  // hoặc Register.jsx, tùy bạn dùng cái nào
+import Register from './pages/Register.jsx';  // 👈 Đổi thành Register
 import Terms from './pages/Terms.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Fraud from './pages/Fraud.jsx';
@@ -25,8 +25,8 @@ export default function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/register" element={<Signup />} /> {/* Nếu ai vào /register cũng ra Signup */}
+        <Route path="/signup" element={<Register />} />  {/* /signup -> Register */}
+        <Route path="/register" element={<Register />} /> {/* /register -> Register */}
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/fraud" element={<Fraud />} />
@@ -45,4 +45,4 @@ export default function App() {
       </Routes>
     </HashRouter>
   );
-      }
+}
