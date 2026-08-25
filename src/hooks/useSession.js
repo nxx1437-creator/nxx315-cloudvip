@@ -7,9 +7,13 @@ export default function useSession() {
   const [needsTermsAcceptance, setNeedsTermsAcceptance] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  console.log('useSession init'); // 👈 Thêm dòng này
+
   useEffect(() => {
-    // Lấy session hiện tại
+    console.log('useSession useEffect run'); // 👈 Thêm dòng này
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('getSession result:', session); // 👈 Thêm dòng này
       setSession(session);
       if (session?.user) {
         checkProfile(session.user.id);
@@ -18,9 +22,9 @@ export default function useSession() {
       }
     });
 
-    // Lắng nghe thay đổi auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log('onAuthStateChange:', _event, session); // 👈 Thêm dòng này
         setSession(session);
         if (session?.user) {
           await checkProfile(session.user.id);
@@ -36,6 +40,7 @@ export default function useSession() {
   }, []);
 
   const checkProfile = async (userId) => {
+    console.log('checkProfile:', userId); // 👈 Thêm dòng này
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -43,18 +48,18 @@ export default function useSession() {
         .eq('id', userId)
         .single();
 
+      console.log('Profile data:', data, error); // 👈 Thêm dòng này
+
       if (error) throw error;
 
       setIsAdmin(data?.is_admin === true);
 
-      // Admin được bypass, không cần xác nhận điều khoản
       if (data?.is_admin === true) {
         setNeedsTermsAcceptance(false);
         setLoading(false);
         return;
       }
 
-      // Kiểm tra đã đồng ý điều khoản chưa
       const CURRENT_TERMS_VERSION = '2026-08-25';
       
       if (!data?.terms_accepted_at || data?.terms_version !== CURRENT_TERMS_VERSION) {
@@ -64,7 +69,6 @@ export default function useSession() {
       }
     } catch (error) {
       console.error('Error checking profile:', error);
-      // Nếu chưa có profile, cần tạo và yêu cầu đồng ý
       setNeedsTermsAcceptance(true);
     } finally {
       setLoading(false);
