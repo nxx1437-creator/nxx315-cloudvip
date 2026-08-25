@@ -17,10 +17,10 @@ export default function Footer() {
           <div>
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Thông tin</h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-sm text-slate-600 hover:text-sky-600">Giới thiệu</Link></li>
-              <li><Link to="/terms" className="text-sm text-slate-600 hover:text-sky-600">Điều khoản dịch vụ</Link></li>
+              <li><Link to="/terms" className="text-sm text-slate-600 hover:text-sky-600">Điều khoản sử dụng</Link></li>
               <li><Link to="/privacy" className="text-sm text-slate-600 hover:text-sky-600">Chính sách bảo mật</Link></li>
-              <li><Link to="/store" className="text-sm text-slate-600 hover:text-sky-600">Quy định đổi thưởng</Link></li>
+              <li><Link to="/fraud" className="text-sm text-slate-600 hover:text-sky-600">Chính sách chống gian lận</Link></li>
+              <li><Link to="/redemption-policy" className="text-sm text-slate-600 hover:text-sky-600">Quy định đổi thưởng</Link></li>
             </ul>
           </div>
           <div>
