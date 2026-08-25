@@ -4,7 +4,7 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, MailCheck, Gift } f
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-import { generateFingerprint, getPublicIP } from "../lib/fraud/fingerprint.js";
+import { getDeviceId } from "../lib/deviceId.js";
 
 export default function Register() {
   const navigate = useNavigate();
