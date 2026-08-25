@@ -8,7 +8,7 @@ const TABS = [
   { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
   { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản" },
   { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Yêu cầu hỗ trợ" },
-  { key: "notices", label: "Thông báo", icon: Bell, desc: "Quản lý thông báo" }, // 👈 Thêm tab mới
+  { key: "notices", label: "Thông báo", icon: Bell, desc: "Quản lý thông báo" },
 ];
 
 export default function Admin() {
@@ -43,14 +43,48 @@ export default function Admin() {
         </div>
       </div>
 
-    <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
-       {tab === "orders" && <OrdersTab />}
-       {tab === "tasks" && <TasksTab />}
-       {tab === "packages" && <PackagesTab />}
-       {tab === "users" && <UsersTab />}
-       {tab === "support" && <SupportTab />}
-       {tab === "notices" && <NoticesTab />} {/* 👈 Thêm dòng này */}
-   </main>
+      <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
+        {tab === "orders" && <OrdersTab />}
+        {tab === "tasks" && <TasksTab />}
+        {tab === "packages" && <PackagesTab />}
+        {tab === "users" && <UsersTab />}
+        {tab === "support" && <SupportTab />}
+        {tab === "notices" && <NoticesTab />}
+      </main>
+    </div>
+  );
+}
+
+/* ===== LOADING ===== */
+function Loading({ text }) {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 size={28} className="animate-spin text-blue-500" />
+      <span className="ml-3 text-sm text-slate-500">{text}</span>
+    </div>
+  );
+}
+
+/* ===== EMPTY STATE ===== */
+function EmptyState({ text }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+      <p className="text-sm text-slate-400">{text}</p>
+    </div>
+  );
+}
+
+/* ===== SECTION HEADER ===== */
+function SectionHeader({ title, count, onRefresh }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+        <p className="text-xs text-slate-400">{count}</p>
+      </div>
+      <button onClick={onRefresh} className="rounded-full bg-blue-50 p-2.5 text-blue-500 hover:bg-blue-100 transition">
+        <RefreshCw size={16} />
+      </button>
     </div>
   );
 }
@@ -90,7 +124,6 @@ function OrdersTab() {
   const deliveredCount = orders.filter(o => o.status === "delivered").length;
   const rejectedCount = orders.filter(o => o.status === "rejected").length;
 
-  // ✅ Dùng update trực tiếp thay vì RPC
   const handleDelivered = async () => {
     if (!confirmModal) return;
     setSavingId(confirmModal.id);
@@ -245,7 +278,7 @@ function OrdersTab() {
   );
 }
 
-/* ===== CÁC TAB KHÁC ===== */
+/* ===== SUPPORT TAB ===== */
 function SupportTab() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -282,6 +315,7 @@ function SupportTab() {
   );
 }
 
+/* ===== USERS TAB ===== */
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -327,378 +361,4 @@ function UsersTab() {
                   {user.is_banned ? <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button> : <button onClick={() => handleBan(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function TasksTab() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const fetchTasks = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
-    setTasks(data ?? []);
-    setLoading(false);
-  };
-  useEffect(() => { fetchTasks(); }, []);
-  if (loading) return <Loading text="Loading tasks..." />;
-  if (tasks.length === 0) return <EmptyState text="No tasks found." />;
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
-      {tasks.map((task) => (
-        <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-900">{task.provider}</span>
-            <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Pack
-/* ===== NOTICES TAB ===== */
-function NoticesTab() {
-  const [notices, setNotices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    type: 'warning',
-    icon: 'bell',
-    status_1: '',
-    status_2: '',
-    status_3: '',
-    progress_label: '',
-    action_label: '',
-    action_link: '',
-    link_text: '',
-    link: '',
-    active: true,
-    priority: 0
-  });
-  const [isEditing, setIsEditing] = useState(false);
-
-  const fetchNotices = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("admin_notices")
-      .select("*")
-      .order("priority", { ascending: false })
-      .order("created_at", { ascending: false });
-    setNotices(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchNotices(); }, []);
-
-  const handleSave = async () => {
-    if (!formData.title || !formData.content) {
-      alert("Vui lòng nhập tiêu đề và nội dung!");
-      return;
-    }
-
-    setLoading(true);
-    if (isEditing && editing) {
-      // Update
-      await supabase
-        .from("admin_notices")
-        .update({
-          ...formData,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", editing);
-    } else {
-      // Insert
-      await supabase
-        .from("admin_notices")
-        .insert([formData]);
-    }
-
-    setLoading(false);
-    setIsEditing(false);
-    setEditing(null);
-    setFormData({
-      title: '',
-      content: '',
-      type: 'warning',
-      icon: 'bell',
-      status_1: '',
-      status_2: '',
-      status_3: '',
-      progress_label: '',
-      action_label: '',
-      action_link: '',
-      link_text: '',
-      link: '',
-      active: true,
-      priority: 0
-    });
-    await fetchNotices();
-  };
-
-  const handleEdit = (notice) => {
-    setEditing(notice.id);
-    setIsEditing(true);
-    setFormData({
-      title: notice.title || '',
-      content: notice.content || '',
-      type: notice.type || 'warning',
-      icon: notice.icon || 'bell',
-      status_1: notice.status_1 || '',
-      status_2: notice.status_2 || '',
-      status_3: notice.status_3 || '',
-      progress_label: notice.progress_label || '',
-      action_label: notice.action_label || '',
-      action_link: notice.action_link || '',
-      link_text: notice.link_text || '',
-      link: notice.link || '',
-      active: notice.active ?? true,
-      priority: notice.priority || 0
-    });
-  };
-
-  const handleToggleActive = async (id, current) => {
-    await supabase
-      .from("admin_notices")
-      .update({ active: !current })
-      .eq("id", id);
-    await fetchNotices();
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc muốn xóa thông báo này?")) {
-      await supabase
-        .from("admin_notices")
-        .delete()
-        .eq("id", id);
-      await fetchNotices();
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setEditing(null);
-    setFormData({
-      title: '',
-      content: '',
-      type: 'warning',
-      icon: 'bell',
-      status_1: '',
-      status_2: '',
-      status_3: '',
-      progress_label: '',
-      action_label: '',
-      action_link: '',
-      link_text: '',
-      link: '',
-      active: true,
-      priority: 0
-    });
-  };
-
-  if (loading && notices.length === 0) return <Loading text="Đang tải thông báo..." />;
-
-  return (
-    <div className="space-y-5">
-      <SectionHeader title="Quản lý thông báo" count={`${notices.length} Thông báo`} onRefresh={fetchNotices} />
-
-      {/* Form thêm/sửa */}
-      <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-blue-800 mb-3">
-          {isEditing ? '✏️ Sửa thông báo' : '➕ Thêm thông báo mới'}
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input
-            value={formData.title}
-            onChange={(e) => setFormData({...formData, title: e.target.value})}
-            placeholder="Tiêu đề *"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.content}
-            onChange={(e) => setFormData({...formData, content: e.target.value})}
-            placeholder="Nội dung *"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <select
-            value={formData.type}
-            onChange={(e) => setFormData({...formData, type: e.target.value})}
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          >
-            <option value="info">📘 Info (Xanh)</option>
-            <option value="warning">⚠️ Warning (Vàng)</option>
-            <option value="danger">🔴 Danger (Đỏ)</option>
-            <option value="success">✅ Success (Xanh lá)</option>
-          </select>
-          <input
-            value={formData.status_1}
-            onChange={(e) => setFormData({...formData, status_1: e.target.value})}
-            placeholder="Status 1 (VD: Đăng ký)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.status_2}
-            onChange={(e) => setFormData({...formData, status_2: e.target.value})}
-            placeholder="Status 2 (VD: Ký hợp đồng)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.status_3}
-            onChange={(e) => setFormData({...formData, status_3: e.target.value})}
-            placeholder="Status 3 (VD: Chờ phê duyệt)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.progress_label}
-            onChange={(e) => setFormData({...formData, progress_label: e.target.value})}
-            placeholder="Progress label (VD: Kiểm tra...)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.action_label}
-            onChange={(e) => setFormData({...formData, action_label: e.target.value})}
-            placeholder="Nút hành động (VD: Màn hình chính)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.action_link}
-            onChange={(e) => setFormData({...formData, action_link: e.target.value})}
-            placeholder="Link nút hành động (VD: /)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.link_text}
-            onChange={(e) => setFormData({...formData, link_text: e.target.value})}
-            placeholder="Link text (VD: Tìm hiểu thêm)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            value={formData.link}
-            onChange={(e) => setFormData({...formData, link: e.target.value})}
-            placeholder="Link (VD: https://t.me/...)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <input
-            type="number"
-            value={formData.priority}
-            onChange={(e) => setFormData({...formData, priority: parseInt(e.target.value) || 0})}
-            placeholder="Priority (số càng cao càng ưu tiên)"
-            className="rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400"
-          />
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={formData.active}
-                onChange={(e) => setFormData({...formData, active: e.target.checked})}
-                className="w-4 h-4"
-              />
-              Active
-            </label>
-          </div>
-        </div>
-
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {isEditing ? 'Cập nhật' : 'Thêm mới'}
-          </button>
-          {isEditing && (
-            <button
-              onClick={handleCancel}
-              className="px-6 py-2.5 bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-300 transition"
-            >
-              Hủy
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Danh sách thông báo */}
-      {notices.length === 0 ? (
-        <EmptyState text="Chưa có thông báo nào." />
-      ) : (
-        <div className="space-y-3">
-          {notices.map((notice) => (
-            <div key={notice.id} className={`rounded-2xl border p-5 shadow-sm ${
-              notice.active ? 'bg-white border-slate-200' : 'bg-slate-50 border-slate-200 opacity-60'
-            }`}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-sm font-bold ${notice.active ? 'text-slate-900' : 'text-slate-500'}`}>
-                      {notice.title}
-                    </span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      notice.type === 'danger' ? 'bg-rose-100 text-rose-700' :
-                      notice.type === 'warning' ? 'bg-amber-100 text-amber-700' :
-                      notice.type === 'success' ? 'bg-emerald-100 text-emerald-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {notice.type}
-                    </span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      notice.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {notice.active ? '🟢 Hiển thị' : '⚪ Ẩn'}
-                    </span>
-                    {notice.priority > 0 && (
-                      <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">
-                        Priority: {notice.priority}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-sm text-slate-600">{notice.content}</p>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-                    {notice.status_1 && <span>✓ {notice.status_1}</span>}
-                    {notice.status_2 && <span>• {notice.status_2}</span>}
-                    {notice.status_3 && <span>• {notice.status_3}</span>}
-                    {notice.progress_label && <span>⏱ {notice.progress_label}</span>}
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Tạo: {new Date(notice.created_at).toLocaleString("vi-VN")}
-                  </p>
-                </div>
-                <div className="flex gap-2 shrink-0 ml-4">
-                  <button
-                    onClick={() => handleToggleActive(notice.id, notice.active)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                      notice.active ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                    } transition`}
-                  >
-                    {notice.active ? 'Ẩn' : 'Hiện'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(notice)}
-                    className="rounded-full bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 transition"
-                  >
-                    <Edit2 size={14} className="inline mr-1" /> Sửa
-                  </button>
-                  <button
-                    onClick={() => handleDelete(notice.id)}
-                    className="rounded-full bg-rose-100 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-200 transition"
-                  >
-                    <Trash2 size={14} className="inline mr-1" /> Xóa
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-        }
+            )
