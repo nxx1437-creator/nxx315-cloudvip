@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShieldCheck } from "lucid
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+import { getDeviceId } from "../lib/deviceId.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -55,8 +56,10 @@ export default function Login() {
       );
       return;
     }
-    await handlePostLogin();
-  };
+    supabase.functions.invoke("record-device", {
+      body: { deviceId: getDeviceId(), userAgent: navigator.userAgent },
+    }).catch(() => {});
+    navigate("/dashboard");
 
   const handleSocial = async (provider, supported) => {
     setError("");
