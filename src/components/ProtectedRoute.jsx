@@ -7,7 +7,8 @@ import { Loader2 } from 'lucide-react';
 export default function ProtectedRoute({ children }) {
   const { session, loading, needsTermsAcceptance, acceptTerms, user } = useSession();
 
-  // Đang loading
+  console.log('ProtectedRoute:', { session, loading, needsTermsAcceptance }); // 👈 Thêm dòng này
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -16,12 +17,10 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // Chưa đăng nhập -> về trang login
   if (!session) {
     return <Navigate to="/login" replace />;
   }
 
-  // Cần xác nhận điều khoản
   if (needsTermsAcceptance) {
     return (
       <TermsAcceptance 
@@ -32,6 +31,5 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // Đã xác nhận -> cho vào web
   return children;
 }
