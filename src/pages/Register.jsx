@@ -13,28 +13,6 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmSent, setConfirmSent] = useState(false);
-  const [fingerprint, setFingerprint] = useState(null);
-  const [ip, setIp] = useState(null);
-
-  // Khởi tạo fingerprint khi component mount
-  React.useEffect(() => {
-    const initFingerprint = async () => {
-      const fp = await generateFingerprint();
-      setFingerprint(fp);
-      const publicIP = await getPublicIP();
-      setIp(publicIP);
-    };
-    initFingerprint();
-  }, []);
-
-  const generateReferralCode = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "";
-    for (let i = 0; i < 8; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return code;
-  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -49,83 +27,31 @@ export default function Register() {
     setError("");
     setLoading(true);
 
-    const newReferralCode = generateReferralCode();
-
-    // 1. Đăng ký user
     const { data, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { 
-        data: { 
-          username: form.username,
-          referral_code: newReferralCode,
-          device_id: fingerprint?.deviceId || null,
-          fingerprint: fingerprint?.fingerprint || null
-        } 
-      },
+      options: { data: { username: form.username } },
     });
-    
+
     setLoading(false);
     if (authError) {
       setError(authError.message);
       return;
     }
-
     if (!data.user) {
       setError("Đăng ký thất bại, vui lòng thử lại.");
       return;
     }
 
-    // 2. Lưu fingerprint vào bảng devices
-    if (fingerprint) {
-      await supabase.from("devices").insert({
-        user_id: data.user.id,
-        device_id: fingerprint.deviceId,
-        fingerprint: fingerprint.fingerprint,
-        fingerprint_components: fingerprint.components,
-        ip: ip || null,
-        user_agent: navigator.userAgent
-      });
+    // Ghi nhận thiết bị + tính điểm rủi ro (không chặn luồng nếu lỗi)
+    supabase.functions
+      .invoke("record-device", { body: { deviceId: getDeviceId(), userAgent: navigator.userAgent } })
+      .catch(() => {});
+
+    // Áp dụng mã giới thiệu nếu có (qua RPC an toàn, không gọi thẳng update coins)
+    if (form.referralCode.trim() && data.session) {
+      await supabase.rpc("apply_referral_code", { p_code: form.referralCode.trim() });
     }
-
-    // 3. Cập nhật referral_code vào profiles
-    await supabase.from("profiles").update({ 
-      referral_code: newReferralCode 
-    }).eq("id", data.user.id);
-
-    // 4. Xử lý mã giới thiệu
-    if (form.referralCode && data.user) {
-      const { data: referrer } = await supabase
-        .from("profiles")
-        .select("id, coins")
-        .eq("referral_code", form.referralCode.toUpperCase())
-        .single();
-
-      if (referrer) {
-        await supabase.from("referrals").insert({
-          referrer_id: referrer.id,
-          referred_id: data.user.id,
-          code: form.referralCode.toUpperCase(),
-        });
-
-        await supabase.from("profiles").update({ coins: 200 }).eq("id", data.user.id);
-        await supabase.from("profiles").update({ coins: referrer.coins + 30 }).eq("id", referrer.id);
-      }
-    }
-
-    // 5. Log đăng ký
-    await supabase.from("fraud_logs").insert({
-      user_id: data.user.id,
-      action: "register",
-      result: "success",
-      device_id: fingerprint?.deviceId || null,
-      fingerprint: fingerprint?.fingerprint || null,
-      ip: ip || null,
-      metadata: {
-        username: form.username,
-        has_referral: !!form.referralCode
-      }
-    });
 
     if (data.session) {
       navigate("/dashboard");
@@ -231,7 +157,6 @@ export default function Register() {
           </button>
         </div>
 
-        {/* Ô nhập mã giới thiệu */}
         <div className="relative">
           <Gift size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
           <input
@@ -253,35 +178,4 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-      }
-// Thêm vào sau khi tạo user
-const handleSubmit = async (e) => {
-  // ... existing code ...
-
-  // 🔥 KIỂM TRA CLUSTER TRƯỚC KHI CHO ĐĂNG KÝ
-  if (fingerprint) {
-    const existingDevices = await supabase
-      .from('devices')
-      .select('user_id, users!inner(username)')
-      .eq('fingerprint', fingerprint.fingerprint);
-    
-    if (existingDevices.data && existingDevices.data.length >= 5) {
-      setError(`⚠️ Phát hiện ${existingDevices.data.length} tài khoản trên thiết bị này. 
-                Vui lòng liên hệ hỗ trợ để được giải quyết.`);
-      setLoading(false);
-      return;
-    }
-
-    // Nếu có từ 3-4 account → cảnh báo
-    if (existingDevices.data && existingDevices.data.length >= 3) {
-      console.warn(`⚠️ Cảnh báo: ${existingDevices.data.length} accounts trên cùng thiết bị`);
-      // Có thể cho đăng ký nhưng đánh dấu suspicious
-      await supabase
-        .from('users')
-        .update({ risk_level: 'warning' })
-        .eq('id', data.user.id);
-    }
-  }
-
-  // ... tiếp tục code đăng ký ...
-};
+              }
