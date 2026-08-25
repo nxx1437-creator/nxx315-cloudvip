@@ -3,7 +3,7 @@ import { Coins, Gift, Loader2, CheckCircle2, XCircle, Gamepad2, Flame, Swords, S
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import useFraud from "../hooks/useFraud.js";
+import { useFraud } from "../hooks/useFraud.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
