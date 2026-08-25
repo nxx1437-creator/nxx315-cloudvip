@@ -324,7 +324,7 @@ function UsersTab() {
   );
 }
 
-/* ===== CÁC TAB KHÁC ===== */
+/* ===== TASKS TAB ===== */
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -355,6 +355,7 @@ function TasksTab() {
   );
 }
 
+/* ===== PACKAGES TAB ===== */
 function PackagesTab() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -383,8 +384,7 @@ function PackagesTab() {
   );
 }
 
-/* ===== SHARED ===== */
+/* ===== SHARED COMPONENTS ===== */
 function SectionHeader({ title, count, onRefresh }) {
   return (
-    <div className="flex items-center justify-between">
-      <div><h2 classNa
+    <div className="flex items-center j
