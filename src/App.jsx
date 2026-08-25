@@ -1,8 +1,7 @@
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
+// import ProtectedRoute from './components/ProtectedRoute.jsx';  // 👈 Comment lại
 
-// Pages
 import Home from './CloudVIPLanding.jsx';
 import Tasks from './pages/Tasks.jsx';
 import Store from './pages/Store.jsx';
@@ -20,7 +19,7 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
-        {/* Public routes - không cần login */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/terms" element={<Terms />} />
@@ -30,28 +29,12 @@ export default function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
 
-        {/* Protected routes - cần login + xác nhận điều khoản */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        } />
-        <Route path="/tasks" element={
-          <ProtectedRoute>
-            <Tasks />
-          </ProtectedRoute>
-        } />
-        <Route path="/store" element={
-          <ProtectedRoute>
-            <Store />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        } />
+        {/* Routes tạm thời không cần login để test */}
+        <Route path="/" element={<Home />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/store" element={<Store />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </HashRouter>
   );
-            }
+}
