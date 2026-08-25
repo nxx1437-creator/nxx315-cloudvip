@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 // Pages
-import Home from './pages/Index.jsx';
+import Home from './pages/landing.jsx';
 import Tasks from './pages/Tasks.jsx';
 import Store from './pages/Store.jsx';
 import Admin from './pages/Admin.jsx';
