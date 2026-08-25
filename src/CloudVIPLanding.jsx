@@ -199,7 +199,7 @@ export default function CloudVIPLanding() {
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <button
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/register")}
               className={`rounded-full ${ctaGradient} px-4 py-2 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110 flex items-center gap-1.5`}
             >
               <Star size={14} /> Đăng ký
@@ -251,7 +251,7 @@ export default function CloudVIPLanding() {
           <Reveal delay={240}>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/register")}
                 className={`group flex items-center gap-2 rounded-full ${ctaGradient} px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110`}
               >
                 Bắt đầu ngay — Miễn phí
@@ -437,7 +437,7 @@ export default function CloudVIPLanding() {
               Đăng ký miễn phí và hoàn thành nhiệm vụ đầu tiên ngay hôm nay.
             </p>
             <button
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/register")}
               className={`mt-6 inline-flex items-center gap-2 rounded-full ${ctaGradient} px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110`}
             >
               Bắt đầu ngay — Miễn phí <ArrowRight size={16} />
@@ -451,4 +451,4 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-  }
+                       }
