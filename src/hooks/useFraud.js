@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { RiskEngine } from '../lib/fraud/riskEngine';
+import { supabase } from '../lib/supabaseClient.js';
 
 // Hàm tạo fingerprint đơn giản
 const generateFingerprint = () => {
-  // Không cần async/await vì là sync
   const components = [
     navigator.userAgent,
     navigator.language,
@@ -21,7 +21,7 @@ const generateFingerprint = () => {
   return hash.toString();
 };
 
-// Hàm lấy IP public (nếu không có thì dùng fallback)
+// Hàm lấy IP public
 const getPublicIP = async () => {
   try {
     const res = await fetch('https://api.ipify.org?format=json');
@@ -32,25 +32,47 @@ const getPublicIP = async () => {
   }
 };
 
+// Kiểm tra xem user có phải admin không
+const checkIsAdmin = async (userId) => {
+  if (!userId) return false;
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .single();
+    return data?.is_admin === true;
+  } catch {
+    return false;
+  }
+};
+
 export const useFraud = (userId) => {
   const [fingerprint, setFingerprint] = useState(null);
   const [risk, setRisk] = useState(null);
   const [loading, setLoading] = useState(true);
   const [ip, setIp] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Khởi tạo fingerprint
   useEffect(() => {
     const init = async () => {
-      const fp = generateFingerprint(); // ❌ Bỏ await vì sync
+      const fp = generateFingerprint();
       setFingerprint(fp);
       
       const publicIP = await getPublicIP();
       setIp(publicIP);
       
+      // Kiểm tra admin
+      if (userId) {
+        const adminStatus = await checkIsAdmin(userId);
+        setIsAdmin(adminStatus);
+      }
+      
       setLoading(false);
     };
     init();
-  }, []);
+  }, [userId]);
 
   // Tính risk khi có userId
   useEffect(() => {
@@ -68,9 +90,15 @@ export const useFraud = (userId) => {
     checkRisk();
   }, [userId]);
 
-  // Kiểm tra redeem
+  // Kiểm tra redeem - Admin bypass
   const checkRedeem = async () => {
     if (!userId) return { allowed: false, reason: 'Chưa đăng nhập' };
+    
+    // Admin được bypass toàn bộ
+    if (isAdmin) {
+      return { allowed: true, reason: '' };
+    }
+    
     try {
       return await RiskEngine.canRedeem(userId);
     } catch {
@@ -78,9 +106,15 @@ export const useFraud = (userId) => {
     }
   };
 
-  // Kiểm tra task
+  // Kiểm tra task - Admin bypass
   const checkTask = async () => {
     if (!userId) return { allowed: false, reason: 'Chưa đăng nhập' };
+    
+    // Admin được bypass toàn bộ
+    if (isAdmin) {
+      return { allowed: true, reason: '' };
+    }
+    
     try {
       return await RiskEngine.canDoTask(userId);
     } catch {
@@ -106,8 +140,11 @@ export const useFraud = (userId) => {
     risk,
     loading,
     ip,
+    isAdmin,
     checkRedeem,
     checkTask,
     logAction
   };
 };
+
+export default useFraud;
