@@ -21,6 +21,8 @@ export default function Footer() {
               <li><Link to="/privacy" className="text-sm text-slate-600 hover:text-sky-600">Chính sách bảo mật</Link></li>
               <li><Link to="/fraud" className="text-sm text-slate-600 hover:text-sky-600">Chính sách chống gian lận</Link></li>
               <li><Link to="/redemption-policy" className="text-sm text-slate-600 hover:text-sky-600">Quy định đổi thưởng</Link></li>
+              <li><Link to="/contact" className="text-sm text-slate-600 hover:text-sky-600">Liên hệ</Link></li>
+              <li><Link to="/help" className="text-sm text-slate-600 hover:text-sky-600">Trung tâm trợ giúp</Link></li>                                                                                                                
             </ul>
           </div>
           <div>
