@@ -10,6 +10,7 @@ import Admin from './pages/Admin.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Status from './pages/Status.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 export default function App() {
   const MAINTENANCE_MODE = true; // 👈 Bật/tắt bảo trì ở đây
