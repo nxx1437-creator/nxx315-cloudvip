@@ -12,31 +12,28 @@ export default function Footer() {
           <p className="mt-1 text-xs text-slate-400">Kiếm coin • Đổi thưởng • Marketing</p>
         </div>
 
-        {/* 2 cột thông tin */}
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Thông tin</h4>
-            <ul className="space-y-2">
-              <li><Link to="/terms" className="text-sm text-slate-600 hover:text-sky-600">Điều khoản sử dụng</Link></li>
-              <li><Link to="/privacy" className="text-sm text-slate-600 hover:text-sky-600">Chính sách bảo mật</Link></li>
-              <li><Link to="/fraud" className="text-sm text-slate-600 hover:text-sky-600">Chính sách chống gian lận</Link></li>
-              <li><Link to="/redemption-policy" className="text-sm text-slate-600 hover:text-sky-600">Quy định đổi thưởng</Link></li>
-              <li><Link to="/contact" className="text-sm text-slate-600 hover:text-sky-600">Liên hệ</Link></li>
-              <li><Link to="/help" className="text-sm text-slate-600 hover:text-sky-600">Trung tâm trợ giúp</Link></li>                                                                                                                
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Hỗ trợ</h4>
-            <ul className="space-y-2">
-              <li><Link to="/support" className="text-sm text-slate-600 hover:text-sky-600">Trung tâm trợ giúp</Link></li>
-              <li><Link to="/contact" className="text-sm text-slate-600 hover:text-sky-600">Liên hệ</Link></li>
-              <li><Link to="/status" className="text-sm text-slate-600 hover:text-sky-600">Trạng thái hệ thống</Link></li>
-            </ul>
-          </div>
+        {/* Thông tin */}
+        <div className="mb-6">
+          <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Thông tin</h4>
+          <ul className="space-y-2">
+            <li><Link to="/terms" className="text-sm text-slate-600 hover:text-sky-600">Điều khoản sử dụng</Link></li>
+            <li><Link to="/privacy" className="text-sm text-slate-600 hover:text-sky-600">Chính sách bảo mật</Link></li>
+            <li><Link to="/fraud" className="text-sm text-slate-600 hover:text-sky-600">Chính sách chống gian lận</Link></li>
+            <li><Link to="/redemption-policy" className="text-sm text-slate-600 hover:text-sky-600">Quy định đổi thưởng</Link></li>
+          </ul>
         </div>
 
-        {/* Kết nối - Chỉ YouTube và TikTok */}
-        <div className="mt-8">
+        {/* Hỗ trợ */}
+        <div className="mb-6">
+          <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Hỗ trợ</h4>
+          <ul className="space-y-2">
+            <li><Link to="/help" className="text-sm text-slate-600 hover:text-sky-600">Trung tâm trợ giúp</Link></li>
+            <li><Link to="/contact" className="text-sm text-slate-600 hover:text-sky-600">Liên hệ</Link></li>
+          </ul>
+        </div>
+
+        {/* Kết nối */}
+        <div className="mb-6">
           <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Kết nối</h4>
           <div className="flex gap-3">
             <a 
@@ -63,7 +60,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-8 border-t border-slate-100 pt-6 text-center">
+        <div className="border-t border-slate-100 pt-6 text-center">
           <p className="text-xs text-slate-400">© 2026 NXX315 Studio</p>
         </div>
       </div>
