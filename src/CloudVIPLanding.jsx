@@ -278,7 +278,7 @@ export default function CloudVIPLanding() {
                 <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
               </button>
               <button
-                onClick={scrollToHowItWorks}
+                onClick={() => navigate('/signup')}>Bắt đầu miễn phí</button>
                 className={`flex items-center gap-2 rounded-full border px-7 py-3.5 text-sm font-semibold transition ${
                   dark
                     ? "border-white/15 hover:bg-white/5 text-sky-100"
