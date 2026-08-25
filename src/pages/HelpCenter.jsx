@@ -19,7 +19,7 @@ const faqData = [
   {
     id: "account",
     icon: User,
-    title: "👤 Tài khoản",
+    title: "Tài khoản",
     questions: [
       {
         q: "Ai có thể sử dụng NXX315 Studio Rewards?",
@@ -38,7 +38,7 @@ const faqData = [
   {
     id: "tasks",
     icon: Coins,
-    title: "🪙 Xu và nhiệm vụ",
+    title: "Xu và nhiệm vụ",
     questions: [
       {
         q: "Làm nhiệm vụ nhưng không nhận được xu thì sao?",
@@ -57,7 +57,7 @@ const faqData = [
   {
     id: "redemption",
     icon: Gift,
-    title: "🎁 Đổi thưởng",
+    title: "Đổi thưởng",
     questions: [
       {
         q: "Tôi có thể đổi những gì?",
@@ -80,7 +80,7 @@ const faqData = [
   {
     id: "fraud",
     icon: Shield,
-    title: "🛡️ Gian lận",
+    title: "Gian lận",
     questions: [
       {
         q: "Tôi có thể dùng nhiều mạng để tạo nhiều tài khoản không?",
@@ -99,7 +99,7 @@ const faqData = [
   {
     id: "security",
     icon: Lock,
-    title: "🔐 An toàn tài khoản",
+    title: " An toàn tài khoản",
     questions: [
       {
         q: "NXX315 Studio Rewards có yêu cầu mật khẩu của tôi không?",
