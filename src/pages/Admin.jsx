@@ -226,7 +226,6 @@ function SupportTab() {
       const ticket = tickets.find(t => t.id === ticketId);
       if (!ticket) throw new Error('Không tìm thấy ticket');
 
-      // 1️⃣ Cập nhật database
       const { error: dbError } = await supabase
         .from('support_tickets')
         .update({
@@ -238,7 +237,6 @@ function SupportTab() {
 
       if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
-      // 2️⃣ Gửi email
       try {
         const result = await emailjs.send(
           SERVICE_ID,
@@ -369,4 +367,4 @@ function UsersTab() {
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
                 <td className="px-6 py-4">
                   {user.is_banned ? (
-               
+                    <span className="rounded-full bg-rose-50 px-3 py-
