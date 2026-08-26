@@ -403,4 +403,9 @@ function UsersTab() {
                 <td className="px-6 py-4">Lv.{user.level}</td>
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
                 <td className="px-6 py-4">
-                  {user.is_banned ? <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban<
+         {user.is_banned ? (
+    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
+  ) : (
+    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
+  )}
+</td>
