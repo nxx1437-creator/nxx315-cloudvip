@@ -276,9 +276,8 @@ export default function Dashboard() {
             Đi đến nhiệm vụ <ArrowRight size={14} />
           </button>
         </div>
-      </main>
-<Footer />
-<BottomNav />
+            </main>
+      <Footer />
       <BottomNav />
       <Sidebar
         open={sidebarOpen}
@@ -290,4 +289,4 @@ export default function Dashboard() {
       />
     </div>
   );
-      }
+}
