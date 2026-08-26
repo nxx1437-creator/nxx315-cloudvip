@@ -18,9 +18,9 @@ import {
 import { supabase } from '../lib/supabaseClient.js';
 import emailjs from '@emailjs/browser';
 
+// 👉 DÙNG EMAILJS (không dùng Edge Function nữa)
 const SERVICE_ID = 'service_i4wv7md';
-const TEMPLATE_ID_USER = 'template_eoitihx';   // Xác nhận liên hệ (gửi user + admin qua Cc)
-const TEMPLATE_ID_REPLY = 'template_i16qct';   // Phản hồi từ NXX315
+const TEMPLATE_ID_USER = 'template_eoitihx';   // Xác nhận liên hệ
 const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
@@ -54,7 +54,7 @@ export default function Contact() {
 
       if (dbError) throw dbError;
 
-      // 2️⃣ Gửi email xác nhận cho user + thông báo cho admin (Cc)
+      // 2️⃣ Gửi email xác nhận cho user + Cc admin
       await emailjs.send(
         SERVICE_ID,
         TEMPLATE_ID_USER,
@@ -63,7 +63,7 @@ export default function Contact() {
           from_email: formData.email,
           subject: formData.subject,
           message: formData.message,
-          admin_email: 'nxx315hub@gmail.com'  // 👈 Admin sẽ nhận qua Cc
+          admin_email: 'nxx315hub@gmail.com'  // Admin nhận qua Cc
         },
         PUBLIC_KEY
       );
@@ -341,4 +341,4 @@ function Section({ icon: Icon, title, children, color }) {
       </div>
     </div>
   );
-      }
+          }
