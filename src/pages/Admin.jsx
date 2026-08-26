@@ -215,67 +215,57 @@ function SupportTab() {
   useEffect(() => { fetchTickets(); }, []);
 
   const handleReply = async (ticketId) => {
-    if (!replyText.trim()) {
-      alert('Vui lòng nhập nội dung phản hồi!');
-      return;
-    }
+  if (!replyText.trim()) {
+    alert('Vui lòng nhập nội dung phản hồi!');
+    return;
+  }
 
-    setReplyingId(ticketId);
+  setReplyingId(ticketId);
 
-    try {
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (!ticket) throw new Error('Không tìm thấy ticket');
+  try {
+    const ticket = tickets.find(t => t.id === ticketId);
+    if (!ticket) throw new Error('Không tìm thấy ticket');
 
-      const { error: dbError } = await supabase
-        .from('support_tickets')
-        .update({
-          admin_reply: replyText,
-          status: 'replied',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', ticketId);
+    // 1️⃣ Cập nhật database
+    const { error: dbError } = await supabase
+      .from('support_tickets')
+      .update({
+        admin_reply: replyText,
+        status: 'replied',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', ticketId);
 
-      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
+    if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
-      try {
-        const result = await emailjs.send(
-          SERVICE_ID,
-          TEMPLATE_ID_REPLY,
-          {
-            user_name: ticket.user_name || 'Khách',
-            user_email: ticket.user_email || 'Không có email',
-            subject: ticket.subject || 'Không có chủ đề',
-            admin_reply: replyText,
-            current_date: new Date().toLocaleDateString('vi-VN')
-          },
-          PUBLIC_KEY
-        );
+    // 2️⃣ Gửi email
+    const result = await emailjs.send(
+      SERVICE_ID,
+      'template_eoitihx',
+      {
+        from_name: 'Admin NXX315',
+        from_email: 'nxx315hub@gmail.com',
+        subject: 'Phản hồi từ NXX315 Studio',
+        message: `Chào ${ticket.user_name || 'bạn'},\n\n${replyText}\n\n---\nNXX315 Studio Rewards`
+      },
+      PUBLIC_KEY
+    );
 
-        console.log('EmailJS result:', result);
-
-        if (result.status !== 200) {
-          throw new Error('EmailJS status: ' + result.status + ' - ' + (result.text || 'Unknown error'));
-        }
-      } catch (emailError) {
-        console.error('EmailJS error:', emailError);
-        alert('⚠️ Đã lưu phản hồi nhưng gửi email thất bại: ' + (emailError.message || 'Lỗi không xác định'));
-        setReplyText('');
-        await fetchTickets();
-        setReplyingId(null);
-        return;
-      }
-
+    if (result.status === 200) {
       setReplyText('');
       await fetchTickets();
       alert('✅ Đã gửi phản hồi thành công!');
-
-    } catch (err) {
-      alert('❌ Lỗi: ' + err.message);
-      console.error('Error:', err);
-    } finally {
-      setReplyingId(null);
+    } else {
+      throw new Error('EmailJS status: ' + result.status);
     }
-  };
+
+  } catch (err) {
+    alert('❌ Lỗi: ' + err.message);
+    console.error('Error:', err);
+  } finally {
+    setReplyingId(null);
+  }
+};
 
   if (loading) return <Loading text="Loading tickets..." />;
   if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
