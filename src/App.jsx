@@ -21,6 +21,7 @@ import Fraud from "./pages/Fraud.jsx";
 import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
 import Contact from "./pages/Contact.jsx";
 import HelpCenter from "./pages/HelpCenter.jsx";
+import Support from "./pages/Support.jsx";
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/redemption-policy" element={<RedemptionPolicy />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/store" element={<Store />} />
@@ -49,4 +51,4 @@ export default function App() {
       </Routes>
     </HashRouter>
   );
-        }
+}
