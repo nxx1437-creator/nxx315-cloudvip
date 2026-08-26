@@ -205,7 +205,7 @@ export default function CloudVIPLanding() {
               <Coins size={18} className="text-white" />
             </div>
             <span className={`font-display text-lg font-bold tracking-tight ${dark ? "text-sky-100" : "text-sky-950"}`}>
-              CloudVIP
+              NXX315 Studio Rewards
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -299,7 +299,7 @@ export default function CloudVIPLanding() {
                 <ShieldCheck size={14} className={accentText} /> Robux chính hãng 100%
               </span>
               <span className="flex items-center gap-1.5">
-                <BadgeCheck size={14} className={accentText} /> Nhiệm vụ được duyệt thủ công
+                <BadgeCheck size={14} className={accentText} /> đổi thưởng được duyệt thủ công!
               </span>
             </div>
           </Reveal>
@@ -425,7 +425,7 @@ export default function CloudVIPLanding() {
             Tính năng nổi bật
           </span>
           <h2 className={`font-display mt-2 text-3xl font-bold ${dark ? "text-sky-50" : "text-sky-950"}`}>
-            Tại sao chọn <span className={accentText}>CloudVIP</span>?
+            Tại sao chọn <span className={accentText}>NXX315 Studio Rewards</span>?
           </h2>
         </Reveal>
 
@@ -467,7 +467,7 @@ export default function CloudVIPLanding() {
       </section>
 
       <footer className={`border-t px-5 py-6 text-center text-xs ${dark ? "border-white/10 text-sky-300/60" : "border-sky-200 text-sky-700/60"}`}>
-        © {new Date().getFullYear()} CloudVIP. Robux là thương hiệu của Roblox Corporation.
+        © {new Date().getFullYear()} NXX315 Studio Rewards. Robux là thương hiệu của Roblox Corporation.
       </footer>
     </div>
   );
