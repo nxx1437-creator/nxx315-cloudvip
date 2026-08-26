@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import emailjs from '@emailjs/browser';
-
-const SERVICE_ID = 'service_i4wv7md';
-const TEMPLATE_ID_REPLY = 'template_i16qct';
-const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 const TABS = [
   { key: "orders", label: "Đơn hàng", icon: Package, desc: "Quản lý đơn đổi thưởng" },
@@ -215,58 +210,39 @@ function SupportTab() {
   useEffect(() => { fetchTickets(); }, []);
 
   const handleReply = async (ticketId) => {
-  const handleReply = async (ticketId) => {
-  if (!replyText.trim()) {
-    alert('Vui lòng nhập nội dung phản hồi!');
-    return;
-  }
-
-  setReplyingId(ticketId);
-
-  try {
-    const ticket = tickets.find(t => t.id === ticketId);
-    if (!ticket) throw new Error('Không tìm thấy ticket');
-
-    // 1️⃣ Cập nhật database
-    const { error: dbError } = await supabase
-      .from('support_tickets')
-      .update({
-        admin_reply: replyText,
-        status: 'replied',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', ticketId);
-
-    if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
-
-    // 2️⃣ Gửi email - KHỚP VỚI BIẾN TRONG TEMPLATE
-    const result = await emailjs.send(
-      SERVICE_ID,
-      TEMPLATE_ID_REPLY,
-      {
-        user_name: ticket.user_name || 'Khách',
-        admin_reply: replyText,
-        user_subject: ticket.subject || 'Không có chủ đề',
-        user_message: ticket.message || 'Không có nội dung'
-      },
-      PUBLIC_KEY
-    );
-
-    if (result.status === 200) {
-      setReplyText('');
-      await fetchTickets();
-      alert('✅ Đã gửi phản hồi thành công!');
-    } else {
-      throw new Error('EmailJS status: ' + result.status);
+    if (!replyText.trim()) {
+      alert('Vui lòng nhập nội dung phản hồi!');
+      return;
     }
 
-  } catch (err) {
-    alert('❌ Lỗi: ' + err.message);
-    console.error('Error:', err);
-  } finally {
-    setReplyingId(null);
-  }
-};
+    setReplyingId(ticketId);
+
+    try {
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) throw new Error('Không tìm thấy ticket');
+
+      const { error: dbError } = await supabase
+        .from('support_tickets')
+        .update({
+          admin_reply: replyText,
+          status: 'replied',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
+
+      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
+
+      setReplyText('');
+      await fetchTickets();
+      alert('✅ Đã lưu phản hồi thành công!');
+
+    } catch (err) {
+      alert('❌ Lỗi: ' + err.message);
+      console.error('Error:', err);
+    } finally {
+      setReplyingId(null);
+    }
+  };
 
   if (loading) return <Loading text="Loading tickets..." />;
   if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
@@ -308,7 +284,8 @@ function SupportTab() {
       ))}
     </div>
   );
-            }
+}
+
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -465,4 +442,4 @@ function EmptyState({ text }) {
       <p className="text-sm text-slate-400">{text}</p>
     </div>
   );
-}
+    }
