@@ -15,7 +15,6 @@ import {
   XCircle
 } from "lucide-react";
 import { supabase } from '../lib/supabaseClient.js';
-import emailjs from '@emailjs/browser';
 
 const SERVICE_ID = 'service_i4wv7md';
 const TEMPLATE_ID_USER = 'template_eoitihx';
@@ -33,35 +32,52 @@ export default function Contact() {
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSending(true);
-    setError('');
-    setSent(false);
+  e.preventDefault();
+  setSending(true);
+  setError('');
+  setSent(false);
 
-    try {
-      const { error: dbError } = await supabase
-        .from('support_tickets')
-        .insert({
-          user_name: formData.name,
-          user_email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          status: 'pending'
-        });
+  try {
+    const { error: dbError } = await supabase
+      .from('support_tickets')
+      .insert({
+        user_name: formData.name,
+        user_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        status: 'pending'
+      });
 
-      if (dbError) throw dbError;
+    if (dbError) throw dbError;
 
-      const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID_USER,
-        {
-          from_name: formData.name,
-          from_email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-        },
-        PUBLIC_KEY
-      );
+    // 👉 Dùng window.emailjs (từ CDN)
+    const result = await window.emailjs.send(
+      'service_i4wv7md',
+      'template_eoitihx',
+      {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+      },
+      'RCMv-hwVtokArn48n'
+    );
+
+    if (result.status === 200) {
+      setSent(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setSent(false), 5000);
+    } else {
+      throw new Error('Gửi email thất bại');
+    }
+
+  } catch (err) {
+    setError(err.message || 'Lỗi kết nối, vui lòng thử lại sau');
+    console.error('Error:', err);
+  } finally {
+    setSending(false);
+  }
+};
 
       if (result.status === 200) {
         setSent(true);
