@@ -1,27 +1,47 @@
-import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 
-import Home from './CloudVIPLanding.jsx';
-import Tasks from './pages/Tasks.jsx';
-import Store from './pages/Store.jsx';
-import Admin from './pages/Admin.jsx';
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import Status from './pages/Status.jsx';
+import CloudVIPLanding from "./CloudVIPLanding.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Tasks from "./pages/Tasks.jsx";
+import Store from "./pages/Store.jsx";
+import Admin from "./pages/Admin.jsx";
+import TaskCallback from "./pages/TaskCallback.jsx";
+import Wallet from "./pages/Wallet.jsx";
+import ProfilePage from "./pages/Profile.jsx";
+import Invite from "./pages/Invite.jsx";
+import Marketing from "./pages/Marketing.jsx";
+import MarketingWallet from "./pages/MarketingWallet.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
+
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 export default function App() {
   return (
-    <HashRouter>
+    <ErrorBoundary>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/" element={<CloudVIPLanding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/signup" element={<Register />} />
-        <Route path="/status" element={<Status />} />
+
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+        <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
+        <Route path="/marketing-wallet" element={<ProtectedRoute><MarketingWallet /></ProtectedRoute>} />
+        <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
+        <Route path="/task/callback" element={<ProtectedRoute><TaskCallback /></ProtectedRoute>} />
+
+        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </HashRouter>
+    </ErrorBoundary>
   );
-}
+        }
