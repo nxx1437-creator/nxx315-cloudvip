@@ -253,7 +253,6 @@ function SupportTab() {
     try {
       const ticket = tickets.find(t => t.id === ticketId);
 
-      // 1️⃣ Cập nhật database
       const { error: dbError } = await supabase
         .from('support_tickets')
         .update({
@@ -265,7 +264,6 @@ function SupportTab() {
 
       if (dbError) throw dbError;
 
-      // 2️⃣ Gửi email phản hồi cho người dùng
       await emailjs.send(
         SERVICE_ID,
         TEMPLATE_ID_REPLY,
@@ -403,9 +401,7 @@ function UsersTab() {
                 <td className="px-6 py-4">Lv.{user.level}</td>
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
                 <td className="px-6 py-4">
-         {user.is_banned ? (
-    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
-  ) : (
-    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
-  )}
-</td>
+                  {user.is_banned ? (
+                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
+                  ) : (
+                    <span
