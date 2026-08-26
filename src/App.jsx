@@ -28,7 +28,6 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Routes>
-        <Route path="/" element={<CloudVIPLanding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/terms" element={<Terms />} />
@@ -37,6 +36,8 @@ export default function App() {
         <Route path="/redemption-policy" element={<RedemptionPolicy />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/landing" element={<CloudVIPLanding />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/store" element={<Store />} />
@@ -51,4 +52,4 @@ export default function App() {
       </Routes>
     </ErrorBoundary>
   );
-      }
+}
