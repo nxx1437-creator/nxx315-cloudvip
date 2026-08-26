@@ -15,9 +15,13 @@ import Invite from "./pages/Invite.jsx";
 import Marketing from "./pages/Marketing.jsx";
 import MarketingWallet from "./pages/MarketingWallet.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import Terms from "./pages/Terms.jsx";
+import Privacy from "./pages/Privacy.jsx";
+import Fraud from "./pages/Fraud.jsx";
+import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
+import Contact from "./pages/Contact.jsx";
+import HelpCenter from "./pages/HelpCenter.jsx";
 
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import AdminRoute from "./components/AdminRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 export default function App() {
@@ -27,21 +31,24 @@ export default function App() {
         <Route path="/" element={<CloudVIPLanding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-        <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
-        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
-        <Route path="/marketing-wallet" element={<ProtectedRoute><MarketingWallet /></ProtectedRoute>} />
-        <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
-        <Route path="/task/callback" element={<ProtectedRoute><TaskCallback /></ProtectedRoute>} />
-
-        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/fraud" element={<Fraud />} />
+        <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/store" element={<Store />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/marketing" element={<Marketing />} />
+        <Route path="/marketing-wallet" element={<MarketingWallet />} />
+        <Route path="/invite" element={<Invite />} />
+        <Route path="/task/callback" element={<TaskCallback />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </ErrorBoundary>
   );
-        }
+      }
