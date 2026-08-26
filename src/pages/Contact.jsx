@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Mail, 
-  MessageCircle, 
   AlertCircle, 
   Gift, 
   Bug, 
@@ -16,11 +15,6 @@ import {
   XCircle
 } from "lucide-react";
 import { supabase } from '../lib/supabaseClient.js';
-import emailjs from '@emailjs/browser';
-
-const SERVICE_ID = 'service_i4ww7md';
-const TEMPLATE_ID_USER = 'template_eoitihx';
-const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -53,26 +47,24 @@ export default function Contact() {
 
       if (dbError) throw dbError;
 
-      // 2️⃣ Gửi email
-      const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID_USER,
-        {
-          from_name: formData.name,
-          from_email: formData.email,
+      // 2️⃣ Gửi email dùng Supabase Edge Function (Resend)
+      const { data, error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
           subject: formData.subject,
-          message: formData.message,
-          admin_email: 'nxx315hub@gmail.com'
-        },
-        PUBLIC_KEY
-      );
+          message: formData.message
+        }
+      });
 
-      if (result.status === 200) {
+      if (emailError) throw new Error(emailError.message);
+
+      if (data?.success) {
         setSent(true);
         setFormData({ name: '', email: '', subject: '', message: '' });
         setTimeout(() => setSent(false), 5000);
       } else {
-        throw new Error('Gửi email thất bại');
+        throw new Error(data?.error || 'Gửi thất bại');
       }
 
     } catch (err) {
@@ -91,7 +83,6 @@ export default function Contact() {
       `}</style>
 
       <main className="mx-auto max-w-3xl px-4 py-8">
-        {/* Header */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-4 py-2 text-sm font-semibold text-sky-700">
             <Mail size={16} /> Liên hệ
@@ -105,7 +96,6 @@ export default function Contact() {
         </div>
 
         <div className="space-y-6">
-          {/* Hỗ trợ tài khoản */}
           <Section icon={AlertCircle} title=" Hỗ trợ tài khoản" color="blue">
             <p>Bạn có thể liên hệ khi gặp các vấn đề như:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
@@ -119,7 +109,6 @@ export default function Contact() {
             </ul>
           </Section>
 
-          {/* Hỗ trợ đổi thưởng */}
           <Section icon={Gift} title=" Hỗ trợ đổi thưởng" color="emerald">
             <p>Khi liên hệ về một đơn đổi thưởng, vui lòng cung cấp:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
@@ -134,7 +123,6 @@ export default function Contact() {
             </div>
           </Section>
 
-          {/* Báo lỗi */}
           <Section icon={Bug} title=" Báo lỗi" color="rose">
             <p>Nếu bạn phát hiện lỗi trên NXX315 Studio Rewards, hãy cung cấp:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
@@ -148,7 +136,6 @@ export default function Contact() {
             </div>
           </Section>
 
-          {/* Góp ý */}
           <Section icon={Lightbulb} title=" Góp ý" color="purple">
             <p>Bạn cũng có thể liên hệ để gửi:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
@@ -160,10 +147,8 @@ export default function Contact() {
             </ul>
           </Section>
 
-          {/* Kênh liên hệ */}
           <div className="rounded-2xl border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white p-6 shadow-lg">
             <h2 className="font-display text-2xl font-bold text-slate-900"> Kênh liên hệ chính thức</h2>
-            
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500">
@@ -176,33 +161,23 @@ export default function Contact() {
                   </a>
                 </div>
               </div>
-
               <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500">
                   <Youtube size={24} />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900">Kênh cộng đồng</p>
-                  <a 
-                    href="https://youtube.com/@nxx3155/community" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm text-sky-600 hover:underline flex items-center gap-1"
-                  >
+                  <a href="https://youtube.com/@nxx3155/community" target="_blank" rel="noopener noreferrer" className="text-sm text-sky-600 hover:underline flex items-center gap-1">
                     YouTube Community <ExternalLink size={14} />
                   </a>
                 </div>
               </div>
             </div>
-
             <div className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
               ⚠️ <strong>Chỉ sử dụng các kênh được công bố</strong> trên website NXX315 Studio Rewards.
-              <br />
-              NXX315 Studio Rewards không chịu trách nhiệm đối với các tài khoản hoặc cá nhân giả mạo thương hiệu.
             </div>
           </div>
 
-          {/* Thời gian phản hồi */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
@@ -212,12 +187,9 @@ export default function Contact() {
             </div>
             <p className="mt-3 text-sm text-slate-600">
               Thời gian phản hồi có thể thay đổi tùy số lượng yêu cầu và mức độ phức tạp của vấn đề.
-              <br />
-              Các vấn đề liên quan đến tài khoản hoặc đổi thưởng có thể cần thêm thời gian để kiểm tra dữ liệu hệ thống.
             </p>
           </div>
 
-          {/* Quyền riêng tư */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
@@ -226,13 +198,10 @@ export default function Contact() {
               <h2 className="text-xl font-bold text-slate-900"> Quyền riêng tư</h2>
             </div>
             <p className="mt-3 text-sm text-slate-600">
-              Nếu bạn gửi thông tin cá nhân thông qua biểu mẫu liên hệ hoặc kênh hỗ trợ, thông tin đó có thể được sử dụng để xử lý yêu cầu của bạn.
-              <br />
               Vui lòng xem <Link to="/privacy" className="text-sky-600 hover:underline">Chính sách quyền riêng tư</Link> để biết thêm chi tiết.
             </p>
           </div>
 
-          {/* Form liên hệ */}
           <div className="rounded-2xl border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white p-6 shadow-lg">
             <h2 className="font-display text-2xl font-bold text-slate-900">📝 Gửi yêu cầu</h2>
             <p className="mt-1 text-sm text-slate-500">Điền thông tin bên dưới, chúng tôi sẽ phản hồi sớm nhất có thể.</p>
@@ -313,7 +282,6 @@ export default function Contact() {
             </form>
           </div>
 
-          {/* Footer */}
           <div className="mt-8 text-center">
             <Link to="/" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
               Quay về trang chủ
@@ -345,4 +313,4 @@ function Section({ icon: Icon, title, children, color }) {
       </div>
     </div>
   );
-              }
+      }
