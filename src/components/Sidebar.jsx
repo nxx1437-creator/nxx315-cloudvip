@@ -79,7 +79,7 @@ export default function Sidebar({ open, onClose, displayName, initial, coins, le
   const handleLogout = async () => {
     const { supabase } = await import("../lib/supabaseClient.js");
     await supabase.auth.signOut();
-    navigate("/login");
+    navigate("/Landing");
     onClose();
   };
 
