@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Mail, 
   MessageCircle, 
@@ -12,9 +12,10 @@ import {
   ExternalLink,
   CheckCircle2,
   Loader2,
-  Phone,
-  Youtube
+  Youtube,
+  XCircle
 } from "lucide-react";
+import { supabase } from '../lib/supabaseClient.js';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -25,15 +26,34 @@ export default function Contact() {
   });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSending(true);
-    // Giả lập gửi email (thay bằng API thật sau)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setSending(false);
-    setSent(true);
-    setTimeout(() => setSent(false), 5000);
+    setError('');
+    setSent(false);
+
+    try {
+      // Gọi Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: formData
+      });
+
+      if (error) throw new Error(error.message);
+
+      if (data?.success) {
+        setSent(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setSent(false), 5000);
+      } else {
+        throw new Error(data?.error || 'Gửi thất bại');
+      }
+    } catch (err) {
+      setError(err.message || 'Lỗi kết nối, vui lòng thử lại sau');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -59,7 +79,7 @@ export default function Contact() {
 
         <div className="space-y-6">
           {/* Hỗ trợ tài khoản */}
-          <Section icon={AlertCircle} title="🆘 Hỗ trợ tài khoản" color="blue">
+          <Section icon={AlertCircle} title=" Hỗ trợ tài khoản" color="blue">
             <p>Bạn có thể liên hệ khi gặp các vấn đề như:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
               <li>Không thể đăng nhập</li>
@@ -73,7 +93,7 @@ export default function Contact() {
           </Section>
 
           {/* Hỗ trợ đổi thưởng */}
-          <Section icon={Gift} title="🎁 Hỗ trợ đổi thưởng" color="emerald">
+          <Section icon={Gift} title=" Hỗ trợ đổi thưởng" color="emerald">
             <p>Khi liên hệ về một đơn đổi thưởng, vui lòng cung cấp:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
               <li>Tên tài khoản</li>
@@ -88,7 +108,7 @@ export default function Contact() {
           </Section>
 
           {/* Báo lỗi */}
-          <Section icon={Bug} title="🐛 Báo lỗi" color="rose">
+          <Section icon={Bug} title=" Báo lỗi" color="rose">
             <p>Nếu bạn phát hiện lỗi trên NXX315 Studio Rewards, hãy cung cấp:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
               <li>Mô tả lỗi</li>
@@ -102,7 +122,7 @@ export default function Contact() {
           </Section>
 
           {/* Góp ý */}
-          <Section icon={Lightbulb} title="💡 Góp ý" color="purple">
+          <Section icon={Lightbulb} title=" Góp ý" color="purple">
             <p>Bạn cũng có thể liên hệ để gửi:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
               <li>Góp ý cải thiện website</li>
@@ -115,7 +135,7 @@ export default function Contact() {
 
           {/* Kênh liên hệ */}
           <div className="rounded-2xl border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white p-6 shadow-lg">
-            <h2 className="font-display text-2xl font-bold text-slate-900">📮 Kênh liên hệ chính thức</h2>
+            <h2 className="font-display text-2xl font-bold text-slate-900"> Kênh liên hệ chính thức</h2>
             
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
@@ -161,7 +181,7 @@ export default function Contact() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                 <Clock size={20} />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">⏱️ Thời gian phản hồi</h2>
+              <h2 className="text-xl font-bold text-slate-900"> Thời gian phản hồi</h2>
             </div>
             <p className="mt-3 text-sm text-slate-600">
               Thời gian phản hồi có thể thay đổi tùy số lượng yêu cầu và mức độ phức tạp của vấn đề.
@@ -176,7 +196,7 @@ export default function Contact() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
                 <Shield size={20} />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">🔐 Quyền riêng tư</h2>
+              <h2 className="text-xl font-bold text-slate-900"> Quyền riêng tư</h2>
             </div>
             <p className="mt-3 text-sm text-slate-600">
               Nếu bạn gửi thông tin cá nhân thông qua biểu mẫu liên hệ hoặc kênh hỗ trợ, thông tin đó có thể được sử dụng để xử lý yêu cầu của bạn.
@@ -189,6 +209,12 @@ export default function Contact() {
           <div className="rounded-2xl border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white p-6 shadow-lg">
             <h2 className="font-display text-2xl font-bold text-slate-900">📝 Gửi yêu cầu</h2>
             <p className="mt-1 text-sm text-slate-500">Điền thông tin bên dưới, chúng tôi sẽ phản hồi sớm nhất có thể.</p>
+
+            {error && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+                <XCircle size={18} /> {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div>
@@ -224,11 +250,11 @@ export default function Contact() {
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-sky-400"
                 >
                   <option value="">Chọn chủ đề...</option>
-                  <option value="account">🆘 Hỗ trợ tài khoản</option>
-                  <option value="redemption">🎁 Hỗ trợ đổi thưởng</option>
-                  <option value="bug">🐛 Báo lỗi</option>
-                  <option value="suggestion">💡 Góp ý</option>
-                  <option value="other">📝 Khác</option>
+                  <option value="Hỗ trợ tài khoản"> Hỗ trợ tài khoản</option>
+                  <option value="Hỗ trợ đổi thưởng"> Hỗ trợ đổi thưởng</option>
+                  <option value="Báo lỗi"> Báo lỗi</option>
+                  <option value="Góp ý"> Góp ý</option>
+                  <option value="Khác"> Khác</option>
                 </select>
               </div>
 
@@ -292,4 +318,4 @@ function Section({ icon: Icon, title, children, color }) {
       </div>
     </div>
   );
-            }
+          }
