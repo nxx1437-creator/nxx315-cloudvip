@@ -15,10 +15,9 @@ import {
   XCircle
 } from "lucide-react";
 import { supabase } from '../lib/supabaseClient.js';
-import emailjs from '@emailjs/browser';
 
 const SERVICE_ID = 'service_i4wv7md';
-const TEMPLATE_ID_USER = 'template_eoitihx';
+const TEMPLATE_ID_USER = 'template_i16qcet'; // 👈 Đã sửa
 const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
