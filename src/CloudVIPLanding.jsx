@@ -472,16 +472,3 @@ export default function CloudVIPLanding() {
     </div>
   );
             }
-                  
-import MaintenanceBanner from './components/MaintenanceBanner.jsx';
-
-export default function CloudVIPLanding() {
-  // ... code
-
-  return (
-    <div className="...">
-      <MaintenanceBanner />  {/* 👈 Thêm vào đầu */}
-      {/* ... phần còn lại */}
-    </div>
-  );
-}
