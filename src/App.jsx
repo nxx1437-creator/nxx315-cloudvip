@@ -22,31 +22,35 @@ import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
 import Contact from "./pages/Contact.jsx";
 import HelpCenter from "./pages/HelpCenter.jsx";
 
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
+
 export default function App() {
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<CloudVIPLanding />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/fraud" element={<Fraud />} />
-        <Route path="/redemption-policy" element={<RedemptionPolicy />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/help" element={<HelpCenter />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/wallet" element={<Wallet />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/marketing" element={<Marketing />} />
-        <Route path="/marketing-wallet" element={<MarketingWallet />} />
-        <Route path="/invite" element={<Invite />} />
-        <Route path="/task/callback" element={<TaskCallback />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<CloudVIPLanding />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/fraud" element={<Fraud />} />
+          <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/store" element={<Store />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/marketing" element={<Marketing />} />
+          <Route path="/marketing-wallet" element={<MarketingWallet />} />
+          <Route path="/invite" element={<Invite />} />
+          <Route path="/task/callback" element={<TaskCallback />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </HashRouter>
+    </ErrorBoundary>
   );
 }
