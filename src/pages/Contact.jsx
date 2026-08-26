@@ -16,6 +16,12 @@ import {
   XCircle
 } from "lucide-react";
 import { supabase } from '../lib/supabaseClient.js';
+import emailjs from '@emailjs/browser';
+
+const SERVICE_ID = 'service_i4wv7md';
+const TEMPLATE_ID_USER = 'template_eoitihx';   // Xác nhận liên hệ (gửi user + admin qua Cc)
+const TEMPLATE_ID_REPLY = 'template_i16qct';   // Phản hồi từ NXX315
+const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -35,20 +41,37 @@ export default function Contact() {
     setSent(false);
 
     try {
-      // Gọi Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('send-email', {
-        body: formData
-      });
+      // 1️⃣ Lưu vào database
+      const { error: dbError } = await supabase
+        .from('support_tickets')
+        .insert({
+          user_name: formData.name,
+          user_email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          status: 'pending'
+        });
 
-      if (error) throw new Error(error.message);
+      if (dbError) throw dbError;
 
-      if (data?.success) {
-        setSent(true);
-        setFormData({ name: '', email: '', subject: '', message: '' });
-        setTimeout(() => setSent(false), 5000);
-      } else {
-        throw new Error(data?.error || 'Gửi thất bại');
-      }
+      // 2️⃣ Gửi email xác nhận cho user + thông báo cho admin (Cc)
+      await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID_USER,
+        {
+          from_name: formData.name,
+          from_email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          admin_email: 'nxx315hub@gmail.com'  // 👈 Admin sẽ nhận qua Cc
+        },
+        PUBLIC_KEY
+      );
+
+      setSent(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setSent(false), 5000);
+
     } catch (err) {
       setError(err.message || 'Lỗi kết nối, vui lòng thử lại sau');
     } finally {
@@ -318,4 +341,4 @@ function Section({ icon: Icon, title, children, color }) {
       </div>
     </div>
   );
-          }
+      }
