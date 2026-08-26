@@ -7,7 +7,7 @@ const TABS = [
   { key: "tasks", label: "Nhiệm vụ", icon: ListChecks, desc: "Cấu hình nhiệm vụ" },
   { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
   { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản & Ban" },
-  { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
+  { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" }, 
 ];
 
 export default function Admin() {
