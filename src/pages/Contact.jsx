@@ -17,7 +17,7 @@ import {
 import { supabase } from '../lib/supabaseClient.js';
 
 const SERVICE_ID = 'service_i4wv7md';
-const TEMPLATE_ID_USER = 'template_i16qcet'; // 👈 Đã sửa
+const TEMPLATE_ID_USER = 'template_eoi1ihx';
 const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
