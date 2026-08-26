@@ -215,6 +215,7 @@ function SupportTab() {
   useEffect(() => { fetchTickets(); }, []);
 
   const handleReply = async (ticketId) => {
+  const handleReply = async (ticketId) => {
   if (!replyText.trim()) {
     alert('Vui lòng nhập nội dung phản hồi!');
     return;
@@ -238,15 +239,15 @@ function SupportTab() {
 
     if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
-    // 2️⃣ Gửi email
+    // 2️⃣ Gửi email - KHỚP VỚI BIẾN TRONG TEMPLATE
     const result = await emailjs.send(
       SERVICE_ID,
-      'template_eoitihx',
+      TEMPLATE_ID_REPLY,
       {
-        from_name: 'Admin NXX315',
-        from_email: 'nxx315hub@gmail.com',
-        subject: 'Phản hồi từ NXX315 Studio',
-        message: `Chào ${ticket.user_name || 'bạn'},\n\n${replyText}\n\n---\nNXX315 Studio Rewards`
+        user_name: ticket.user_name || 'Khách',
+        admin_reply: replyText,
+        user_subject: ticket.subject || 'Không có chủ đề',
+        user_message: ticket.message || 'Không có nội dung'
       },
       PUBLIC_KEY
     );
