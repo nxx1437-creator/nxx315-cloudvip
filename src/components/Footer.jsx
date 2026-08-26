@@ -3,18 +3,17 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src =
-      "https://images.dmca.com/Badges/DMCABadgeHelper.min.js";
-    script.async = true;
+    const existingScript = document.querySelector(
+      'script[src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"]'
+    );
 
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.src =
+        "https://images.dmca.com/Badges/DMCABadgeHelper.min.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
   }, []);
 
   return (
@@ -154,7 +153,7 @@ export default function Footer() {
             className="dmca-badge"
           >
             <img
-              src="https://images.dmca.com/Badges/dmca-badge-w100-2x1-04.png?ID=589ed88f-5735-4ea1-8a59-fb1a4ad96159"
+              src="https://images.dmca.com/Badges/dmca_protected_sml_120n.png?ID=589ed88f-5735-4ea1-8a59-fb1a4ad96159"
               alt="DMCA.com Protection Status"
             />
           </a>
