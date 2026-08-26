@@ -18,9 +18,8 @@ import {
 import { supabase } from '../lib/supabaseClient.js';
 import emailjs from '@emailjs/browser';
 
-// 👉 DÙNG EMAILJS (không dùng Edge Function nữa)
 const SERVICE_ID = 'service_i4ww7md';
-const TEMPLATE_ID_USER = 'template_eoitihx';   // Xác nhận liên hệ
+const TEMPLATE_ID_USER = 'template_eoitihx';
 const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
@@ -54,8 +53,8 @@ export default function Contact() {
 
       if (dbError) throw dbError;
 
-      // 2️⃣ Gửi email xác nhận cho user + Cc admin
-      await emailjs.send(
+      // 2️⃣ Gửi email
+      const result = await emailjs.send(
         SERVICE_ID,
         TEMPLATE_ID_USER,
         {
@@ -63,17 +62,22 @@ export default function Contact() {
           from_email: formData.email,
           subject: formData.subject,
           message: formData.message,
-          admin_email: 'nxx315hub@gmail.com'  // Admin nhận qua Cc
+          admin_email: 'nxx315hub@gmail.com'
         },
         PUBLIC_KEY
       );
 
-      setSent(true);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-      setTimeout(() => setSent(false), 5000);
+      if (result.status === 200) {
+        setSent(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setSent(false), 5000);
+      } else {
+        throw new Error('Gửi email thất bại');
+      }
 
     } catch (err) {
       setError(err.message || 'Lỗi kết nối, vui lòng thử lại sau');
+      console.error('Error:', err);
     } finally {
       setSending(false);
     }
@@ -341,4 +345,4 @@ function Section({ icon: Icon, title, children, color }) {
       </div>
     </div>
   );
-          }
+              }
