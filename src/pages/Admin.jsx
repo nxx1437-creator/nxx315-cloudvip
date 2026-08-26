@@ -55,6 +55,7 @@ export default function Admin() {
     </div>
   );
 }
+
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -266,7 +267,8 @@ function SupportTab() {
       ))}
     </div>
   );
-    }
+}
+
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -338,176 +340,4 @@ function UsersTab() {
 
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
-    setTasks(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchTasks(); }, []);
-  if (loading) return <Loading text="Loading tasks..." />;
-  if (tasks.length === 0) return <EmptyState text="No tasks found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
-      {tasks.map((task) => (
-        <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-900">{task.provider}</span>
-            <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PackagesTab() {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchPackages = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
-    setPackages(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchPackages(); }, []);
-  if (loading) return <Loading text="Loading packages..." />;
-  if (packages.length === 0) return <EmptyState text="No packages found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Gói Robux" count={`${packages.length} Gói`} onRefresh={fetchPackages} />
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="font-bold text-slate-900">{pkg.name}</p>
-          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
-        </div>
-      ))}
-    </div>
-  );
-            }
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        <span className="text-sm font-semibold text-slate-400">{count}</span>
-      </div>
-      <button onClick={onRefresh} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100">
-        <RefreshCw size={16} />
-      </button>
-    </div>
-  );
-}
-
-function Loading({ text }) {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 size={24} className="animate-spin text-blue-500" />
-      <p className="ml-3 text-sm text-slate-500">{text}</p>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return (
-    <div className="py-12 text-center">
-      <p className="text-sm text-slate-400">{text}</p>
-    </div>
-  );
-}
-function TasksTab() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
-    setTasks(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchTasks(); }, []);
-  if (loading) return <Loading text="Loading tasks..." />;
-  if (tasks.length === 0) return <EmptyState text="No tasks found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
-      {tasks.map((task) => (
-        <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-900">{task.provider}</span>
-            <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PackagesTab() {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchPackages = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
-    setPackages(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchPackages(); }, []);
-  if (loading) return <Loading text="Loading packages..." />;
-  if (packages.length === 0) return <EmptyState text="No packages found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Gói Robux" count={`${packages.length} Gói`} onRefresh={fetchPackages} />
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="font-bold text-slate-900">{pkg.name}</p>
-          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        <span className="text-sm font-semibold text-slate-400">{count}</span>
-      </div>
-      <button onClick={onRefresh} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100">
-        <RefreshCw size={16} />
-      </button>
-    </div>
-  );
-}
-
-function Loading({ text }) {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 size={24} className="animate-spin text-blue-500" />
-      <p className="ml-3 text-sm text-slate-500">{text}</p>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return (
-    <div className="py-12 text-center">
-      <p className="text-sm text-slate-400">{text}</p>
-    </div>
-  );
-    }
+  const [loading, setLoading] = use
