@@ -15,6 +15,11 @@ import {
   XCircle
 } from "lucide-react";
 import { supabase } from '../lib/supabaseClient.js';
+import emailjs from '@emailjs/browser';
+
+const SERVICE_ID = 'service_i4wv7md';
+const TEMPLATE_ID_USER = 'template_eoitihx';
+const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -34,6 +39,7 @@ export default function Contact() {
     setSent(false);
 
     try {
+      // 1️⃣ Lưu vào database
       const { error: dbError } = await supabase
         .from('support_tickets')
         .insert({
@@ -46,16 +52,17 @@ export default function Contact() {
 
       if (dbError) throw dbError;
 
-      const result = await window.emailjs.send(
-        'service_i4wv7md',
-        'template_eoitihx',
+      // 2️⃣ Gửi email qua EmailJS
+      const result = await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID_USER,
         {
           from_name: formData.name,
           from_email: formData.email,
           subject: formData.subject,
           message: formData.message,
         },
-        'RCMv-hwVtokArn48n'
+        PUBLIC_KEY
       );
 
       if (result.status === 200) {
@@ -312,4 +319,4 @@ function Section({ icon: Icon, title, children, color }) {
       </div>
     </div>
   );
-                             }
+                }
