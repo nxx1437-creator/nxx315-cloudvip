@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
+import emailjs from '@emailjs/browser';
+
+const SERVICE_ID = 'service_i4wv7md';
+const TEMPLATE_ID_REPLY = 'template_i16qcet'; 
+const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 const TABS = [
   { key: "orders", label: "Đơn hàng", icon: Package, desc: "Quản lý đơn đổi thưởng" },
@@ -221,6 +226,7 @@ function SupportTab() {
       const ticket = tickets.find(t => t.id === ticketId);
       if (!ticket) throw new Error('Không tìm thấy ticket');
 
+      // 1️⃣ Cập nhật database
       const { error: dbError } = await supabase
         .from('support_tickets')
         .update({
@@ -232,9 +238,35 @@ function SupportTab() {
 
       if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
+      // 2️⃣ Gửi email
+      try {
+        const result = await emailjs.send(
+          SERVICE_ID,
+          TEMPLATE_ID_REPLY,
+          {
+            user_name: ticket.user_name || 'Khách',
+            admin_reply: replyText,
+            user_subject: ticket.subject || 'Không có chủ đề',
+            user_message: ticket.message || 'Không có nội dung'
+          },
+          PUBLIC_KEY
+        );
+
+        if (result.status !== 200) {
+          throw new Error('EmailJS status: ' + result.status);
+        }
+      } catch (emailError) {
+        console.error('EmailJS error:', emailError);
+        alert('⚠️ Đã lưu phản hồi nhưng gửi email thất bại: ' + (emailError.message || 'Lỗi không xác định'));
+        setReplyText('');
+        await fetchTickets();
+        setReplyingId(null);
+        return;
+      }
+
       setReplyText('');
       await fetchTickets();
-      alert('✅ Đã lưu phản hồi thành công!');
+      alert('✅ Đã gửi phản hồi thành công!');
 
     } catch (err) {
       alert('❌ Lỗi: ' + err.message);
@@ -335,7 +367,7 @@ function UsersTab() {
                 <td className="px-6 py-4">
                   {user.is_banned ? (
                     <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
-                  ) : (
+             ) : (
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
                   )}
                 </td>
@@ -442,4 +474,4 @@ function EmptyState({ text }) {
       <p className="text-sm text-slate-400">{text}</p>
     </div>
   );
-    }
+                       }
