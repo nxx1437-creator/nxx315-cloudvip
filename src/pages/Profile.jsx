@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/login");
+    navigate("/landing");
   };
 
   const handleCopySecret = () => {
