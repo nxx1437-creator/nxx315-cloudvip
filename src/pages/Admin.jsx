@@ -215,16 +215,68 @@ function SupportTab() {
   useEffect(() => { fetchTickets(); }, []);
 
   const handleReply = async (ticketId) => {
-    if (!replyText.trim()) { alert('Vui lòng nhập nội dung phản hồi!'); return; }
+    if (!replyText.trim()) {
+      alert('Vui lòng nhập nội dung phản hồi!');
+      return;
+    }
+
     setReplyingId(ticketId);
+
     try {
       const ticket = tickets.find(t => t.id === ticketId);
-      await supabase.from('support_tickets').update({ admin_reply: replyText, status: 'replied', updated_at: new Date().toISOString() }).eq('id', ticketId);
-      await emailjs.send(SERVICE_ID, TEMPLATE_ID_REPLY, { user_name: ticket.user_name, user_email: ticket.user_email, subject: ticket.subject, admin_reply: replyText, current_date: new Date().toLocaleDateString('vi-VN') }, PUBLIC_KEY);
+      if (!ticket) throw new Error('Không tìm thấy ticket');
+
+      // 1️⃣ Cập nhật database
+      const { error: dbError } = await supabase
+        .from('support_tickets')
+        .update({
+          admin_reply: replyText,
+          status: 'replied',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
+
+      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
+
+      // 2️⃣ Gửi email
+      try {
+        const result = await emailjs.send(
+          SERVICE_ID,
+          TEMPLATE_ID_REPLY,
+          {
+            user_name: ticket.user_name || 'Khách',
+            user_email: ticket.user_email || 'Không có email',
+            subject: ticket.subject || 'Không có chủ đề',
+            admin_reply: replyText,
+            current_date: new Date().toLocaleDateString('vi-VN')
+          },
+          PUBLIC_KEY
+        );
+
+        console.log('EmailJS result:', result);
+
+        if (result.status !== 200) {
+          throw new Error('EmailJS status: ' + result.status + ' - ' + (result.text || 'Unknown error'));
+        }
+      } catch (emailError) {
+        console.error('EmailJS error:', emailError);
+        alert('⚠️ Đã lưu phản hồi nhưng gửi email thất bại: ' + (emailError.message || 'Lỗi không xác định'));
+        setReplyText('');
+        await fetchTickets();
+        setReplyingId(null);
+        return;
+      }
+
       setReplyText('');
       await fetchTickets();
       alert('✅ Đã gửi phản hồi thành công!');
-    } catch (err) { alert('Lỗi: ' + err.message); } finally { setReplyingId(null); }
+
+    } catch (err) {
+      alert('❌ Lỗi: ' + err.message);
+      console.error('Error:', err);
+    } finally {
+      setReplyingId(null);
+    }
   };
 
   if (loading) return <Loading text="Loading tickets..." />;
@@ -317,112 +369,4 @@ function UsersTab() {
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
                 <td className="px-6 py-4">
                   {user.is_banned ? (
-                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
-                  ) : (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  {user.is_banned ? (
-                    <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button>
-                  ) : (
-                    <button onClick={() => handleBan(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function TasksTab() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
-    setTasks(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchTasks(); }, []);
-  if (loading) return <Loading text="Loading tasks..." />;
-  if (tasks.length === 0) return <EmptyState text="No tasks found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
-      {tasks.map((task) => (
-        <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-900">{task.provider}</span>
-            <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PackagesTab() {
-  const [packages, setPackages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchPackages = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
-    setPackages(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchPackages(); }, []);
-  if (loading) return <Loading text="Loading packages..." />;
-  if (packages.length === 0) return <EmptyState text="No packages found." />;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader title="Gói Robux" count={`${packages.length} Gói`} onRefresh={fetchPackages} />
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="font-bold text-slate-900">{pkg.name}</p>
-          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        <span className="text-sm font-semibold text-slate-400">{count}</span>
-      </div>
-      <button onClick={onRefresh} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100">
-        <RefreshCw size={16} />
-      </button>
-    </div>
-  );
-}
-
-function Loading({ text }) {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 size={24} className="animate-spin text-blue-500" />
-      <p className="ml-3 text-sm text-slate-500">{text}</p>
-    </div>
-  );
-}
-
-function EmptyState({ text }) {
-  return (
-    <div className="py-12 text-center">
-      <p className="text-sm text-slate-400">{text}</p>
-    </div>
-  );
-}
+               
