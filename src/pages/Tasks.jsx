@@ -47,7 +47,6 @@ export default function Tasks() {
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const { tasks, loading, reload } = useTasks(user?.id);
-  const { tasks, loading, reload } = useTasks(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
