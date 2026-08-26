@@ -47,15 +47,14 @@ export default function Tasks() {
   const user = session?.user;
   const { profile } = useProfile(user?.id);
   const { tasks, loading, reload } = useTasks(user?.id);
- // const { risk, checkTask, logAction, isAdmin } = useFraud(user?.id);
+  const { tasks, loading, reload } = useTasks(user?.id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
-  const [fraudBlocked, setFraudBlocked] = useState(false);
 
-  // Kiểm tra fraud khi vào trang - Admin bypass
-  useEffect(() => {
-    if (user?.id) {
+  // Dùng thẳng dữ liệu is_flagged/is_admin đã có sẵn trong profile
+  const isAdmin = profile.is_admin;
+  const isBlocked = profile.is_flagged && !isAdmin;
       checkTask().then(result => {
         if (!result.allowed) {
           setFraudBlocked(true);
@@ -84,22 +83,10 @@ export default function Tasks() {
       return;
     }
 
-    // 👉 FRAUD CHECK - Admin bypass
-  //  const fraudCheck = await checkTask();
-  //  if (!fraudCheck.allowed) {
-  //    await logAction('task_start', 'blocked', { 
-   //     task_id: task.id, 
-   //     reason: fraudCheck.reason,
-   //     risk: fraudCheck.risk 
-   //   });
-   //  alert(`⚠️ ${fraudCheck.reason}`);
-   //   return;
-  //  }
-
-    if (risk?.level === 'danger' && !isAdmin) {
-      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên email nxx315hub@gmail.com để được hỗ trợ!");
+   if (isBlocked) {
+      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên hệ email nxx315hub@gmail.com để được hỗ trợ!");
       return;
-    }
+   }
 
     setStartingTaskId(task.id);
     const { data, error } = await supabase.functions.invoke("start-task", {
