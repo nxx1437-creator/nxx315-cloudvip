@@ -40,7 +40,7 @@ export default function Register() {
     }
 
     if (data.user) {
-      alert("✅ Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.");
+      alert(" Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.");
       navigate("/login");
     }
   };
@@ -53,7 +53,7 @@ export default function Register() {
     }
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/#/dashboard` },
     });
     if (authError) setError(authError.message);
   };
