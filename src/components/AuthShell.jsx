@@ -21,7 +21,7 @@ export default function AuthShell({ title, subtitle, children, promo }) {
           <div className="mt-6">{children}</div>
         </div>
 
-        {/* Khối quảng bá Nxx315 Studio Rewards */}
+        {/* Khối quảng bá - GIỮ NGUYÊN NHƯ CŨ */}
         {promo && (
           <div className="mt-8 text-center">
             <div className="flex items-center justify-center gap-2">
@@ -42,6 +42,18 @@ export default function AuthShell({ title, subtitle, children, promo }) {
             </Link>
           </div>
         )}
+
+        {/* Footer - GIỮ NGUYÊN NHƯ CŨ */}
+        <div className="mt-10 flex flex-col items-center gap-4 text-xs text-sky-200/40">
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="hover:text-sky-200/70">Điều khoản dịch vụ</Link>
+            <span className="h-3 w-px bg-white/10" />
+            <Link to="/privacy" className="hover:text-sky-200/70">Chính sách bảo mật</Link>
+            <span className="h-3 w-px bg-white/10" />
+            <Link to="/support" className="hover:text-sky-200/70">Hỗ trợ</Link>
+          </div>
+          <span className="rounded-full border border-white/10 px-3 py-1">🇻🇳 Tiếng Việt</span>
+        </div>
       </div>
     </div>
   );
