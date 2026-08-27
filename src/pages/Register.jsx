@@ -1,26 +1,35 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, User, Loader2 } from "lucide-react";
+import AuthShell from "../components/AuthShell.jsx";
+import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-import { Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+    if (!form.email || !form.password) {
+      setError("Vui lòng điền đầy đủ thông tin.");
+      return;
+    }
+    if (form.password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
     setError("");
     setLoading(true);
 
     const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
+      email: form.email,
+      password: form.password,
       options: {
-        data: { username: username || email.split("@")[0] }
+        data: { username: form.username || form.email.split("@")[0] }
       }
     });
 
@@ -36,91 +45,83 @@ export default function Register() {
     }
   };
 
+  const handleSocial = async (provider, supported) => {
+    setError("");
+    if (!supported) {
+      setError("Đăng ký bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
+      return;
+    }
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (authError) setError(authError.message);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-3xl font-bold text-slate-800">
-            🎮 NXX315 Studio
-          </div>
-          <p className="text-slate-500 mt-1">Tạo tài khoản để bắt đầu kiếm Coin</p>
+    <AuthShell
+      title="Đăng ký"
+      subtitle="Đăng ký với tài khoản mạng xã hội"
+      promo={{
+        heading: "Đã có tài khoản?",
+        body: "Đăng nhập ngay để tiếp tục kiếm Coin và nhận thưởng.",
+        ctaLabel: "Đăng nhập",
+        ctaHref: "/login",
+      }}
+    >
+      <SocialRow onSelect={handleSocial} />
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <div className="relative">
+          <User size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+          <input
+            type="text"
+            value={form.username}
+            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            placeholder="Tên hiển thị (tùy chọn)"
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+          />
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl shadow-sky-500/10 border border-white/50">
-          <h1 className="text-2xl font-bold text-slate-800">📝 Đăng ký</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Đã có tài khoản?{" "}
-            <Link to="/login" className="text-sky-600 font-semibold hover:underline">
-              Đăng nhập
-            </Link>
-          </p>
-
-          {error && (
-            <div className="mt-4 bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-2xl text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Tên hiển thị (tùy chọn)"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-12 pr-4 py-3.5 text-sm outline-none focus:border-sky-400 focus:bg-white transition"
-              />
-            </div>
-
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Địa chỉ email"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-12 pr-4 py-3.5 text-sm outline-none focus:border-sky-400 focus:bg-white transition"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mật khẩu (tối thiểu 6 ký tự)"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-12 pr-4 py-3.5 text-sm outline-none focus:border-sky-400 focus:bg-white transition"
-                required
-                minLength={6}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 py-3.5 text-white font-semibold shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <>
-                  Đăng ký <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </form>
+        <div className="relative">
+          <Mail size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="Email"
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+          />
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Bằng việc đăng ký, bạn đồng ý với{" "}
-          <Link to="/terms" className="text-sky-500 hover:underline">Điều khoản</Link>{" "}
-          và{" "}
-          <Link to="/privacy" className="text-sky-500 hover:underline">Chính sách bảo mật</Link>
-        </p>
-      </div>
-    </div>
+        <div className="relative">
+          <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+          <input
+            type={showPassword ? "text" : "password"}
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-11 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-sky-300/50 hover:text-sky-200"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 py-3.5 text-white font-semibold shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-200 flex items-center justify-center gap-2"
+        >
+          {loading ? <Loader2 size={18} className="animate-spin" /> : "Đăng ký"}
+        </button>
+
+        {error && <p className="text-sm text-rose-400 text-center">{error}</p>}
+      </form>
+    </AuthShell>
   );
-      }
+}
