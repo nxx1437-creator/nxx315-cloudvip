@@ -59,7 +59,16 @@ export default function Register() {
   };
 
   return (
-    <AuthShell title="Đăng ký" subtitle="Đăng ký với tài khoản mạng xã hội">
+    <AuthShell
+      title="Đăng ký"
+      subtitle="Đăng ký với tài khoản mạng xã hội"
+      promo={{
+        heading: "Đã có tài khoản?",
+        body: "Đăng nhập ngay để tiếp tục kiếm Coin và nhận thưởng.",
+        ctaLabel: "Đăng nhập",
+        ctaHref: "/login",
+      }}
+    >
       <SocialRow onSelect={handleSocial} />
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -117,14 +126,4 @@ export default function Register() {
       </form>
     </AuthShell>
   );
-}
-<AuthShell
-  title="Đăng ký"
-  subtitle="Đăng ký với tài khoản mạng xã hội"
-  promo={{
-    heading: "Đã có tài khoản?",
-    body: "Đăng nhập ngay để tiếp tục kiếm Coin và nhận thưởng.",
-    ctaLabel: "Đăng nhập",
-    ctaHref: "/login",
-  }}
->
+            }
