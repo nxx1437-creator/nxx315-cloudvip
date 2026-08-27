@@ -49,8 +49,6 @@ export default function Tasks() {
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
 
-  // Dùng thẳng dữ liệu chống đa tài khoản đã có sẵn trong profile
-  // (is_admin, is_flagged, risk_score được tính bởi record_device_and_score())
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
 
@@ -110,7 +108,6 @@ export default function Tasks() {
         .font-display { font-family: 'Baloo 2', sans-serif; }
       `}</style>
 
-      {/* TOP BAR */}
       <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-gradient-to-b from-sky-50/80 to-white/90 px-4 py-3 shadow-sm backdrop-blur-md">
         <button
           aria-label="Mở menu"
@@ -137,7 +134,6 @@ export default function Tasks() {
       </header>
 
       <main className="mx-auto max-w-md space-y-4 px-4 py-5">
-        {/* HERO */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             <Sparkles size={12} /> TRUNG TÂM NHIỆM VỤ
@@ -162,7 +158,6 @@ export default function Tasks() {
             </div>
           </div>
 
-          {/* Risk Badge — chỉ hiện khi tài khoản có điểm rủi ro hoặc là Admin */}
           {(isAdmin || profile.risk_score > 0) && (
             <div
               className={`mt-3 rounded-xl px-3 py-2 text-xs font-semibold ${
@@ -189,7 +184,6 @@ export default function Tasks() {
           </div>
         </div>
 
-        {/* SEARCH */}
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <Search size={16} className="text-slate-400" />
           <input
@@ -207,7 +201,6 @@ export default function Tasks() {
           </div>
         )}
 
-        {/* TASK LIST */}
         {loading && <p className="py-8 text-center text-sm text-slate-400">Đang tải nhiệm vụ...</p>}
         {!loading && filteredTasks.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-400">Không có nhiệm vụ nào.</p>
@@ -288,5 +281,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-      }
-            
+          }
