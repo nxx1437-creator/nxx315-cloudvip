@@ -65,6 +65,7 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
+  const handleStart = async (task) => {
   if (!user?.id) {
     alert("Vui lòng đăng nhập!");
     return;
@@ -80,15 +81,15 @@ export default function Tasks() {
       return;
     }
 
-    // Gọi Edge Function bằng fetch
+    // Gọi Edge Function
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/start-task`,
+      "https://rwglwovohbyqmbbzvdvj.supabase.co/functions/v1/start-task",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`,
-          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Z2x3b3ZvaHlicW1iYnp2ZHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk4NzUyMTksImV4cCI6MjA0NTQ1MTIxOX0.2BYj6baKGVqn0XgQbM73Mh74q_zTfGgDQ1c_rccCGdI",
         },
         body: JSON.stringify({ task_id: task.id }),
       }
