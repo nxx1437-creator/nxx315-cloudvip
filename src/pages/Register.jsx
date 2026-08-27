@@ -118,3 +118,13 @@ export default function Register() {
     </AuthShell>
   );
 }
+<AuthShell
+  title="Đăng ký"
+  subtitle="Đăng ký với tài khoản mạng xã hội"
+  promo={{
+    heading: "Đã có tài khoản?",
+    body: "Đăng nhập ngay để tiếp tục kiếm Coin và nhận thưởng.",
+    ctaLabel: "Đăng nhập",
+    ctaHref: "/login",
+  }}
+>
