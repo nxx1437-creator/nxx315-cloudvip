@@ -38,17 +38,17 @@ export default function Login() {
   };
 
   const handleSocial = async (provider, supported) => {
-    setError("");
-    if (!supported) {
-      setError("Đăng nhập bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
-      return;
-    }
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/#/dashboard` },
-    });
-    if (authError) setError(authError.message);
-  };
+  setError("");
+  if (!supported) {
+    setError("Đăng nhập bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
+    return;
+  }
+  const { error: authError } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: `${window.location.origin}/#/dashboard` }, // 👈 Thêm #/
+  });
+  if (authError) setError(authError.message);
+};
 
   return (
     <AuthShell
