@@ -51,16 +51,7 @@ export default function Login() {
   };
 
   return (
-    <AuthShell
-      title="Đăng nhập"
-      subtitle="Đăng nhập với tài khoản mạng xã hội"
-      promo={{
-        heading: "Chưa có tài khoản?",
-        body: "Tạo tài khoản ngay để bắt đầu kiếm Coin và nhận thưởng.",
-        ctaLabel: "Đăng ký",
-        ctaHref: "/register",
-      }}
-    >
+    <AuthShell title="Đăng nhập" subtitle="Đăng nhập với tài khoản mạng xã hội">
       <SocialRow onSelect={handleSocial} />
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
