@@ -40,10 +40,9 @@ export default function Register() {
     }
 
     if (data.user) {
-      alert("✅ Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.");
-      navigate("/login");
+  alert("Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.");
+  window.location.href = '/login';
     }
-  };
 
   const handleSocial = async (provider, supported) => {
     setError("");
