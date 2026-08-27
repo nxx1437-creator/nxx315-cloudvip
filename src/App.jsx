@@ -16,6 +16,8 @@ import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Fraud from "./pages/Fraud.jsx";
 import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
+import Wallet from "./pages/Wallet.jsx";
+import ProfilePage from "./pages/Profile.jsx";
 
 function AppContent() {
   const navigate = useNavigate();
@@ -46,6 +48,8 @@ function AppContent() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/fraud" element={<Fraud />} />
       <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+      <Route path="/wallet" element={<Wallet />} />
+      <Route path="/profile" element={<ProfilePage />} />
     </Routes>
   );
 }
