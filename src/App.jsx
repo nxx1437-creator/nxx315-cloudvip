@@ -18,6 +18,7 @@ import Fraud from "./pages/Fraud.jsx";
 import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
+import TaskCallback from "./pages/TaskCallback.jsx";
 
 function AppContent() {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ function AppContent() {
       <Route path="/redemption-policy" element={<RedemptionPolicy />} />
       <Route path="/wallet" element={<Wallet />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/task/callback" element={<TaskCallback />} />
     </Routes>
   );
 }
