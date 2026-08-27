@@ -66,12 +66,18 @@ export default function Tasks() {
 
   const handleStart = async (task) => {
   // Tạo token
-  const { data: tokenData } = await supabase
-    .from("task_tokens")
-    .insert({...})
-    .select()
-    .single();
+  const token = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 
+const { data: tokenData, error: tokenError } = await supabase
+  .from("task_tokens")
+  .insert({
+    token: token,
+    task_id: task.id,
+    user_id: user.id,
+    expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+  })
+  .select()
+  .single();
   // Mở link task
   window.open(task.url, "_blank");
   
