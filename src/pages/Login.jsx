@@ -33,7 +33,7 @@ export default function Login() {
     }
 
     if (data.session) {
-      navigate("/dashboard");
+      window.location.href = '/dashboard'; // 👈 Sửa chỗ này
     }
   };
 
@@ -114,4 +114,4 @@ export default function Login() {
       </form>
     </AuthShell>
   );
-            }
+        }
