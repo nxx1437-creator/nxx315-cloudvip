@@ -65,17 +65,42 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-  // Gọi Edge Function tạo token + callback URL
-  const { data } = await supabase.functions.invoke('start-task', {
-    body: { task_id: task.id }
-  });
+    if (!user?.id) {
+      alert("Vui lòng đăng nhập để làm nhiệm vụ!");
+      return;
+    }
 
-  // Mở link provider (đã có callback URL ngầm)
-  window.open(data.shortUrl, "_blank");
-  
-  // ❌ KHÔNG navigate sang callback
-  // Token sẽ được consume khi provider redirect về
-};
+    if (isBlocked) {
+      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên hệ email nxx315hub@gmail.com để được hỗ trợ!");
+      return;
+    }
+
+    setStartingTaskId(task.id);
+    const { data, error } = await supabase.functions.invoke("start-task", {
+      body: { task_id: task.id },
+    });
+    setStartingTaskId(null);
+
+    if (error) {
+      let message = error.message;
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // giữ nguyên
+      }
+      alert(message);
+      return;
+    }
+
+    if (data?.error) {
+      alert(data.error);
+      return;
+    }
+
+    window.open(data.shortUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
@@ -256,4 +281,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-      }
+}
