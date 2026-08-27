@@ -45,11 +45,11 @@ export default function Login() {
   }
   const { error: authError } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: `${window.location.origin}/#/dashboard` }, // 👈 Thêm #/
+    options: { redirectTo: `${window.location.origin}/` }, // Về trang chủ
   });
   if (authError) setError(authError.message);
 };
-
+  
   return (
     <AuthShell
       title="Đăng nhập"
