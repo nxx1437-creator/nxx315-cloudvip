@@ -65,42 +65,58 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-    if (!user?.id) {
-      alert("Vui lòng đăng nhập để làm nhiệm vụ!");
+  const handleStart = async (task) => {
+  if (!user?.id) {
+    alert("Vui lòng đăng nhập!");
+    return;
+  }
+
+  try {
+    // Lấy session token
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    if (!accessToken) {
+      alert("Không lấy được token đăng nhập!");
       return;
     }
 
-    if (isBlocked) {
-      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên hệ email nxx315hub@gmail.com để được hỗ trợ!");
-      return;
-    }
-
-    setStartingTaskId(task.id);
-    const { data, error } = await supabase.functions.invoke("start-task", {
-      body: { task_id: task.id },
-    });
-    setStartingTaskId(null);
-
-    if (error) {
-      let message = error.message;
-      try {
-        const body = await error.context.json();
-        if (body?.error) message = body.error;
-      } catch {
-        // giữ nguyên
+    // Gọi Edge Function bằng fetch
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/start-task`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ task_id: task.id }),
       }
-      alert(message);
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert("Lỗi: " + (data.error || "Không xác định"));
       return;
     }
 
-    if (data?.error) {
+    if (data.error) {
       alert(data.error);
       return;
     }
 
-    window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-  };
+    if (data.shortUrl) {
+      window.open(data.shortUrl, "_blank");
+    } else {
+      alert("Không lấy được link nhiệm vụ!");
+    }
 
+  } catch (err) {
+    alert("Lỗi: " + err.message);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
