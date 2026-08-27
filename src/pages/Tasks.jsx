@@ -65,24 +65,38 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-  // Tạo token
-  const token = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+  if (!user?.id) {
+    alert("Vui lòng đăng nhập!");
+    return;
+  }
 
-const { data: tokenData, error: tokenError } = await supabase
-  .from("task_tokens")
-  .insert({
-    token: token,
-    task_id: task.id,
-    user_id: user.id,
-    expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-  })
-  .select()
-  .single();
-  // Mở link task
-  window.open(task.url, "_blank");
-  
-  // ❌ KHÔNG navigate sang callback ngay
-  // navigate(`/task/callback?token=${tokenData.token}`);
+  try {
+    // Gọi Edge Function start-task
+    const { data, error } = await supabase.functions.invoke('start-task', {
+      body: { task_id: task.id }
+    });
+
+    if (error) {
+      alert("Lỗi: " + error.message);
+      return;
+    }
+
+    if (data?.error) {
+      alert(data.error);
+      return;
+    }
+
+    if (data?.shortUrl) {
+      window.open(data.shortUrl, "_blank");
+      // Token đã được tạo trong Edge Function, redirect về callback
+      navigate(`/task/callback?token=${data.token}`);
+    } else {
+      alert("Không lấy được link nhiệm vụ!");
+    }
+
+  } catch (err) {
+    alert("Lỗi: " + err.message);
+  }
 };
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
