@@ -45,7 +45,7 @@ export default function Login() {
   }
   const { error: authError } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: `${window.location.origin}/#/dashboard` },
+    options: { redirectTo: `${window.location.origin}/dashboard` },
   });
   if (authError) setError(authError.message);
 };
