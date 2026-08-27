@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
+options: { redirectTo: `${window.location.origin}/dashboard` },
 
 // Import các trang
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
