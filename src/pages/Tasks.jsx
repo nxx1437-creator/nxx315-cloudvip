@@ -71,7 +71,6 @@ export default function Tasks() {
   }
 
   try {
-    // Gọi Edge Function start-task
     const { data, error } = await supabase.functions.invoke('start-task', {
       body: { task_id: task.id }
     });
@@ -87,9 +86,13 @@ export default function Tasks() {
     }
 
     if (data?.shortUrl) {
+      // ❌ Không navigate sang callback ngay
+      // navigate(`/task/callback?token=${data.token}`);
+      
+      // ✅ Chỉ mở link task
       window.open(data.shortUrl, "_blank");
-      // Token đã được tạo trong Edge Function, redirect về callback
-      navigate(`/task/callback?token=${data.token}`);
+      
+      // Token sẽ được consume khi provider redirect về callback
     } else {
       alert("Không lấy được link nhiệm vụ!");
     }
