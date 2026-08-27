@@ -65,47 +65,18 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-  if (!user?.id) {
-    alert("Vui lòng đăng nhập!");
-    return;
-  }
+  // Tạo token
+  const { data: tokenData } = await supabase
+    .from("task_tokens")
+    .insert({...})
+    .select()
+    .single();
 
-  try {
-    // Tạo token ngẫu nhiên
-    const token = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("task_tokens")
-      .insert({
-        token: token,
-        task_id: task.id,
-        user_id: user.id,
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 phút
-      })
-      .select()
-      .single();
-
-    if (tokenError) {
-      alert("Lỗi tạo token: " + tokenError.message);
-      return;
-    }
-
-    if (!tokenData) {
-      alert("Không thể tạo token!");
-      return;
-    }
-
-    // Mở link task
-    if (task.url) {
-      window.open(task.url, "_blank");
-    }
-    
-    // Chuyển đến callback
-    navigate(`/task/callback?token=${tokenData.token}`);
-    
-  } catch (err) {
-    alert("Lỗi: " + err.message);
-  }
+  // Mở link task
+  window.open(task.url, "_blank");
+  
+  // ❌ KHÔNG navigate sang callback ngay
+  // navigate(`/task/callback?token=${tokenData.token}`);
 };
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
