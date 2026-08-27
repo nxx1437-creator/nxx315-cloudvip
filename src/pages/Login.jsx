@@ -33,7 +33,7 @@ export default function Login() {
     }
 
     if (data.session) {
-      navigate("/dashboard");
+      navigate('/dashboard');
     }
   };
 
