@@ -1,16 +1,5 @@
 import React from "react";
 
-/**
- * SocialRow.jsx
- * -----------------------------------------------------------------
- * Hàng 4 icon đăng nhập nhanh: Facebook, Google, TikTok, Discord —
- * giống đúng bố cục ảnh mẫu. Facebook/Google/Discord gọi thật qua
- * Supabase OAuth (onSelect prop). TikTok Supabase KHÔNG hỗ trợ sẵn
- * (không có trong danh sách provider chuẩn) nên tạm để placeholder,
- * báo "sắp có" khi bấm — khi nào cần dùng thật phải tự cấu hình
- * Custom OAuth provider phía Supabase.
- * -----------------------------------------------------------------
- */
 export default function SocialRow({ onSelect }) {
   const items = [
     {
