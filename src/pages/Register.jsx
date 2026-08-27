@@ -53,7 +53,7 @@ export default function Register() {
   }
   const { error: authError } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: `${window.location.origin}/` }, // Về trang chủ
+    options: { redirectTo: `${window.location.origin}/#/dashboard` }, 
   });
   if (authError) setError(authError.message);
 };
