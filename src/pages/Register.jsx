@@ -48,7 +48,7 @@ export default function Register() {
   const handleSocial = async (provider, supported) => {
     setError("");
     if (!supported) {
-      setError("Đăng ký bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
+      setError("Đăng ký bằng TikTok sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
       return;
     }
     const { error: authError } = await supabase.auth.signInWithOAuth({
