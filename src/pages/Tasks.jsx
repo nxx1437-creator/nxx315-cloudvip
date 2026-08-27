@@ -65,55 +65,35 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-  const handleStart = async (task) => {
   if (!user?.id) {
     alert("Vui lòng đăng nhập!");
     return;
   }
 
   try {
-    // Lấy session token
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
+    const { data, error } = await supabase.functions.invoke("start-task", {
+      body: { task_id: task.id },
+    });
 
-    if (!accessToken) {
-      alert("Không lấy được token đăng nhập!");
+    if (error) {
+      console.error("Edge Function error:", error);
+      alert("Lỗi: " + error.message);
       return;
     }
 
-    // Gọi Edge Function
-    const response = await fetch(
-      "https://rwglwovohbyqmbbzvdvj.supabase.co/functions/v1/start-task",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Z2x3b3ZvaHlicW1iYnp2ZHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk4NzUyMTksImV4cCI6MjA0NTQ1MTIxOX0.2BYj6baKGVqn0XgQbM73Mh74q_zTfGgDQ1c_rccCGdI",
-        },
-        body: JSON.stringify({ task_id: task.id }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      alert("Lỗi: " + (data.error || "Không xác định"));
-      return;
-    }
-
-    if (data.error) {
+    if (data?.error) {
       alert(data.error);
       return;
     }
 
-    if (data.shortUrl) {
+    if (data?.shortUrl) {
       window.open(data.shortUrl, "_blank");
     } else {
       alert("Không lấy được link nhiệm vụ!");
     }
 
   } catch (err) {
+    console.error("Error:", err);
     alert("Lỗi: " + err.message);
   }
 };
