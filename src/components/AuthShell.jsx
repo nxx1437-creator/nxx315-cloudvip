@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Coins } from "lucide-react";
 
-export default function AuthShell({ title, subtitle, children, promo }) {
+export default function AuthShell({ title, subtitle, children }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#040910] font-[Be_Vietnam_Pro] text-sky-50">
       {/* Nền */}
@@ -21,30 +21,20 @@ export default function AuthShell({ title, subtitle, children, promo }) {
           <div className="mt-6">{children}</div>
         </div>
 
-        {/* Khối quảng bá - GIỮ NGUYÊN NHƯ CŨ */}
-        {promo && (
-          <div className="mt-8 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-lg shadow-sky-500/30">
-                <Coins size={18} className="text-white" />
-              </span>
-              <span className="text-xl font-extrabold tracking-tight text-white">
-                Nxx315 <span className="text-sky-400">Studio</span> Rewards
-              </span>
-            </div>
-            <h2 className="mt-4 text-lg font-bold text-white">{promo.heading}</h2>
-            <p className="mx-auto mt-2 max-w-xs text-sm text-sky-200/60">{promo.body}</p>
-            <Link
-              to={promo.ctaHref}
-              className="mt-5 inline-block w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110"
-            >
-              {promo.ctaLabel}
-            </Link>
+        {/* Brand - chỉ còn logo + tên */}
+        <div className="mt-8 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-lg shadow-sky-500/30">
+              <Coins size={18} className="text-white" />
+            </span>
+            <span className="text-xl font-extrabold tracking-tight text-white">
+              Nxx315 <span className="text-sky-400">Studio</span> Rewards
+            </span>
           </div>
-        )}
+        </div>
 
-        {/* Footer - GIỮ NGUYÊN NHƯ CŨ */}
-        <div className="mt-10 flex flex-col items-center gap-4 text-xs text-sky-200/40">
+        {/* Footer */}
+        <div className="mt-6 flex flex-col items-center gap-4 text-xs text-sky-200/40">
           <div className="flex items-center gap-4">
             <Link to="/terms" className="hover:text-sky-200/70">Điều khoản dịch vụ</Link>
             <span className="h-3 w-px bg-white/10" />
@@ -57,4 +47,4 @@ export default function AuthShell({ title, subtitle, children, promo }) {
       </div>
     </div>
   );
-}
+        }
