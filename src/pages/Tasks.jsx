@@ -65,41 +65,16 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-  if (!user?.id) {
-    alert("Vui lòng đăng nhập!");
-    return;
-  }
+  // Gọi Edge Function tạo token + callback URL
+  const { data } = await supabase.functions.invoke('start-task', {
+    body: { task_id: task.id }
+  });
 
-  try {
-    const { data, error } = await supabase.functions.invoke('start-task', {
-      body: { task_id: task.id }
-    });
-
-    if (error) {
-      alert("Lỗi: " + error.message);
-      return;
-    }
-
-    if (data?.error) {
-      alert(data.error);
-      return;
-    }
-
-    if (data?.shortUrl) {
-      // ❌ Không navigate sang callback ngay
-      // navigate(`/task/callback?token=${data.token}`);
-      
-      // ✅ Chỉ mở link task
-      window.open(data.shortUrl, "_blank");
-      
-      // Token sẽ được consume khi provider redirect về callback
-    } else {
-      alert("Không lấy được link nhiệm vụ!");
-    }
-
-  } catch (err) {
-    alert("Lỗi: " + err.message);
-  }
+  // Mở link provider (đã có callback URL ngầm)
+  window.open(data.shortUrl, "_blank");
+  
+  // ❌ KHÔNG navigate sang callback
+  // Token sẽ được consume khi provider redirect về
 };
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
