@@ -1,29 +1,22 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
-import AuthShell from "../components/AuthShell.jsx";
-import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e?.preventDefault();
-    if (!form.email || !form.password) {
-      setError("Vui lòng điền đầy đủ thông tin.");
-      return;
-    }
+    e.preventDefault();
     setError("");
     setLoading(true);
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
+      email,
+      password,
     });
 
     setLoading(false);
@@ -33,85 +26,57 @@ export default function Login() {
     }
 
     if (data.session) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
-  };
-
-  const handleSocial = async (provider, supported) => {
-    setError("");
-    if (!supported) {
-      setError("Đăng nhập bằng TikTok sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
-      return;
-    }
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    });
-    if (authError) setError(authError.message);
   };
 
   return (
-    <AuthShell
-      title="Đăng nhập"
-      subtitle="Đăng nhập với tài khoản mạng xã hội"
-      promo={{
-        heading: "Chưa có tài khoản?",
-        body: "Tạo tài khoản ngay để bắt đầu kiếm Coin và nhận thưởng.",
-        ctaLabel: "Đăng ký",
-        ctaHref: "/register",
-      }}
-    >
-      <SocialRow onSelect={handleSocial} />
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-slate-900">🔐 Đăng nhập</h1>
+        <p className="text-center text-slate-500 mt-2">
+          Chưa có tài khoản? <Link to="/register" className="text-sky-600 font-semibold">Đăng ký</Link>
+        </p>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div className="relative">
-          <Mail size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+        {error && (
+          <div className="mt-4 bg-rose-50 text-rose-600 p-3 rounded-xl text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+            className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-400"
+            required
           />
-        </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mật khẩu"
+            className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sky-400"
+            required
+          />
 
-        <div className="flex items-center gap-2.5">
-          <div className="relative flex-1">
-            <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
-            <input
-              type={showPassword ? "text" : "password"}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Mật khẩu"
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-11 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-sky-300/50 hover:text-sky-200"
-              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
           <button
             type="submit"
             disabled={loading}
-            aria-label="Đăng nhập"
-            className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:opacity-60"
+            className="w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-white font-semibold shadow-lg disabled:opacity-50"
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
-        </div>
+        </form>
 
-        {error && <p className="text-sm text-rose-400">{error}</p>}
-
-        <div className="text-center">
-          <Link to="/forgot-password" className="text-xs text-sky-400 hover:underline">
+        <div className="mt-4 text-center">
+          <Link to="/forgot-password" className="text-sm text-slate-400 hover:text-sky-600">
             Quên mật khẩu?
           </Link>
         </div>
-      </form>
-    </AuthShell>
+      </div>
+    </div>
   );
-          }
+}
