@@ -65,7 +65,6 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-  const handleStart = async (task) => {
   if (!user?.id) {
     alert("Vui lòng đăng nhập!");
     return;
