@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { HashRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient.js";
 
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
@@ -21,13 +21,10 @@ function AppContent() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session && window.location.hash === "#/") {
-        navigate("/dashboard");
-      }
-    };
-    checkSession();
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session && window.location.pathname === "/") {
+      navigate("/dashboard");
+    }
   }, [navigate]);
 
   return (
@@ -52,8 +49,8 @@ function AppContent() {
 
 export default function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <AppContent />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
