@@ -21,10 +21,13 @@ function AppContent() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (sessionData.session && window.location.pathname === "/") {
-      navigate("/dashboard");
-    }
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session && window.location.pathname === "/") {
+        navigate("/dashboard");
+      }
+    };
+    checkSession();
   }, [navigate]);
 
   return (
