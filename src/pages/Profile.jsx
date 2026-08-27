@@ -40,7 +40,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     checkMFAStatus();
-    // Lấy mã dự phòng đã lưu
     if (profile?.recovery_codes && profile.recovery_codes.length > 0) {
       setRecoveryCodes(profile.recovery_codes);
     }
@@ -48,7 +47,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/landing");
+    navigate("/");
   };
 
   const handleCopySecret = () => {
@@ -57,7 +56,6 @@ export default function ProfilePage() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  // Hàm tạo MFA
   const handleStartMFA = async () => {
     setError("");
     setSuccess("");
@@ -95,9 +93,7 @@ export default function ProfilePage() {
     checkMFAStatus();
   };
 
-  // Hàm tạo mã dự phòng
   const generateRecoveryCodes = async () => {
-    // Sinh 10 mã ngẫu nhiên (định dạng: XXXX-XXXX)
     const codes = Array.from({ length: 10 }, () => {
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       let code = "";
@@ -108,7 +104,6 @@ export default function ProfilePage() {
       return code;
     });
 
-    // Lưu vào database
     const { error } = await supabase
       .from("profiles")
       .update({ recovery_codes: codes })
@@ -135,7 +130,6 @@ export default function ProfilePage() {
       </header>
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* Avatar */}
         <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col items-center">
             <div className="relative">
@@ -157,7 +151,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Số dư & Đăng xuất */}
         <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
           <div className="text-center">
             <p className="text-xs uppercase tracking-wide text-slate-400">Số dư</p>
@@ -171,7 +164,6 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Menu chuyển tab */}
         <div className="space-y-2">
           <button 
             onClick={() => setActiveSection("info")}
@@ -189,7 +181,6 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Nội dung tab Thông tin */}
         {activeSection === "info" && (
           <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-bold text-slate-900">Thông tin tài khoản</h2>
@@ -231,7 +222,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Nội dung tab Bảo mật */}
         {activeSection === "security" && (
           <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
             <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
@@ -251,7 +241,6 @@ export default function ProfilePage() {
               </span>
             </button>
 
-            {/* Nút Tạo mã dự phòng */}
             <button
               onClick={generateRecoveryCodes}
               className="mt-3 flex w-full items-center justify-between rounded-2xl bg-sky-50 p-4 text-left transition hover:bg-sky-100"
@@ -269,7 +258,6 @@ export default function ProfilePage() {
         )}
       </main>
 
-      {/* Modal hiển thị Secret */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
@@ -310,7 +298,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Modal hiển thị Mã dự phòng */}
       {showRecovery && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
@@ -341,7 +328,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Modal Logout */}
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
@@ -358,4 +344,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-}
+}                                       
