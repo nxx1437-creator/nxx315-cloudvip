@@ -1,7 +1,7 @@
-import React from "react";
-options: { redirectTo: `${window.location.origin}/dashboard` },
+import React, { useEffect } from "react";
+import { HashRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { supabase } from "./lib/supabaseClient.js";
 
-// Import các trang
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -17,25 +17,43 @@ import Privacy from "./pages/Privacy.jsx";
 import Fraud from "./pages/Fraud.jsx";
 import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
 
+function AppContent() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session && window.location.hash === "#/") {
+        navigate("/dashboard");
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
+  return (
+    <Routes>
+      <Route path="/" element={<CloudVIPLanding />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/tasks" element={<Tasks />} />
+      <Route path="/store" element={<Store />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/help" element={<HelpCenter />} />
+      <Route path="/support" element={<Support />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/fraud" element={<Fraud />} />
+      <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<CloudVIPLanding />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/help" element={<HelpCenter />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/fraud" element={<Fraud />} />
-        <Route path="/redemption-policy" element={<RedemptionPolicy />} />
-      </Routes>
+      <AppContent />
     </HashRouter>
   );
 }
