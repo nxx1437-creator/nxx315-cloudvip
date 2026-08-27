@@ -65,42 +65,48 @@ export default function Tasks() {
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
   const handleStart = async (task) => {
-    if (!user?.id) {
-      alert("Vui lòng đăng nhập để làm nhiệm vụ!");
+  if (!user?.id) {
+    alert("Vui lòng đăng nhập!");
+    return;
+  }
+
+  try {
+    // Tạo token ngẫu nhiên
+    const token = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .from("task_tokens")
+      .insert({
+        token: token,
+        task_id: task.id,
+        user_id: user.id,
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 phút
+      })
+      .select()
+      .single();
+
+    if (tokenError) {
+      alert("Lỗi tạo token: " + tokenError.message);
       return;
     }
 
-    if (isBlocked) {
-      alert("🚫 Tài khoản của bạn đang bị hạn chế, vui lòng liên hệ email nxx315hub@gmail.com để được hỗ trợ!");
+    if (!tokenData) {
+      alert("Không thể tạo token!");
       return;
     }
 
-    setStartingTaskId(task.id);
-    const { data, error } = await supabase.functions.invoke("start-task", {
-      body: { task_id: task.id },
-    });
-    setStartingTaskId(null);
-
-    if (error) {
-      let message = error.message;
-      try {
-        const body = await error.context.json();
-        if (body?.error) message = body.error;
-      } catch {
-        // giữ nguyên
-      }
-      alert(message);
-      return;
+    // Mở link task
+    if (task.url) {
+      window.open(task.url, "_blank");
     }
-
-    if (data?.error) {
-      alert(data.error);
-      return;
-    }
-
-    window.open(data.shortUrl, "_blank", "noopener,noreferrer");
-  };
-
+    
+    // Chuyển đến callback
+    navigate(`/task/callback?token=${tokenData.token}`);
+    
+  } catch (err) {
+    alert("Lỗi: " + err.message);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
