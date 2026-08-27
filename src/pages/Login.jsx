@@ -40,7 +40,7 @@ export default function Login() {
   const handleSocial = async (provider, supported) => {
     setError("");
     if (!supported) {
-      setError("Đăng nhập bằng TikTok sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
+      setError("Đăng nhập bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
       return;
     }
     const { error: authError } = await supabase.auth.signInWithOAuth({
@@ -115,13 +115,3 @@ export default function Login() {
     </AuthShell>
   );
             }
-<AuthShell
-  title="Đăng nhập"
-  subtitle="Đăng nhập với tài khoản mạng xã hội"
-  promo={{
-    heading: "Chưa có tài khoản?",
-    body: "Tạo tài khoản ngay để bắt đầu kiếm Coin và nhận thưởng.",
-    ctaLabel: "Đăng ký",
-    ctaHref: "/register",
-  }}
->
