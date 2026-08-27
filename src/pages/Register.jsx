@@ -48,12 +48,12 @@ export default function Register() {
   const handleSocial = async (provider, supported) => {
   setError("");
   if (!supported) {
-    setError("Đăng ký bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
+    setError("Đăng nhập bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
     return;
   }
   const { error: authError } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: `${window.location.origin}/#/dashboard` },
+    options: { redirectTo: `${window.location.origin}/` }, // Về trang chủ
   });
   if (authError) setError(authError.message);
 };
