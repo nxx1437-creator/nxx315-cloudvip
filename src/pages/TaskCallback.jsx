@@ -1,56 +1,104 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle2, XCircle, Loader2, Coins } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Coins, ShieldCheck } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
+
+const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
 
 export default function TaskCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const [state, setState] = useState({ status: "loading", message: "", reward: 0 });
+  const [state, setState] = useState({ status: "captcha", message: "", reward: 0 });
+  const widgetIdRef = useRef(null);
   const token = params.get("token");
 
+  // Tải script reCAPTCHA
   useEffect(() => {
-    const completeTask = async () => {
-      if (!token) {
-        setState({ status: "error", message: "Thiếu mã Token!", reward: 0 });
+    if (!token) {
+      setState({ status: "error", message: "Thiếu mã Token trong đường dẫn.", reward: 0 });
+      return;
+    }
+
+    const renderWidget = () => {
+      window.grecaptcha.ready(() => {
+        if (document.getElementById("recaptcha-box") && widgetIdRef.current === null) {
+          widgetIdRef.current = window.grecaptcha.render("recaptcha-box", {
+            sitekey: RECAPTCHA_SITE_KEY,
+            callback: handleCaptchaSolved,
+          });
+        }
+      });
+    };
+
+    if (window.grecaptcha) {
+      renderWidget();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://www.google.com/recaptcha/api.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = renderWidget;
+      document.body.appendChild(script);
+    }
+  }, [token]);
+
+  const handleCaptchaSolved = async (captchaToken) => {
+    setState({ status: "verifying", message: "", reward: 0 });
+
+    try {
+      // 1️⃣ Verify captcha qua Edge Function
+      const res = await fetch("https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/rapid-handler", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          "apikey": supabase.supabaseKey,
+        },
+        body: JSON.stringify({ captchaToken }),
+      });
+      
+      const verifyData = await res.json();
+
+      if (!verifyData?.success) {
+        setState({ status: "error", message: "Xác minh captcha thất bại!", reward: 0 });
         return;
       }
 
-      try {
-        const { data, error } = await supabase.rpc("consume_task_token", { p_token: token });
+      // 2️⃣ Consume token
+      const { data, error } = await supabase.rpc("consume_task_token", { p_token: token });
 
-        if (error) {
-          setState({ status: "error", message: error.message, reward: 0 });
-          return;
-        }
-
-        // data là JSON: { success: true, message: "...", reward: 10 }
-        if (data?.success) {
-          setState({ 
-            status: "success", 
-            message: data.message, 
-            reward: data.reward 
-          });
-        } else {
-          setState({ 
-            status: "error", 
-            message: data?.message || "Xác thực thất bại.", 
-            reward: 0 
-          });
-        }
-      } catch (err) {
-        setState({ status: "error", message: err.message, reward: 0 });
+      if (error) {
+        setState({ status: "error", message: error.message, reward: 0 });
+        return;
       }
-    };
 
-    completeTask();
-  }, [token]);
+      if (data?.success) {
+        setState({ status: "success", message: data.message, reward: data.reward });
+      } else {
+        setState({ status: "error", message: data?.message || "Xác thực thất bại.", reward: 0 });
+      }
+    } catch (err) {
+      setState({ status: "error", message: err.message, reward: 0 });
+    }
+  };
 
-  if (state.status === "loading") {
+  // UI hiển thị
+  if (state.status === "captcha") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center font-[Be_Vietnam_Pro]">
+        <ShieldCheck size={36} className="text-sky-500" />
+        <h1 className="mt-4 text-lg font-bold text-slate-900">Xác nhận bạn không phải bot</h1>
+        <p className="mt-1.5 text-sm text-slate-500">Tick vào ô bên dưới để nhận thưởng nhé</p>
+        <div id="recaptcha-box" className="mt-5" />
+      </div>
+    );
+  }
+
+  if (state.status === "verifying") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center">
         <Loader2 size={48} className="animate-spin text-sky-500" />
-        <p className="mt-4 text-sm text-slate-500">Đang xác nhận nhiệm vụ...</p>
+        <p className="mt-4 text-sm text-slate-500">Đang xác thực...</p>
       </div>
     );
   }
