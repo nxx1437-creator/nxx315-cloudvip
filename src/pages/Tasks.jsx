@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -48,6 +48,9 @@ export default function Tasks() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [startingTaskId, setStartingTaskId] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
+  const [currentTaskLogId, setCurrentTaskLogId] = useState(null);
+  const [isPolling, setIsPolling] = useState(false);
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
@@ -64,59 +67,139 @@ export default function Tasks() {
   const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
+  // Cleanup polling khi component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  const startPolling = (logId) => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+
+    setIsPolling(true);
+
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("check-task-status", {
+          body: { task_log_id: logId },
+        });
+
+        if (error) {
+          console.error("Polling error:", error);
+          return;
+        }
+
+        if (data?.completed) {
+          clearInterval(interval);
+          setPollingInterval(null);
+          setCurrentTaskLogId(null);
+          setIsPolling(false);
+          alert("✅ Hoàn thành nhiệm vụ! +Coin");
+          reload();
+          navigate("/tasks");
+          return;
+        }
+
+        if (data?.error === "Đã hết hạn") {
+          clearInterval(interval);
+          setPollingInterval(null);
+          setCurrentTaskLogId(null);
+          setIsPolling(false);
+          alert("⏰ Nhiệm vụ đã hết hạn!");
+          reload();
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 5000);
+
+    setPollingInterval(interval);
+  };
+
   const handleStart = async (task) => {
-  if (!user?.id) {
-    alert("Vui lòng đăng nhập!");
-    return;
-  }
-
-  setStartingTaskId(task.id);
-
-  try {
-    const { data, error } = await supabase.functions.invoke("start-task", {
-      body: { task_id: task.id },
-    });
-
-    setStartingTaskId(null);
-
-    if (error) {
-      alert("Lỗi: " + error.message);
+    if (!user?.id) {
+      alert("Vui lòng đăng nhập!");
       return;
     }
 
-    if (data?.error) {
-      alert(data.error);
+    if (isBlocked) {
+      alert("🚫 Tài khoản của bạn đang bị hạn chế!");
       return;
     }
 
-    if (data?.shortUrl) {
-      // Lấy slug từ shortUrl (ví dụ: site2s.com/abc123 -> abc123)
-      const slug = data.shortUrl.split('/').pop();
-      
-      // Lưu vào task_logs
-      await supabase.from("task_logs").insert({
-        user_id: user.id,
-        task_id: task.id,
-        token: data.token,
-        provider: task.provider,
-        provider_slug: slug,
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+    if (isPolling) {
+      alert("⏳ Bạn đang có một nhiệm vụ đang chờ xác nhận!");
+      return;
+    }
+
+    setStartingTaskId(task.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("start-task", {
+        body: { task_id: task.id },
       });
 
-      // Mở link
-      window.open(data.shortUrl, "_blank");
-      
-      // Bắt đầu polling
-      alert(" Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
-    } else {
-      alert("Không lấy được link nhiệm vụ!");
-    }
+      setStartingTaskId(null);
 
-  } catch (err) {
-    setStartingTaskId(null);
-    alert("Lỗi: " + err.message);
-  }
-};
+      if (error) {
+        alert("Lỗi: " + error.message);
+        return;
+      }
+
+      if (data?.error) {
+        alert(data.error);
+        return;
+      }
+
+      if (data?.shortUrl) {
+        // Lấy slug từ shortUrl
+        const urlParts = data.shortUrl.split('/');
+        const slug = urlParts[urlParts.length - 1];
+        
+        // Lưu vào task_logs
+        const { data: logData, error: logError } = await supabase
+          .from("task_logs")
+          .insert({
+            user_id: user.id,
+            task_id: task.id,
+            token: data.token,
+            provider: task.provider,
+            provider_slug: slug,
+            expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+          })
+          .select()
+          .single();
+
+        if (logError) {
+          alert("Lỗi lưu task log: " + logError.message);
+          return;
+        }
+
+        // Mở link
+        window.open(data.shortUrl, "_blank");
+        
+        // Lưu task log id để polling
+        setCurrentTaskLogId(logData.id);
+
+        // Bắt đầu polling
+        startPolling(logData.id);
+
+        alert("✅ Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
+      } else {
+        alert("Không lấy được link nhiệm vụ!");
+      }
+
+    } catch (err) {
+      setStartingTaskId(null);
+      alert("Lỗi: " + err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
@@ -217,6 +300,13 @@ export default function Tasks() {
           </div>
         )}
 
+        {isPolling && (
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-center">
+            <p className="text-sm font-semibold text-sky-700">⏳ Đang chờ xác nhận nhiệm vụ...</p>
+            <p className="mt-1 text-xs text-sky-600">Vui lòng đợi trong giây lát</p>
+          </div>
+        )}
+
         {loading && <p className="py-8 text-center text-sm text-slate-400">Đang tải nhiệm vụ...</p>}
         {!loading && filteredTasks.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-400">Không có nhiệm vụ nào.</p>
@@ -273,11 +363,11 @@ export default function Tasks() {
 
                   <button
                     onClick={() => handleStart(task)}
-                    disabled={isDone || startingTaskId === task.id || isBlocked}
+                    disabled={isDone || startingTaskId === task.id || isBlocked || isPolling}
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ExternalLink size={15} />
-                    {isBlocked ? "🚫 Tài khoản bị khóa" : isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
+                    {isPolling ? "⏳ Đang xác nhận..." : isBlocked ? "🚫 Tài khoản bị khóa" : isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
                   </button>
                 </div>
               </div>
