@@ -70,11 +70,6 @@ export default function Tasks() {
     return;
   }
 
-  if (isBlocked) {
-    alert(" Tài khoản của bạn đang bị hạn chế");
-    return;
-  }
-
   setStartingTaskId(task.id);
 
   try {
@@ -95,7 +90,9 @@ export default function Tasks() {
     }
 
     if (data?.shortUrl) {
+      // CHỈ MỞ LINK, KHÔNG NAVIGATE
       window.open(data.shortUrl, "_blank");
+      // KHÔNG navigate sang callback
     } else {
       alert("Không lấy được link nhiệm vụ!");
     }
