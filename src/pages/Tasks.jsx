@@ -90,9 +90,24 @@ export default function Tasks() {
     }
 
     if (data?.shortUrl) {
-      // CHỈ MỞ LINK, KHÔNG NAVIGATE
+      // Lấy slug từ shortUrl (ví dụ: site2s.com/abc123 -> abc123)
+      const slug = data.shortUrl.split('/').pop();
+      
+      // Lưu vào task_logs
+      await supabase.from("task_logs").insert({
+        user_id: user.id,
+        task_id: task.id,
+        token: data.token,
+        provider: task.provider,
+        provider_slug: slug,
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+      });
+
+      // Mở link
       window.open(data.shortUrl, "_blank");
-      // KHÔNG navigate sang callback
+      
+      // Bắt đầu polling
+      alert(" Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
     } else {
       alert("Không lấy được link nhiệm vụ!");
     }
