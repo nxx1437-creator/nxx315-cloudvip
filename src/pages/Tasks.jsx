@@ -70,34 +70,38 @@ export default function Tasks() {
     return;
   }
 
-  try {
-    const token = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    
-    const { data: tokenData, error: tokenError } = await supabase
-      .from("task_tokens")
-      .insert({
-        token: token,
-        task_id: task.id,
-        user_id: user.id,
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-      })
-      .select()
-      .single();
+  if (isBlocked) {
+    alert(" Tài khoản của bạn đang bị hạn chế");
+    return;
+  }
 
-    if (tokenError) {
-      alert("Lỗi tạo token: " + tokenError.message);
+  setStartingTaskId(task.id);
+
+  try {
+    const { data, error } = await supabase.functions.invoke("start-task", {
+      body: { task_id: task.id },
+    });
+
+    setStartingTaskId(null);
+
+    if (error) {
+      alert("Lỗi: " + error.message);
       return;
     }
 
-    if (task.url) {
-      window.open(task.url, "_blank");
-      // 👇 Thêm thông báo hướng dẫn
-      alert(" Đã mở link nhiệm vụ! Hãy hoàn thành quảng cáo, sau đó quay lại và bấm 'Xác nhận' để nhận thưởng.");
+    if (data?.error) {
+      alert(data.error);
+      return;
+    }
+
+    if (data?.shortUrl) {
+      window.open(data.shortUrl, "_blank");
     } else {
-      alert("Nhiệm vụ chưa có link!");
+      alert("Không lấy được link nhiệm vụ!");
     }
 
   } catch (err) {
+    setStartingTaskId(null);
     alert("Lỗi: " + err.message);
   }
 };
