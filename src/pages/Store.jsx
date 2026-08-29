@@ -13,14 +13,13 @@ export default function Store() {
   const { session } = useSession();
   const { profile, setProfile } = useProfile();
   const [toast, setToast] = useState(null);
-  const [category, setCategory] = useState("robux"); // "robux" | "quanhuy"
+  const [category, setCategory] = useState("robux");
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   
-  // Chọn gói
   const [selectedPkg, setSelectedPkg] = useState(null);
-  const [step, setStep] = useState("category"); // "category" | "package" | "delivery"
+  const [step, setStep] = useState("category");
   
   const [deliveryMethod, setDeliveryMethod] = useState("");
   const [deliveryInfo, setDeliveryInfo] = useState("");
@@ -53,17 +52,14 @@ export default function Store() {
     fetchData();
   }, [session]);
 
-  // Lọc gói theo category
   const filteredPackages = packages.filter(pkg => {
     const name = pkg.name.toLowerCase();
     if (category === "quanhuy") {
       return name.includes("quân huy") || name.includes("qh");
     }
-    // Robux
     return name.includes("robux") || name.includes("r$") || name.includes("40") || name.includes("80") || name.includes("100") || name.includes("500");
   });
 
-  // Xử lý đổi thưởng bằng RPC
   const handleRedeem = async () => {
     if (!session?.user?.id) {
       setToast({ message: "Vui lòng đăng nhập!", type: "error" });
@@ -82,7 +78,6 @@ export default function Store() {
 
     setIsRedeeming(true);
 
-    // Gọi RPC create_redemption_order
     const { data, error } = await supabase.rpc("create_redemption_order", {
       p_user_id: session.user.id,
       p_package_id: selectedPkg.id,
@@ -102,10 +97,8 @@ export default function Store() {
       return;
     }
 
-    // Cập nhật profile
     await setProfile((prev) => ({ ...prev, coins: data.coins_remaining }));
 
-    // Gửi thông báo Telegram
     try {
       await supabase.functions.invoke("telegram-webhook", {
         body: {
@@ -119,7 +112,6 @@ export default function Store() {
       console.error("Lỗi gửi Telegram:", teleError);
     }
 
-    // Refresh lịch sử
     const { data: newOrders } = await supabase
       .from("redemption_orders")
       .select("*")
@@ -132,7 +124,6 @@ export default function Store() {
       type: "success" 
     });
     
-    // Reset
     setSelectedPkg(null);
     setDeliveryInfo("");
     setDeliveryMethod("");
@@ -155,12 +146,10 @@ export default function Store() {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
-  // Format số
   const formatNumber = (num) => {
     return num?.toLocaleString() || 0;
   };
 
-  // Render category selection
   const renderCategory = () => (
     <div className="grid grid-cols-2 gap-4">
       <button
@@ -201,7 +190,6 @@ export default function Store() {
     </div>
   );
 
-  // Render package list (2 cột)
   const renderPackages = () => (
     <div>
       <button
@@ -258,7 +246,6 @@ export default function Store() {
     </div>
   );
 
-  // Render delivery method selection
   const renderDelivery = () => {
     const isQuocTe = selectedPkg?.name?.toLowerCase().includes("quốc tế") || 
                       selectedPkg?.name?.toLowerCase().includes("quoc te");
@@ -325,7 +312,6 @@ export default function Store() {
     );
   };
 
-  // Render delivery detail
   const renderDeliveryDetail = () => {
     const isVNG = deliveryMethod === "vng";
     const isQuocTe = deliveryMethod === "quocte";
@@ -425,9 +411,7 @@ export default function Store() {
       </div>
     );
   };
-
-  // Lịch sử
-  const renderHistory = () => (
+    const renderHistory = () => (
     <div className="mt-8 pt-4 border-t border-slate-200">
       <h3 className="text-lg font-bold text-slate-900">🧾 Lịch sử đổi thưởng</h3>
       <p className="text-xs text-slate-400 mb-4">Theo dõi các đơn hàng của bạn</p>
@@ -513,9 +497,16 @@ export default function Store() {
           <h1 className="font-display mt-3 text-3xl font-bold leading-tight text-slate-900">🛍️ Đổi Coin lấy phần thưởng</h1>
           <p className="mt-2 text-sm text-slate-500">✨ Nhanh chóng • An toàn • Uy tín</p>
 
-          {/* Số dư */}
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-500">
+              <Wallet size={20} />
+            </span>
+            <div>
+              <p className="text-xs text-slate-400">Số dư của bạn</p>
+              <p className="text-xl font-bold text-amber-500">
+                {formatNumber(profile.coins)} <span className="text-sm font-normal text-slate-400">Coin</span>
+              </p>
+            </div>
           </div>
           <p className="mt-2 text-xs text-slate-400 text-center">
             💡 Coin sẽ được trừ khi đơn đổi thưởng được tạo.
@@ -567,10 +558,10 @@ export default function Store() {
           </div>
         )}
 
-        {/* Lịch sử - luôn hiển thị ở cuối */}
+        {/* Lịch sử */}
         {renderHistory()}
       </main>
       <BottomNav />
     </div>
   );
-}
+      }
