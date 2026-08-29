@@ -67,21 +67,14 @@ export default function Tasks() {
   const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
-  // Cleanup polling khi component unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
-
+  // Khởi tạo polling
   const startPolling = (logId) => {
     if (pollingInterval) {
       clearInterval(pollingInterval);
     }
 
     setIsPolling(true);
+    setCurrentTaskLogId(logId);
 
     const interval = setInterval(async () => {
       try {
@@ -99,7 +92,13 @@ export default function Tasks() {
           setPollingInterval(null);
           setCurrentTaskLogId(null);
           setIsPolling(false);
-          alert("✅ Hoàn thành nhiệm vụ! +Coin");
+          
+          await supabase
+            .from("task_logs")
+            .update({ is_polling: false })
+            .eq("id", logId);
+          
+          alert(" Hoàn thành nhiệm vụ! +Coin");
           reload();
           navigate("/tasks");
           return;
@@ -110,7 +109,13 @@ export default function Tasks() {
           setPollingInterval(null);
           setCurrentTaskLogId(null);
           setIsPolling(false);
-          alert("⏰ Nhiệm vụ đã hết hạn!");
+          
+          await supabase
+            .from("task_logs")
+            .update({ is_polling: false })
+            .eq("id", logId);
+          
+          alert(" Nhiệm vụ đã hết hạn!");
           reload();
         }
       } catch (err) {
@@ -121,6 +126,52 @@ export default function Tasks() {
     setPollingInterval(interval);
   };
 
+  // Khôi phục polling khi refresh
+  useEffect(() => {
+    const restorePolling = async () => {
+      if (!user?.id) return;
+      
+      const { data, error } = await supabase
+        .from("task_logs")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_polling", true)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Lỗi khôi phục polling:", error);
+        return;
+      }
+
+      if (data) {
+        if (new Date(data.expires_at) < new Date()) {
+          await supabase
+            .from("task_logs")
+            .update({ 
+              status: "expired", 
+              is_polling: false 
+            })
+            .eq("id", data.id);
+          return;
+        }
+
+        setCurrentTaskLogId(data.id);
+        startPolling(data.id);
+      }
+    };
+
+    restorePolling();
+  }, [user?.id]);
+
+  // Cleanup polling khi unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
   const handleStart = async (task) => {
     if (!user?.id) {
       alert("Vui lòng đăng nhập!");
@@ -128,12 +179,12 @@ export default function Tasks() {
     }
 
     if (isBlocked) {
-      alert("🚫 Tài khoản của bạn đang bị hạn chế!");
+      alert(" Tài khoản của bạn đang bị hạn chế!");
       return;
     }
 
     if (isPolling) {
-      alert("⏳ Bạn đang có một nhiệm vụ đang chờ xác nhận!");
+      alert(" Bạn đang có một nhiệm vụ đang chờ xác nhận!");
       return;
     }
 
@@ -157,11 +208,9 @@ export default function Tasks() {
       }
 
       if (data?.shortUrl) {
-        // Lấy slug từ shortUrl
         const urlParts = data.shortUrl.split('/');
         const slug = urlParts[urlParts.length - 1];
         
-        // Lưu vào task_logs
         const { data: logData, error: logError } = await supabase
           .from("task_logs")
           .insert({
@@ -170,7 +219,8 @@ export default function Tasks() {
             token: data.token,
             provider: task.provider,
             provider_slug: slug,
-            expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+            expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            is_polling: true
           })
           .select()
           .single();
@@ -180,16 +230,10 @@ export default function Tasks() {
           return;
         }
 
-        // Mở link
         window.open(data.shortUrl, "_blank");
-        
-        // Lưu task log id để polling
-        setCurrentTaskLogId(logData.id);
-
-        // Bắt đầu polling
         startPolling(logData.id);
 
-        alert("✅ Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
+        alert(" Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
       } else {
         alert("Không lấy được link nhiệm vụ!");
       }
@@ -268,10 +312,10 @@ export default function Tasks() {
               }`}
             >
               {isAdmin
-                ? "👑 Admin — Miễn kiểm tra"
+                ? " Admin — Miễn kiểm tra"
                 : isBlocked
-                ? `🚫 Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế làm nhiệm vụ`
-                : `⚠️ Rủi ro: ${profile.risk_score}/100`}
+                ? ` Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế làm nhiệm vụ`
+                : ` Rủi ro: ${profile.risk_score}/100`}
             </div>
           )}
 
@@ -295,7 +339,7 @@ export default function Tasks() {
 
         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
-            <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
+            <p className="text-sm font-semibold text-rose-700"> Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
             <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
           </div>
         )}
@@ -367,7 +411,7 @@ export default function Tasks() {
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ExternalLink size={15} />
-                    {isPolling ? "⏳ Đang xác nhận..." : isBlocked ? "🚫 Tài khoản bị khóa" : isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
+                    {isPolling ? " Đang xác nhận..." : isBlocked ? " Tài khoản bị khóa" : isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
                   </button>
                 </div>
               </div>
@@ -387,4 +431,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-}
+                }
