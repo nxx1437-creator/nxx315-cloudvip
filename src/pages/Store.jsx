@@ -7,7 +7,7 @@ import { useFraud } from "../hooks/useFraud.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
-const ADMIN_CHAT_ID = 8637128924; // 👈 Thay bằng ID admin của bạn
+const ADMIN_CHAT_ID = 6152450878; 
 
 export default function Store() {
   const navigate = useNavigate();
