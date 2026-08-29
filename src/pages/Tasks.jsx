@@ -51,6 +51,7 @@ export default function Tasks() {
   const [pollingInterval, setPollingInterval] = useState(null);
   const [currentTaskLogId, setCurrentTaskLogId] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // 👉 6. CHỐNG SPAM
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
@@ -67,7 +68,6 @@ export default function Tasks() {
   const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
 
-  // Khởi tạo polling
   const startPolling = (logId) => {
     if (pollingInterval) {
       clearInterval(pollingInterval);
@@ -83,7 +83,10 @@ export default function Tasks() {
         });
 
         if (error) {
-          console.error("Polling error:", error);
+          // 👉 6. XỬ LÝ LỖI RATE LIMIT
+          if (error.message?.includes("429") || error.status === 429) {
+            console.warn("Rate limit exceeded, waiting...");
+          }
           return;
         }
 
@@ -163,7 +166,6 @@ export default function Tasks() {
     restorePolling();
   }, [user?.id]);
 
-  // Cleanup polling khi unmount
   useEffect(() => {
     return () => {
       if (pollingInterval) {
@@ -173,25 +175,27 @@ export default function Tasks() {
   }, [pollingInterval]);
 
   const handleStart = async (task) => {
+    // 👉 6. CHỐNG SPAM
+    if (isLoading) {
+      return;
+    }
+
     if (!user?.id) {
       alert("Vui lòng đăng nhập!");
       return;
     }
 
     if (isBlocked) {
-      alert(" Tài khoản của bạn đang bị hạn chế!");
+      alert("Tài khoản của bạn đang bị hạn chế!");
       return;
     }
 
-    // Trong UI, hiển thị thông báo khi đang kiểm tra
-{isPolling && (
-  <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-center">
-    <p className="text-sm font-semibold text-sky-700"> Đang kiểm tra nhiệm vụ...</p>
-    <p className="mt-1 text-xs text-sky-600">Hệ thống sẽ tự động kiểm tra trong 5-10 phút</p>
-    <p className="mt-1 text-xs text-amber-600"> Nếu không hoàn thành, bạn sẽ bị trừ điểm!</p>
-  </div>
-)}
+    if (isPolling) {
+      alert(" Bạn đang có một nhiệm vụ đang chờ xác nhận!");
+      return;
+    }
 
+    setIsLoading(true);
     setStartingTaskId(task.id);
 
     try {
@@ -201,13 +205,20 @@ export default function Tasks() {
 
       setStartingTaskId(null);
 
+      // 👉 6. XỬ LÝ LỖI RATE LIMIT
       if (error) {
-        alert("Lỗi: " + error.message);
+        if (error.message?.includes("Quá nhiều request") || error.status === 429) {
+          alert(" Bạn đang thao tác quá nhanh! Vui lòng đợi 1 phút.");
+        } else {
+          alert("Lỗi: " + error.message);
+        }
+        setIsLoading(false);
         return;
       }
 
       if (data?.error) {
         alert(data.error);
+        setIsLoading(false);
         return;
       }
 
@@ -231,13 +242,14 @@ export default function Tasks() {
 
         if (logError) {
           alert("Lỗi lưu task log: " + logError.message);
+          setIsLoading(false);
           return;
         }
 
         window.open(data.shortUrl, "_blank");
         startPolling(logData.id);
 
-        alert(" Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
+        alert("Đã mở link nhiệm vụ! Hoàn thành quảng cáo để nhận thưởng.");
       } else {
         alert("Không lấy được link nhiệm vụ!");
       }
@@ -245,6 +257,8 @@ export default function Tasks() {
     } catch (err) {
       setStartingTaskId(null);
       alert("Lỗi: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -316,10 +330,10 @@ export default function Tasks() {
               }`}
             >
               {isAdmin
-                ? " Admin — Miễn kiểm tra"
+                ? "👑 Admin — Miễn kiểm tra"
                 : isBlocked
-                ? ` Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế làm nhiệm vụ`
-                : ` Rủi ro: ${profile.risk_score}/100`}
+                ? `Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế làm nhiệm vụ`
+                : `Rủi ro: ${profile.risk_score}/100`}
             </div>
           )}
 
@@ -343,7 +357,7 @@ export default function Tasks() {
 
         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
-            <p className="text-sm font-semibold text-rose-700"> Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
+            <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
             <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
           </div>
         )}
@@ -411,11 +425,11 @@ export default function Tasks() {
 
                   <button
                     onClick={() => handleStart(task)}
-                    disabled={isDone || startingTaskId === task.id || isBlocked || isPolling}
+                    disabled={isDone || startingTaskId === task.id || isBlocked || isPolling || isLoading}
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ExternalLink size={15} />
-                    {isPolling ? " Đang xác nhận..." : isBlocked ? " Tài khoản bị khóa" : isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
+                    {isLoading ? " Đang xử lý..." : isPolling ? " Đang xác nhận..." : isBlocked ? " Tài khoản bị khóa" : isDone ? "Đã hết lượt hôm nay" : startingTaskId === task.id ? "Đang mở..." : "Làm nhiệm vụ"}
                   </button>
                 </div>
               </div>
@@ -435,4 +449,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-                }
+    }
