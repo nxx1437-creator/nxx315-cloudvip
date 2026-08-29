@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { supabase } from "./lib/supabaseClient.js";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
@@ -19,47 +18,31 @@ import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
-
-function AppContent() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session && window.location.pathname === "/") {
-        navigate("/dashboard");
-      }
-    };
-    checkSession();
-  }, [navigate]);
-
-  return (
-    <Routes>
-      <Route path="/" element={<CloudVIPLanding />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/tasks" element={<Tasks />} />
-      <Route path="/store" element={<Store />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/help" element={<HelpCenter />} />
-      <Route path="/support" element={<Support />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/fraud" element={<Fraud />} />
-      <Route path="/redemption-policy" element={<RedemptionPolicy />} />
-      <Route path="/wallet" element={<Wallet />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/task/callback" element={<TaskCallback />} />
-    </Routes>
-  );
-}
+import ChatBot from "./components/ChatBot.jsx"; // 👈 THÊM
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <Routes>
+        <Route path="/" element={<CloudVIPLanding />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/store" element={<Store />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/fraud" element={<Fraud />} />
+        <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/task/callback" element={<TaskCallback />} />
+      </Routes>
+      <ChatBot />
     </BrowserRouter>
   );
 }
