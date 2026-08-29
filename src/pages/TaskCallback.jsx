@@ -43,48 +43,45 @@ export default function TaskCallback() {
     }
   }, [token]);
 
-  const handleCaptchaSolved = async (captchaToken) => {
-    setState({ status: "verifying", message: "", reward: 0 });
+const handleCaptchaSolved = async (captchaToken) => {
+  setState({ status: "verifying", message: "", reward: 0 });
 
-    let verifyData = null;
-    let verifyErrorText = null;
-    try {
-      const res = await fetch("https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/rapid-handler", {
+  try {
+    // Gọi Edge Function rapid-handler với cả captchaToken và token
+    const res = await fetch(
+      "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/rapid-handler",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          "apikey": supabase.supabaseKey,
         },
-        body: JSON.stringify({ captchaToken }),
-      });
-      verifyErrorText = `HTTP ${res.status}`;
-      verifyData = await res.json();
-    } catch (fetchErr) {
-      verifyErrorText = "FETCH THREW: " + String(fetchErr);
-    }
+        body: JSON.stringify({ 
+          captchaToken: captchaToken,
+          token: token 
+        }),
+      }
+    );
 
-    if (!verifyData?.success) {
-      setState({
-        status: "error",
-        message: "DEBUG2: " + JSON.stringify({ verifyErrorText, verifyData }),
-        reward: 0,
+    const data = await res.json();
+
+    if (data?.success) {
+      setState({ 
+        status: "success", 
+        message: data.message || "Hoàn thành nhiệm vụ!", 
+        reward: data.reward || 0 
       });
-      return;
-    }
-    const { data, error } = await supabase.rpc("consume_task_token", { p_token: token });
-    if (error) {
-      setState({ status: "error", message: error.message, reward: 0 });
-      return;
-    }
-    const row = data?.[0];
-    if (row?.success) {
-      setState({ status: "success", message: row.message, reward: row.reward_coins });
     } else {
-      setState({ status: "error", message: row?.message || "Xác thực thất bại.", reward: 0 });
+      setState({ 
+        status: "error", 
+        message: data?.error || "Xác minh thất bại!", 
+        reward: 0 
+      });
     }
-  };
-
+  } catch (err) {
+    setState({ status: "error", message: err.message, reward: 0 });
+  }
+};
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center font-[Be_Vietnam_Pro]">
       {state.status === "captcha" && (
