@@ -45,13 +45,13 @@ export default function ChatBot() {
 
       if (error) throw error;
 
-      const botReply = data?.reply || "Xin lỗi cậu, Nia chưa hiểu câu hỏi này lắm. ";
+      const botReply = data?.reply || "Xin lỗi cậu, Nia chưa hiểu câu hỏi này lắm. 🥺";
       setMessages(prev => [...prev, { role: "bot", content: botReply, timestamp: new Date() }]);
 
     } catch (err) {
       setMessages(prev => [...prev, { 
         role: "bot", 
-        content: "❌ Có lỗi xảy ra rồi cậu ơi! Nia đang bảo trì, thử lại sau nha! ",
+        content: "❌ Có lỗi xảy ra rồi cậu ơi! Nia đang bảo trì, thử lại sau nha! 🥺",
         timestamp: new Date()
       }]);
     } finally {
@@ -61,7 +61,11 @@ export default function ChatBot() {
 
   const handleFeedback = (type) => {
     setFeedback(type);
-    alert(`Cảm ơn cậu đã phản hồi! ${type === 'yes' ? '😊' : '🥺 Nia sẽ cố gắng hơn nha!'}`);
+    if (type === 'yes') {
+      alert(' Cảm ơn cậu đã phản hồi! Nia vui quá!');
+    } else {
+      alert(' Nia sẽ cố gắng hơn nha! Cảm ơn cậu đã góp ý!');
+    }
   };
 
   if (!isOpen) {
@@ -77,6 +81,7 @@ export default function ChatBot() {
 
   return (
     <div className="fixed bottom-24 right-4 z-50 w-[90vw] max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+      {/* Header */}
       <div className="bg-gradient-to-r from-pink-400 to-rose-500 px-4 py-3 text-white flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">🌸</span>
@@ -90,6 +95,7 @@ export default function ChatBot() {
         </button>
       </div>
 
+      {/* Messages */}
       <div className="h-80 overflow-y-auto p-4 space-y-3 bg-pink-50/30">
         {messages.map((msg, idx) => (
           <div key={idx}>
@@ -127,19 +133,28 @@ export default function ChatBot() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* 👉 FEEDBACK - DÁN VÀO ĐÂY */}
       {messages.length > 1 && !loading && (
         <div className="border-t border-pink-100 px-4 py-2 bg-pink-50/50 flex items-center justify-between">
           <span className="text-xs text-slate-500">Câu trả lời có hữu ích không?</span>
           <div className="flex gap-2">
             <button 
               onClick={() => handleFeedback('yes')}
-              className={`p-1.5 rounded-full transition ${feedback === 'yes' ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-slate-100 text-slate-400'}`}
+              className={`p-1.5 rounded-full transition ${
+                feedback === 'yes' 
+                  ? 'bg-emerald-100 text-emerald-600' 
+                  : 'hover:bg-slate-100 text-slate-400'
+              }`}
             >
               <ThumbsUp size={14} />
             </button>
             <button 
               onClick={() => handleFeedback('no')}
-              className={`p-1.5 rounded-full transition ${feedback === 'no' ? 'bg-rose-100 text-rose-600' : 'hover:bg-slate-100 text-slate-400'}`}
+              className={`p-1.5 rounded-full transition ${
+                feedback === 'no' 
+                  ? 'bg-rose-100 text-rose-600' 
+                  : 'hover:bg-slate-100 text-slate-400'
+              }`}
             >
               <ThumbsDown size={14} />
             </button>
@@ -147,6 +162,7 @@ export default function ChatBot() {
         </div>
       )}
 
+      {/* Input */}
       <div className="border-t border-pink-100 p-3 flex gap-2 bg-white">
         <input
           value={input}
@@ -166,4 +182,4 @@ export default function ChatBot() {
       </div>
     </div>
   );
-                                   }
+                }
