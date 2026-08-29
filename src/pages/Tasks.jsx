@@ -91,21 +91,35 @@ export default function Tasks() {
         }
 
         if (data?.completed) {
-          clearInterval(interval);
-          setPollingInterval(null);
-          setCurrentTaskLogId(null);
-          setIsPolling(false);
-          
-          await supabase
-            .from("task_logs")
-            .update({ is_polling: false })
-            .eq("id", logId);
-          
-          alert(" Hoàn thành nhiệm vụ! +Coin");
-          reload();
-          navigate("/tasks");
-          return;
+  clearInterval(interval);
+  setPollingInterval(null);
+  setCurrentTaskLogId(null);
+  setIsPolling(false);
+  
+  await supabase
+    .from("task_logs")
+    .update({ is_polling: false })
+    .eq("id", logId);
+  
+  // 👉 Gửi thông báo lên Telegram
+  try {
+    await supabase.functions.invoke("telegram-webhook", {
+      body: {
+        message: {
+          text: `✅ Hoàn thành nhiệm vụ!\n👤 User: ${user.email}\n📦 Provider: ${task.provider}\n💰 Thưởng: +${task.reward_coins} Coin`,
+          chat: { id: 6152450878 }
         }
+      }
+    });
+  } catch (teleError) {
+    console.error("Lỗi gửi Telegram:", teleError);
+  }
+  
+  alert("✅ Hoàn thành nhiệm vụ! +Coin");
+  reload();
+  navigate("/tasks");
+  return;
+      }
 
         if (data?.error === "Đã hết hạn") {
           clearInterval(interval);
