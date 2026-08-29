@@ -516,3 +516,61 @@ export default function Store() {
           {/* Số dư */}
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber
+          </div>
+          <p className="mt-2 text-xs text-slate-400 text-center">
+            💡 Coin sẽ được trừ khi đơn đổi thưởng được tạo.
+          </p>
+        </div>
+
+        {toast && (
+          <div className={`mt-4 rounded-2xl p-4 ${
+            toast.type === 'success' 
+              ? 'bg-emerald-50 border border-emerald-200' 
+              : 'bg-rose-50 border border-rose-200'
+          }`}>
+            <p className={`text-sm ${
+              toast.type === 'success' ? 'text-emerald-700' : 'text-rose-700'
+            }`}>
+              {toast.message}
+            </p>
+          </div>
+        )}
+
+        {/* Bạn muốn đổi gì? */}
+        {step === "category" && (
+          <>
+            <p className="text-center text-sm font-medium text-slate-700 mt-6 mb-3">
+              Bạn muốn đổi gì?
+            </p>
+            {renderCategory()}
+          </>
+        )}
+
+        {/* Package list */}
+        {step === "package" && (
+          <div className="mt-6">
+            {renderPackages()}
+          </div>
+        )}
+
+        {/* Delivery method */}
+        {step === "delivery" && (
+          <div className="mt-6">
+            {renderDelivery()}
+          </div>
+        )}
+
+        {/* Delivery detail */}
+        {step === "delivery-detail" && (
+          <div className="mt-6">
+            {renderDeliveryDetail()}
+          </div>
+        )}
+
+        {/* Lịch sử - luôn hiển thị ở cuối */}
+        {renderHistory()}
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
