@@ -16,9 +16,7 @@ import {
 } from "lucide-react";
 import { supabase } from '../lib/supabaseClient.js';
 
-const SERVICE_ID = 'service_i4wv7md';
-const TEMPLATE_ID_USER = 'template_eoi1ihx';
-const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
+const ADMIN_CHAT_ID = 6152450878;
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -51,30 +49,42 @@ export default function Contact() {
 
       if (dbError) throw dbError;
 
-      // 2️⃣ Gửi email qua EmailJS
-      const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID_USER,
-        {
-          from_name: formData.name,
-          from_email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-        },
-        PUBLIC_KEY
-      );
+      // 2️⃣ Gửi thông báo lên Telegram
+      try {
+        await supabase.functions.invoke("telegram-webhook", {
+          body: {
+            message: {
+              text: ` Yêu cầu hỗ trợ mới! Tên: ${formData.name}\n📧 Email: ${formData.email}\n📌 Chủ đề: ${formData.subject}\n📝 Nội dung: ${formData.message}`,
+              chat: { id: ADMIN_CHAT_ID }
+            }
+          }
+        });
+      } catch (teleError) {
+        console.error("Lỗi gửi Telegram:", teleError);
+      }
 
-      if (result.status === 200) {
+      // 3️⃣ Gửi email (gọi Edge Function send-email)
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message
+        }
+      });
+
+      if (error) throw new Error(error.message);
+
+      if (data?.success) {
         setSent(true);
         setFormData({ name: '', email: '', subject: '', message: '' });
         setTimeout(() => setSent(false), 5000);
       } else {
-        throw new Error('Gửi email thất bại');
+        throw new Error(data?.error || 'Gửi thất bại');
       }
 
     } catch (err) {
       setError(err.message || 'Lỗi kết nối, vui lòng thử lại sau');
-      console.error('Error:', err);
     } finally {
       setSending(false);
     }
