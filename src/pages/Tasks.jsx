@@ -183,10 +183,14 @@ export default function Tasks() {
       return;
     }
 
-    if (isPolling) {
-      alert(" Bạn đang có một nhiệm vụ đang chờ xác nhận!");
-      return;
-    }
+    // Trong UI, hiển thị thông báo khi đang kiểm tra
+{isPolling && (
+  <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-center">
+    <p className="text-sm font-semibold text-sky-700"> Đang kiểm tra nhiệm vụ...</p>
+    <p className="mt-1 text-xs text-sky-600">Hệ thống sẽ tự động kiểm tra trong 5-10 phút</p>
+    <p className="mt-1 text-xs text-amber-600"> Nếu không hoàn thành, bạn sẽ bị trừ điểm!</p>
+  </div>
+)}
 
     setStartingTaskId(task.id);
 
