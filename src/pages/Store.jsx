@@ -1178,9 +1178,6 @@ const formatDate = (value) => {
     timeStyle: "short",
   });
 };
-
-  
-export default function Store() {
   const { session } = useSession();
   const { profile, setProfile } = useProfile();
 
