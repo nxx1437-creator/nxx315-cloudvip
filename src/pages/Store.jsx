@@ -1145,30 +1145,7 @@ function PackageCard({
     </button>
   );
         }
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  Clock3,
-  Coins,
-  Copy,
-  Gift,
-  Loader2,
-  ShieldCheck,
-  Sparkles,
-  XCircle,
-} from "lucide-react";
 
-import useSession from "../hooks/useSession.js";
-import useProfile from "../hooks/useProfile.js";
-import { supabase } from "../lib/supabaseClient.js";
-import BottomNav from "../components/BottomNav.jsx";
-
-const ADMIN_CHAT_ID = 8637128924;
-
-const STATUS = {
   pending: {
     label: "Đang xử lý",
     icon: Clock3,
