@@ -1145,8 +1145,8 @@ function PackageCard({
     </button>
   );
         }
-
-  pending: {
+const STATUS_CONFIG = {
+pending: {
     label: "Đang xử lý",
     icon: Clock3,
     className: "bg-amber-50 text-amber-700 border-amber-100",
@@ -1179,6 +1179,7 @@ const formatDate = (value) => {
   });
 };
 
+  
 export default function Store() {
   const { session } = useSession();
   const { profile, setProfile } = useProfile();
