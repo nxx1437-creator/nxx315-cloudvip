@@ -1905,4 +1905,4 @@ const formatDate = (value) => {
       <BottomNav />
     </div>
   );
-            }
+}
