@@ -353,8 +353,9 @@ export default function Store() {
           <div
             className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-xl ${
               toast.type === "error"
-                ? "border-rose-200 bg-white/95 text-rose-700"
-                }`}
+                  ? "border-rose-200 bg-white/95 text-rose-700"
+                  : "border-emerald-200 bg-white/95 text-emerald-700"
+              }`}
           >
             {toast.type === "error" ? (
               <XCircle size={19} />
