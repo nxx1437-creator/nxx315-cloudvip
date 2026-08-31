@@ -242,3 +242,9 @@ function History({ history, copied, onCopy }) {
     </section>
   );
 }
+
+export default function Store() {
+  return null;
+}
+
+export { OrderPanel, History };
