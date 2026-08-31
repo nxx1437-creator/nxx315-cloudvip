@@ -44,16 +44,12 @@ export default function BanUserModal({ user, onClose, onBanned }) {
             Date.now() + duration * 24 * 60 * 60 * 1000
           ).toISOString();
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        is_banned: true,
-        ban_reason: finalReason.trim(),
-        ban_note: note.trim() || null,
-        banned_until: bannedUntil,
-        banned_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
+    const { error: updateError } = await supabase.rpc("ban_linked_group", {
+      p_user_id: user.id,
+      p_reason: finalReason.trim(),
+      p_note: note.trim() || null,
+      p_banned_until: bannedUntil,
+    });
 
     setSubmitting(false);
 
@@ -94,6 +90,17 @@ export default function BanUserModal({ user, onClose, onBanned }) {
             <X size={16} />
           </button>
         </div>
+
+        {user?.multi_account_flag && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+            <p className="text-xs font-bold text-amber-700">
+              ⚠️ Tài khoản này nằm trong nhóm nghi đa tài khoản.
+            </p>
+            <p className="mt-0.5 text-[11px] text-amber-600">
+              Khóa tài khoản này sẽ tự động khóa luôn các tài khoản liên kết cùng nhóm.
+            </p>
+          </div>
+        )}
 
         <div className="mb-4">
           <p className="mb-2 text-xs font-bold text-slate-600">
