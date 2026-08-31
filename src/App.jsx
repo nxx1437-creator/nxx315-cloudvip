@@ -19,6 +19,7 @@ import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import Banned from "./pages/Banned.jsx";
+import AccountReview from "./pages/AccountReview.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/banned" element={<Banned />} />
+        <Route path="/account-review" element={<AccountReview />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
         <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
