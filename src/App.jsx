@@ -18,7 +18,8 @@ import RedemptionPolicy from "./pages/RedemptionPolicy.jsx";
 import Wallet from "./pages/Wallet.jsx";
 import ProfilePage from "./pages/Profile.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
-import ChatBot from "./components/ChatBot.jsx"; // 👈 THÊM
+import Banned from "./pages/Banned.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
   return (
@@ -27,9 +28,10 @@ export default function App() {
         <Route path="/" element={<CloudVIPLanding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/store" element={<Store />} />
+        <Route path="/banned" element={<Banned />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+        <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
@@ -38,11 +40,10 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/fraud" element={<Fraud />} />
         <Route path="/redemption-policy" element={<RedemptionPolicy />} />
-        <Route path="/wallet" element={<Wallet />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/task/callback" element={<TaskCallback />} />
       </Routes>
-      <ChatBot />
     </BrowserRouter>
   );
 }
