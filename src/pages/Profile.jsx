@@ -152,7 +152,11 @@ export default function ProfilePage() {
         </div>
 
         {profile?.multi_account_flag && !profile?.is_banned && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <button
+            type="button"
+            onClick={() => navigate("/account-review")}
+            className="w-full rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100"
+          >
             <div className="flex items-start gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
                 <ShieldAlert size={16} />
@@ -162,13 +166,12 @@ export default function ProfilePage() {
                   Tài khoản đang được xem xét
                 </p>
                 <p className="mt-0.5 text-xs leading-5 text-amber-700">
-                  Hệ thống phát hiện dấu hiệu bất thường (có thể trùng thiết bị với tài khoản khác). Nếu bạn không tạo nhiều tài khoản, vui lòng bỏ qua thông báo này.
+                  Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
                 </p>
               </div>
             </div>
-          </div>
+          </button>
         )}
-
         <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
           <div className="text-center">
             <p className="text-xs uppercase tracking-wide text-slate-400">Số dư</p>
