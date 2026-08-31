@@ -160,6 +160,7 @@ jobs:
       - name: Comment on Issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           python << 'EOF'
           import os
@@ -167,15 +168,15 @@ jobs:
           
           gh = Github(os.environ['GITHUB_TOKEN'])
           repo = gh.get_repo(os.environ['GITHUB_REPOSITORY'])
-          issue = repo.get_issue(number=int(os.environ['GITHUB_EVENT_ISSUE_NUMBER']))
+          issue = repo.get_issue(number=int(os.environ['ISSUE_NUMBER']))
           
           issue.create_comment("""
-          ## 🤖 AI Team đang xử lý!
+          ## ✅ AI Team đã xử lý xong!
           
           - ✅ GPT-4 đã tạo code
           - ✅ Claude đã review và cải thiện
-          - 🔄 Đang tạo Pull Request...
+          - ✅ Pull Request đã được tạo
           
-          Vui lòng chờ trong giây lát!
+          Xem Pull Requests để review code!
           """)
           EOF
