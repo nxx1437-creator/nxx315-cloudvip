@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getDeviceFingerprint, getPublicIp } from "../lib/deviceFingerprint.js";
 
 const DEFAULT_PROFILE = {
   username: "",
@@ -36,11 +37,28 @@ export default function useProfile() {
 
       if (data) {
         setProfile(data);
+
+        const sessionKey = `fp_recorded_${user.id}`;
+        if (!sessionStorage.getItem(sessionKey)) {
+          getDeviceFingerprint().then((fingerprint) => {
+            if (!fingerprint) return;
+
+            getPublicIp().then((ip) => {
+              supabase
+                .rpc("record_device_fingerprint", {
+                  p_user_id: user.id,
+                  p_fingerprint: fingerprint,
+                  p_ip: ip,
+                })
+                .then(() => {
+                  sessionStorage.setItem(sessionKey, "1");
+                });
+            });
+          });
+        }
       }
       setLoading(false);
     };
-
-    fetchProfile();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, _session) => {
       fetchProfile();
