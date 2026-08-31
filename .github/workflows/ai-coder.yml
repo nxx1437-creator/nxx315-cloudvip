@@ -1,4 +1,4 @@
-name: AI Coder - Viết Code & Fix Bug
+name: AI Coder - Gemini Free
 on:
   issues:
     types: [opened, edited]
@@ -20,12 +20,11 @@ jobs:
           python-version: '3.10'
       
       - name: Install dependencies
-        run: pip install openai anthropic PyGithub
+        run: pip install google-generativeai PyGithub
       
-      - name: AI Xử Lý Issue
+      - name: AI Xử Lý Issue với Gemini
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -33,107 +32,87 @@ jobs:
         run: |
           python << 'EOF'
           import os, sys
-          from openai import OpenAI
-          import anthropic
+          import google.generativeai as genai
           from github import Github
+          
+          print("=" * 50)
+          print("🚀 Bắt đầu xử lý với Gemini...")
+          print("=" * 50)
           
           # Đọc thông tin issue
           title = os.environ.get('ISSUE_TITLE', '')
           body = os.environ.get('ISSUE_BODY', '')
           issue_num = os.environ.get('ISSUE_NUMBER', '1')
           
-          # Kiểm tra API keys
-          if not os.environ.get('OPENAI_API_KEY'):
-              print("❌ Thiếu OPENAI_API_KEY")
-              sys.exit(1)
-          if not os.environ.get('CLAUDE_API_KEY'):
-              print("❌ Thiếu CLAUDE_API_KEY")
+          print(f"📝 Issue #{issue_num}: {title}")
+          
+          # Kiểm tra API key
+          if not os.environ.get('GEMINI_API_KEY'):
+              print("❌ Thiếu GEMINI_API_KEY")
+              print("👉 Vào Settings → Secrets → Actions → Thêm GEMINI_API_KEY")
               sys.exit(1)
           
-          print("✅ API keys OK")
+          print("✅ Gemini API key OK")
           
           # Xác định loại yêu cầu
           is_bug = any(word in (title + body).lower() 
                       for word in ['bug', 'lỗi', 'fix', 'sửa', 'error', 'sai', 'trắng'])
           
-          print(f"📝 Loại: {'Bug Fix' if is_bug else 'New Code'}")
+          print(f"📝 Loại: {'🐛 Bug Fix' if is_bug else '✨ New Code'}")
           
-          # GPT-4 xử lý
+          # Gemini xử lý
           try:
-              openai_client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+              genai.configure(api_key=os.environ['GEMINI_API_KEY'])
+              
+              # Dùng model Gemini Pro (free)
+              model = genai.GenerativeModel('gemini-1.5-pro')
               
               if is_bug:
                   prompt = f"""
-                  Đây là bug cần fix:
+                  Bạn là senior developer. Hãy fix bug sau:
                   
                   Title: {title}
                   Description: {body}
                   
                   Hãy:
                   1. Phân tích nguyên nhân bug
-                  2. Viết code fix hoàn chỉnh
-                  3. Giải thích cách fix
+                  2. Viết code fix hoàn chỉnh (chỉ code, không giải thích dài dòng)
+                  3. Code phải chạy được ngay
                   """
               else:
                   prompt = f"""
-                  Viết code cho yêu cầu sau:
+                  Bạn là senior developer. Hãy viết code cho yêu cầu sau:
                   
                   Title: {title}
                   Description: {body}
                   
                   Hãy:
-                  1. Viết code hoàn chỉnh
+                  1. Viết code hoàn chỉnh (chỉ code, không giải thích dài dòng)
                   2. Có comment giải thích
                   3. Xử lý các edge cases
                   """
               
-              print("🤖 GPT-4 đang xử lý...")
-              gpt_response = openai_client.chat.completions.create(
-                  model="gpt-4o",
-                  messages=[
-                      {"role": "system", "content": "You are a senior developer. Write production-ready code."},
-                      {"role": "user", "content": prompt}
-                  ],
-                  max_tokens=4000
-              )
+              print("🤖 Gemini đang xử lý...")
+              response = model.generate_content(prompt)
               
-              gpt_code = gpt_response.choices[0].message.content
-              print("✅ GPT-4 hoàn thành")
+              final_code = response.text
+              
+              # Clean code nếu Gemini wrap trong ```
+              if "```" in final_code:
+                  # Extract code from markdown blocks
+                  parts = final_code.split("```")
+                  if len(parts) >= 2:
+                      final_code = parts[1]
+                      # Remove language identifier
+                      if "\n" in final_code:
+                          final_code = final_code.split("\n", 1)[1]
+              
+              print("✅ Gemini hoàn thành")
+              print(f"📏 Code length: {len(final_code)} characters")
               
           except Exception as e:
-              print(f"❌ Lỗi OpenAI: {e}")
+              print(f"❌ Lỗi Gemini: {e}")
               sys.exit(1)
-          
-          # Claude review
-          try:
-              claude_client = anthropic.Anthropic(api_key=os.environ['CLAUDE_API_KEY'])
-              
-              print("🔍 Claude đang review...")
-              claude_response = claude_client.messages.create(
-                  model="claude-3-opus-20240229",
-                  max_tokens=4000,
-                  messages=[
-                      {"role": "user", "content": f"""
-                      Review và cải thiện code này:
-                      
-                      {gpt_code}
-                      
-                      Yêu cầu:
-                      1. Fix bugs nếu có
-                      2. Tối ưu code
-                      3. Thêm error handling
-                      4. Trả về code hoàn chỉnh
-                      """}
-                  ]
-              )
-              
-              final_code = claude_response.content[0].text
-              print("✅ Claude review xong")
-              
-          except Exception as e:
-              print(f"⚠️ Lỗi Claude: {e}")
-              print("👉 Dùng code của GPT-4")
-              final_code = gpt_code
           
           # Tạo PR
           try:
@@ -168,7 +147,6 @@ jobs:
               filename = f"solution_{issue_num}.py"
               
               try:
-                  # Kiểm tra file đã tồn tại chưa
                   try:
                       old_file = repo.get_contents(filename, ref=branch_name)
                       repo.update_file(
@@ -199,8 +177,7 @@ jobs:
                   **Loại**: {'🐛 Fix Bug' if is_bug else '✨ Viết Code Mới'}
                   
                   ### Process:
-                  1. GPT-4 {'phân tích và fix bug' if is_bug else 'viết code'}
-                  2. Claude review và cải thiện
+                  1. Gemini phân tích và xử lý
                   
                   ### File:
                   - `{filename}`
@@ -221,9 +198,8 @@ jobs:
               {'🐛 **Bug đã được fix**' if is_bug else '✨ **Code đã được viết**'}
               
               ### Process:
-              1. ✅ GPT-4 {'phân tích bug' if is_bug else 'viết code'}
-              2. ✅ Claude review
-              3. ✅ Tạo Pull Request: PR #{pr.number}
+              1. ✅ Gemini phân tích và xử lý
+              2. ✅ Tạo Pull Request: PR #{pr.number}
               
               Xem code tại: {pr.html_url}
               """)
