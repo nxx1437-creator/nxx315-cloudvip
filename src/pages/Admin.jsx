@@ -256,14 +256,12 @@ function SupportTab() {
       const ticket = tickets.find(t => t.id === ticketId);
       if (!ticket) throw new Error('Không tìm thấy ticket');
 
-      const { error: dbError } = await supabase
-        .from('support_tickets')
-        .update({
-          admin_reply: replyText,
-          status: 'replied',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', ticketId);
+      const { error: updateError } = await supabase.rpc("ban_linked_group", {
+      p_user_id: user.id,
+      p_reason: finalReason.trim(),
+      p_note: note.trim() || null,
+      p_banned_until: bannedUntil,
+    });
 
       if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
@@ -412,6 +410,7 @@ function UsersTab() {
               <th className="px-6 py-4">Level</th>
               <th className="px-6 py-4">Coins</th>
               <th className="px-6 py-4">Trạng thái</th>
+              <th className="px-6 py-4">Cảnh báo</th>
               <th className="px-6 py-4 text-right">Thao tác</th>
             </tr>
           </thead>
@@ -426,6 +425,15 @@ function UsersTab() {
                     <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
                   ) : (
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  {user.multi_account_flag ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">
+                      ⚠️ Nghi đa tài khoản
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-300">—</span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">
