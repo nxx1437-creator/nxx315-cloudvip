@@ -12,10 +12,10 @@ jobs:
       issues: write
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
@@ -54,7 +54,7 @@ jobs:
           
           # Xác định loại yêu cầu
           is_bug = any(word in (title + body).lower() 
-                      for word in ['bug', 'lỗi', 'fix', 'sửa', 'error', 'sai'])
+                      for word in ['bug', 'lỗi', 'fix', 'sửa', 'error', 'sai', 'trắng'])
           
           print(f"📝 Loại: {'Bug Fix' if is_bug else 'New Code'}")
           
@@ -131,13 +131,9 @@ jobs:
               print("✅ Claude review xong")
               
           except Exception as e:
-              print(f"❌ Lỗi Claude: {e}")
-              final_code = gpt_code  # Dùng code của GPT nếu Claude lỗi
-          
-          # Lưu code
-          filename = f"solution_{issue_num}.py"
-          with open(filename, 'w') as f:
-              f.write(final_code)
+              print(f"⚠️ Lỗi Claude: {e}")
+              print("👉 Dùng code của GPT-4")
+              final_code = gpt_code
           
           # Tạo PR
           try:
@@ -159,16 +155,18 @@ jobs:
               
               try:
                   repo.create_git_ref(f"refs/heads/{branch_name}", main_branch.commit.sha)
+                  print(f"✅ Tạo branch: {branch_name}")
               except:
-                  print("Branch đã tồn tại, xóa và tạo lại...")
-                  # Xóa branch cũ nếu có
+                  print("⚠️ Branch đã tồn tại, xóa và tạo lại...")
                   try:
                       repo.get_git_ref(f"heads/{branch_name}").delete()
                   except:
                       pass
                   repo.create_git_ref(f"refs/heads/{branch_name}", main_branch.commit.sha)
               
-              # Commit file
+              # Lưu file
+              filename = f"solution_{issue_num}.py"
+              
               try:
                   # Kiểm tra file đã tồn tại chưa
                   try:
@@ -180,6 +178,7 @@ jobs:
                           sha=old_file.sha,
                           branch=branch_name
                       )
+                      print(f"✅ Update file: {filename}")
                   except:
                       repo.create_file(
                           path=filename,
@@ -187,6 +186,7 @@ jobs:
                           content=final_code,
                           branch=branch_name
                       )
+                      print(f"✅ Tạo file: {filename}")
               except Exception as e:
                   print(f"⚠️ Lỗi commit file: {e}")
               
@@ -228,7 +228,9 @@ jobs:
               Xem code tại: {pr.html_url}
               """)
               
-              print("✅ Done!")
+              print("=" * 50)
+              print("✅ HOÀN THÀNH!")
+              print("=" * 50)
               
           except Exception as e:
               print(f"❌ Lỗi tạo PR: {e}")
