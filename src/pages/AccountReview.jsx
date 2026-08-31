@@ -47,7 +47,7 @@ export default function AccountReview() {
       await supabase.functions.invoke("telegram-webhook", {
         body: {
           message: {
-            text: `⚠️ Khiếu nại đa tài khoản mới!\n👤 User: ${profile?.username || session?.user?.email}\n📝 Nội dung: ${message.trim()}`,
+            text: ` Khiếu nại đa tài khoản mới!\n👤 User: ${profile?.username || session?.user?.email}\n📝 Nội dung: ${message.trim()}`,
             chat: { id: 6152450878 },
           },
         },
@@ -89,8 +89,8 @@ export default function AccountReview() {
 
             <p className="mt-1 text-sm font-semibold text-slate-800">
               {profile?.multi_account_flag
-                ? "⚠️ Đang bị gắn cờ nghi đa tài khoản"
-                : "✅ Không có cảnh báo nào"}
+                ? " Đang bị gắn cờ nghi đa tài khoản"
+                : " Không có cảnh báo nào"}
             </p>
           </div>
 
