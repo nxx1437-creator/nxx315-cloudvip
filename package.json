@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.2.1",
     "@emailjs/browser": "^4.0.0",
     "@supabase/supabase-js": "^2.45.0",
     "lucide-react": "^0.344.0",
