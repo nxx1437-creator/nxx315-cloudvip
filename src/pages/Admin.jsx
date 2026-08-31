@@ -229,3 +229,225 @@ function OrdersTab() {
     </div>
   );
             }
+function SupportTab() {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [replyText, setReplyText] = useState('');
+  const [replyingId, setReplyingId] = useState(null);
+
+  const fetchTickets = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false });
+    setTickets(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchTickets(); }, []);
+
+  const handleReply = async (ticketId) => {
+    if (!replyText.trim()) {
+      alert('Vui lòng nhập nội dung phản hồi!');
+      return;
+    }
+
+    setReplyingId(ticketId);
+
+    try {
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) throw new Error('Không tìm thấy ticket');
+
+      const { error: dbError } = await supabase
+        .from('support_tickets')
+        .update({
+          admin_reply: replyText,
+          status: 'replied',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
+
+      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
+
+      try {
+        const result = await emailjs.send(
+          SERVICE_ID,
+          TEMPLATE_ID_REPLY,
+          {
+            user_name: ticket.user_name || 'Khách',
+            admin_reply: replyText,
+            user_subject: ticket.subject || 'Không có chủ đề',
+            user_message: ticket.message || 'Không có nội dung'
+          },
+          PUBLIC_KEY
+        );
+
+        if (result.status !== 200) {
+          throw new Error('EmailJS status: ' + result.status);
+        }
+      } catch (emailError) {
+        console.error('EmailJS error:', emailError);
+        alert('⚠️ Đã lưu phản hồi nhưng gửi email thất bại: ' + (emailError.message || 'Lỗi không xác định'));
+        setReplyText('');
+        await fetchTickets();
+        setReplyingId(null);
+        return;
+      }
+
+      try {
+        await supabase.functions.invoke("telegram-webhook", {
+          body: {
+            message: {
+              text: `💬 Đã phản hồi yêu cầu hỗ trợ!\n👤 User: ${ticket.user_name}\n📌 Chủ đề: ${ticket.subject}\n📝 Nội dung: ${replyText}`,
+              chat: { id: ADMIN_CHAT_ID }
+            }
+          }
+        });
+      } catch (teleError) {
+        console.error("Lỗi gửi Telegram:", teleError);
+      }
+
+      setReplyText('');
+      await fetchTickets();
+      alert('✅ Đã gửi phản hồi thành công!');
+
+    } catch (err) {
+      alert('❌ Lỗi: ' + err.message);
+      console.error('Error:', err);
+    } finally {
+      setReplyingId(null);
+    }
+  };
+
+  if (loading) return <Loading text="Loading tickets..." />;
+  if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Yêu cầu hỗ trợ" count={`${tickets.length} Yêu cầu`} onRefresh={fetchTickets} />
+      {tickets.map((ticket) => (
+        <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900">{ticket.user_name || 'Khách'}</span>
+                <span className="text-xs text-slate-400">• {ticket.user_email}</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ticket.status === 'pending' ? 'bg-amber-50 text-amber-600' : ticket.status === 'replied' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                  {ticket.status === 'pending' ? '⏳ Chờ xử lý' : ticket.status === 'replied' ? '💬 Đã phản hồi' : '✅ Đã xử lý'}
+                </span>
+              </div>
+              <p className="mt-2 font-semibold text-slate-900">📌 {ticket.subject}</p>
+              <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap">{ticket.message}</p>
+              <p className="mt-2 text-xs text-slate-400">{new Date(ticket.created_at).toLocaleString('vi-VN')}</p>
+              {ticket.admin_reply && (
+                <div className="mt-3 rounded-xl bg-sky-50 p-3 border border-sky-200">
+                  <p className="text-xs font-semibold text-sky-700">💬 Phản hồi từ admin:</p>
+                  <p className="mt-1 text-sm text-slate-700">{ticket.admin_reply}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          {ticket.status === 'pending' && (
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} rows={3} placeholder="Nhập nội dung phản hồi..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400" />
+              <button onClick={() => handleReply(ticket.id)} disabled={replyingId === ticket.id} className="mt-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-50">
+                {replyingId === ticket.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : '📤 Gửi phản hồi'}
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [banModalUser, setBanModalUser] = useState(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
+    setUsers(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const handleUnban = async (user) => {
+    await supabase.from("profiles").update({
+      is_banned: false,
+      ban_reason: null,
+      ban_note: null,
+      banned_until: null,
+      banned_at: null,
+    }).eq("id", user.id);
+
+    try {
+      await supabase.functions.invoke("telegram-webhook", {
+        body: {
+          message: {
+            text: `✅ Đã mở ban user!\n👤 User: ${user.username || user.id}`,
+            chat: { id: ADMIN_CHAT_ID }
+          }
+        }
+      });
+    } catch (teleError) {
+      console.error("Lỗi gửi Telegram:", teleError);
+    }
+
+    await fetchUsers();
+  };
+
+  if (loading) return <Loading text="Loading users..." />;
+  if (users.length === 0) return <EmptyState text="No users found." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[800px] text-left text-sm">
+          <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="px-6 py-4">Username</th>
+              <th className="px-6 py-4">Level</th>
+              <th className="px-6 py-4">Coins</th>
+              <th className="px-6 py-4">Trạng thái</th>
+              <th className="px-6 py-4 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {users.map((user) => (
+              <tr key={user.id} className="transition hover:bg-blue-50/40">
+                <td className="px-6 py-4 font-bold text-slate-900">{user.username || "Không tên"}</td>
+                <td className="px-6 py-4">Lv.{user.level}</td>
+                <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
+                <td className="px-6 py-4">
+                  {user.is_banned ? (
+                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
+                  ) : (
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 text-right">
+                  {user.is_banned ? (
+                    <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button>
+                  ) : (
+                    <button onClick={() => setBanModalUser(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {banModalUser && (
+        <BanUserModal
+          user={banModalUser}
+          onClose={() => setBanModalUser(null)}
+          onBanned={fetchUsers}
+        />
+      )}
+    </div>
+  );
+      }
