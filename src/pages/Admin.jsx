@@ -256,12 +256,16 @@ function SupportTab() {
       const ticket = tickets.find(t => t.id === ticketId);
       if (!ticket) throw new Error('Không tìm thấy ticket');
 
-      const { error: updateError } = await supabase.rpc("ban_linked_group", {
-      p_user_id: user.id,
-      p_reason: finalReason.trim(),
-      p_note: note.trim() || null,
-      p_banned_until: bannedUntil,
-    });
+      const { error: dbError } = await supabase
+        .from('support_tickets')
+        .update({
+          admin_reply: replyText,
+          status: 'replied',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
+
+      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
       if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
 
