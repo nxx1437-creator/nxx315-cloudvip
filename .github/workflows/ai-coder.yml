@@ -64,8 +64,8 @@ jobs:
           try:
               genai.configure(api_key=os.environ['GEMINI_API_KEY'])
               
-              # Dùng model Gemini Pro (free)
-              model = genai.GenerativeModel('gemini-1.5-pro')
+              # Dùng model Gemini 2.0 Flash (free, mới nhất)
+              model = genai.GenerativeModel('gemini-2.0-flash')
               
               if is_bug:
                   prompt = f"""
@@ -99,11 +99,9 @@ jobs:
               
               # Clean code nếu Gemini wrap trong ```
               if "```" in final_code:
-                  # Extract code from markdown blocks
                   parts = final_code.split("```")
                   if len(parts) >= 2:
                       final_code = parts[1]
-                      # Remove language identifier
                       if "\n" in final_code:
                           final_code = final_code.split("\n", 1)[1]
               
