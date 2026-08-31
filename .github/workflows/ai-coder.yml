@@ -1,0 +1,171 @@
+name: AI Coder - Viết Code & Fix Bug
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  ai-handler:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install openai anthropic PyGithub
+      
+      - name: AI Xử Lý Issue
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          python << 'EOF'
+          import os, re
+          from openai import OpenAI
+          import anthropic
+          from github import Github
+          
+          # Đọc thông tin issue
+          title = os.environ['ISSUE_TITLE']
+          body = os.environ['ISSUE_BODY']
+          issue_num = os.environ['ISSUE_NUMBER']
+          
+          # Xác định loại yêu cầu
+          is_bug = any(word in (title + body).lower() 
+                      for word in ['bug', 'lỗi', 'fix', 'sửa', 'error', 'sai'])
+          
+          # GPT-4 xử lý
+          openai_client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+          
+          if is_bug:
+              prompt = f"""
+              Đây là bug cần fix:
+              
+              Title: {title}
+              Description: {body}
+              
+              Hãy:
+              1. Phân tích nguyên nhân bug
+              2. Viết code fix hoàn chỉnh
+              3. Giải thích cách fix
+              """
+          else:
+              prompt = f"""
+              Viết code cho yêu cầu sau:
+              
+              Title: {title}
+              Description: {body}
+              
+              Hãy:
+              1. Viết code hoàn chỉnh
+              2. Có comment giải thích
+              3. Xử lý các edge cases
+              """
+          
+          # GPT-4 viết code
+          gpt_response = openai_client.chat.completions.create(
+              model="gpt-4-turbo-preview",
+              messages=[
+                  {"role": "system", "content": "You are a senior developer. Write production-ready code."},
+                  {"role": "user", "content": prompt}
+              ],
+              max_tokens=4000
+          )
+          
+          gpt_code = gpt_response.choices[0].message.content
+          
+          # Claude review và cải thiện
+          claude_client = anthropic.Anthropic(api_key=os.environ['CLAUDE_API_KEY'])
+          
+          claude_response = claude_client.messages.create(
+              model="claude-3-opus-20240229",
+              max_tokens=4000,
+              messages=[
+                  {"role": "user", "content": f"""
+                  Review và cải thiện code này:
+                  
+                  {gpt_code}
+                  
+                  Yêu cầu:
+                  1. Fix bugs nếu có
+                  2. Tối ưu code
+                  3. Thêm error handling
+                  4. Trả về code hoàn chỉnh
+                  """}
+              ]
+          )
+          
+          final_code = claude_response.content[0].text
+          
+          # Lưu code
+          filename = f"solution_{issue_num}.py"
+          with open(filename, 'w') as f:
+              f.write(final_code)
+          
+          # Tạo PR
+          gh = Github(os.environ['GITHUB_TOKEN'])
+          repo = gh.get_repo(os.environ['GITHUB_REPOSITORY'])
+          
+          # Tạo branch mới
+          branch_name = f"ai-fix-{issue_num}"
+          main_branch = repo.get_branch("main")
+          repo.create_git_ref(f"refs/heads/{branch_name}", main_branch.commit.sha)
+          
+          # Commit file
+          repo.create_file(
+              path=filename,
+              message=f"AI fix issue #{issue_num}",
+              content=final_code,
+              branch=branch_name
+          )
+          
+          # Tạo PR
+          pr = repo.create_pull(
+              title=f"🤖 AI {'Fix' if is_bug else 'Code'}: {title}",
+              body=f"""
+              ## 🤖 AI Generated {'Fix' if is_bug else 'Code'}
+              
+              **Loại**: {'🐛 Fix Bug' if is_bug else '✨ Viết Code Mới'}
+              
+              ### Process:
+              1. GPT-4 {'phân tích và fix bug' if is_bug else 'viết code'}
+              2. Claude review và cải thiện
+              
+              ### File:
+              - `{filename}`
+              
+              Fixes #{issue_num}
+              """,
+              head=branch_name,
+              base="main"
+          )
+          
+          # Comment lên issue
+          issue = repo.get_issue(number=int(issue_num))
+          issue.create_comment(f"""
+          ## ✅ AI đã xử lý xong!
+          
+          {'🐛 **Bug đã được fix**' if is_bug else '✨ **Code đã được viết**'}
+          
+          ### Process:
+          1. ✅ GPT-4 {'phân tích bug' if is_bug else 'viết code'}
+          2. ✅ Claude review
+          3. ✅ Tạo Pull Request: PR #{pr.number}
+          
+          Xem code tại: {pr.html_url}
+          """)
+          
+          print(f"✅ Done! Created PR #{pr.number}")
+          EOF
