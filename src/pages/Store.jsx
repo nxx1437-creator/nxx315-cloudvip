@@ -121,7 +121,7 @@ function OrderPanel({
           value={deliveryTarget}
           onChange={(event) => setDeliveryTarget(event.target.value)}
           placeholder={targetPlaceholder}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-200"
         />
       </div>
 
@@ -147,6 +147,7 @@ function OrderPanel({
     </div>
   );
 }
+
 function History({ history, copied, onCopy }) {
   if (!history?.length) {
     return (
@@ -240,4 +241,4 @@ function History({ history, copied, onCopy }) {
       </div>
     </section>
   );
-          }
+}
