@@ -1,4 +1,4 @@
-name: AI Coder - Gemini Free
+name: AI Coder - Claude Only
 on:
   issues:
     types: [opened, edited]
@@ -17,14 +17,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
       
       - name: Install dependencies
-        run: pip install google-genai PyGithub
+        run: pip install anthropic PyGithub
       
-      - name: AI Xử Lý Issue với Gemini
+      - name: AI Xử Lý Issue với Claude
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -32,36 +32,32 @@ jobs:
         run: |
           python << 'EOF'
           import os, sys
-          from google import genai
+          import anthropic
           from github import Github
           
           print("=" * 50)
-          print("🚀 Bắt đầu xử lý với Gemini...")
+          print("🚀 Bắt đầu xử lý với Claude...")
           print("=" * 50)
           
-          # Đọc thông tin issue
           title = os.environ.get('ISSUE_TITLE', '')
           body = os.environ.get('ISSUE_BODY', '')
           issue_num = os.environ.get('ISSUE_NUMBER', '1')
           
           print(f"📝 Issue #{issue_num}: {title}")
           
-          # Kiểm tra API key
-          if not os.environ.get('GEMINI_API_KEY'):
-              print("❌ Thiếu GEMINI_API_KEY")
+          if not os.environ.get('CLAUDE_API_KEY'):
+              print("❌ Thiếu CLAUDE_API_KEY")
               sys.exit(1)
           
-          print("✅ Gemini API key OK")
+          print("✅ Claude API key OK")
           
-          # Xác định loại yêu cầu
           is_bug = any(word in (title + body).lower() 
                       for word in ['bug', 'lỗi', 'fix', 'sửa', 'error', 'sai', 'trắng'])
           
           print(f"📝 Loại: {'🐛 Bug Fix' if is_bug else '✨ New Code'}")
           
-          # Gemini xử lý
           try:
-              client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
+              claude_client = anthropic.Anthropic(api_key=os.environ['CLAUDE_API_KEY'])
               
               if is_bug:
                   prompt = f"""
@@ -72,8 +68,8 @@ jobs:
                   
                   Hãy:
                   1. Phân tích nguyên nhân bug
-                  2. Viết code fix hoàn chỉnh (chỉ code, không giải thích dài dòng)
-                  3. Code phải chạy được ngay
+                  2. Viết code fix hoàn chỉnh
+                  3. Chỉ trả về code, không giải thích
                   """
               else:
                   prompt = f"""
@@ -83,21 +79,24 @@ jobs:
                   Description: {body}
                   
                   Hãy:
-                  1. Viết code hoàn chỉnh (chỉ code, không giải thích dài dòng)
+                  1. Viết code hoàn chỉnh
                   2. Có comment giải thích
                   3. Xử lý các edge cases
                   """
               
-              print("🤖 Gemini đang xử lý...")
+              print("🤖 Claude đang xử lý...")
               
-              response = client.models.generate_content(
-                  model="gemini-2.0-flash",
-                  contents=prompt
+              response = claude_client.messages.create(
+                  model="claude-3-5-sonnet-20241022",
+                  max_tokens=4000,
+                  messages=[
+                      {"role": "user", "content": prompt}
+                  ]
               )
               
-              final_code = response.text
+              final_code = response.content[0].text
               
-              # Clean code nếu Gemini wrap trong ```
+              # Clean code nếu có markdown
               if "```" in final_code:
                   parts = final_code.split("```")
                   if len(parts) >= 2:
@@ -105,39 +104,18 @@ jobs:
                       if "\n" in final_code:
                           final_code = final_code.split("\n", 1)[1]
               
-              print("✅ Gemini hoàn thành")
+              print("✅ Claude hoàn thành")
               print(f"📏 Code length: {len(final_code)} characters")
               
           except Exception as e:
-              print(f"❌ Lỗi Gemini: {e}")
-              print("🔍 Thử model khác...")
-              
-              # Fallback: thử model cũ hơn
-              try:
-                  response = client.models.generate_content(
-                      model="gemini-1.5-flash",
-                      contents=prompt
-                  )
-                  final_code = response.text
-                  
-                  if "```" in final_code:
-                      parts = final_code.split("```")
-                      if len(parts) >= 2:
-                          final_code = parts[1]
-                          if "\n" in final_code:
-                              final_code = final_code.split("\n", 1)[1]
-                  
-                  print("✅ Dùng model fallback thành công")
-              except Exception as e2:
-                  print(f"❌ Lỗi fallback: {e2}")
-                  sys.exit(1)
+              print(f"❌ Lỗi Claude: {e}")
+              sys.exit(1)
           
           # Tạo PR
           try:
               gh = Github(os.environ['GITHUB_TOKEN'])
               repo = gh.get_repo(os.environ['GITHUB_REPOSITORY'])
               
-              # Tự detect branch chính
               try:
                   main_branch = repo.get_branch("main")
                   base_branch = "main"
@@ -147,21 +125,17 @@ jobs:
               
               print(f"📦 Branch chính: {base_branch}")
               
-              # Tạo branch mới
               branch_name = f"ai-fix-{issue_num}"
               
               try:
                   repo.create_git_ref(f"refs/heads/{branch_name}", main_branch.commit.sha)
-                  print(f"✅ Tạo branch: {branch_name}")
               except:
-                  print("⚠️ Branch đã tồn tại, xóa và tạo lại...")
                   try:
                       repo.get_git_ref(f"heads/{branch_name}").delete()
                   except:
                       pass
                   repo.create_git_ref(f"refs/heads/{branch_name}", main_branch.commit.sha)
               
-              # Lưu file
               filename = f"solution_{issue_num}.py"
               
               try:
@@ -174,7 +148,6 @@ jobs:
                           sha=old_file.sha,
                           branch=branch_name
                       )
-                      print(f"✅ Update file: {filename}")
                   except:
                       repo.create_file(
                           path=filename,
@@ -182,11 +155,9 @@ jobs:
                           content=final_code,
                           branch=branch_name
                       )
-                      print(f"✅ Tạo file: {filename}")
               except Exception as e:
                   print(f"⚠️ Lỗi commit file: {e}")
               
-              # Tạo PR
               pr = repo.create_pull(
                   title=f"🤖 AI {'Fix' if is_bug else 'Code'}: {title}",
                   body=f"""
@@ -195,7 +166,7 @@ jobs:
                   **Loại**: {'🐛 Fix Bug' if is_bug else '✨ Viết Code Mới'}
                   
                   ### Process:
-                  1. Gemini phân tích và xử lý
+                  1. Claude phân tích và xử lý
                   
                   ### File:
                   - `{filename}`
@@ -208,7 +179,6 @@ jobs:
               
               print(f"✅ Tạo PR thành công: #{pr.number}")
               
-              # Comment lên issue
               issue = repo.get_issue(number=int(issue_num))
               issue.create_comment(f"""
               ## ✅ AI đã xử lý xong!
@@ -216,15 +186,13 @@ jobs:
               {'🐛 **Bug đã được fix**' if is_bug else '✨ **Code đã được viết**'}
               
               ### Process:
-              1. ✅ Gemini phân tích và xử lý
+              1. ✅ Claude phân tích và xử lý
               2. ✅ Tạo Pull Request: PR #{pr.number}
               
               Xem code tại: {pr.html_url}
               """)
               
-              print("=" * 50)
               print("✅ HOÀN THÀNH!")
-              print("=" * 50)
               
           except Exception as e:
               print(f"❌ Lỗi tạo PR: {e}")
