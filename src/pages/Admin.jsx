@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import emailjs from '@emailjs/browser';
+import BanUserModal from '../components/BanUserModal.jsx';
 
 const ADMIN_CHAT_ID = 6152450878; 
 
@@ -365,6 +366,7 @@ function SupportTab() {
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [banModalUser, setBanModalUser] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -375,15 +377,21 @@ function UsersTab() {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const handleBan = async (user) => {
-    await supabase.from("profiles").update({ is_banned: true }).eq("id", user.id);
+  const handleUnban = async (user) => {
+    await supabase.from("profiles").update({
+      is_banned: false,
+      ban_reason: null,
+      ban_note: null,
+      banned_until: null,
+      banned_at: null,
+    }).eq("id", user.id);
     
     // 👉 Gửi thông báo Telegram
     try {
       await supabase.functions.invoke("telegram-webhook", {
         body: {
           message: {
-            text: `🚫 Đã ban user!\n👤 User: ${user.username || user.id}\n📧 Email: ${user.email || 'N/A'}`,
+            text: `✅ Đã mở ban user!\n👤 User: ${user.username || user.id}`,
             chat: { id: ADMIN_CHAT_ID }
           }
         }
@@ -394,7 +402,6 @@ function UsersTab() {
     
     await fetchUsers();
   };
-
   const handleUnban = async (user) => {
     await supabase.from("profiles").update({ is_banned: false }).eq("id", user.id);
     
@@ -438,11 +445,11 @@ function UsersTab() {
                 <td className="px-6 py-4 font-bold text-slate-900">{user.username || "Không tên"}</td>
                 <td className="px-6 py-4">Lv.{user.level}</td>
                 <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-right">
                   {user.is_banned ? (
-                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
+                    <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button>
                   ) : (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
+                    <button onClick={() => setBanModalUser(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -457,9 +464,19 @@ function UsersTab() {
           </tbody>
         </table>
       </div>
+
+      {banModalUser && (
+        <BanUserModal
+          user={banModalUser}
+          onClose={() => setBanModalUser(null)}
+          onBanned={fetchUsers}
+        />
+      )}
     </div>
   );
 }
+
+function TasksTab() {
 
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
