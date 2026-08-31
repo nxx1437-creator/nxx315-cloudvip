@@ -89,7 +89,7 @@ jobs:
               
               print("🤖 GPT-4 đang xử lý...")
               gpt_response = openai_client.chat.completions.create(
-                  model="gpt-4-turbo-preview",
+                  model="gpt-4o",
                   messages=[
                       {"role": "system", "content": "You are a senior developer. Write production-ready code."},
                       {"role": "user", "content": prompt}
