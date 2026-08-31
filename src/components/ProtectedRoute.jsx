@@ -1,34 +1,49 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import useSession from '../hooks/useSession.js';
-import TermsAcceptance from './TermsAcceptance.jsx';
-import { Loader2 } from 'lucide-react';
+import React, { useEffect } from "react";
+import { Navigate } from "react-router-dom";
+
+import useProfile from "../hooks/useProfile.js";
+import { supabase } from "../lib/supabaseClient.js";
+
+function isCurrentlyBanned(profile) {
+  if (!profile?.is_banned) return false;
+
+  if (!profile.banned_until) {
+    return true;
+  }
+
+  return new Date(profile.banned_until).getTime() > Date.now();
+}
 
 export default function ProtectedRoute({ children }) {
-  const { session, loading, needsTermsAcceptance, acceptTerms, user } = useSession();
+  const { profile, loading } = useProfile();
 
-  console.log('ProtectedRoute:', { session, loading, needsTermsAcceptance }); // 👈 Thêm dòng này
+  const banExpired =
+    profile?.is_banned &&
+    profile?.banned_until &&
+    new Date(profile.banned_until).getTime() <= Date.now();
+
+  useEffect(() => {
+    if (!banExpired || !profile?.id) return;
+
+    supabase
+      .from("profiles")
+      .update({
+        is_banned: false,
+        ban_reason: null,
+        ban_note: null,
+        banned_until: null,
+        banned_at: null,
+      })
+      .eq("id", profile.id)
+      .then(() => {});
+  }, [banExpired, profile?.id]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 size={40} className="animate-spin text-sky-500" />
-      </div>
-    );
+    return null;
   }
 
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (needsTermsAcceptance) {
-    return (
-      <TermsAcceptance 
-        user={user} 
-        onAccept={acceptTerms} 
-        loading={loading} 
-      />
-    );
+  if (isCurrentlyBanned(profile)) {
+    return <Navigate to="/banned" replace />;
   }
 
   return children;
