@@ -17,10 +17,10 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       
       - name: Install dependencies
-        run: pip install google-generativeai PyGithub
+        run: pip install google-genai PyGithub
       
       - name: AI Xử Lý Issue với Gemini
         env:
@@ -32,7 +32,7 @@ jobs:
         run: |
           python << 'EOF'
           import os, sys
-          import google.generativeai as genai
+          from google import genai
           from github import Github
           
           print("=" * 50)
@@ -49,7 +49,6 @@ jobs:
           # Kiểm tra API key
           if not os.environ.get('GEMINI_API_KEY'):
               print("❌ Thiếu GEMINI_API_KEY")
-              print("👉 Vào Settings → Secrets → Actions → Thêm GEMINI_API_KEY")
               sys.exit(1)
           
           print("✅ Gemini API key OK")
@@ -62,10 +61,7 @@ jobs:
           
           # Gemini xử lý
           try:
-              genai.configure(api_key=os.environ['GEMINI_API_KEY'])
-              
-              # Dùng model Gemini 2.0 Flash (free, mới nhất)
-              model = genai.GenerativeModel('gemini-2.0-flash')
+              client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
               
               if is_bug:
                   prompt = f"""
@@ -93,7 +89,11 @@ jobs:
                   """
               
               print("🤖 Gemini đang xử lý...")
-              response = model.generate_content(prompt)
+              
+              response = client.models.generate_content(
+                  model="gemini-2.0-flash",
+                  contents=prompt
+              )
               
               final_code = response.text
               
@@ -110,7 +110,27 @@ jobs:
               
           except Exception as e:
               print(f"❌ Lỗi Gemini: {e}")
-              sys.exit(1)
+              print("🔍 Thử model khác...")
+              
+              # Fallback: thử model cũ hơn
+              try:
+                  response = client.models.generate_content(
+                      model="gemini-1.5-flash",
+                      contents=prompt
+                  )
+                  final_code = response.text
+                  
+                  if "```" in final_code:
+                      parts = final_code.split("```")
+                      if len(parts) >= 2:
+                          final_code = parts[1]
+                          if "\n" in final_code:
+                              final_code = final_code.split("\n", 1)[1]
+                  
+                  print("✅ Dùng model fallback thành công")
+              except Exception as e2:
+                  print(f"❌ Lỗi fallback: {e2}")
+                  sys.exit(1)
           
           # Tạo PR
           try:
