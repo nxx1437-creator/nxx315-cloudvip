@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
+import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function Login() {
@@ -11,6 +12,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showMfa, setShowMfa] = useState(false);
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -33,8 +35,20 @@ export default function Login() {
     }
 
     if (data.session) {
-      window.location.href = '/dashboard'; // 👈 Sửa chỗ này
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
+        setShowMfa(true);
+        return;
+      }
+
+      window.location.href = '/dashboard';
     }
+  };
+
+  const handleMfaCancel = async () => {
+    await supabase.auth.signOut();
+    setShowMfa(false);
   };
 
   const handleSocial = async (provider, supported) => {
@@ -112,6 +126,13 @@ export default function Login() {
           </Link>
         </div>
       </form>
+
+      {showMfa && (
+        <MfaChallenge
+          onVerified={() => { window.location.href = '/dashboard'; }}
+          onCancel={handleMfaCancel}
+        />
+      )}
     </AuthShell>
-  );
-        }
+   );
+ }
