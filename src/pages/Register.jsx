@@ -40,11 +40,8 @@ export default function Register() {
     }
 
     if (data.user) {
-      alert(" Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.");
-      navigate("/login");
+      navigate("/verify-email", { state: { email: form.email } });
     }
-  };
-
   const handleSocial = async (provider, supported) => {
   setError("");
   if (!supported) {
