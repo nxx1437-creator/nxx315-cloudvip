@@ -12,6 +12,7 @@ import useProfile from "../hooks/useProfile.js";
 import useTheme from "../hooks/useTheme.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+import MfaChallenge from "../components/MfaChallenge.jsx";
 
 const ACCENT_OPTIONS = [
   { key: "blue", label: "Xanh dương", dot: "bg-sky-500" },
@@ -426,13 +427,18 @@ return (
       )}
 
       {showChangePassword && (
-        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+        <ChangePasswordModal
+          onClose={() => setShowChangePassword(false)}
+          isMFAEnabled={isMFAEnabled}
+        />
       )}
 
       {showDeleteAccount && (
-        <DeleteAccountModal onClose={() => setShowDeleteAccount(false)} />
+        <DeleteAccountModal
+          onClose={() => setShowDeleteAccount(false)}
+          isMFAEnabled={isMFAEnabled}
+        />
       )}
-
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl dark:bg-slate-900">
@@ -640,8 +646,9 @@ function EditProfileModal({ profile, onClose, onSaved }) {
   );
 }
 
-function ChangePasswordModal({ onClose }) {
+function ChangePasswordModal({ onClose, isMFAEnabled }) {
   const { session } = useSession();
+  const [mfaVerified, setMfaVerified] = useState(!isMFAEnabled);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -692,6 +699,15 @@ function ChangePasswordModal({ onClose }) {
 
     setSuccess(true);
   };
+
+  if (!mfaVerified) {
+    return (
+      <MfaChallenge
+        onVerified={() => setMfaVerified(true)}
+        onCancel={onClose}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -751,7 +767,8 @@ function ChangePasswordModal({ onClose }) {
   );
 }
 
-function DeleteAccountModal({ onClose }) {
+function DeleteAccountModal({ onClose, isMFAEnabled }) {
+  const [mfaVerified, setMfaVerified] = useState(!isMFAEnabled);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -781,6 +798,15 @@ function DeleteAccountModal({ onClose }) {
       setError(err.message || "Xóa tài khoản thất bại, thử lại sau.");
     }
   };
+
+  if (!mfaVerified) {
+    return (
+      <MfaChallenge
+        onVerified={() => setMfaVerified(true)}
+        onCancel={onClose}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
