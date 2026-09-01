@@ -1,40 +1,68 @@
 import React, { useState, useEffect } from "react";
-import { 
-  User, Mail, Phone, Calendar, Award, ShieldCheck, Coins, LogOut, 
-  Camera, ShieldAlert, KeyRound, Plus, ChevronRight, Copy, Check
+import {
+  User, Mail, ShieldCheck, Coins, LogOut, Camera, ShieldAlert,
+  KeyRound, Plus, ChevronRight, Copy, Check, Bell, Palette,
+  HelpCircle, FileText, Lock, Trash2, Sun, Moon, Monitor,
+  Flame, Star, Pencil, X, Loader2, AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
+import useTheme from "../hooks/useTheme.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+
+const ACCENT_OPTIONS = [
+  { key: "blue", label: "Xanh dương", dot: "bg-sky-500" },
+  { key: "purple", label: "Tím", dot: "bg-purple-500" },
+  { key: "green", label: "Xanh lá", dot: "bg-emerald-500" },
+];
+
+const THEME_OPTIONS = [
+  { key: "light", label: "Sáng", icon: Sun },
+  { key: "dark", label: "Tối", icon: Moon },
+  { key: "system", label: "Thiết bị", icon: Monitor },
+];
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { session } = useSession();
-  const { profile } = useProfile();
-  
+  const { profile, setProfile } = useProfile();
+  const { themeMode, accentColor, setThemeMode, setAccentColor } = useTheme();
+
+  const [activeSection, setActiveSection] = useState(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
-  
+
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [mfaError, setMfaError] = useState("");
+  const [mfaSuccess, setMfaSuccess] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [recoveryCodes, setRecoveryCodes] = useState([]);
-  
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
-  const [activeSection, setActiveSection] = useState("info");
 
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
 
+  const memberSince = session?.user?.created_at
+    ? new Date(session.user.created_at).toLocaleDateString("vi-VN")
+    : "—";
+
+  const expPercent = Math.min(
+    100,
+    Math.round(((profile.exp || 0) / (profile.exp_target || 100)) * 100)
+  );
+
   const checkMFAStatus = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
-    const verifiedFactors = data.totp?.filter(f => f.status === 'verified');
+    const verifiedFactors = data.totp?.filter((f) => f.status === "verified");
     setIsMFAEnabled(!!verifiedFactors?.length);
   };
 
@@ -50,6 +78,11 @@ export default function ProfilePage() {
     navigate("/");
   };
 
+  const handleLogoutAllDevices = async () => {
+    await supabase.auth.signOut({ scope: "global" });
+    navigate("/");
+  };
+
   const handleCopySecret = () => {
     navigator.clipboard.writeText(secret);
     setIsCopied(true);
@@ -57,15 +90,15 @@ export default function ProfilePage() {
   };
 
   const handleStartMFA = async () => {
-    setError("");
-    setSuccess("");
-    
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
-    if (error) { 
-      setError("Lỗi khởi tạo: " + error.message); 
-      return; 
+    setMfaError("");
+    setMfaSuccess("");
+
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+    if (error) {
+      setMfaError("Lỗi khởi tạo: " + error.message);
+      return;
     }
-    
+
     setSecret(data?.totp?.secret || "");
     setFactorId(data?.id || "");
     setIsCopied(false);
@@ -74,20 +107,27 @@ export default function ProfilePage() {
 
   const handleVerifyMFA = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-    
-    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
-    if (challengeError) { setError("Lỗi xác minh: " + challengeError.message); return; }
-    
+    setMfaError("");
+    setMfaSuccess("");
+
+    const { data: challengeData, error: challengeError } =
+      await supabase.auth.mfa.challenge({ factorId });
+    if (challengeError) {
+      setMfaError("Lỗi xác minh: " + challengeError.message);
+      return;
+    }
+
     const { error } = await supabase.auth.mfa.verify({
       factorId,
       challengeId: challengeData.id,
       code: verifyCode,
     });
-    if (error) { setError("Mã không đúng hoặc đã hết hạn."); return; }
-    
-    setSuccess("Xác minh 2 bước đã được bật thành công!");
+    if (error) {
+      setMfaError("Mã không đúng hoặc đã hết hạn.");
+      return;
+    }
+
+    setMfaSuccess("Xác minh 2 bước đã được bật thành công!");
     setVerifyCode("");
     setShowMFA(false);
     checkMFAStatus();
@@ -118,251 +158,13 @@ export default function ProfilePage() {
     setShowRecovery(true);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-        .font-display { font-family: 'Baloo 2', sans-serif; }
-      `}</style>
+  const toggleSection = (key) => {
+    setActiveSection((prev) => (prev === key ? null : key));
+  };
 
-      <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-4 backdrop-blur-md">
-        <h1 className="font-display text-xl font-bold text-slate-900">Tài khoản</h1>
-      </header>
-
-      <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
-          <div className="flex flex-col items-center">
-            <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-sky-100 bg-gradient-to-br from-sky-400 to-blue-600 text-4xl font-bold text-white shadow-md">
-                {initial}
-              </div>
-              <button className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-white shadow">
-                <Camera size={14} />
-              </button>
-            </div>
-            <h2 className="mt-3 text-xl font-bold text-slate-900">{displayName}</h2>
-            <p className="text-xs text-slate-400">{session?.user?.email}</p>
-            <div className="mt-3 flex items-center gap-2">
-              <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">Lv.{profile.level || 1}</span>
-              <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-600">
-                <ShieldCheck size={12} /> Active
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {profile?.multi_account_flag && !profile?.is_banned && (
-          <button
-            type="button"
-            onClick={() => navigate("/account-review")}
-            className="w-full rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100"
-          >
-            <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                <ShieldAlert size={16} />
-              </span>
-              <div>
-                <p className="text-sm font-bold text-amber-800">
-                  Tài khoản đang được xem xét
-                </p>
-                <p className="mt-0.5 text-xs leading-5 text-amber-700">
-                  Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
-                </p>
-              </div>
-            </div>
-          </button>
-        )}
-        <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
-          <div className="text-center">
-            <p className="text-xs uppercase tracking-wide text-slate-400">Số dư</p>
-            <p className="mt-1 text-3xl font-bold text-slate-900">{profile.coins || 0} <span className="text-sm text-amber-500">Coin</span></p>
-          </div>
-          <button
-            onClick={() => setShowLogout(true)}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
-          >
-            <LogOut size={16} /> Đăng Xuất
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <button 
-            onClick={() => setActiveSection("info")}
-            className={`flex w-full items-center justify-between rounded-2xl border p-4 transition ${activeSection === "info" ? "border-sky-100 bg-white shadow-sm" : "border-transparent"}`}
-          >
-            <span className={`text-sm font-semibold ${activeSection === "info" ? "text-slate-800" : "text-slate-500"}`}>Thông tin</span>
-            <ChevronRight size={16} className="text-slate-300" />
-          </button>
-          <button 
-            onClick={() => setActiveSection("security")}
-            className={`flex w-full items-center justify-between rounded-2xl border p-4 transition ${activeSection === "security" ? "border-sky-100 bg-white shadow-sm" : "border-transparent"}`}
-          >
-            <span className={`text-sm font-semibold ${activeSection === "security" ? "text-slate-800" : "text-slate-500"}`}>Bảo mật</span>
-            <ChevronRight size={16} className="text-slate-300" />
-          </button>
-        </div>
-
-        {activeSection === "info" && (
-          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold text-slate-900">Thông tin tài khoản</h2>
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><User size={18} /></span>
-              <div>
-                <p className="text-xs uppercase text-slate-400">Họ tên</p>
-                <p className="text-sm font-semibold text-slate-800">{displayName}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 border-b border-slate-100 py-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Mail size={18} /></span>
-              <div>
-                <p className="text-xs uppercase text-slate-400">Email</p>
-                <p className="text-sm font-semibold text-slate-800">{session?.user?.email}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 border-b border-slate-100 py-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Phone size={18} /></span>
-              <div>
-                <p className="text-xs uppercase text-slate-400">SĐT</p>
-                <p className="text-sm font-semibold text-slate-800">-</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 border-b border-slate-100 py-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Calendar size={18} /></span>
-              <div>
-                <p className="text-xs uppercase text-slate-400">Ngày tham gia</p>
-                <p className="text-sm font-semibold text-slate-800">{session?.user?.created_at ? new Date(session.user.created_at).toLocaleDateString('vi-VN') : '-'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 pt-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-sky-500"><Award size={18} /></span>
-              <div>
-                <p className="text-xs uppercase text-slate-400">Kinh nghiệm</p>
-                <p className="text-sm font-semibold text-slate-800">{profile.exp || 0} Exp</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSection === "security" && (
-          <div className="rounded-3xl border border-white bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-lg font-bold text-slate-900">Cài đặt bảo mật</h3>
-            <button
-              onClick={handleStartMFA}
-              className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500"><ShieldAlert size={18} /></span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">Xác minh 2 bước (Google Authenticator)</p>
-                  <p className="text-xs text-slate-400">Tăng cường bảo mật tài khoản</p>
-                </div>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-50 text-emerald-600" : "bg-slate-200 text-slate-600"}`}>
-                {isMFAEnabled ? "Đã bật" : "Chưa bật"}
-              </span>
-            </button>
-
-            <button
-              onClick={generateRecoveryCodes}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl bg-sky-50 p-4 text-left transition hover:bg-sky-100"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-500"><KeyRound size={18} /></span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">Mã dự phòng</p>
-                  <p className="text-xs text-slate-400">Dùng khi mất điện thoại (Số mã: {recoveryCodes.length}/10)</p>
-                </div>
-              </div>
-              <Plus size={18} className="text-sky-500" />
-            </button>
-          </div>
-        )}
-      </main>
-
-      {showMFA && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
-            <h3 className="font-display text-lg font-bold text-slate-900">Thêm thiết bị</h3>
-            <p className="mt-2 text-sm text-slate-500">Mở Google Authenticator, chọn "Nhập mã thiết lập" và nhập chuỗi bên dưới:</p>
-            
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="text-left">
-                <p className="text-xs font-bold uppercase text-slate-400">Mã bí mật</p>
-                <p className="break-all font-mono text-sm font-bold text-blue-600">{secret}</p>
-              </div>
-              <button
-                onClick={handleCopySecret}
-                className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700"
-              >
-                {isCopied ? <Check size={16} /> : <Copy size={16} />}
-              </button>
-            </div>
-
-            <form onSubmit={handleVerifyMFA} className="mt-4">
-              <input
-                type="text"
-                value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value)}
-                placeholder="Nhập mã 6 số từ app"
-                maxLength={6}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center text-lg tracking-widest outline-none focus:border-blue-400"
-              />
-              {error && <p className="mt-2 text-xs font-medium text-rose-500">{error}</p>}
-              {success && <p className="mt-2 text-xs font-medium text-emerald-600">{success}</p>}
-              
-              <div className="mt-5 flex gap-3">
-                <button type="button" onClick={() => setShowMFA(false)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Huỷ</button>
-                <button type="submit" className="flex-1 rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Xác nhận</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showRecovery && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
-            <h3 className="font-display text-lg font-bold text-slate-900">Mã dự phòng của bạn</h3>
-            <p className="mt-2 text-sm text-slate-500">Lưu lại những mã này ở nơi an toàn. Mỗi mã chỉ dùng được 1 lần.</p>
-            
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {recoveryCodes.map((code, idx) => (
-                <div key={idx} className="rounded-lg bg-slate-50 p-2 font-mono text-xs font-bold text-slate-700">
-                  {code}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 flex gap-3">
-              <button onClick={() => setShowRecovery(false)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Đã lưu</button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(recoveryCodes.join("\n"));
-                  alert("Đã sao chép toàn bộ mã!");
-                }}
-                className="flex-1 rounded-full bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-              >
-                Sao chép tất cả
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showLogout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
-            <h3 className="font-display text-lg font-bold text-slate-900">Xác nhận đăng xuất?</h3>
-            <p className="mt-1 text-sm text-slate-500">Bạn sẽ cần đăng nhập lại để sử dụng dịch vụ.</p>
-            <div className="mt-5 flex gap-3">
-              <button onClick={() => setShowLogout(false)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Huỷ</button>
-              <button onClick={handleLogout} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white">Đăng xuất</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <BottomNav />
-    </div>
-  );
-}                                       
+  const updateNotifPref = async (field, value) => {
+    setProfile((prev) => ({ ...prev, [field]: value }));
+    if (profile?.id) {
+      await supabase.from("profiles").update({ [field]: value }).eq("id", profile.id);
+    }
+  };
