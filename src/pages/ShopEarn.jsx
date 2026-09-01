@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
-  ShoppingBag, Link2, Copy, Check, Loader2, Star, Wallet,
-  ArrowLeftRight, Landmark, X, Clock3, CheckCircle2, XCircle, Info,
+  Link2, Copy, Check, Loader2, Star, ArrowLeftRight,
+  Landmark, X, Clock3, CheckCircle2, XCircle, ChevronRight, ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,11 +10,8 @@ import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
-const formatVND = (v) =>
-  Number(v || 0).toLocaleString("vi-VN") + "đ";
-
-const formatCoins = (v) =>
-  Number(v || 0).toLocaleString("vi-VN");
+const formatVND = (v) => Number(v || 0).toLocaleString("vi-VN") + "đ";
+const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
 
 export default function ShopEarn() {
   const navigate = useNavigate();
@@ -31,10 +28,11 @@ export default function ShopEarn() {
   const [showWithdraw, setShowWithdraw] = useState(false);
 
   const starPoints = Number(profile?.star_points || 0);
+  const canWithdraw = starPoints >= 20000;
 
   const handleGenerate = async () => {
     if (!productUrl.trim()) {
-      setGenError("Vui lòng dán link sản phẩm TikTok Shop.");
+      setGenError("Vui lòng dán link sản phẩm.");
       return;
     }
 
@@ -72,127 +70,97 @@ export default function ShopEarn() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] pb-28 text-slate-900">
-      <div className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-72 w-72 rounded-full bg-sky-300/10 blur-3xl" />
-        <div className="absolute right-0 top-40 h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-[#F7F9FC] pb-28 text-[#111827]">
+      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#E5E7EB] bg-[#F7F9FC]/95 px-4 py-3.5 backdrop-blur-md">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-9 w-9 items-center justify-center rounded-full text-[#6B7280] hover:bg-white"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 className="text-[15px] font-bold text-[#111827]">Mua hàng kiếm sao</h1>
+          <p className="text-[11px] text-[#6B7280]">Kiếm Sao từ các đơn mua sắm</p>
+        </div>
+      </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-2xl px-4 py-5">
-        <header className="mb-5 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-100"
-          >
-            ←
-          </button>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-sky-500">
-              NXX315 Studio
-            </p>
-            <h1 className="text-xl font-black text-slate-950">Mua hàng kiếm sao</h1>
-          </div>
-        </header>
+      <main className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
 
-        <section className="relative overflow-hidden rounded-[28px] border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-[0_12px_40px_rgba(245,158,11,0.08)]">
-          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-200/20 blur-3xl" />
-
-          <div className="relative flex items-center justify-between">
-            <div>
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-600">
-                <Star size={13} className="fill-amber-500 text-amber-500" />
-                Điểm sao của bạn
-              </p>
-              <p className="mt-1 text-3xl font-black text-slate-900">
-                {formatVND(starPoints)}
-              </p>
-              <p className="mt-0.5 text-[11px] text-slate-400">
-                Quy đổi từ hoa hồng mua hàng thực tế
-              </p>
-            </div>
-
-            <Wallet size={40} className="text-amber-300" />
-          </div>
-
-          <div className="relative mt-4 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setShowWithdraw(true)}
-              disabled={starPoints < 20000}
-              className="flex items-center justify-center gap-1.5 rounded-2xl bg-white px-3 py-3 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-100 disabled:opacity-40"
-            >
-              <Landmark size={14} />
-              Rút về ngân hàng
-            </button>
-            <button
-              onClick={() => setShowConvert(true)}
-              disabled={starPoints <= 0}
-              className="flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-400 px-3 py-3 text-xs font-bold text-white shadow-sm disabled:opacity-40"
-            >
-              <ArrowLeftRight size={14} />
-              Đổi sang Xu
-            </button>
-          </div>
-
-          {starPoints < 20000 && (
-            <p className="relative mt-2 flex items-center gap-1 text-[10px] text-slate-400">
-              <Info size={11} />
-              Cần tối thiểu 20.000đ để rút về ngân hàng
-            </p>
-          )}
-        </section>
-<section className="mt-5 rounded-[24px] border border-sky-100 bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <ShoppingBag size={17} className="text-sky-500" />
-            <h2 className="text-sm font-black text-slate-900">Tạo link kiếm sao</h2>
-          </div>
-
-          <p className="mb-3 text-xs text-slate-400">
-            Dán link sản phẩm TikTok Shop vào ô bên dưới để tạo link riêng của bạn.
+        <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-[#6B7280]">
+            <Star size={13} className="fill-amber-500 text-amber-500" />
+            Sao của bạn
           </p>
 
-          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-            <Link2 size={15} className="shrink-0 text-slate-300" />
+          <p className="mt-1.5 text-[28px] font-bold leading-none text-[#111827]">
+            {formatVND(starPoints)}
+          </p>
+          <p className="mt-1 text-xs text-[#6B7280]">Từ hoa hồng mua sắm</p>
+
+          <button
+            onClick={() => setShowConvert(true)}
+            disabled={starPoints <= 0}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3 text-sm font-bold text-white transition disabled:opacity-40"
+          >
+            <ArrowLeftRight size={15} />
+            Đổi sang Xu
+          </button>
+
+          <button
+            onClick={() => canWithdraw && setShowWithdraw(true)}
+            disabled={!canWithdraw}
+            className="mt-2 flex w-full items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-[#6B7280] disabled:opacity-50"
+          >
+            <Landmark size={12} />
+            Rút ngân hàng · Tối thiểu 20.000đ
+          </button>
+        </section>
+
+        <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+          <p className="text-sm font-bold text-[#111827]">🛍️ Tạo link mua sắm</p>
+          <p className="mt-1 text-xs text-[#6B7280]">
+            Dán link sản phẩm để nhận Sao khi có đơn hàng.
+          </p>
+
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3">
+            <Link2 size={15} className="shrink-0 text-[#9CA3AF]" />
             <input
               type="text"
               value={productUrl}
               onChange={(e) => setProductUrl(e.target.value)}
-              placeholder="Dán link sản phẩm TikTok Shop..."
-              className="w-full bg-transparent text-sm outline-none"
+              placeholder="Dán link sản phẩm"
+              className="w-full bg-transparent text-sm text-[#111827] outline-none placeholder:text-[#9CA3AF]"
             />
           </div>
 
-          {genError && (
-            <p className="mt-2 text-xs font-bold text-rose-500">{genError}</p>
-          )}
+          <p className="mt-1.5 text-[11px] text-[#9CA3AF]">Hỗ trợ: TikTok Shop</p>
+
+          {genError && <p className="mt-2 text-xs font-semibold text-rose-500">{genError}</p>}
 
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-400 px-4 py-3 text-sm font-black text-white shadow-lg shadow-sky-500/25 disabled:opacity-60"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3 text-sm font-bold text-white disabled:opacity-60"
           >
-            {generating ? <Loader2 size={16} className="animate-spin" /> : "Tạo link ngay"}
+            {generating ? <Loader2 size={16} className="animate-spin" /> : "Tạo link"}
           </button>
 
           {resultLink && (
-            <div className="mt-4 rounded-2xl bg-emerald-50 p-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
-                Link của bạn (đã tự mở tab mới)
-              </p>
-              <div className="mt-2 flex items-center gap-2">
-                <p className="flex-1 truncate text-sm font-semibold text-slate-700">{resultLink}</p>
+            <div className="mt-3 rounded-xl bg-[#F7F9FC] p-3">
+              <div className="flex items-center gap-2">
+                <p className="flex-1 truncate text-xs font-medium text-[#374151]">{resultLink}</p>
                 <button
                   onClick={handleCopy}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#6B7280] shadow-sm"
                 >
-                  {copied ? <Check size={15} /> : <Copy size={15} />}
+                  {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                 </button>
               </div>
-
               <a
                 href={resultLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 py-2.5 text-sm font-black text-white"
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-sky-500 py-2 text-xs font-bold text-white"
               >
                 Mở lại link này
               </a>
@@ -200,26 +168,14 @@ export default function ShopEarn() {
           )}
         </section>
 
-        <section className="mt-5 rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-sm font-black text-slate-900">Lưu ý để được ghi nhận đơn</h2>
-          <ul className="space-y-2 text-xs leading-5 text-slate-500">
-            <li className="flex gap-2">
-              <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-500" />
-              Sau khi tạo link, bấm mua ngay, không xem Video/Livestream trước khi đặt hàng.
-            </li>
-            <li className="flex gap-2">
-              <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-500" />
-              Xóa hết giỏ hàng TikTok Shop trước khi đặt qua link mới.
-            </li>
-            <li className="flex gap-2">
-              <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-500" />
-              Mỗi lần tạo link chỉ tính cho 1 đơn hàng phát sinh ngay sau đó.
-            </li>
-            <li className="flex gap-2">
-              <Clock3 size={14} className="mt-0.5 shrink-0 text-amber-500" />
-              Điểm sao thường được duyệt sau vài ngày, không cộng ngay lập tức.
-            </li>
-          </ul>
+        <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+          <p className="text-sm font-bold text-[#111827]">💡 Cách nhận Sao</p>
+
+          <div className="mt-3 space-y-3">
+            <GuideStep number="1" title="Tạo link" desc="Dán link sản phẩm từ sàn được hỗ trợ." />
+            <GuideStep number="2" title="Mua hàng" desc="Mở link và hoàn tất đơn hàng." />
+            <GuideStep number="3" title="Chờ xác nhận" desc="Sao được cộng sau khi đơn được xác nhận." />
+          </div>
         </section>
 
         <TransactionHistory userId={session?.user?.id} />
@@ -253,6 +209,19 @@ export default function ShopEarn() {
   );
 }
 
+function GuideStep({ number, title, desc }) {
+  return (
+    <div className="flex gap-3">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-50 text-[11px] font-bold text-sky-600">
+        {number}
+      </span>
+      <div>
+        <p className="text-xs font-bold text-[#111827]">{title}</p>
+        <p className="mt-0.5 text-xs text-[#6B7280]">{desc}</p>
+      </div>
+    </div>
+  );
+                  }
 function TransactionHistory({ userId }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -273,54 +242,47 @@ function TransactionHistory({ userId }) {
   }, [userId]);
 
   const statusMap = {
-    0: { label: "Đang chờ duyệt", icon: Clock3, cls: "bg-amber-50 text-amber-600 border-amber-100" },
-    1: { label: "Đã duyệt", icon: CheckCircle2, cls: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-    2: { label: "Bị từ chối", icon: XCircle, cls: "bg-rose-50 text-rose-600 border-rose-100" },
+    0: { label: "Chờ duyệt", icon: Clock3, cls: "bg-amber-50 text-amber-600" },
+    1: { label: "Đã duyệt", icon: CheckCircle2, cls: "bg-emerald-50 text-emerald-600" },
+    2: { label: "Từ chối", icon: XCircle, cls: "bg-rose-50 text-rose-600" },
   };
 
   if (loading) return null;
+  if (history.length === 0) return null;
 
   return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-lg font-black">Lịch sử đơn hàng</h2>
+    <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+      <p className="mb-3 text-sm font-bold text-[#111827]">Lịch sử đơn hàng</p>
 
-      {history.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-5 py-12 text-center">
-          <p className="text-sm font-black text-slate-700">Chưa có đơn nào</p>
-          <p className="mt-1 text-xs text-slate-400">Tạo link và mua hàng để bắt đầu kiếm sao.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {history.map((tx) => {
-            const status = statusMap[tx.status] || statusMap[0];
-            const StatusIcon = status.icon;
+      <div className="space-y-3">
+        {history.map((tx) => {
+          const status = statusMap[tx.status] || statusMap[0];
+          const StatusIcon = status.icon;
 
-            return (
-              <div key={tx.id} className="rounded-[20px] border border-slate-100 bg-white p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-slate-900">
-                      {tx.product_name || tx.merchant || "Đơn hàng"}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-slate-400">
-                      {tx.transaction_time ? new Date(tx.transaction_time).toLocaleString("vi-VN") : "—"}
-                    </p>
-                  </div>
-                  <span className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${status.cls}`}>
-                    <StatusIcon size={11} />
-                    {status.label}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-bold text-amber-600">
-                  <span>Hoa hồng: {formatVND(tx.commission)}</span>
-                  {tx.credited && <span className="text-emerald-600">+{formatVND(tx.star_points_awarded)} điểm sao</span>}
-                </div>
+          return (
+            <div key={tx.id} className="flex items-center justify-between border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold text-[#111827]">
+                  {tx.product_name || tx.merchant || "Đơn hàng"}
+                </p>
+                <p className="mt-0.5 text-[11px] text-[#9CA3AF]">
+                  {tx.transaction_time ? new Date(tx.transaction_time).toLocaleDateString("vi-VN") : "—"}
+                </p>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className="flex shrink-0 items-center gap-2">
+                {tx.credited && (
+                  <span className="text-xs font-bold text-amber-600">+{formatVND(tx.star_points_awarded)}</span>
+                )}
+                <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${status.cls}`}>
+                  <StatusIcon size={10} />
+                  {status.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -368,46 +330,46 @@ function ConvertModal({ starPoints, onClose, onDone }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-black text-slate-900">Đổi sang Xu</h3>
-          <button onClick={onClose} className="text-slate-400"><X size={18} /></button>
+          <h3 className="text-base font-bold text-[#111827]">Đổi sang Xu</h3>
+          <button onClick={onClose} className="text-[#9CA3AF]"><X size={18} /></button>
         </div>
 
-        <p className="mt-1 text-xs text-slate-400">Số dư khả dụng: {formatVND(starPoints)}</p>
+        <p className="mt-1 text-xs text-[#6B7280]">Số dư khả dụng: {formatVND(starPoints)}</p>
 
-        <p className="mb-2 mt-4 text-xs font-bold text-slate-500">Số điểm muốn đổi</p>
+        <p className="mb-1.5 mt-4 text-xs font-semibold text-[#6B7280]">Số điểm muốn đổi</p>
         <input
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-amber-400"
+          className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:border-sky-400"
         />
 
         {numAmount > 0 && (
-          <div className="mt-3 space-y-1.5 rounded-xl bg-amber-50 p-3 text-xs">
-            <div className="flex justify-between text-slate-500">
+          <div className="mt-3 space-y-1.5 rounded-xl bg-[#F7F9FC] p-3 text-xs">
+            <div className="flex justify-between text-[#6B7280]">
               <span>Phí sàn (5%)</span>
-              <span className="font-bold text-rose-500">-{formatVND(fee)}</span>
+              <span className="font-semibold text-rose-500">-{formatVND(fee)}</span>
             </div>
-            <div className="flex justify-between font-black text-slate-800">
+            <div className="flex justify-between font-bold text-[#111827]">
               <span>Xu nhận được</span>
               <span>{formatCoins(coinsReceived)} Xu</span>
             </div>
           </div>
         )}
 
-        {error && <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>}
+        {error && <p className="mt-2 text-xs font-semibold text-rose-500">{error}</p>}
 
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Huỷ</button>
+          <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280]">Huỷ</button>
           <button
             onClick={handleConvert}
             disabled={saving}
-            className="flex flex-1 items-center justify-center gap-2 rounded-full bg-amber-500 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500 py-2.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {saving ? <Loader2 size={15} className="animate-spin" /> : "Xác nhận đổi"}
+            {saving ? <Loader2 size={15} className="animate-spin" /> : "Xác nhận"}
           </button>
         </div>
       </div>
@@ -472,10 +434,10 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-black text-slate-900">Rút về ngân hàng</h3>
-          <button onClick={onClose} className="text-slate-400"><X size={18} /></button>
+          <h3 className="text-base font-bold text-[#111827]">Rút về ngân hàng</h3>
+          <button onClick={onClose} className="text-[#9CA3AF]"><X size={18} /></button>
         </div>
 
         {success ? (
@@ -487,50 +449,50 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
           </div>
         ) : (
           <>
-            <p className="mt-1 text-xs text-slate-400">Số dư khả dụng: {formatVND(starPoints)}</p>
+            <p className="mt-1 text-xs text-[#6B7280]">Số dư khả dụng: {formatVND(starPoints)}</p>
 
-            <p className="mb-2 mt-4 text-xs font-bold text-slate-500">Số tiền rút (tối thiểu 20.000đ)</p>
+            <p className="mb-1.5 mt-4 text-xs font-semibold text-[#6B7280]">Số tiền rút (tối thiểu 20.000đ)</p>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="20000"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-sky-400"
+              className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:border-sky-400"
             />
 
-            <p className="mb-2 mt-3 text-xs font-bold text-slate-500">Ngân hàng</p>
+            <p className="mb-1.5 mt-3 text-xs font-semibold text-[#6B7280]">Ngân hàng</p>
             <input
               type="text"
               value={bankName}
               onChange={(e) => setBankName(e.target.value)}
               placeholder="VD: Agribank, MoMo..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-sky-400"
+              className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:border-sky-400"
             />
 
-            <p className="mb-2 mt-3 text-xs font-bold text-slate-500">Số tài khoản</p>
+            <p className="mb-1.5 mt-3 text-xs font-semibold text-[#6B7280]">Số tài khoản</p>
             <input
               type="text"
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-sky-400"
+              className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:border-sky-400"
             />
 
-            <p className="mb-2 mt-3 text-xs font-bold text-slate-500">Chủ tài khoản</p>
+            <p className="mb-1.5 mt-3 text-xs font-semibold text-[#6B7280]">Chủ tài khoản</p>
             <input
               type="text"
               value={accountHolder}
               onChange={(e) => setAccountHolder(e.target.value.toUpperCase())}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold uppercase outline-none focus:border-sky-400"
+              className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold uppercase text-[#111827] outline-none focus:border-sky-400"
             />
 
-            {error && <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>}
+            {error && <p className="mt-2 text-xs font-semibold text-rose-500">{error}</p>}
 
             <div className="mt-5 flex gap-3">
-              <button onClick={onClose} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">Huỷ</button>
+              <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280]">Huỷ</button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-sky-500 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500 py-2.5 text-sm font-bold text-white disabled:opacity-60"
               >
                 {saving ? <Loader2 size={15} className="animate-spin" /> : "Gửi yêu cầu"}
               </button>
@@ -540,4 +502,4 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
       </div>
     </div>
   );
-    }
+            }
