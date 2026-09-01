@@ -503,3 +503,11 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
     </div>
   );
             }
+import Tooltip from "../components/Tooltip.jsx";
+
+// ...
+<p className="flex items-center gap-1.5 text-xs font-semibold text-[#6B7280]">
+  <Star size={13} className="fill-amber-500 text-amber-500" />
+  Sao của bạn
+  <Tooltip text="Điểm sao được cộng từ hoa hồng thực tế khi bạn mua hàng qua link liên kết." />
+</p>
