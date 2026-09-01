@@ -72,96 +72,33 @@ export default function ProfilePage() {
     if (profile?.recovery_codes && profile.recovery_codes.length > 0) {
       setRecoveryCodes(profile.recovery_codes);
     }
-import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+  }, [profile]);
 
-import useProfile from "../hooks/useProfile.js";
-import { supabase } from "../lib/supabaseClient.js";
-import MfaChallenge from "./MfaChallenge.jsx";
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
-function isCurrentlyBanned(profile) {
-  if (!profile?.is_banned) return false;
+  const handleLogoutAllDevices = async () => {
+    await supabase.auth.signOut({ scope: "global" });
+    navigate("/");
+  };
 
-  if (!profile.banned_until) {
-    return true;
-  }
+  const handleCopySecret = () => {
+    navigator.clipboard.writeText(secret);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
-  return new Date(profile.banned_until).getTime() > Date.now();
-}
+  const handleStartMFA = async () => {
+    setMfaError("");
+    setMfaSuccess("");
 
-export default function ProtectedRoute({ children }) {
-  const { profile, loading } = useProfile();
-
-  const [mfaChecked, setMfaChecked] = useState(false);
-  const [needsMfa, setNeedsMfa] = useState(false);
-
-  const banExpired =
-    profile?.is_banned &&
-    profile?.banned_until &&
-    new Date(profile.banned_until).getTime() <= Date.now();
-
-  useEffect(() => {
-    if (!banExpired || !profile?.id) return;
-
-    supabase
-      .from("profiles")
-      .update({
-        is_banned: false,
-        ban_reason: null,
-        ban_note: null,
-        banned_until: null,
-        banned_at: null,
-      })
-      .eq("id", profile.id)
-      .then(() => {});
-  }, [banExpired, profile?.id]);
-
-  useEffect(() => {
-    let active = true;
-
-    const checkMfa = async () => {
-      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-      if (!active) return;
-
-      if (data?.nextLevel === "aal2" && data?.currentLevel !== "aal2") {
-        setNeedsMfa(true);
-      } else {
-        setNeedsMfa(false);
-      }
-
-      setMfaChecked(true);
-    };
-
-    checkMfa();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (loading || !mfaChecked) {
-    return null;
-  }
-
-  if (isCurrentlyBanned(profile)) {
-    return <Navigate to="/banned" replace />;
-  }
-
-  if (needsMfa) {
-    return (
-      <MfaChallenge
-        onVerified={() => setNeedsMfa(false)}
-        onCancel={async () => {
-          await supabase.auth.signOut();
-          window.location.href = "/login";
-        }}
-      />
-    );
-  }
-
-  return children;
-}
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+    if (error) {
+      setMfaError("Lỗi khởi tạo: " + error.message);
+      return;
+    }
 
     setSecret(data?.totp?.secret || "");
     setFactorId(data?.id || "");
@@ -232,7 +169,7 @@ export default function ProtectedRoute({ children }) {
       await supabase.from("profiles").update({ [field]: value }).eq("id", profile.id);
     }
   };
-return (
+ return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro] dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
@@ -478,7 +415,7 @@ return (
           <SettingsRow icon={Trash2} label="Xóa tài khoản" onClick={() => setShowDeleteAccount(true)} danger last />
         </SettingsGroup>
       </main>
-  {showEditProfile && (
+      {showEditProfile && (
         <EditProfileModal
           profile={profile}
           onClose={() => setShowEditProfile(false)}
@@ -502,6 +439,7 @@ return (
           isMFAEnabled={isMFAEnabled}
         />
       )}
+
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl dark:bg-slate-900">
@@ -911,4 +849,4 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
       </div>
     </div>
   );
-                       }    
+          }
