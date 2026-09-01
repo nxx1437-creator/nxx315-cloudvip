@@ -263,6 +263,30 @@ return (
 
         {activeSection === "security" && (
           <div className="rounded-3xl border border-white bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+              Thông tin tài khoản
+            </p>
+
+            <div className="mb-4 overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-800/60">
+              <button
+                onClick={() => setShowEditProfile(true)}
+                className="flex w-full items-center justify-between border-b border-white px-4 py-3.5 text-left dark:border-slate-900"
+              >
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Tên hiển thị</span>
+                <span className="flex items-center gap-1.5 text-sm font-bold text-slate-900 dark:text-white">
+                  {profile.username || "Chưa đặt"}
+                  <ChevronRight size={14} className="text-slate-300" />
+                </span>
+              </button>
+
+              <div className="flex w-full items-center justify-between px-4 py-3.5">
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Email</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  {session?.user?.email}
+                </span>
+              </div>
+            </div>
+
             <button
               onClick={() => setShowChangePassword(true)}
               className="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
@@ -617,6 +641,8 @@ function EditProfileModal({ profile, onClose, onSaved }) {
 }
 
 function ChangePasswordModal({ onClose }) {
+  const { session } = useSession();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -624,8 +650,13 @@ function ChangePasswordModal({ onClose }) {
   const [success, setSuccess] = useState(false);
 
   const handleSave = async () => {
+    if (!currentPassword) {
+      setError("Vui lòng nhập mật khẩu hiện tại.");
+      return;
+    }
+
     if (newPassword.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
       return;
     }
 
@@ -636,6 +667,17 @@ function ChangePasswordModal({ onClose }) {
 
     setSaving(true);
     setError("");
+
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: session?.user?.email,
+      password: currentPassword,
+    });
+
+    if (verifyError) {
+      setSaving(false);
+      setError("Mật khẩu hiện tại không đúng.");
+      return;
+    }
 
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
@@ -666,7 +708,15 @@ function ChangePasswordModal({ onClose }) {
           </div>
         ) : (
           <>
-            <p className="mb-2 mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Mật khẩu mới</p>
+            <p className="mb-2 mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">Mật khẩu hiện tại</p>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-accent-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            />
+
+            <p className="mb-2 mt-3 text-xs font-bold text-slate-500 dark:text-slate-400">Mật khẩu mới</p>
             <input
               type="password"
               value={newPassword}
@@ -674,7 +724,7 @@ function ChangePasswordModal({ onClose }) {
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-accent-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
 
-            <p className="mb-2 mt-3 text-xs font-bold text-slate-500 dark:text-slate-400">Xác nhận mật khẩu</p>
+            <p className="mb-2 mt-3 text-xs font-bold text-slate-500 dark:text-slate-400">Xác nhận mật khẩu mới</p>
             <input
               type="password"
               value={confirmPassword}
