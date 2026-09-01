@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coins, Gift, Trophy, Users, Flame, TrendingUp, CheckSquare, Rocket, Crown, Menu, Search, Bell, Globe } from "lucide-react";
+import { Coins, Gift, Trophy, Users, Flame, TrendingUp, CheckSquare, Rocket, Crown, Menu, Search, Bell, Globe, Star, ShoppingBag } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
@@ -125,6 +125,25 @@ export default function Dashboard() {
               <Gift size={15} /> Mời bạn
             </button>
           </div>
+
+          <button
+            onClick={() => navigate("/shop-earn")}
+            className="mt-3 flex w-full items-center justify-between rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white p-4 shadow-sm transition hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                <ShoppingBag size={19} />
+              </span>
+              <div className="text-left">
+                <p className="flex items-center gap-1 text-sm font-black text-slate-900">
+                  <Star size={13} className="fill-amber-500 text-amber-500" />
+                  Mua hàng kiếm sao
+                </p>
+                <p className="text-xs text-slate-400">Đổi điểm sang Xu hoặc rút về ngân hàng</p>
+              </div>
+            </div>
+            <span className="text-lg font-black text-amber-400">→</span>
+          </button>
 
           <div className="mt-5 rounded-2xl border border-white bg-white p-4 shadow-md shadow-sky-100">
             <div className="flex items-center justify-between">
