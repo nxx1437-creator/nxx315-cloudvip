@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import VerifyEmail from "./pages/VerifyEmail.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/" element={<CloudVIPLanding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/banned" element={<Banned />} />
         <Route path="/account-review" element={<AccountReview />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
