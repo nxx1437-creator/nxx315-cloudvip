@@ -72,33 +72,96 @@ export default function ProfilePage() {
     if (profile?.recovery_codes && profile.recovery_codes.length > 0) {
       setRecoveryCodes(profile.recovery_codes);
     }
-  }, [profile]);
+import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
+import useProfile from "../hooks/useProfile.js";
+import { supabase } from "../lib/supabaseClient.js";
+import MfaChallenge from "./MfaChallenge.jsx";
 
-  const handleLogoutAllDevices = async () => {
-    await supabase.auth.signOut({ scope: "global" });
-    navigate("/");
-  };
+function isCurrentlyBanned(profile) {
+  if (!profile?.is_banned) return false;
 
-  const handleCopySecret = () => {
-    navigator.clipboard.writeText(secret);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
+  if (!profile.banned_until) {
+    return true;
+  }
 
-  const handleStartMFA = async () => {
-    setMfaError("");
-    setMfaSuccess("");
+  return new Date(profile.banned_until).getTime() > Date.now();
+}
 
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
-    if (error) {
-      setMfaError("Lỗi khởi tạo: " + error.message);
-      return;
-    }
+export default function ProtectedRoute({ children }) {
+  const { profile, loading } = useProfile();
+
+  const [mfaChecked, setMfaChecked] = useState(false);
+  const [needsMfa, setNeedsMfa] = useState(false);
+
+  const banExpired =
+    profile?.is_banned &&
+    profile?.banned_until &&
+    new Date(profile.banned_until).getTime() <= Date.now();
+
+  useEffect(() => {
+    if (!banExpired || !profile?.id) return;
+
+    supabase
+      .from("profiles")
+      .update({
+        is_banned: false,
+        ban_reason: null,
+        ban_note: null,
+        banned_until: null,
+        banned_at: null,
+      })
+      .eq("id", profile.id)
+      .then(() => {});
+  }, [banExpired, profile?.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkMfa = async () => {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      if (!active) return;
+
+      if (data?.nextLevel === "aal2" && data?.currentLevel !== "aal2") {
+        setNeedsMfa(true);
+      } else {
+        setNeedsMfa(false);
+      }
+
+      setMfaChecked(true);
+    };
+
+    checkMfa();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loading || !mfaChecked) {
+    return null;
+  }
+
+  if (isCurrentlyBanned(profile)) {
+    return <Navigate to="/banned" replace />;
+  }
+
+  if (needsMfa) {
+    return (
+      <MfaChallenge
+        onVerified={() => setNeedsMfa(false)}
+        onCancel={async () => {
+          await supabase.auth.signOut();
+          window.location.href = "/login";
+        }}
+      />
+    );
+  }
+
+  return children;
+}
 
     setSecret(data?.totp?.secret || "");
     setFactorId(data?.id || "");
