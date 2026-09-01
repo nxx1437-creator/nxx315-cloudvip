@@ -22,6 +22,7 @@ import TaskCallback from "./pages/TaskCallback.jsx";
 import Banned from "./pages/Banned.jsx";
 import AccountReview from "./pages/AccountReview.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 
 export default function App() {
   return (
@@ -36,7 +37,7 @@ export default function App() {
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
         <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
         <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
         <Route path="/support" element={<Support />} />
