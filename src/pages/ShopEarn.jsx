@@ -198,6 +198,7 @@ export default function ShopEarn() {
               </a>
             </div>
           )}
+        </section>
 
         <section className="mt-5 rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-black text-slate-900">Lưu ý để được ghi nhận đơn</h2>
