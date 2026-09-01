@@ -54,7 +54,9 @@ export default function ShopEarn() {
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Không tạo được link.");
 
-      setResultLink(data.short_link || data.full_link);
+      const link = data.short_link || data.full_link;
+      setResultLink(link);
+      window.open(link, "_blank");
     } catch (err) {
       setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
     } finally {
@@ -174,7 +176,7 @@ export default function ShopEarn() {
           {resultLink && (
             <div className="mt-4 rounded-2xl bg-emerald-50 p-4">
               <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
-                Link của bạn
+                Link của bạn (đã tự mở tab mới)
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <p className="flex-1 truncate text-sm font-semibold text-slate-700">{resultLink}</p>
@@ -185,9 +187,17 @@ export default function ShopEarn() {
                   {copied ? <Check size={15} /> : <Copy size={15} />}
                 </button>
               </div>
+
+              <a
+                href={resultLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 py-2.5 text-sm font-black text-white"
+              >
+                Mở lại link này
+              </a>
             </div>
           )}
-        </section>
 
         <section className="mt-5 rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-black text-slate-900">Lưu ý để được ghi nhận đơn</h2>
