@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye, Star, Landmark, ShoppingBag } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import emailjs from '@emailjs/browser';
 import BanUserModal from '../components/BanUserModal.jsx';
@@ -16,6 +16,7 @@ const TABS = [
   { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
   { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản & Ban" },
   { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
+  { key: "affiliate", label: "Điểm sao", icon: Star, desc: "Đồng bộ & duyệt rút tiền" },
 ];
 
 export default function Admin() {
@@ -54,6 +55,7 @@ export default function Admin() {
         {tab === "packages" && <PackagesTab />}
         {tab === "users" && <UsersTab />}
         {tab === "support" && <SupportTab />}
+        {tab === "affiliate" && <AffiliateTab />}
       </main>
     </div>
   );
@@ -551,3 +553,150 @@ function EmptyState({ text }) {
     </div>
   );
 }
+function AffiliateTab() {
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
+  const [rejectModal, setRejectModal] = useState(null);
+  const [rejectNote, setRejectNote] = useState("");
+
+  const fetchWithdrawals = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("star_withdrawals")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setWithdrawals(data ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchWithdrawals(); }, []);
+
+  const pendingCount = withdrawals.filter((w) => w.status === "pending").length;
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-affiliate-transactions", {
+        headers: { Authorization: `Bearer ${token}` },
+        body: {},
+      });
+
+      if (error) throw error;
+      setSyncResult(data);
+    } catch (err) {
+      setSyncResult({ error: err.message || "Đồng bộ thất bại." });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleComplete = async (withdrawal) => {
+    setProcessingId(withdrawal.id);
+    await supabase
+      .from("star_withdrawals")
+      .update({ status: "completed", processed_at: new Date().toISOString() })
+      .eq("id", withdrawal.id);
+    setProcessingId(null);
+    await fetchWithdrawals();
+  };
+
+  const handleReject = async () => {
+    if (!rejectNote.trim()) { alert("Vui lòng nhập lý do từ chối!"); return; }
+    setProcessingId(rejectModal.id);
+
+    const { error } = await supabase.rpc("reject_star_withdrawal", {
+      p_withdrawal_id: rejectModal.id,
+      p_note: rejectNote.trim(),
+    });
+
+    setProcessingId(null);
+    if (error) { alert(error.message); return; }
+
+    setRejectModal(null);
+    setRejectNote("");
+    await fetchWithdrawals();
+  };
+
+  if (loading) return <Loading text="Loading affiliate data..." />;
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader title="Điểm sao & Rút tiền" count={`${pendingCount} chờ duyệt`} onRefresh={fetchWithdrawals} />
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600"><ShoppingBag size={20} /></span>
+          <div>
+            <p className="font-bold text-slate-900">Đồng bộ đơn hàng Affiliate</p>
+            <p className="text-xs text-slate-400">Lấy đơn hàng 7 ngày gần nhất từ Accesstrade</p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50"
+        >
+          {syncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={15} />}
+          {syncing ? "Đang đồng bộ..." : "Đồng bộ ngay"}
+        </button>
+
+        {syncResult && (
+          <div className={`mt-3 rounded-xl p-3 text-xs font-semibold ${syncResult.error ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}>
+            {syncResult.error ? syncResult.error : `Đã quét ${syncResult.synced} đơn, cộng điểm cho ${syncResult.credited} đơn mới.`}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        {withdrawals.length === 0 ? <EmptyState text="Chưa có yêu cầu rút tiền." /> : withdrawals.map((w) => (
+          <div key={w.id} className={`rounded-2xl border p-5 shadow-sm ${w.status === "completed" ? "bg-emerald-50/30 border-emerald-100" : w.status === "rejected" ? "bg-rose-50/30 border-rose-100" : "bg-white border-slate-200"}`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-bold text-slate-900">{Number(w.amount).toLocaleString("vi-VN")}đ</p>
+                <p className="mt-1 text-xs text-slate-400">{w.bank_name} • {w.account_number} • {w.account_holder}</p>
+                <p className="mt-1 text-xs text-slate-400">{new Date(w.created_at).toLocaleString("vi-VN")}</p>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${w.status === "pending" ? "bg-amber-50 text-amber-600" : w.status === "completed" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                {w.status === "pending" ? "Chờ xử lý" : w.status === "completed" ? "Đã chuyển" : "Từ chối"}
+              </span>
+            </div>
+
+            {w.status === "pending" && (
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => handleComplete(w)} disabled={processingId === w.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} className="inline mr-1" /> Đã chuyển khoản</button>
+                <button onClick={() => setRejectModal(w)} disabled={processingId === w.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><XCircle size={14} className="inline mr-1" /> Từ chối</button>
+              </div>
+            )}
+
+            {w.admin_note && <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs italic text-slate-500">Lý do: {w.admin_note}</p>}
+          </div>
+        ))}
+      </div>
+
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-slate-900">Từ chối yêu cầu rút tiền</h2>
+            <p className="mt-1 text-sm text-slate-500">{Number(rejectModal.amount).toLocaleString("vi-VN")}đ sẽ được hoàn lại vào điểm sao của user.</p>
+            <textarea value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} rows={3} placeholder="Lý do từ chối..." className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+            <div className="mt-6 flex gap-3">
+              <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
+              <button onClick={handleReject} disabled={processingId === rejectModal.id} className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white disabled:opacity-50">
+                {processingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn điểm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+      }
