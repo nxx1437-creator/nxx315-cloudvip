@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
+import MfaChallenge from "./MfaChallenge.jsx";
 
 function isCurrentlyBanned(profile) {
   if (!profile?.is_banned) return false;
@@ -16,6 +17,9 @@ function isCurrentlyBanned(profile) {
 
 export default function ProtectedRoute({ children }) {
   const { profile, loading } = useProfile();
+
+  const [mfaChecked, setMfaChecked] = useState(false);
+  const [needsMfa, setNeedsMfa] = useState(false);
 
   const banExpired =
     profile?.is_banned &&
@@ -38,12 +42,48 @@ export default function ProtectedRoute({ children }) {
       .then(() => {});
   }, [banExpired, profile?.id]);
 
-  if (loading) {
+  useEffect(() => {
+    let active = true;
+
+    const checkMfa = async () => {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      if (!active) return;
+
+      if (data?.nextLevel === "aal2" && data?.currentLevel !== "aal2") {
+        setNeedsMfa(true);
+      } else {
+        setNeedsMfa(false);
+      }
+
+      setMfaChecked(true);
+    };
+
+    checkMfa();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loading || !mfaChecked) {
     return null;
   }
 
   if (isCurrentlyBanned(profile)) {
     return <Navigate to="/banned" replace />;
+  }
+
+  if (needsMfa) {
+    return (
+      <MfaChallenge
+        onVerified={() => setNeedsMfa(false)}
+        onCancel={async () => {
+          await supabase.auth.signOut();
+          window.location.href = "/login";
+        }}
+      />
+    );
   }
 
   return children;
