@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coins, Gift, Trophy, Users, Flame, TrendingUp, CheckSquare, Rocket, Crown, Menu, Search, Bell, Globe, Star, ShoppingBag } from "lucide-react";
+import { Coins, Gift, Trophy, Users, Flame, TrendingUp, CheckSquare, Rocket, Crown, Star, ShoppingBag } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-import Sidebar from "../components/Sidebar.jsx";
+import TopHeader from "../components/TopHeader.jsx";
 import Footer from "../components/Footer.jsx";
 
 function getGreeting() {
@@ -33,9 +33,8 @@ export default function Dashboard() {
   const { session } = useSession();
   const user = session?.user;
   const [profile, setProfile] = useState({ coins: 0, level: 0, exp: 0, exp_target: 100, tasks_completed_today: 0, coins_earned_today: 0, referrals_count: 0, streak_days: 0, streak_record: 0, username: "" });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) {
@@ -82,26 +81,7 @@ export default function Dashboard() {
       `}</style>
 
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-gradient-to-b from-sky-50/80 to-white/90 px-4 py-3 shadow-sm backdrop-blur-md">
-        <button onClick={() => setSidebarOpen(true)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm">
-          <Menu size={19} />
-        </button>
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
-          <Search size={15} className="shrink-0" />
-          <span className="truncate">Tìm kiếm</span>
-        </div>
-        <button className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm">
-          <Bell size={16} className="text-slate-600" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
-        </button>
-        <button className="flex h-9 shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm shadow-sm">
-          <Globe size={15} className="text-slate-500" /> 🇻🇳 VI
-        </button>
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-md shadow-sky-500/30">
-          {initial}
-          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
-        </div>
-      </header>
+      <TopHeader />
 
       <main className="mx-auto max-w-md space-y-5 px-4 py-5">
         {/* Hero */}
@@ -208,14 +188,6 @@ export default function Dashboard() {
 
       <Footer />
       <BottomNav />
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        displayName={displayName}
-        initial={initial}
-        coins={profile?.coins || 0}
-        level={profile?.level || 0}
-      />
     </div>
   );
-      }
+}
