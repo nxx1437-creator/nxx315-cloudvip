@@ -16,7 +16,8 @@ function getGreeting() {
 
 function StatCard({ icon: Icon, iconBg, iconColor, value, label }) {
   return (
-    <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+    <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50/60 to-white p-5">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
       <div className="flex items-start justify-between">
         <span className="text-2xl font-bold text-[#111827]">{value}</span>
         <span className={`flex h-8 w-8 items-center justify-center rounded-full ${iconBg}`}>
@@ -159,10 +160,10 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
-          <StatCard icon={CheckSquare} iconBg="bg-sky-50" iconColor="text-sky-500" value={0} label="Nhiệm vụ khả dụng" />
-          <StatCard icon={Trophy} iconBg="bg-emerald-50" iconColor="text-emerald-500" value={todayTasksDone} label="Hoàn thành hôm nay" />
-          <StatCard icon={Coins} iconBg="bg-amber-50" iconColor="text-amber-500" value={profile?.coins_earned_today || 0} label="Coin kiếm hôm nay" />
-          <StatCard icon={Users} iconBg="bg-blue-50" iconColor="text-blue-500" value={profile?.referrals_count || 0} label="Bạn đã mời" />
+          <StatCard icon={CheckSquare} iconBg="bg-sky-100" iconColor="text-sky-600" value={0} label="Nhiệm vụ khả dụng" />
+          <StatCard icon={Trophy} iconBg="bg-emerald-100" iconColor="text-emerald-600" value={todayTasksDone} label="Hoàn thành hôm nay" />
+          <StatCard icon={Coins} iconBg="bg-amber-100" iconColor="text-amber-600" value={profile?.coins_earned_today || 0} label="Coin kiếm hôm nay" />
+          <StatCard icon={Users} iconBg="bg-blue-100" iconColor="text-blue-600" value={profile?.referrals_count || 0} label="Bạn đã mời" />
         </div>
 
         {/* Streak */}
@@ -188,7 +189,7 @@ export default function Dashboard() {
               <span className="text-xs text-[#9CA3AF]">{todayTasksDone}/{todayTasksTotal}</span>
             </div>
           </div>
-          <button onClick={() => navigate("/tasks")} className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl bg-[#F3F4F6] px-4 py-2 text-sm font-medium text-[#374151]">
+          <button onClick={() => navigate("/tasks")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 transition hover:brightness-105">
             Đi đến nhiệm vụ
           </button>
         </div>
