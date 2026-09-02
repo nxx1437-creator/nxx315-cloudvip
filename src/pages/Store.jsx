@@ -20,6 +20,7 @@ import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+import TopHeader from "../components/TopHeader.jsx";
 
 const ADMIN_CHAT_ID = 6152450878;
 
@@ -347,6 +348,8 @@ export default function Store() {
         <div className="absolute right-0 top-40 h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl" />
       </div>
 
+      <TopHeader />
+
       <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
 
         {toast && (
@@ -461,16 +464,11 @@ function StoreHeader({ profile, onBack }) {
         </button>
 
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-sky-500">
-            NXX315 Studio
-          </p>
-
           <h1 className="text-xl font-black text-slate-950">
             Cửa hàng
           </h1>
         </div>
-      </div>
-
+        
       <div className="flex items-center gap-2 rounded-2xl border border-amber-100 bg-white px-3 py-2 shadow-sm">
         <Coins size={17} className="text-amber-500" />
 
