@@ -22,6 +22,7 @@ import ProfilePage from "./pages/Profile.jsx";
 import TaskCallback from "./pages/TaskCallback.jsx";
 import Banned from "./pages/Banned.jsx";
 import AccountReview from "./pages/AccountReview.jsx";
+import Onboarding from "./pages/Onboarding.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/banned" element={<Banned />} />
         <Route path="/account-review" element={<AccountReview />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
         <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
