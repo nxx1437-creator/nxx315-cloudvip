@@ -4,6 +4,7 @@ import { Navigate } from "react-router-dom";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import MfaChallenge from "./MfaChallenge.jsx";
+import { useLocation } from "react-router-dom";
 
 function isCurrentlyBanned(profile) {
   if (!profile?.is_banned) return false;
@@ -17,6 +18,7 @@ function isCurrentlyBanned(profile) {
 
 export default function ProtectedRoute({ children }) {
   const { profile, loading } = useProfile();
+  const location = useLocation();
 
   const [mfaChecked, setMfaChecked] = useState(false);
   const [needsMfa, setNeedsMfa] = useState(false);
@@ -73,7 +75,12 @@ export default function ProtectedRoute({ children }) {
   if (isCurrentlyBanned(profile)) {
     return <Navigate to="/banned" replace />;
   }
-
+if (
+    profile?.onboarding_completed === false &&
+    location.pathname !== "/onboarding"
+  ) {
+    return <Navigate to="/onboarding" replace />;
+}
   if (needsMfa) {
     return (
       <MfaChallenge
