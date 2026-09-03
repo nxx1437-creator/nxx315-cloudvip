@@ -6,12 +6,14 @@ import useSession from "../../hooks/useSession.js";
 import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
-// Danh sách các mức phần thưởng bằng đồng xu tương ứng
-const REWARDS = [
-  { id: 1, amount: 10, subtitle: "Coin thưởng nhỏ", isBigWin: false },
-  { id: 2, amount: 50, subtitle: "Coin thưởng vừa", isBigWin: false },
-  { id: 3, amount: 100, subtitle: "Trúng lớn!", isBigWin: true },
-  { id: 4, amount: 500, subtitle: "Siêu khủng!", isBigWin: true },
+// Các mốc phần thưởng trên vòng quay
+const SEGMENTS = [
+  { id: 1, amount: 10, isBigWin: false },
+  { id: 2, amount: 20, isBigWin: false },
+  { id: 3, amount: 50, isBigWin: false },
+  { id: 4, amount: 100, isBigWin: true },
+  { id: 5, amount: 200, isBigWin: true },
+  { id: 6, amount: 500, isBigWin: true },
 ];
 
 function ConfettiBurst() {
@@ -49,7 +51,8 @@ export default function WheelGame() {
   const { profile, setProfile } = useProfile();
 
   const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState(null); // Lưu thông tin phần thưởng trúng
+  const [rotation, setRotation] = useState(0);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
   const tickets = profile?.game_tickets || 0;
@@ -71,6 +74,16 @@ export default function WheelGame() {
       p_game_type: "wheel",
     });
 
+    // Random chọn một phần thưởng trong danh sách SEGMENTS
+    const randomIndex = Math.floor(Math.random() * SEGMENTS.length);
+    const selectedSegment = SEGMENTS[randomIndex];
+    
+    // Tính toán góc quay: Quay nhiều vòng (ít nhất 5 vòng = 1800 độ) + góc của ô trúng
+    const degreesPerSegment = 360 / SEGMENTS.length;
+    const targetRotation = rotation + 1800 + (randomIndex * degreesPerSegment);
+
+    setRotation(targetRotation);
+
     setTimeout(() => {
       setSpinning(false);
 
@@ -79,21 +92,18 @@ export default function WheelGame() {
         return;
       }
 
-      // Chọn một mức thưởng ngẫu nhiên từ danh sách (hoặc dùng data.reward nếu trả về từ server)
-      const randomReward = REWARDS[Math.floor(Math.random() * REWARDS.length)];
-      const finalRewardAmount = data.reward || randomReward.amount;
-      
+      const finalAmount = data.reward || selectedSegment.amount;
       setResult({
-        amount: finalRewardAmount,
-        isBigWin: finalRewardAmount >= 100,
+        amount: finalAmount,
+        isBigWin: finalAmount >= 100,
       });
 
       setProfile((prev) => ({
         ...prev,
-        coins: (prev.coins || 0) + finalRewardAmount,
+        coins: (prev.coins || 0) + finalAmount,
         game_tickets: data.tickets_left,
       }));
-    }, 1500);
+    }, 3000); // Khớp với thời gian transition CSS (3 giây)
   };
 
   return (
@@ -103,49 +113,65 @@ export default function WheelGame() {
           0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
           100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0); opacity: 0; }
         }
-        @keyframes mascot-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
       `}</style>
 
       {/* Header */}
-      <header className="relative z-25 flex items-center justify-between px-4 py-3.5 bg-white/50 backdrop-blur-md">
+      <header className="relative z-20 flex items-center justify-between px-4 py-3.5 bg-transparent">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#374151] shadow-sm">
+          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-[#374151] shadow-sm">
             <ArrowLeft size={18} />
           </button>
           <h1 className="text-[15px] font-bold text-[#111827]">Wheel of Fortune</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">🐵</span>
-        </div>
       </header>
 
-      {/* Khu vực vòng quay với icon Đồng xu ở tâm */}
-      <div className="relative flex h-64 flex-col items-center overflow-hidden pt-4">
-        {/* Kim chỉ định hướng ở trên */}
-        <div className="absolute top-2 z-20 h-3 w-6 bg-[#3478F6] rounded-b-full shadow-md" />
+      {/* Khu vực vòng quay khổng lồ hiển thị 1 phần (giống ảnh mẫu) */}
+      <div className="relative flex h-60 w-full flex-col items-center overflow-hidden">
+        {/* Thanh chỉ định hướng ở chính giữa phía trên */}
+        <div className="absolute top-1 z-30 h-3.5 w-8 bg-[#3478F6] rounded-b-full shadow-md" />
 
-        {/* Khối vòng quay mô phỏng */}
+        {/* Vòng quay lớn được neo định vị phía trên */}
         <div 
-          className={`relative mt-4 flex h-44 w-44 items-center justify-center rounded-full border-4 border-white bg-gradient-to-tr from-blue-100 to-white shadow-xl ${spinning ? "animate-spin" : ""}`}
-          style={{ animationDuration: spinning ? "0.4s" : "0s" }}
+          className="absolute -top-32 h-[380px] w-[380px] rounded-full border-[12px] border-white bg-gradient-to-b from-[#F3F8FE] to-[#DCEAFB] shadow-inner transition-all ease-out"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            transitionDuration: spinning ? "3s" : "0s",
+          }}
         >
-          <div className="absolute inset-2 rounded-full border border-dashed border-blue-300" />
-          
-          {/* Biểu tượng Đồng xu ở giữa vòng quay */}
-          <div
-            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-100 to-amber-200 shadow-md"
-            style={{ animation: !spinning ? "mascot-bounce 1.8s ease-in-out infinite" : "none" }}
-          >
-            <Coins size={36} className="text-[#F2A900]" />
+          {/* Các vạch ngăn cách và các ô chứa icon đồng xu trên vòng tròn */}
+          {SEGMENTS.map((seg, idx) => {
+            const angle = (360 / SEGMENTS.length) * idx;
+            return (
+              <div
+                key={seg.id}
+                className="absolute inset-0 flex items-start justify-center"
+                style={{ transform: `rotate(${angle}deg)` }}
+              >
+                {/* Vạch kẻ xanh dương định vị giống ảnh */}
+                <div className="mt-3 h-4 w-10 rounded-full bg-[#3478F6]" />
+                
+                {/* Icon đồng xu nằm phía trong múi */}
+                <div 
+                  className="absolute top-14 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
+                  style={{ transform: `rotate(-${angle + rotation}deg)` }} // Giữ icon luôn đứng thẳng không bị xoay ngược
+                >
+                  <Coins size={24} className="text-[#F2A900]" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Khối thẻ trắng bọc ô chính giữa (nơi hiển thị đồng xu trúng thưởng nổi bật) */}
+        <div className="absolute bottom-0 z-20 flex h-28 w-[82%] max-w-sm items-center justify-center rounded-[32px] bg-white border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF7E6] border-2 border-[#FFE0A6] shadow-sm animate-bounce">
+            <Coins size={32} className="text-[#F2A900]" />
           </div>
         </div>
       </div>
       
-      {/* Card trắng chứa thông tin chính */}
-      <div className="relative z-10 -mt-2 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
+      {/* Card trắng chứa thông tin tương tác bên dưới */}
+      <div className="relative z-10 mt-4 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-base font-black text-[#111827]">Fortune Wheel</p>
@@ -171,7 +197,7 @@ export default function WheelGame() {
           Activate promo codes and get more spins!
         </div>
 
-        {/* Phần "You can get" hiển thị các mức Coin */}
+        {/* Danh sách mốc thưởng */}
         <div className="mt-6 flex items-center justify-between">
           <p className="text-sm font-bold text-[#111827]">You can get:</p>
           <button className="text-[#9CA3AF] hover:text-[#111827]">
@@ -180,22 +206,21 @@ export default function WheelGame() {
         </div>
 
         <div className="mt-3 flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {REWARDS.map((item) => (
+          {SEGMENTS.map((item) => (
             <div
               key={item.id}
-              className="flex w-32 shrink-0 flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-3 text-center shadow-sm"
+              className="flex w-28 shrink-0 flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-3 text-center shadow-sm"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#FFF4DB] mb-2 border border-amber-100">
-                <Coins size={28} className="text-[#F2A900]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFF4DB] mb-2 border border-amber-100">
+                <Coins size={22} className="text-[#F2A900]" />
               </div>
               <span className="text-xs font-bold text-[#111827]">+{item.amount} Coins</span>
-              <span className="text-[10px] text-[#9CA3AF]">{item.subtitle}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Popup kết quả trúng thưởng hiển thị số lượng coin */}
+      {/* Popup kết quả trúng thưởng */}
       {result !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-xs overflow-visible rounded-3xl bg-white p-6 text-center shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -231,5 +256,5 @@ export default function WheelGame() {
       )}
     </div>
   );
-          }
-        
+      }
+                  
