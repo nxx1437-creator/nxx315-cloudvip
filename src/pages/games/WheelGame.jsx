@@ -78,6 +78,20 @@ const ConfettiBurst = () => {
    PRIZE WHEEL - ĐÃ SỬA HẾT LỖI
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
+  // 🔥 DÙNG DỮ LIỆU CỨNG - BỎ QUA SEGMENTS BÊN NGOÀI
+  const myData = [
+    { amount: 10 },
+    { amount: 20 },
+    { amount: 50 },
+    { amount: 100 },
+    { amount: 200 },
+    { amount: 500 },
+  ];
+  const myAngle = 360 / myData.length;
+
+  // LOG RA ĐỂ KIỂM TRA
+  console.log('🔥 myData:', myData);
+
   return (
     <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
       <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
@@ -110,13 +124,14 @@ const PrizeWheel = ({ rotation, spinning }) => {
           />
         </div>
 
+        {/* DÙNG myData THAY VÌ SEGMENTS */}
         <div className="absolute inset-0">
-          {SEGMENTS.map((segment, index) => {
-            const angle = -90 + index * SEGMENT_ANGLE;
+          {myData.map((segment, index) => {
+            const angle = -90 + index * myAngle;
             const isBlueBg = index % 2 === 0;
             return (
               <div
-                key={segment.id}
+                key={index}
                 className="absolute left-1/2 top-1/2 h-0 w-0"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
@@ -142,7 +157,6 @@ const PrizeWheel = ({ rotation, spinning }) => {
     </div>
   );
 };
-
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
