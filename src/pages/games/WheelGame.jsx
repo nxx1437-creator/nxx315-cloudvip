@@ -13,15 +13,15 @@ import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
 // DỮ LIỆU CHÍNH XÁC
-const SEGMENTS = [
-  { id: 1, amount: 10, isBigWin: false },
-  { id: 2, amount: 20, isBigWin: false },
-  { id: 3, amount: 50, isBigWin: false },
-  { id: 4, amount: 100, isBigWin: true },
-  { id: 5, amount: 200, isBigWin: true },
-  { id: 6, amount: 500, isBigWin: true },
+const WHEEL_SEGMENTS = [
+  { amount: 10 },
+  { amount: 20 },
+  { amount: 50 },
+  { amount: 100 },
+  { amount: 200 },
+  { amount: 500 },
 ];
-const SEGMENT_ANGLE = 360 / SEGMENTS.length;
+const WHEEL_ANGLE = 360 / WHEEL_SEGMENTS.length;
 
 const Coin = ({ amount, size = "normal" }) => {
   const sizes = {
