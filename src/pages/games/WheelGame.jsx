@@ -31,40 +31,49 @@ export default function WheelGame() {
       <div className="flex justify-center items-center h-[420px]">
         <div className="relative h-[320px] w-[320px]">
           {/* Pointer */}
-          <div className="absolute left-1/2 top-[-8px] z-10 -translate-x-1/2">
-            <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-t-[28px] border-l-transparent border-r-transparent border-t-[#1a56db]" />
+          <div className="absolute left-1/2 top-[-12px] z-10 -translate-x-1/2">
+            <div className="w-0 h-0 border-l-[20px] border-r-[20px] border-t-[35px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-lg" />
           </div>
 
           {/* Vòng quay */}
           <div
-            className="w-full h-full rounded-full border-[8px] border-white shadow-xl transition-all duration-[3000ms] ease-out"
+            className="w-full h-full rounded-full border-[8px] border-white shadow-xl transition-all duration-[3000ms] ease-out relative"
             style={{
               transform: `rotate(${rotation}deg)`,
-              background: `conic-gradient(from -30deg, 
-                #1a56db 0deg 60deg, 
-                #ffffff 60deg 120deg, 
-                #1a56db 120deg 180deg, 
-                #ffffff 180deg 240deg, 
-                #1a56db 240deg 300deg, 
-                #ffffff 300deg 360deg
-              )`,
             }}
           >
-            {/* Các ô số */}
+            {/* Nền màu */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `conic-gradient(from -30deg, 
+                  #1a56db 0deg 60deg, 
+                  #ffffff 60deg 120deg, 
+                  #1a56db 120deg 180deg, 
+                  #ffffff 180deg 240deg, 
+                  #1a56db 240deg 300deg, 
+                  #ffffff 300deg 360deg
+                )`,
+              }}
+            />
+
+            {/* Số tiền */}
             {SEGMENTS.map((amount, i) => {
-              const angle = i * 60;
+              const angle = -30 + i * 60;
               const isBlue = i % 2 === 0;
+              const textColor = isBlue ? 'text-white' : 'text-[#1a56db]';
+              
               return (
                 <div
                   key={i}
-                  className="absolute left-1/2 top-0 w-0 h-0"
+                  className="absolute left-1/2 top-1/2 w-0 h-0"
                   style={{ transform: `rotate(${angle}deg)` }}
                 >
                   <span
-                    className="absolute left-1/2 -translate-x-1/2 text-[20px] font-black"
+                    className={`absolute font-black text-[20px] ${textColor}`}
                     style={{
-                      transform: `translateY(30px) rotate(${-angle}deg)`,
-                      color: isBlue ? '#ffffff' : '#1a56db',
+                      transform: `translateX(-50%) translateY(-130px) rotate(${-angle}deg)`,
+                      left: '50%',
                     }}
                   >
                     +{amount}
