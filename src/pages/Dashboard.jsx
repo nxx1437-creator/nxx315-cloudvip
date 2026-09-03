@@ -79,7 +79,9 @@ export default function Dashboard() {
   const [profile, setProfile] = useState({ coins: 0, level: 0, exp: 0, exp_target: 100, tasks_completed_today: 0, coins_earned_today: 0, referrals_count: 0, streak_days: 0, streak_record: 0, username: "", milestone_1_claimed: false, milestone_5_claimed: false, milestone_10_claimed: false });
   const [loading, setLoading] = useState(true);
   const [claimingMilestone, setClaimingMilestone] = useState(null);
-
+  const [chartData, setChartData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(true);
+  
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) {
@@ -97,6 +99,49 @@ export default function Dashboard() {
       setLoading(false);
     };
     fetchProfile();
+  }, [user]);
+  useEffect(() => {
+    const fetchChart = async () => {
+      if (!user?.id) {
+        setChartLoading(false);
+        return;
+      }
+
+      const WEEKDAY_LABELS = ["CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        days.push(d);
+      }
+
+      const rangeStart = days[0];
+
+      const { data: rows } = await supabase
+        .from("task_completions")
+        .select("completed_at, coins_earned")
+        .eq("user_id", user.id)
+        .gte("completed_at", rangeStart.toISOString());
+
+      const sumByDate = {};
+      (rows || []).forEach((r) => {
+        const key = new Date(r.completed_at).toDateString();
+        sumByDate[key] = (sumByDate[key] || 0) + (r.coins_earned || 0);
+      });
+
+      const result = days.map((d) => ({
+        label: WEEKDAY_LABELS[d.getDay()],
+        value: sumByDate[d.toDateString()] || 0,
+        isToday: d.toDateString() === new Date().toDateString(),
+      }));
+
+      setChartData(result);
+      setChartLoading(false);
+    };
+
+    fetchChart();
   }, [user]);
 
   const displayName = profile?.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
@@ -289,9 +334,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Coin 7 ngày qua — placeholder chờ Phần 5 */}
-
-        {/* Coin 7 ngày qua — placeholder chờ Phần 5 */}
+        {/* Coin 7 ngày qua */}
         <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
@@ -299,14 +342,42 @@ export default function Dashboard() {
               Coin 7 ngày qua
             </p>
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-              +0 hôm nay
+              +{chartData.find((d) => d.isToday)?.value || 0} hôm nay
             </span>
           </div>
-          <div className="mt-5 flex flex-col items-center justify-center py-6 text-center">
-            <BarChart3 size={28} className="text-[#D1D5DB]" />
-            <p className="mt-2 text-sm font-medium text-[#9CA3AF]">Chưa có dữ liệu</p>
-            <p className="mt-0.5 text-xs text-[#C4CAD2]">Hoàn thành nhiệm vụ để bắt đầu theo dõi thu nhập Coin</p>
-          </div>
+
+          {chartLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 size={20} className="animate-spin text-[#D1D5DB]" />
+            </div>
+          ) : chartData.every((d) => d.value === 0) ? (
+            <div className="mt-5 flex flex-col items-center justify-center py-6 text-center">
+              <BarChart3 size={28} className="text-[#D1D5DB]" />
+              <p className="mt-2 text-sm font-medium text-[#9CA3AF]">Chưa có dữ liệu</p>
+              <p className="mt-0.5 text-xs text-[#C4CAD2]">Hoàn thành nhiệm vụ để bắt đầu theo dõi thu nhập Coin</p>
+            </div>
+          ) : (
+            <div className="mt-5 flex items-end justify-between gap-2" style={{ height: "120px" }}>
+              {chartData.map((d, i) => {
+                const max = Math.max(...chartData.map((x) => x.value), 1);
+                const heightPct = Math.max(4, Math.round((d.value / max) * 100));
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-[#9CA3AF]">{d.value > 0 ? d.value : ""}</span>
+                    <div className="flex w-full flex-1 items-end">
+                      <div
+                        className={`w-full rounded-t-md ${d.isToday ? "bg-[#3478F6]" : "bg-[#D9E7FD]"}`}
+                        style={{ height: `${heightPct}%` }}
+                      />
+                    </div>
+                    <span className={`text-[10px] ${d.isToday ? "font-bold text-[#3478F6]" : "text-[#9CA3AF]"}`}>
+                      {d.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Hành động nhanh */}
