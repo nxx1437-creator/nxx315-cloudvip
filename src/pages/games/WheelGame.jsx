@@ -75,79 +75,76 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL - ĐÃ SỬA LỖI HIỂN THỊ 00
+   PRIZE WHEEL - TRÒN TO NHƯ CŨ
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
   return (
-    <div className="relative h-[420px] w-full overflow-hidden">
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-        <div
-          className="relative h-[500px] w-[500px] rounded-full border-[8px] border-white bg-white shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-transform ease-out"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            transitionDuration: spinning ? "3s" : "0ms",
-            clipPath: 'inset(50% 0 0 0)',
-          }}
-        >
-          {/* Nền */}
-          <div className="absolute inset-0 overflow-hidden rounded-full">
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  conic-gradient(
-                    from -30deg,
-                    #1a56db 0deg 60deg,
-                    #ffffff 60deg 120deg,
-                    #1a56db 120deg 180deg,
-                    #ffffff 180deg 240deg,
-                    #1a56db 240deg 300deg,
-                    #ffffff 300deg 360deg
-                  )
-                `,
-              }}
-            />
-          </div>
-
-          {/* Phần thưởng - SỬA LỖI 00 */}
-          <div className="absolute inset-0">
-            {SEGMENTS.map((segment, index) => {
-              const angle = -90 + index * SEGMENT_ANGLE;
-              const isBlueBg = index % 2 === 0;
-              // LẤY SỐ TIỀN CHÍNH XÁC
-              const amount = segment.amount || 0;
-              
-              return (
-                <div
-                  key={segment.id}
-                  className="absolute left-1/2 top-1/2 h-0 w-0"
-                  style={{ transform: `rotate(${angle}deg)` }}
-                >
-                  <div 
-                    className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center"
-                    style={{ transform: "translateX(-50%) translateY(-135px)" }}
-                  >
-                    <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
-                      <span className={`text-[24px] font-black ${isBlueBg ? 'text-white' : 'text-[#1a56db]'}`}>
-                        +{amount}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Tâm */}
-          <div className="absolute left-1/2 top-1/2 z-40 flex h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[8px] border-white bg-[#F59E0B] shadow-[0_4px_15px_rgba(245,158,11,0.3)]">
-            <span className="text-[26px] font-black tracking-wider text-white">SPIN</span>
-          </div>
-        </div>
+    <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
+      {/* Pointer */}
+      <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
+        <div className="relative z-10 h-0 w-0 border-l-[24px] border-r-[24px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-[0_4px_8px_rgba(26,86,219,0.3)]" />
       </div>
 
-      {/* Pointer */}
-      <div className="absolute left-1/2 bottom-[60px] z-[60] -translate-x-1/2 rotate-180">
-        <div className="relative z-10 h-0 w-0 border-l-[24px] border-r-[24px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-[0_4px_8px_rgba(26,86,219,0.3)]" />
+      {/* Vòng quay */}
+      <div
+        className="absolute inset-0 rounded-full border-[8px] border-white bg-white shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-transform ease-out"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transitionDuration: spinning ? "3s" : "0ms",
+        }}
+      >
+        {/* Nền xanh dương và trắng xen kẽ */}
+        <div className="absolute inset-0 overflow-hidden rounded-full">
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                conic-gradient(
+                  from -30deg,
+                  #1a56db 0deg 60deg,
+                  #ffffff 60deg 120deg,
+                  #1a56db 120deg 180deg,
+                  #ffffff 180deg 240deg,
+                  #1a56db 240deg 300deg,
+                  #ffffff 300deg 360deg
+                )
+              `,
+            }}
+          />
+        </div>
+
+        {/* Phần thưởng */}
+        <div className="absolute inset-0">
+          {SEGMENTS.map((segment, index) => {
+            const angle = -90 + index * SEGMENT_ANGLE;
+            const isBlueBg = index % 2 === 0;
+            const amount = segment.amount || 0;
+            
+            return (
+              <div
+                key={segment.id}
+                className="absolute left-1/2 top-1/2 h-0 w-0"
+                style={{ transform: `rotate(${angle}deg)` }}
+              >
+                <div 
+                  className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center"
+                  style={{ transform: "translateX(-50%) translateY(-105px)" }}
+                >
+                  <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
+                    <span className={`text-[20px] font-black ${isBlueBg ? 'text-white' : 'text-[#1a56db]'}`}>
+                      +{amount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tâm vòng quay */}
+        <div className="absolute left-1/2 top-1/2 z-40 flex h-[100px] w-[100px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[8px] border-white bg-[#F59E0B] shadow-[0_4px_15px_rgba(245,158,11,0.3)]">
+          <span className="text-[22px] font-black tracking-wider text-white">SPIN</span>
+        </div>
       </div>
     </div>
   );
