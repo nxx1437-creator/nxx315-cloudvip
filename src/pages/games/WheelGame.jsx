@@ -14,7 +14,7 @@ import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
 /* =========================================================
-   CONSTANTS - ĐẢM BẢO CÓ DỮ LIỆU
+   CONSTANTS - ĐÃ SỬA ĐÚNG
 ========================================================= */
 const SEGMENTS = [
   { id: 1, amount: 10, isBigWin: false },
@@ -75,17 +75,15 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL - TRÒN TO NHƯ CŨ
+   PRIZE WHEEL - ĐÃ SỬA HẾT LỖI
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
   return (
     <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
-      {/* Pointer */}
       <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
         <div className="relative z-10 h-0 w-0 border-l-[24px] border-r-[24px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-[0_4px_8px_rgba(26,86,219,0.3)]" />
       </div>
 
-      {/* Vòng quay */}
       <div
         className="absolute inset-0 rounded-full border-[8px] border-white bg-white shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-transform ease-out"
         style={{
@@ -93,7 +91,6 @@ const PrizeWheel = ({ rotation, spinning }) => {
           transitionDuration: spinning ? "3s" : "0ms",
         }}
       >
-        {/* Nền xanh dương và trắng xen kẽ */}
         <div className="absolute inset-0 overflow-hidden rounded-full">
           <div
             className="absolute inset-0"
@@ -113,80 +110,10 @@ const PrizeWheel = ({ rotation, spinning }) => {
           />
         </div>
 
-        {/* Phần thưởng */}
         <div className="absolute inset-0">
           {SEGMENTS.map((segment, index) => {
             const angle = -90 + index * SEGMENT_ANGLE;
             const isBlueBg = index % 2 === 0;
-            const amount = segment.amount || 0;
-            
-            return (
-              <div
-                key={segment.id}
-                className="absolute left-1/2 top-1/2 h-0 w-0"
-                style={{ transform: `rotate(${angle}deg)` }}
-              >
-                <div 
-                  className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center"
-                  style={{ transform: "translateX(-50%) translateY(-105px)" }}
-                >
-                  <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
-/* =========================================================
-   PRIZE WHEEL - GÁN CỨNG DỮ LIỆU
-========================================================= */
-const PrizeWheel = ({ rotation, spinning }) => {
-  // GÁN CỨNG DỮ LIỆU Ở ĐÂY
-  const segments = [
-    { id: 1, amount: 10 },
-    { id: 2, amount: 20 },
-    { id: 3, amount: 50 },
-    { id: 4, amount: 100 },
-    { id: 5, amount: 200 },
-    { id: 6, amount: 500 },
-  ];
-  const segmentAngle = 360 / segments.length;
-
-  return (
-    <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
-      {/* Pointer */}
-      <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
-        <div className="relative z-10 h-0 w-0 border-l-[24px] border-r-[24px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-[0_4px_8px_rgba(26,86,219,0.3)]" />
-      </div>
-
-      {/* Vòng quay */}
-      <div
-        className="absolute inset-0 rounded-full border-[8px] border-white bg-white shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-transform ease-out"
-        style={{
-          transform: `rotate(${rotation}deg)`,
-          transitionDuration: spinning ? "3s" : "0ms",
-        }}
-      >
-        {/* Nền */}
-        <div className="absolute inset-0 overflow-hidden rounded-full">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `
-                conic-gradient(
-                  from -30deg,
-                  #1a56db 0deg 60deg,
-                  #ffffff 60deg 120deg,
-                  #1a56db 120deg 180deg,
-                  #ffffff 180deg 240deg,
-                  #1a56db 240deg 300deg,
-                  #ffffff 300deg 360deg
-                )
-              `,
-            }}
-          />
-        </div>
-
-        {/* Phần thưởng */}
-        <div className="absolute inset-0">
-          {segments.map((segment, index) => {
-            const angle = -90 + index * segmentAngle;
-            const isBlueBg = index % 2 === 0;
-            
             return (
               <div
                 key={segment.id}
@@ -208,7 +135,6 @@ const PrizeWheel = ({ rotation, spinning }) => {
           })}
         </div>
 
-        {/* Tâm */}
         <div className="absolute left-1/2 top-1/2 z-40 flex h-[100px] w-[100px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[8px] border-white bg-[#F59E0B] shadow-[0_4px_15px_rgba(245,158,11,0.3)]">
           <span className="text-[22px] font-black tracking-wider text-white">SPIN</span>
         </div>
@@ -218,7 +144,7 @@ const PrizeWheel = ({ rotation, spinning }) => {
 };
 
 /* =========================================================
-   MAIN COMPONENT - ĐÃ SỬA LỖI HẾT LƯỢT
+   MAIN COMPONENT
 ========================================================= */
 export default function WheelGame() {
   const navigate = useNavigate();
@@ -230,28 +156,14 @@ export default function WheelGame() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
-  // LẤY SỐ LƯỢT CHÍNH XÁC
-  const tickets = profile?.game_tickets ?? 0;
-  
-  // DEBUG: Kiểm tra số lượt
-  console.log('🔍 Tickets:', tickets);
-  console.log('🔍 Profile:', profile);
+  const tickets = profile?.game_tickets || 0;
 
   const handleSpin = useCallback(async () => {
-    // KIỂM TRA ĐANG QUAY
-    if (spinning) {
-      console.log('⏳ Đang quay...');
-      return;
-    }
-    
-    // KIỂM TRA SESSION
+    if (spinning) return;
     if (!session?.user?.id) {
       setError("Không tìm thấy phiên đăng nhập.");
       return;
     }
-
-    // KIỂM TRA LƯỢT - SỬA LỖI
-    console.log('🔍 Tickets hiện tại:', tickets);
     if (tickets < 1) {
       setError("Bạn đã hết lượt chơi. Làm nhiệm vụ để nhận thêm nhé!");
       return;
@@ -266,8 +178,6 @@ export default function WheelGame() {
         p_user_id: session.user.id,
         p_game_type: "wheel",
       });
-
-      console.log('📦 Data from RPC:', data);
 
       if (rpcError || !data?.success) {
         setSpinning(false);
@@ -286,18 +196,14 @@ export default function WheelGame() {
       setTimeout(() => {
         setSpinning(false);
         setResult({ amount: finalAmount, isBigWin: finalAmount >= 100 });
-        
-        // CẬP NHẬT PROFILE
         setProfile((prev) => ({
           ...prev,
           coins: (prev?.coins || 0) + finalAmount,
-          game_tickets: data.tickets_left ?? 0,
+          game_tickets: data.tickets_left,
         }));
-        
-        console.log('✅ Cập nhật profile thành công!');
       }, 3000);
     } catch (err) {
-      console.error("❌ Wheel error:", err);
+      console.error("Wheel error:", err);
       setSpinning(false);
       setError("Có lỗi xảy ra, vui lòng thử lại.");
     }
@@ -316,7 +222,6 @@ export default function WheelGame() {
         .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
 
-      {/* Header */}
       <header className="flex items-center px-4 pb-3 pt-4">
         <button
           onClick={() => navigate(-1)}
@@ -327,12 +232,10 @@ export default function WheelGame() {
         <h1 className="ml-3 text-[18px] font-black text-[#111827]">Wheel of Fortune</h1>
       </header>
 
-      {/* Wheel */}
       <div className="relative flex h-[420px] w-full items-center justify-center overflow-hidden">
         <PrizeWheel rotation={rotation} spinning={spinning} />
       </div>
 
-      {/* Bottom Card */}
       <section className="relative z-10 -mt-1 min-h-[420px] rounded-t-[32px] bg-white px-4 pb-10 pt-6 shadow-[0_-7px_25px_rgba(0,0,0,0.035)]">
         <div className="flex items-start justify-between">
           <div>
@@ -383,7 +286,6 @@ export default function WheelGame() {
         </div>
       </section>
 
-      {/* Result Modal */}
       {result !== null && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-[330px] rounded-[30px] bg-white p-6 text-center shadow-2xl">
@@ -417,4 +319,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-      }
+               }
