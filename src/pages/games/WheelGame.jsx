@@ -2,21 +2,21 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Ticket } from "lucide-react";
 
+// DỮ LIỆU CHUẨN - CHỈ 6 SỐ
+const PRIZES = [10, 20, 50, 100, 200, 500];
+
 export default function WheelGame() {
   const navigate = useNavigate();
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
 
-  // DỮ LIỆU CHÍNH XÁC - GÁN CỨNG TRONG COMPONENT
-  const items = [10, 20, 50, 100, 200, 500];
-
-  const handleSpin = () => {
+  const spin = () => {
     if (spinning) return;
     setSpinning(true);
-    const randomIndex = Math.floor(Math.random() * items.length);
-    const angle = 360 / items.length;
-    const targetRotation = rotation + 360 * 5 + (360 - randomIndex * angle);
-    setRotation(targetRotation);
+    const idx = Math.floor(Math.random() * PRIZES.length);
+    const angle = 360 / PRIZES.length;
+    const newRot = rotation + 360 * 5 + (360 - idx * angle);
+    setRotation(newRot);
     setTimeout(() => setSpinning(false), 3000);
   };
 
@@ -42,19 +42,19 @@ export default function WheelGame() {
               background: `conic-gradient(from -30deg, #1a56db 0deg 60deg, #ffffff 60deg 120deg, #1a56db 120deg 180deg, #ffffff 180deg 240deg, #1a56db 240deg 300deg, #ffffff 300deg 360deg)`,
             }}
           >
-            {items.map((amount, i) => {
-              const angle = -30 + i * 60;
+            {PRIZES.map((amount, i) => {
+              const a = -30 + i * 60;
               const isBlue = i % 2 === 0;
               return (
                 <div
                   key={i}
                   className="absolute left-1/2 top-1/2"
-                  style={{ transform: `rotate(${angle}deg)` }}
+                  style={{ transform: `rotate(${a}deg)` }}
                 >
                   <span
                     className={`absolute font-bold text-xl whitespace-nowrap ${isBlue ? 'text-white' : 'text-[#1a56db]'}`}
                     style={{
-                      transform: `translateX(-50%) translateY(-115px) rotate(${-angle}deg)`,
+                      transform: `translateX(-50%) translateY(-115px) rotate(${-a}deg)`,
                       left: '50%',
                     }}
                   >
@@ -86,7 +86,7 @@ export default function WheelGame() {
         </div>
 
         <button
-          onClick={handleSpin}
+          onClick={spin}
           disabled={spinning}
           className="w-full py-4 bg-gradient-to-r from-yellow-400 to-orange-300 rounded-2xl font-bold text-white text-lg shadow-lg disabled:opacity-50 transition active:scale-95"
         >
