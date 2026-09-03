@@ -75,35 +75,54 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL (RÚT GỌN)
+   PRIZE WHEEL (UI ĐẸP HƠN)
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
-  // Render các mảnh của vòng quay
+  // Màu sắc cho các mảnh
+  const segmentColors = [
+    "#FF6B6B", // đỏ
+    "#4ECDC4", // xanh ngọc
+    "#FFE66D", // vàng
+    "#A8E6CF", // xanh lá nhạt
+    "#FF8A5C", // cam
+    "#74B9FF", // xanh dương
+  ];
+
   const renderSegments = () => {
     return SEGMENTS.map((segment, index) => {
       const angle = -90 + index * SEGMENT_ANGLE;
+      const color = segmentColors[index % segmentColors.length];
+      
       return (
         <div
           key={segment.id}
           className="absolute left-1/2 top-1/2 h-0 w-0"
           style={{ transform: `rotate(${angle}deg)` }}
         >
-          {/* Vạch xanh */}
-          <div className="absolute left-1/2 top-[-132px] h-[43px] w-[12px] -translate-x-1/2 rounded-full bg-[#3478F6]" />
+          {/* Mảnh màu */}
+          <div
+            className="absolute left-1/2 top-0 h-[140px] w-[2px] -translate-x-1/2"
+            style={{
+              background: `conic-gradient(from 0deg, ${color}, ${color}80)`,
+              transform: "translateX(-50%) translateY(-140px)",
+            }}
+          />
           
-          {/* Coin và số thưởng */}
+          {/* Phần thưởng */}
           <div 
             className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center"
-            style={{ transform: "translateX(-50%) translateY(-103px)" }}
+            style={{ transform: "translateX(-50%) translateY(-100px)" }}
           >
-            <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
-              <Coin amount={segment.amount} size="small" />
-            </div>
             <div 
-              className="mt-[5px] whitespace-nowrap text-[12px] font-black text-[#654500]"
+              className="flex flex-col items-center"
               style={{ transform: `rotate(${-angle - rotation}deg)` }}
             >
-              +{segment.amount}
+              <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm">
+                <span className="text-[13px] font-black text-[#2D3436]">+{segment.amount}</span>
+              </div>
+              {segment.isBigWin && (
+                <span className="mt-1 text-[8px] font-bold text-[#FF6B6B]">⭐</span>
+              )}
             </div>
           </div>
         </div>
@@ -114,42 +133,70 @@ const PrizeWheel = ({ rotation, spinning }) => {
   return (
     <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
       {/* Pointer */}
-      <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
-        <div className="absolute left-1/2 top-[17px] h-[38px] w-[180px] -translate-x-1/2 rounded-full bg-[#3478F6] shadow-[0_4px_9px_rgba(52,120,246,0.25)]" />
-        <div className="absolute left-1/2 top-[40px] h-[70px] w-[22px] -translate-x-1/2 rounded-b-full bg-[#3478F6]" />
-        <div className="relative z-10 h-0 w-0 border-l-[27px] border-r-[27px] border-t-[43px] border-l-transparent border-r-transparent border-t-[#3478F6] drop-shadow-[0_4px_4px_rgba(0,0,0,0.15)]" />
+      <div className="absolute left-1/2 top-[-12px] z-[60] -translate-x-1/2">
+        <div className="relative z-10 h-0 w-0 border-l-[18px] border-r-[18px] border-t-[32px] border-l-transparent border-r-transparent border-t-[#FF4757] drop-shadow-[0_4px_12px_rgba(255,71,87,0.5)]" />
+        <div className="absolute left-1/2 top-[20px] h-[30px] w-[6px] -translate-x-1/2 rounded-full bg-[#FF4757]" />
       </div>
 
-      {/* Vòng quay chính */}
+      {/* Vòng quay */}
       <div
-        className="absolute inset-0 rounded-full border-[11px] border-white bg-white shadow-[0_9px_30px_rgba(69,102,130,0.18)] transition-transform ease-out"
+        className="absolute inset-0 rounded-full border-[6px] border-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] transition-transform ease-out"
         style={{
           transform: `rotate(${rotation}deg)`,
           transitionDuration: spinning ? "3s" : "0ms",
         }}
       >
-        {/* Nền 6 màu */}
-        <div
-          className="absolute inset-0 overflow-hidden rounded-full"
-          style={{ 
-            background: "conic-gradient(from -30deg, #FFFFFF 0deg 60deg, #EEF5FF 60deg 120deg, #FFFFFF 120deg 180deg, #EEF5FF 180deg 240deg, #FFFFFF 240deg 300deg, #EEF5FF 300deg 360deg)" 
-          }}
-        />
+        {/* Nền các mảnh màu */}
+        <div className="absolute inset-0 overflow-hidden rounded-full">
+          {SEGMENTS.map((segment, index) => {
+            const startAngle = -30 + index * SEGMENT_ANGLE;
+            const color = segmentColors[index % segmentColors.length];
+            return (
+              <div
+                key={segment.id}
+                className="absolute inset-0"
+                style={{
+                  background: `conic-gradient(from ${startAngle}deg, ${color} 0deg ${SEGMENT_ANGLE}deg, transparent ${SEGMENT_ANGLE}deg 360deg)`,
+                  opacity: 0.85,
+                }}
+              />
+            );
+          })}
+        </div>
 
-        {/* Các mảnh */}
+        {/* Vạch phân cách */}
+        <div className="absolute inset-0 rounded-full">
+          {SEGMENTS.map((segment, index) => {
+            const angle = -30 + index * SEGMENT_ANGLE;
+            return (
+              <div
+                key={`line-${segment.id}`}
+                className="absolute left-1/2 top-1/2 h-[1px] w-[140px] -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  transform: `rotate(${angle}deg)`,
+                  background: "linear-gradient(to right, transparent, rgba(255,255,255,0.5) 50%, transparent)",
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Các phần thưởng */}
         {renderSegments()}
 
         {/* Tâm vòng quay */}
-        <div className="absolute left-1/2 top-1/2 z-40 flex h-[108px] w-[108px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[9px] border-white bg-[#F4B51B] shadow-[0_5px_15px_rgba(163,108,0,0.23)]">
-          <div className="flex h-[82px] w-[82px] items-center justify-center rounded-full border border-white/80 bg-gradient-to-br from-[#FFD95A] to-[#F0A900]">
-            <Coins size={36} strokeWidth={2.5} className="text-white" />
+        <div className="absolute left-1/2 top-1/2 z-40 flex h-[85px] w-[85px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[5px] border-white bg-gradient-to-br from-[#FFD93D] to-[#F6B93B] shadow-[0_4px_25px_rgba(246,185,59,0.4)]">
+          <div className="flex flex-col items-center">
+            <Coins size={26} strokeWidth={2.2} className="text-white drop-shadow-sm" />
+            <span className="mt-0.5 text-[9px] font-black tracking-wider text-white">SPIN</span>
           </div>
+          {/* Hiệu ứng glow */}
+          <div className="absolute inset-[-8px] rounded-full bg-gradient-to-br from-[#FFD93D]/20 to-[#F6B93B]/20 blur-xl" />
         </div>
       </div>
     </div>
   );
 };
-
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
