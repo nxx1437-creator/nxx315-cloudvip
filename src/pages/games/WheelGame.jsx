@@ -121,14 +121,14 @@ export default function WheelGame() {
         </div>
       </header>
 
-      {/* Khu vực vòng quay gọn gàng phía trên */}
-      <div className="relative flex h-52 w-full flex-col items-center justify-center overflow-hidden">
+      {/* Khu vực vòng quay tròn trịa, cân đối phía trên */}
+      <div className="relative flex h-64 w-full flex-col items-center justify-center overflow-hidden px-4">
         {/* Kim chỉ định hướng phía trên */}
-        <div className="absolute top-2 z-30 h-3 w-7 bg-[#3478F6] rounded-b-full shadow-md" />
+        <div className="absolute top-2 z-30 h-3.5 w-8 bg-[#3478F6] rounded-b-full shadow-md" />
 
-        {/* Vòng quay kích thước vừa vặn */}
+        {/* Vòng quay chuẩn hình tròn (dùng aspect-square và w-72 max-w-[280px]) */}
         <div 
-          className="relative h-64 w-64 rounded-full border-[10px] border-white bg-[#EBF3FE] shadow-md transition-all ease-out"
+          className="relative aspect-square w-72 max-w-[280px] rounded-full border-[12px] border-white bg-[#EBF3FE] shadow-md transition-all ease-out"
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionDuration: spinning ? "3s" : "0s",
@@ -142,12 +142,12 @@ export default function WheelGame() {
                 className="absolute inset-0"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
-                <div className="absolute left-1/2 top-2 -translate-x-1/2 h-3 w-8 rounded-full bg-[#3478F6]" />
+                <div className="absolute left-1/2 top-2 -translate-x-1/2 h-3.5 w-9 rounded-full bg-[#3478F6]" />
                 <div 
-                  className="absolute left-1/2 top-10 -translate-x-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
+                  className="absolute left-1/2 top-11 -translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
                   style={{ transform: `rotate(-${angle + rotation}deg)` }}
                 >
-                  <Coins size={18} className="text-[#F2A900]" />
+                  <Coins size={20} className="text-[#F2A900]" />
                 </div>
               </div>
             );
@@ -241,5 +241,5 @@ export default function WheelGame() {
       )}
     </div>
   );
-        }
-                
+      }
+            
