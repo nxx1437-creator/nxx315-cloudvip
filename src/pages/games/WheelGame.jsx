@@ -75,22 +75,26 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL (HIỂN THỊ 1/4 PHÍA DƯỚI - ĐÃ SỬA LỖI)
+   PRIZE WHEEL (HIỂN THỊ 1/4 PHÍA DƯỚI - DEBUG)
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
+  // DEBUG: In ra dữ liệu SEGMENTS
+  console.log('🔍 SEGMENTS data:', SEGMENTS);
+  console.log('🔍 SEGMENTS[0]:', SEGMENTS[0]);
+  console.log('🔍 SEGMENTS[0].amount:', SEGMENTS[0]?.amount);
+  
   return (
     <div className="relative h-[420px] w-full overflow-hidden">
-      {/* Vòng quay - chỉ hiển thị 1/4 phía dưới */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <div
           className="relative h-[500px] w-[500px] rounded-full border-[8px] border-white bg-white shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-transform ease-out"
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionDuration: spinning ? "3s" : "0ms",
-            clipPath: 'inset(50% 0 0 0)', // Chỉ hiển thị 1/4 phía dưới
+            clipPath: 'inset(50% 0 0 0)',
           }}
         >
-          {/* Nền xanh dương và trắng xen kẽ */}
+          {/* Nền */}
           <div className="absolute inset-0 overflow-hidden rounded-full">
             <div
               className="absolute inset-0"
@@ -110,17 +114,22 @@ const PrizeWheel = ({ rotation, spinning }) => {
             />
           </div>
 
-          {/* Phần thưởng - ĐÃ SỬA LỖI */}
+          {/* Phần thưởng - DEBUG thêm */}
           <div className="absolute inset-0">
             {SEGMENTS.map((segment, index) => {
               const angle = -90 + index * SEGMENT_ANGLE;
               const isBlueBg = index % 2 === 0;
-              // Lấy số tiền - ưu tiên amount, nếu không có thì lấy value
-              const amount = segment.amount || segment.value || 0;
+              
+              // DEBUG: In từng segment
+              console.log(`🔍 Segment ${index}:`, segment);
+              console.log(`🔍 Segment ${index} amount:`, segment.amount);
+              
+              // Thử lấy amount từ nhiều nguồn
+              const amount = segment.amount || segment.value || segment.reward || segment.prize || 0;
               
               return (
                 <div
-                  key={segment.id || index}
+                  key={index}
                   className="absolute left-1/2 top-1/2 h-0 w-0"
                   style={{ transform: `rotate(${angle}deg)` }}
                 >
@@ -139,14 +148,14 @@ const PrizeWheel = ({ rotation, spinning }) => {
             })}
           </div>
 
-          {/* Tâm vòng quay */}
+          {/* Tâm */}
           <div className="absolute left-1/2 top-1/2 z-40 flex h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[8px] border-white bg-[#F59E0B] shadow-[0_4px_15px_rgba(245,158,11,0.3)]">
             <span className="text-[26px] font-black tracking-wider text-white">SPIN</span>
           </div>
         </div>
       </div>
 
-      {/* Pointer - đặt ở dưới */}
+      {/* Pointer */}
       <div className="absolute left-1/2 bottom-[60px] z-[60] -translate-x-1/2 rotate-180">
         <div className="relative z-10 h-0 w-0 border-l-[24px] border-r-[24px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-[0_4px_8px_rgba(26,86,219,0.3)]" />
       </div>
