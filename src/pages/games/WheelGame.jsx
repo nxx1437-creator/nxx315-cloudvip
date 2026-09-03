@@ -6,7 +6,6 @@ import useSession from "../../hooks/useSession.js";
 import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
-// Các mốc phần thưởng trên vòng quay
 const SEGMENTS = [
   { id: 1, amount: 10, isBigWin: false },
   { id: 2, amount: 20, isBigWin: false },
@@ -74,11 +73,8 @@ export default function WheelGame() {
       p_game_type: "wheel",
     });
 
-    // Random chọn một phần thưởng trong danh sách SEGMENTS
     const randomIndex = Math.floor(Math.random() * SEGMENTS.length);
     const selectedSegment = SEGMENTS[randomIndex];
-    
-    // Tính toán góc quay: Quay nhiều vòng (ít nhất 5 vòng = 1800 độ) + góc của ô trúng
     const degreesPerSegment = 360 / SEGMENTS.length;
     const targetRotation = rotation + 1800 + (randomIndex * degreesPerSegment);
 
@@ -103,7 +99,7 @@ export default function WheelGame() {
         coins: (prev.coins || 0) + finalAmount,
         game_tickets: data.tickets_left,
       }));
-    }, 3000); // Khớp với thời gian transition CSS (3 giây)
+    }, 3000);
   };
 
   return (
@@ -125,45 +121,44 @@ export default function WheelGame() {
         </div>
       </header>
 
-      {/* Khu vực vòng quay khổng lồ hiển thị 1 phần (giống ảnh mẫu) */}
-      <div className="relative flex h-60 w-full flex-col items-center overflow-hidden">
-        {/* Thanh chỉ định hướng ở chính giữa phía trên */}
+      {/* Khu vực vòng quay chuẩn dáng Starpets */}
+      <div className="relative flex h-64 w-full flex-col items-center overflow-hidden">
+        {/* Kim chỉ định hướng phía trên */}
         <div className="absolute top-1 z-30 h-3.5 w-8 bg-[#3478F6] rounded-b-full shadow-md" />
 
-        {/* Vòng quay lớn được neo định vị phía trên */}
+        {/* Vòng quay lớn được neo đúng tâm phía trên */}
         <div 
-          className="absolute -top-32 h-[380px] w-[380px] rounded-full border-[12px] border-white bg-gradient-to-b from-[#F3F8FE] to-[#DCEAFB] shadow-inner transition-all ease-out"
+          className="absolute -top-40 h-[420px] w-[420px] rounded-full border-[16px] border-white bg-[#EBF3FE] shadow-inner transition-all ease-out"
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionDuration: spinning ? "3s" : "0s",
           }}
         >
-          {/* Các vạch ngăn cách và các ô chứa icon đồng xu trên vòng tròn */}
           {SEGMENTS.map((seg, idx) => {
             const angle = (360 / SEGMENTS.length) * idx;
             return (
               <div
                 key={seg.id}
-                className="absolute inset-0 flex items-start justify-center"
+                className="absolute inset-0"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
-                {/* Vạch kẻ xanh dương định vị giống ảnh */}
-                <div className="mt-3 h-4 w-10 rounded-full bg-[#3478F6]" />
+                {/* Vạch ngăn cách xanh dương ở vành ngoài */}
+                <div className="absolute left-1/2 top-4 -translate-x-1/2 h-4 w-10 rounded-full bg-[#3478F6]" />
                 
-                {/* Icon đồng xu nằm phía trong múi */}
+                {/* Icon đồng xu nằm đối xứng đều quanh vòng tròn */}
                 <div 
-                  className="absolute top-14 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
-                  style={{ transform: `rotate(-${angle + rotation}deg)` }} // Giữ icon luôn đứng thẳng không bị xoay ngược
+                  className="absolute left-1/2 top-16 -translate-x-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
+                  style={{ transform: `rotate(-${angle + rotation}deg)` }}
                 >
-                  <Coins size={24} className="text-[#F2A900]" />
+                  <Coins size={22} className="text-[#F2A900]" />
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Khối thẻ trắng bọc ô chính giữa (nơi hiển thị đồng xu trúng thưởng nổi bật) */}
-        <div className="absolute bottom-0 z-20 flex h-28 w-[82%] max-w-sm items-center justify-center rounded-[32px] bg-white border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+        {/* Khẻ trắng bo cung che nửa dưới vòng quay giống mẫu ảnh */}
+        <div className="absolute bottom-0 z-20 flex h-32 w-[85%] max-w-sm items-center justify-center rounded-[36px] bg-white border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF7E6] border-2 border-[#FFE0A6] shadow-sm animate-bounce">
             <Coins size={32} className="text-[#F2A900]" />
           </div>
@@ -256,5 +251,5 @@ export default function WheelGame() {
       )}
     </div>
   );
-      }
+                }
                   
