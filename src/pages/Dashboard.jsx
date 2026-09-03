@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coins, Gift, Trophy, Users, Flame, CheckSquare, Rocket, Crown, Star, ShoppingBag, ArrowLeftRight, Headphones, BarChart3 } from "lucide-react";
+import { Coins, Gift, Trophy, Users, Flame, CheckSquare, Rocket, Crown, Star, ShoppingBag, ArrowLeftRight, Headphones, BarChart3, Loader2, Check } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
@@ -41,13 +41,44 @@ function QuickAction({ icon: Icon, iconBg, iconColor, label, onClick }) {
     </button>
   );
 }
+function MilestoneCard({ milestone, reward, tasksDone, claimed, onClaim, claiming }) {
+  const reached = tasksDone >= milestone;
+  const progressPct = Math.min(100, Math.round((tasksDone / milestone) * 100));
+
+  return (
+    <button
+      onClick={() => reached && !claimed && onClaim(milestone)}
+      disabled={!reached || claimed || claiming}
+      className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition ${
+        claimed
+          ? "border-emerald-200 bg-emerald-50"
+          : reached
+          ? "border-[#F2A900]/40 bg-[#FFF8ED]"
+          : "border-[#E5E7EB] bg-white"
+      }`}
+    >
+      <span className="text-xs font-bold text-[#111827]">{milestone} nv</span>
+      <span className={`flex items-center gap-1 text-sm font-bold ${claimed ? "text-emerald-600" : "text-[#B87700]"}`}>
+        {claimed ? <Check size={13} /> : <Coins size={13} />}
+        +{reward}
+      </span>
+      <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+        <div
+          className={`h-full rounded-full ${claimed ? "bg-emerald-400" : "bg-[#F2A900]"}`}
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+    </button>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { session } = useSession();
   const user = session?.user;
-  const [profile, setProfile] = useState({ coins: 0, level: 0, exp: 0, exp_target: 100, tasks_completed_today: 0, coins_earned_today: 0, referrals_count: 0, streak_days: 0, streak_record: 0, username: "" });
+  const [profile, setProfile] = useState({ coins: 0, level: 0, exp: 0, exp_target: 100, tasks_completed_today: 0, coins_earned_today: 0, referrals_count: 0, streak_days: 0, streak_record: 0, username: "", milestone_1_claimed: false, milestone_5_claimed: false, milestone_10_claimed: false });
   const [loading, setLoading] = useState(true);
+  const [claimingMilestone, setClaimingMilestone] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -74,6 +105,34 @@ export default function Dashboard() {
   const todayTasksDone = profile?.tasks_completed_today || 0;
   const todayTasksTotal = 3;
   const todayTaskPct = Math.min(100, Math.round((todayTasksDone / todayTasksTotal) * 100));
+  const handleClaimMilestone = async (milestone) => {
+    if (!user?.id) return;
+    setClaimingMilestone(milestone);
+
+    const { data, error } = await supabase.rpc("claim_task_milestone", {
+      p_user_id: user.id,
+      p_milestone: milestone,
+    });
+
+    setClaimingMilestone(null);
+
+    if (error) {
+      alert("Lỗi: " + error.message);
+      return;
+    }
+
+    if (!data?.success) {
+      alert(data?.message || "Không thể nhận thưởng.");
+      return;
+    }
+
+    const field = `milestone_${milestone}_claimed`;
+    setProfile((prev) => ({
+      ...prev,
+      coins: (prev.coins || 0) + data.reward,
+      [field]: true,
+    }));
+  };
 
   if (loading) {
     return (
@@ -194,6 +253,43 @@ export default function Dashboard() {
             Đi đến nhiệm vụ
           </button>
         </div>
+
+        {/* Mốc thưởng chuỗi nhiệm vụ */}
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-[#111827]">✨ Chuỗi nhiệm vụ hôm nay</p>
+            <span className="text-xs text-[#9CA3AF]">Đã làm: {todayTasksDone}</span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <MilestoneCard
+              milestone={1}
+              reward={50}
+              tasksDone={todayTasksDone}
+              claimed={profile?.milestone_1_claimed}
+              claiming={claimingMilestone === 1}
+              onClaim={handleClaimMilestone}
+            />
+            <MilestoneCard
+              milestone={5}
+              reward={200}
+              tasksDone={todayTasksDone}
+              claimed={profile?.milestone_5_claimed}
+              claiming={claimingMilestone === 5}
+              onClaim={handleClaimMilestone}
+            />
+            <MilestoneCard
+              milestone={10}
+              reward={400}
+              tasksDone={todayTasksDone}
+              claimed={profile?.milestone_10_claimed}
+              claiming={claimingMilestone === 10}
+              onClaim={handleClaimMilestone}
+            />
+          </div>
+        </div>
+
+        {/* Coin 7 ngày qua — placeholder chờ Phần 5 */}
 
         {/* Coin 7 ngày qua — placeholder chờ Phần 5 */}
         <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
