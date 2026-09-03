@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Ticket,
   Coins,
   X,
-  Sparkles,
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
@@ -75,51 +74,81 @@ const ConfettiBurst = () => {
   );
 };
 
-const PrizeWheel = ({ rotation, spinning }) => (
-  <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
-    <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
-      <div className="absolute left-1/2 top-[17px] h-[38px] w-[180px] -translate-x-1/2 rounded-full bg-[#3478F6] shadow-[0_4px_9px_rgba(52,120,246,0.25)]" />
-      <div className="absolute left-1/2 top-[40px] h-[70px] w-[22px] -translate-x-1/2 rounded-b-full bg-[#3478F6]" />
-      <div className="relative z-10 h-0 w-0 border-l-[27px] border-r-[27px] border-t-[43px] border-l-transparent border-r-transparent border-t-[#3478F6] drop-shadow-[0_4px_4px_rgba(0,0,0,0.15)]" />
-    </div>
-
-    <div
-      className="absolute inset-0 rounded-full border-[11px] border-white bg-white shadow-[0_9px_30px_rgba(69,102,130,0.18)] transition-transform ease-out"
-      style={{
-        transform: `rotate(${rotation}deg)`,
-        transitionDuration: spinning ? "3s" : "0ms",
-      }}
-    >
-      <div
-        className="absolute inset-0 overflow-hidden rounded-full"
-        style={{ background: "conic-gradient(from -30deg, #FFFFFF 0deg 60deg, #EEF5FF 60deg 120deg, #FFFFFF 120deg 180deg, #EEF5FF 180deg 240deg, #FFFFFF 240deg 300deg, #EEF5FF 300deg 360deg)" }}
-      />
-
-      {SEGMENTS.map((segment, index) => {
-        const angle = -90 + index * SEGMENT_ANGLE;
-        return (
-          <div key={segment.id} className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: `rotate(${angle}deg)` }}>
-            <div className="absolute left-1/2 top-[-132px] h-[43px] w-[12px] -translate-x-1/2 rounded-full bg-[#3478F6]" />
-            <div className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center" style={{ transform: "translateX(-50%) translateY(-103px)" }}>
-              <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
-                <Coin amount={segment.amount} size="small" />
-              </div>
-              <div className="mt-[5px] whitespace-nowrap text-[12px] font-black text-[#654500]" style={{ transform: `rotate(${-angle - rotation}deg)` }}>
-                +{segment.amount}
-              </div>
+/* =========================================================
+   PRIZE WHEEL (RÚT GỌN)
+========================================================= */
+const PrizeWheel = ({ rotation, spinning }) => {
+  // Render các mảnh của vòng quay
+  const renderSegments = () => {
+    return SEGMENTS.map((segment, index) => {
+      const angle = -90 + index * SEGMENT_ANGLE;
+      return (
+        <div
+          key={segment.id}
+          className="absolute left-1/2 top-1/2 h-0 w-0"
+          style={{ transform: `rotate(${angle}deg)` }}
+        >
+          {/* Vạch xanh */}
+          <div className="absolute left-1/2 top-[-132px] h-[43px] w-[12px] -translate-x-1/2 rounded-full bg-[#3478F6]" />
+          
+          {/* Coin và số thưởng */}
+          <div 
+            className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center"
+            style={{ transform: "translateX(-50%) translateY(-103px)" }}
+          >
+            <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
+              <Coin amount={segment.amount} size="small" />
+            </div>
+            <div 
+              className="mt-[5px] whitespace-nowrap text-[12px] font-black text-[#654500]"
+              style={{ transform: `rotate(${-angle - rotation}deg)` }}
+            >
+              +{segment.amount}
             </div>
           </div>
-        );
-      })}
+        </div>
+      );
+    });
+  };
 
-      <div className="absolute left-1/2 top-1/2 z-40 flex h-[108px] w-[108px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[9px] border-white bg-[#F4B51B] shadow-[0_5px_15px_rgba(163,108,0,0.23)]">
-        <div className="flex h-[82px] w-[82px] items-center justify-center rounded-full border border-white/80 bg-gradient-to-br from-[#FFD95A] to-[#F0A900]">
-          <Coins size={36} strokeWidth={2.5} className="text-white" />
+  return (
+    <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
+      {/* Pointer */}
+      <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
+        <div className="absolute left-1/2 top-[17px] h-[38px] w-[180px] -translate-x-1/2 rounded-full bg-[#3478F6] shadow-[0_4px_9px_rgba(52,120,246,0.25)]" />
+        <div className="absolute left-1/2 top-[40px] h-[70px] w-[22px] -translate-x-1/2 rounded-b-full bg-[#3478F6]" />
+        <div className="relative z-10 h-0 w-0 border-l-[27px] border-r-[27px] border-t-[43px] border-l-transparent border-r-transparent border-t-[#3478F6] drop-shadow-[0_4px_4px_rgba(0,0,0,0.15)]" />
+      </div>
+
+      {/* Vòng quay chính */}
+      <div
+        className="absolute inset-0 rounded-full border-[11px] border-white bg-white shadow-[0_9px_30px_rgba(69,102,130,0.18)] transition-transform ease-out"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transitionDuration: spinning ? "3s" : "0ms",
+        }}
+      >
+        {/* Nền 6 màu */}
+        <div
+          className="absolute inset-0 overflow-hidden rounded-full"
+          style={{ 
+            background: "conic-gradient(from -30deg, #FFFFFF 0deg 60deg, #EEF5FF 60deg 120deg, #FFFFFF 120deg 180deg, #EEF5FF 180deg 240deg, #FFFFFF 240deg 300deg, #EEF5FF 300deg 360deg)" 
+          }}
+        />
+
+        {/* Các mảnh */}
+        {renderSegments()}
+
+        {/* Tâm vòng quay */}
+        <div className="absolute left-1/2 top-1/2 z-40 flex h-[108px] w-[108px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[9px] border-white bg-[#F4B51B] shadow-[0_5px_15px_rgba(163,108,0,0.23)]">
+          <div className="flex h-[82px] w-[82px] items-center justify-center rounded-full border border-white/80 bg-gradient-to-br from-[#FFD95A] to-[#F0A900]">
+            <Coins size={36} strokeWidth={2.5} className="text-white" />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* =========================================================
    MAIN COMPONENT
@@ -189,7 +218,6 @@ export default function WheelGame() {
     }
   }, [spinning, session, tickets, rotation, setProfile]);
 
-  // Reset result after modal close
   const closeResult = useCallback(() => setResult(null), []);
 
   return (
@@ -304,4 +332,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-    }
+          }
