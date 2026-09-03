@@ -39,15 +39,35 @@ function Coin({
   amount,
   size = "normal",
 }) {
-  const isSmall = size === "small";
-  const isBig = size === "big";
+  const sizes = {
+    small: {
+      wrapper: "h-[58px] w-[58px]",
+      icon: 18,
+      text: "text-[8px]",
+    },
+
+    normal: {
+      wrapper: "h-[68px] w-[68px]",
+      icon: 22,
+      text: "text-[9px]",
+    },
+
+    big: {
+      wrapper: "h-[78px] w-[78px]",
+      icon: 27,
+      text: "text-[11px]",
+    },
+  };
+
+  const config =
+    sizes[size] || sizes.normal;
 
   return (
     <div
       className={`
         relative
         flex
-        shrink-0
+        ${config.wrapper}
         items-center
         justify-center
         rounded-full
@@ -55,34 +75,34 @@ function Coin({
         border-[#D79A00]
         bg-gradient-to-br
         from-[#FFE98A]
-        via-[#FFC62E]
+        via-[#FFC72C]
         to-[#E59A00]
-        shadow-[0_4px_8px_rgba(170,110,0,0.28)]
-        ${
-          isSmall
-            ? "h-[54px] w-[54px]"
-            : isBig
-              ? "h-[76px] w-[76px]"
-              : "h-[62px] w-[62px]"
-        }
+        shadow-[0_4px_9px_rgba(176,112,0,0.30)]
       `}
     >
-      {/* Viền bên trong */}
+
+      {/* Viền trong */}
       <div
-        className={`
+        className="
           pointer-events-none
           absolute
+          inset-[5px]
           rounded-full
           border
-          border-[#FFF2AE]/90
-          ${
-            isSmall
-              ? "inset-[5px]"
-              : isBig
-                ? "inset-[6px]"
-                : "inset-[5px]"
-          }
-        `}
+          border-[#FFF1A6]
+        "
+      />
+
+      {/* Viền trong thứ 2 */}
+      <div
+        className="
+          pointer-events-none
+          absolute
+          inset-[8px]
+          rounded-full
+          border
+          border-[#E5A800]/60
+        "
       />
 
       {/* Highlight */}
@@ -92,19 +112,28 @@ function Coin({
           absolute
           left-[10px]
           top-[8px]
-          h-2
-          w-5
-          rotate-[-25deg]
+          h-[7px]
+          w-[19px]
+          rotate-[-28deg]
           rounded-full
-          bg-white/35
+          bg-white/45
         "
       />
 
-      <div className="relative z-10 flex flex-col items-center justify-center">
+      <div
+        className="
+          relative
+          z-10
+          flex
+          flex-col
+          items-center
+          justify-center
+        "
+      >
         <Coins
-          size={isBig ? 25 : isSmall ? 17 : 20}
+          size={config.icon}
           strokeWidth={2.6}
-          className="text-[#FFF4B6]"
+          className="text-[#FFF7C7]"
         />
 
         <span
@@ -112,14 +141,8 @@ function Coin({
             mt-[1px]
             font-black
             leading-none
-            text-[#8A5700]
-            ${
-              isBig
-                ? "text-[11px]"
-                : isSmall
-                  ? "text-[8px]"
-                  : "text-[9px]"
-            }
+            text-[#805100]
+            ${config.text}
           `}
         >
           +{amount}
@@ -135,7 +158,9 @@ function Coin({
 ========================================================= */
 
 function ConfettiBurst() {
-  const pieces = Array.from({ length: 28 });
+  const pieces = Array.from({
+    length: 28,
+  });
 
   const colors = [
     "#F2A900",
@@ -146,10 +171,18 @@ function ConfettiBurst() {
   ];
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-visible">
+    <div
+      className="
+        pointer-events-none
+        absolute
+        inset-0
+        overflow-visible
+      "
+    >
       {pieces.map((_, index) => {
         const angle =
-          (360 / pieces.length) * index;
+          (360 / pieces.length) *
+          index;
 
         const distance =
           90 + Math.random() * 70;
@@ -177,7 +210,10 @@ function ConfettiBurst() {
             "
             style={{
               backgroundColor:
-                colors[index % colors.length],
+                colors[
+                  index %
+                    colors.length
+                ],
 
               animation:
                 "confetti-fly 900ms ease-out forwards",
@@ -194,7 +230,7 @@ function ConfettiBurst() {
 
 
 /* =========================================================
-   VÒNG QUAY
+   PRIZE WHEEL
 ========================================================= */
 
 function PrizeWheel({
@@ -205,37 +241,53 @@ function PrizeWheel({
     <div
       className="
         relative
-        aspect-square
-        w-[292px]
-        max-w-[82vw]
+        h-[320px]
+        w-[320px]
+        max-w-[86vw]
+        max-h-[86vw]
       "
     >
 
-      {/* =================================================
-          KIM CHỈ
-      ================================================= */}
+      {/* ===================================================
+          POINTER
+      =================================================== */}
 
       <div
         className="
           absolute
           left-1/2
-          top-[-4px]
-          z-50
+          top-[-5px]
+          z-[60]
           -translate-x-1/2
         "
       >
-        {/* Thanh xanh */}
+
+        {/* Thanh ngang */}
         <div
           className="
             absolute
             left-1/2
-            top-[8px]
-            h-[20px]
-            w-[94px]
+            top-[17px]
+            h-[38px]
+            w-[180px]
             -translate-x-1/2
             rounded-full
             bg-[#3478F6]
-            shadow-[0_3px_6px_rgba(52,120,246,0.2)]
+            shadow-[0_4px_9px_rgba(52,120,246,0.25)]
+          "
+        />
+
+        {/* Thanh dọc */}
+        <div
+          className="
+            absolute
+            left-1/2
+            top-[40px]
+            h-[70px]
+            w-[22px]
+            -translate-x-1/2
+            rounded-b-full
+            bg-[#3478F6]
           "
         />
 
@@ -243,33 +295,35 @@ function PrizeWheel({
         <div
           className="
             relative
+            z-10
             h-0
             w-0
-            border-l-[18px]
-            border-r-[18px]
-            border-t-[29px]
+            border-l-[27px]
+            border-r-[27px]
+            border-t-[43px]
             border-l-transparent
             border-r-transparent
             border-t-[#3478F6]
-            drop-shadow-[0_3px_3px_rgba(0,0,0,0.12)]
+            drop-shadow-[0_4px_4px_rgba(0,0,0,0.15)]
           "
         />
+
       </div>
 
 
-      {/* =================================================
-          WHEEL
-      ================================================= */}
+      {/* ===================================================
+          WHEEL OUTER
+      =================================================== */}
 
       <div
         className="
           absolute
           inset-0
           rounded-full
-          border-[10px]
+          border-[11px]
           border-white
           bg-white
-          shadow-[0_8px_28px_rgba(66,100,130,0.16)]
+          shadow-[0_9px_30px_rgba(69,102,130,0.18)]
           transition-transform
           ease-out
         "
@@ -285,7 +339,7 @@ function PrizeWheel({
       >
 
         {/* =================================================
-            NỀN 6 Ô
+            NỀN 6 MẢNH
         ================================================= */}
 
         <div
@@ -298,13 +352,13 @@ function PrizeWheel({
           style={{
             background: `
               conic-gradient(
-                from 0deg,
-                #EEF5FF 0deg 60deg,
-                #FFFFFF 60deg 120deg,
-                #EEF5FF 120deg 180deg,
-                #FFFFFF 180deg 240deg,
-                #EEF5FF 240deg 300deg,
-                #FFFFFF 300deg 360deg
+                from -30deg,
+                #FFFFFF 0deg 60deg,
+                #EEF5FF 60deg 120deg,
+                #FFFFFF 120deg 180deg,
+                #EEF5FF 180deg 240deg,
+                #FFFFFF 240deg 300deg,
+                #EEF5FF 300deg 360deg
               )
             `,
           }}
@@ -312,20 +366,33 @@ function PrizeWheel({
 
 
         {/* =================================================
-            CÁC PHẦN THƯỞNG
+            6 VẠCH XANH + 6 COIN
         ================================================= */}
 
         {SEGMENTS.map(
           (segment, index) => {
+
+            /*
+             * Góc bắt đầu từ phía trên.
+             *
+             * -90 = 12 giờ
+             * Mỗi ô cách nhau 60 độ.
+             */
+
             const angle =
-              index * SEGMENT_ANGLE;
+              -90 +
+              index *
+                SEGMENT_ANGLE;
 
             return (
               <div
                 key={segment.id}
                 className="
                   absolute
-                  inset-0
+                  left-1/2
+                  top-1/2
+                  h-0
+                  w-0
                 "
                 style={{
                   transform:
@@ -333,17 +400,17 @@ function PrizeWheel({
                 }}
               >
 
-                {/* -----------------------------------------
-                    VẠCH XANH
-                ----------------------------------------- */}
+                {/* =======================================
+                    VẠCH XANH Ở VÀNH NGOÀI
+                ======================================= */}
 
                 <div
                   className="
                     absolute
                     left-1/2
-                    top-[11px]
-                    h-[35px]
-                    w-[11px]
+                    top-[-132px]
+                    h-[43px]
+                    w-[12px]
                     -translate-x-1/2
                     rounded-full
                     bg-[#3478F6]
@@ -351,17 +418,19 @@ function PrizeWheel({
                 />
 
 
-                {/* -----------------------------------------
-                    COIN + SỐ
+                {/* =======================================
+                    COIN
 
-                    Counter rotate để luôn đứng thẳng
-                ----------------------------------------- */}
+                    QUAN TRỌNG:
+                    Coin được đẩy ra khỏi tâm
+                    bằng translateY.
+                ======================================= */}
 
                 <div
                   className="
                     absolute
                     left-1/2
-                    top-[55px]
+                    top-0
                     flex
                     -translate-x-1/2
                     flex-col
@@ -369,28 +438,50 @@ function PrizeWheel({
                   "
                   style={{
                     transform:
-                      `translateX(-50%) rotate(${-angle - rotation}deg)`,
+                      `
+                        translateX(-50%)
+                        translateY(-103px)
+                      `,
                   }}
                 >
-                  <Coin
-                    amount={
-                      segment.amount
-                    }
-                    size="small"
-                  />
 
-                  <span
+                  {/* Coin */}
+
+                  <div
+                    style={{
+                      transform:
+                        `rotate(${-angle - rotation}deg)`,
+                    }}
+                  >
+                    <Coin
+                      amount={
+                        segment.amount
+                      }
+                      size="small"
+                    />
+                  </div>
+
+
+                  {/* Số thưởng */}
+
+                  <div
                     className="
                       mt-[5px]
                       whitespace-nowrap
                       text-[12px]
                       font-black
-                      text-[#6F4A00]
+                      text-[#654500]
                     "
+                    style={{
+                      transform:
+                        `rotate(${-angle - rotation}deg)`,
+                    }}
                   >
                     +{segment.amount}
-                  </span>
+                  </div>
+
                 </div>
+
               </div>
             );
           }
@@ -398,7 +489,7 @@ function PrizeWheel({
 
 
         {/* =================================================
-            TÂM VÒNG QUAY
+            TÂM WHEEL
         ================================================= */}
 
         <div
@@ -406,49 +497,55 @@ function PrizeWheel({
             absolute
             left-1/2
             top-1/2
+            z-40
             flex
-            h-[92px]
-            w-[92px]
+            h-[108px]
+            w-[108px]
             -translate-x-1/2
             -translate-y-1/2
             items-center
             justify-center
             rounded-full
-            border-[8px]
+            border-[9px]
             border-white
-            bg-[#F5B51B]
-            shadow-[0_4px_12px_rgba(170,110,0,0.22)]
+            bg-[#F4B51B]
+            shadow-[0_5px_15px_rgba(163,108,0,0.23)]
           "
         >
+
           <div
             className="
               flex
-              h-[66px]
-              w-[66px]
+              h-[82px]
+              w-[82px]
               items-center
               justify-center
               rounded-full
               border
-              border-white/70
+              border-white/80
               bg-gradient-to-br
               from-[#FFD95A]
               to-[#F0A900]
             "
           >
+
             <Coins
-              size={31}
+              size={36}
               strokeWidth={2.5}
               className="text-white"
             />
+
           </div>
+
         </div>
 
       </div>
+
     </div>
   );
-      }
+                  }
 /* =========================================================
-   MAIN COMPONENT
+   MAIN WHEEL GAME
 ========================================================= */
 
 export default function WheelGame() {
@@ -457,8 +554,10 @@ export default function WheelGame() {
   const { session } =
     useSession();
 
-  const { profile, setProfile } =
-    useProfile();
+  const {
+    profile,
+    setProfile,
+  } = useProfile();
 
 
   /* =======================================================
@@ -487,16 +586,15 @@ export default function WheelGame() {
 
 
   /* =======================================================
-     SPIN
+     HANDLE SPIN
   ======================================================= */
 
   const handleSpin = async () => {
+
     if (spinning) return;
 
 
-    /* -----------------------------------------------
-       Kiểm tra đăng nhập
-    ------------------------------------------------ */
+    /* Kiểm tra session */
 
     if (!session?.user?.id) {
       setError(
@@ -507,9 +605,7 @@ export default function WheelGame() {
     }
 
 
-    /* -----------------------------------------------
-       Kiểm tra lượt quay
-    ------------------------------------------------ */
+    /* Kiểm tra lượt */
 
     if (tickets < 1) {
       setError(
@@ -527,33 +623,35 @@ export default function WheelGame() {
 
     try {
 
-      /* =============================================
-         GỌI SUPABASE RPC
-      ============================================= */
+      /* ===============================================
+         GỌI RPC
+      =============================================== */
 
       const {
         data,
         error: rpcError,
-      } = await supabase.rpc(
-        "play_minigame",
-        {
-          p_user_id:
-            session.user.id,
+      } =
+        await supabase.rpc(
+          "play_minigame",
+          {
+            p_user_id:
+              session.user.id,
 
-          p_game_type:
-            "wheel",
-        }
-      );
+            p_game_type:
+              "wheel",
+          }
+        );
 
 
-      /* =============================================
-         KIỂM TRA RPC
-      ============================================= */
+      /* ===============================================
+         RPC ERROR
+      =============================================== */
 
       if (
         rpcError ||
         !data?.success
       ) {
+
         setSpinning(false);
 
         setError(
@@ -566,17 +664,17 @@ export default function WheelGame() {
       }
 
 
-      /* =============================================
-         LẤY PHẦN THƯỞNG THẬT
-      ============================================= */
+      /* ===============================================
+         REWARD TỪ DATABASE
+      =============================================== */
 
       const finalAmount =
         Number(data.reward || 0);
 
 
-      /* =============================================
-         TÌM Ô TƯƠNG ỨNG
-      ============================================= */
+      /* ===============================================
+         TÌM SEGMENT
+      =============================================== */
 
       let selectedIndex =
         SEGMENTS.findIndex(
@@ -586,11 +684,6 @@ export default function WheelGame() {
         );
 
 
-      /*
-       * Nếu reward không nằm trong
-       * danh sách SEGMENTS thì dùng ô đầu tiên.
-       */
-
       if (
         selectedIndex === -1
       ) {
@@ -598,42 +691,50 @@ export default function WheelGame() {
       }
 
 
-      /* =============================================
+      /* ===============================================
          TÍNH GÓC QUAY
-      ============================================= */
+      =============================================== */
 
-      const currentNormalized =
+      const current =
         (
           rotation % 360 +
           360
         ) % 360;
 
 
-      /*
-       * Tính vị trí ô cần đưa lên kim.
-       */
-
-      const targetOffset =
-        (
-          360 -
-          currentNormalized -
-          selectedIndex *
-            SEGMENT_ANGLE
-        ) % 360;
+      const desiredAngle =
+        -90 +
+        selectedIndex *
+          SEGMENT_ANGLE;
 
 
       /*
-       * 5 vòng quay hoàn chỉnh
+       * Đưa segment trúng thưởng
+       * về vị trí kim 12 giờ.
        */
 
-      const extraSpins =
-        360 * 5;
+      let delta =
+        desiredAngle -
+        current;
 
+
+      /*
+       * Đảm bảo quay theo chiều thuận
+       */
+
+      if (delta < 0) {
+        delta += 360;
+      }
+
+
+      /*
+       * Thêm 5 vòng hoàn chỉnh.
+       */
 
       const targetRotation =
         rotation +
-        extraSpins +
-        targetOffset;
+        360 * 5 -
+        delta;
 
 
       setRotation(
@@ -641,18 +742,18 @@ export default function WheelGame() {
       );
 
 
-      /* =============================================
-         CHỜ ANIMATION 3 GIÂY
-      ============================================= */
+      /* ===============================================
+         ĐỢI ANIMATION
+      =============================================== */
 
       setTimeout(() => {
 
         setSpinning(false);
 
 
-        /* =========================================
-           KẾT QUẢ
-        ========================================= */
+        /* =============================================
+           HIỆN KẾT QUẢ
+        ============================================= */
 
         setResult({
           amount:
@@ -663,9 +764,9 @@ export default function WheelGame() {
         });
 
 
-        /* =========================================
-           CẬP NHẬT PROFILE
-        ========================================= */
+        /* =============================================
+           UPDATE PROFILE
+        ============================================= */
 
         setProfile(
           (prev) => ({
@@ -699,7 +800,7 @@ export default function WheelGame() {
 
 
   /* =======================================================
-     RETURN
+     UI
   ======================================================= */
 
   return (
@@ -707,13 +808,13 @@ export default function WheelGame() {
       className="
         min-h-screen
         overflow-x-hidden
-        bg-[#EAF2FB]
+        bg-[#EAF3FC]
         text-[#111827]
       "
     >
 
       {/* =================================================
-          CSS
+          ANIMATION CSS
       ================================================= */}
 
       <style>{`
@@ -740,14 +841,11 @@ export default function WheelGame() {
 
             opacity: 0;
           }
-
         }
-
 
         .scrollbar-none::-webkit-scrollbar {
           display: none;
         }
-
 
         .scrollbar-none {
           scrollbar-width: none;
@@ -763,13 +861,11 @@ export default function WheelGame() {
 
       <header
         className="
-          relative
-          z-20
           flex
           items-center
           px-4
           pb-3
-          pt-3
+          pt-4
         "
       >
 
@@ -779,19 +875,20 @@ export default function WheelGame() {
           }
           className="
             flex
-            h-[42px]
-            w-[42px]
+            h-[46px]
+            w-[46px]
             items-center
             justify-center
             rounded-full
-            bg-white/90
+            bg-white
             text-[#374151]
-            shadow-[0_2px_8px_rgba(0,0,0,0.05)]
+            shadow-[0_3px_12px_rgba(0,0,0,0.05)]
             active:scale-95
           "
         >
           <ArrowLeft
-            size={21}
+            size={23}
+            strokeWidth={2.4}
           />
         </button>
 
@@ -799,7 +896,7 @@ export default function WheelGame() {
         <h1
           className="
             ml-3
-            text-[17px]
+            text-[18px]
             font-black
             text-[#111827]
           "
@@ -811,19 +908,18 @@ export default function WheelGame() {
 
 
       {/* =================================================
-          WHEEL
+          WHEEL AREA
       ================================================= */}
 
       <div
         className="
           relative
           flex
-          h-[360px]
+          h-[420px]
           w-full
           items-center
           justify-center
           overflow-hidden
-          px-4
         "
       >
 
@@ -840,7 +936,7 @@ export default function WheelGame() {
 
 
       {/* =================================================
-          WHITE CARD
+          WHITE BOTTOM CARD
       ================================================= */}
 
       <section
@@ -848,23 +944,24 @@ export default function WheelGame() {
           relative
           z-10
           -mt-1
-          rounded-t-[30px]
+          min-h-[420px]
+          rounded-t-[32px]
           bg-white
           px-4
           pb-10
-          pt-5
-          shadow-[0_-8px_24px_rgba(0,0,0,0.04)]
+          pt-6
+          shadow-[0_-7px_25px_rgba(0,0,0,0.035)]
         "
       >
 
-        {/* ===============================================
-            TITLE + TICKET
-        =============================================== */}
+        {/* =================================================
+            TITLE
+        ================================================= */}
 
         <div
           className="
             flex
-            items-center
+            items-start
             justify-between
           "
         >
@@ -873,8 +970,9 @@ export default function WheelGame() {
 
             <p
               className="
-                text-[17px]
+                text-[18px]
                 font-black
+                leading-tight
                 text-[#111827]
               "
             >
@@ -884,7 +982,7 @@ export default function WheelGame() {
             <p
               className="
                 mt-1
-                text-[13px]
+                text-[14px]
                 text-[#9CA3AF]
               "
             >
@@ -894,23 +992,24 @@ export default function WheelGame() {
           </div>
 
 
-          {/* Ticket counter */}
+          {/* =============================================
+              TICKET
+          ============================================= */}
 
           <div
             className="
               flex
-              min-w-[82px]
+              h-[52px]
+              min-w-[92px]
               items-center
               justify-center
-              gap-2
+              gap-3
               rounded-full
-              bg-[#F6F8FC]
+              bg-[#F7F9FC]
               px-4
-              py-2.5
-              text-[15px]
+              text-[16px]
               font-black
-              text-[#111827]
-              shadow-inner
+              shadow-[inset_0_1px_5px_rgba(0,0,0,0.025)]
             "
           >
 
@@ -919,7 +1018,8 @@ export default function WheelGame() {
             </span>
 
             <Ticket
-              size={17}
+              size={21}
+              strokeWidth={2}
               className="text-[#3478F6]"
             />
 
@@ -928,9 +1028,9 @@ export default function WheelGame() {
         </div>
 
 
-        {/* ===============================================
+        {/* =================================================
             ERROR
-        =============================================== */}
+        ================================================= */}
 
         {error && (
           <p
@@ -947,9 +1047,9 @@ export default function WheelGame() {
         )}
 
 
-        {/* ===============================================
+        {/* =================================================
             ADD SPINS
-        =============================================== */}
+        ================================================= */}
 
         <button
           onClick={handleSpin}
@@ -964,19 +1064,19 @@ export default function WheelGame() {
             items-center
             justify-center
             gap-2
-            rounded-[18px]
+            rounded-[20px]
             bg-gradient-to-r
-            from-[#FB923C]
-            to-[#F2A900]
-            py-[15px]
-            text-[16px]
+            from-[#FFD4A7]
+            to-[#FFE39A]
+            py-[17px]
+            text-[17px]
             font-black
             text-white
-            shadow-[0_9px_22px_rgba(242,169,0,0.26)]
+            shadow-[0_8px_22px_rgba(247,183,72,0.15)]
             transition
             active:scale-[0.98]
             disabled:cursor-not-allowed
-            disabled:opacity-40
+            disabled:opacity-50
           "
         >
 
@@ -988,7 +1088,7 @@ export default function WheelGame() {
 
           {!spinning && (
             <ChevronRight
-              size={19}
+              size={21}
               strokeWidth={3}
             />
           )}
@@ -996,19 +1096,22 @@ export default function WheelGame() {
         </button>
 
 
-        {/* ===============================================
+        {/* =================================================
             PROMO
-        =============================================== */}
+        ================================================= */}
 
         <div
           className="
-            mt-3
-            rounded-[17px]
-            bg-[#F5F7FB]
+            mt-4
+            flex
+            min-h-[58px]
+            items-center
+            justify-center
+            rounded-[18px]
+            bg-[#F6F8FC]
             px-4
-            py-[13px]
             text-center
-            text-[12px]
+            text-[13px]
             text-[#6B7280]
           "
         >
@@ -1016,13 +1119,13 @@ export default function WheelGame() {
         </div>
 
 
-        {/* ===============================================
+        {/* =================================================
             YOU CAN GET
-        =============================================== */}
+        ================================================= */}
 
         <div
           className="
-            mt-7
+            mt-8
             flex
             items-center
             justify-between
@@ -1031,7 +1134,7 @@ export default function WheelGame() {
 
           <p
             className="
-              text-[17px]
+              text-[18px]
               font-black
               text-[#111827]
             "
@@ -1043,8 +1146,8 @@ export default function WheelGame() {
           <button
             className="
               flex
-              h-[42px]
-              w-[42px]
+              h-[45px]
+              w-[45px]
               items-center
               justify-center
               rounded-full
@@ -1053,16 +1156,16 @@ export default function WheelGame() {
             "
           >
             <RefreshCw
-              size={18}
+              size={20}
             />
           </button>
 
         </div>
 
 
-        {/* ===============================================
-            REWARD LIST
-        =============================================== */}
+        {/* =================================================
+            REWARD CARDS
+        ================================================= */}
 
         <div
           className="
@@ -1071,7 +1174,7 @@ export default function WheelGame() {
             flex
             gap-3
             overflow-x-auto
-            pb-2
+            pb-3
           "
         >
 
@@ -1081,29 +1184,28 @@ export default function WheelGame() {
                 key={item.id}
                 className="
                   flex
-                  w-[130px]
+                  w-[138px]
                   shrink-0
                   flex-col
                   items-center
-                  rounded-[20px]
+                  rounded-[21px]
                   border
-                  border-[#E5E7EB]
+                  border-[#E3E6EB]
                   bg-white
                   px-3
                   pb-4
                   pt-3
                   text-center
-                  shadow-[0_2px_6px_rgba(0,0,0,0.025)]
                 "
               >
 
-                {/* top line */}
+                {/* Top indicator */}
 
                 <div
                   className={`
                     mb-3
                     h-[4px]
-                    w-[45px]
+                    w-[48px]
                     rounded-full
                     ${
                       item.isBigWin
@@ -1114,39 +1216,36 @@ export default function WheelGame() {
                 />
 
 
-                {/* coin */}
+                {/* Coin background */}
 
                 <div
-                  className={`
+                  className="
                     flex
-                    h-[86px]
-                    w-[86px]
+                    h-[91px]
+                    w-[91px]
                     items-center
                     justify-center
-                    rounded-[19px]
-                    ${
-                      item.isBigWin
-                        ? "bg-[#FFF7DF]"
-                        : "bg-[#F2F7FF]"
-                    }
-                  `}
+                    rounded-[20px]
+                    bg-[#F3F7FC]
+                  "
                 >
 
                   <Coin
                     amount={
                       item.amount
                     }
+                    size="normal"
                   />
 
                 </div>
 
 
-                {/* amount */}
+                {/* Text */}
 
                 <p
                   className="
                     mt-3
-                    text-[14px]
+                    text-[13px]
                     font-black
                     text-[#111827]
                   "
@@ -1155,19 +1254,17 @@ export default function WheelGame() {
                 </p>
 
 
-                {/* BIG WIN */}
-
                 {item.isBigWin && (
                   <span
                     className="
                       mt-1.5
                       rounded-full
-                      bg-[#FFF0C5]
+                      bg-[#FFF3CE]
                       px-2.5
                       py-1
                       text-[9px]
                       font-black
-                      text-[#D88A00]
+                      text-[#D78B00]
                     "
                   >
                     BIG WIN
@@ -1184,7 +1281,7 @@ export default function WheelGame() {
 
 
       {/* =================================================
-          RESULT POPUP
+          RESULT MODAL
       ================================================= */}
 
       {result !== null && (
@@ -1208,8 +1305,7 @@ export default function WheelGame() {
               relative
               w-full
               max-w-[330px]
-              overflow-visible
-              rounded-[28px]
+              rounded-[30px]
               bg-white
               p-6
               text-center
@@ -1251,17 +1347,15 @@ export default function WheelGame() {
             </button>
 
 
-            {/* =========================================
-                RESULT COIN
-            ========================================= */}
+            {/* Result coin */}
 
             <div
               className="
                 relative
                 mx-auto
                 flex
-                h-[108px]
-                w-[108px]
+                h-[112px]
+                w-[112px]
                 items-center
                 justify-center
                 rounded-full
@@ -1279,9 +1373,7 @@ export default function WheelGame() {
             </div>
 
 
-            {/* =========================================
-                TITLE
-            ========================================= */}
+            {/* Title */}
 
             <p
               className="
@@ -1297,9 +1389,7 @@ export default function WheelGame() {
             </p>
 
 
-            {/* =========================================
-                AMOUNT
-            ========================================= */}
+            {/* Amount */}
 
             <p
               className="
@@ -1312,7 +1402,6 @@ export default function WheelGame() {
             >
               +{result.amount}
             </p>
-
 
             <p
               className="
@@ -1330,7 +1419,6 @@ export default function WheelGame() {
               className="
                 mt-2
                 text-[12px]
-                leading-relaxed
                 text-[#9CA3AF]
               "
             >
@@ -1339,9 +1427,7 @@ export default function WheelGame() {
             </p>
 
 
-            {/* =========================================
-                BUTTON
-            ========================================= */}
+            {/* Button */}
 
             <button
               onClick={() =>
@@ -1351,11 +1437,11 @@ export default function WheelGame() {
                 relative
                 mt-6
                 w-full
-                rounded-[15px]
+                rounded-[16px]
                 bg-gradient-to-r
                 from-[#3478F6]
                 to-[#0878C9]
-                py-3
+                py-[13px]
                 text-[14px]
                 font-black
                 text-white
@@ -1373,4 +1459,4 @@ export default function WheelGame() {
 
     </div>
   );
-}
+  }
