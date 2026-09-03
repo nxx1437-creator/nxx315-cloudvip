@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Coins, Gift, Trophy, Users, Flame, CheckSquare, Rocket, Crown, Star, ShoppingBag, ArrowLeftRight, Headphones, BarChart3, Loader2, Check } from "lucide-react";
+import { Coins, Gift, Trophy, Users, Flame, CheckSquare, Rocket, Crown, Star, ShoppingBag, ArrowLeftRight, Headphones, BarChart3, Loader2, Check, ChevronRight } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
@@ -333,7 +333,40 @@ export default function Dashboard() {
             />
           </div>
         </div>
+{/* Giới thiệu Mini Game */}
+        <button
+          onClick={() => navigate("/minigames")}
+          className="w-full overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white text-left transition hover:border-sky-200"
+        >
+          <div className="flex items-center justify-between px-4 pt-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🎮</span>
+              <p className="text-sm font-bold text-[#111827]">Mini Game</p>
+            </div>
+            <span className="flex items-center gap-1 rounded-full bg-[#EAF2FE] px-2.5 py-1 text-xs font-semibold text-[#3478F6]">
+              {profile?.game_tickets || 0} lượt <ChevronRight size={12} />
+            </span>
+          </div>
+          <p className="px-4 pb-3 pt-1 text-xs text-[#9CA3AF]">
+            Quay, cào thẻ, lắc xúc xắc — nhận Coin miễn phí mỗi ngày
+          </p>
+          <div className="grid grid-cols-3 gap-px bg-[#F3F4F6]">
+            <div className="bg-white px-3 py-3 text-center">
+              <p className="text-lg">🎡</p>
+              <p className="mt-1 text-[10px] font-semibold text-[#6B7280]">Vòng quay</p>
+            </div>
+            <div className="bg-white px-3 py-3 text-center">
+              <p className="text-lg">🎫</p>
+              <p className="mt-1 text-[10px] font-semibold text-[#6B7280]">Cào thẻ</p>
+            </div>
+            <div className="bg-white px-3 py-3 text-center">
+              <p className="text-lg">🎲</p>
+              <p className="mt-1 text-[10px] font-semibold text-[#6B7280]">Xúc xắc</p>
+            </div>
+          </div>
+        </button>
 
+        {/* Mốc thưởng chuỗi nhiệm vụ */}
         {/* Coin 7 ngày qua */}
         <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
           <div className="flex items-center justify-between">
