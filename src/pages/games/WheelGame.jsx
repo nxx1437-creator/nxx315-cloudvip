@@ -15,7 +15,7 @@ export default function WheelGame() {
     setSpinning(true);
     const idx = Math.floor(Math.random() * PRIZES.length);
     const angle = 360 / PRIZES.length;
-    const newRot = rotation + 360 * 12 + (360 - idx * angle);
+    const newRot = rotation + 360 * 11 + (360 - idx * angle);
     setRotation(newRot);
     setTimeout(() => setSpinning(false), 3000);
   };
