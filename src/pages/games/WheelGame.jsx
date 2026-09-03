@@ -145,7 +145,7 @@ export default function WheelGame() {
                 {/* Vạch ngăn cách xanh dương ở vành ngoài */}
                 <div className="absolute left-1/2 top-4 -translate-x-1/2 h-4 w-10 rounded-full bg-[#3478F6]" />
                 
-                {/* Icon đồng xu nằm đối xứng đều quanh vòng tròn */}
+                {/* Icon đồng xu nhỏ nằm trên các múi */}
                 <div 
                   className="absolute left-1/2 top-16 -translate-x-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
                   style={{ transform: `rotate(-${angle + rotation}deg)` }}
@@ -157,11 +157,9 @@ export default function WheelGame() {
           })}
         </div>
 
-        {/* Khẻ trắng bo cung che nửa dưới vòng quay giống mẫu ảnh */}
-        <div className="absolute bottom-0 z-20 flex h-32 w-[85%] max-w-sm items-center justify-center rounded-[36px] bg-white border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF7E6] border-2 border-[#FFE0A6] shadow-sm animate-bounce">
-            <Coins size={32} className="text-[#F2A900]" />
-          </div>
+        {/* Thẻ trắng bo cung trống trải bên dưới (đã bỏ đồng xu to) */}
+        <div className="absolute bottom-0 z-20 flex h-28 w-[85%] max-w-sm items-center justify-center rounded-[36px] bg-white border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+          {/* Không gian trống giống mẫu gốc */}
         </div>
       </div>
       
@@ -252,4 +250,4 @@ export default function WheelGame() {
     </div>
   );
                 }
-                  
+          
