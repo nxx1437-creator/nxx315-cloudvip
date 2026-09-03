@@ -109,32 +109,32 @@ export default function WheelGame() {
       </header>
 
       {/* Khu vực trang trí phối cảnh */}
-      <div className="relative flex h-64 items-end justify-center overflow-hidden">
+      <div className="relative flex h-64 flex-col items-center overflow-hidden pt-6">
+        <div className="h-1.5 w-10 rounded-full bg-[#3478F6]" />
+
+        <span className="absolute left-[20%] top-14 h-10 w-1.5 rotate-[35deg] rounded-full bg-[#3478F6]/70" />
+        <span className="absolute right-[20%] top-14 h-10 w-1.5 -rotate-[35deg] rounded-full bg-[#3478F6]/70" />
+
         <div
-          className="absolute left-1/2 top-8 h-56 w-56 -translate-x-1/2 rounded-full opacity-70"
+          className="relative mt-3"
           style={{
-            background: "conic-gradient(#93C5FD, #60A5FA, #3478F6, #38BDF8, #93C5FD)",
-            transform: "translateX(-50%) scaleY(0.55)",
-            animation: spinning ? "cone-spin 1.2s linear infinite" : "none",
+            width: "280px",
+            height: "160px",
+            clipPath: "polygon(50% 0%, 12% 100%, 88% 100%)",
+            background: "linear-gradient(180deg, rgba(147,197,253,0.85), rgba(52,120,246,0.55))",
           }}
         />
-        <div
-          className="absolute left-1/2 top-8 h-56 w-56 -translate-x-1/2 rounded-full bg-[#EAF2FB]"
-          style={{ transform: "translateX(-50%) scaleY(0.55)", clipPath: "polygon(50% 100%, 0% 0%, 100% 0%)" }}
-        />
 
-        <span className="absolute left-[18%] top-16 h-10 w-1.5 rotate-[35deg] rounded-full bg-[#3478F6]/70" />
-        <span className="absolute right-[18%] top-16 h-10 w-1.5 -rotate-[35deg] rounded-full bg-[#3478F6]/70" />
-        <span className="absolute left-1/2 top-10 h-1.5 w-10 -translate-x-1/2 rounded-full bg-[#3478F6]/70" />
+        <div className="relative -mt-6 h-9 w-56 rounded-[50%] bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)]" />
 
         <div
-          className="relative z-10 mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg"
-          style={{ animation: "mascot-bounce 1.6s ease-in-out infinite" }}
+          className="absolute bottom-8 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-white to-[#EAF2FB] shadow-xl"
+          style={{ animation: "mascot-bounce 1.8s ease-in-out infinite" }}
         >
-          <Coins size={36} className="text-[#F2A900]" />
+          <Coins size={40} className="text-[#F2A900]" />
         </div>
       </div>
-
+      
       {/* Card trắng */}
       <div className="relative z-10 -mt-4 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between">
