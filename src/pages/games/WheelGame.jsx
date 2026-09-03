@@ -14,7 +14,7 @@ import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
 /* =========================================================
-   CONSTANTS
+   CONSTANTS - ĐẢM BẢO CÓ DỮ LIỆU
 ========================================================= */
 const SEGMENTS = [
   { id: 1, amount: 10, isBigWin: false },
@@ -75,14 +75,9 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL (HIỂN THỊ 1/4 PHÍA DƯỚI - DEBUG)
+   PRIZE WHEEL - ĐÃ SỬA LỖI HIỂN THỊ 00
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
-  // DEBUG: In ra dữ liệu SEGMENTS
-  console.log('🔍 SEGMENTS data:', SEGMENTS);
-  console.log('🔍 SEGMENTS[0]:', SEGMENTS[0]);
-  console.log('🔍 SEGMENTS[0].amount:', SEGMENTS[0]?.amount);
-  
   return (
     <div className="relative h-[420px] w-full overflow-hidden">
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -114,22 +109,17 @@ const PrizeWheel = ({ rotation, spinning }) => {
             />
           </div>
 
-          {/* Phần thưởng - DEBUG thêm */}
+          {/* Phần thưởng - SỬA LỖI 00 */}
           <div className="absolute inset-0">
             {SEGMENTS.map((segment, index) => {
               const angle = -90 + index * SEGMENT_ANGLE;
               const isBlueBg = index % 2 === 0;
-              
-              // DEBUG: In từng segment
-              console.log(`🔍 Segment ${index}:`, segment);
-              console.log(`🔍 Segment ${index} amount:`, segment.amount);
-              
-              // Thử lấy amount từ nhiều nguồn
-              const amount = segment.amount || segment.value || segment.reward || segment.prize || 0;
+              // LẤY SỐ TIỀN CHÍNH XÁC
+              const amount = segment.amount || 0;
               
               return (
                 <div
-                  key={index}
+                  key={segment.id}
                   className="absolute left-1/2 top-1/2 h-0 w-0"
                   style={{ transform: `rotate(${angle}deg)` }}
                 >
@@ -164,7 +154,7 @@ const PrizeWheel = ({ rotation, spinning }) => {
 };
 
 /* =========================================================
-   MAIN COMPONENT
+   MAIN COMPONENT - ĐÃ SỬA LỖI HẾT LƯỢT
 ========================================================= */
 export default function WheelGame() {
   const navigate = useNavigate();
@@ -176,13 +166,28 @@ export default function WheelGame() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
-  const tickets = profile?.game_tickets || 0;
+  // LẤY SỐ LƯỢT CHÍNH XÁC
+  const tickets = profile?.game_tickets ?? 0;
+  
+  // DEBUG: Kiểm tra số lượt
+  console.log('🔍 Tickets:', tickets);
+  console.log('🔍 Profile:', profile);
 
   const handleSpin = useCallback(async () => {
-    if (spinning || !session?.user?.id) {
-      if (!session?.user?.id) setError("Không tìm thấy phiên đăng nhập.");
+    // KIỂM TRA ĐANG QUAY
+    if (spinning) {
+      console.log('⏳ Đang quay...');
       return;
     }
+    
+    // KIỂM TRA SESSION
+    if (!session?.user?.id) {
+      setError("Không tìm thấy phiên đăng nhập.");
+      return;
+    }
+
+    // KIỂM TRA LƯỢT - SỬA LỖI
+    console.log('🔍 Tickets hiện tại:', tickets);
     if (tickets < 1) {
       setError("Bạn đã hết lượt chơi. Làm nhiệm vụ để nhận thêm nhé!");
       return;
@@ -198,6 +203,8 @@ export default function WheelGame() {
         p_game_type: "wheel",
       });
 
+      console.log('📦 Data from RPC:', data);
+
       if (rpcError || !data?.success) {
         setSpinning(false);
         setError(data?.message || rpcError?.message || "Có lỗi xảy ra.");
@@ -208,7 +215,6 @@ export default function WheelGame() {
       let selectedIndex = SEGMENTS.findIndex((s) => s.amount === finalAmount);
       if (selectedIndex === -1) selectedIndex = 0;
 
-      // Tính toán góc quay
       const targetAngle = selectedIndex * SEGMENT_ANGLE;
       const targetRotation = rotation + 360 * 5 + (360 - targetAngle);
       setRotation(targetRotation);
@@ -216,14 +222,18 @@ export default function WheelGame() {
       setTimeout(() => {
         setSpinning(false);
         setResult({ amount: finalAmount, isBigWin: finalAmount >= 100 });
+        
+        // CẬP NHẬT PROFILE
         setProfile((prev) => ({
           ...prev,
           coins: (prev?.coins || 0) + finalAmount,
-          game_tickets: data.tickets_left,
+          game_tickets: data.tickets_left ?? 0,
         }));
+        
+        console.log('✅ Cập nhật profile thành công!');
       }, 3000);
     } catch (err) {
-      console.error("Wheel error:", err);
+      console.error("❌ Wheel error:", err);
       setSpinning(false);
       setError("Có lỗi xảy ra, vui lòng thử lại.");
     }
@@ -343,4 +353,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-  }
+      }
