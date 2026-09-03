@@ -75,90 +75,12 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL (UI ĐẸP HƠN)
+   PRIZE WHEEL
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
-  // Màu sắc cho các mảnh
-  const segmentColors = [
-    "#FF6B6B", // đỏ
-    "#4ECDC4", // xanh ngọc
-    "#FFE66D", // vàng
-    "#A8E6CF", // xanh lá nhạt
-    "#FF8A5C", // cam
-    "#74B9FF", // xanh dương
-  ];
-
-  const renderSegments = () => {
-    return SEGMENTS.map((segment, index) => {
-      const angle = -90 + index * SEGMENT_ANGLE;
-      const color = segmentColors[index % segmentColors.length];
-      
-      return (
-        <div
-          key={segment.id}
-          className="absolute left-1/2 top-1/2 h-0 w-0"
-          style={{ transform: `rotate(${angle}deg)` }}
-        >
-          {/* Mảnh màu */}
-          <div
-            className="absolute left-1/2 top-0 h-[140px] w-[2px] -translate-x-1/2"
-            style={{
-              background: `conic-gradient(from 0deg, ${color}, ${color}80)`,
-              transform: "translateX(-50%) translateY(-140px)",
-            }}
-          />
-          
-          {/* Phần thưởng */}
-          <div 
-            className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center"
-            style={{ transform: "translateX(-50%) translateY(-100px)" }}
-          >
-            <div 
-              className="flex flex-col items-center"
-              style={{ transform: `rotate(${-angle - rotation}deg)` }}
-            >
-              <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm">
-                <span className="text-[13px] font-black text-[#2D3436]">+{segment.amount}</span>
-              </div>
-              {segment.isBigWin && (
-                <span className="mt-1 text-[8px] font-bold text-[#FF6B6B]">⭐</span>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    });
-  };
-
   return (
     <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
       {/* Pointer */}
-      <div className="absolute left-1/2 top-[-12px] z-[60] -translate-x-1/2">
-        <div className="relative z-10 h-0 w-0 border-l-[18px] border-r-[18px] border-t-[32px] border-l-transparent border-r-transparent border-t-[#FF4757] drop-shadow-[0_4px_12px_rgba(255,71,87,0.5)]" />
-        <div className="absolute left-1/2 top-[20px] h-[30px] w-[6px] -translate-x-1/2 rounded-full bg-[#FF4757]" />
-      </div>
-
-      {/* Vòng quay */}
-      <div
-        className="absolute inset-0 rounded-full border-[6px] border-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] transition-transform ease-out"
-        style={{
-          transform: `rotate(${rotation}deg)`,
-          transitionDuration: spinning ? "3s" : "0ms",
-        }}
-      >
-        {/* Nền các mảnh màu */}
-        <div className="absolute inset-0 overflow-hidden rounded-full">
-          {SEGMENTS.map((segment, index) => {
-            const startAngle = -30 + index * SEGMENT_ANGLE;
-            const color = segmentColors[index % segmentColors.length];
-            return (
-/* =========================================================
-   PRIZE WHEEL (ĐÚNG NHƯ HÌNH)
-========================================================= */
-const PrizeWheel = ({ rotation, spinning }) => {
-  return (
-    <div className="relative h-[320px] w-[320px] max-w-[86vw] max-h-[86vw]">
-      {/* Pointer - Màu xanh dương đậm */}
       <div className="absolute left-1/2 top-[-5px] z-[60] -translate-x-1/2">
         <div className="relative z-10 h-0 w-0 border-l-[24px] border-r-[24px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#1a56db] drop-shadow-[0_4px_8px_rgba(26,86,219,0.3)]" />
       </div>
@@ -191,7 +113,7 @@ const PrizeWheel = ({ rotation, spinning }) => {
           />
         </div>
 
-        {/* Phần thưởng - Số màu trắng trên nền xanh, số màu xanh trên nền trắng */}
+        {/* Phần thưởng */}
         <div className="absolute inset-0">
           {SEGMENTS.map((segment, index) => {
             const angle = -90 + index * SEGMENT_ANGLE;
@@ -218,7 +140,7 @@ const PrizeWheel = ({ rotation, spinning }) => {
           })}
         </div>
 
-        {/* Tâm vòng quay - Màu vàng với chữ SPIN */}
+        {/* Tâm vòng quay */}
         <div className="absolute left-1/2 top-1/2 z-40 flex h-[100px] w-[100px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[8px] border-white bg-[#F59E0B] shadow-[0_4px_15px_rgba(245,158,11,0.3)]">
           <div className="flex flex-col items-center">
             <span className="text-[22px] font-black tracking-wider text-white">SPIN</span>
@@ -228,6 +150,7 @@ const PrizeWheel = ({ rotation, spinning }) => {
     </div>
   );
 };
+
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
@@ -410,4 +333,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-          }
+                }
