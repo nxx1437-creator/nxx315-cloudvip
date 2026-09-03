@@ -12,6 +12,7 @@ import ShopEarn from "./pages/ShopEarn.jsx";
 import MiniGames from "./pages/MiniGames.jsx";
 import WheelGame from "./pages/games/WheelGame.jsx";
 import ScratchGame from "./pages/games/ScratchGame.jsx";
+import DiceGame from "./pages/games/DiceGame.jsx";
 import Admin from "./pages/Admin.jsx";
 import Contact from "./pages/Contact.jsx";
 import HelpCenter from "./pages/HelpCenter.jsx";
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/minigames" element={<ProtectedRoute><MiniGames /></ProtectedRoute>} />
         <Route path="/minigames/wheel" element={<ProtectedRoute><WheelGame /></ProtectedRoute>} />
         <Route path="/minigames/scratch" element={<ProtectedRoute><ScratchGame /></ProtectedRoute>} />
+        <Route path="/minigames/dice" element={<ProtectedRoute><DiceGame /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
