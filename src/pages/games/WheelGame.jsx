@@ -168,64 +168,55 @@ export default function WheelGame() {
   const tickets = profile?.game_tickets || 0;
 
   const handleSpin = useCallback(async () => {
-  if (spinning || !session?.user?.id) {
-    if (!session?.user?.id) setError("Không tìm thấy phiên đăng nhập.");
-    return;
-  }
-  if (tickets < 1) {
-    setError("Bạn đã hết lượt chơi. Làm nhiệm vụ để nhận thêm nhé!");
-    return;
-  }
-
-  setError("");
-  setResult(null);
-  setSpinning(true);
-
-  try {
-    const { data, error: rpcError } = await supabase.rpc("play_minigame", {
-      p_user_id: session.user.id,
-      p_game_type: "wheel",
-    });
-
-    if (rpcError || !data?.success) {
-      setSpinning(false);
-      setError(data?.message || rpcError?.message || "Có lỗi xảy ra.");
+    if (spinning || !session?.user?.id) {
+      if (!session?.user?.id) setError("Không tìm thấy phiên đăng nhập.");
+      return;
+    }
+    if (tickets < 1) {
+      setError("Bạn đã hết lượt chơi. Làm nhiệm vụ để nhận thêm nhé!");
       return;
     }
 
-    const finalAmount = Number(data.reward || 0);
-    
-    // Tìm segment trúng thưởng
-    let selectedIndex = SEGMENTS.findIndex((s) => s.amount === finalAmount);
-    if (selectedIndex === -1) selectedIndex = 0;
+    setError("");
+    setResult(null);
+    setSpinning(true);
 
-    // Tính toán góc quay
-    const segmentAngle = 360 / SEGMENTS.length;
-    
-    // Góc của segment (0 là segment đầu tiên ở vị trí 12h)
-    const targetSegmentAngle = selectedIndex * segmentAngle;
-    
-    // Vòng quay cần thêm: ít nhất 5 vòng + góc để segment về đúng vị trí
-    const extraSpins = 5;
-    const targetRotation = rotation + 360 * extraSpins + (360 - targetSegmentAngle);
-    
-    setRotation(targetRotation);
+    try {
+      const { data, error: rpcError } = await supabase.rpc("play_minigame", {
+        p_user_id: session.user.id,
+        p_game_type: "wheel",
+      });
 
-    setTimeout(() => {
+      if (rpcError || !data?.success) {
+        setSpinning(false);
+        setError(data?.message || rpcError?.message || "Có lỗi xảy ra.");
+        return;
+      }
+
+      const finalAmount = Number(data.reward || 0);
+      let selectedIndex = SEGMENTS.findIndex((s) => s.amount === finalAmount);
+      if (selectedIndex === -1) selectedIndex = 0;
+
+      // Tính toán góc quay
+      const targetAngle = selectedIndex * SEGMENT_ANGLE;
+      const targetRotation = rotation + 360 * 5 + (360 - targetAngle);
+      setRotation(targetRotation);
+
+      setTimeout(() => {
+        setSpinning(false);
+        setResult({ amount: finalAmount, isBigWin: finalAmount >= 100 });
+        setProfile((prev) => ({
+          ...prev,
+          coins: (prev?.coins || 0) + finalAmount,
+          game_tickets: data.tickets_left,
+        }));
+      }, 3000);
+    } catch (err) {
+      console.error("Wheel error:", err);
       setSpinning(false);
-      setResult({ amount: finalAmount, isBigWin: finalAmount >= 100 });
-      setProfile((prev) => ({
-        ...prev,
-        coins: (prev?.coins || 0) + finalAmount,
-        game_tickets: data.tickets_left,
-      }));
-    }, 3000);
-  } catch (err) {
-    console.error("Wheel error:", err);
-    setSpinning(false);
-    setError("Có lỗi xảy ra, vui lòng thử lại.");
-  }
-}, [spinning, session, tickets, rotation, setProfile]);
+      setError("Có lỗi xảy ra, vui lòng thử lại.");
+    }
+  }, [spinning, session, tickets, rotation, setProfile]);
 
   const closeResult = useCallback(() => setResult(null), []);
 
@@ -341,4 +332,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-                }
+}
