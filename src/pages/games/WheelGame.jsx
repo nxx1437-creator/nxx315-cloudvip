@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Ticket, X, Sparkles, ChevronRight, RefreshCw } from "lucide-react";
+import { ArrowLeft, Ticket, Coins, X, Sparkles, ChevronRight, RefreshCw } from "lucide-react";
 
 import useSession from "../../hooks/useSession.js";
 import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
-// Danh sách phần thưởng mô phỏng theo hình ảnh mẫu
+// Danh sách các mức phần thưởng bằng đồng xu tương ứng
 const REWARDS = [
-  { id: 1, name: "Frost Dragon", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1563460718537-17f13fc2eaec?w=150&auto=format&fit=crop&q=80", isBigWin: true },
-  { id: 2, name: "Owl", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=150&auto=format&fit=crop&q=80", isBigWin: true },
-  { id: 3, name: "Fennec Fox", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?w=150&auto=format&fit=crop&q=80", isBigWin: false },
-  { id: 4, name: "Chihuahua", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150&auto=format&fit=crop&q=80", isBigWin: false },
+  { id: 1, amount: 10, subtitle: "Coin thưởng nhỏ", isBigWin: false },
+  { id: 2, amount: 50, subtitle: "Coin thưởng vừa", isBigWin: false },
+  { id: 3, amount: 100, subtitle: "Trúng lớn!", isBigWin: true },
+  { id: 4, amount: 500, subtitle: "Siêu khủng!", isBigWin: true },
 ];
 
 function ConfettiBurst() {
@@ -79,13 +79,18 @@ export default function WheelGame() {
         return;
       }
 
-      // Giả lập random chọn một phần thưởng từ danh sách dựa trên kết quả trả về từ server
+      // Chọn một mức thưởng ngẫu nhiên từ danh sách (hoặc dùng data.reward nếu trả về từ server)
       const randomReward = REWARDS[Math.floor(Math.random() * REWARDS.length)];
-      setResult(randomReward);
+      const finalRewardAmount = data.reward || randomReward.amount;
+      
+      setResult({
+        amount: finalRewardAmount,
+        isBigWin: finalRewardAmount >= 100,
+      });
 
       setProfile((prev) => ({
         ...prev,
-        coins: (prev.coins || 0) + (data.reward || 0),
+        coins: (prev.coins || 0) + finalRewardAmount,
         game_tickets: data.tickets_left,
       }));
     }, 1500);
@@ -102,14 +107,10 @@ export default function WheelGame() {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-8px); }
         }
-        @keyframes wheel-rotate {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
       `}</style>
 
       {/* Header */}
-      <header className="relative z-20 flex items-center justify-between px-4 py-3.5 bg-white/50 backdrop-blur-md">
+      <header className="relative z-25 flex items-center justify-between px-4 py-3.5 bg-white/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#374151] shadow-sm">
             <ArrowLeft size={18} />
@@ -121,7 +122,7 @@ export default function WheelGame() {
         </div>
       </header>
 
-      {/* Khu vực vòng quay trực quan */}
+      {/* Khu vực vòng quay với icon Đồng xu ở tâm */}
       <div className="relative flex h-64 flex-col items-center overflow-hidden pt-4">
         {/* Kim chỉ định hướng ở trên */}
         <div className="absolute top-2 z-20 h-3 w-6 bg-[#3478F6] rounded-b-full shadow-md" />
@@ -133,16 +134,12 @@ export default function WheelGame() {
         >
           <div className="absolute inset-2 rounded-full border border-dashed border-blue-300" />
           
-          {/* Pet trung tâm vòng quay */}
+          {/* Biểu tượng Đồng xu ở giữa vòng quay */}
           <div
-            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-white shadow-md overflow-hidden"
+            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-100 to-amber-200 shadow-md"
             style={{ animation: !spinning ? "mascot-bounce 1.8s ease-in-out infinite" : "none" }}
           >
-            <img 
-              src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150&auto=format&fit=crop&q=80" 
-              alt="Pet" 
-              className="h-full w-full object-cover"
-            />
+            <Coins size={36} className="text-[#F2A900]" />
           </div>
         </div>
       </div>
@@ -152,7 +149,7 @@ export default function WheelGame() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-base font-black text-[#111827]">Fortune Wheel</p>
-            <p className="text-xs text-[#9CA3AF]">Get free items</p>
+            <p className="text-xs text-[#9CA3AF]">Get free coins</p>
           </div>
           <span className="flex items-center gap-1.5 rounded-full bg-[#F5F7FB] px-3 py-1.5 text-sm font-bold text-[#111827] shadow-inner">
             {tickets} <Ticket size={14} className="text-[#3478F6]" />
@@ -174,7 +171,7 @@ export default function WheelGame() {
           Activate promo codes and get more spins!
         </div>
 
-        {/* Phần "You can get" hiển thị các Pet giống như ảnh mẫu */}
+        {/* Phần "You can get" hiển thị các mức Coin */}
         <div className="mt-6 flex items-center justify-between">
           <p className="text-sm font-bold text-[#111827]">You can get:</p>
           <button className="text-[#9CA3AF] hover:text-[#111827]">
@@ -188,17 +185,17 @@ export default function WheelGame() {
               key={item.id}
               className="flex w-32 shrink-0 flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-3 text-center shadow-sm"
             >
-              <div className="h-14 w-14 rounded-xl bg-[#F5F7FB] overflow-hidden mb-2 border border-gray-100">
-                <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#FFF4DB] mb-2 border border-amber-100">
+                <Coins size={28} className="text-[#F2A900]" />
               </div>
-              <span className="text-xs font-bold text-[#111827] truncate w-full">{item.name}</span>
+              <span className="text-xs font-bold text-[#111827]">+{item.amount} Coins</span>
               <span className="text-[10px] text-[#9CA3AF]">{item.subtitle}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Popup kết quả trúng thưởng */}
+      {/* Popup kết quả trúng thưởng hiển thị số lượng coin */}
       {result !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-xs overflow-visible rounded-3xl bg-white p-6 text-center shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -209,19 +206,19 @@ export default function WheelGame() {
             </button>
 
             <div
-              className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-full overflow-hidden border-4 ${
-                result.isBigWin ? "border-amber-400 bg-amber-50" : "border-gray-200 bg-gray-50"
+              className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-full border-4 ${
+                result.isBigWin ? "border-amber-400 bg-amber-50" : "border-blue-100 bg-blue-50"
               }`}
             >
-              <img src={result.image} alt={result.name} className="h-full w-full object-cover" />
+              {result.isBigWin ? <Sparkles size={32} className="text-amber-500" /> : <Coins size={36} className="text-[#F2A900]" />}
             </div>
 
             <p className="mt-4 text-xl font-black text-[#111827]">
-              {result.isBigWin ? "TRÚNG LỚN! 🎉" : "Chúc mừng!"}
+              {result.isBigWin ? "TRÚNG LỚN! 🎉" : "Chúc mừng bạn!"}
             </p>
 
-            <p className="mt-1 text-base font-bold text-[#3478F6]">{result.name}</p>
-            <p className="text-xs text-[#9CA3AF]">{result.subtitle}</p>
+            <p className="mt-2 text-2xl font-black text-[#F2A900]">+{result.amount} Coins</p>
+            <p className="text-xs text-[#9CA3AF] mt-1">Số dư đã được cộng vào tài khoản của bạn</p>
 
             <button
               onClick={() => setResult(null)}
@@ -234,4 +231,5 @@ export default function WheelGame() {
       )}
     </div>
   );
-}
+          }
+        
