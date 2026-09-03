@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock, AlertCircle, CheckCircle } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient.js";
+import { supabase } from "../lib/supabaseClient.js";
 
 export default function UpdatePassword() {
   const navigate = useNavigate();
