@@ -2,14 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Ticket } from "lucide-react";
 
-const SEGMENTS = [
-  { value: 10, color: '#1a56db' },
-  { value: 20, color: '#ffffff' },
-  { value: 50, color: '#1a56db' },
-  { value: 100, color: '#ffffff' },
-  { value: 200, color: '#1a56db' },
-  { value: 500, color: '#ffffff' },
-];
+const SEGMENTS = [10, 20, 50, 100, 200, 500];
 
 export default function WheelGame() {
   const navigate = useNavigate();
@@ -59,19 +52,27 @@ export default function WheelGame() {
             }}
           >
             {/* Numbers */}
-            {SEGMENTS.map((seg, i) => {
+            {SEGMENTS.map((amount, i) => {
               const angle = -30 + i * 60;
-              const textColor = seg.color === '#1a56db' ? 'text-white' : 'text-[#1a56db]';
+              const isBlue = i % 2 === 0;
               return (
                 <div
                   key={i}
                   className="absolute left-1/2 top-1/2"
                   style={{
-                    transform: `rotate(${angle}deg) translateY(-115px)`,
+                    transform: `rotate(${angle}deg)`,
                   }}
                 >
-                  <span className={`font-bold text-xl ${textColor}`}>
-                    +{seg.value}
+                  <span
+                    className={`absolute font-bold text-xl whitespace-nowrap ${
+                      isBlue ? 'text-white' : 'text-[#1a56db]'
+                    }`}
+                    style={{
+                      transform: `translateX(-50%) translateY(-115px) rotate(${-angle}deg)`,
+                      left: '50%',
+                    }}
+                  >
+                    +{amount}
                   </span>
                 </div>
               );
@@ -79,7 +80,7 @@ export default function WheelGame() {
 
             {/* Center */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-24 w-24 rounded-full bg-yellow-500 border-8 border-white flex items-center justify-center shadow-lg">
+              <div className="h-24 w-24 rounded-full bg-yellow-500 border-8 border-white flex items-center justify-center shadow-lg z-10">
                 <span className="font-bold text-white text-xl tracking-wider">SPIN</span>
               </div>
             </div>
@@ -114,4 +115,4 @@ export default function WheelGame() {
       </div>
     </div>
   );
-            }
+}
