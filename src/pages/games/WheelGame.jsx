@@ -108,7 +108,7 @@ export default function WheelGame() {
                   style={{ transform: `rotate(${angle}deg)` }}
                 >
                   <span
-                    className="mt-6 text-sm font-black text-white drop-shadow"
+                    className="mt-24 text-sm font-black text-white drop-shadow"
                     style={{ transform: `rotate(180deg)` }}
                   >
                     {val}
