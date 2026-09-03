@@ -75,7 +75,7 @@ const ConfettiBurst = () => {
 };
 
 /* =========================================================
-   PRIZE WHEEL (HIỂN THỊ 1/4 PHÍA DƯỚI)
+   PRIZE WHEEL (HIỂN THỊ 1/4 PHÍA DƯỚI - ĐÃ SỬA LỖI)
 ========================================================= */
 const PrizeWheel = ({ rotation, spinning }) => {
   return (
@@ -110,15 +110,17 @@ const PrizeWheel = ({ rotation, spinning }) => {
             />
           </div>
 
-          {/* Phần thưởng */}
+          {/* Phần thưởng - ĐÃ SỬA LỖI */}
           <div className="absolute inset-0">
             {SEGMENTS.map((segment, index) => {
               const angle = -90 + index * SEGMENT_ANGLE;
               const isBlueBg = index % 2 === 0;
+              // Lấy số tiền - ưu tiên amount, nếu không có thì lấy value
+              const amount = segment.amount || segment.value || 0;
               
               return (
                 <div
-                  key={segment.id}
+                  key={segment.id || index}
                   className="absolute left-1/2 top-1/2 h-0 w-0"
                   style={{ transform: `rotate(${angle}deg)` }}
                 >
@@ -128,7 +130,7 @@ const PrizeWheel = ({ rotation, spinning }) => {
                   >
                     <div style={{ transform: `rotate(${-angle - rotation}deg)` }}>
                       <span className={`text-[24px] font-black ${isBlueBg ? 'text-white' : 'text-[#1a56db]'}`}>
-                        +{segment.amount}
+                        +{amount}
                       </span>
                     </div>
                   </div>
@@ -332,4 +334,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-}
+  }
