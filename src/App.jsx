@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
 import ShopEarn from "./pages/ShopEarn.jsx";
+import MiniGames from "./pages/MiniGames.jsx";
 import Admin from "./pages/Admin.jsx";
 import Contact from "./pages/Contact.jsx";
 import HelpCenter from "./pages/HelpCenter.jsx";
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
         <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
         <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
+        <Route path="/minigames" element={<ProtectedRoute><MiniGames /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
