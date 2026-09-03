@@ -14,12 +14,12 @@ import { supabase } from "../../lib/supabaseClient.js";
 
 // DỮ LIỆU CHÍNH XÁC
 const SEGMENTS = [
-  { amount: 10 },
-  { amount: 20 },
-  { amount: 50 },
-  { amount: 100 },
-  { amount: 200 },
-  { amount: 500 },
+  { id: 1, amount: 10, isBigWin: false },
+  { id: 2, amount: 20, isBigWin: false },
+  { id: 3, amount: 50, isBigWin: false },
+  { id: 4, amount: 100, isBigWin: true },
+  { id: 5, amount: 200, isBigWin: true },
+  { id: 6, amount: 500, isBigWin: true },
 ];
 const SEGMENT_ANGLE = 360 / SEGMENTS.length;
 
