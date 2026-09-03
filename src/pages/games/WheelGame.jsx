@@ -121,14 +121,14 @@ export default function WheelGame() {
         </div>
       </header>
 
-      {/* Khu vực vòng quay chuẩn dáng Starpets */}
-      <div className="relative flex h-64 w-full flex-col items-center overflow-hidden">
+      {/* Khu vực vòng quay gọn gàng phía trên */}
+      <div className="relative flex h-52 w-full flex-col items-center justify-center overflow-hidden">
         {/* Kim chỉ định hướng phía trên */}
-        <div className="absolute top-1 z-30 h-3.5 w-8 bg-[#3478F6] rounded-b-full shadow-md" />
+        <div className="absolute top-2 z-30 h-3 w-7 bg-[#3478F6] rounded-b-full shadow-md" />
 
-        {/* Vòng quay lớn được neo đúng tâm phía trên */}
+        {/* Vòng quay kích thước vừa vặn */}
         <div 
-          className="absolute -top-40 h-[420px] w-[420px] rounded-full border-[16px] border-white bg-[#EBF3FE] shadow-inner transition-all ease-out"
+          className="relative h-64 w-64 rounded-full border-[10px] border-white bg-[#EBF3FE] shadow-md transition-all ease-out"
           style={{
             transform: `rotate(${rotation}deg)`,
             transitionDuration: spinning ? "3s" : "0s",
@@ -142,29 +142,21 @@ export default function WheelGame() {
                 className="absolute inset-0"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
-                {/* Vạch ngăn cách xanh dương ở vành ngoài */}
-                <div className="absolute left-1/2 top-4 -translate-x-1/2 h-4 w-10 rounded-full bg-[#3478F6]" />
-                
-                {/* Icon đồng xu nhỏ nằm trên các múi */}
+                <div className="absolute left-1/2 top-2 -translate-x-1/2 h-3 w-8 rounded-full bg-[#3478F6]" />
                 <div 
-                  className="absolute left-1/2 top-16 -translate-x-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
+                  className="absolute left-1/2 top-10 -translate-x-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm border border-blue-50"
                   style={{ transform: `rotate(-${angle + rotation}deg)` }}
                 >
-                  <Coins size={22} className="text-[#F2A900]" />
+                  <Coins size={18} className="text-[#F2A900]" />
                 </div>
               </div>
             );
           })}
         </div>
-
-        {/* Thẻ trắng bo cung trống trải bên dưới (đã bỏ đồng xu to) */}
-        <div className="absolute bottom-0 z-20 flex h-28 w-[85%] max-w-sm items-center justify-center rounded-[36px] bg-white border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
-          {/* Không gian trống giống mẫu gốc */}
-        </div>
       </div>
       
       {/* Card trắng chứa thông tin tương tác bên dưới */}
-      <div className="relative z-10 mt-4 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
+      <div className="relative z-10 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-base font-black text-[#111827]">Fortune Wheel</p>
@@ -249,5 +241,5 @@ export default function WheelGame() {
       )}
     </div>
   );
-                }
-          
+        }
+                
