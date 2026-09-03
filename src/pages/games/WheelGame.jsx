@@ -1,13 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Ticket, Coins, X, Sparkles, ChevronRight } from "lucide-react";
+import { ArrowLeft, Ticket, X, Sparkles, ChevronRight, RefreshCw } from "lucide-react";
 
 import useSession from "../../hooks/useSession.js";
 import useProfile from "../../hooks/useProfile.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
-const SEGMENTS = [0, 10, 20, 30, 50, 100, 200, 500];
-const BIG_WIN_THRESHOLD = 100;
+// Danh sách phần thưởng mô phỏng theo hình ảnh mẫu
+const REWARDS = [
+  { id: 1, name: "Frost Dragon", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1563460718537-17f13fc2eaec?w=150&auto=format&fit=crop&q=80", isBigWin: true },
+  { id: 2, name: "Owl", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=150&auto=format&fit=crop&q=80", isBigWin: true },
+  { id: 3, name: "Fennec Fox", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?w=150&auto=format&fit=crop&q=80", isBigWin: false },
+  { id: 4, name: "Chihuahua", subtitle: "Full-Grown", image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150&auto=format&fit=crop&q=80", isBigWin: false },
+];
 
 function ConfettiBurst() {
   const pieces = Array.from({ length: 24 });
@@ -44,11 +49,10 @@ export default function WheelGame() {
   const { profile, setProfile } = useProfile();
 
   const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(null); // Lưu thông tin phần thưởng trúng
   const [error, setError] = useState("");
 
   const tickets = profile?.game_tickets || 0;
-  const isBigWin = result > 0 && result >= BIG_WIN_THRESHOLD;
 
   const handleSpin = async () => {
     if (spinning) return;
@@ -75,13 +79,16 @@ export default function WheelGame() {
         return;
       }
 
-      setResult(data.reward);
+      // Giả lập random chọn một phần thưởng từ danh sách dựa trên kết quả trả về từ server
+      const randomReward = REWARDS[Math.floor(Math.random() * REWARDS.length)];
+      setResult(randomReward);
+
       setProfile((prev) => ({
         ...prev,
-        coins: (prev.coins || 0) + data.reward,
+        coins: (prev.coins || 0) + (data.reward || 0),
         game_tickets: data.tickets_left,
       }));
-    }, 1200);
+    }, 1500);
   };
 
   return (
@@ -95,54 +102,59 @@ export default function WheelGame() {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-8px); }
         }
-        @keyframes cone-spin {
+        @keyframes wheel-rotate {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
       `}</style>
 
-      <header className="relative z-20 flex items-center gap-3 px-4 py-3.5">
-        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-[#374151]">
-          <ArrowLeft size={18} />
-        </button>
-        <h1 className="text-[15px] font-bold text-[#111827]">Vòng quay may mắn</h1>
+      {/* Header */}
+      <header className="relative z-20 flex items-center justify-between px-4 py-3.5 bg-white/50 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#374151] shadow-sm">
+            <ArrowLeft size={18} />
+          </button>
+          <h1 className="text-[15px] font-bold text-[#111827]">Wheel of Fortune</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">🐵</span>
+        </div>
       </header>
 
-      {/* Khu vực trang trí phối cảnh */}
-      <div className="relative flex h-64 flex-col items-center overflow-hidden pt-6">
-        <div className="h-1.5 w-10 rounded-full bg-[#3478F6]" />
+      {/* Khu vực vòng quay trực quan */}
+      <div className="relative flex h-64 flex-col items-center overflow-hidden pt-4">
+        {/* Kim chỉ định hướng ở trên */}
+        <div className="absolute top-2 z-20 h-3 w-6 bg-[#3478F6] rounded-b-full shadow-md" />
 
-        <span className="absolute left-[20%] top-14 h-10 w-1.5 rotate-[35deg] rounded-full bg-[#3478F6]/70" />
-        <span className="absolute right-[20%] top-14 h-10 w-1.5 -rotate-[35deg] rounded-full bg-[#3478F6]/70" />
-
-        <div
-          className="relative mt-3"
-          style={{
-            width: "280px",
-            height: "160px",
-            clipPath: "polygon(50% 0%, 12% 100%, 88% 100%)",
-            background: "linear-gradient(180deg, rgba(147,197,253,0.85), rgba(52,120,246,0.55))",
-          }}
-        />
-
-        <div className="relative -mt-6 h-9 w-56 rounded-[50%] bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)]" />
-
-        <div
-          className="absolute bottom-8 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-white to-[#EAF2FB] shadow-xl"
-          style={{ animation: "mascot-bounce 1.8s ease-in-out infinite" }}
+        {/* Khối vòng quay mô phỏng */}
+        <div 
+          className={`relative mt-4 flex h-44 w-44 items-center justify-center rounded-full border-4 border-white bg-gradient-to-tr from-blue-100 to-white shadow-xl ${spinning ? "animate-spin" : ""}`}
+          style={{ animationDuration: spinning ? "0.4s" : "0s" }}
         >
-          <Coins size={40} className="text-[#F2A900]" />
+          <div className="absolute inset-2 rounded-full border border-dashed border-blue-300" />
+          
+          {/* Pet trung tâm vòng quay */}
+          <div
+            className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-white shadow-md overflow-hidden"
+            style={{ animation: !spinning ? "mascot-bounce 1.8s ease-in-out infinite" : "none" }}
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150&auto=format&fit=crop&q=80" 
+              alt="Pet" 
+              className="h-full w-full object-cover"
+            />
+          </div>
         </div>
       </div>
       
-      {/* Card trắng */}
-      <div className="relative z-10 -mt-4 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
+      {/* Card trắng chứa thông tin chính */}
+      <div className="relative z-10 -mt-2 rounded-t-[28px] bg-white px-4 pb-8 pt-5 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-base font-black text-[#111827]">Vòng quay may mắn</p>
-            <p className="text-xs text-[#9CA3AF]">Nhận Coin miễn phí</p>
+            <p className="text-base font-black text-[#111827]">Fortune Wheel</p>
+            <p className="text-xs text-[#9CA3AF]">Get free items</p>
           </div>
-          <span className="flex items-center gap-1.5 rounded-full bg-[#F5F7FB] px-3 py-1.5 text-sm font-bold text-[#111827]">
+          <span className="flex items-center gap-1.5 rounded-full bg-[#F5F7FB] px-3 py-1.5 text-sm font-bold text-[#111827] shadow-inner">
             {tickets} <Ticket size={14} className="text-[#3478F6]" />
           </span>
         </div>
@@ -152,58 +164,68 @@ export default function WheelGame() {
         <button
           onClick={handleSpin}
           disabled={spinning || tickets < 1}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FB923C] to-[#F2A900] py-3.5 text-base font-black text-white shadow-[0_10px_24px_rgba(242,169,0,0.3)] transition disabled:opacity-40"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FB923C] to-[#F2A900] py-3.5 text-base font-black text-white shadow-[0_10px_24px_rgba(242,169,0,0.3)] transition active:scale-95 disabled:opacity-40"
         >
-          {spinning ? "Đang quay..." : "Quay ngay"}
+          {spinning ? "Đang quay..." : "Add spins"}
           {!spinning && <ChevronRight size={18} />}
         </button>
 
         <div className="mt-3 rounded-xl bg-[#F5F7FB] px-4 py-2.5 text-center text-xs text-[#6B7280]">
-          Hoàn thành nhiệm vụ để nhận thêm lượt quay miễn phí
+          Activate promo codes and get more spins!
         </div>
 
-        <p className="mb-3 mt-6 text-sm font-bold text-[#111827]">Bạn có thể nhận:</p>
-        <div className="flex gap-2.5 overflow-x-auto pb-1">
-          {SEGMENTS.map((val, i) => (
+        {/* Phần "You can get" hiển thị các Pet giống như ảnh mẫu */}
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm font-bold text-[#111827]">You can get:</p>
+          <button className="text-[#9CA3AF] hover:text-[#111827]">
+            <RefreshCw size={14} />
+          </button>
+        </div>
+
+        <div className="mt-3 flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+          {REWARDS.map((item) => (
             <div
-              key={i}
-              className="flex w-20 shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-[#E5E7EB] bg-white p-3"
+              key={item.id}
+              className="flex w-32 shrink-0 flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-3 text-center shadow-sm"
             >
-              <span className={`flex h-9 w-9 items-center justify-center rounded-full ${val >= BIG_WIN_THRESHOLD ? "bg-[#FFF4DB]" : "bg-[#F5F7FB]"}`}>
-                <Coins size={16} className={val >= BIG_WIN_THRESHOLD ? "text-[#F2A900]" : "text-[#9CA3AF]"} />
-              </span>
-              <span className="text-xs font-bold text-[#111827]">{val}</span>
+              <div className="h-14 w-14 rounded-xl bg-[#F5F7FB] overflow-hidden mb-2 border border-gray-100">
+                <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+              </div>
+              <span className="text-xs font-bold text-[#111827] truncate w-full">{item.name}</span>
+              <span className="text-[10px] text-[#9CA3AF]">{item.subtitle}</span>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Popup kết quả trúng thưởng */}
       {result !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-xs overflow-visible rounded-3xl bg-white p-6 text-center shadow-2xl">
-            {isBigWin && <ConfettiBurst />}
+          <div className="relative w-full max-w-xs overflow-visible rounded-3xl bg-white p-6 text-center shadow-2xl animate-in fade-in zoom-in duration-200">
+            {result.isBigWin && <ConfettiBurst />}
 
-            <button onClick={() => setResult(null)} className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center text-[#9CA3AF]">
+            <button onClick={() => setResult(null)} className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center text-[#9CA3AF] hover:text-black">
               <X size={16} />
             </button>
 
             <div
-              className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-full ${
-                isBigWin ? "bg-gradient-to-br from-[#F2A900] to-[#FB923C]" : "bg-[#F5F7FB]"
+              className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-full overflow-hidden border-4 ${
+                result.isBigWin ? "border-amber-400 bg-amber-50" : "border-gray-200 bg-gray-50"
               }`}
             >
-              {isBigWin ? <Sparkles size={32} className="text-white" /> : <Coins size={28} className="text-[#F2A900]" />}
+              <img src={result.image} alt={result.name} className="h-full w-full object-cover" />
             </div>
 
             <p className="mt-4 text-xl font-black text-[#111827]">
-              {result > 0 ? (isBigWin ? "TRÚNG LỚN! 🎉" : "Chúc mừng!") : "Chúc bạn may mắn lần sau!"}
+              {result.isBigWin ? "TRÚNG LỚN! 🎉" : "Chúc mừng!"}
             </p>
 
-            {result > 0 && <p className="mt-1 text-2xl font-black text-[#F2A900]">+{result} Coin</p>}
+            <p className="mt-1 text-base font-bold text-[#3478F6]">{result.name}</p>
+            <p className="text-xs text-[#9CA3AF]">{result.subtitle}</p>
 
             <button
               onClick={() => setResult(null)}
-              className="relative mt-6 w-full rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] py-3 text-sm font-bold text-white"
+              className="relative mt-6 w-full rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] py-3 text-sm font-bold text-white shadow-md active:scale-95"
             >
               Tuyệt vời
             </button>
@@ -212,4 +234,4 @@ export default function WheelGame() {
       )}
     </div>
   );
-        }
+}
