@@ -5,6 +5,7 @@ import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
@@ -29,8 +30,6 @@ import AccountReview from "./pages/AccountReview.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
-import ForgotPassword from './pages/ForgotPassword';
-import UpdatePassword from './pages/UpdatePassword';
 
 export default function App() {
   return (
@@ -40,6 +39,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/banned" element={<Banned />} />
         <Route path="/account-review" element={<AccountReview />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -62,8 +62,6 @@ export default function App() {
         <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/task/callback" element={<TaskCallback />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/update-password" element={<UpdatePassword />} />
       </Routes>
     </BrowserRouter>
   );
