@@ -23,7 +23,6 @@ export default function Wallet() {
 
       const userId = session.user.id;
 
-      const [tasksRes, milestonesRes, ordersRes] = await Promise.all([
       const [tasksRes, milestonesRes, ordersRes, gamesRes] = await Promise.all([
         supabase
           .from("task_completions")
