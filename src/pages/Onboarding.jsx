@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, ArrowRight, Loader2, ShieldCheck, CheckCircle2, Info } from "lucide-react";
-
+import { User, ArrowRight, Loader2, ShieldCheck, CheckCircle2, Info, Gift } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -11,6 +10,7 @@ export default function Onboarding() {
 
   const [step, setStep] = useState(1);
   const [username, setUsername] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -47,8 +47,9 @@ export default function Onboarding() {
     const { data, error: rpcError } = await supabase.rpc("complete_onboarding", {
       p_user_id: session.user.id,
       p_username: username.trim(),
+      p_referral_code: referralCode.trim() || null,
     });
-
+    
     setSubmitting(false);
 
     if (rpcError) {
@@ -63,11 +64,12 @@ export default function Onboarding() {
         `Tên "${username.trim()}" không phù hợp với quy định, hệ thống đã đổi thành "${result.final_username}". Bạn có thể đổi tên khác trong Cài đặt sau.`
       );
       setTimeout(() => navigate("/dashboard"), 2800);
+    } else if (result?.referral_bonus > 0) {
+      setRenameNotice(`🎉 Bạn nhận được +${result.referral_bonus} Coin từ mã giới thiệu!`);
+      setTimeout(() => navigate("/dashboard"), 2200);
     } else {
       navigate("/dashboard");
     }
-  };
-
   if (sessionLoading || !session) return null;
 
   return (
@@ -101,6 +103,17 @@ export default function Onboarding() {
                 placeholder="Tên hiển thị"
                 autoFocus
                 className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+              />
+            </div>
+
+            <div className="relative mt-3">
+              <Gift size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="Mã giới thiệu (không bắt buộc)"
+                className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm uppercase text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
               />
             </div>
 
