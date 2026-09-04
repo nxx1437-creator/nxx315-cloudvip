@@ -67,9 +67,11 @@ export default function Onboarding() {
     } else if (result?.referral_bonus > 0) {
       setRenameNotice(`🎉 Bạn nhận được +${result.referral_bonus} Coin từ mã giới thiệu!`);
       setTimeout(() => navigate("/dashboard"), 2200);
-    } else {
+} else {
       navigate("/dashboard");
     }
+  };
+
   if (sessionLoading || !session) return null;
 
   return (
