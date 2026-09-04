@@ -87,10 +87,7 @@ export default function Wallet() {
       const merged = [...taskTx, ...milestoneTx, ...orderTx, ...gameTx].sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
-      const merged = [...taskTx, ...milestoneTx, ...orderTx].sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
+    
       setTransactions(merged);
       setLoading(false);
     };
