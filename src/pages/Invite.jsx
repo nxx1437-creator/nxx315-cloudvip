@@ -1,165 +1,235 @@
 import React, { useState, useEffect } from "react";
-import { Users, TrendingUp, Gift, Copy, Share2, CheckCircle2, Coins } from "lucide-react";
-import BottomNav from "../components/BottomNav.jsx";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Users, Coins, TrendingUp, Copy, Check, Share2, Loader2 } from "lucide-react";
+
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
+import BottomNav from "../components/BottomNav.jsx";
+
+const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
 
 export default function Invite() {
+  const navigate = useNavigate();
   const { session } = useSession();
   const { profile } = useProfile();
-  const [copied, setCopied] = useState(false);
-  const [referrals, setReferrals] = useState([]);
-  const [totalCommission, setTotalCommission] = useState(0);
-  
-  // Sinh mã giới thiệu ngẫu nhiên 8 ký tự
-  const code = profile?.referral_code || "A8662459";
+
+  const [referredUsers, setReferredUsers] = useState([]);
+  const [commissions, setCommissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const referralCode = profile?.referral_code || "";
+  const inviteLink = `${window.location.origin}/register?ref=${referralCode}`;
 
   useEffect(() => {
-    const fetchReferrals = async () => {
-      if (!session?.user?.id) return;
-      const { data } = await supabase.from("referrals").select("*").eq("referrer_id", session.user.id);
-      setReferrals(data ?? []);
-      
-      // Tính tổng hoa hồng (Tạm thời lấy từ data dựa trên % hoặc giả định)
-      const total = (data || []).reduce((sum, r) => sum + (r.total_commission || 0), 0);
-      setTotalCommission(total);
+    if (!session?.user?.id) return;
+
+    const fetchData = async () => {
+      const [usersRes, commissionsRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, username, created_at")
+          .eq("referred_by", session.user.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("referral_commissions")
+          .select("id, referred_id, source_amount, commission, created_at")
+          .eq("referrer_id", session.user.id)
+          .order("created_at", { ascending: false })
+          .limit(30),
+      ]);
+
+      setReferredUsers(usersRes.data || []);
+      setCommissions(commissionsRes.data || []);
+      setLoading(false);
     };
-    fetchReferrals();
-  }, [session]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    fetchData();
+  }, [session?.user?.id]);
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: "Tham gia cùng tôi trên Nxx315 Studio Rewards!",
-        text: `Nhập mã ${code} để nhận 200 Coin ngay khi đăng ký!`,
-        url: window.location.origin + "/register",
-      });
+  const totalCommission = commissions.reduce((sum, c) => sum + c.commission, 0);
+  const nameMap = Object.fromEntries(referredUsers.map((u) => [u.id, u.username]));
+
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text);
+    if (type === "code") {
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
     } else {
-      navigator.clipboard.writeText(window.location.origin + "/register");
-      alert("Đã sao chép link!");
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
-  const link = `${window.location.origin}/register`;
-
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "NXX315 Studio Rewards",
+          text: `Dùng mã ${referralCode} để nhận 200 Coin miễn phí khi đăng ký NXX315 Studio!`,
+          url: inviteLink,
+        });
+      } catch {
+        // người dùng huỷ chia sẻ, bỏ qua
+      }
+    } else {
+      handleCopy(inviteLink, "link");
+    }
+  };
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-        .font-display { font-family: 'Baloo 2', sans-serif; }
-      `}</style>
-
-      <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-4 backdrop-blur-md">
-        <h1 className="font-display text-xl font-bold text-slate-900">Giới Thiệu Bạn Bè</h1>
+    <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
+      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#E5E7EB] bg-white/95 px-4 py-3.5 backdrop-blur-md">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full text-[#6B7280] hover:bg-[#F5F7FB]">
+          <ArrowLeft size={18} />
+        </button>
+        <h1 className="text-[15px] font-bold text-[#111827]">Giới thiệu bạn bè</h1>
       </header>
 
-      <main className="mx-auto max-w-md space-y-5 px-4 py-5">
-        {/* HEADER CARD */}
-        <div className="rounded-3xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-6 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
-              <Gift size={24} />
-            </span>
-            <div>
-              <h2 className="font-display text-lg font-bold text-slate-900">Giới Thiệu Bạn Bè</h2>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                Mời bạn — họ nhận 200 coin, bạn ăn 15% hoa hồng từ mỗi nhiệm vụ họ làm.
-              </p>
-            </div>
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5">
+
+        <div className="flex items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+            <Users size={20} className="text-emerald-600" />
+          </span>
+          <div>
+            <p className="text-base font-black text-[#111827]">Giới thiệu bạn bè</p>
+            <p className="mt-0.5 text-xs leading-5 text-[#6B7280]">
+              Mời bạn — họ nhận 200 Coin, bạn ăn 15% hoa hồng từ mỗi nhiệm vụ họ làm
+            </p>
           </div>
         </div>
 
-        {/* STATS CARDS */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-            <p className="flex items-center gap-1.5 text-xs text-slate-400"><Users size={14} /> ĐÃ GIỚI THIỆU</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{referrals.length}</p>
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              <Users size={12} /> Đã giới thiệu
+            </p>
+            <p className="mt-1.5 text-2xl font-bold text-[#111827]">{referredUsers.length}</p>
           </div>
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-            <p className="flex items-center gap-1.5 text-xs text-slate-400"><TrendingUp size={14} /> TỔNG HOA HỒNG</p>
-            <p className="mt-2 text-2xl font-bold text-amber-500">{totalCommission.toLocaleString()}đ</p>
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              <Coins size={12} /> Tổng hoa hồng
+            </p>
+            <p className="mt-1.5 text-2xl font-bold text-[#F2A900]">{formatCoins(totalCommission)}đ</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="flex items-center gap-1.5 text-xs text-slate-400"><TrendingUp size={14} /> TỈ LỆ</p>
-          <p className="mt-2 text-2xl font-bold text-emerald-500">15%</p>
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+            <TrendingUp size={12} /> Tỉ lệ
+          </p>
+          <p className="mt-1.5 text-2xl font-bold text-emerald-600">15%</p>
         </div>
 
-        {/* CODE + LINK CARD */}
-        <div className="rounded-3xl border border-blue-100 bg-blue-50/50 p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Mã giới thiệu của bạn</p>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 rounded-xl border-2 border-dashed border-blue-300 bg-white py-3 text-center">
-              <span className="font-display text-2xl font-bold tracking-widest text-blue-600">{code}</span>
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Mã giới thiệu của bạn</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 rounded-xl border-2 border-dashed border-sky-300 bg-[#EAF2FE] py-3 text-center">
+              <span className="text-lg font-black tracking-widest text-[#3478F6]">{referralCode || "..."}</span>
             </div>
-            <button onClick={handleCopy} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-white shadow-md shadow-blue-500/25 transition hover:bg-blue-600">
-              {copied ? <CheckCircle2 size={20} /> : <Copy size={20} />}
+            <button
+              onClick={() => handleCopy(referralCode, "code")}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#3478F6] text-white"
+            >
+              {copiedCode ? <Check size={16} /> : <Copy size={16} />}
             </button>
           </div>
 
-          <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400">Link mời bạn bè</p>
-          <div className="mt-3 flex items-center gap-2">
-            <input readOnly value={link} className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 outline-none" />
-            <button onClick={handleShare} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200">
-              <Share2 size={20} />
+          <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Link mời bạn bè</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 truncate rounded-xl border border-[#E5E7EB] bg-[#F5F7FB] px-3.5 py-3 text-xs text-[#6B7280]">
+              {inviteLink}
+            </div>
+            <button
+              onClick={handleShare}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F5F7FB] text-[#6B7280]"
+            >
+              <Share2 size={16} />
             </button>
           </div>
-        </div>
 
-        {/* STEPS */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">1</span>
-            <p className="text-sm text-slate-600">Chia sẻ mã/link cho bạn bè</p>
-          </div>
-          <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">2</span>
-            <p className="text-sm text-slate-600">Bạn của bạn nhập mã khi đăng ký — <span className="font-bold text-emerald-600">+200 coin</span></p>
-          </div>
-          <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">3</span>
-            <p className="text-sm text-slate-600">Bạn ăn <span className="font-bold text-amber-600">15% coin</span> từ mỗi nhiệm vụ họ hoàn thành</p>
+          <div className="mt-4 space-y-2.5">
+            <StepRow number="1" text="Chia sẻ mã/link cho bạn bè" />
+            <StepRow number="2" text="Bạn của bạn nhập mã khi đăng ký → +200 Coin" />
+            <StepRow number="3" text="Bạn ăn 15% Coin từ mỗi nhiệm vụ họ hoàn thành" />
           </div>
         </div>
 
-        {/* REFERRAL HISTORY */}
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-slate-900">Người đã giới thiệu</h2>
-            <span className="text-sm text-slate-400">{referrals.length}</span>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 size={20} className="animate-spin text-[#D1D5DB]" />
           </div>
-          
-          <div className="mt-4 space-y-3">
-            {referrals.length === 0 ? (
-              <div className="py-10 text-center">
-                <Users size={40} className="mx-auto text-slate-200" />
-                <p className="mt-3 text-sm text-slate-400">Chưa có ai được giới thiệu.</p>
+        ) : (
+          <>
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-[#111827]">Người đã giới thiệu</p>
+                <span className="text-xs font-semibold text-[#9CA3AF]">{referredUsers.length}</span>
               </div>
-            ) : referrals.map((ref) => (
-              <div key={ref.id} className="flex items-center justify-between border-b border-slate-50 pb-3 last:border-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500">?</span>
-                  <div>
-                    <p className="text-sm font-medium text-slate-700">—</p>
-                    <p className="text-xs text-slate-400">{new Date(ref.created_at).toLocaleDateString("vi-VN")}</p>
-                  </div>
+
+              {referredUsers.length === 0 ? (
+                <p className="py-6 text-center text-xs text-[#9CA3AF]">Chưa có ai dùng mã của bạn.</p>
+              ) : (
+                <div className="space-y-3">
+                  {referredUsers.map((u) => (
+                    <div key={u.id} className="flex items-center justify-between border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F5F7FB] text-xs font-bold text-[#6B7280]">
+                          {(u.username || "?").charAt(0).toUpperCase()}
+                        </span>
+                        <div>
+                          <p className="text-xs font-semibold text-[#374151]">{u.username || "Người dùng"}</p>
+                          <p className="text-[10px] text-[#9CA3AF]">{new Date(u.created_at).toLocaleDateString("vi-VN")}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-sm font-bold text-emerald-500">+{ref.total_commission || 0}đ</span>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-[#111827]">Lịch sử hoa hồng</p>
+                <span className="text-xs font-semibold text-[#9CA3AF]">{commissions.length}</span>
               </div>
-            ))}
-          </div>
-        </div>
+
+              {commissions.length === 0 ? (
+                <p className="py-6 text-center text-xs text-[#9CA3AF]">Chưa có hoa hồng nào.</p>
+              ) : (
+                <div className="space-y-3">
+                  {commissions.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0">
+                      <div>
+                        <p className="text-xs font-semibold text-[#374151]">
+                          {nameMap[c.referred_id] || "Người dùng"} · {c.source_amount}đ
+                        </p>
+                        <p className="text-[10px] text-[#9CA3AF]">{new Date(c.created_at).toLocaleString("vi-VN")}</p>
+                      </div>
+                      <span className="text-sm font-bold text-[#F2A900]">+{c.commission}đ</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       <BottomNav />
     </div>
   );
-      }
+}
+
+function StepRow({ number, text }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-[#F5F7FB] px-3.5 py-3">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#3478F6] text-[11px] font-bold text-white">
+        {number}
+      </span>
+      <p className="text-xs font-medium text-[#374151]">{text}</p>
+    </div>
+  );
+        }
