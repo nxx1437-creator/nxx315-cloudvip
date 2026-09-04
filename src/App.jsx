@@ -6,6 +6,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
+import Invite from "./pages/Invite.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Store from "./pages/Store.jsx";
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
         <Route path="/banned" element={<Banned />} />
         <Route path="/account-review" element={<AccountReview />} />
         <Route path="/onboarding" element={<Onboarding />} />
