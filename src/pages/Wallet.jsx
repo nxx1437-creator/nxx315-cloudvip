@@ -24,6 +24,7 @@ export default function Wallet() {
       const userId = session.user.id;
 
       const [tasksRes, milestonesRes, ordersRes] = await Promise.all([
+      const [tasksRes, milestonesRes, ordersRes, gamesRes] = await Promise.all([
         supabase
           .from("task_completions")
           .select("id, completed_at, coins_earned")
@@ -41,6 +42,12 @@ export default function Wallet() {
           .select("id, package_name, coins_charged, created_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
+          .limit(30),
+        supabase
+          .from("game_plays")
+          .select("id, game_type, reward, played_at")
+          .eq("user_id", userId)
+          .order("played_at", { ascending: false })
           .limit(30),
       ]);
 
@@ -68,6 +75,19 @@ export default function Wallet() {
         date: o.created_at,
       }));
 
+      const gameLabel = (t) => (t === "wheel" ? "Vòng quay may mắn" : t === "scratch" ? "Cào thẻ trúng thưởng" : "Xúc xắc may mắn");
+
+      const gameTx = (gamesRes.data || []).map((g) => ({
+        id: "game-" + g.id,
+        type: "game",
+        title: gameLabel(g.game_type),
+        amount: g.reward || 0,
+        date: g.played_at,
+      }));
+
+      const merged = [...taskTx, ...milestoneTx, ...orderTx, ...gameTx].sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
       const merged = [...taskTx, ...milestoneTx, ...orderTx].sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
@@ -86,9 +106,10 @@ export default function Wallet() {
   const iconFor = (type) => {
     if (type === "task") return { Icon: CheckSquare, cls: "bg-[#EAF2FE] text-[#3478F6]" };
     if (type === "milestone") return { Icon: Sparkles, cls: "bg-[#FFF4DB] text-[#B87700]" };
+    if (type === "game") return { Icon: Gift, cls: "bg-emerald-50 text-emerald-600" };
     return { Icon: ArrowUpRight, cls: "bg-rose-50 text-rose-500" };
   };
-
+  
   return (
     <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
       <TopHeader />
