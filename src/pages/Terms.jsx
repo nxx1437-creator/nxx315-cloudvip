@@ -19,7 +19,7 @@ export default function Terms() {
           <h1 className="font-display mt-4 text-3xl font-bold text-slate-900">Điều khoản sử dụng</h1>
           <p className="mt-2 text-sm text-slate-500">Cập nhật lần cuối: 25/08/2026</p>
           <div className="mt-4 rounded-2xl bg-blue-50 p-4 text-sm text-blue-700">
-            <p className="font-semibold">📌 Lưu ý quan trọng:</p>
+            <p className="font-semibold"> Lưu ý quan trọng:</p>
             <p>Bằng việc đăng ký, truy cập hoặc sử dụng NXX315 Studio Rewards, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý tuân thủ các Điều khoản sử dụng dưới đây.</p>
           </div>
         </div>
@@ -35,7 +35,7 @@ export default function Terms() {
               <li>Các phần thưởng khác được công bố trên hệ thống</li>
             </ul>
             <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              ⚠️ NXX315 Studio Rewards không phải là Roblox Corporation và không đại diện, liên kết hoặc được Roblox Corporation tài trợ, chứng thực hay quản lý.
+              NXX315 Studio Rewards không phải là Roblox Corporation và không đại diện, liên kết hoặc được Roblox Corporation tài trợ, chứng thực hay quản lý.
             </div>
           </Section>
 
@@ -43,11 +43,11 @@ export default function Terms() {
           <Section icon={Users} title="2. Điều kiện sử dụng">
             <p>Để sử dụng dịch vụ, người dùng phải:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
-              <li>✅ Từ 15 tuổi trở lên</li>
-              <li>✅ Cung cấp thông tin đăng ký chính xác và trung thực</li>
-              <li>✅ Chỉ sử dụng tài khoản của chính mình</li>
-              <li>✅ Tuân thủ các điều khoản và quy định của NXX315 Studio Rewards</li>
-              <li>✅ Không sử dụng hệ thống nhằm mục đích gian lận, trục lợi hoặc phá hoại dịch vụ</li>
+              <li>✓ Từ 15 tuổi trở lên</li>
+              <li>✓ Cung cấp thông tin đăng ký chính xác và trung thực</li>
+              <li>✓ Chỉ sử dụng tài khoản của chính mình</li>
+              <li>✓ Tuân thủ các điều khoản và quy định của NXX315 Studio Rewards</li>
+              <li>✓ Không sử dụng hệ thống nhằm mục đích gian lận, trục lợi hoặc phá hoại dịch vụ</li>
             </ul>
             <p className="mt-2 text-sm text-slate-500">NXX315 Studio Rewards có quyền yêu cầu xác minh thông tin khi cần thiết để bảo vệ hệ thống và người dùng.</p>
           </Section>
@@ -57,7 +57,7 @@ export default function Terms() {
             <p>Mỗi người dùng chỉ được phép sở hữu một tài khoản trên hệ thống, trừ khi NXX315 Studio Rewards có quy định khác.</p>
             <p className="mt-2">Người dùng chịu trách nhiệm bảo vệ thông tin đăng nhập và không được chia sẻ tài khoản cho người khác.</p>
             <div className="mt-3 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
-              <p className="font-semibold">🚫 Nghiêm cấm:</p>
+              <p className="font-semibold"> Nghiêm cấm:</p>
               <ul className="mt-1 list-inside list-disc space-y-1">
                 <li>Tạo nhiều tài khoản để nhận nhiều lần phần thưởng</li>
                 <li>Sử dụng tài khoản của người khác</li>
@@ -71,7 +71,7 @@ export default function Terms() {
           {/* 4. Xu và điểm thưởng */}
           <Section icon={Coins} title="4. Xu và điểm thưởng">
             <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-700">
-              ⚠️ Xu/điểm trên NXX315 Studio Rewards <strong>chỉ có giá trị trong phạm vi hệ thống</strong> và không được xem là tiền mặt, tiền điện tử, tài sản tài chính hoặc phương tiện thanh toán.
+              Xu/điểm trên NXX315 Studio Rewards <strong>chỉ có giá trị trong phạm vi hệ thống</strong> và không được xem là tiền mặt, tiền điện tử, tài sản tài chính hoặc phương tiện thanh toán.
             </div>
             <p className="mt-3">Xu/điểm có thể được cộng hoặc trừ dựa trên:</p>
             <ul className="mt-1 list-inside list-disc space-y-1 text-sm text-slate-600">
@@ -87,7 +87,7 @@ export default function Terms() {
           <Section icon={Gift} title="5. Nhiệm vụ">
             <p>Người dùng phải hoàn thành nhiệm vụ theo đúng yêu cầu được hiển thị trên hệ thống.</p>
             <div className="mt-3 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
-              <p className="font-semibold">🚫 Nghiêm cấm việc:</p>
+              <p className="font-semibold"> Nghiêm cấm việc:</p>
               <ul className="mt-1 list-inside list-disc space-y-1">
                 <li>Khai báo hoàn thành nhiệm vụ khi chưa thực hiện</li>
                 <li>Sử dụng nhiều tài khoản để thực hiện cùng một nhiệm vụ nhằm nhận thưởng nhiều lần</li>
@@ -112,7 +112,7 @@ export default function Terms() {
             </ul>
             <p className="mt-2 text-sm text-slate-500">Sau khi yêu cầu được xác nhận và xử lý thành công, số xu/điểm tương ứng sẽ được trừ khỏi tài khoản.</p>
             <div className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
-              ℹ️ NXX315 Studio Rewards không đảm bảo rằng mọi phần thưởng luôn có sẵn. Phần thưởng có thể thay đổi, hết hàng hoặc được thay thế tùy theo tình trạng cung cấp.
+               NXX315 Studio Rewards không đảm bảo rằng mọi phần thưởng luôn có sẵn. Phần thưởng có thể thay đổi, hết hàng hoặc được thay thế tùy theo tình trạng cung cấp.
             </div>
           </Section>
 
@@ -128,7 +128,7 @@ export default function Terms() {
               <li>Có lý do hợp lý để nghi ngờ tài khoản hoặc giao dịch không hợp lệ</li>
             </ul>
             <div className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-              ⚠️ Trong trường hợp yêu cầu bị từ chối do lỗi của người dùng hoặc hành vi vi phạm, NXX315 Studio Rewards <strong>có thể không hoàn lại</strong> số xu/điểm đã sử dụng cho yêu cầu đó.
+               Trong trường hợp yêu cầu bị từ chối do lỗi của người dùng hoặc hành vi vi phạm, NXX315 Studio Rewards <strong>có thể không hoàn lại</strong> số xu/điểm đã sử dụng cho yêu cầu đó.
             </div>
           </Section>
 
@@ -145,10 +145,10 @@ export default function Terms() {
               <li>Mối liên hệ giữa nhiều tài khoản</li>
             </ul>
             <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              ℹ️ Việc sử dụng mạng Wi-Fi, 4G hoặc 5G khác nhau không đồng nghĩa với việc người dùng được phép tạo nhiều tài khoản.
+               Việc sử dụng mạng Wi-Fi, 4G hoặc 5G khác nhau không đồng nghĩa với việc người dùng được phép tạo nhiều tài khoản.
             </div>
             <div className="mt-3 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
-              <p className="font-semibold">🚫 Nếu phát hiện hành vi gian lận hoặc lạm dụng hệ thống, NXX315 Studio Rewards có thể:</p>
+              <p className="font-semibold"> Nếu phát hiện hành vi gian lận hoặc lạm dụng hệ thống, NXX315 Studio Rewards có thể:</p>
               <ul className="mt-1 list-inside list-disc space-y-1">
                 <li>Hủy nhiệm vụ không hợp lệ</li>
                 <li>Thu hồi xu/điểm bất hợp lệ</li>
@@ -166,7 +166,7 @@ export default function Terms() {
             <p>Người dùng không được cố ý khai thác lỗi, lỗ hổng hoặc hành vi ngoài dự kiến của hệ thống để nhận lợi ích.</p>
             <p className="mt-2">Nếu phát hiện lỗi, người dùng nên thông báo cho NXX315 Studio Rewards thay vì khai thác lỗi.</p>
             <div className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-              ⚠️ Việc cố tình khai thác lỗi để nhận xu, điểm hoặc phần thưởng có thể được xem là hành vi gian lận.
+               Việc cố tình khai thác lỗi để nhận xu, điểm hoặc phần thưởng có thể được xem là hành vi gian lận.
             </div>
           </Section>
 
@@ -188,7 +188,7 @@ export default function Terms() {
             <p>NXX315 Studio Rewards có quyền cập nhật hoặc thay đổi Điều khoản sử dụng khi cần thiết.</p>
             <p className="mt-2">Phiên bản mới sẽ được công bố trên website và có thể có ngày cập nhật mới.</p>
             <div className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
-              ℹ️ Việc tiếp tục sử dụng dịch vụ sau khi điều khoản được cập nhật được xem là bạn tiếp tục chấp nhận các điều khoản mới.
+               Việc tiếp tục sử dụng dịch vụ sau khi điều khoản được cập nhật được xem là bạn tiếp tục chấp nhận các điều khoản mới.
             </div>
           </Section>
 
@@ -221,16 +221,16 @@ export default function Terms() {
             <div className="mt-4 space-y-2 text-left text-sm text-slate-700">
               <p>Khi tạo tài khoản hoặc tiếp tục sử dụng NXX315 Studio Rewards, bạn xác nhận rằng:</p>
               <ul className="list-inside list-disc space-y-1 pl-2">
-                <li>✅ Bạn đã đọc và hiểu Điều khoản sử dụng</li>
-                <li>✅ Bạn đáp ứng điều kiện độ tuổi tối thiểu 15 tuổi</li>
-                <li>✅ Bạn đồng ý tuân thủ các quy định của nền tảng</li>
-                <li>✅ Bạn hiểu rằng hành vi gian lận hoặc lạm dụng có thể dẫn đến việc mất quyền sử dụng tài khoản và các quyền lợi liên quan</li>
+                <li>✓ Bạn đã đọc và hiểu Điều khoản sử dụng</li>
+                <li>✓ Bạn đáp ứng điều kiện độ tuổi tối thiểu 15 tuổi</li>
+                <li>✓ Bạn đồng ý tuân thủ các quy định của nền tảng</li>
+                <li>✓ Bạn hiểu rằng hành vi gian lận hoặc lạm dụng có thể dẫn đến việc mất quyền sử dụng tài khoản và các quyền lợi liên quan</li>
               </ul>
             </div>
             <div className="mt-4 rounded-lg bg-sky-100 p-3 text-sm text-sky-700">
-              🔒 NXX315 Studio Rewards có quyền thực hiện các biện pháp cần thiết để bảo vệ tính công bằng, an toàn và ổn định của hệ thống.
+               NXX315 Studio Rewards có quyền thực hiện các biện pháp cần thiết để bảo vệ tính công bằng, an toàn và ổn định của hệ thống.
             </div>
-            <Link to="/" className="mt-6 inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
+            <Link to="/dashboard" className="mt-6 inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
               Quay về trang chủ
             </Link>
           </div>
