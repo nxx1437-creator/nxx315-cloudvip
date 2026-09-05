@@ -31,6 +31,7 @@ import AccountReview from "./pages/AccountReview.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
+import VersionChecker from './VersionChecker';
 
 export default function App() {
   return (
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/task/callback" element={<TaskCallback />} />
       </Routes>
+    <VersionChecker />
     </BrowserRouter>
   );
 }
