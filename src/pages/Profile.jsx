@@ -786,10 +786,9 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
     const token = sessionData?.session?.access_token;
 
     try {
-      const { error: fnError } = await supabase.functions.invoke("delete-account", {
+      const { error: fnError } = await supabase.functions.invoke("swift-function", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (fnError) throw fnError;
 
       await supabase.auth.signOut();
