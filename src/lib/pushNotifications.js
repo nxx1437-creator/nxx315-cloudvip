@@ -17,7 +17,14 @@ export async function isPushSupported() {
 
 export async function getPushPermissionState() {
   if (!(await isPushSupported())) return "unsupported";
-  return Notification.permission;
+
+  if (Notification.permission === "denied") return "denied";
+  if (Notification.permission !== "granted") return "default";
+
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+
+  return subscription ? "granted" : "default";
 }
 
 export async function subscribeToPush() {
