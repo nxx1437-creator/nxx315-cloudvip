@@ -19,7 +19,7 @@ export default function RedemptionPolicy() {
           <h1 className="font-display mt-4 text-3xl font-bold text-slate-900">Quy định đổi thưởng</h1>
           <p className="mt-2 text-sm text-slate-500">Cập nhật lần cuối: 25/08/2026</p>
           <div className="mt-4 rounded-2xl bg-blue-50 p-4 text-sm text-blue-700">
-            <p className="font-semibold">🎯 Áp dụng cho tất cả yêu cầu đổi thưởng</p>
+            <p className="font-semibold"> Áp dụng cho tất cả yêu cầu đổi thưởng</p>
             <p>Quy định này áp dụng cho tất cả yêu cầu đổi xu/điểm lấy phần thưởng trên NXX315 Studio Rewards.</p>
           </div>
         </div>
@@ -33,18 +33,18 @@ export default function RedemptionPolicy() {
               <li>Các phần thưởng khác được công bố trên hệ thống</li>
             </ul>
             <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              ℹ️ Danh sách, giá trị và số xu/điểm cần thiết <strong>có thể thay đổi</strong> tùy từng thời điểm.
+               Danh sách, giá trị và số xu/điểm cần thiết <strong>có thể thay đổi</strong> tùy từng thời điểm.
             </div>
           </Section>
 
           <Section icon={Shield} title="2. Điều kiện đổi thưởng">
             <p>Để tạo yêu cầu đổi thưởng:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600">
-              <li>✅ Tài khoản phải hoạt động bình thường</li>
-              <li>✅ Người dùng phải có đủ số xu/điểm yêu cầu</li>
-              <li>✅ Người dùng phải cung cấp thông tin nhận thưởng chính xác</li>
-              <li>✅ Tài khoản không đang bị hạn chế do vi phạm</li>
-              <li>✅ Yêu cầu phải tuân thủ các quy định của NXX315 Studio Rewards</li>
+              <li>✓ Tài khoản phải hoạt động bình thường</li>
+              <li>✓ Người dùng phải có đủ số xu/điểm yêu cầu</li>
+              <li>✓ Người dùng phải cung cấp thông tin nhận thưởng chính xác</li>
+              <li>✓ Tài khoản không đang bị hạn chế do vi phạm</li>
+              <li>✓ Yêu cầu phải tuân thủ các quy định của NXX315 Studio Rewards</li>
             </ul>
           </Section>
 
@@ -78,7 +78,7 @@ export default function RedemptionPolicy() {
           <Section icon={Mail} title="4. Thông tin nhận thưởng">
             <p>Người dùng <strong>chịu trách nhiệm kiểm tra thông tin</strong> trước khi gửi yêu cầu.</p>
             <div className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-              ⚠️ Nếu người dùng cung cấp thông tin sai, NXX315 Studio Rewards <strong>có thể không thể hoàn lại hoặc thay thế</strong> phần thưởng đã được gửi thành công.
+              Nếu người dùng cung cấp thông tin sai, NXX315 Studio Rewards <strong>có thể không thể hoàn lại hoặc thay thế</strong> phần thưởng đã được gửi thành công.
             </div>
           </Section>
 
@@ -97,10 +97,10 @@ export default function RedemptionPolicy() {
           <Section icon={Coins} title="6. Xu/điểm sau khi đổi thưởng">
             <p>Khi yêu cầu đổi thưởng được xác nhận, số xu/điểm tương ứng <strong>sẽ được trừ khỏi tài khoản</strong>.</p>
             <div className="mt-3 space-y-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">
-              <p>✅ Nếu yêu cầu bị từ chối do lỗi hệ thống hoặc nguyên nhân thuộc về NXX315 Studio Rewards, số xu/điểm <strong>có thể được hoàn lại</strong> tùy trường hợp.</p>
+              <p> Nếu yêu cầu bị từ chối do lỗi hệ thống hoặc nguyên nhân thuộc về NXX315 Studio Rewards, số xu/điểm <strong>có thể được hoàn lại</strong> tùy trường hợp.</p>
             </div>
             <div className="mt-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-              ⚠️ Nếu yêu cầu bị từ chối do gian lận hoặc vi phạm của người dùng, NXX315 Studio Rewards <strong>có quyền không hoàn lại</strong> số xu/điểm liên quan.
+               Nếu yêu cầu bị từ chối do gian lận hoặc vi phạm của người dùng, NXX315 Studio Rewards <strong>có quyền không hoàn lại</strong> số xu/điểm liên quan.
             </div>
           </Section>
 
@@ -125,7 +125,7 @@ export default function RedemptionPolicy() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <Link to="/" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
+            <Link to="/dashboard" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
               Quay về trang chủ
             </Link>
           </div>
