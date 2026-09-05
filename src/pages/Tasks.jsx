@@ -340,7 +340,7 @@ const handleStart = async (task) => {
               }`}
             >
               {isAdmin
-                ? "👑 Admin — Miễn kiểm tra"
+                ? " Admin — Miễn kiểm tra"
                 : isBlocked
                 ? `Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế làm nhiệm vụ`
                 : `Rủi ro: ${profile.risk_score}/100`}
@@ -369,15 +369,6 @@ const handleStart = async (task) => {
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
             <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
             <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
-          </div>
-        )}
-
-        {pollingTaskIds.length > 0 && (
-          <div className="flex items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50/70 px-4 py-2.5">
-            <div className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-sky-300 border-t-sky-600" />
-            <p className="text-xs font-semibold text-sky-700">
-              Đang chờ xác nhận {pollingTaskIds.length} nhiệm vụ — cứ làm tiếp nhiệm vụ khác nhé
-            </p>
           </div>
         )}
 
@@ -436,22 +427,22 @@ const handleStart = async (task) => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleStart(task)}
-                    disabled={isDone || startingTaskId === task.id || isBlocked || isThisPolling || isLoading}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <ExternalLink size={15} />
-                    {startingTaskId === task.id
-                      ? "Đang mở..."
-                      : isThisPolling
-                      ? "Đang xác nhận..."
-                      : isBlocked
-                      ? "Tài khoản bị khóa"
-                      : isDone
-                      ? "Đã hết lượt hôm nay"
-                      : "Làm nhiệm vụ"}
-                  </button>
+                  {!loading && (
+                    <button
+                      onClick={() => handleStart(task)}
+                      disabled={isDone || startingTaskId === task.id || isBlocked || isThisPolling || isLoading}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <ExternalLink size={15} />
+                      {startingTaskId === task.id
+                        ? "Đang mở..."
+                        : isBlocked
+                        ? "Tài khoản bị khóa"
+                        : isDone
+                        ? "Đã hết lượt hôm nay"
+                        : "Làm nhiệm vụ"}
+                    </button>
+                  )}
                 </div>
               </div>
             );
