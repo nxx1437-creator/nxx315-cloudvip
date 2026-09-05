@@ -1,0 +1,17 @@
+{
+  "name": "NXX315 Studio Rewards",
+  "short_name": "NXX315",
+  "description": "Kiếm Coin, đổi thưởng, nhận Sao mỗi ngày",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F5F7FB",
+  "theme_color": "#3478F6",
+  "icons": [
+    {
+      "src": "/favicon-outline.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
