@@ -148,6 +148,7 @@ export default function Tasks() {
             .eq("id", logId);
 
           showToast("Một nhiệm vụ đã hết hạn.", "error");
+          
           reload();
         }
       } catch (err) {
