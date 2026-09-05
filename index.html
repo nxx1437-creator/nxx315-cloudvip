@@ -9,7 +9,10 @@
       content="b3BlZVRCZm9DOFJDWUNFZllINTQ4eVNXMkU5Y1FybXNEa2RUVXNqQUVLST01"
     />
 
-    <title>NXX315 Studio Rewards — Kiếm Coin, đổi Robux chính hãng</title>
+<title>NXX315 Studio Rewards — Kiếm Coin, đổi Robux chính hãng</title>
+
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3478F6" />
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   </head>
@@ -17,6 +20,16 @@
   <body>
     <div id="root"></div>
 
-    <script type="module" src="/src/main.jsx"></script>
+<script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch((err) => {
+            console.error("SW registration failed:", err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
