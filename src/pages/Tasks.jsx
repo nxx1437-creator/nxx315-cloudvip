@@ -130,12 +130,13 @@ export default function Tasks() {
               body: `Bạn vừa nhận được +${completedTask?.reward_coins || 0} Coin từ ${completedTask?.provider || "nhiệm vụ"}!`,
               url: "/tasks",
             },
-          }).catch((err) => console.error("Push error:", err));
-
-          reload();
-          return;
-        }
-
+          }).then((res) => {
+            if (res.error) {
+              alert("LỖI PUSH: " + JSON.stringify(res.error));
+            } else {
+              alert("PUSH OK: " + JSON.stringify(res.data));
+            }
+          }).catch((err) => alert("PUSH CATCH: " + err.message));
         if (data?.error === "Đã hết hạn") {
           clearInterval(pollingRefs.current[logId]);
           delete pollingRefs.current[logId];
