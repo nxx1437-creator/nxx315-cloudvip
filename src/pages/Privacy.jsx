@@ -19,7 +19,7 @@ export default function Privacy() {
           <h1 className="font-display mt-4 text-3xl font-bold text-slate-900">Chính sách quyền riêng tư</h1>
           <p className="mt-2 text-sm text-slate-500">Cập nhật lần cuối: 25/08/2026</p>
           <div className="mt-4 rounded-2xl bg-blue-50 p-4 text-sm text-blue-700">
-            <p className="font-semibold">🔒 Cam kết bảo vệ quyền riêng tư</p>
+            <p className="font-semibold"> Cam kết bảo vệ quyền riêng tư</p>
             <p>NXX315 Studio Rewards tôn trọng quyền riêng tư của người dùng và cam kết bảo vệ thông tin được cung cấp trong quá trình sử dụng dịch vụ.</p>
           </div>
         </div>
@@ -36,7 +36,7 @@ export default function Privacy() {
               <li>Thông tin kỹ thuật cần thiết để duy trì và bảo vệ hoạt động của hệ thống</li>
             </ul>
             <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              ℹ️ Chúng tôi <strong>chỉ thu thập những thông tin cần thiết</strong> cho mục đích vận hành, bảo mật và cung cấp dịch vụ.
+               Chúng tôi <strong>chỉ thu thập những thông tin cần thiết</strong> cho mục đích vận hành, bảo mật và cung cấp dịch vụ.
             </div>
           </Section>
 
@@ -57,7 +57,7 @@ export default function Privacy() {
           <Section icon={Lock} title="3. Bảo vệ thông tin">
             <p>NXX315 Studio Rewards áp dụng các biện pháp phù hợp nhằm hạn chế truy cập trái phép, mất mát hoặc sử dụng thông tin không đúng mục đích.</p>
             <div className="mt-3 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-700">
-              ⚠️ Tuy nhiên, <strong>không có hệ thống trực tuyến nào có thể đảm bảo an toàn tuyệt đối</strong>. Người dùng cũng có trách nhiệm bảo vệ thông tin đăng nhập và không chia sẻ thông tin tài khoản cho người khác.
+               Tuy nhiên, <strong>không có hệ thống trực tuyến nào có thể đảm bảo an toàn tuyệt đối</strong>. Người dùng cũng có trách nhiệm bảo vệ thông tin đăng nhập và không chia sẻ thông tin tài khoản cho người khác.
             </div>
           </Section>
 
@@ -87,7 +87,7 @@ export default function Privacy() {
               <li>Yêu cầu xóa tài khoản khi phù hợp</li>
             </ul>
             <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              ℹ️ Một số dữ liệu có thể cần được giữ lại vì lý do bảo mật, giao dịch, chống gian lận hoặc nghĩa vụ pháp lý.
+               Một số dữ liệu có thể cần được giữ lại vì lý do bảo mật, giao dịch, chống gian lận hoặc nghĩa vụ pháp lý.
             </div>
           </Section>
 
@@ -107,7 +107,7 @@ export default function Privacy() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <Link to="/" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
+            <Link to="/dashboard" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
               Quay về trang chủ
             </Link>
           </div>
