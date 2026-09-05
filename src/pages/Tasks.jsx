@@ -136,7 +136,8 @@ export default function Tasks() {
             } else {
               alert("PUSH OK: " + JSON.stringify(res.data));
             }
-          }).catch((err) => alert("PUSH CATCH: " + err.message));
+          }).catch((err) => alert("PUSH CATCH: " + err.message))
+        }
         if (data?.error === "Đã hết hạn") {
           clearInterval(pollingRefs.current[logId]);
           delete pollingRefs.current[logId];
