@@ -11,8 +11,8 @@ import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import useTheme from "../hooks/useTheme.js";
 import { supabase } from "../lib/supabaseClient.js";
-import BottomNav from "../components/BottomNav.jsx";
-import MfaChallenge from "../components/MfaChallenge.jsx";
+import BottomNav from "../components/BottomNav.jsx";import MfaChallenge from "../components/MfaChallenge.jsx";
+import { isPushSupported, getPushPermissionState, subscribeToPush, unsubscribeFromPush } from "../lib/pushNotifications.js";
 
 const ACCENT_OPTIONS = [
   { key: "blue", label: "Xanh dương", dot: "bg-sky-500" },
@@ -48,7 +48,10 @@ export default function ProfilePage() {
   const [isCopied, setIsCopied] = useState(false);
   const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [isMFAEnabled, setIsMFAEnabled] = useState(false);
-
+  const [pushState, setPushState] = useState("default");
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState("");
+  
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
 
@@ -68,11 +71,39 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    checkMFAStatus();
-    if (profile?.recovery_codes && profile.recovery_codes.length > 0) {
-      setRecoveryCodes(profile.recovery_codes);
+    getPushPermissionState().then(setPushState);
+  }, []);
+
+  const handleTogglePush = async () => {
+    setPushError("");
+    setPushLoading(true);
+
+    try {
+      if (pushState === "granted") {
+        await unsubscribeFromPush();
+        await supabase.from("push_subscriptions").delete().eq("user_id", session.user.id);
+        setPushState("default");
+      } else {
+        const sub = await subscribeToPush();
+
+        await supabase.from("push_subscriptions").upsert(
+          {
+            user_id: session.user.id,
+            endpoint: sub.endpoint,
+            p256dh: sub.keys.p256dh,
+            auth: sub.keys.auth,
+          },
+          { onConflict: "endpoint" }
+        );
+
+        setPushState("granted");
+      }
+    } catch (err) {
+      setPushError(err.message || "Có lỗi xảy ra.");
+    } finally {
+      setPushLoading(false);
     }
-  }, [profile]);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -317,7 +348,30 @@ export default function ProfilePage() {
                 {isMFAEnabled ? "Đã bật" : "Chưa bật"}
               </span>
             </button>
+           <button
+              onClick={handleTogglePush}
+              disabled={pushLoading || pushState === "unsupported"}
+              className="mt-3 flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100 disabled:opacity-50 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-500/10 text-accent-600"><Bell size={18} /></span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Thông báo đẩy</p>
+                  <p className="text-xs text-slate-400">
+                    {pushState === "unsupported" ? "Thiết bị không hỗ trợ" : "Nhận thông báo ngay cả khi đóng app"}
+                  </p>
+                </div>
+              </div>
+              {pushLoading ? (
+                <Loader2 size={16} className="animate-spin text-accent-500" />
+              ) : (
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${pushState === "granted" ? "bg-emerald-50 text-emerald-600" : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}>
+                  {pushState === "granted" ? "Đã bật" : "Chưa bật"}
+                </span>
+              )}
+            </button>
 
+            {pushError && <p className="mt-2 text-xs font-bold text-rose-500">{pushError}</p>}
             <button
               onClick={generateRecoveryCodes}
               className="mt-3 flex w-full items-center justify-between rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
