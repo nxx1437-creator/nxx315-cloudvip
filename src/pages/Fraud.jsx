@@ -29,7 +29,7 @@ export default function Fraud() {
             <p>Mỗi người dùng <strong>chỉ được phép sử dụng một tài khoản</strong> trên NXX315 Studio Rewards.</p>
             <p className="mt-2 text-sm text-slate-500">Việc thay đổi thiết bị hoặc mạng Internet không làm thay đổi quy định này.</p>
             <div className="mt-3 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
-              <p className="font-semibold">🚫 Nghiêm cấm tạo hoặc sử dụng nhiều tài khoản nhằm:</p>
+              <p className="font-semibold"> Nghiêm cấm tạo hoặc sử dụng nhiều tài khoản nhằm:</p>
               <ul className="mt-1 list-inside list-disc space-y-1">
                 <li>Nhận phần thưởng nhiều lần</li>
                 <li>Vượt giới hạn nhiệm vụ</li>
@@ -67,7 +67,7 @@ export default function Fraud() {
               <li>Khai thác lỗi hoặc hành vi bất thường khác</li>
             </ul>
             <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
-              ℹ️ Việc sử dụng Wi-Fi, 4G hoặc 5G khác nhau <strong>không được xem là lý do hợp lệ</strong> để tạo thêm tài khoản.
+               Việc sử dụng Wi-Fi, 4G hoặc 5G khác nhau <strong>không được xem là lý do hợp lệ</strong> để tạo thêm tài khoản.
             </div>
           </Section>
 
@@ -88,7 +88,7 @@ export default function Fraud() {
           <Section icon={Bug} title="5. Khai thác lỗi hệ thống">
             <p>Nếu phát hiện lỗi, người dùng <strong>nên báo cho NXX315 Studio Rewards</strong> thay vì khai thác lỗi.</p>
             <div className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
-              ⚠️ Việc cố tình khai thác lỗi để nhận xu, điểm hoặc phần thưởng <strong>được xem là hành vi vi phạm</strong> chính sách chống gian lận.
+               Việc cố tình khai thác lỗi để nhận xu, điểm hoặc phần thưởng <strong>được xem là hành vi vi phạm</strong> chính sách chống gian lận.
             </div>
           </Section>
 
@@ -104,7 +104,7 @@ export default function Fraud() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <Link to="/" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
+            <Link to="/dashboard" className="inline-block rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:scale-105">
               Quay về trang chủ
             </Link>
           </div>
