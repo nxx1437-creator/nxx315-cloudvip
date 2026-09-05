@@ -123,6 +123,15 @@ export default function Tasks() {
           }
 
           showToast(`✅ Hoàn thành ${completedTask?.provider || "nhiệm vụ"}! +${completedTask?.reward_coins || 0} Coin`);
+
+          supabase.functions.invoke("send-push", {
+            body: {
+              title: "🎉 Hoàn thành nhiệm vụ",
+              body: `Bạn vừa nhận được +${completedTask?.reward_coins || 0} Coin từ ${completedTask?.provider || "nhiệm vụ"}!`,
+              url: "/tasks",
+            },
+          }).catch((err) => console.error("Push error:", err));
+
           reload();
           return;
         }
