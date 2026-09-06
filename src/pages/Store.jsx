@@ -1071,10 +1071,10 @@ function History({ history, copied, onCopy }) {
                   </button>
                 )}
               </div>
-            </div>
+                        </div>
           );
         })}
       </div>
     </section>
-  ):
+  );
 }
