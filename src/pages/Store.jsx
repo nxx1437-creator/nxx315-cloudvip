@@ -1070,12 +1070,14 @@ function History({ history, copied, onCopy }) {
       )}
     </button>
   )}
-</div>
-</div>
-))}
-</div>
-</section>
-);
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 export default Store;
+
