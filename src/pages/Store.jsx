@@ -738,75 +738,97 @@ function PackageGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-      {packages.map((pkg) => (
-        <PackageCard
-          key={pkg.id}
-          pkg={pkg}
-          category={category}
-          selected={selectedPackage?.id === pkg.id}
-          onClick={() => onSelect(pkg)}
-        />
-      ))}
-    </div>
-  );
-}
+  <div className="flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible">
+    {packages.map((pkg) => (
+      <PackageCard
+        key={pkg.id}
+        pkg={pkg}
+        category={category}
+        selected={selectedPackage?.id === pkg.id}
+        onClick={() => onSelect(pkg)}
+      />
+    ))}
+  </div>
+);
+
 function PackageCard({
   pkg,
   category,
   selected,
   onClick,
 }) {
+  const gameName =
+    pkg.game_name ||
+    (category === "robux" ? "Roblox" : "Liên Quân Mobile");
+
+  const gameLogo =
+    pkg.game_logo ||
+    (category === "robux"
+      ? "/images/games/roblox.png"
+      : "/images/games/lien-quan.png");
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-[22px] border bg-white p-3 text-left transition duration-200 ${
+      className={`group relative min-w-[160px] overflow-hidden rounded-[18px] border bg-white p-2 text-left transition ${
         selected
-          ? "border-pink-400 shadow-[0_8px_25px_rgba(244,114,182,0.2)] ring-2 ring-pink-100"
-          : "border-orange-100 shadow-sm hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md"
+          ? "border-pink-400 ring-2 ring-pink-100"
+          : "border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-md"
       }`}
     >
       {selected && (
-        <div className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white">
+        <div className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white">
           <Check size={13} strokeWidth={3} />
         </div>
       )}
 
-      <div
-        className={`mb-3 flex h-28 items-center justify-center rounded-[18px] ${
-          category === "robux"
-            ? "bg-gradient-to-br from-pink-100 to-orange-100"
-            : "bg-gradient-to-br from-sky-100 to-cyan-100"
-        }`}
-      >
-        {category === "robux" ? (
-          <Gamepad2 size={42} strokeWidth={1.5} className="text-pink-400" />
+      <div className="flex h-[105px] items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-pink-100 to-orange-100">
+        {pkg.image_url ? (
+          <img
+            src={pkg.image_url}
+            alt={pkg.name}
+            className="h-full w-full object-cover"
+          />
         ) : (
-          <Swords size={42} strokeWidth={1.5} className="text-sky-500" />
+          <Gift size={38} className="text-pink-400" />
         )}
       </div>
 
-      <span className="inline-flex rounded-full bg-pink-50 px-2 py-1 text-[9px] font-bold text-pink-500">
-        Xu thưởng
-      </span>
+      <div className="mt-2 flex items-center gap-2">
+        <img
+          src={gameLogo}
+          alt={gameName}
+          className="h-8 w-8 rounded-lg object-cover ring-1 ring-slate-100"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+          }}
+        />
 
-      <p className="mt-2 min-h-[40px] text-sm font-black leading-5 text-slate-900">
-        {pkg.name}
-      </p>
+        <div className="min-w-0">
+          <p className="truncate text-[10px] font-bold text-slate-400">
+            {gameName}
+          </p>
 
-      <div className="mt-3 flex items-center justify-between border-t border-orange-50 pt-3">
-        <div className="flex items-center gap-1.5">
-          <Coins size={15} className="text-amber-500" />
+          <p className="truncate text-xs font-black text-slate-900">
+            {pkg.name}
+          </p>
+        </div>
+      </div>
 
-          <span className="text-sm font-black text-orange-500">
-            {formatCoins(pkg.coin_cost)}
+      <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
+        <div className="flex items-center gap-1">
+          <Coins size={14} className="text-amber-500" />
+
+          <span className="text-xs font-black text-orange-500">
+            {formatCoins(pkg.coin_cost)} xu
           </span>
         </div>
 
-        <span className="rounded-full bg-pink-500 px-2.5 py-1 text-[10px] font-bold text-white">
-          Đổi
-        </span>
+        <ChevronRight
+          size={14}
+          className="text-slate-300 transition group-hover:translate-x-0.5"
+        />
       </div>
     </button>
   );
