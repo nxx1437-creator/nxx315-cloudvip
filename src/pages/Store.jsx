@@ -454,28 +454,34 @@ export default function Store() {
               }
 function StoreHeader({ profile, onBack }) {
   return (
-    <header className="mb-5 flex items-center justify-between">
+    <header className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-100 transition hover:text-sky-600"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-orange-100 transition hover:text-orange-500"
         >
           <ArrowLeft size={18} />
         </button>
 
         <div>
-          <h1 className="text-xl font-black text-slate-950">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-400">
             Cửa hàng
+          </p>
+
+          <h1 className="text-xl font-black text-slate-900">
+            Cộng Sản Thưởng
           </h1>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-2xl border border-amber-100 bg-white px-3 py-2 shadow-sm">
-        <Coins size={17} className="text-amber-500" />
+      <div className="flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-2 shadow-sm">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
+          <Coins size={17} className="text-amber-500" />
+        </div>
 
         <div className="leading-none">
-          <p className="text-[10px] font-medium text-slate-400">
-            Số dư
+          <p className="text-[9px] font-medium text-slate-400">
+            Số xu
           </p>
 
           <p className="mt-1 text-sm font-black text-slate-900">
@@ -486,54 +492,48 @@ function StoreHeader({ profile, onBack }) {
     </header>
   );
 }
+
 function Hero({ balance }) {
   return (
-    <section className="relative mb-5 overflow-hidden rounded-[28px] border border-sky-100 bg-white p-5 shadow-[0_12px_40px_rgba(14,165,233,0.08)] sm:p-6">
-      <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-sky-300/15 blur-3xl" />
-      <div className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
+    <section className="relative mb-5 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#ffd9df] via-[#ffe9d5] to-[#fff5c7] px-5 py-5 shadow-[0_12px_35px_rgba(244,165,28,0.12)] sm:px-6">
+      <div className="absolute -right-10 -top-8 h-36 w-36 rounded-full bg-pink-300/30 blur-2xl" />
+      <div className="absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-yellow-300/30 blur-2xl" />
 
-      <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-        <div>
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-[10px] font-bold text-sky-600">
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="max-w-[68%]">
+          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 text-[10px] font-bold text-orange-500">
             <Sparkles size={12} />
-            ĐỔI THƯỞNG NHANH
+            NHẬN THƯỞNG MỖI NGÀY
           </div>
 
-          <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-            Đổi Coin lấy quà game
-            <span className="text-sky-500"> cực dễ</span>
+          <h2 className="text-xl font-black leading-tight text-slate-900 sm:text-2xl">
+            Đổi xu lấy
+            <span className="text-pink-500"> phần thưởng</span>
           </h2>
 
-          <p className="mt-2 max-w-xl text-xs leading-5 text-slate-500 sm:text-sm">
-            Chọn phần thưởng, nhập thông tin nhận hàng và gửi
-            đơn. Mọi giao dịch đều được ghi nhận trên hệ thống.
+          <p className="mt-2 text-[11px] leading-5 text-slate-600 sm:text-sm">
+            Dùng xu của bạn để đổi Robux, Quân Huy và nhiều phần quà hấp dẫn.
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <InfoBadge text="Giao dịch minh bạch" />
-            <InfoBadge text="Không cần mật khẩu" />
-            <InfoBadge text="Xử lý theo đơn" />
+          <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-2 shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100">
+              <Coins size={19} className="text-amber-500" />
+            </div>
+
+            <div>
+              <p className="text-[10px] text-slate-400">
+                Xu hiện có
+              </p>
+
+              <p className="text-lg font-black text-slate-900">
+                {formatCoins(balance)}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="hidden min-w-[170px] rounded-2xl border border-sky-100 bg-sky-50/70 p-4 sm:block">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm">
-              <WalletIcon />
-            </div>
-
-            <span className="text-xs font-semibold text-slate-500">
-              Coin hiện có
-            </span>
-          </div>
-
-          <p className="mt-3 text-2xl font-black text-slate-900">
-            {formatCoins(balance)}
-          </p>
-
-          <p className="text-[10px] text-slate-400">
-            Coin khả dụng
-          </p>
+        <div className="hidden h-28 w-28 shrink-0 items-center justify-center rounded-full bg-white/50 sm:flex">
+          <Gift size={58} strokeWidth={1.5} className="text-pink-400" />
         </div>
       </div>
     </section>
@@ -753,6 +753,7 @@ function PackageGrid({
 }
 
 function PackageCard({
+function PackageCard({
   pkg,
   category,
   selected,
@@ -762,66 +763,57 @@ function PackageCard({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-[24px] border bg-white p-4 text-left transition duration-200 ${
+      className={`group relative overflow-hidden rounded-[22px] border bg-white p-3 text-left transition duration-200 ${
         selected
-          ? "border-sky-400 shadow-[0_8px_30px_rgba(14,165,233,0.16)] ring-2 ring-sky-100"
-          : "border-slate-200 shadow-sm hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
+          ? "border-pink-400 shadow-[0_8px_25px_rgba(244,114,182,0.2)] ring-2 ring-pink-100"
+          : "border-orange-100 shadow-sm hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md"
       }`}
     >
       {selected && (
-        <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm">
+        <div className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white">
           <Check size={13} strokeWidth={3} />
         </div>
       )}
 
       <div
-        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${
+        className={`mb-3 flex h-28 items-center justify-center rounded-[18px] ${
           category === "robux"
-            ? "bg-sky-50 text-sky-500"
-            : "bg-cyan-50 text-cyan-600"
+            ? "bg-gradient-to-br from-pink-100 to-orange-100"
+            : "bg-gradient-to-br from-sky-100 to-cyan-100"
         }`}
       >
         {category === "robux" ? (
-          <Gamepad2 size={21} />
+          <Gamepad2 size={42} strokeWidth={1.5} className="text-pink-400" />
         ) : (
-          <Swords size={21} />
+          <Swords size={42} strokeWidth={1.5} className="text-sky-500" />
         )}
       </div>
 
-      <p className="min-h-[40px] text-sm font-black leading-5 text-slate-900">
+      <span className="inline-flex rounded-full bg-pink-50 px-2 py-1 text-[9px] font-bold text-pink-500">
+        Xu thưởng
+      </span>
+
+      <p className="mt-2 min-h-[40px] text-sm font-black leading-5 text-slate-900">
         {pkg.name}
       </p>
 
-      <div className="mt-3 flex items-end justify-between gap-2">
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">
-            Chi phí
-          </p>
+      <div className="mt-3 flex items-center justify-between border-t border-orange-50 pt-3">
+        <div className="flex items-center gap-1.5">
+          <Coins size={15} className="text-amber-500" />
 
-          <p className="mt-0.5 text-base font-black text-sky-600">
+          <span className="text-sm font-black text-orange-500">
             {formatCoins(pkg.coin_cost)}
-          </p>
+          </span>
         </div>
 
-        <Coins
-          size={17}
-          className="mb-1 text-amber-400"
-        />
-      </div>
-
-      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-        <span className="text-[10px] font-bold text-sky-500">
-          Đổi ngay
+        <span className="rounded-full bg-pink-500 px-2.5 py-1 text-[10px] font-bold text-white">
+          Đổi
         </span>
-
-        <ChevronRight
-          size={14}
-          className="text-slate-300 transition group-hover:translate-x-0.5"
-        />
       </div>
     </button>
   );
-                }
+}
+
 function OrderPanel({
   selectedPackage,
   category,
