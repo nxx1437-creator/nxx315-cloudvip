@@ -20,7 +20,7 @@ import {
 
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
-import { supabase } from "../lib/supabase.js";
+import { supabase } from "../lib/supabaseClient.js";
 
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
