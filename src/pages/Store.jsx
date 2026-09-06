@@ -751,8 +751,6 @@ function PackageGrid({
     </div>
   );
 }
-
-function PackageCard({
 function PackageCard({
   pkg,
   category,
