@@ -1078,6 +1078,3 @@ function History({ history, copied, onCopy }) {
     </section>
   );
 }
-
-export default Store;
-
