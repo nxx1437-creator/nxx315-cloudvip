@@ -14,6 +14,8 @@ import {
   Sparkles,
   Swords,
   XCircle,
+  Star,
+  Zap,
 } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
@@ -84,6 +86,7 @@ export default function Store() {
     setToast({ message, type });
 
     window.clearTimeout(window.__storeToast);
+
     window.__storeToast = window.setTimeout(() => {
       setToast(null);
     }, 3500);
@@ -342,23 +345,25 @@ export default function Store() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] pb-28 text-slate-900">
+    <div className="min-h-screen bg-[#f5f5f7] pb-28 text-slate-900">
+
       <div className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-72 w-72 rounded-full bg-sky-300/10 blur-3xl" />
-        <div className="absolute right-0 top-40 h-80 w-80 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-pink-300/20 blur-3xl" />
+        <div className="absolute right-0 top-32 h-96 w-96 rounded-full bg-violet-300/15 blur-3xl" />
+        <div className="absolute bottom-20 left-1/3 h-80 w-80 rounded-full bg-yellow-200/20 blur-3xl" />
       </div>
 
       <TopHeader />
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
 
         {toast && (
           <div
-            className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-xl ${
+            className={`fixed left-1/2 top-4 z-[100] flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border bg-white/95 px-4 py-3 shadow-2xl backdrop-blur-xl ${
               toast.type === "error"
-                  ? "border-rose-200 bg-white/95 text-rose-700"
-                  : "border-emerald-200 bg-white/95 text-emerald-700"
-              }`}
+                ? "border-rose-200 text-rose-700"
+                : "border-emerald-200 text-emerald-700"
+            }`}
           >
             {toast.type === "error" ? (
               <XCircle size={19} />
@@ -377,9 +382,9 @@ export default function Store() {
           onBack={() => window.history.back()}
         />
 
-        <Hero
-          balance={profile?.coins}
-        />
+        <Hero balance={profile?.coins} />
+
+        <BalanceCard balance={profile?.coins} />
 
         <CategoryTabs
           category={category}
@@ -398,34 +403,41 @@ export default function Store() {
           />
         )}
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="mt-6">
 
-          <section>
-            <div className="mb-3 flex items-end justify-between">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-500">
-                  Cửa hàng
-                </p>
+          <div className="mb-3 flex items-end justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles
+                  size={18}
+                  className="text-orange-400"
+                />
 
-                <h2 className="mt-1 text-lg font-black">
-                  Chọn gói {category === "robux" ? "Robux" : "Quân Huy"}
+                <h2 className="text-xl font-black">
+                  Đề xuất cho bạn
                 </h2>
               </div>
 
-              <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-400 shadow-sm ring-1 ring-slate-100">
-                {filteredPackages.length} gói
-              </span>
+              <p className="mt-1 text-xs text-slate-400">
+                Chọn phần thưởng bạn muốn đổi bằng xu
+              </p>
             </div>
 
-            <PackageGrid
-              packages={filteredPackages}
-              category={category}
-              selectedPackage={selectedPackage}
-              loading={loading}
-              onSelect={selectPackage}
-            />
-          </section>
+            <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-400 shadow-sm">
+              {filteredPackages.length} gói
+            </span>
+          </div>
 
+          <PackageGrid
+            packages={filteredPackages}
+            category={category}
+            selectedPackage={selectedPackage}
+            loading={loading}
+            onSelect={selectPackage}
+          />
+        </section>
+
+        <div className="mt-6">
           <OrderPanel
             selectedPackage={selectedPackage}
             category={category}
@@ -446,48 +458,71 @@ export default function Store() {
           copied={copied}
           onCopy={copyOrderCode}
         />
+
       </main>
 
       <BottomNav />
     </div>
   );
-              }
+}
+
 function StoreHeader({ profile, onBack }) {
   return (
     <header className="mb-4 flex items-center justify-between">
+
       <div className="flex items-center gap-3">
+
         <button
+          type="button"
           onClick={onBack}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-orange-100 transition hover:text-orange-500"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100 transition hover:scale-105"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={20} />
         </button>
 
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-400">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-pink-500">
             Cửa hàng
           </p>
 
-          <h1 className="text-xl font-black text-slate-900">
+          <h1 className="text-xl font-black">
             Cộng Sản Thưởng
           </h1>
         </div>
+
       </div>
 
-      <div className="flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-3 py-2 shadow-sm">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
-          <Coins size={17} className="text-amber-500" />
+      <div className="flex items-center gap-2">
+
+        <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm sm:flex">
+          <Star
+            size={19}
+            className="text-yellow-400"
+            fill="currentColor"
+          />
         </div>
 
-        <div className="leading-none">
-          <p className="text-[9px] font-medium text-slate-400">
-            Số xu
-          </p>
+        <div className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2 shadow-sm ring-1 ring-slate-100">
 
-          <p className="mt-1 text-sm font-black text-slate-900">
-            {formatCoins(profile?.coins)}
-          </p>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100">
+            <Coins
+              size={17}
+              className="text-yellow-500"
+            />
+          </div>
+
+          <div className="leading-none">
+            <p className="text-[9px] font-medium text-slate-400">
+              Số xu
+            </p>
+
+            <p className="mt-1 text-sm font-black">
+              {formatCoins(profile?.coins)}
+            </p>
+          </div>
+
         </div>
+
       </div>
     </header>
   );
@@ -495,29 +530,40 @@ function StoreHeader({ profile, onBack }) {
 
 function Hero({ balance }) {
   return (
-    <section className="relative mb-5 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#ffd9df] via-[#ffe9d5] to-[#fff5c7] px-5 py-5 shadow-[0_12px_35px_rgba(244,165,28,0.12)] sm:px-6">
-      <div className="absolute -right-10 -top-8 h-36 w-36 rounded-full bg-pink-300/30 blur-2xl" />
-      <div className="absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-yellow-300/30 blur-2xl" />
+    <section className="relative mb-4 overflow-hidden rounded-[30px] bg-gradient-to-br from-[#ffd7e4] via-[#ffe9d5] to-[#fff6bd] px-5 py-6 shadow-[0_15px_50px_rgba(236,72,153,0.12)] sm:px-7">
+
+      <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-pink-300/30 blur-3xl" />
+
+      <div className="absolute -bottom-20 left-1/3 h-44 w-44 rounded-full bg-yellow-300/30 blur-3xl" />
 
       <div className="relative flex items-center justify-between gap-4">
-        <div className="max-w-[68%]">
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 text-[10px] font-bold text-orange-500">
+
+        <div className="max-w-[72%]">
+
+          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/75 px-3 py-1.5 text-[10px] font-black text-pink-500 shadow-sm">
             <Sparkles size={12} />
-            NHẬN THƯỞNG MỖI NGÀY
+            SĂN QUÀ MỖI NGÀY
           </div>
 
-          <h2 className="text-xl font-black leading-tight text-slate-900 sm:text-2xl">
+          <h2 className="text-2xl font-black leading-tight sm:text-3xl">
             Đổi xu lấy
-            <span className="text-pink-500"> phần thưởng</span>
+            <span className="text-pink-500">
+              {" "}phần thưởng
+            </span>
           </h2>
 
-          <p className="mt-2 text-[11px] leading-5 text-slate-600 sm:text-sm">
-            Dùng xu của bạn để đổi Robux, Quân Huy và nhiều phần quà hấp dẫn.
+          <p className="mt-2 max-w-lg text-xs leading-5 text-slate-600 sm:text-sm">
+            Dùng xu của bạn để đổi Robux, Quân Huy
+            và nhiều phần quà hấp dẫn.
           </p>
 
-          <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-2 shadow-sm">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100">
-              <Coins size={19} className="text-amber-500" />
+          <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white/85 px-3 py-2.5 shadow-sm">
+
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100">
+              <Coins
+                size={19}
+                className="text-yellow-500"
+              />
             </div>
 
             <div>
@@ -525,177 +571,197 @@ function Hero({ balance }) {
                 Xu hiện có
               </p>
 
-              <p className="text-lg font-black text-slate-900">
+              <p className="text-lg font-black">
                 {formatCoins(balance)}
               </p>
             </div>
+
           </div>
+
         </div>
 
         <div className="hidden h-28 w-28 shrink-0 items-center justify-center rounded-full bg-white/50 sm:flex">
-          <Gift size={58} strokeWidth={1.5} className="text-pink-400" />
+          <Gift
+            size={60}
+            strokeWidth={1.5}
+            className="text-pink-400"
+          />
         </div>
+
       </div>
     </section>
   );
 }
 
-function WalletIcon() {
+function BalanceCard({ balance }) {
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <Coins size={18} className="text-amber-500" />
+    <div className="mb-5 grid gap-3 sm:grid-cols-2">
+
+      <div className="relative overflow-hidden rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
+
+        <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-yellow-100 blur-xl" />
+
+        <div className="relative flex items-center gap-3">
+
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-300 to-orange-400 shadow-lg shadow-orange-200">
+            <Coins
+              size={23}
+              className="text-white"
+            />
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Ví xu của bạn
+            </p>
+
+            <p className="mt-0.5 text-xl font-black text-slate-900">
+              {formatCoins(balance)}
+              <span className="ml-1 text-sm text-orange-500">
+                xu
+              </span>
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 rounded-[24px] bg-gradient-to-r from-violet-500 to-fuchsia-500 p-4 text-white shadow-lg shadow-fuchsia-200">
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
+          <Zap size={23} />
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">
+            Ưu đãi
+          </p>
+
+          <p className="mt-0.5 text-sm font-black">
+            Đổi quà nhanh chóng
+          </p>
+
+          <p className="mt-0.5 text-[10px] text-white/75">
+            Chọn gói → nhập thông tin → xác nhận
+          </p>
+        </div>
+
+      </div>
+
     </div>
   );
 }
-
-function InfoBadge({ text }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-semibold text-slate-500">
-      <Check size={11} className="text-emerald-500" />
-      {text}
-    </span>
-  );
-}
-
 function CategoryTabs({ category, onChange }) {
-  const items = [
-    {
-      id: "robux",
-      icon: Gamepad2,
-      title: "Robux Roblox",
-      subtitle: "Nhận quà game",
-      active: "from-sky-500 to-cyan-400",
-    },
-    {
-      id: "quanhuy",
-      icon: Swords,
-      title: "Quân Huy Liên Quân",
-      subtitle: "Nạp phần thưởng",
-      active: "from-blue-600 to-sky-400",
-    },
-  ];
-
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const active = category === item.id;
+    <div className="mb-4 rounded-[24px] bg-white p-2 shadow-sm ring-1 ring-slate-100">
 
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onChange(item.id)}
-            className={`group relative overflow-hidden rounded-[22px] border p-4 text-left transition duration-200 ${
-              active
-                ? "border-sky-300 bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-lg shadow-sky-500/15"
-                : "border-slate-200 bg-white text-slate-800 shadow-sm hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
-            }`}
-          >
-            {active && (
-              <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
-            )}
+      <div className="grid grid-cols-2 gap-2">
 
-            <div className="relative flex items-center gap-3">
-              <div
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
-                  active
-                    ? "bg-white/15"
-                    : "bg-sky-50 text-sky-600"
-                }`}
-              >
-                <Icon size={21} />
-              </div>
+        <button
+          type="button"
+          onClick={() => onChange("robux")}
+          className={`flex items-center justify-center gap-2 rounded-[18px] px-4 py-3 text-sm font-black transition ${
+            category === "robux"
+              ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white shadow-lg shadow-pink-200"
+              : "text-slate-500 hover:bg-slate-50"
+          }`}
+        >
+          <Gamepad2 size={18} />
+          Robux
+        </button>
 
-              <div>
-                <p className="text-sm font-black">
-                  {item.title}
-                </p>
+        <button
+          type="button"
+          onClick={() => onChange("quanhuy")}
+          className={`flex items-center justify-center gap-2 rounded-[18px] px-4 py-3 text-sm font-black transition ${
+            category === "quanhuy"
+              ? "bg-gradient-to-r from-orange-400 to-pink-500 text-white shadow-lg shadow-orange-200"
+              : "text-slate-500 hover:bg-slate-50"
+          }`}
+        >
+          <Swords size={18} />
+          Quân Huy
+        </button>
 
-                <p
-                  className={`mt-0.5 text-[10px] ${
-                    active
-                      ? "text-white/70"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {item.subtitle}
-                </p>
-              </div>
-
-              <ChevronRight
-                size={17}
-                className={`ml-auto ${
-                  active
-                    ? "text-white/70"
-                    : "text-slate-300"
-                }`}
-              />
-            </div>
-          </button>
-        );
-      })}
+      </div>
     </div>
   );
 }
 
 function VersionTabs({ version, onChange }) {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
-      <VersionButton
-        active={version === "vng"}
-        onClick={() => onChange("vng")}
-        icon="🇻🇳"
-        title="VNG"
-        subtitle="Nạp trực tiếp"
-      />
+    <div className="mb-5">
 
-      <VersionButton
-        active={version === "quoc_te"}
-        onClick={() => onChange("quoc_te")}
-        icon="🌎"
-        title="Quốc tế"
-        subtitle="Nhận mã"
-      />
-    </div>
-  );
-}
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-black text-slate-700">
+          Chọn phiên bản
+        </p>
 
-function VersionButton({
-  active,
-  onClick,
-  icon,
-  title,
-  subtitle,
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl px-3 py-3 text-left transition ${
-        active
-          ? "bg-white shadow-sm ring-1 ring-sky-100"
-          : "text-slate-500"
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
-
-        <div>
-          <p
-            className={`text-xs font-black ${
-              active ? "text-slate-900" : ""
-            }`}
-          >
-            {title}
-          </p>
-
-          <p className="text-[9px] text-slate-400">
-            {subtitle}
-          </p>
-        </div>
+        <span className="text-[10px] font-semibold text-slate-400">
+          Hình thức nhận thưởng
+        </span>
       </div>
-    </button>
+
+      <div className="grid grid-cols-2 gap-3">
+
+        <button
+          type="button"
+          onClick={() => onChange("vng")}
+          className={`relative overflow-hidden rounded-[22px] border p-4 text-left transition ${
+            version === "vng"
+              ? "border-pink-400 bg-pink-50 shadow-md shadow-pink-100"
+              : "border-slate-100 bg-white hover:border-pink-200"
+          }`}
+        >
+          {version === "vng" && (
+            <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white">
+              <Check size={14} />
+            </div>
+          )}
+
+          <div className="mb-2 text-2xl">
+            🇻🇳
+          </div>
+
+          <p className="text-sm font-black">
+            Robux Việt Nam
+          </p>
+
+          <p className="mt-1 text-[10px] text-slate-400">
+            Nhận qua tài khoản / mã
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onChange("global")}
+          className={`relative overflow-hidden rounded-[22px] border p-4 text-left transition ${
+            version === "global"
+              ? "border-violet-400 bg-violet-50 shadow-md shadow-violet-100"
+              : "border-slate-100 bg-white hover:border-violet-200"
+          }`}
+        >
+          {version === "global" && (
+            <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-violet-500 text-white">
+              <Check size={14} />
+            </div>
+          )}
+
+          <div className="mb-2 text-2xl">
+            🌎
+          </div>
+
+          <p className="text-sm font-black">
+            Robux Global
+          </p>
+
+          <p className="mt-1 text-[10px] text-slate-400">
+            Dành cho tài khoản quốc tế
+          </p>
+        </button>
+
+      </div>
+    </div>
   );
 }
 
@@ -708,127 +774,157 @@ function PackageGrid({
 }) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-        {[1, 2, 3, 4, 5, 6].map((item) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+
+        {[1, 2, 3, 4].map((item) => (
           <div
             key={item}
-            className="h-48 animate-pulse rounded-[24px] bg-white ring-1 ring-slate-100"
+            className="h-44 animate-pulse rounded-[24px] bg-white"
           />
         ))}
+
       </div>
     );
   }
 
   if (!packages.length) {
     return (
-      <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-5 py-14 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50">
-          <Gift size={23} className="text-sky-400" />
+      <div className="rounded-[26px] bg-white px-5 py-12 text-center shadow-sm ring-1 ring-slate-100">
+
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+          <Gift
+            size={25}
+            className="text-slate-400"
+          />
         </div>
 
-        <p className="mt-4 text-sm font-black text-slate-700">
-          Chưa có gói phù hợp
+        <p className="font-black">
+          Chưa có gói thưởng
         </p>
 
         <p className="mt-1 text-xs text-slate-400">
-          Các gói thưởng hiện chưa được mở bán.
+          Hiện chưa có phần thưởng phù hợp.
         </p>
+
       </div>
     );
   }
 
   return (
-  <div className="flex gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible">
-    {packages.map((pkg) => (
-      <PackageCard
-        key={pkg.id}
-        pkg={pkg}
-        category={category}
-        selected={selectedPackage?.id === pkg.id}
-        onClick={() => onSelect(pkg)}
-      />
-    ))}
-  </div>
-);
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+
+      {packages.map((pkg) => (
+        <PackageCard
+          key={pkg.id}
+          pkg={pkg}
+          category={category}
+          selected={selectedPackage?.id === pkg.id}
+          onSelect={() => onSelect(pkg)}
+        />
+      ))}
+
+    </div>
+  );
+}
 
 function PackageCard({
   pkg,
   category,
   selected,
-  onClick,
+  onSelect,
 }) {
-  const gameName =
-    pkg.game_name ||
-    (category === "robux" ? "Roblox" : "Liên Quân Mobile");
+  const coinCost = Number(pkg.coin_cost || 0);
+  const rewardAmount = pkg.reward_amount || pkg.amount || "";
 
-  const gameLogo =
-    pkg.game_logo ||
-    (category === "robux"
-      ? "/images/games/roblox.png"
-      : "/images/games/lien-quan.png");
+  const image =
+    pkg.image_url ||
+    pkg.image ||
+    pkg.icon_url ||
+    "";
 
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={`group relative min-w-[160px] overflow-hidden rounded-[18px] border bg-white p-2 text-left transition ${
+      onClick={onSelect}
+      className={`group relative overflow-hidden rounded-[25px] border bg-white text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl ${
         selected
-          ? "border-pink-400 ring-2 ring-pink-100"
-          : "border-slate-100 shadow-sm hover:-translate-y-0.5 hover:shadow-md"
+          ? "border-pink-400 ring-2 ring-pink-200"
+          : "border-slate-100"
       }`}
     >
-      {selected && (
-        <div className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white">
-          <Check size={13} strokeWidth={3} />
+
+      {pkg.badge && (
+        <div className="absolute left-2.5 top-2.5 z-10 rounded-full bg-pink-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md">
+          {pkg.badge}
         </div>
       )}
 
-      <div className="flex h-[105px] items-center justify-center overflow-hidden rounded-[14px] bg-gradient-to-br from-pink-100 to-orange-100">
-        {pkg.image_url ? (
+      <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-pink-50 via-orange-50 to-yellow-50">
+
+        <div className="absolute -right-7 -top-7 h-24 w-24 rounded-full bg-pink-200/40 blur-2xl" />
+
+        <div className="absolute -bottom-8 -left-5 h-20 w-20 rounded-full bg-yellow-200/50 blur-2xl" />
+
+        {image ? (
           <img
-            src={pkg.image_url}
-            alt={pkg.name}
-            className="h-full w-full object-cover"
+            src={image}
+            alt={pkg.name || "Phần thưởng"}
+            className="relative z-[1] h-24 w-24 object-contain drop-shadow-xl transition duration-300 group-hover:scale-110"
           />
         ) : (
-          <Gift size={38} className="text-pink-400" />
+          <div className="relative z-[1] flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-lg">
+
+            {category === "quanhuy" ? (
+              <Swords
+                size={37}
+                className="text-orange-400"
+              />
+            ) : (
+              <Coins
+                size={37}
+                className="text-yellow-400"
+              />
+            )}
+
+          </div>
         )}
+
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
-        <img
-          src={gameLogo}
-          alt={gameName}
-          className="h-8 w-8 rounded-lg object-cover ring-1 ring-slate-100"
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
-        />
+      <div className="p-3.5">
 
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-bold text-slate-400">
-            {gameName}
-          </p>
+        <p className="line-clamp-1 text-sm font-black text-slate-800">
+          {pkg.name || `${rewardAmount} ${category === "quanhuy" ? "Quân Huy" : "Robux"}`}
+        </p>
 
-          <p className="truncate text-xs font-black text-slate-900">
-            {pkg.name}
-          </p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+
+          <div className="flex items-center gap-1.5">
+
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-100">
+              <Coins
+                size={13}
+                className="text-yellow-500"
+              />
+            </div>
+
+            <span className="text-xs font-black text-orange-500">
+              {formatCoins(coinCost)}
+            </span>
+
+          </div>
+
+          <ChevronRight
+            size={16}
+            className={`transition ${
+              selected
+                ? "translate-x-0 text-pink-500"
+                : "-translate-x-1 text-slate-300 group-hover:translate-x-0 group-hover:text-pink-500"
+            }`}
+          />
+
         </div>
-      </div>
 
-      <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
-        <div className="flex items-center gap-1">
-          <Coins size={14} className="text-amber-500" />
-
-          <span className="text-xs font-black text-orange-500">
-            {formatCoins(pkg.coin_cost)} xu
-          </span>
-        </div>
-
-        <ChevronRight
-          size={14}
-          className="text-slate-300 transition group-hover:translate-x-0.5"
-        />
       </div>
     </button>
   );
@@ -847,237 +943,428 @@ function OrderPanel({
   onRedeem,
   onBack,
 }) {
-  const isForcedVng = category === "robux" && version === "vng";
-
-  const targetLabel =
-    category === "robux"
-      ? "Tên đăng nhập Roblox"
-      : "ID tài khoản Liên Quân";
-
-  const targetPlaceholder =
-    category === "robux"
-      ? "Nhập username Roblox..."
-      : "Nhập ID game...";
-
   if (!selectedPackage) {
     return (
-      <div
-        id="store-order-panel"
-        className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-200 bg-white px-6 py-14 text-center"
-      >
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50">
-          <Gift size={23} className="text-sky-400" />
+      <section className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 px-5 py-8 text-center">
+
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+          <Gift
+            size={22}
+            className="text-slate-400"
+          />
         </div>
 
-        <p className="mt-4 text-sm font-black text-slate-700">
-          Chưa chọn gói thưởng
+        <p className="text-sm font-black text-slate-600">
+          Chọn một gói phần thưởng
         </p>
 
         <p className="mt-1 text-xs text-slate-400">
-          Chọn 1 gói ở bên trái để bắt đầu đổi thưởng.
+          Sau khi chọn, thông tin đổi thưởng sẽ xuất hiện ở đây.
         </p>
-      </div>
+
+      </section>
     );
   }
 
+  const cost = Number(selectedPackage.coin_cost || 0);
+  const reward =
+    selectedPackage.reward_amount ||
+    selectedPackage.amount ||
+    "";
+
+  const isVng =
+    category === "robux" &&
+    version === "vng";
+
   return (
-    <div
+    <section
       id="store-order-panel"
-      className="h-fit rounded-[24px] border border-sky-100 bg-white p-5 shadow-[0_12px_40px_rgba(14,165,233,0.08)]"
+      className="scroll-mt-20 overflow-hidden rounded-[30px] bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-100"
     >
-      <div className="mb-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-xs font-bold text-slate-400 transition hover:text-sky-600"
-        >
-          <ArrowLeft size={14} />
-          Đổi gói khác
-        </button>
 
-        <ShieldCheck size={16} className="text-emerald-500" />
-      </div>
+      <div className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-5 py-5 text-white">
 
-      <div className="rounded-2xl bg-sky-50/70 p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-sky-500">
-          Gói đã chọn
-        </p>
+        <div className="flex items-start justify-between gap-4">
 
-        <p className="mt-1 text-base font-black text-slate-900">
-          {selectedPackage.name}
-        </p>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
+              Xác nhận đổi thưởng
+            </p>
 
-        <div className="mt-2 flex items-center gap-1.5 text-sm font-black text-sky-600">
-          <Coins size={15} />
-          {formatCoins(selectedPackage.coin_cost)} Coin
+            <h3 className="mt-1 text-xl font-black">
+              {selectedPackage.name || "Gói phần thưởng"}
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-full bg-white/15 p-2 transition hover:bg-white/25"
+          >
+            <XCircle size={19} />
+          </button>
+
         </div>
+
       </div>
 
-      {!isForcedVng && (
-        <div className="mt-4">
-          <p className="mb-2 text-xs font-bold text-slate-600">
-            Phương thức nhận
+      <div className="space-y-5 p-5">
+
+        <div className="grid grid-cols-2 gap-3">
+
+          <div className="rounded-2xl bg-slate-50 p-3">
+
+            <p className="text-[10px] font-semibold text-slate-400">
+              Phần thưởng
+            </p>
+
+            <p className="mt-1 text-base font-black">
+              {reward || selectedPackage.name}
+            </p>
+
+          </div>
+
+          <div className="rounded-2xl bg-yellow-50 p-3">
+
+            <p className="text-[10px] font-semibold text-yellow-600">
+              Chi phí
+            </p>
+
+            <div className="mt-1 flex items-center gap-1.5">
+
+              <Coins
+                size={16}
+                className="text-yellow-500"
+              />
+
+              <p className="text-base font-black text-orange-500">
+                {formatCoins(cost)}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {!isVng && (
+          <div>
+            <p className="mb-2 text-xs font-black text-slate-700">
+              Phương thức nhận
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+
+              <MethodButton
+                active={deliveryMethod === "account"}
+                onClick={() => setDeliveryMethod("account")}
+                title="Tài khoản"
+                subtitle="Nhận trực tiếp"
+              />
+
+              <MethodButton
+                active={deliveryMethod === "code"}
+                onClick={() => setDeliveryMethod("code")}
+                title="Mã quà"
+                subtitle="Nhận mã"
+              />
+
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p className="mb-2 text-xs font-black text-slate-700">
+            {isVng
+              ? "Nhập thông tin tài khoản"
+              : deliveryMethod === "code"
+                ? "Thông tin nhận mã"
+                : "Tên tài khoản nhận thưởng"}
           </p>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setDeliveryMethod("direct")}
-              className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
-                deliveryMethod === "direct"
-                  ? "border-sky-300 bg-sky-500 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-sky-200"
-              }`}
-            >
-              Nhận trực tiếp
-            </button>
+          <input
+            value={deliveryTarget}
+            onChange={(event) =>
+              setDeliveryTarget(event.target.value)
+            }
+            placeholder={
+              isVng
+                ? "Nhập UID / thông tin tài khoản"
+                : deliveryMethod === "code"
+                  ? "Nhập email hoặc thông tin nhận mã"
+                  : "Nhập username / UID"
+            }
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition placeholder:text-slate-400 focus:border-pink-400 focus:bg-white focus:ring-4 focus:ring-pink-100"
+          />
 
-            <button
-              type="button"
-              onClick={() => setDeliveryMethod("code")}
-              className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
-                deliveryMethod === "code"
-                  ? "border-sky-300 bg-sky-500 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-500 hover:border-sky-200"
-              }`}
-            >
-              Nhận mã
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-4">
-        <label className="mb-2 block text-xs font-bold text-slate-600">
-          {targetLabel}
-        </label>
-
-        <input
-          type="text"
-          value={deliveryTarget}
-          onChange={(event) => setDeliveryTarget(event.target.value)}
-          placeholder={targetPlaceholder}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-sky-300 focus:bg-white focus:ring-2 focus:ring-sky-100"
-        />
-      </div>
-
-      <button
-        type="button"
-        disabled={!canRedeem}
-        onClick={onRedeem}
-        className={`mt-5 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-black shadow-lg transition ${
-          canRedeem
-            ? "bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-sky-500/25 hover:-translate-y-0.5"
-            : "cursor-not-allowed bg-slate-100 text-slate-400 shadow-none"
-        }`}
-      >
-        {redeeming ? (
-          <>
-            <Loader2 size={16} className="animate-spin" />
-            Đang xử lý...
-          </>
-        ) : (
-          "Xác nhận đổi thưởng"
-        )}
-      </button>
-    </div>
-  );
-}
-
-function History({ history, copied, onCopy }) {
-  if (!history.length) {
-  return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-lg font-black">
-        Lịch sử đổi thưởng
-      </h2>
-
-      <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-5 py-14 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50">
-          <Clock3 size={23} className="text-sky-400" />
+          <p className="mt-2 text-[10px] leading-4 text-slate-400">
+            Kiểm tra kỹ thông tin trước khi xác nhận. Đơn đã tạo
+            có thể không được hoàn lại nếu nhập sai thông tin.
+          </p>
         </div>
 
-        <p className="mt-4 text-sm font-black text-slate-700">
-          Chưa có đơn nào
-        </p>
+        <div className="flex items-start gap-2 rounded-2xl bg-emerald-50 p-3 text-emerald-700">
 
-        <p className="mt-1 text-xs text-slate-400">
-          Đơn đổi thưởng của bạn sẽ hiện ở đây.
-        </p>
+          <ShieldCheck
+            size={18}
+            className="mt-0.5 shrink-0"
+          />
+
+          <p className="text-[11px] font-medium leading-5">
+            Hệ thống sẽ ghi nhận đơn và chuyển sang trạng thái
+            xử lý. Bạn có thể theo dõi đơn ở phần lịch sử bên dưới.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          disabled={!canRedeem}
+          onClick={onRedeem}
+          className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 py-3.5 text-sm font-black text-white shadow-lg shadow-pink-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+        >
+          {redeeming ? (
+            <>
+              <Loader2
+                size={18}
+                className="animate-spin"
+              />
+              Đang tạo đơn...
+            </>
+          ) : (
+            <>
+              <Gift size={18} />
+              Đổi ngay · {formatCoins(cost)} xu
+            </>
+          )}
+        </button>
+
       </div>
     </section>
   );
 }
 
+function MethodButton({
+  active,
+  onClick,
+  title,
+  subtitle,
+}) {
   return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-lg font-black">
-        Lịch sử đổi thưởng
-      </h2>
-
-      <div className="space-y-3">
-        {history.map((order) => {
-          const status =
-            statusConfig[order.status] || statusConfig.pending;
-          const StatusIcon = status.icon;
-
-          return (
-            <div
-              key={order.id}
-              className="rounded-[20px] border border-slate-100 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-slate-900">
-                    {order.package_name || "Gói đổi thưởng"}
-                  </p>
-
-                  <p className="mt-0.5 text-[11px] text-slate-400">
-                    {formatDate(order.created_at)}
-                  </p>
-                </div>
-
-                <span
-                  className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${status.className}`}
-                >
-                  <StatusIcon size={12} />
-                  {status.label}
-                </span>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-  <div className="flex items-center gap-1.5 text-xs font-bold text-sky-600">
-    <Coins size={13} />
-    {formatCoins(order.coin_cost)} Coin
-  </div>
-
-  {order.order_code && (
     <button
       type="button"
-      onClick={() => onCopy(order.order_code)}
-      className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-500 transition hover:bg-slate-100"
+      onClick={onClick}
+      className={`rounded-2xl border p-3 text-left transition ${
+        active
+          ? "border-pink-400 bg-pink-50 ring-2 ring-pink-100"
+          : "border-slate-100 bg-white hover:border-pink-200"
+      }`}
     >
-      {copied === order.order_code ? (
-        <>
-          <Check size={11} className="text-emerald-500" />
-          Đã chép
-        </>
-      ) : (
-        <>
-          <Copy size={11} />
-          {order.order_code}
-        </>
-      )}
-    </button>
-  )}
-                            </div>
-            </div>
-          );
-        })}
+
+      <div className="flex items-center justify-between">
+
+        <div>
+          <p
+            className={`text-xs font-black ${
+              active
+                ? "text-pink-600"
+                : "text-slate-700"
+            }`}
+          >
+            {title}
+          </p>
+
+          <p className="mt-0.5 text-[9px] text-slate-400">
+            {subtitle}
+          </p>
+        </div>
+
+        {active && (
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white">
+            <Check size={13} />
+          </div>
+        )}
+
       </div>
-    </section>
+    </button>
   );
 }
 
-export default Store;
+function History({
+  history,
+  copied,
+  onCopy,
+}) {
+  return (
+    <section className="mt-7">
 
+      <div className="mb-3 flex items-end justify-between">
+
+        <div>
+          <h2 className="text-xl font-black">
+            Lịch sử đổi thưởng
+          </h2>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Theo dõi các gói bạn đã đổi
+          </p>
+        </div>
+
+        <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-slate-400 shadow-sm">
+          {history.length} đơn
+        </span>
+
+      </div>
+
+      {!history.length ? (
+        <div className="rounded-[26px] bg-white px-5 py-10 text-center shadow-sm ring-1 ring-slate-100">
+
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+            <Clock3
+              size={23}
+              className="text-slate-400"
+            />
+          </div>
+
+          <p className="text-sm font-black text-slate-600">
+            Chưa có lịch sử
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">
+            Các đơn đổi thưởng của bạn sẽ xuất hiện ở đây.
+          </p>
+
+        </div>
+      ) : (
+        <div className="space-y-3">
+
+          {history.map((order) => {
+            const config =
+              statusConfig[order.status] ||
+              statusConfig.pending;
+
+            const StatusIcon = config.icon;
+
+            return (
+              <div
+                key={order.id}
+                className="rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100"
+              >
+
+                <div className="flex items-start justify-between gap-3">
+
+                  <div className="min-w-0">
+
+                    <p className="truncate text-sm font-black text-slate-800">
+                      {order.package_name ||
+                        order.reward_name ||
+                        order.name ||
+                        "Đơn đổi thưởng"}
+                    </p>
+
+                    <p className="mt-1 text-[10px] text-slate-400">
+                      {formatDate(order.created_at)}
+                    </p>
+
+                  </div>
+
+                  <span
+                    className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-black ${config.className}`}
+                  >
+                    <StatusIcon size={12} />
+                    {config.label}
+                  </span>
+
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+
+                    <p className="text-[9px] text-slate-400">
+                      Chi phí
+                    </p>
+
+                    <div className="mt-0.5 flex items-center gap-1">
+
+                      <Coins
+                        size={13}
+                        className="text-yellow-500"
+                      />
+
+                      <p className="text-xs font-black">
+                        {formatCoins(
+                          order.coin_cost ||
+                          order.cost ||
+                          0
+                        )}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+
+                    <p className="text-[9px] text-slate-400">
+                      Mã đơn
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onCopy(
+                          order.order_code ||
+                          order.code
+                        )
+                      }
+                      className="mt-0.5 flex max-w-full items-center gap-1 text-xs font-black text-pink-500"
+                    >
+                      <span className="truncate">
+                        {order.order_code ||
+                          order.code ||
+                          "N/A"}
+                      </span>
+
+                      <Copy
+                        size={12}
+                        className="shrink-0"
+                      />
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {order.delivery_target && (
+                  <div className="mt-2 rounded-xl bg-slate-50 px-3 py-2">
+
+                    <p className="text-[9px] text-slate-400">
+                      Thông tin nhận
+                    </p>
+
+                    <p className="mt-0.5 truncate text-xs font-semibold text-slate-600">
+                      {order.delivery_target}
+                    </p>
+
+                  </div>
+                )}
+
+                {copied ===
+                  (order.order_code || order.code) && (
+                  <p className="mt-2 text-[10px] font-bold text-emerald-500">
+                    ✓ Đã sao chép mã đơn
+                  </p>
+                )}
+
+              </div>
+            );
+          })}
+
+        </div>
+      )}
+
+    </section>
+  );
+      }
