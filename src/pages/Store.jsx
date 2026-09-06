@@ -1076,5 +1076,5 @@ function History({ history, copied, onCopy }) {
         })}
       </div>
     </section>
-  )
+  ):
 }
