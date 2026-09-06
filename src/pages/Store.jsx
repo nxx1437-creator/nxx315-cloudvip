@@ -1070,7 +1070,7 @@ function History({ history, copied, onCopy }) {
       )}
     </button>
   )}
-              </div>
+                            </div>
             </div>
           );
         })}
@@ -1078,3 +1078,6 @@ function History({ history, copied, onCopy }) {
     </section>
   );
 }
+
+export default Store;
+
