@@ -1046,35 +1046,36 @@ function History({ history, copied, onCopy }) {
               </div>
 
               <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-sky-600">
-                  <Coins size={13} />
-                  {formatCoins(order.coin_cost)} Coin
-                </div>
+  <div className="flex items-center gap-1.5 text-xs font-bold text-sky-600">
+    <Coins size={13} />
+    {formatCoins(order.coin_cost)} Coin
+  </div>
 
-                {order.order_code && (
-                  <button
-                    type="button"
-                    onClick={() => onCopy(order.order_code)}
-                    className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-500 transition hover:bg-slate-100"
-                  >
-                    {copied === order.order_code ? (
-                      <>
-                        <Check size={11} className="text-emerald-500" />
-                        Đã chép
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={11} />
-                        {order.order_code}
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-                        </div>
-          );
-        })}
-      </div>
-    </section>
-  );
+  {order.order_code && (
+    <button
+      type="button"
+      onClick={() => onCopy(order.order_code)}
+      className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-500 transition hover:bg-slate-100"
+    >
+      {copied === order.order_code ? (
+        <>
+          <Check size={11} className="text-emerald-500" />
+          Đã chép
+        </>
+      ) : (
+        <>
+          <Copy size={11} />
+          {order.order_code}
+        </>
+      )}
+    </button>
+  )}
+</div>
+</div>
+))}
+</div>
+</section>
+);
 }
+
+export default Store;
