@@ -22,6 +22,13 @@ import {
   Zap,
   X,
   XCircle,
+  Search,
+  UserCheck,
+  Mail,
+  CreditCard,
+  QrCode,
+  Plus,
+  Minus,
 } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
@@ -29,6 +36,7 @@ import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 
 const formatCoins = (value) => Number(value || 0).toLocaleString("vi-VN");
+const formatVND = (value) => Number(value || 0).toLocaleString("vi-VN") + " VND";
 
 const formatDate = (value) => {
   if (!value) return "";
@@ -42,26 +50,73 @@ const formatDate = (value) => {
 };
 
 const statusMap = {
-  pending: {
-    text: "Đang xử lý",
-    className: "bg-amber-50 text-amber-600",
-    icon: Clock3,
+  pending: { text: "Đang xử lý", className: "bg-amber-50 text-amber-600", icon: Clock3 },
+  delivered: { text: "Đã giao", className: "bg-emerald-50 text-emerald-600", icon: CheckCircle2 },
+  rejected: { text: "Từ chối", className: "bg-rose-50 text-rose-500", icon: XCircle },
+  cancelled: { text: "Đã hủy", className: "bg-gray-100 text-gray-500", icon: XCircle },
+};
+
+// ======================== GAME CATEGORIES ========================
+const GAME_CATEGORIES = [
+  {
+    id: "robux",
+    name: "Roblox",
+    icon: Gamepad2,
+    color: "from-red-500 to-orange-500",
+    bgColor: "from-red-50 to-orange-50",
   },
-  delivered: {
-    text: "Đã giao",
-    className: "bg-emerald-50 text-emerald-600",
-    icon: CheckCircle2,
+  {
+    id: "quanhuy",
+    name: "Quân Huy",
+    icon: Swords,
+    color: "from-blue-500 to-cyan-500",
+    bgColor: "from-blue-50 to-cyan-50",
   },
-  rejected: {
-    text: "Từ chối",
-    className: "bg-rose-50 text-rose-500",
-    icon: XCircle,
+  {
+    id: "pubg",
+    name: "PUBG",
+    icon: Target,
+    color: "from-yellow-500 to-amber-500",
+    bgColor: "from-yellow-50 to-amber-50",
   },
-  cancelled: {
-    text: "Đã hủy",
-    className: "bg-gray-100 text-gray-500",
-    icon: XCircle,
+  {
+    id: "freefire",
+    name: "Free Fire",
+    icon: Flame,
+    color: "from-orange-500 to-red-500",
+    bgColor: "from-orange-50 to-red-50",
   },
+  {
+    id: "lienminh",
+    name: "Liên Minh",
+    icon: Sword,
+    color: "from-blue-600 to-indigo-600",
+    bgColor: "from-blue-50 to-indigo-50",
+  },
+  {
+    id: "zingcard",
+    name: "ZingCard",
+    icon: CreditCard,
+    color: "from-purple-500 to-pink-500",
+    bgColor: "from-purple-50 to-pink-50",
+  },
+];
+
+// ======================== ROBLOX PACKAGES ========================
+const ROBLOX_PACKAGES = {
+  vng: [
+    { id: "vng_40", name: "Gói 40 Robux", robux: 40, price_vnd: 14000, coin_cost: 14000, badge: "Phổ biến" },
+    { id: "vng_80", name: "Gói 80 Robux", robux: 80, price_vnd: 28000, coin_cost: 28000, badge: "Tiết kiệm" },
+    { id: "vng_500", name: "Gói 500 Robux", robux: 500, price_vnd: 140000, coin_cost: 140000, badge: "Hot" },
+    { id: "vng_1000", name: "Gói 1000 Robux", robux: 1000, price_vnd: 280000, coin_cost: 280000, badge: "VIP" },
+  ],
+  global: [
+    { id: "global_55", name: "Gói 55 Robux", robux: 55, price_vnd: 20000, coin_cost: 20000 },
+    { id: "global_145", name: "Gói 145 Robux", robux: 145, price_vnd: 50000, coin_cost: 50000 },
+    { id: "global_300", name: "Gói 300 Robux", robux: 300, price_vnd: 100000, coin_cost: 100000 },
+    { id: "global_600", name: "Gói 600 Robux", robux: 600, price_vnd: 180000, coin_cost: 180000, badge: "Hot" },
+    { id: "global_1200", name: "Gói 1200 Robux", robux: 1200, price_vnd: 350000, coin_cost: 350000, badge: "VIP" },
+  ],
 };
 
 export default function Store() {
@@ -72,13 +127,27 @@ export default function Store() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState(false);
-  const [category, setCategory] = useState("robux");
-  const [version, setVersion] = useState("vng");
+  
+  // Game selection
+  const [selectedGame, setSelectedGame] = useState("robux");
+  const [robuxVersion, setRobuxVersion] = useState("vng");
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [deliveryMethod, setDeliveryMethod] = useState("");
+  
+  // Roblox user
+  const [robloxUsername, setRobloxUsername] = useState("");
+  const [robloxUserData, setRobloxUserData] = useState(null);
+  const [searchingRoblox, setSearchingRoblox] = useState(false);
+  const [robloxError, setRobloxError] = useState(null);
+  
+  // Delivery method
+  const [deliveryMethod, setDeliveryMethod] = useState("vng"); // vng, global_code
   const [deliveryTarget, setDeliveryTarget] = useState("");
+  
+  // Payment
+  const [paymentMethod, setPaymentMethod] = useState("coins"); // coins, vietqr, zalopay
   const [toast, setToast] = useState(null);
   const [copied, setCopied] = useState("");
+  const [showPackageSelector, setShowPackageSelector] = useState(false);
 
   const userId = session?.user?.id;
 
@@ -95,16 +164,8 @@ export default function Store() {
     setLoading(true);
     try {
       const [packageResponse, historyResponse] = await Promise.all([
-        supabase
-          .from("redemption_packages")
-          .select("*")
-          .eq("active", true)
-          .order("sort_order", { ascending: true }),
-        supabase
-          .from("redemption_orders")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false }),
+        supabase.from("redemption_packages").select("*").eq("active", true).order("sort_order", { ascending: true }),
+        supabase.from("redemption_orders").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       ]);
       if (packageResponse.error) console.error("Package error:", packageResponse.error);
       if (historyResponse.error) console.error("History error:", historyResponse.error);
@@ -122,53 +183,157 @@ export default function Store() {
     loadStore();
   }, [userId]);
 
-  const filteredPackages = useMemo(() => {
-    return packages.filter((item) => {
-      const type = String(item.reward_type || "").toLowerCase();
-      const itemVersion = String(item.version || "").toLowerCase();
+  // ======================== ROBLOX API ========================
+  const searchRobloxUser = async () => {
+    if (!robloxUsername.trim()) {
+      setRobloxError("Vui lòng nhập tên tài khoản");
+      return;
+    }
 
-      if (category === "quanhuy") {
-        if (type) {
-          return type === "quan_huy" || type === "quanhuy" || type === "quan huy";
+    setSearchingRoblox(true);
+    setRobloxError(null);
+    setRobloxUserData(null);
+
+    try {
+      // Gọi API Roblox để tìm user
+      const response = await fetch(
+        `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(robloxUsername.trim())}&limit=1`
+      );
+      
+      if (!response.ok) throw new Error("Không thể tìm kiếm người dùng");
+
+      const data = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        const user = data.data[0];
+        // Lấy thêm thông tin chi tiết
+        const detailResponse = await fetch(`https://users.roblox.com/v1/users/${user.id}`);
+        if (detailResponse.ok) {
+          const detailData = await detailResponse.json();
+          setRobloxUserData(detailData);
+          showToast(`Đã tìm thấy: ${detailData.displayName || detailData.name}`, "success");
+        } else {
+          setRobloxUserData(user);
         }
-        const name = String(item.name || "").toLowerCase();
-        return name.includes("quân huy") || name.includes("quan huy");
+      } else {
+        setRobloxError("Không tìm thấy người dùng. Vui lòng kiểm tra lại tên.");
+        setRobloxUserData(null);
+      }
+    } catch (error) {
+      console.error("Roblox search error:", error);
+      setRobloxError("Lỗi kết nối đến Roblox API. Vui lòng thử lại.");
+    } finally {
+      setSearchingRoblox(false);
+    }
+  };
+
+  // ======================== SELECT PACKAGE ========================
+  const getCurrentPackages = () => {
+    if (selectedGame === "robux") {
+      return robuxVersion === "vng" ? ROBLOX_PACKAGES.vng : ROBLOX_PACKAGES.global;
+    }
+    return packages.filter((pkg) => pkg.game_type === selectedGame);
+  };
+
+  const handleSelectPackage = (pkg) => {
+    setSelectedPackage(pkg);
+    setShowPackageSelector(false);
+    
+    if (selectedGame === "robux") {
+      if (robuxVersion === "vng") {
+        setDeliveryMethod("vng");
+      } else {
+        setDeliveryMethod("global_code");
+      }
+    }
+  };
+
+  const handleRedeem = async () => {
+    if (!userId) {
+      showToast("Vui lòng đăng nhập trước.", "error");
+      return;
+    }
+
+    if (!selectedPackage) {
+      showToast("Bạn chưa chọn gói phần thưởng.", "error");
+      return;
+    }
+
+    // Kiểm tra xu nếu thanh toán bằng xu
+    if (paymentMethod === "coins") {
+      const cost = Number(selectedPackage.coin_cost || 0);
+      const balance = Number(profile?.coins || 0);
+      if (balance < cost) {
+        showToast(`Bạn cần thêm ${formatCoins(cost - balance)} xu.`, "error");
+        return;
+      }
+    }
+
+    if (selectedGame === "robux" && !robloxUserData) {
+      showToast("Vui lòng xác nhận tên tài khoản Roblox.", "error");
+      return;
+    }
+
+    if (!deliveryTarget.trim()) {
+      showToast("Vui lòng nhập thông tin nhận thưởng.", "error");
+      return;
+    }
+
+    setRedeeming(true);
+
+    try {
+      const orderData = {
+        user_id: userId,
+        game_type: selectedGame,
+        package_id: selectedPackage.id,
+        package_name: selectedPackage.name,
+        robux_amount: selectedPackage.robux || 0,
+        price_vnd: selectedPackage.price_vnd || 0,
+        coin_cost: selectedPackage.coin_cost || 0,
+        delivery_method: deliveryMethod,
+        delivery_target: deliveryTarget,
+        roblox_username: robloxUserData?.name || robloxUsername,
+        roblox_user_id: robloxUserData?.id,
+        payment_method: paymentMethod,
+        status: "pending",
+      };
+
+      // Lưu vào database
+      const { data, error } = await supabase
+        .from("redemption_orders")
+        .insert([orderData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Trừ xu nếu thanh toán bằng xu
+      if (paymentMethod === "coins") {
+        const newBalance = Number(profile?.coins || 0) - Number(selectedPackage.coin_cost || 0);
+        if (typeof setProfile === "function") {
+          setProfile((old) => ({ ...old, coins: newBalance }));
+        }
+        // Cập nhật coins trong database
+        await supabase
+          .from("profiles")
+          .update({ coins: newBalance })
+          .eq("id", userId);
       }
 
-      if (type && type !== "robux") return false;
-      if (itemVersion) return itemVersion === version;
-      return true;
-    });
-  }, [packages, category, version]);
+      await refreshHistory();
+      showToast(`Đổi thưởng thành công! ${selectedPackage.name}`, "success");
 
-  const changeCategory = (value) => {
-    setCategory(value);
-    setSelectedPackage(null);
-    setDeliveryMethod("");
-    setDeliveryTarget("");
-    if (value === "robux") setVersion("vng");
-  };
+      // Reset
+      setSelectedPackage(null);
+      setDeliveryTarget("");
+      setShowPackageSelector(false);
 
-  const changeVersion = (value) => {
-    setVersion(value);
-    setSelectedPackage(null);
-    setDeliveryMethod("");
-    setDeliveryTarget("");
-  };
-
-  const selectPackage = (item) => {
-    setSelectedPackage(item);
-    setDeliveryMethod("");
-    setDeliveryTarget("");
-    if (category === "robux" && version === "vng") {
-      setDeliveryMethod("vng");
+    } catch (error) {
+      console.error("Redeem error:", error);
+      showToast(error?.message || "Đổi thưởng thất bại.", "error");
+    } finally {
+      setRedeeming(false);
     }
-    setTimeout(() => {
-      document.getElementById("exchange-box")?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }, 100);
   };
 
   const refreshHistory = async () => {
@@ -181,56 +346,6 @@ export default function Store() {
     if (!error) setHistory(data || []);
   };
 
-  const handleRedeem = async () => {
-    if (!userId) {
-      showToast("Vui lòng đăng nhập trước.", "error");
-      return;
-    }
-    if (!selectedPackage) {
-      showToast("Bạn chưa chọn gói phần thưởng.", "error");
-      return;
-    }
-    const cost = Number(selectedPackage.coin_cost || 0);
-    const balance = Number(profile?.coins || 0);
-    if (balance < cost) {
-      showToast(`Bạn cần thêm ${formatCoins(cost - balance)} xu.`, "error");
-      return;
-    }
-    if (!deliveryTarget.trim()) {
-      showToast("Vui lòng nhập thông tin nhận thưởng.", "error");
-      return;
-    }
-
-    setRedeeming(true);
-    try {
-      const { data, error } = await supabase.rpc("create_redemption_order", {
-        p_user_id: userId,
-        p_package_id: selectedPackage.id,
-        p_delivery_method: deliveryMethod || "account",
-        p_delivery_target: deliveryTarget.trim(),
-      });
-
-      if (error) throw error;
-      const result = Array.isArray(data) ? data[0] : data;
-      if (!result?.success) throw new Error(result?.error || "Không thể tạo đơn đổi thưởng.");
-
-      if (typeof setProfile === "function") {
-        setProfile((old) => ({ ...old, coins: result.coins_remaining }));
-      }
-
-      await refreshHistory();
-      showToast(result.order_code ? `Đổi thưởng thành công • ${result.order_code}` : "Đổi thưởng thành công!");
-      setSelectedPackage(null);
-      setDeliveryMethod("");
-      setDeliveryTarget("");
-    } catch (error) {
-      console.error("Redeem error:", error);
-      showToast(error?.message || "Đổi thưởng thất bại.", "error");
-    } finally {
-      setRedeeming(false);
-    }
-  };
-
   const copyCode = async (code) => {
     if (!code) return;
     try {
@@ -241,6 +356,10 @@ export default function Store() {
       showToast("Không thể sao chép.", "error");
     }
   };
+
+  const totalAmount = selectedPackage ? 
+    (paymentMethod === "coins" ? `${formatCoins(selectedPackage.coin_cost)} xu` : formatVND(selectedPackage.price_vnd)) 
+    : "0";
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-[#f0f2ff] via-white to-[#faf0ff] pb-28 text-[#151827]">
@@ -260,478 +379,483 @@ export default function Store() {
       <main className="mx-auto max-w-7xl px-4 sm:px-6">
         <PageTitle balance={profile?.coins} onBack={() => window.history.back()} />
         <Hero balance={profile?.coins} />
-        <BalanceSection balance={profile?.coins} />
-        <CategorySection category={category} onChange={changeCategory} />
-        {category === "robux" && <VersionSection version={version} onChange={changeVersion} />}
-        <RewardSection packages={filteredPackages} loading={loading} selectedPackage={selectedPackage} onSelect={selectPackage} />
-        <ExchangeBox
+        
+        {/* Game Categories */}
+        <GameCategories selectedGame={selectedGame} onSelectGame={setSelectedGame} />
+
+        {/* Game Content */}
+        <GameContent
+          selectedGame={selectedGame}
+          robuxVersion={robuxVersion}
+          setRobuxVersion={setRobuxVersion}
+          robloxUsername={robloxUsername}
+          setRobloxUsername={setRobloxUsername}
+          robloxUserData={robloxUserData}
+          setRobloxUserData={setRobloxUserData}
+          robloxError={robloxError}
+          setRobloxError={setRobloxError}
+          searchingRoblox={searchingRoblox}
+          searchRobloxUser={searchRobloxUser}
           selectedPackage={selectedPackage}
-          category={category}
-          version={version}
-          deliveryMethod={deliveryMethod}
-          setDeliveryMethod={setDeliveryMethod}
+          setSelectedPackage={setSelectedPackage}
+          showPackageSelector={showPackageSelector}
+          setShowPackageSelector={setShowPackageSelector}
+          handleSelectPackage={handleSelectPackage}
+          getCurrentPackages={getCurrentPackages}
+        />
+
+        {/* Order Summary */}
+        <OrderSummary
+          selectedPackage={selectedPackage}
+          selectedGame={selectedGame}
+          robloxUserData={robloxUserData}
           deliveryTarget={deliveryTarget}
           setDeliveryTarget={setDeliveryTarget}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          totalAmount={totalAmount}
           redeeming={redeeming}
           onRedeem={handleRedeem}
-          onClose={() => {
+          onClearSelection={() => {
             setSelectedPackage(null);
-            setDeliveryMethod("");
-            setDeliveryTarget("");
+            setShowPackageSelector(false);
           }}
         />
-        <RecentSection packages={packages} onSelect={selectPackage} />
-        <ExploreSection />
+
         <HistorySection history={history} copied={copied} onCopy={copyCode} />
       </main>
 
       <BottomNavigation />
     </div>
   );
-}
+    }
+// ======================== GAME CATEGORIES ========================
+function GameCategories({ selectedGame, onSelectGame }) {
+  const categories = [
+    { id: "robux", name: "Roblox", icon: Gamepad2, color: "from-red-500 to-orange-500" },
+    { id: "quanhuy", name: "Quân Huy", icon: Swords, color: "from-blue-500 to-cyan-500" },
+    { id: "pubg", name: "PUBG", icon: Target, color: "from-yellow-500 to-amber-500" },
+    { id: "freefire", name: "Free Fire", icon: Flame, color: "from-orange-500 to-red-500" },
+    { id: "lienminh", name: "Liên Minh", icon: Sword, color: "from-blue-600 to-indigo-600" },
+    { id: "zingcard", name: "ZingCard", icon: CreditCard, color: "from-purple-500 to-pink-500" },
+  ];
 
-// ======================== HEADER ========================
-function StoreHeader({ balance, onBack }) {
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/20 bg-white/80 backdrop-blur-2xl">
-      <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-3 px-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 shadow-lg shadow-purple-100/50 ring-1 ring-purple-100"
-        >
-          <ArrowLeft size={21} className="text-purple-600" />
-        </button>
-
-        <div className="flex items-center gap-1 text-lg font-black">
-          <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">NXX315</span>
-          <span className="text-cyan-500">Studio</span>
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden items-center gap-2 rounded-full border border-purple-100 bg-white/80 px-3 py-2 shadow-lg shadow-purple-100/30 sm:flex">
-            <Coins size={17} className="text-amber-400" />
-            <span className="text-sm font-black bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-              {formatCoins(balance)}
-            </span>
-          </div>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-lg shadow-purple-100/30 ring-1 ring-purple-100">
-            <Bell size={19} className="text-purple-500" />
-          </button>
-          <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 shadow-lg shadow-purple-100/30 ring-1 ring-purple-100">
-            <Menu size={20} className="text-purple-500" />
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-// ======================== PAGE TITLE ========================
-function PageTitle({ balance, onBack }) {
-  return (
-    <section className="flex items-center justify-between gap-4 py-5">
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="hidden h-14 w-14 items-center justify-center rounded-full bg-white/80 shadow-lg shadow-purple-100/30 ring-1 ring-purple-100 sm:flex"
-        >
-          <ArrowLeft size={26} className="text-purple-600" />
-        </button>
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.3em] bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-            CỬA HÀNG
-          </p>
-          <h1 className="mt-1 text-3xl font-black leading-tight sm:text-4xl">
-            Cổng <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">Săn Thưởng</span>
-          </h1>
-        </div>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2 rounded-[25px] bg-white/80 px-4 py-3 shadow-lg shadow-purple-100/40 ring-1 ring-purple-100">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-400">
-          <Coins size={22} className="text-white" />
-        </div>
-        <div>
-          <p className="text-[10px] text-gray-400">Số xu</p>
-          <p className="text-lg font-black bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-            {formatCoins(balance)}
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ======================== HERO ========================
-function Hero({ balance }) {
-  return (
-    <section className="relative mb-6 min-h-[300px] overflow-hidden rounded-[35px] bg-gradient-to-br from-[#e8d5ff] via-[#fce4ec] to-[#fff3c9] shadow-[0_20px_60px_rgba(180,100,220,0.2)]">
-      <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-purple-300/30 blur-3xl" />
-      <div className="absolute right-[-50px] top-[-50px] h-72 w-72 rounded-full bg-pink-300/30 blur-3xl" />
-      <div className="absolute bottom-[-100px] left-1/3 h-72 w-72 rounded-full bg-yellow-300/40 blur-3xl" />
-
-      <Sparkles size={20} className="absolute left-[55%] top-8 text-white animate-pulse" />
-      <Sparkles size={15} className="absolute right-[25%] top-16 text-white animate-pulse" />
-      <Star size={28} fill="currentColor" className="absolute right-8 top-7 text-pink-300" />
-
-      <div className="relative z-10 flex min-h-[300px] items-center px-6 py-8 sm:px-10 lg:px-14">
-        <div className="max-w-[580px]">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2.5 text-xs font-black text-purple-600 shadow-lg shadow-purple-200/50 backdrop-blur-sm">
-            <Sparkles size={15} className="text-amber-400" />
-            SĂN QUÀ MỖI NGÀY
-          </div>
-
-          <h2 className="text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl">
-            Săn quà
-            <span className="block bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 bg-clip-text text-transparent">
-              một chạm
-            </span>
-          </h2>
-
-          <p className="mt-4 max-w-[510px] text-sm leading-6 text-gray-600 sm:text-base">
-            Nhớ thêm vào <span className="font-black text-purple-600">Yêu thích</span> — để một chạm săn quà mỗi ngày từ toàn bộ các game dành cho bạn!
-          </p>
-
-          <div className="mt-5 inline-flex items-center gap-3 rounded-[22px] bg-white/90 px-4 py-3 shadow-lg shadow-purple-200/50 backdrop-blur-sm">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-400">
-              <Coins size={25} className="text-white" />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-400">Xu hiện có</p>
-              <p className="text-xl font-black bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                {formatCoins(balance)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-0 right-5 hidden h-[290px] w-[330px] lg:block">
-          <div className="absolute bottom-4 right-8 h-52 w-52 rounded-full bg-pink-200/50 blur-2xl" />
-          <div className="absolute bottom-12 right-12 flex h-48 w-48 rotate-[-5deg] items-center justify-center rounded-[48%] bg-gradient-to-br from-pink-400 via-purple-500 to-violet-500 shadow-2xl shadow-purple-300/50">
-            <Gift size={105} strokeWidth={1.1} className="text-white" />
-          </div>
-          <div className="absolute bottom-0 right-0 h-20 w-64 rounded-t-[100%] bg-white/50 blur-sm" />
-        </div>
-      </div>
-    </section>
-  );
-                           }
-// ======================== BALANCE SECTION ========================
-function BalanceSection({ balance }) {
-  return (
-    <section className="mb-7 grid gap-4 md:grid-cols-2">
-      <div className="relative overflow-hidden rounded-[28px] bg-white/80 p-5 shadow-lg shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
-        <div className="absolute right-[-30px] top-[-30px] h-32 w-32 rounded-full bg-amber-100 blur-2xl" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-gradient-to-br from-amber-300 to-orange-400 shadow-lg shadow-orange-200">
-            <Coins size={30} className="text-white" />
-          </div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-wider text-gray-400">VÍ XU CỦA BẠN</p>
-            <p className="mt-1 text-2xl font-black">
-              {formatCoins(balance)}
-              <span className="ml-1 text-sm text-orange-500">xu</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-violet-500 to-fuchsia-500 p-5 text-white shadow-lg shadow-fuchsia-200">
-        <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-white/15">
-            <Zap size={31} />
-          </div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-wider text-white/70">ƯU ĐÃI</p>
-            <p className="mt-1 text-xl font-black">Đổi quà nhanh chóng</p>
-            <p className="mt-1 text-xs text-white/75">Chọn gói → nhập thông tin → xác nhận</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ======================== CATEGORY SECTION ========================
-function CategorySection({ category, onChange }) {
-  return (
-    <section className="mb-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xl font-black">Danh mục phần thưởng</h2>
-        <Sparkles size={19} className="text-purple-400" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => onChange("robux")}
-          className={`rounded-[24px] border p-4 text-left transition-all duration-300 ${
-            category === "robux"
-              ? "border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg shadow-purple-200/50 scale-[1.02]"
-              : "border-gray-100 bg-white/80 hover:shadow-lg hover:shadow-purple-100/30"
-          }`}
-        >
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100">
-            <Gamepad2 size={24} className="text-purple-500" />
-          </div>
-          <p className="font-black">Robux</p>
-          <p className="mt-1 text-xs text-gray-400">Đổi Robux bằng xu</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onChange("quanhuy")}
-          className={`rounded-[24px] border p-4 text-left transition-all duration-300 ${
-            category === "quanhuy"
-              ? "border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 shadow-lg shadow-orange-200/50 scale-[1.02]"
-              : "border-gray-100 bg-white/80 hover:shadow-lg hover:shadow-orange-100/30"
-          }`}
-        >
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-amber-100">
-            <Swords size={24} className="text-orange-500" />
-          </div>
-          <p className="font-black">Quân Huy</p>
-          <p className="mt-1 text-xs text-gray-400">Phần thưởng Liên Quân</p>
-        </button>
-      </div>
-    </section>
-  );
-}
-
-// ======================== VERSION SECTION ========================
-function VersionSection({ version, onChange }) {
   return (
     <section className="mb-6">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-black">Chọn phiên bản Robux</h3>
-        <span className="text-[10px] text-gray-400">Hình thức nhận</span>
+        <h2 className="text-xl font-black">🎮 Chọn game</h2>
+        <span className="text-xs text-gray-400">Chọn phần thưởng</span>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          onClick={() => onChange("vng")}
-          className={`whitespace-nowrap rounded-full px-5 py-3 text-xs font-black transition-all duration-300 ${
-            version === "vng"
-              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-200 scale-[1.02]"
-              : "bg-white/80 text-gray-500 ring-1 ring-gray-100 hover:shadow-lg"
-          }`}
-        >
-          🇻🇳 Robux Việt Nam
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onChange("global")}
-          className={`whitespace-nowrap rounded-full px-5 py-3 text-xs font-black transition-all duration-300 ${
-            version === "global"
-              ? "bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-lg shadow-violet-200 scale-[1.02]"
-              : "bg-white/80 text-gray-500 ring-1 ring-gray-100 hover:shadow-lg"
-          }`}
-        >
-          🌎 Robux Global
-        </button>
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        {categories.map((game) => {
+          const Icon = game.icon;
+          const isActive = selectedGame === game.id;
+          return (
+            <button
+              key={game.id}
+              type="button"
+              onClick={() => onSelectGame(game.id)}
+              className={`group relative rounded-[20px] border p-3 text-center transition-all duration-300 ${
+                isActive
+                  ? `border-transparent bg-gradient-to-br ${game.color} text-white shadow-lg scale-[1.02]`
+                  : "border-gray-100 bg-white/80 hover:shadow-lg"
+              }`}
+            >
+              <div className={`flex justify-center transition-all duration-300 ${isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"}`}>
+                <Icon size={28} />
+              </div>
+              <p className={`mt-1 text-[10px] font-black ${isActive ? "text-white" : "text-gray-600"}`}>
+                {game.name}
+              </p>
+              {isActive && (
+                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-400 shadow-lg flex items-center justify-center">
+                  <Check size={10} className="text-white" />
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-// ======================== REWARD SECTION ========================
-function RewardSection({ packages, loading, selectedPackage, onSelect }) {
-  return (
-    <section className="mb-7">
-      <div className="mb-4 flex items-end justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">✨</span>
-            <h2 className="text-2xl font-black">Đề xuất cho bạn</h2>
-          </div>
-          <p className="mt-1 text-xs text-gray-400">Chọn phần thưởng bạn muốn đổi</p>
-        </div>
-        <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-gray-400 shadow-sm">
-          {packages.length} gói
-        </span>
-      </div>
+// ======================== GAME CONTENT ========================
+function GameContent({
+  selectedGame,
+  robuxVersion,
+  setRobuxVersion,
+  robloxUsername,
+  setRobloxUsername,
+  robloxUserData,
+  setRobloxUserData,
+  robloxError,
+  setRobloxError,
+  searchingRoblox,
+  searchRobloxUser,
+  selectedPackage,
+  setSelectedPackage,
+  showPackageSelector,
+  setShowPackageSelector,
+  handleSelectPackage,
+  getCurrentPackages,
+}) {
+  // Roblox Content
+  if (selectedGame === "robux") {
+    return (
+      <RobloxContent
+        robuxVersion={robuxVersion}
+        setRobuxVersion={setRobuxVersion}
+        robloxUsername={robloxUsername}
+        setRobloxUsername={setRobloxUsername}
+        robloxUserData={robloxUserData}
+        setRobloxUserData={setRobloxUserData}
+        robloxError={robloxError}
+        setRobloxError={setRobloxError}
+        searchingRoblox={searchingRoblox}
+        searchRobloxUser={searchRobloxUser}
+        selectedPackage={selectedPackage}
+        setSelectedPackage={setSelectedPackage}
+        showPackageSelector={showPackageSelector}
+        setShowPackageSelector={setShowPackageSelector}
+        handleSelectPackage={handleSelectPackage}
+        getCurrentPackages={getCurrentPackages}
+      />
+    );
+  }
 
-      {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="h-56 animate-pulse rounded-[28px] bg-white/80" />
-          ))}
-        </div>
-      ) : packages.length === 0 ? (
-        <div className="rounded-[28px] bg-white/80 px-5 py-14 text-center shadow-sm">
-          <Gift size={42} className="mx-auto mb-3 text-gray-300" />
-          <p className="font-black text-gray-600">Chưa có gói thưởng</p>
-          <p className="mt-1 text-xs text-gray-400">Hiện chưa có phần thưởng phù hợp.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {packages.map((item) => (
-            <RewardCard key={item.id} item={item} selected={selectedPackage?.id === item.id} onClick={() => onSelect(item)} />
-          ))}
-        </div>
-      )}
+  // Other games content
+  return (
+    <section className="mb-6 rounded-[28px] bg-white/80 p-6 shadow-lg shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
+      <div className="text-center py-8">
+        <div className="text-6xl mb-4">🎮</div>
+        <h3 className="text-xl font-black">Đang phát triển</h3>
+        <p className="mt-2 text-sm text-gray-400">Phần thưởng cho game này sẽ sớm có mặt</p>
+      </div>
     </section>
   );
 }
 
-// ======================== REWARD CARD ========================
-function RewardCard({ item, selected, onClick }) {
-  const image = item.image_url || item.image || item.icon_url || "";
-  const cost = Number(item.coin_cost || 0);
-  const amount = item.reward_amount || item.amount || "";
+// ======================== ROBLOX CONTENT ========================
+function RobloxContent({
+  robuxVersion,
+  setRobuxVersion,
+  robloxUsername,
+  setRobloxUsername,
+  robloxUserData,
+  setRobloxUserData,
+  robloxError,
+  setRobloxError,
+  searchingRoblox,
+  searchRobloxUser,
+  selectedPackage,
+  setSelectedPackage,
+  showPackageSelector,
+  setShowPackageSelector,
+  handleSelectPackage,
+  getCurrentPackages,
+}) {
+  const packages = getCurrentPackages();
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group relative overflow-hidden rounded-[28px] border bg-white/80 text-left shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${
-        selected ? "border-purple-400 ring-2 ring-purple-200 shadow-xl shadow-purple-200/50" : "border-gray-100"
-      }`}
-    >
-      {item.badge && (
-        <div className="absolute left-3 top-3 z-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md">
-          {item.badge}
+    <section className="mb-6 space-y-5">
+      {/* Version Selector */}
+      <div className="rounded-[28px] bg-white/80 p-5 shadow-lg shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
+        <h3 className="text-sm font-black mb-3">Chọn hình thức nhận Robux</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setRobuxVersion("vng")}
+            className={`rounded-[20px] border p-4 text-left transition-all duration-300 ${
+              robuxVersion === "vng"
+                ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg"
+                : "border-gray-100 bg-white/50 hover:shadow-md"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white">
+                <Gamepad2 size={18} />
+              </div>
+              <div>
+                <p className="font-black text-sm">VNG Nạp thẳng</p>
+                <p className="text-[10px] text-gray-400">Nhận Robux trực tiếp</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRobuxVersion("global")}
+            className={`rounded-[20px] border p-4 text-left transition-all duration-300 ${
+              robuxVersion === "global"
+                ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg"
+                : "border-gray-100 bg-white/50 hover:shadow-md"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+                <Mail size={18} />
+              </div>
+              <div>
+                <p className="font-black text-sm">Global Code</p>
+                <p className="text-[10px] text-gray-400">Nhận code qua email/Discord</p>
+              </div>
+            </div>
+          </button>
         </div>
-      )}
+      </div>
 
-      <div className="relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-amber-50">
-        <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-purple-200/50 blur-2xl" />
-        <div className="absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-amber-200/50 blur-2xl" />
+      {/* Roblox Username Input */}
+      <div className="rounded-[28px] bg-white/80 p-5 shadow-lg shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-black">1. Đăng nhập bằng tên tài khoản</h3>
+          <button type="button" className="text-[10px] text-purple-500 font-bold hover:text-purple-600">
+            Hướng dẫn tìm ID
+          </button>
+        </div>
 
-        {image ? (
-          <img src={image} alt={item.name || "Phần thưởng"} className="relative z-10 h-28 w-28 object-contain drop-shadow-xl transition duration-300 group-hover:scale-110" />
-        ) : (
-          <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-[28px] bg-white shadow-lg">
-            <Gift size={43} className="text-purple-400" />
+        <div className="flex gap-2">
+          <input
+            value={robloxUsername}
+            onChange={(e) => {
+              setRobloxUsername(e.target.value);
+              setRobloxUserData(null);
+              setRobloxError(null);
+            }}
+            placeholder="Tên tài khoản Roblox"
+            className="flex-1 h-12 rounded-2xl border border-gray-200 bg-gray-50/50 px-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-purple-400 focus:bg-white focus:ring-4 focus:ring-purple-100"
+          />
+          <button
+            type="button"
+            onClick={searchRobloxUser}
+            disabled={searchingRoblox || !robloxUsername.trim()}
+            className="flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 px-5 text-sm font-black text-white shadow-lg shadow-purple-200 transition hover:-translate-y-0.5 disabled:opacity-50"
+          >
+            {searchingRoblox ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+            Tìm
+          </button>
+        </div>
+
+        {robloxError && (
+          <p className="mt-2 text-xs text-rose-500">{robloxError}</p>
+        )}
+
+        {robloxUserData && (
+          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-emerald-50 p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-sm">{robloxUserData.displayName || robloxUserData.name}</p>
+              <p className="text-[10px] text-gray-400">ID: {robloxUserData.id}</p>
+            </div>
+            <Check size={16} className="ml-auto text-emerald-500" />
           </div>
         )}
       </div>
 
-      <div className="p-4">
-        <p className="line-clamp-2 min-h-[40px] text-sm font-black text-gray-800">
-          {item.name || (amount ? `${amount} phần thưởng` : "Gói phần thưởng")}
-        </p>
-
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100">
-              <Coins size={14} className="text-amber-500" />
-            </div>
-            <span className="text-sm font-black text-orange-500">{formatCoins(cost)}</span>
-          </div>
-
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 ${
-              selected
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-200"
-                : "bg-gray-50 text-gray-400 group-hover:bg-purple-50 group-hover:text-purple-500"
-            }`}
-          >
-            {selected ? <Check size={15} /> : <ChevronRight size={16} />}
-          </div>
+      {/* Package Selector */}
+      <div className="rounded-[28px] bg-white/80 p-5 shadow-lg shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-black">2. Chọn gói</h3>
+          {selectedPackage && (
+            <button
+              type="button"
+              onClick={() => setShowPackageSelector(!showPackageSelector)}
+              className="text-xs text-purple-500 font-bold"
+            >
+              {showPackageSelector ? "Đóng" : "Thay đổi"}
+            </button>
+          )}
         </div>
+
+        {selectedPackage && !showPackageSelector ? (
+          <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+            <div>
+              <p className="font-black">{selectedPackage.name}</p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-xs text-gray-500">{selectedPackage.robux} Robux</span>
+                <span className="text-xs font-bold text-orange-500">{formatCoins(selectedPackage.coin_cost)} xu</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-black text-purple-500">{formatVND(selectedPackage.price_vnd)}</p>
+              <button
+                type="button"
+                onClick={() => setShowPackageSelector(true)}
+                className="text-[10px] text-purple-500"
+              >
+                Thay đổi
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {packages.map((pkg) => (
+              <button
+                key={pkg.id}
+                type="button"
+                onClick={() => handleSelectPackage(pkg)}
+                className={`w-full flex items-center justify-between rounded-2xl border p-4 text-left transition-all duration-300 ${
+                  selectedPackage?.id === pkg.id
+                    ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md"
+                    : "border-gray-100 bg-white/50 hover:shadow-md"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-black text-sm">{pkg.name}</p>
+                    {pkg.badge && (
+                      <span className="rounded-full bg-gradient-to-r from-pink-500 to-purple-500 px-2 py-0.5 text-[8px] font-black text-white">
+                        {pkg.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400">{pkg.robux} Robux</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-purple-500">{formatVND(pkg.price_vnd)}</p>
+                  <p className="text-[10px] text-orange-500">{formatCoins(pkg.coin_cost)} xu</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    </button>
+    </section>
   );
-}
-// ======================== EXCHANGE BOX ========================
-function ExchangeBox({
+        }
+// ======================== ORDER SUMMARY ========================
+function OrderSummary({
   selectedPackage,
-  category,
-  version,
-  deliveryMethod,
-  setDeliveryMethod,
+  selectedGame,
+  robloxUserData,
   deliveryTarget,
   setDeliveryTarget,
+  paymentMethod,
+  setPaymentMethod,
+  totalAmount,
   redeeming,
   onRedeem,
-  onClose,
+  onClearSelection,
 }) {
   if (!selectedPackage) return null;
 
-  const cost = Number(selectedPackage.coin_cost || 0);
-  const reward = selectedPackage.reward_amount || selectedPackage.amount || selectedPackage.name || "Phần thưởng";
-  const isVng = category === "robux" && version === "vng";
-
   return (
-    <section id="exchange-box" className="mb-7 overflow-hidden rounded-[30px] bg-white/80 shadow-xl shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
-      <div className="flex items-center justify-between bg-gradient-to-r from-purple-500 via-pink-500 to-violet-500 px-5 py-5 text-white">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">XÁC NHẬN ĐỔI THƯỞNG</p>
-          <h3 className="mt-1 text-xl font-black">{selectedPackage.name || "Gói phần thưởng"}</h3>
+    <section className="mb-7 overflow-hidden rounded-[30px] bg-white/80 shadow-xl shadow-purple-100/40 ring-1 ring-purple-100 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-violet-500 px-5 py-4 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">THÔNG TIN ĐƠN HÀNG</p>
+            <h3 className="mt-1 text-lg font-black">Giỏ hàng</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClearSelection}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition"
+          >
+            <X size={17} />
+          </button>
         </div>
-        <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition">
-          <X size={19} />
-        </button>
       </div>
 
-      <div className="space-y-5 p-5">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 p-3">
-            <p className="text-[10px] text-gray-400">Phần thưởng</p>
-            <p className="mt-1 text-base font-black">{reward}</p>
+      <div className="p-5 space-y-5">
+        {/* Selected Package */}
+        <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+          <div>
+            <p className="font-black">{selectedPackage.name}</p>
+            <p className="text-sm text-gray-500">{selectedPackage.robux} Robux</p>
           </div>
-          <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-3">
-            <p className="text-[10px] text-amber-600">Chi phí</p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <Coins size={16} className="text-amber-500" />
-              <p className="text-base font-black text-orange-500">{formatCoins(cost)}</p>
-            </div>
-          </div>
+          <p className="font-bold text-purple-600">{formatVND(selectedPackage.price_vnd)}</p>
         </div>
 
-        {!isVng && (
-          <div>
-            <p className="mb-2 text-xs font-black">Phương thức nhận</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setDeliveryMethod("account")}
-                className={`rounded-2xl border p-3 text-left transition-all duration-300 ${
-                  deliveryMethod === "account"
-                    ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md"
-                    : "border-gray-100 bg-white/50 hover:shadow-md"
-                }`}
-              >
-                <p className="text-xs font-black">Tài khoản</p>
-                <p className="mt-1 text-[9px] text-gray-400">Nhận trực tiếp</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeliveryMethod("code")}
-                className={`rounded-2xl border p-3 text-left transition-all duration-300 ${
-                  deliveryMethod === "code"
-                    ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md"
-                    : "border-gray-100 bg-white/50 hover:shadow-md"
-                }`}
-              >
-                <p className="text-xs font-black">Mã quà</p>
-                <p className="mt-1 text-[9px] text-gray-400">Nhận mã</p>
-              </button>
-            </div>
-          </div>
-        )}
-
+        {/* Delivery Target */}
         <div>
-          <p className="mb-2 text-xs font-black">{isVng ? "Thông tin tài khoản" : "Thông tin nhận thưởng"}</p>
+          <p className="text-xs font-black mb-2">
+            {selectedGame === "robux" ? "Thông tin nhận thưởng" : "Thông tin nhận"}
+          </p>
           <input
             value={deliveryTarget}
-            onChange={(event) => setDeliveryTarget(event.target.value)}
-            placeholder={isVng ? "Nhập UID / username" : "Nhập thông tin nhận thưởng"}
+            onChange={(e) => setDeliveryTarget(e.target.value)}
+            placeholder={
+              selectedGame === "robux" 
+                ? "Nhập email hoặc Discord để nhận code" 
+                : "Nhập thông tin nhận thưởng"
+            }
             className="h-12 w-full rounded-2xl border border-gray-200 bg-gray-50/50 px-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-purple-400 focus:bg-white focus:ring-4 focus:ring-purple-100"
           />
+          {robloxUserData && selectedGame === "robux" && (
+            <p className="mt-1 text-[10px] text-emerald-500">
+              ✓ Tài khoản Roblox: {robloxUserData.displayName || robloxUserData.name}
+            </p>
+          )}
         </div>
 
-        <div className="flex items-start gap-2 rounded-2xl bg-emerald-50 p-3 text-emerald-700">
-          <ShieldCheck size={18} className="mt-0.5 shrink-0" />
-          <p className="text-[10px] leading-5">Hãy kiểm tra kỹ thông tin trước khi xác nhận đổi thưởng.</p>
+        {/* Payment Methods */}
+        <div>
+          <p className="text-xs font-black mb-2">Phương thức thanh toán</p>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("coins")}
+              className={`rounded-2xl border p-3 text-center transition-all duration-300 ${
+                paymentMethod === "coins"
+                  ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md"
+                  : "border-gray-100 bg-white/50 hover:shadow-md"
+              }`}
+            >
+              <Coins size={20} className="mx-auto text-amber-500" />
+              <p className="mt-1 text-[9px] font-black">Xu</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("vietqr")}
+              className={`rounded-2xl border p-3 text-center transition-all duration-300 ${
+                paymentMethod === "vietqr"
+                  ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md"
+                  : "border-gray-100 bg-white/50 hover:shadow-md"
+              }`}
+            >
+              <QrCode size={20} className="mx-auto text-blue-500" />
+              <p className="mt-1 text-[9px] font-black">VietQR</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("zalopay")}
+              className={`rounded-2xl border p-3 text-center transition-all duration-300 ${
+                paymentMethod === "zalopay"
+                  ? "border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 shadow-md"
+                  : "border-gray-100 bg-white/50 hover:shadow-md"
+              }`}
+            >
+              <CreditCard size={20} className="mx-auto text-blue-600" />
+              <p className="mt-1 text-[9px] font-black">ZaloPay</p>
+            </button>
+          </div>
         </div>
 
+        {/* Voucher */}
+        <div className="flex items-center justify-between rounded-2xl border border-dashed border-gray-300 p-3">
+          <p className="text-xs font-bold text-gray-400">Mã Voucher</p>
+          <button type="button" className="text-xs font-black text-purple-500">
+            Nhập mã &gt;
+          </button>
+        </div>
+
+        {/* Total */}
+        <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+          <p className="font-black">Tổng thanh toán</p>
+          <p className="text-xl font-black text-orange-500">{totalAmount}</p>
+        </div>
+
+        {/* Terms */}
+        <p className="text-[9px] text-gray-400 text-center leading-relaxed">
+          Bằng việc nhấn nút “Thanh toán ngay”, bạn đồng ý rằng giao dịch này không hoàn, không hủy 
+          và tuân thủ với Điều khoản sử dụng và Chính sách bảo mật.
+        </p>
+
+        {/* Pay Button */}
         <button
           type="button"
           disabled={redeeming || !deliveryTarget.trim()}
@@ -745,113 +869,11 @@ function ExchangeBox({
             </>
           ) : (
             <>
-              <Gift size={18} />
-              Đổi ngay • {formatCoins(cost)} xu
+              <CreditCard size={18} />
+              Thanh toán ngay
             </>
           )}
         </button>
-      </div>
-    </section>
-  );
-}
-
-// ======================== RECENT SECTION ========================
-function RecentSection({ packages, onSelect }) {
-  const recent = packages.slice(0, 4);
-
-  return (
-    <section className="mb-7">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black">Bạn chơi gần đây</h2>
-          <p className="mt-1 text-xs text-gray-400">Những phần thưởng được quan tâm</p>
-        </div>
-        <ChevronRight size={20} className="text-gray-400" />
-      </div>
-
-      {recent.length === 0 ? (
-        <div className="rounded-[28px] bg-white/80 p-8 text-center shadow-sm">
-          <Gamepad2 size={36} className="mx-auto mb-3 text-gray-300" />
-          <p className="text-sm font-black text-gray-500">Chưa có dữ liệu</p>
-        </div>
-      ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {recent.map((item) => (
-            <button
-              type="button"
-              key={item.id}
-              onClick={() => onSelect(item)}
-              className="min-w-[155px] max-w-[170px] overflow-hidden rounded-[25px] bg-white/80 text-left shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="flex h-28 items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-amber-50">
-                {item.image_url || item.image || item.icon_url ? (
-                  <img src={item.image_url || item.image || item.icon_url} alt="" className="h-20 w-20 object-contain" />
-                ) : (
-                  <Gift size={38} className="text-purple-400" />
-                )}
-              </div>
-              <div className="p-3">
-                <p className="line-clamp-2 min-h-[36px] text-xs font-black">{item.name || "Phần thưởng"}</p>
-                <p className="mt-2 text-[10px] font-bold text-gray-400">Đổi bằng xu</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-// ======================== EXPLORE SECTION ========================
-function ExploreSection() {
-  const items = [
-    {
-      icon: Gift,
-      title: "Quà mỗi ngày",
-      text: "Nhận thêm xu",
-      className: "bg-gradient-to-br from-purple-100 via-pink-100 to-amber-50",
-    },
-    {
-      icon: Gamepad2,
-      title: "Game thưởng",
-      text: "Chơi nhận quà",
-      className: "bg-gradient-to-br from-violet-100 via-indigo-100 to-blue-50",
-    },
-    {
-      icon: Star,
-      title: "Ưu đãi đặc biệt",
-      text: "Gói giới hạn",
-      className: "bg-gradient-to-br from-amber-100 via-orange-100 to-yellow-50",
-    },
-  ];
-
-  return (
-    <section className="mb-8">
-      <div className="mb-4">
-        <h2 className="text-2xl font-black">Khám phá</h2>
-        <p className="mt-1 text-xs text-gray-400">Nhiều cách nhận xu và phần thưởng</p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              type="button"
-              key={item.title}
-              className={`relative overflow-hidden rounded-[28px] p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${item.className}`}
-            >
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/40 blur-xl" />
-              <div className="relative">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
-                  <Icon size={23} className="text-purple-500" />
-                </div>
-                <p className="text-base font-black">{item.title}</p>
-                <p className="mt-1 text-xs text-gray-500">{item.text}</p>
-              </div>
-            </button>
-          );
-        })}
       </div>
     </section>
   );
@@ -863,7 +885,7 @@ function HistorySection({ history, copied, onCopy }) {
     <section className="mb-8">
       <div className="mb-4 flex items-end justify-between">
         <div>
-          <h2 className="text-2xl font-black">Lịch sử đổi thưởng</h2>
+          <h2 className="text-2xl font-black">📜 Lịch sử đổi thưởng</h2>
           <p className="mt-1 text-xs text-gray-400">Theo dõi những đơn đã đổi</p>
         </div>
         <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-gray-400 shadow-sm">
@@ -879,17 +901,16 @@ function HistorySection({ history, copied, onCopy }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {history.map((order) => {
+          {history.slice(0, 5).map((order) => {
             const config = statusMap[order.status] || statusMap.pending;
             const StatusIcon = config.icon;
             const code = order.order_code || order.code || "";
-            const cost = order.coin_cost || order.cost || 0;
 
             return (
               <div key={order.id} className="rounded-[25px] bg-white/80 p-4 shadow-sm ring-1 ring-gray-100 backdrop-blur-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black">{order.package_name || order.reward_name || order.name || "Đơn đổi thưởng"}</p>
+                    <p className="truncate text-sm font-black">{order.package_name || "Đơn đổi thưởng"}</p>
                     <p className="mt-1 text-[10px] text-gray-400">{formatDate(order.created_at)}</p>
                   </div>
                   <div className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-black ${config.className}`}>
@@ -901,10 +922,9 @@ function HistorySection({ history, copied, onCopy }) {
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 p-3">
                     <p className="text-[9px] text-gray-400">Chi phí</p>
-                    <div className="mt-1 flex items-center gap-1">
-                      <Coins size={13} className="text-amber-500" />
-                      <span className="text-xs font-black">{formatCoins(cost)}</span>
-                    </div>
+                    <p className="mt-1 text-xs font-black text-orange-500">
+                      {order.coin_cost ? formatCoins(order.coin_cost) + " xu" : formatVND(order.price_vnd)}
+                    </p>
                   </div>
                   <div className="rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 p-3">
                     <p className="text-[9px] text-gray-400">Mã đơn</p>
@@ -918,13 +938,6 @@ function HistorySection({ history, copied, onCopy }) {
                     </button>
                   </div>
                 </div>
-
-                {order.delivery_target && (
-                  <div className="mt-2 rounded-xl bg-gray-50/50 p-3">
-                    <p className="text-[9px] text-gray-400">Thông tin nhận</p>
-                    <p className="mt-1 truncate text-xs font-semibold text-gray-600">{order.delivery_target}</p>
-                  </div>
-                )}
 
                 {copied === code && (
                   <p className="mt-2 text-[10px] font-bold text-emerald-500">✓ Đã sao chép mã đơn</p>
@@ -961,8 +974,8 @@ function BottomNavigation() {
           const Icon = item.icon;
           return (
             <button
-              type="button"
               key={item.label}
+              type="button"
               onClick={() => go(item.path)}
               className={`relative flex min-w-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-[23px] px-2 py-2 transition-all duration-300 ${
                 item.active
@@ -978,4 +991,30 @@ function BottomNavigation() {
       </div>
     </nav>
   );
-    }
+}
+
+// ======================== ADDITIONAL ICONS ========================
+// Thêm các icon còn thiếu
+const Target = ({ size = 24, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
+const Flame = ({ size = 24, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+  </svg>
+);
+
+const Sword = ({ size = 24, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="8 10 14 4 20 10 14 16 8 10" />
+    <line x1="14" y1="16" x2="14" y2="20" />
+    <line x1="10" y1="20" x2="14" y2="20" />
+    <line x1="10" y1="20" x2="8" y2="22" />
+    <line x1="14" y1="20" x2="16" y2="22" />
+  </svg>
+);
