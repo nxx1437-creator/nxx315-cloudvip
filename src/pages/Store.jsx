@@ -985,29 +985,29 @@ function OrderPanel({
 }
 
 function History({ history, copied, onCopy }) {
-  if (!history?.length) {
-    return (
-      <section className="mt-8">
-        <h2 className="mb-3 text-lg font-black">
-          Lịch sử đổi thưởng
-        </h2>
+  if (!history.length) {
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 text-lg font-black">
+        Lịch sử đổi thưởng
+      </h2>
 
-        <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-5 py-14 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50">
-            <Clock3 size={23} className="text-sky-400" />
-          </div>
-
-          <p className="mt-4 text-sm font-black text-slate-700">
-            Chưa có đơn nào
-          </p>
-
-          <p className="mt-1 text-xs text-slate-400">
-            Đơn đổi thưởng của bạn sẽ hiện ở đây.
-          </p>
+      <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-5 py-14 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50">
+          <Clock3 size={23} className="text-sky-400" />
         </div>
-      </section>
-    );
-  }
+
+        <p className="mt-4 text-sm font-black text-slate-700">
+          Chưa có đơn nào
+        </p>
+
+        <p className="mt-1 text-xs text-slate-400">
+          Đơn đổi thưởng của bạn sẽ hiện ở đây.
+        </p>
+      </div>
+    </section>
+  );
+}
 
   return (
     <section className="mt-8">
