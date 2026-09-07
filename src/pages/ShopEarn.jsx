@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   Link2, Copy, Check, Loader2, Star, ArrowLeftRight, Landmark, X,
   Clock3, CheckCircle2, XCircle, ArrowLeft, HelpCircle, Info,
-  ShoppingBag, PackageCheck, Wallet2,
+  ShoppingBag, PackageCheck, Wallet2, Flame, CalendarCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -35,6 +35,42 @@ export default function ShopEarn() {
 
   const [showConvert, setShowConvert] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [checkinLoading, setCheckinLoading] = useState(false);
+  const [checkinResult, setCheckinResult] = useState(null);
+
+  const todayStr = new Date().toDateString();
+  const hasCheckedInToday =
+    profile?.last_checkin_date &&
+    new Date(profile.last_checkin_date).toDateString() === todayStr;
+
+  const currentStreak = profile?.checkin_streak || 0;
+
+  const rewardForDay = (day) => (day <= 10 ? 5 : day <= 20 ? 10 : 15);
+
+  const handleCheckin = async () => {
+    if (hasCheckedInToday || checkinLoading) return;
+
+    setCheckinLoading(true);
+
+    const { data, error } = await supabase.rpc("daily_checkin", {
+      p_user_id: session.user.id,
+    });
+
+    setCheckinLoading(false);
+
+    if (error || !data?.success) {
+      alert(data?.message || error?.message || "Có lỗi xảy ra.");
+      return;
+    }
+
+    setCheckinResult(data);
+    setProfile((prev) => ({
+      ...prev,
+      checkin_streak: data.streak,
+      last_checkin_date: new Date().toISOString(),
+      star_points: (prev.star_points || 0) + data.reward,
+    }));
+  };
 
   const starPoints = Number(profile?.star_points || 0);
   const canWithdraw = starPoints >= 20000;
@@ -107,6 +143,62 @@ export default function ShopEarn() {
       </header>
 
       <main className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
+
+        {/* Điểm danh chuỗi ngày */}
+        <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
+              <CalendarCheck size={15} className="text-sky-500" />
+              Chuỗi điểm danh
+            </p>
+            <span className="flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-600">
+              <Flame size={12} /> {currentStreak} ngày
+            </span>
+          </div>
+
+          <div className="mt-3 flex justify-between gap-1.5">
+            {[0, 1, 2, 3, 4].map((offset) => {
+              const day = currentStreak - (hasCheckedInToday ? 4 - offset : 3 - offset);
+              const dayNumber = Math.max(1, day);
+              const isPast = hasCheckedInToday ? offset < 4 : offset < 3;
+              const isToday = hasCheckedInToday ? offset === 4 : offset === 3;
+
+              return (
+                <div
+                  key={offset}
+                  className={`flex flex-1 flex-col items-center gap-1 rounded-xl border py-2.5 ${
+                    isPast || (isToday && hasCheckedInToday)
+                      ? "border-emerald-200 bg-emerald-50"
+                      : isToday
+                      ? "border-sky-300 bg-sky-50"
+                      : "border-[#E5E7EB] bg-[#F5F7FB]"
+                  }`}
+                >
+                  <span className="text-[9px] font-semibold text-[#9CA3AF]">
+                    {isToday ? "Hôm nay" : `N${dayNumber}`}
+                  </span>
+                  <span className="flex items-center gap-0.5 text-xs font-bold text-[#111827]">
+                    +{rewardForDay(Math.max(1, dayNumber))} <Star size={10} className="fill-amber-500 text-amber-500" />
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={handleCheckin}
+            disabled={hasCheckedInToday || checkinLoading}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-sm font-bold text-white disabled:opacity-50"
+          >
+            {checkinLoading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : hasCheckedInToday ? (
+              "Đã điểm danh hôm nay"
+            ) : (
+              `Điểm danh nhận +${rewardForDay(currentStreak + 1)} Sao`
+            )}
+          </button>
+        </section>
 
         {/* HERO — Tạo link (ưu tiên hàng đầu) */}
         <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
@@ -284,6 +376,25 @@ export default function ShopEarn() {
       </main>
 
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      {checkinResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-xs rounded-3xl bg-white p-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
+              <Flame size={28} className="text-orange-500" />
+            </div>
+            <p className="mt-4 text-lg font-black text-[#111827]">
+              Điểm danh thành công! 🔥 {checkinResult.streak} ngày
+            </p>
+            <p className="mt-1 text-2xl font-black text-amber-500">+{checkinResult.reward} Sao</p>
+            <button
+              onClick={() => setCheckinResult(null)}
+              className="mt-5 w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 text-sm font-bold text-white"
+            >
+              Tuyệt vời
+            </button>
+          </div>
+        </div>
+      )}
 
       {showConvert && (
         <ConvertModal
