@@ -1,0 +1,278 @@
+import React, { useState, useEffect } from "react";
+import { Gift, Star, Loader2, Sparkles, Flame, Clock, Lock, RefreshCw, X } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient.js";
+
+// Cấu hình phần thưởng
+const REWARDS = [
+  { id: 1, label: "May mắn 🍀", value: 10, color: "from-green-400 to-green-600", icon: "🍀" },
+  { id: 2, label: "Sao vàng ⭐", value: 50, color: "from-yellow-400 to-yellow-600", icon: "⭐" },
+  { id: 3, label: "Cực phẩm 🔥", value: 100, color: "from-red-400 to-red-600", icon: "🔥" },
+  { id: 4, label: "Thần tài 🧧", value: 200, color: "from-purple-400 to-purple-600", icon: "🧧" },
+  { id: 5, label: "Hên xui 😅", value: 5, color: "from-gray-400 to-gray-600", icon: "😅" },
+  { id: 6, label: "Đại phát 🎊", value: 300, color: "from-pink-400 to-pink-600", icon: "🎊" },
+];
+
+// Cấu hình hộp quà
+const BOXES = [
+  { id: 1, rewardId: 0, emoji: "🎁", label: "Hộp 1" },
+  { id: 2, rewardId: 1, emoji: "🎁", label: "Hộp 2" },
+  { id: 3, rewardId: 2, emoji: "🎁", label: "Hộp 3" },
+];
+
+export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = false }) {
+  const [selectedBox, setSelectedBox] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [remainingDraws, setRemainingDraws] = useState(3);
+  const [history, setHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+
+  // Kiểm tra số lượt quay còn lại trong ngày
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchDraws = async () => {
+      const today = new Date().toDateString();
+      const { data, error } = await supabase
+        .from('lucky_draws')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('created_at', new Date(today))
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const remaining = 3 - data.length;
+        setRemainingDraws(Math.max(0, remaining));
+        setHistory(data.slice(0, 5));
+      }
+    };
+
+    fetchDraws();
+  }, [userId, result]);
+
+  const handleBoxClick = async (boxId) => {
+    if (isDrawing || remainingDraws <= 0 || isRefundLocked || isLocked) return;
+
+    setSelectedBox(boxId);
+    setIsDrawing(true);
+    setResult(null);
+
+    // Random phần thưởng
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Random chọn phần thưởng
+    const rewardIndex = Math.floor(Math.random() * REWARDS.length);
+    const reward = REWARDS[rewardIndex];
+
+    // Random hiệu ứng "đang mở"
+    const boxEmojis = ["🎁", "📦", "🎀", "✨"];
+    let count = 0;
+    const interval = setInterval(() => {
+      const box = document.getElementById(`box-${boxId}`);
+      if (box) {
+        box.textContent = boxEmojis[count % boxEmojis.length];
+        count++;
+      }
+    }, 200);
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    clearInterval(interval);
+
+    // Lưu kết quả
+    const { data, error } = await supabase
+      .from('lucky_draws')
+      .insert({
+        user_id: userId,
+        reward: reward.value,
+        reward_label: reward.label,
+        box_id: boxId,
+        created_at: new Date().toISOString(),
+      })
+      .select();
+
+    if (!error && data) {
+      // Cộng điểm sao
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('star_points')
+        .eq('id', userId)
+        .single();
+
+      if (profile) {
+        const newStars = (profile.star_points || 0) + reward.value;
+        await supabase
+          .from('profiles')
+          .update({ star_points: newStars })
+          .eq('id', userId);
+      }
+
+      setResult({ ...reward, boxId });
+      setRemainingDraws(prev => prev - 1);
+      
+      if (onDrawComplete) {
+        onDrawComplete(reward);
+      }
+    }
+
+    setIsDrawing(false);
+  };
+
+  // Reset khi hết lượt (dùng Xu để mua thêm lượt)
+  const buyExtraDraw = async () => {
+    if (isLocked) return;
+    
+    // Kiểm tra user có đủ Xu không (50 Xu = 1 lượt)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('coins')
+      .eq('id', userId)
+      .single();
+
+    if (!profile || profile.coins < 50) {
+      alert("⚠️ Cần 50 Xu để mua thêm 1 lượt bốc thăm!");
+      return;
+    }
+
+    // Trừ 50 Xu
+    const { error } = await supabase
+      .from('profiles')
+      .update({ coins: profile.coins - 50 })
+      .eq('id', userId);
+
+    if (!error) {
+      setRemainingDraws(prev => prev + 1);
+      alert("✅ Đã mua thêm 1 lượt bốc thăm!");
+    }
+  };
+
+  if (isRefundLocked) {
+    return (
+      <div className="mt-3 rounded-2xl bg-gray-100 p-6 text-center border-2 border-gray-200">
+        <Lock size={32} className="mx-auto text-gray-400" />
+        <p className="mt-2 text-sm font-semibold text-gray-500">🔒 Bị khóa do nợ hoàn trả</p>
+        <p className="mt-1 text-xs text-gray-400">Vui lòng trả nợ để mở khóa tính năng này</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-2xl bg-gradient-to-br from-[#1A1A2E] via-[#16213E] to-[#0F3460] p-4 shadow-xl">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Gift size={18} className="text-pink-400" />
+          <span className="text-sm font-bold text-white">🎲 Bốc thăm trúng thưởng</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-white/60">Lượt:</span>
+            <span className="text-sm font-bold text-yellow-400">{remainingDraws}</span>
+            <span className="text-xs text-white/40">/3</span>
+          </div>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-xs text-white/40 hover:text-white/80 transition-colors"
+          >
+            {showHistory ? "Ẩn lịch sử" : "Lịch sử"}
+          </button>
+        </div>
+      </div>
+
+      {/* 3 hộp quà */}
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        {BOXES.map((box) => {
+          const isSelected = selectedBox === box.id;
+          const isRevealed = result && result.boxId === box.id;
+          
+          return (
+            <button
+              key={box.id}
+              id={`box-${box.id}`}
+              onClick={() => handleBoxClick(box.id)}
+              disabled={isDrawing || remainingDraws <= 0 || isRefundLocked}
+              className={`relative aspect-square rounded-2xl text-4xl transition-all duration-300 ${
+                isSelected && isDrawing
+                  ? "scale-95 ring-4 ring-yellow-400 ring-offset-2 ring-offset-[#1A1A2E]"
+                  : isRevealed
+                  ? "scale-105 ring-4 ring-green-400 ring-offset-2 ring-offset-[#1A1A2E]"
+                  : "hover:scale-105 hover:ring-2 hover:ring-white/20"
+              } ${
+                isRevealed && result
+                  ? `bg-gradient-to-br ${result.color}`
+                  : "bg-gradient-to-br from-gray-700 to-gray-900"
+              } ${
+                isDrawing || remainingDraws <= 0 || isRefundLocked
+                  ? "cursor-not-allowed opacity-60"
+                  : "cursor-pointer"
+              }`}
+            >
+              {isRevealed && result ? (
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-3xl">{result.icon}</span>
+                  <span className="mt-1 text-[10px] font-bold text-white">{result.label}</span>
+                  <span className="text-[8px] text-white/80">+{result.value}⭐</span>
+                </div>
+              ) : isSelected && isDrawing ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 size={32} className="animate-spin text-white" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-4xl">{box.emoji}</span>
+                  <span className="mt-1 text-[9px] text-white/40">{box.label}</span>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Kết quả */}
+      {result && (
+        <div className="mt-3 animate-bounce rounded-xl bg-gradient-to-r from-yellow-400 to-orange-400 p-3 text-center">
+          <p className="text-sm font-bold text-white">
+            🎉 Chúc mừng! Bạn nhận được {result.label} (+{result.value}⭐)
+          </p>
+        </div>
+      )}
+
+      {/* Nút mua thêm lượt */}
+      {remainingDraws === 0 && !isDrawing && (
+        <button
+          onClick={buyExtraDraw}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 py-2.5 text-xs font-bold text-white transition hover:shadow-lg active:scale-[0.98]"
+        >
+          <RefreshCw size={14} />
+          Mua thêm 1 lượt (50 Xu)
+        </button>
+      )}
+
+      {/* Lịch sử */}
+      {showHistory && (
+        <div className="mt-3 max-h-32 overflow-y-auto rounded-xl bg-black/20 p-2">
+          <p className="text-[9px] font-bold text-white/40 mb-1">Lịch sử bốc thăm</p>
+          {history.length === 0 ? (
+            <p className="text-[9px] text-white/20">Chưa có lượt bốc thăm nào</p>
+          ) : (
+            history.map((item, index) => (
+              <div key={index} className="flex items-center justify-between border-b border-white/5 py-1">
+                <span className="text-[9px] text-white/60">
+                  {new Date(item.created_at).toLocaleString("vi-VN")}
+                </span>
+                <span className="text-[9px] font-bold text-yellow-400">
+                  +{item.reward}⭐
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Hướng dẫn */}
+      <p className="mt-2 text-center text-[8px] text-white/30">
+        🎯 Chọn 1 trong 3 hộp quà. Mỗi ngày được bốc 3 lượt. Mỗi lượt 50 Xu
+      </p>
+    </div>
+  );
+    }
