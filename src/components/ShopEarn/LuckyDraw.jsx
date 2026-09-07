@@ -140,7 +140,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
       .single();
 
     if (!profile || profile.coins < 50) {
-      alert("⚠️ Cần 50 Xu để mua thêm 1 lượt bốc thăm!");
+      alert(" Cần 50 Xu để mua thêm 1 lượt bốc thăm!");
       return;
     }
 
@@ -151,7 +151,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
 
     if (!error) {
       setRemainingDraws(1);
-      alert("✅ Đã mua thêm 1 lượt bốc thăm!");
+      alert("Đã mua thêm 1 lượt bốc thăm!");
     }
   };
 
@@ -263,7 +263,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
       {result && (
         <div className="mt-3 animate-bounce rounded-xl bg-gradient-to-r from-yellow-400 to-orange-400 p-3 text-center">
           <p className="text-sm font-bold text-white">
-            🎉 Chúc mừng! Bạn nhận được {result.label} (+{result.value}⭐)
+             Chúc mừng! Bạn nhận được {result.label} (+{result.value}⭐)
           </p>
         </div>
       )}
@@ -302,7 +302,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
 
       {/* Hướng dẫn */}
       <p className="mt-2 text-center text-[8px] text-white/30">
-        🎯 Chọn 1 trong 3 hộp quà. Mỗi ngày được bốc 1 lượt. Mua thêm 1 lượt (50 Xu)
+         Chọn 1 trong 3 hộp quà. Mỗi ngày được bốc 1 lượt. Mua thêm 1 lượt (50 Xu)
       </p>
     </div>
   );
