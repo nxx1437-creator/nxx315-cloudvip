@@ -352,17 +352,35 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
           </button>
         </div>
 
+        {/* ===== SẢN PHẨM - ĐÃ SỬA ===== */}
         <div className="mt-4 flex gap-3 rounded-2xl border border-[#E8ECE8] bg-[#F8FAF8] p-3">
-          {productInfo.image ? (
-            <img src={productInfo.image} alt="" className="h-[72px] w-[72px] shrink-0 rounded-xl object-cover" />
+          {productInfo.image && productInfo.image !== "https://via.placeholder.com/200" ? (
+            <img 
+              src={productInfo.image} 
+              alt={productInfo.name || "Sản phẩm"} 
+              className="h-[72px] w-[72px] shrink-0 rounded-xl object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                // Hiển thị fallback
+                const parent = e.target.parentElement;
+                const fallback = document.createElement('div');
+                fallback.className = 'flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-white';
+                fallback.innerHTML = `<svg class="w-8 h-8 text-[#C6CEC8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`;
+                parent?.appendChild(fallback);
+              }}
+            />
           ) : (
-            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-white">
-              <ShoppingBag size={25} className="text-[#C6CEC8]" />
+            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-white border border-[#E8ECE8]">
+              <ShoppingBag size={28} className="text-[#C6CEC8]" />
             </div>
           )}
           <div className="min-w-0 flex-1 py-1">
-            <p className="line-clamp-3 text-xs font-black leading-4 text-[#18231D]">{productInfo.name}</p>
-            <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-[#111] px-1.5 py-1 text-[8px] font-black text-white">TikTok Shop</span>
+            <p className="line-clamp-3 text-xs font-black leading-4 text-[#18231D]">
+              {productInfo.name || "Sản phẩm TikTok Shop"}
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-[#111] px-1.5 py-1 text-[8px] font-black text-white">
+              TikTok Shop
+            </span>
           </div>
         </div>
 
@@ -370,7 +388,12 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
           <button
             onClick={async () => {
               if (navigator.share) {
-                try { await navigator.share({ title: productInfo.name, url: productInfo.link }); } catch {}
+                try { 
+                  await navigator.share({ 
+                    title: productInfo.name || "Sản phẩm", 
+                    url: productInfo.link 
+                  }); 
+                } catch {}
               } else {
                 await navigator.clipboard.writeText(productInfo.link);
                 setCopied(true);
@@ -404,15 +427,6 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function NoteRow({ text }) {
-  return (
-    <div className="flex items-start gap-2">
-      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
-      <p className="text-[10px] leading-4 text-[#6B7280]">{text}</p>
     </div>
   );
 }
@@ -578,7 +592,7 @@ function TransactionHistory({ userId }) {
     </section>
   );
             }
-         // ============================================
+// ============================================
 // PHẦN 3: MODALS & MAIN COMPONENT
 // ============================================
 
@@ -849,40 +863,67 @@ export default function ShopEarn() {
   };
 
   const handleGenerate = async () => {
-    if (platform !== "tiktok") {
-      setGenError("Sàn này chưa khả dụng, vui lòng chọn TikTok Shop.");
-      return;
+  const handleGenerate = async () => {
+  if (platform !== "tiktok") {
+    setGenError("Sàn này chưa khả dụng, vui lòng chọn TikTok Shop.");
+    return;
+  }
+  if (!productUrl.trim()) {
+    setGenError("Vui lòng dán link sản phẩm.");
+    return;
+  }
+  setGenerating(true);
+  setGenError("");
+  setResultLink(null);
+  
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  
+  try {
+    const { data, error } = await supabase.functions.invoke("create-affiliate-link", {
+      headers: { Authorization: `Bearer ${token}` },
+      body: { 
+        product_url: productUrl.trim(), 
+        platform: "tiktok",
+        amount: 100000 // Tạm thời, sau này lấy từ API
+      },
+    });
+    
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || "Không tạo được link.");
+    
+    const link = data.short_link || data.full_link;
+    setResultLink(link);
+    
+    // ===== LẤY TÊN SẢN PHẨM TỪ URL =====
+    let productName = data.product_name || "Sản phẩm TikTok Shop";
+    let productImage = data.product_image || null;
+    
+    // Nếu không có tên từ API, thử lấy từ URL
+    if (!data.product_name && productUrl) {
+      try {
+        const urlObj = new URL(productUrl);
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
+        // Lấy phần cuối của URL làm tên sản phẩm
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart) {
+          productName = lastPart.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+        }
+      } catch {}
     }
-    if (!productUrl.trim()) {
-      setGenError("Vui lòng dán link sản phẩm.");
-      return;
-    }
-    setGenerating(true);
-    setGenError("");
-    setResultLink(null);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
-    try {
-      const { data, error } = await supabase.functions.invoke("create-affiliate-link", {
-        headers: { Authorization: `Bearer ${token}` },
-        body: { product_url: productUrl.trim(), platform: "tiktok" },
-      });
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Không tạo được link.");
-      const link = data.short_link || data.full_link;
-      setResultLink(link);
-      setProductInfo({
-        name: data.product_name || "Sản phẩm TikTok Shop",
-        image: data.product_image || null,
-        link,
-      });
-    } catch (err) {
-      setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
+    
+    setProductInfo({
+      name: productName,
+      image: productImage,
+      link,
+    });
+    
+  } catch (err) {
+    setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
+  } finally {
+    setGenerating(false);
+  }
+};
   return (
     <div className="min-h-screen bg-[#F5F8F4] pb-28 text-[#18231D]">
       <Header />
