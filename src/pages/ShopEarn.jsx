@@ -51,12 +51,11 @@ function Header() {
   );
 }
 
-// ===== POINTS CARD =====
-function PointsCard({ starPoints }) {
+// ========== POINTS CARD ==========
+function PointsCard({ starPoints, pendingPoints = 0 }) {
   return (
     <section className="relative overflow-hidden rounded-[25px] bg-gradient-to-br from-[#B9EFA5] via-[#86D88A] to-[#45B96B] p-5 shadow-[0_10px_30px_rgba(61,153,89,0.18)]">
-      <div className="pointer-events-none absolute -right-12 -top-14 h-36 w-36 rounded-full bg-white/20 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-20 left-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
+      {/* ... */}
       <div className="relative">
         <div className="flex items-start justify-between">
           <div>
@@ -67,21 +66,19 @@ function PointsCard({ starPoints }) {
             </div>
             <span className="mt-2 inline-flex rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black text-[#3B7D4E]">Tập sự săn sale</span>
           </div>
+          
+          {/* ===== ĐIỂM CHỜ DUYỆT ===== */}
           <div className="rounded-2xl bg-white/25 px-3 py-2 text-right backdrop-blur-sm">
             <p className="text-[9px] font-bold text-[#255B38]">Điểm chờ duyệt</p>
-            <p className="mt-0.5 text-sm font-black text-white">0 ⭐</p>
+            <p className="mt-0.5 text-sm font-black text-white">
+              {formatCoins(pendingPoints)} ⭐
+            </p>
+            {pendingPoints > 0 && (
+              <p className="text-[8px] text-white/70">Đang xử lý...</p>
+            )}
           </div>
         </div>
-        <div className="mt-5 rounded-2xl bg-white/30 p-3 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[11px] font-bold leading-4 text-[#255B38]">Thêm 2.000 ⭐ để nâng hạng nhaaa</p>
-            <ChevronRight size={15} className="shrink-0 text-[#255B38]" />
-          </div>
-          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/50">
-            <div className="h-full rounded-full bg-white transition-all" style={{ width: `${Math.min(100, (starPoints / 2000) * 100)}%` }} />
-          </div>
-          <button className="mt-2 text-[10px] font-bold text-[#255B38]">Chi tiết lịch sử điểm →</button>
-        </div>
+        {/* ... */}
       </div>
     </section>
   );
