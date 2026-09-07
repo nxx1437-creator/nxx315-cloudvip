@@ -1,7 +1,3 @@
-// ============================================
-// PHẦN 1: IMPORTS, UTILITIES & COMPONENTS
-// ============================================
-
 import React, { useState } from "react";
 import {
   Link2, Copy, Check, Loader2, Star, ArrowLeftRight, Landmark, X,
@@ -258,7 +254,6 @@ function TaskSection({ tasks }) {
 // ============================================
 // PHẦN 2: SHOP, WALLET, ROADMAP, HISTORY
 // ============================================
-
 // ===== SHOP SECTION =====
 function ShopSection({ 
   platform, setPlatform, productUrl, setProductUrl, 
@@ -274,29 +269,22 @@ function ShopSection({
         </div>
         <div>
           <p className="text-sm font-black text-[#245A34]">MUA HÀNG TÍCH ĐIỂM</p>
-          <p className="mt-1 text-[10px] leading-4 text-[#64806B]">Nhập link sản phẩm → lấy link Nô Tì → mua hàng → nhận Sao.</p>
+          <p className="mt-1 text-[10px] leading-4 text-[#64806B]">Dán link sản phẩm, hoặc sử dụng mẹo chia sẻ link nhanh không cần copy link theo hướng dẫn</p>
         </div>
       </div>
 
-      <div className="mt-3 flex gap-1.5">
-        {PLATFORMS.map((p) => (
-          <button
-            key={p.key}
-            onClick={() => { setPlatform(p.key); }}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-[10px] font-black transition ${
-              platform === p.key
-                ? "border-[#55B96D] bg-white text-[#3EA85A] shadow-sm"
-                : "border-transparent bg-white/55 text-[#9BA79F]"
-            }`}
-          >
-            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#F0F5F0] text-[8px] font-black">{p.mark}</span>
-            {p.label}
-            {!p.active && <span className="text-[8px]">(sắp có)</span>}
-          </button>
-        ))}
+      {/* Nút hướng dẫn */}
+      <div className="mt-2 text-right">
+        <button 
+          onClick={() => setShowGuide(true)}
+          className="text-[10px] font-black text-[#3FA55A] underline"
+        >
+          TẠI ĐÂY
+        </button>
       </div>
 
-      <div className="mt-2.5 flex items-center gap-2 rounded-2xl border border-[#D8EAD3] bg-white px-3 py-2.5 shadow-sm">
+      {/* Input link */}
+      <div className="mt-3 flex items-center gap-2 rounded-2xl border border-[#D8EAD3] bg-white px-3 py-2.5 shadow-sm">
         <Link2 size={16} className="shrink-0 text-[#91A098]" />
         <input
           type="text"
@@ -312,6 +300,7 @@ function ShopSection({
 
       {genError && <p className="mt-2 text-[10px] font-bold text-rose-500">{genError}</p>}
 
+      {/* Nút lấy link */}
       <button
         onClick={handleGenerate}
         disabled={generating}
@@ -320,13 +309,17 @@ function ShopSection({
         {generating ? <Loader2 size={16} className="animate-spin" /> : <><Link2 size={15} /> Lấy link nhận Sao</>}
       </button>
 
-      <p className="mt-3 text-center text-[9px] font-medium leading-4 text-[#77907E]">
-        Sau khi nhập link và mua hàng, đơn sẽ tự động xuất hiện trong Điểm chờ duyệt sau tối đa 48 giờ.
-      </p>
-
-      <button onClick={() => setShowGuide(true)} className="mx-auto mt-2 flex items-center gap-1 text-[10px] font-black text-[#3FA55A]">
-        <HelpCircle size={12} /> Chưa biết cách lấy link?
-      </button>
+      {/* Lịch sử link đã tạo */}
+      <div className="mt-3.5 flex items-center justify-between border-t border-[#D8EAD3] pt-3">
+        <button 
+          onClick={() => navigate("/link-history")}
+          className="flex items-center gap-1 text-[10px] font-black text-[#3FA55A]"
+        >
+          <Clock3 size={12} />
+          Lịch sử tạo link
+        </button>
+        <ChevronRight size={14} className="text-[#3FA55A]" />
+      </div>
 
       {/* Product Info Modal */}
       {productInfo && (
