@@ -1,3 +1,7 @@
+// ============================================
+// PHẦN 1: IMPORTS, UTILITIES & COMPONENTS CHÍNH
+// ============================================
+
 import React, { useState } from "react";
 import {
   Link2, Copy, Check, Loader2, Star, ArrowLeftRight, Landmark, X,
@@ -13,7 +17,7 @@ import useTasks from "../hooks/useTasks.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
-// ========== UTILITY FUNCTIONS ==========
+// ========== UTILITY ==========
 const formatVND = (v) => Number(v || 0).toLocaleString("vi-VN") + "đ";
 const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
 
@@ -25,12 +29,7 @@ const PLATFORMS = [
 
 const rewardForDay = (day) => day <= 10 ? 5 : day <= 20 ? 10 : 15;
 
-const COLOR_MAP = {
-  sky: { bg: "bg-sky-500", ring: "ring-sky-100", badgeBg: "bg-sky-50", badgeText: "text-sky-600" },
-  amber: { bg: "bg-amber-500", ring: "ring-amber-100", badgeBg: "bg-amber-50", badgeText: "text-amber-600" },
-  emerald: { bg: "bg-emerald-500", ring: "ring-emerald-100", badgeBg: "bg-emerald-50", badgeText: "text-emerald-600" },
-};
-// ===== HEADER =====
+// ========== HEADER ==========
 function Header() {
   const navigate = useNavigate();
   return (
@@ -51,7 +50,7 @@ function Header() {
   );
 }
 
-// ===== POINTS CARD =====
+// ========== POINTS CARD ==========
 function PointsCard({ starPoints }) {
   return (
     <section className="relative overflow-hidden rounded-[25px] bg-gradient-to-br from-[#B9EFA5] via-[#86D88A] to-[#45B96B] p-5 shadow-[0_10px_30px_rgba(61,153,89,0.18)]">
@@ -87,7 +86,7 @@ function PointsCard({ starPoints }) {
   );
 }
 
-// ===== CHECKIN SECTION =====
+// ========== CHECKIN SECTION ==========
 function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, handleCheckin, daysToNextMilestone }) {
   const nextReward = rewardForDay(currentStreak + 1);
 
@@ -120,7 +119,6 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
           const dayNumber = baseDay + offset;
           const isToday = hasCheckedInToday ? offset === 3 : offset === 4;
           const isDone = dayNumber <= currentStreak;
-
           return (
             <div key={offset} className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl border px-1 py-2.5 ${
               isDone ? "border-[#BFE8B8] bg-[#F0FAEC]" :
@@ -159,94 +157,11 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
     </section>
   );
 }
-
-// ===== BRAND REWARD =====
-function BrandReward() {
-  const navigate = useNavigate();
-  return (
-    <section>
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THƯỞNG THƯƠNG HIỆU</p>
-        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961]">
-          Tất cả <ChevronRight size={13} />
-        </button>
-      </div>
-      <div className="mt-2.5 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
-        <div className="flex min-h-[108px] items-center gap-3 bg-gradient-to-r from-[#FFF8D9] to-[#FFFDF2] p-4">
-          <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFEAA4] to-[#FFF7D6] text-center shadow-inner">
-            <span className="text-[11px] font-black leading-3 text-[#8A5A13]">NUTI<br/>GROW+</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-black text-[#6E5A2A]">Nutifood GrowPLUS+</p>
-            <p className="mt-1 text-xs font-bold leading-4 text-[#8A8065]">Khám phá ưu đãi và săn thêm điểm thưởng.</p>
-            <span className="mt-2 inline-flex rounded-full bg-[#FFE9A3] px-2.5 py-1 text-[9px] font-black text-[#8A5A13]">Nhận điểm thưởng x2 ⭐</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ===== TASK SECTION =====
-function TaskSection({ tasks }) {
-  const navigate = useNavigate();
-
-  return (
-    <section>
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THỬ THÁCH NHẬN ĐIỂM</p>
-        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961]">
-          Tất cả <ChevronRight size={13} />
-        </button>
-      </div>
-
-      <div className="mt-2.5 rounded-[22px] bg-white p-3 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
-        {tasks.length > 0 ? (
-          <div className="space-y-2">
-            {tasks.slice(0, 3).map((task) => {
-              const isDone = task.remainingToday <= 0;
-              return (
-                <div key={task.id} className="flex items-center gap-3 rounded-2xl bg-[#F7FAF7] p-3">
-                  {task.logo_url ? (
-                    <img src={task.logo_url} alt={task.provider} className="h-11 w-11 shrink-0 rounded-xl object-cover" />
-                  ) : (
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E9F6E9] text-xs font-black text-[#43A85F]">
-                      {task.provider?.slice(0, 2) || "NV"}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-black text-[#18231D]">{task.provider}</p>
-                    <p className="mt-0.5 text-[10px] text-[#8B978F]">Nhiệm vụ hàng ngày · {task.remainingToday} lượt còn lại</p>
-                  </div>
-                  <button
-                    onClick={() => navigate("/tasks")}
-                    disabled={isDone}
-                    className="shrink-0 rounded-xl bg-[#4FBE69] px-3 py-2 text-[10px] font-black text-white disabled:bg-[#C8D0CB]"
-                  >
-                    {isDone ? "Đã xong" : `+${task.reward_coins} ⭐`}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <button onClick={() => navigate("/tasks")} className="flex w-full items-center justify-between rounded-2xl bg-[#F7FAF7] p-4 text-left">
-            <div>
-              <p className="text-xs font-black text-[#18231D]">Nhiệm vụ hàng ngày</p>
-              <p className="mt-1 text-[10px] text-[#8B978F]">Vào xem các thử thách mới để nhận thêm Sao.</p>
-            </div>
-            <ChevronRight size={17} className="text-[#54AF68]" />
-          </button>
-        )}
-      </div>
-    </section>
-  );
-}
 // ============================================
-// PHẦN 3: SHOP, WALLET, ROADMAP, HISTORY
+// PHẦN 2: SHOP, WALLET, ROADMAP, HISTORY
 // ============================================
 
-// ===== SHOP SECTION =====
+// ========== SHOP SECTION ==========
 function ShopSection({ 
   platform, setPlatform, productUrl, setProductUrl, 
   generating, genError, handlePaste, handleGenerate,
@@ -314,104 +229,11 @@ function ShopSection({
       <button onClick={() => setShowGuide(true)} className="mx-auto mt-2 flex items-center gap-1 text-[10px] font-black text-[#3FA55A]">
         <HelpCircle size={12} /> Chưa biết cách lấy link?
       </button>
-
-      {/* Product Info Modal */}
-      {productInfo && (
-        <ProductInfoModal 
-          productInfo={productInfo} 
-          setProductInfo={setProductInfo} 
-          copied={copied} 
-          setCopied={setCopied} 
-          navigate={navigate} 
-        />
-      )}
     </section>
   );
 }
 
-// ===== PRODUCT INFO MODAL =====
-function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navigate }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-sm rounded-t-[30px] bg-white px-5 pb-6 pt-2.5 shadow-2xl sm:rounded-[30px]">
-        <div className="mx-auto h-1.5 w-12 rounded-full bg-[#D9DED9]" />
-        
-        <div className="mt-4 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[17px] font-black text-[#42AE5F]">Tạo link mua hàng thành công 🎉</p>
-            <p className="mt-1 text-[10px] font-medium text-[#87938B]">Mua hàng từ link Nô Tì để tích điểm đổi quà.</p>
-          </div>
-          <button onClick={() => setProductInfo(null)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F4F6F4] text-[#8C978F]">
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="mt-4 flex gap-3 rounded-2xl border border-[#E8ECE8] bg-[#F8FAF8] p-3">
-          {productInfo.image ? (
-            <img src={productInfo.image} alt="" className="h-[72px] w-[72px] shrink-0 rounded-xl object-cover" />
-          ) : (
-            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-white">
-              <ShoppingBag size={25} className="text-[#C6CEC8]" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1 py-1">
-            <p className="line-clamp-3 text-xs font-black leading-4 text-[#18231D]">{productInfo.name}</p>
-            <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-[#111] px-1.5 py-1 text-[8px] font-black text-white">TikTok Shop</span>
-          </div>
-        </div>
-
-        <div className="mt-4 flex gap-2.5">
-          <button
-            onClick={async () => {
-              if (navigator.share) {
-                try { await navigator.share({ title: productInfo.name, url: productInfo.link }); } catch {}
-              } else {
-                await navigator.clipboard.writeText(productInfo.link);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }
-            }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#48B866] py-3.5 text-xs font-black text-[#42AA5C]"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? "Đã sao chép" : "Chia sẻ"}
-          </button>
-
-          <button
-            onClick={() => navigate(`/redirect?url=${encodeURIComponent(productInfo.link)}&name=${encodeURIComponent(productInfo.name || "Sản phẩm TikTok Shop")}&image=${encodeURIComponent(productInfo.image || "")}`)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#45B967] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(69,185,103,0.18)]"
-          >
-            Mua ngay <ChevronRight size={14} />
-          </button>
-        </div>
-
-        <div className="mt-3 rounded-xl bg-[#EFF9EC] px-3 py-2.5 text-center">
-          <p className="text-[10px] font-black text-[#42A35A]">Đơn hàng của Sếp sẽ được cập nhật điểm sau 24–48h</p>
-        </div>
-
-        <div className="mt-4 border-t border-[#EEF1EE] pt-4">
-          <p className="text-[11px] font-black text-[#26352B]">Lưu ý để được ghi nhận đơn</p>
-          <div className="mt-2.5 space-y-2">
-            <NoteRow text="Sau mỗi lần đặt hàng, nhớ bấm lại link để nhận Sao cho đơn tiếp theo." />
-            <NoteRow text="Mua đúng sản phẩm được gắn link hoặc sản phẩm cùng shop để nhận Sao chính xác." />
-            <NoteRow text="Không tính Sao cho sản phẩm được thêm từ livestream/video KOC." />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NoteRow({ text }) {
-  return (
-    <div className="flex items-start gap-2">
-      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
-      <p className="text-[10px] leading-4 text-[#6B7280]">{text}</p>
-    </div>
-  );
-}
-
-// ===== WALLET SECTION =====
+// ========== WALLET SECTION ==========
 function WalletSection({ starPoints, canWithdraw, setShowConvert, setShowWithdraw }) {
   return (
     <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
@@ -453,8 +275,36 @@ function WalletSection({ starPoints, canWithdraw, setShowConvert, setShowWithdra
   );
 }
 
-// ===== ROADMAP =====
+// ========== ROADMAP ==========
 function Roadmap() {
+  const colors = {
+    sky: { bg: "bg-sky-500", ring: "ring-sky-100", badgeBg: "bg-sky-50", badgeText: "text-sky-600" },
+    amber: { bg: "bg-amber-500", ring: "ring-amber-100", badgeBg: "bg-amber-50", badgeText: "text-amber-600" },
+    emerald: { bg: "bg-emerald-500", ring: "ring-emerald-100", badgeBg: "bg-emerald-50", badgeText: "text-emerald-600" },
+  };
+
+  function TimelineStep({ icon: Icon, color, step, title, badge, desc, isLast }) {
+    const c = colors[color];
+    return (
+      <div className="flex gap-3.5">
+        <div className="flex flex-col items-center">
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.bg} text-white ring-4 ${c.ring}`}>
+            <Icon size={17} />
+          </span>
+          {!isLast && <span className="mt-1 w-[2px] flex-1 bg-[#E5E7EB]" />}
+        </div>
+        <div className={isLast ? "pb-0" : "pb-5"}>
+          <p className="text-[10px] font-bold tracking-wide text-[#9CA3AF]">{step}</p>
+          <div className="mt-0.5 flex items-center gap-2">
+            <p className="text-sm font-bold text-[#111827]">{title}</p>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${c.badgeBg} ${c.badgeText}`}>{badge}</span>
+          </div>
+          <p className="mt-1 text-xs leading-5 text-[#6B7280]">{desc}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF8EC] px-2.5 py-1 text-[9px] font-black text-[#4CA662]">
@@ -495,29 +345,7 @@ function Roadmap() {
   );
 }
 
-function TimelineStep({ icon: Icon, color, step, title, badge, desc, isLast }) {
-  const c = COLOR_MAP[color];
-  return (
-    <div className="flex gap-3.5">
-      <div className="flex flex-col items-center">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.bg} text-white ring-4 ${c.ring}`}>
-          <Icon size={17} />
-        </span>
-        {!isLast && <span className="mt-1 w-[2px] flex-1 bg-[#E5E7EB]" />}
-      </div>
-      <div className={isLast ? "pb-0" : "pb-5"}>
-        <p className="text-[10px] font-bold tracking-wide text-[#9CA3AF]">{step}</p>
-        <div className="mt-0.5 flex items-center gap-2">
-          <p className="text-sm font-bold text-[#111827]">{title}</p>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${c.badgeBg} ${c.badgeText}`}>{badge}</span>
-        </div>
-        <p className="mt-1 text-xs leading-5 text-[#6B7280]">{desc}</p>
-      </div>
-    </div>
-  );
-}
-
-// ===== TRANSACTION HISTORY =====
+// ========== TRANSACTION HISTORY ==========
 function TransactionHistory({ userId }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -571,12 +399,12 @@ function TransactionHistory({ userId }) {
       </div>
     </section>
   );
-                   }
-// ============================================
-// PHẦN 4: MAIN COMPONENT & MODALS
+          }
+    // ============================================
+// PHẦN 3: MAIN COMPONENT & MODALS
 // ============================================
 
-// ===== GUIDE MODAL =====
+// ========== GUIDE MODAL ==========
 function GuideModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -608,7 +436,7 @@ function GuideCard({ number, title, desc }) {
   );
 }
 
-// ===== CONVERT MODAL =====
+// ========== CONVERT MODAL ==========
 function ConvertModal({ starPoints, onClose, onDone }) {
   const [amount, setAmount] = useState("");
   const [saving, setSaving] = useState(false);
@@ -681,7 +509,7 @@ function ConvertModal({ starPoints, onClose, onDone }) {
   );
 }
 
-// ===== WITHDRAW MODAL =====
+// ========== WITHDRAW MODAL ==========
 function WithdrawModal({ starPoints, userId, onClose, onDone }) {
   const [amount, setAmount] = useState("");
   const [bankName, setBankName] = useState("");
@@ -860,6 +688,7 @@ export default function ShopEarn() {
       
       <main className="mx-auto w-full max-w-md space-y-3.5 px-3.5 pt-3.5">
         <PointsCard starPoints={starPoints} />
+        
         <CheckinSection 
           currentStreak={currentStreak}
           hasCheckedInToday={hasCheckedInToday}
@@ -867,8 +696,78 @@ export default function ShopEarn() {
           handleCheckin={handleCheckin}
           daysToNextMilestone={daysToNextMilestone}
         />
-        <BrandReward />
-        <TaskSection tasks={tasks} />
+        
+        {/* Brand Reward */}
+        <section>
+          <div className="flex items-center justify-between px-1">
+            <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THƯỞNG THƯƠNG HIỆU</p>
+            <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961]">
+              Tất cả <ChevronRight size={13} />
+            </button>
+          </div>
+          <div className="mt-2.5 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+            <div className="flex min-h-[108px] items-center gap-3 bg-gradient-to-r from-[#FFF8D9] to-[#FFFDF2] p-4">
+              <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFEAA4] to-[#FFF7D6] text-center shadow-inner">
+                <span className="text-[11px] font-black leading-3 text-[#8A5A13]">NUTI<br/>GROW+</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-black text-[#6E5A2A]">Nutifood GrowPLUS+</p>
+                <p className="mt-1 text-xs font-bold leading-4 text-[#8A8065]">Khám phá ưu đãi và săn thêm điểm thưởng.</p>
+                <span className="mt-2 inline-flex rounded-full bg-[#FFE9A3] px-2.5 py-1 text-[9px] font-black text-[#8A5A13]">Nhận điểm thưởng x2 ⭐</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Task Section */}
+        <section>
+          <div className="flex items-center justify-between px-1">
+            <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THỬ THÁCH NHẬN ĐIỂM</p>
+            <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961]">
+              Tất cả <ChevronRight size={13} />
+            </button>
+          </div>
+          <div className="mt-2.5 rounded-[22px] bg-white p-3 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+            {tasks.length > 0 ? (
+              <div className="space-y-2">
+                {tasks.slice(0, 3).map((task) => {
+                  const isDone = task.remainingToday <= 0;
+                  return (
+                    <div key={task.id} className="flex items-center gap-3 rounded-2xl bg-[#F7FAF7] p-3">
+                      {task.logo_url ? (
+                        <img src={task.logo_url} alt={task.provider} className="h-11 w-11 shrink-0 rounded-xl object-cover" />
+                      ) : (
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E9F6E9] text-xs font-black text-[#43A85F]">
+                          {task.provider?.slice(0, 2) || "NV"}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-black text-[#18231D]">{task.provider}</p>
+                        <p className="mt-0.5 text-[10px] text-[#8B978F]">Nhiệm vụ hàng ngày · {task.remainingToday} lượt còn lại</p>
+                      </div>
+                      <button
+                        onClick={() => navigate("/tasks")}
+                        disabled={isDone}
+                        className="shrink-0 rounded-xl bg-[#4FBE69] px-3 py-2 text-[10px] font-black text-white disabled:bg-[#C8D0CB]"
+                      >
+                        {isDone ? "Đã xong" : `+${task.reward_coins} ⭐`}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <button onClick={() => navigate("/tasks")} className="flex w-full items-center justify-between rounded-2xl bg-[#F7FAF7] p-4 text-left">
+                <div>
+                  <p className="text-xs font-black text-[#18231D]">Nhiệm vụ hàng ngày</p>
+                  <p className="mt-1 text-[10px] text-[#8B978F]">Vào xem các thử thách mới để nhận thêm Sao.</p>
+                </div>
+                <ChevronRight size={17} className="text-[#54AF68]" />
+              </button>
+            )}
+          </div>
+        </section>
+
         <ShopSection 
           platform={platform}
           setPlatform={setPlatform}
@@ -885,18 +784,21 @@ export default function ShopEarn() {
           setCopied={setCopied}
           navigate={navigate}
         />
+
         <WalletSection 
           starPoints={starPoints}
           canWithdraw={canWithdraw}
           setShowConvert={setShowConvert}
           setShowWithdraw={setShowWithdraw}
         />
+
         <Roadmap />
         <TransactionHistory userId={session?.user?.id} />
       </main>
 
       {/* Modals */}
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      
       {checkinResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
           <div className="w-full max-w-xs rounded-[28px] bg-white p-6 text-center shadow-2xl">
@@ -909,6 +811,7 @@ export default function ShopEarn() {
           </div>
         </div>
       )}
+
       {showConvert && (
         <ConvertModal
           starPoints={starPoints}
@@ -919,6 +822,7 @@ export default function ShopEarn() {
           }}
         />
       )}
+
       {showWithdraw && (
         <WithdrawModal
           starPoints={starPoints}
@@ -930,7 +834,8 @@ export default function ShopEarn() {
           }}
         />
       )}
+
       <BottomNav />
     </div>
   );
-                                                                 }
+              }    
