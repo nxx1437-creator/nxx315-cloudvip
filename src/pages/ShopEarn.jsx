@@ -168,33 +168,6 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
     </section>
   );
 }
-
-// ===== BRAND REWARD =====
-function BrandReward() {
-  const navigate = useNavigate();
-  return (
-    <section>
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THƯỞNG THƯƠNG HIỆU</p>
-        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961] hover:text-[#3D8F54] transition-colors">
-          Tất cả <ChevronRight size={13} />
-        </button>
-      </div>
-      <div className="mt-2.5 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
-        <div className="flex min-h-[108px] items-center gap-3 bg-gradient-to-r from-[#FFF8D9] to-[#FFFDF2] p-4">
-          <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFEAA4] to-[#FFF7D6] text-center shadow-inner">
-            <span className="text-[11px] font-black leading-3 text-[#8A5A13]">NUTI<br/>GROW+</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-black text-[#6E5A2A]">Nutifood GrowPLUS+</p>
-            <p className="mt-1 text-xs font-bold leading-4 text-[#8A8065]">Khám phá ưu đãi và săn thêm điểm thưởng.</p>
-            <span className="mt-2 inline-flex rounded-full bg-[#FFE9A3] px-2.5 py-1 text-[9px] font-black text-[#8A5A13]">Nhận điểm thưởng x2 ⭐</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 // ============================================
 // PHẦN 2: TASK, SHOP, CASHBACK HISTORY
 // ============================================
