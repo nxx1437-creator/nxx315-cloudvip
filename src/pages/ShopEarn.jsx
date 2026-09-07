@@ -1,3 +1,7 @@
+// ============================================
+// PHẦN 1: IMPORTS, UTILITIES & COMPONENTS
+// ============================================
+
 import React, { useState } from "react";
 import {
   Link2, Copy, Check, Loader2, Star, ArrowLeftRight, Landmark, X,
@@ -30,6 +34,7 @@ const COLOR_MAP = {
   amber: { bg: "bg-amber-500", ring: "ring-amber-100", badgeBg: "bg-amber-50", badgeText: "text-amber-600" },
   emerald: { bg: "bg-emerald-500", ring: "ring-emerald-100", badgeBg: "bg-emerald-50", badgeText: "text-emerald-600" },
 };
+
 // ===== HEADER =====
 function Header() {
   const navigate = useNavigate();
@@ -51,11 +56,12 @@ function Header() {
   );
 }
 
-// ========== POINTS CARD ==========
+// ===== POINTS CARD =====
 function PointsCard({ starPoints, pendingPoints = 0 }) {
   return (
     <section className="relative overflow-hidden rounded-[25px] bg-gradient-to-br from-[#B9EFA5] via-[#86D88A] to-[#45B96B] p-5 shadow-[0_10px_30px_rgba(61,153,89,0.18)]">
-      {/* ... */}
+      <div className="pointer-events-none absolute -right-12 -top-14 h-36 w-36 rounded-full bg-white/20 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-20 left-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
       <div className="relative">
         <div className="flex items-start justify-between">
           <div>
@@ -74,11 +80,21 @@ function PointsCard({ starPoints, pendingPoints = 0 }) {
               {formatCoins(pendingPoints)} ⭐
             </p>
             {pendingPoints > 0 && (
-              <p className="text-[8px] text-white/70">Đang xử lý...</p>
+              <p className="text-[8px] text-white/70 animate-pulse">⏳ Đang xử lý...</p>
             )}
           </div>
         </div>
-        {/* ... */}
+
+        <div className="mt-5 rounded-2xl bg-white/30 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold leading-4 text-[#255B38]">Thêm 2.000 ⭐ để nâng hạng nhaaa</p>
+            <ChevronRight size={15} className="shrink-0 text-[#255B38]" />
+          </div>
+          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/50">
+            <div className="h-full rounded-full bg-white transition-all" style={{ width: `${Math.min(100, (starPoints / 2000) * 100)}%` }} />
+          </div>
+          <button className="mt-2 text-[10px] font-bold text-[#255B38]">Chi tiết lịch sử điểm →</button>
+        </div>
       </div>
     </section>
   );
@@ -238,9 +254,9 @@ function TaskSection({ tasks }) {
       </div>
     </section>
   );
-}
+          }
 // ============================================
-// PHẦN 3: SHOP, WALLET, ROADMAP, HISTORY
+// PHẦN 2: SHOP, WALLET, ROADMAP, HISTORY
 // ============================================
 
 // ===== SHOP SECTION =====
@@ -568,9 +584,9 @@ function TransactionHistory({ userId }) {
       </div>
     </section>
   );
-                   }
-// ============================================
-// PHẦN 4: MAIN COMPONENT & MODALS
+            }
+         // ============================================
+// PHẦN 3: MODALS & MAIN COMPONENT
 // ============================================
 
 // ===== GUIDE MODAL =====
@@ -783,6 +799,29 @@ export default function ShopEarn() {
   const [checkinResult, setCheckinResult] = useState(null);
   const [productInfo, setProductInfo] = useState(null);
 
+  // ===== THÊM STATE PENDING POINTS =====
+  const [pendingPoints, setPendingPoints] = useState(0);
+
+  // ===== THÊM useEffect FETCH PENDING POINTS =====
+  React.useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const fetchPendingPoints = async () => {
+      const { data, error } = await supabase
+        .from('pending_transactions')
+        .select('star_points_expected')
+        .eq('user_id', session.user.id)
+        .eq('status', 'pending');
+
+      if (!error && data) {
+        const total = data.reduce((sum, item) => sum + item.star_points_expected, 0);
+        setPendingPoints(total);
+      }
+    };
+
+    fetchPendingPoints();
+  }, [session?.user?.id]);
+
   const todayStr = new Date().toDateString();
   const hasCheckedInToday = profile?.last_checkin_date && new Date(profile.last_checkin_date).toDateString() === todayStr;
   const currentStreak = profile?.checkin_streak || 0;
@@ -856,7 +895,9 @@ export default function ShopEarn() {
       <Header />
       
       <main className="mx-auto w-full max-w-md space-y-3.5 px-3.5 pt-3.5">
-        <PointsCard starPoints={starPoints} />
+        {/* ===== TRUYỀN PENDING POINTS VÀO POINTS CARD ===== */}
+        <PointsCard starPoints={starPoints} pendingPoints={pendingPoints} />
+        
         <CheckinSection 
           currentStreak={currentStreak}
           hasCheckedInToday={hasCheckedInToday}
@@ -930,4 +971,4 @@ export default function ShopEarn() {
       <BottomNav />
     </div>
   );
-                                                                 }
+                                       }     
