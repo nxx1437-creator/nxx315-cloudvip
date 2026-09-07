@@ -484,7 +484,6 @@ export default function ShopEarn() {
       )}
 
       {checkinResult && (
-      {checkinResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-xs rounded-3xl bg-white p-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50">
