@@ -113,7 +113,7 @@ export default function RefundHistoryPage() {
           </div>
         </div>
 
-        {/* Tabs - Style MoMo */}
+        {/* Tabs */}
         <div className="mt-3.5 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           {tabs.map((tab) => (
             <button
@@ -185,7 +185,7 @@ export default function RefundHistoryPage() {
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E3F0FF]">
                       <Clock3 size={12} className="text-[#1A8C3F]" />
                     </div>
-                    <span className="text-[9px] font-semibold text-[#1A8C3F]">Hoàn Nhanh 48H</span>
+                    <span className="text-[9px] font-semibold text-[#1A8C3F]">mua hàng kiếm sao</span>
                     <span className={`ml-auto text-[8px] font-bold px-2 py-0.5 rounded-full ${status.cls}`}>
                       {status.badge}
                     </span>
