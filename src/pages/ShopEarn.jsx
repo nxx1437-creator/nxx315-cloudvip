@@ -791,22 +791,22 @@ function NoteRow({ text }) {
   );
 }
 
-// ===== PAYMENT RULES - DẠNG LIST NHỎ =====
+// ===== PAYMENT RULES - CHUẨN MOMO =====
 function PaymentRules() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-[22px] bg-white p-3.5 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+    <div className="rounded-[18px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <Info size={14} className="text-[#45B967]" />
-          <span className="text-[12px] font-bold text-[#18231D]">Quy tắc thanh toán</span>
+          <Info size={15} className="text-[#45B967]" />
+          <span className="text-[13px] font-semibold text-[#18231D]">Quy tắc thanh toán</span>
         </div>
         <ChevronRight 
-          size={14} 
+          size={16} 
           className={`text-[#9CA3AF] transition-transform duration-300 ${
             expanded ? 'rotate-90' : ''
           }`} 
@@ -814,40 +814,42 @@ function PaymentRules() {
       </button>
 
       {expanded && (
-        <div className="mt-2.5 space-y-2 border-t border-[#F3F4F6] pt-2.5">
+        <div className="mt-3 space-y-2.5 border-t border-[#F3F4F6] pt-3">
           {/* Tổng nhận */}
-          <div className="flex items-center justify-between rounded-lg bg-[#F5F8F4] px-3 py-1.5">
-            <span className="text-[8px] font-medium text-[#7A897F]">Tổng nhận VND</span>
-            <span className="text-[11px] font-bold text-[#18231D]">0đ</span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg bg-[#F5F8F4] px-3 py-1.5">
-            <span className="text-[8px] font-medium text-[#7A897F]">Đã đổi Main</span>
-            <span className="text-[11px] font-bold text-[#18231D]">0</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-[#F5F8F4] p-3 text-center">
+              <p className="text-[10px] text-[#7A897F]">Tổng nhận VND</p>
+              <p className="text-[15px] font-bold text-[#18231D]">0đ</p>
+            </div>
+            <div className="rounded-xl bg-[#F5F8F4] p-3 text-center">
+              <p className="text-[10px] text-[#7A897F]">Đã đổi Main</p>
+              <p className="text-[15px] font-bold text-[#18231D]">0</p>
+            </div>
           </div>
 
           {/* Quy tắc */}
-          <div className="space-y-1 mt-1">
-            <p className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-wide">Quy tắc</p>
-            <div className="grid grid-cols-1 gap-0.5">
-              <div className="flex items-center gap-1.5 rounded px-2 py-0.5">
-                <span className="text-[8px]">•</span>
-                <p className="text-[8px] text-[#6B7280]">1 sao = 10 VND khi rút tiền</p>
+          <div className="space-y-1.5">
+            <p className="text-[9px] font-semibold text-[#9CA3AF] uppercase tracking-wider">Quy tắc</p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 rounded-lg bg-[#FAFCFA] px-2.5 py-1.5">
+                <span className="text-[11px]">💵</span>
+                <p className="text-[11px] text-[#6B7280]">1 sao = 10 VND khi rút tiền</p>
               </div>
-              <div className="flex items-center gap-1.5 rounded px-2 py-0.5">
-                <span className="text-[8px]">•</span>
-                <p className="text-[8px] text-[#6B7280]">Đổi 1.000 mkt → 900 main (phí 10%)</p>
+              <div className="flex items-center gap-2 rounded-lg bg-[#FAFCFA] px-2.5 py-1.5">
+                <span className="text-[11px]">🔄</span>
+                <p className="text-[11px] text-[#6B7280]">Đổi 1.000 mkt → 900 main (phí 10%)</p>
               </div>
-              <div className="flex items-center gap-1.5 rounded px-2 py-0.5">
-                <span className="text-[8px]">•</span>
-                <p className="text-[8px] text-[#6B7280]">Rút bank/ví: phí 20%</p>
+              <div className="flex items-center gap-2 rounded-lg bg-[#FAFCFA] px-2.5 py-1.5">
+                <span className="text-[11px]">🏦</span>
+                <p className="text-[11px] text-[#6B7280]">Rút bank/ví: phí 20%</p>
               </div>
-              <div className="flex items-center gap-1.5 rounded px-2 py-0.5">
-                <span className="text-[8px]">•</span>
-                <p className="text-[8px] text-[#6B7280]">Tối thiểu mỗi lần rút: 10.000 VND</p>
+              <div className="flex items-center gap-2 rounded-lg bg-[#FAFCFA] px-2.5 py-1.5">
+                <span className="text-[11px]">📌</span>
+                <p className="text-[11px] text-[#6B7280]">Tối thiểu 10.000 VND</p>
               </div>
-              <div className="flex items-center gap-1.5 rounded px-2 py-0.5">
-                <span className="text-[8px]">•</span>
-                <p className="text-[8px] text-[#6B7280]">Sao mua hàng tách riêng khỏi Main coin</p>
+              <div className="flex items-center gap-2 rounded-lg bg-[#FAFCFA] px-2.5 py-1.5">
+                <span className="text-[11px]">🔀</span>
+                <p className="text-[11px] text-[#6B7280]">Sao tách riêng khỏi Main coin</p>
               </div>
             </div>
           </div>
