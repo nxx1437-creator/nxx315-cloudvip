@@ -288,14 +288,12 @@ export default function ShopEarn() {
                   {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                 </button>
               </div>
-              <a
-                href={resultLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-sky-500 py-2 text-xs font-bold text-white"
+              <button
+                onClick={() => navigate(`/redirect?url=${encodeURIComponent(productInfo.link)}`)}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white"
               >
-                Mở lại link này
-              </a>
+                Mua ngay
+              </button>
             </div>
           )}
         </section>
