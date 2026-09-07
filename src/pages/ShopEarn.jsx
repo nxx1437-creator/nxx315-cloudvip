@@ -43,12 +43,15 @@ export default function ShopEarn() {
   const [productInfo, setProductInfo] = useState(null);
 
   const todayStr = new Date().toDateString();
+
   const hasCheckedInToday =
     profile?.last_checkin_date &&
     new Date(profile.last_checkin_date).toDateString() === todayStr;
 
   const currentStreak = profile?.checkin_streak || 0;
-  const rewardForDay = (day) => (day <= 10 ? 5 : day <= 20 ? 10 : 15);
+
+  const rewardForDay = (day) =>
+    day <= 10 ? 5 : day <= 20 ? 10 : 15;
 
   const nextReward = rewardForDay(currentStreak + 1);
 
@@ -91,7 +94,10 @@ export default function ShopEarn() {
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text) setProductUrl(text);
+
+      if (text) {
+        setProductUrl(text);
+      }
     } catch {
       // im lặng nếu trình duyệt không cho phép đọc clipboard
     }
@@ -112,40 +118,52 @@ export default function ShopEarn() {
     setGenError("");
     setResultLink(null);
 
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } =
+      await supabase.auth.getSession();
+
     const token = sessionData?.session?.access_token;
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "create-affiliate-link",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: {
-            product_url: productUrl.trim(),
-            platform: "tiktok",
-          },
-        }
-      );
+      const { data, error } =
+        await supabase.functions.invoke(
+          "create-affiliate-link",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              product_url: productUrl.trim(),
+              platform: "tiktok",
+            },
+          }
+        );
 
       if (error) throw error;
 
       if (!data?.success) {
-        throw new Error(data?.error || "Không tạo được link.");
+        throw new Error(
+          data?.error || "Không tạo được link."
+        );
       }
 
-      const link = data.short_link || data.full_link;
+      const link =
+        data.short_link || data.full_link;
 
       setResultLink(link);
 
       setProductInfo({
-        name: data.product_name || "Sản phẩm TikTok Shop",
-        image: data.product_image || null,
+        name:
+          data.product_name ||
+          "Sản phẩm TikTok Shop",
+        image:
+          data.product_image || null,
         link,
       });
     } catch (err) {
-      setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
+      setGenError(
+        err.message ||
+          "Có lỗi xảy ra, thử lại sau."
+      );
     } finally {
       setGenerating(false);
     }
@@ -155,16 +173,22 @@ export default function ShopEarn() {
     if (!resultLink) return;
 
     navigator.clipboard.writeText(resultLink);
+
     setCopied(true);
 
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(
+      () => setCopied(false),
+      2000
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#F5F8F4] pb-28 text-[#18231D]">
 
       {/* HEADER */}
+
       <header className="sticky top-0 z-30 border-b border-black/[0.04] bg-[#F5F8F4]/95 px-4 py-3 backdrop-blur-xl">
+
         <div className="mx-auto flex max-w-md items-center gap-3">
 
           <button
@@ -192,11 +216,13 @@ export default function ShopEarn() {
           </button>
 
         </div>
+
       </header>
 
       <main className="mx-auto w-full max-w-md space-y-3.5 px-3.5 pt-3.5">
 
         {/* 1. ĐIỂM TÍCH LŨY */}
+
         <section className="relative overflow-hidden rounded-[25px] bg-gradient-to-br from-[#B9EFA5] via-[#86D88A] to-[#45B96B] p-5 shadow-[0_10px_30px_rgba(61,153,89,0.18)]">
 
           <div className="pointer-events-none absolute -right-12 -top-14 h-36 w-36 rounded-full bg-white/20 blur-2xl" />
@@ -208,11 +234,13 @@ export default function ShopEarn() {
             <div className="flex items-start justify-between">
 
               <div>
+
                 <p className="text-[11px] font-bold text-[#255B38]">
                   Điểm tích lũy
                 </p>
 
                 <div className="mt-1 flex items-center gap-1.5">
+
                   <span className="text-[30px] font-black leading-none text-white">
                     {formatCoins(starPoints)}
                   </span>
@@ -221,14 +249,17 @@ export default function ShopEarn() {
                     size={20}
                     className="fill-white text-white"
                   />
+
                 </div>
 
                 <span className="mt-2 inline-flex rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black text-[#3B7D4E]">
                   Tập sự săn sale
                 </span>
+
               </div>
 
               <div className="rounded-2xl bg-white/25 px-3 py-2 text-right backdrop-blur-sm">
+
                 <p className="text-[9px] font-bold text-[#255B38]">
                   Điểm chờ duyệt
                 </p>
@@ -236,6 +267,7 @@ export default function ShopEarn() {
                 <p className="mt-0.5 text-sm font-black text-white">
                   0 ⭐
                 </p>
+
               </div>
 
             </div>
@@ -243,6 +275,7 @@ export default function ShopEarn() {
             <div className="mt-5 rounded-2xl bg-white/30 p-3 backdrop-blur-sm">
 
               <div className="flex items-center justify-between gap-3">
+
                 <p className="text-[11px] font-bold leading-4 text-[#255B38]">
                   Thêm 2.000 ⭐ để nâng hạng nhaaa
                 </p>
@@ -251,9 +284,11 @@ export default function ShopEarn() {
                   size={15}
                   className="shrink-0 text-[#255B38]"
                 />
+
               </div>
 
               <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/50">
+
                 <div
                   className="h-full rounded-full bg-white transition-all"
                   style={{
@@ -263,6 +298,7 @@ export default function ShopEarn() {
                     )}%`,
                   }}
                 />
+
               </div>
 
               <button className="mt-2 text-[10px] font-bold text-[#255B38]">
@@ -272,19 +308,23 @@ export default function ShopEarn() {
             </div>
 
           </div>
+
         </section>
 
         {/* 2. CHUỖI ĐIỂM DANH */}
+
         <section className="rounded-[23px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
 
           <div className="flex items-center justify-between">
 
             <div>
+
               <p className="text-[10px] font-black tracking-[0.14em] text-[#7A897F]">
                 CHUỖI ĐIỂM DANH
               </p>
 
               <div className="mt-1 flex items-center gap-1.5">
+
                 <Flame
                   size={18}
                   className="fill-orange-400 text-orange-500"
@@ -297,7 +337,9 @@ export default function ShopEarn() {
                 <span className="text-xs font-bold text-[#7A897F]">
                   ngày
                 </span>
+
               </div>
+
             </div>
 
             <div className="rounded-full bg-[#EFF9E9] px-3 py-1.5 text-[10px] font-black text-[#43A85F]">
@@ -314,10 +356,12 @@ export default function ShopEarn() {
               ["N21–N30", "+15 ⭐"],
               ["N31+", "+15 ⭐"],
             ].map(([title, reward]) => (
+
               <div
                 key={title}
                 className="rounded-xl bg-[#F5F8F4] px-1 py-2 text-center"
               >
+
                 <p className="text-[9px] font-bold text-[#8B978F]">
                   {title}
                 </p>
@@ -325,71 +369,83 @@ export default function ShopEarn() {
                 <p className="mt-0.5 text-[10px] font-black text-[#43A85F]">
                   {reward}
                 </p>
+
               </div>
+
             ))}
 
           </div>
-                    <div className="mt-3 flex gap-1.5">
 
-            {Array.from({ length: 5 }).map((_, offset) => {
+          <div className="mt-3 flex gap-1.5">
 
-              const baseDay = Math.max(
-                1,
-                currentStreak - 3
-              );
+            {Array.from({ length: 5 }).map(
+              (_, offset) => {
 
-              const dayNumber = baseDay + offset;
+                const baseDay =
+                  Math.max(
+                    1,
+                    currentStreak - 3
+                  );
 
-              const isToday = hasCheckedInToday
-                ? offset === 3
-                : offset === 4;
+                const dayNumber =
+                  baseDay + offset;
 
-              const isDone = dayNumber <= currentStreak;
+                const isToday =
+                  hasCheckedInToday
+                    ? offset === 3
+                    : offset === 4;
 
-              return (
-                <div
-                  key={offset}
-                  className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl border px-1 py-2.5 ${
-                    isDone
-                      ? "border-[#BFE8B8] bg-[#F0FAEC]"
-                      : isToday
-                      ? "border-[#8FD79A] bg-[#F7FFF5]"
-                      : "border-[#EDF0ED] bg-[#FAFBFA]"
-                  }`}
-                >
+                const isDone =
+                  dayNumber <= currentStreak;
 
-                  <span className="text-[8px] font-bold text-[#96A199]">
-                    {isToday
-                      ? "HÔM NAY"
-                      : `N${dayNumber}`}
-                  </span>
-
-                  <span
-                    className={`mt-1 text-[11px] font-black ${
+                return (
+                  <div
+                    key={offset}
+                    className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl border px-1 py-2.5 ${
                       isDone
-                        ? "text-[#43A85F]"
-                        : "text-[#8C968F]"
+                        ? "border-[#BFE8B8] bg-[#F0FAEC]"
+                        : isToday
+                        ? "border-[#8FD79A] bg-[#F7FFF5]"
+                        : "border-[#EDF0ED] bg-[#FAFBFA]"
                     }`}
                   >
-                    +{rewardForDay(dayNumber)} ⭐
-                  </span>
 
-                  {isDone && (
-                    <Check
-                      size={11}
-                      className="mt-1 text-[#43A85F]"
-                    />
-                  )}
+                    <span className="text-[8px] font-bold text-[#96A199]">
+                      {isToday
+                        ? "HÔM NAY"
+                        : `N${dayNumber}`}
+                    </span>
 
-                </div>
-              );
-            })}
+                    <span
+                      className={`mt-1 text-[11px] font-black ${
+                        isDone
+                          ? "text-[#43A85F]"
+                          : "text-[#8C968F]"
+                      }`}
+                    >
+                      +{rewardForDay(dayNumber)} ⭐
+                    </span>
+
+                    {isDone && (
+                      <Check
+                        size={11}
+                        className="mt-1 text-[#43A85F]"
+                      />
+                    )}
+
+                  </div>
+                );
+              }
+            )}
 
           </div>
 
           <button
             onClick={handleCheckin}
-            disabled={hasCheckedInToday || checkinLoading}
+            disabled={
+              hasCheckedInToday ||
+              checkinLoading
+            }
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#42B866] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(66,184,102,0.22)] transition active:scale-[0.99] disabled:bg-[#B9C6BD] disabled:shadow-none"
           >
 
@@ -416,7 +472,9 @@ export default function ShopEarn() {
 
             {daysToNextMilestone > 0
               ? `Còn ${daysToNextMilestone} ngày nữa để đạt mốc ${
-                  currentStreak < 10 ? "10" : "15"
+                  currentStreak < 10
+                    ? "10"
+                    : "15"
                 } ⭐/ngày`
               : "Bạn đang ở mốc thưởng cao nhất 🔥"}
 
@@ -425,6 +483,7 @@ export default function ShopEarn() {
         </section>
 
         {/* 3. THƯỞNG THƯƠNG HIỆU */}
+
         <section>
 
           <SectionHeading
@@ -463,11 +522,13 @@ export default function ShopEarn() {
               </div>
 
             </div>
+
           </div>
 
         </section>
 
         {/* 4. NHIỆM VỤ */}
+
         <section>
 
           <SectionHeading
@@ -481,66 +542,76 @@ export default function ShopEarn() {
 
               <div className="space-y-2">
 
-                {tasks.slice(0, 3).map((task) => {
+                {tasks.slice(0, 3).map(
+                  (task) => {
 
-                  const isDone =
-                    task.remainingToday <= 0;
+                    const isDone =
+                      task.remainingToday <= 0;
 
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 rounded-2xl bg-[#F7FAF7] p-3"
-                    >
+                    return (
+                      <div
+                        key={task.id}
+                        className="flex items-center gap-3 rounded-2xl bg-[#F7FAF7] p-3"
+                      >
 
-                      {task.logo_url ? (
-                        <img
-                          src={task.logo_url}
-                          alt={task.provider}
-                          className="h-11 w-11 shrink-0 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E9F6E9] text-xs font-black text-[#43A85F]">
-                          {task.provider?.slice(0, 2) || "NV"}
+                        {task.logo_url ? (
+                          <img
+                            src={task.logo_url}
+                            alt={task.provider}
+                            className="h-11 w-11 shrink-0 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E9F6E9] text-xs font-black text-[#43A85F]">
+                            {task.provider?.slice(
+                              0,
+                              2
+                            ) || "NV"}
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1">
+
+                          <p className="truncate text-xs font-black text-[#18231D]">
+                            {task.provider}
+                          </p>
+
+                          <p className="mt-0.5 text-[10px] text-[#8B978F]">
+                            Nhiệm vụ hàng ngày ·{" "}
+                            {task.remainingToday} lượt còn lại
+                          </p>
+
                         </div>
-                      )}
 
-                      <div className="min-w-0 flex-1">
-
-                        <p className="truncate text-xs font-black text-[#18231D]">
-                          {task.provider}
-                        </p>
-
-                        <p className="mt-0.5 text-[10px] text-[#8B978F]">
-                          Nhiệm vụ hàng ngày ·{" "}
-                          {task.remainingToday} lượt còn lại
-                        </p>
+                        <button
+                          onClick={() =>
+                            navigate("/tasks")
+                          }
+                          disabled={isDone}
+                          className="shrink-0 rounded-xl bg-[#4FBE69] px-3 py-2 text-[10px] font-black text-white disabled:bg-[#C8D0CB]"
+                        >
+                          {isDone
+                            ? "Đã xong"
+                            : `+${task.reward_coins} ⭐`}
+                        </button>
 
                       </div>
-
-                      <button
-                        onClick={() => navigate("/tasks")}
-                        disabled={isDone}
-                        className="shrink-0 rounded-xl bg-[#4FBE69] px-3 py-2 text-[10px] font-black text-white disabled:bg-[#C8D0CB]"
-                      >
-                        {isDone
-                          ? "Đã xong"
-                          : `+${task.reward_coins} ⭐`}
-                      </button>
-
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
 
               </div>
 
             ) : (
 
               <button
-                onClick={() => navigate("/tasks")}
+                onClick={() =>
+                  navigate("/tasks")
+                }
                 className="flex w-full items-center justify-between rounded-2xl bg-[#F7FAF7] p-4 text-left"
               >
 
                 <div>
+
                   <p className="text-xs font-black text-[#18231D]">
                     Nhiệm vụ hàng ngày
                   </p>
@@ -548,6 +619,7 @@ export default function ShopEarn() {
                   <p className="mt-1 text-[10px] text-[#8B978F]">
                     Vào xem các thử thách mới để nhận thêm Sao.
                   </p>
+
                 </div>
 
                 <ChevronRight
@@ -562,8 +634,8 @@ export default function ShopEarn() {
           </div>
 
         </section>
+                {/* 5. MUA HÀNG TÍCH ĐIỂM */}
 
-        {/* 5. MUA HÀNG TÍCH ĐIỂM */}
         <section className="overflow-hidden rounded-[24px] bg-[#EAF7E6] p-4 shadow-[0_5px_20px_rgba(31,55,40,0.04)]">
 
           <div className="flex items-start gap-3">
@@ -589,6 +661,7 @@ export default function ShopEarn() {
           <div className="mt-3 flex gap-1.5">
 
             {PLATFORMS.map((p) => (
+
               <button
                 key={p.key}
                 onClick={() => {
@@ -616,6 +689,7 @@ export default function ShopEarn() {
                 )}
 
               </button>
+
             ))}
 
           </div>
@@ -672,7 +746,8 @@ export default function ShopEarn() {
             )}
 
           </button>
-                    <p className="mt-3 text-center text-[9px] font-medium leading-4 text-[#77907E]">
+
+          <p className="mt-3 text-center text-[9px] font-medium leading-4 text-[#77907E]">
             Sau khi nhập link và mua hàng, đơn sẽ tự động xuất hiện trong Điểm chờ duyệt sau tối đa 48 giờ.
           </p>
 
@@ -687,6 +762,7 @@ export default function ShopEarn() {
         </section>
 
         {/* 6. VÍ SAO */}
+
         <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
 
           <div className="flex items-center justify-between">
@@ -708,10 +784,12 @@ export default function ShopEarn() {
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F3F8F1]">
+
               <Wallet2
                 size={21}
                 className="text-[#66A876]"
               />
+
             </div>
 
           </div>
@@ -719,7 +797,9 @@ export default function ShopEarn() {
           <div className="mt-3 flex gap-2">
 
             <button
-              onClick={() => setShowConvert(true)}
+              onClick={() =>
+                setShowConvert(true)
+              }
               disabled={starPoints <= 0}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#4DBD69] py-2.5 text-[10px] font-black text-white disabled:opacity-40"
             >
@@ -751,6 +831,7 @@ export default function ShopEarn() {
         </section>
 
         {/* 7. LỘ TRÌNH */}
+
         <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
 
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF8EC] px-2.5 py-1 text-[9px] font-black text-[#4CA662]">
@@ -806,11 +887,14 @@ export default function ShopEarn() {
 
       {showGuide && (
         <GuideModal
-          onClose={() => setShowGuide(false)}
+          onClose={() =>
+            setShowGuide(false)
+          }
         />
       )}
 
       {/* 8. CARD SẢN PHẨM SAU KHI TẠO LINK */}
+
       {productInfo && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
 
@@ -833,7 +917,9 @@ export default function ShopEarn() {
               </div>
 
               <button
-                onClick={() => setProductInfo(null)}
+                onClick={() =>
+                  setProductInfo(null)
+                }
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F4F6F4] text-[#8C978F]"
               >
                 <X size={16} />
@@ -880,10 +966,12 @@ export default function ShopEarn() {
                   if (navigator.share) {
 
                     try {
+
                       await navigator.share({
                         title: productInfo.name,
                         url: productInfo.link,
                       });
+
                     } catch {
                       // người dùng đóng hộp chia sẻ
                     }
@@ -900,6 +988,7 @@ export default function ShopEarn() {
                       () => setCopied(false),
                       2000
                     );
+
                   }
 
                 }}
@@ -918,11 +1007,18 @@ export default function ShopEarn() {
 
               </button>
 
+              {/* ĐÃ SỬA: truyền tên + ảnh sang Redirect */}
+
               <button
                 onClick={() =>
                   navigate(
                     `/redirect?url=${encodeURIComponent(
                       productInfo.link
+                    )}&name=${encodeURIComponent(
+                      productInfo.name ||
+                        "Sản phẩm TikTok Shop"
+                    )}&image=${encodeURIComponent(
+                      productInfo.image || ""
                     )}`
                   )
                 }
@@ -961,6 +1057,7 @@ export default function ShopEarn() {
             </div>
 
           </div>
+
         </div>
       )}
 
@@ -988,21 +1085,26 @@ export default function ShopEarn() {
             </p>
 
             <button
-              onClick={() => setCheckinResult(null)}
+              onClick={() =>
+                setCheckinResult(null)
+              }
               className="mt-5 w-full rounded-2xl bg-[#45B967] py-3 text-sm font-black text-white"
             >
               Tuyệt vời
             </button>
 
           </div>
+
         </div>
       )}
-
-      {showConvert && (
+            {showConvert && (
         <ConvertModal
           starPoints={starPoints}
-          onClose={() => setShowConvert(false)}
+          onClose={() =>
+            setShowConvert(false)
+          }
           onDone={(newStar, newCoin) => {
+
             setProfile((prev) => ({
               ...prev,
               star_points: newStar,
@@ -1010,6 +1112,7 @@ export default function ShopEarn() {
             }));
 
             setShowConvert(false);
+
           }}
         />
       )}
@@ -1018,14 +1121,18 @@ export default function ShopEarn() {
         <WithdrawModal
           starPoints={starPoints}
           userId={session?.user?.id}
-          onClose={() => setShowWithdraw(false)}
+          onClose={() =>
+            setShowWithdraw(false)
+          }
           onDone={(newStar) => {
+
             setProfile((prev) => ({
               ...prev,
               star_points: newStar,
             }));
 
             setShowWithdraw(false);
+
           }}
         />
       )}
@@ -1036,7 +1143,10 @@ export default function ShopEarn() {
   );
 }
 
-function SectionHeading({ title, onClick }) {
+function SectionHeading({
+  title,
+  onClick,
+}) {
   return (
     <div className="flex items-center justify-between px-1">
 
@@ -1107,7 +1217,13 @@ function TimelineStep({
 
       </div>
 
-      <div className={isLast ? "pb-0" : "pb-5"}>
+      <div
+        className={
+          isLast
+            ? "pb-0"
+            : "pb-5"
+        }
+      >
 
         <p className="text-[10px] font-bold tracking-wide text-[#9CA3AF]">
           {step}
@@ -1135,7 +1251,8 @@ function TimelineStep({
 
     </div>
   );
-      }
+}
+
 function GuideModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -1187,6 +1304,7 @@ function GuideModal({ onClose }) {
         </button>
 
       </div>
+
     </div>
   );
 }
@@ -1236,9 +1354,14 @@ function NoteRow({ text }) {
   );
 }
 
-function TransactionHistory({ userId }) {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+function TransactionHistory({
+  userId,
+}) {
+  const [history, setHistory] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   React.useEffect(() => {
 
@@ -1281,7 +1404,10 @@ function TransactionHistory({ userId }) {
     },
   };
 
-  if (loading || history.length === 0) {
+  if (
+    loading ||
+    history.length === 0
+  ) {
     return null;
   }
 
@@ -1300,7 +1426,8 @@ function TransactionHistory({ userId }) {
             statusMap[tx.status] ||
             statusMap[0];
 
-          const StatusIcon = status.icon;
+          const StatusIcon =
+            status.icon;
 
           return (
             <div
@@ -1332,8 +1459,7 @@ function TransactionHistory({ userId }) {
 
                 {tx.credited && (
                   <span className="text-xs font-bold text-amber-600">
-                    +
-                    {formatVND(
+                    +{formatVND(
                       tx.star_points_awarded
                     )}
                   </span>
@@ -1356,8 +1482,7 @@ function TransactionHistory({ userId }) {
 
     </section>
   );
-}
-
+          }
 function ConvertModal({
   starPoints,
   onClose,
@@ -1464,7 +1589,10 @@ function ConvertModal({
 
         <p className="mt-1 text-xs text-[#6B7280]">
           Số dư khả dụng:{" "}
-          {formatCoins(starPoints)} ⭐
+          {formatCoins(
+            starPoints
+          )}{" "}
+          ⭐
         </p>
 
         <p className="mb-1.5 mt-4 text-xs font-semibold text-[#6B7280]">
@@ -1475,7 +1603,9 @@ function ConvertModal({
           type="number"
           value={amount}
           onChange={(e) =>
-            setAmount(e.target.value)
+            setAmount(
+              e.target.value
+            )
           }
           placeholder="0"
           className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:border-emerald-400"
@@ -1534,6 +1664,7 @@ function ConvertModal({
             disabled={saving}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white disabled:opacity-60"
           >
+
             {saving ? (
               <Loader2
                 size={15}
@@ -1542,11 +1673,13 @@ function ConvertModal({
             ) : (
               "Xác nhận"
             )}
+
           </button>
 
         </div>
 
       </div>
+
     </div>
   );
 }
@@ -1615,7 +1748,8 @@ function WithdrawModal({
         .insert({
           user_id: userId,
           amount: numAmount,
-          bank_name: bankName.trim(),
+          bank_name:
+            bankName.trim(),
           account_number:
             accountNumber.trim(),
           account_holder:
@@ -1623,10 +1757,13 @@ function WithdrawModal({
         });
 
       if (insertError) {
+
         setSaving(false);
+
         setError(
           insertError.message
         );
+
         return;
       }
 
@@ -1643,9 +1780,11 @@ function WithdrawModal({
       setSaving(false);
 
       if (deductError) {
+
         setError(
           deductError.message
         );
+
         return;
       }
 
@@ -1697,7 +1836,10 @@ function WithdrawModal({
 
             <p className="mt-1 text-xs text-[#6B7280]">
               Số dư khả dụng:{" "}
-              {formatCoins(starPoints)} ⭐
+              {formatCoins(
+                starPoints
+              )}{" "}
+              ⭐
             </p>
 
             <p className="mb-1.5 mt-4 text-xs font-semibold text-[#6B7280]">
@@ -1708,7 +1850,9 @@ function WithdrawModal({
               type="number"
               value={amount}
               onChange={(e) =>
-                setAmount(e.target.value)
+                setAmount(
+                  e.target.value
+                )
               }
               placeholder="20000"
               className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none"
@@ -1722,7 +1866,9 @@ function WithdrawModal({
               type="text"
               value={bankName}
               onChange={(e) =>
-                setBankName(e.target.value)
+                setBankName(
+                  e.target.value
+                )
               }
               placeholder="VD: Agribank, MoMo..."
               className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none"
@@ -1778,6 +1924,7 @@ function WithdrawModal({
                 disabled={saving}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white disabled:opacity-60"
               >
+
                 {saving ? (
                   <Loader2
                     size={15}
@@ -1786,14 +1933,17 @@ function WithdrawModal({
                 ) : (
                   "Gửi yêu cầu"
                 )}
+
               </button>
 
             </div>
 
           </>
+
         )}
 
       </div>
+
     </div>
   );
-}
+            }
