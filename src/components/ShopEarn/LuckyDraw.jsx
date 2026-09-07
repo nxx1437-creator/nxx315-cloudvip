@@ -1,17 +1,31 @@
-// components/ShopEarn/LuckyDraw.jsx
 import React, { useState, useEffect } from "react";
-import { Gift, Loader2, Sparkles, Lock, RefreshCw, X } from "lucide-react";
+import { Gift, Loader2, Sparkles, Lock, RefreshCw, X, Star, Flame, Zap } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 
-// Cấu hình phần thưởng
+// ===== CẤU HÌNH PHẦN THƯỞNG - TỈ LỆ =====
+// Tổng tỉ lệ = 100%
 const REWARDS = [
-  { id: 1, label: "May mắn 🍀", value: 10, color: "from-green-400 to-green-600", icon: "🍀" },
-  { id: 2, label: "Sao vàng ⭐", value: 50, color: "from-yellow-400 to-yellow-600", icon: "⭐" },
-  { id: 3, label: "Cực phẩm 🔥", value: 100, color: "from-red-400 to-red-600", icon: "🔥" },
-  { id: 4, label: "Thần tài 🧧", value: 200, color: "from-purple-400 to-purple-600", icon: "🧧" },
-  { id: 5, label: "Hên xui 😅", value: 5, color: "from-gray-400 to-gray-600", icon: "😅" },
-  { id: 6, label: "Đại phát 🎊", value: 300, color: "from-pink-400 to-pink-600", icon: "🎊" },
+  { id: 1, label: "May mắn 🍀", value: 5, color: "from-gray-400 to-gray-600", icon: "🍀", rate: 30 },   // 30%
+  { id: 2, label: "Sao nhỏ ⭐", value: 10, color: "from-blue-400 to-blue-600", icon: "⭐", rate: 25 },   // 25%
+  { id: 3, label: "Sao vàng ✨", value: 20, color: "from-yellow-400 to-yellow-600", icon: "✨", rate: 20 }, // 20%
+  { id: 4, label: "Cực phẩm 🔥", value: 50, color: "from-red-400 to-red-600", icon: "🔥", rate: 15 },    // 15%
+  { id: 5, label: "Thần tài 🧧", value: 100, color: "from-purple-400 to-purple-600", icon: "🧧", rate: 7 }, // 7%
+  { id: 6, label: "Đại phát 🎊", value: 200, color: "from-pink-400 to-pink-600", icon: "🎊", rate: 3 },   // 3%
 ];
+
+// Hàm random theo tỉ lệ
+const getRandomReward = () => {
+  const random = Math.random() * 100;
+  let cumulative = 0;
+  
+  for (const reward of REWARDS) {
+    cumulative += reward.rate;
+    if (random <= cumulative) {
+      return reward;
+    }
+  }
+  return REWARDS[0];
+};
 
 // Cấu hình hộp quà
 const BOXES = [
@@ -24,12 +38,13 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
   const [selectedBox, setSelectedBox] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState(null);
-  const [remainingDraws, setRemainingDraws] = useState(3);
+  const [remainingDraws, setRemainingDraws] = useState(1);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [lastDrawDate, setLastDrawDate] = useState(null);
 
-  // Kiểm tra số lượt quay còn lại trong ngày
+  // Kiểm tra số lượt quay còn lại trong ngày (chỉ 1 lượt/ngày)
   useEffect(() => {
     if (!userId) {
       setLoading(false);
@@ -49,9 +64,13 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        const remaining = 3 - data.length;
-        setRemainingDraws(Math.max(0, remaining));
+        const hasDrawnToday = data.length > 0;
+        setRemainingDraws(hasDrawnToday ? 0 : 1);
         setHistory(data.slice(0, 5));
+        
+        if (data.length > 0) {
+          setLastDrawDate(data[0].created_at);
+        }
       }
       setLoading(false);
     };
@@ -66,12 +85,11 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
     setIsDrawing(true);
     setResult(null);
 
-    // Random phần thưởng
+    // Hiệu ứng mở hộp
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Random chọn phần thưởng
-    const rewardIndex = Math.floor(Math.random() * REWARDS.length);
-    const reward = REWARDS[rewardIndex];
+    // Random phần thưởng theo tỉ lệ
+    const reward = getRandomReward();
 
     // Lưu kết quả
     const { data, error } = await supabase
@@ -102,7 +120,8 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
       }
 
       setResult({ ...reward, boxId });
-      setRemainingDraws(prev => prev - 1);
+      setRemainingDraws(0);
+      setLastDrawDate(new Date().toISOString());
       
       if (onDrawComplete) {
         onDrawComplete(reward);
@@ -112,9 +131,8 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
     setIsDrawing(false);
   };
 
-  // Reset khi hết lượt (dùng Xu để mua thêm lượt)
+  // Mua thêm lượt (50 Xu)
   const buyExtraDraw = async () => {
-    // Kiểm tra user có đủ Xu không (50 Xu = 1 lượt)
     const { data: profile } = await supabase
       .from('profiles')
       .select('coins')
@@ -126,17 +144,19 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
       return;
     }
 
-    // Trừ 50 Xu
     const { error } = await supabase
       .from('profiles')
       .update({ coins: profile.coins - 50 })
       .eq('id', userId);
 
     if (!error) {
-      setRemainingDraws(prev => prev + 1);
+      setRemainingDraws(1);
       alert("✅ Đã mua thêm 1 lượt bốc thăm!");
     }
   };
+
+  // Kiểm tra xem đã bốc hôm nay chưa
+  const hasDrawnToday = remainingDraws === 0;
 
   if (loading) {
     return (
@@ -168,7 +188,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
           <div className="flex items-center gap-1">
             <span className="text-xs text-white/60">Lượt:</span>
             <span className="text-sm font-bold text-yellow-400">{remainingDraws}</span>
-            <span className="text-xs text-white/40">/3</span>
+            <span className="text-xs text-white/40">/1</span>
           </div>
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -179,8 +199,17 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
         </div>
       </div>
 
+      {/* Tỉ lệ phần thưởng */}
+      <div className="mt-2 flex flex-wrap gap-1">
+        {REWARDS.map((r) => (
+          <span key={r.id} className="text-[7px] text-white/30">
+            {r.icon}{r.rate}%
+          </span>
+        ))}
+      </div>
+
       {/* 3 hộp quà */}
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-3 gap-3">
         {BOXES.map((box) => {
           const isSelected = selectedBox === box.id;
           const isRevealed = result && result.boxId === box.id;
@@ -189,7 +218,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
             <button
               key={box.id}
               onClick={() => handleBoxClick(box.id)}
-              disabled={isDrawing || remainingDraws <= 0 || isRefundLocked}
+              disabled={isDrawing || remainingDraws <= 0 || isRefundLocked || hasDrawnToday}
               className={`relative aspect-square rounded-2xl text-4xl transition-all duration-300 ${
                 isSelected && isDrawing
                   ? "scale-95 ring-4 ring-yellow-400 ring-offset-2 ring-offset-[#1A1A2E]"
@@ -201,7 +230,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
                   ? `bg-gradient-to-br ${result.color}`
                   : "bg-gradient-to-br from-gray-700 to-gray-900"
               } ${
-                isDrawing || remainingDraws <= 0 || isRefundLocked
+                isDrawing || remainingDraws <= 0 || isRefundLocked || hasDrawnToday
                   ? "cursor-not-allowed opacity-60"
                   : "cursor-pointer"
               }`}
@@ -220,6 +249,9 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
                 <div className="flex flex-col items-center justify-center">
                   <span className="text-4xl">{box.emoji}</span>
                   <span className="mt-1 text-[9px] text-white/40">{box.label}</span>
+                  {hasDrawnToday && (
+                    <span className="mt-1 text-[8px] text-yellow-400">✅ Đã bốc</span>
+                  )}
                 </div>
               )}
             </button>
@@ -237,7 +269,7 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
       )}
 
       {/* Nút mua thêm lượt */}
-      {remainingDraws === 0 && !isDrawing && !result && (
+      {hasDrawnToday && !isDrawing && !result && (
         <button
           onClick={buyExtraDraw}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 py-2.5 text-xs font-bold text-white transition hover:shadow-lg active:scale-[0.98]"
@@ -270,8 +302,8 @@ export default function LuckyDraw({ userId, onDrawComplete, isRefundLocked = fal
 
       {/* Hướng dẫn */}
       <p className="mt-2 text-center text-[8px] text-white/30">
-        🎯 Chọn 1 trong 3 hộp quà. Mỗi ngày được bốc 3 lượt. Mỗi lượt 50 Xu
+        🎯 Chọn 1 trong 3 hộp quà. Mỗi ngày được bốc 1 lượt. Mua thêm 1 lượt (50 Xu)
       </p>
     </div>
   );
-    }
+            }
