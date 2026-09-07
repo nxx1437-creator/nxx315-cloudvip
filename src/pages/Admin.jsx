@@ -553,7 +553,9 @@ function EmptyState({ text }) {
     </div>
   );
 }
-function AffiliateTab() {
+
+  function AffiliateTab() {
+          
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -561,12 +563,13 @@ function AffiliateTab() {
   const [processingId, setProcessingId] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [rejectNote, setRejectNote] = useState("");
+  const [detailWithdrawal, setDetailWithdrawal] = useState(null);
 
   const fetchWithdrawals = async () => {
     setLoading(true);
     const { data } = await supabase
       .from("star_withdrawals")
-      .select("*")
+      .select("*, profiles!inner(email, username)")
       .order("created_at", { ascending: false });
     setWithdrawals(data ?? []);
     setLoading(false);
@@ -575,6 +578,8 @@ function AffiliateTab() {
   useEffect(() => { fetchWithdrawals(); }, []);
 
   const pendingCount = withdrawals.filter((w) => w.status === "pending").length;
+  const completedCount = withdrawals.filter((w) => w.status === "approved").length;
+  const rejectedCount = withdrawals.filter((w) => w.status === "rejected").length;
 
   const handleSync = async () => {
     setSyncing(true);
@@ -598,45 +603,111 @@ function AffiliateTab() {
     }
   };
 
-  const handleComplete = async (withdrawal) => {
+  const handleApprove = async (withdrawal) => {
+    if (!confirm(`Duyệt rút ${Number(withdrawal.amount).toLocaleString("vi-VN")}đ cho ${withdrawal.account_holder}?`)) return;
+    
     setProcessingId(withdrawal.id);
-    await supabase
+    
+    const { error } = await supabase
       .from("star_withdrawals")
-      .update({ status: "completed", processed_at: new Date().toISOString() })
+      .update({ 
+        status: "approved", 
+        processed_at: new Date().toISOString() 
+      })
       .eq("id", withdrawal.id);
+
+    if (error) {
+      alert("Lỗi: " + error.message);
+      setProcessingId(null);
+      return;
+    }
+
+    // Gửi thông báo Telegram
+    try {
+      await supabase.functions.invoke("telegram-webhook", {
+        body: {
+          message: {
+            text: `✅ Đã duyệt rút tiền!\n💰 Số tiền: ${Number(withdrawal.amount).toLocaleString("vi-VN")}đ\n🏦 Ngân hàng: ${withdrawal.bank_name}\n👤 Chủ TK: ${withdrawal.account_holder}\n📱 Số TK: ${withdrawal.account_number}`,
+            chat: { id: ADMIN_CHAT_ID }
+          }
+        }
+      });
+    } catch (teleError) {
+      console.error("Lỗi gửi Telegram:", teleError);
+    }
+
     setProcessingId(null);
     await fetchWithdrawals();
   };
 
   const handleReject = async () => {
-    if (!rejectNote.trim()) { alert("Vui lòng nhập lý do từ chối!"); return; }
+    if (!rejectNote.trim()) { 
+      alert("Vui lòng nhập lý do từ chối!"); 
+      return; 
+    }
+    
     setProcessingId(rejectModal.id);
 
+    // Cập nhật status thành rejected và hoàn điểm
     const { error } = await supabase.rpc("reject_star_withdrawal", {
       p_withdrawal_id: rejectModal.id,
       p_note: rejectNote.trim(),
     });
 
     setProcessingId(null);
-    if (error) { alert(error.message); return; }
+    if (error) { 
+      alert(error.message); 
+      return; 
+    }
+
+    // Gửi thông báo Telegram
+    try {
+      await supabase.functions.invoke("telegram-webhook", {
+        body: {
+          message: {
+            text: `❌ Đã từ chối rút tiền!\n💰 Số tiền: ${Number(rejectModal.amount).toLocaleString("vi-VN")}đ\n📝 Lý do: ${rejectNote}`,
+            chat: { id: ADMIN_CHAT_ID }
+          }
+        }
+      });
+    } catch (teleError) {
+      console.error("Lỗi gửi Telegram:", teleError);
+    }
 
     setRejectModal(null);
     setRejectNote("");
     await fetchWithdrawals();
   };
 
-  if (loading) return <Loading text="Loading affiliate data..." />;
+  if (loading) return <Loading text="Loading withdrawals..." />;
 
   return (
     <div className="space-y-5">
-      <SectionHeader title="Điểm sao & Rút tiền" count={`${pendingCount} chờ duyệt`} onRefresh={fetchWithdrawals} />
+      <SectionHeader title="💳 Quản lý rút tiền" count={`${pendingCount} chờ duyệt`} onRefresh={fetchWithdrawals} />
 
+      {/* Thống kê */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-2xl bg-amber-50 p-4 text-center">
+          <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
+          <p className="text-xs text-amber-600">Chờ duyệt</p>
+        </div>
+        <div className="rounded-2xl bg-emerald-50 p-4 text-center">
+          <p className="text-2xl font-bold text-emerald-600">{completedCount}</p>
+          <p className="text-xs text-emerald-600">Đã duyệt</p>
+        </div>
+        <div className="rounded-2xl bg-rose-50 p-4 text-center">
+          <p className="text-2xl font-bold text-rose-600">{rejectedCount}</p>
+          <p className="text-xs text-rose-600">Từ chối</p>
+        </div>
+      </div>
+
+      {/* Nút đồng bộ */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600"><ShoppingBag size={20} /></span>
           <div>
             <p className="font-bold text-slate-900">Đồng bộ đơn hàng Affiliate</p>
-            <p className="text-xs text-slate-400">Lấy đơn hàng 7 ngày gần nhất từ Accesstrade</p>
+            <p className="text-xs text-slate-400">Lấy đơn hàng 7 ngày gần nhất từ AccessTrade</p>
           </div>
         </div>
 
@@ -651,52 +722,136 @@ function AffiliateTab() {
 
         {syncResult && (
           <div className={`mt-3 rounded-xl p-3 text-xs font-semibold ${syncResult.error ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}>
-            {syncResult.error ? syncResult.error : `Đã quét ${syncResult.synced} đơn, cộng điểm cho ${syncResult.credited} đơn mới.`}
+            {syncResult.error ? `❌ ${syncResult.error}` : `✅ Đã quét ${syncResult.synced} đơn, cộng điểm cho ${syncResult.credited} đơn mới.`}
           </div>
         )}
       </div>
 
+      {/* Danh sách yêu cầu rút */}
       <div className="space-y-4">
-        {withdrawals.length === 0 ? <EmptyState text="Chưa có yêu cầu rút tiền." /> : withdrawals.map((w) => (
-          <div key={w.id} className={`rounded-2xl border p-5 shadow-sm ${w.status === "completed" ? "bg-emerald-50/30 border-emerald-100" : w.status === "rejected" ? "bg-rose-50/30 border-rose-100" : "bg-white border-slate-200"}`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-bold text-slate-900">{Number(w.amount).toLocaleString("vi-VN")}đ</p>
-                <p className="mt-1 text-xs text-slate-400">{w.bank_name} • {w.account_number} • {w.account_holder}</p>
-                <p className="mt-1 text-xs text-slate-400">{new Date(w.created_at).toLocaleString("vi-VN")}</p>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${w.status === "pending" ? "bg-amber-50 text-amber-600" : w.status === "completed" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
-                {w.status === "pending" ? "Chờ xử lý" : w.status === "completed" ? "Đã chuyển" : "Từ chối"}
-              </span>
-            </div>
+        {withdrawals.length === 0 ? (
+          <EmptyState text="Chưa có yêu cầu rút tiền nào." />
+        ) : (
+          withdrawals.map((w) => {
+            const statusColors = {
+              pending: "bg-amber-50 text-amber-600",
+              approved: "bg-emerald-50 text-emerald-600",
+              rejected: "bg-rose-50 text-rose-600",
+            };
+            const statusText = {
+              pending: "⏳ Chờ duyệt",
+              approved: "✅ Đã duyệt",
+              rejected: "❌ Từ chối",
+            };
 
-            {w.status === "pending" && (
-              <div className="mt-4 flex gap-2">
-                <button onClick={() => handleComplete(w)} disabled={processingId === w.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} className="inline mr-1" /> Đã chuyển khoản</button>
-                <button onClick={() => setRejectModal(w)} disabled={processingId === w.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><XCircle size={14} className="inline mr-1" /> Từ chối</button>
-              </div>
-            )}
+            return (
+              <div key={w.id} className={`rounded-2xl border p-5 shadow-sm ${
+                w.status === "approved" ? "bg-emerald-50/30 border-emerald-100" : 
+                w.status === "rejected" ? "bg-rose-50/30 border-rose-100" : 
+                "bg-white border-slate-200"
+              }`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-slate-900 text-lg">{Number(w.amount).toLocaleString("vi-VN")}đ</p>
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColors[w.status]}`}>
+                        {statusText[w.status]}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">🏦 {w.bank_name}</p>
+                    <p className="text-xs text-slate-400">👤 {w.account_holder} • 📱 {w.account_number}</p>
+                    <p className="text-xs text-slate-400">📧 {w.profiles?.email || w.user_id}</p>
+                    <p className="mt-1 text-xs text-slate-400">{new Date(w.created_at).toLocaleString("vi-VN")}</p>
+                    {w.fee > 0 && (
+                      <p className="text-xs text-slate-400">Phí: {Number(w.fee).toLocaleString("vi-VN")}đ • Thực nhận: <span className="font-bold text-emerald-600">{Number(w.net_amount).toLocaleString("vi-VN")}đ</span></p>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setDetailWithdrawal(w)} 
+                    className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200"
+                  >
+                    <Eye size={16} />
+                  </button>
+                </div>
 
-            {w.admin_note && <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs italic text-slate-500">Lý do: {w.admin_note}</p>}
-          </div>
-        ))}
+                {w.status === "pending" && (
+                  <div className="mt-4 flex gap-2">
+                    <button 
+                      onClick={() => handleApprove(w)} 
+                      disabled={processingId === w.id} 
+                      className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition disabled:opacity-50"
+                    >
+                      {processingId === w.id ? <Loader2 size={14} className="animate-spin mx-auto" /> : <><CheckCircle2 size={14} className="inline mr-1" /> Duyệt</>}
+                    </button>
+                    <button 
+                      onClick={() => setRejectModal(w)} 
+                      disabled={processingId === w.id} 
+                      className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 transition disabled:opacity-50"
+                    >
+                      <XCircle size={14} className="inline mr-1" /> Từ chối
+                    </button>
+                  </div>
+                )}
+
+                {w.admin_note && (
+                  <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs italic text-slate-500">
+                    📝 Lý do: {w.admin_note}
+                  </p>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
 
+      {/* Modal reject */}
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
             <h2 className="text-lg font-bold text-slate-900">Từ chối yêu cầu rút tiền</h2>
-            <p className="mt-1 text-sm text-slate-500">{Number(rejectModal.amount).toLocaleString("vi-VN")}đ sẽ được hoàn lại vào điểm sao của user.</p>
-            <textarea value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} rows={3} placeholder="Lý do từ chối..." className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
+            <p className="mt-1 text-sm text-slate-500">
+              {Number(rejectModal.amount).toLocaleString("vi-VN")}đ sẽ được hoàn lại vào điểm sao của user.
+            </p>
+            <textarea 
+              value={rejectNote} 
+              onChange={(e) => setRejectNote(e.target.value)} 
+              rows={3} 
+              placeholder="Nhập lý do từ chối..." 
+              className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" 
+            />
             <div className="mt-6 flex gap-3">
-              <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
-              <button onClick={handleReject} disabled={processingId === rejectModal.id} className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white disabled:opacity-50">
+              <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition">Hủy</button>
+              <button 
+                onClick={handleReject} 
+                disabled={processingId === rejectModal.id} 
+                className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white hover:bg-rose-600 transition disabled:opacity-50"
+              >
                 {processingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn điểm"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Modal detail */}
+      {detailWithdrawal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-slate-900">Chi tiết yêu cầu rút</h2>
+            <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
+              <p><span className="font-bold">Số tiền:</span> {Number(detailWithdrawal.amount).toLocaleString("vi-VN")}đ</p>
+              <p><span className="font-bold">Ngân hàng:</span> {detailWithdrawal.bank_name}</p>
+              <p><span className="font-bold">Số tài khoản:</span> {detailWithdrawal.account_number}</p>
+              <p><span className="font-bold">Chủ tài khoản:</span> {detailWithdrawal.account_holder}</p>
+              <p><span className="font-bold">Phí:</span> {Number(detailWithdrawal.fee).toLocaleString("vi-VN")}đ</p>
+              <p><span className="font-bold">Thực nhận:</span> {Number(detailWithdrawal.net_amount).toLocaleString("vi-VN")}đ</p>
+              <p><span className="font-bold">Trạng thái:</span> {statusText[detailWithdrawal.status]}</p>
+              <p><span className="font-bold">Ngày tạo:</span> {new Date(detailWithdrawal.created_at).toLocaleString("vi-VN")}</p>
+            </div>
+            <button onClick={() => setDetailWithdrawal(null)} className="mt-6 w-full rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
+          </div>
+        </div>
+      )}
     </div>
   );
-      }
+            }
