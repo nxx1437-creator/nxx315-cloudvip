@@ -1005,4 +1005,43 @@ export default function ShopEarn() {
       <BottomNav />
     </div>
   );
-                                       }     
+     // ===== SHOP SECTION =====
+function ShopSection({ 
+  platform, setPlatform, productUrl, setProductUrl,
+  generating, genError, handlePaste, handleGenerate,
+  setShowGuide, productInfo, setProductInfo, 
+  copied, setCopied, navigate,
+  userId  // <-- THÊM PROP NÀY
+}) {
+  return (
+    <section className="overflow-hidden rounded-[24px] bg-[#EAF7E6] p-4 shadow-[0_5px_20px_rgba(31,55,40,0.04)]">
+      {/* ... code cũ ... */}
+      
+      {/* Lịch sử link đã tạo */}
+      <div className="mt-3.5 flex items-center justify-between border-t border-[#D8EAD3] pt-3">
+        <button 
+          onClick={() => navigate("/link-history")}
+          className="flex items-center gap-1 text-[10px] font-black text-[#3FA55A]"
+        >
+          <Clock3 size={12} />
+          Lịch sử tạo link
+        </button>
+        <ChevronRight size={14} className="text-[#3FA55A]" />
+      </div>
+
+      {/* ===== THÊM CASHBACK HISTORY VÀO ĐÂY ===== */}
+      {userId && <CashbackHistory userId={userId} />}
+
+      {/* Product Info Modal */}
+      {productInfo && (
+        <ProductInfoModal 
+          productInfo={productInfo} 
+          setProductInfo={setProductInfo} 
+          copied={copied} 
+          setCopied={setCopied} 
+          navigate={navigate} 
+        />
+      )}
+    </section>
+  );
+}                                  }     
