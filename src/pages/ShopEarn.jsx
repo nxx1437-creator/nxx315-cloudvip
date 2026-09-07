@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
+import useTasks from "../hooks/useTasks.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 
@@ -24,6 +25,7 @@ export default function ShopEarn() {
   const navigate = useNavigate();
   const { session } = useSession();
   const { profile, setProfile } = useProfile();
+  const { tasks } = useTasks(session?.user?.id);
 
   const [platform, setPlatform] = useState("tiktok");
   const [productUrl, setProductUrl] = useState("");
@@ -333,6 +335,49 @@ export default function ShopEarn() {
             </p>
           )}
         </section>
+
+        {/* Nhúng danh sách Nhiệm vụ */}
+        {tasks.length > 0 && (
+          <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-[#111827]">⚡ Nhiệm vụ hàng ngày</p>
+              <button
+                onClick={() => navigate("/tasks")}
+                className="text-xs font-bold text-sky-600"
+              >
+                Tất cả →
+              </button>
+            </div>
+
+            <div className="mt-3 space-y-2.5">
+              {tasks.slice(0, 3).map((task) => {
+                const isDone = task.remainingToday <= 0;
+                return (
+                  <div key={task.id} className="flex items-center gap-3 rounded-xl border border-[#F3F4F6] bg-[#F5F7FB] p-3">
+                    {task.logo_url ? (
+                      <img src={task.logo_url} alt={task.provider} className="h-9 w-9 rounded-lg object-cover" />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#111827] text-[10px] font-bold text-white">
+                        {task.provider.slice(0, 2)}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-[#111827]">{task.provider}</p>
+                      <p className="text-[10px] text-[#9CA3AF]">{task.remainingToday} lượt còn hôm nay</p>
+                    </div>
+                    <button
+                      onClick={() => navigate("/tasks")}
+                      disabled={isDone}
+                      className="shrink-0 rounded-lg bg-sky-500 px-3 py-1.5 text-[11px] font-bold text-white disabled:bg-[#D1D5DB]"
+                    >
+                      {isDone ? "Hết lượt" : `+${task.reward_coins}`}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* LỘ TRÌNH — timeline có mốc thời gian */}
         <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
