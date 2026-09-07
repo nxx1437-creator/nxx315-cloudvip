@@ -1080,7 +1080,6 @@ export default function ShopEarn() {
           handleCheckin={handleCheckin}
           daysToNextMilestone={daysToNextMilestone}
         />
-        <BrandReward />
         <TaskSection tasks={tasks} />
         <ShopSection 
           platform={platform}
@@ -1147,4 +1146,4 @@ export default function ShopEarn() {
       <BottomNav />
     </div>
   );
-}
+};
