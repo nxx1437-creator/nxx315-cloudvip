@@ -109,7 +109,7 @@ export default function Redirect() {
             </h1>
 
             <p className="mx-auto mt-2 max-w-[300px] text-xs font-medium leading-5 text-[#78867D]">
-              Sếp chờ xíu nha, hệ thống đang đưa sếp qua trang mua sắm 💚
+              bạn đợi chờ xíu nha, hệ thống đang đưa bạn qua trang mua sắm!
             </p>
 
           </div>
