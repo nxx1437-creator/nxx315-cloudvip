@@ -1,9 +1,13 @@
+// ============================================
+// PHẦN 1: IMPORTS, UTILITIES & COMPONENTS CƠ BẢN
+// ============================================
+
 import React, { useState } from "react";
 import {
   Link2, Copy, Check, Loader2, Star, ArrowLeftRight, Landmark, X,
   Clock3, CheckCircle2, XCircle, ArrowLeft, HelpCircle, Info,
   ShoppingBag, PackageCheck, Wallet2, Flame, CalendarCheck,
-  ChevronRight, Sparkles,
+  ChevronRight, Sparkles, Search, Gift, TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -37,14 +41,14 @@ function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-black/[0.04] bg-[#F5F8F4]/95 px-4 py-3 backdrop-blur-xl">
       <div className="mx-auto flex max-w-md items-center gap-3">
-        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#66736B] shadow-sm">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#66736B] shadow-sm hover:shadow-md transition-all">
           <ArrowLeft size={18} />
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="text-[15px] font-black text-[#18231D]">Mua hàng kiếm sao</h1>
           <p className="text-[11px] text-[#819087]">Mua sắm vui vẻ · nhận Sao mỗi ngày ✨</p>
         </div>
-        <button onClick={() => navigate("/tasks")} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#38A169] shadow-sm">
+        <button onClick={() => navigate("/tasks")} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#38A169] shadow-sm hover:shadow-md transition-all">
           <Sparkles size={17} />
         </button>
       </div>
@@ -55,7 +59,7 @@ function Header() {
 // ===== POINTS CARD =====
 function PointsCard({ starPoints, pendingPoints = 0 }) {
   return (
-    <section className="relative overflow-hidden rounded-[25px] bg-gradient-to-br from-[#B9EFA5] via-[#86D88A] to-[#45B96B] p-5 shadow-[0_10px_30px_rgba(61,153,89,0.18)]">
+    <section className="relative overflow-hidden rounded-[25px] bg-gradient-to-br from-[#B9EFA5] via-[#86D88A] to-[#45B96B] p-5 shadow-[0_10px_30px_rgba(61,153,89,0.18)] hover:shadow-[0_15px_40px_rgba(61,153,89,0.25)] transition-shadow">
       <div className="pointer-events-none absolute -right-12 -top-14 h-36 w-36 rounded-full bg-white/20 blur-2xl" />
       <div className="pointer-events-none absolute -bottom-20 left-10 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
       <div className="relative">
@@ -68,28 +72,25 @@ function PointsCard({ starPoints, pendingPoints = 0 }) {
             </div>
             <span className="mt-2 inline-flex rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black text-[#3B7D4E]">Tập sự săn sale</span>
           </div>
-          
-          {/* ===== ĐIỂM CHỜ DUYỆT ===== */}
           <div className="rounded-2xl bg-white/25 px-3 py-2 text-right backdrop-blur-sm">
             <p className="text-[9px] font-bold text-[#255B38]">Điểm chờ duyệt</p>
-            <p className="mt-0.5 text-sm font-black text-white">
-              {formatCoins(pendingPoints)} ⭐
-            </p>
+            <p className="mt-0.5 text-sm font-black text-white">{formatCoins(pendingPoints)} ⭐</p>
             {pendingPoints > 0 && (
               <p className="text-[8px] text-white/70 animate-pulse">⏳ Đang xử lý...</p>
             )}
           </div>
         </div>
-
         <div className="mt-5 rounded-2xl bg-white/30 p-3 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] font-bold leading-4 text-[#255B38]">Thêm 2.000 ⭐ để nâng hạng nhaaa</p>
             <ChevronRight size={15} className="shrink-0 text-[#255B38]" />
           </div>
           <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/50">
-            <div className="h-full rounded-full bg-white transition-all" style={{ width: `${Math.min(100, (starPoints / 2000) * 100)}%` }} />
+            <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${Math.min(100, (starPoints / 2000) * 100)}%` }} />
           </div>
-          <button className="mt-2 text-[10px] font-bold text-[#255B38]">Chi tiết lịch sử điểm →</button>
+          <button onClick={() => navigate("/point-history")} className="mt-2 text-[10px] font-bold text-[#255B38] hover:underline">
+            Chi tiết lịch sử điểm →
+          </button>
         </div>
       </div>
     </section>
@@ -101,7 +102,7 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
   const nextReward = rewardForDay(currentStreak + 1);
 
   return (
-    <section className="rounded-[23px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+    <section className="rounded-[23px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] font-black tracking-[0.14em] text-[#7A897F]">CHUỖI ĐIỂM DANH</p>
@@ -116,7 +117,7 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
 
       <div className="mt-3 grid grid-cols-4 gap-1.5">
         {[["N1–N10", "+5 ⭐"], ["N11–N20", "+10 ⭐"], ["N21–N30", "+15 ⭐"], ["N31+", "+15 ⭐"]].map(([title, reward]) => (
-          <div key={title} className="rounded-xl bg-[#F5F8F4] px-1 py-2 text-center">
+          <div key={title} className="rounded-xl bg-[#F5F8F4] px-1 py-2 text-center hover:bg-[#EAF3E8] transition-colors">
             <p className="text-[9px] font-bold text-[#8B978F]">{title}</p>
             <p className="mt-0.5 text-[10px] font-black text-[#43A85F]">{reward}</p>
           </div>
@@ -129,11 +130,10 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
           const dayNumber = baseDay + offset;
           const isToday = hasCheckedInToday ? offset === 3 : offset === 4;
           const isDone = dayNumber <= currentStreak;
-
           return (
-            <div key={offset} className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl border px-1 py-2.5 ${
+            <div key={offset} className={`flex min-w-0 flex-1 flex-col items-center rounded-2xl border px-1 py-2.5 transition-all ${
               isDone ? "border-[#BFE8B8] bg-[#F0FAEC]" :
-              isToday ? "border-[#8FD79A] bg-[#F7FFF5]" :
+              isToday ? "border-[#8FD79A] bg-[#F7FFF5] ring-2 ring-[#8FD79A]" :
               "border-[#EDF0ED] bg-[#FAFBFA]"
             }`}>
               <span className="text-[8px] font-bold text-[#96A199]">{isToday ? "HÔM NAY" : `N${dayNumber}`}</span>
@@ -149,7 +149,7 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
       <button
         onClick={handleCheckin}
         disabled={hasCheckedInToday || checkinLoading}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#42B866] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(66,184,102,0.22)] transition active:scale-[0.99] disabled:bg-[#B9C6BD] disabled:shadow-none"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#42B866] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(66,184,102,0.22)] transition active:scale-[0.99] hover:bg-[#3AA85A] disabled:bg-[#B9C6BD] disabled:shadow-none"
       >
         {checkinLoading ? (
           <Loader2 size={16} className="animate-spin" />
@@ -176,11 +176,11 @@ function BrandReward() {
     <section>
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THƯỞNG THƯƠNG HIỆU</p>
-        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961]">
+        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961] hover:text-[#3D8F54] transition-colors">
           Tất cả <ChevronRight size={13} />
         </button>
       </div>
-      <div className="mt-2.5 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+      <div className="mt-2.5 overflow-hidden rounded-[22px] bg-white shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
         <div className="flex min-h-[108px] items-center gap-3 bg-gradient-to-r from-[#FFF8D9] to-[#FFFDF2] p-4">
           <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFEAA4] to-[#FFF7D6] text-center shadow-inner">
             <span className="text-[11px] font-black leading-3 text-[#8A5A13]">NUTI<br/>GROW+</span>
@@ -195,6 +195,9 @@ function BrandReward() {
     </section>
   );
 }
+// ============================================
+// PHẦN 2: TASK, SHOP, CASHBACK HISTORY
+// ============================================
 
 // ===== TASK SECTION =====
 function TaskSection({ tasks }) {
@@ -204,18 +207,18 @@ function TaskSection({ tasks }) {
     <section>
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] font-black tracking-[0.13em] text-[#69766E]">THỬ THÁCH NHẬN ĐIỂM</p>
-        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961]">
+        <button onClick={() => navigate("/tasks")} className="flex items-center gap-0.5 text-[10px] font-black text-[#49A961] hover:text-[#3D8F54] transition-colors">
           Tất cả <ChevronRight size={13} />
         </button>
       </div>
 
-      <div className="mt-2.5 rounded-[22px] bg-white p-3 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+      <div className="mt-2.5 rounded-[22px] bg-white p-3 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
         {tasks.length > 0 ? (
           <div className="space-y-2">
             {tasks.slice(0, 3).map((task) => {
               const isDone = task.remainingToday <= 0;
               return (
-                <div key={task.id} className="flex items-center gap-3 rounded-2xl bg-[#F7FAF7] p-3">
+                <div key={task.id} className="flex items-center gap-3 rounded-2xl bg-[#F7FAF7] p-3 hover:bg-[#F0F5EE] transition-colors">
                   {task.logo_url ? (
                     <img src={task.logo_url} alt={task.provider} className="h-11 w-11 shrink-0 rounded-xl object-cover" />
                   ) : (
@@ -230,7 +233,7 @@ function TaskSection({ tasks }) {
                   <button
                     onClick={() => navigate("/tasks")}
                     disabled={isDone}
-                    className="shrink-0 rounded-xl bg-[#4FBE69] px-3 py-2 text-[10px] font-black text-white disabled:bg-[#C8D0CB]"
+                    className="shrink-0 rounded-xl bg-[#4FBE69] px-3 py-2 text-[10px] font-black text-white hover:bg-[#3DA85A] transition-colors disabled:bg-[#C8D0CB] disabled:cursor-not-allowed"
                   >
                     {isDone ? "Đã xong" : `+${task.reward_coins} ⭐`}
                   </button>
@@ -239,7 +242,7 @@ function TaskSection({ tasks }) {
             })}
           </div>
         ) : (
-          <button onClick={() => navigate("/tasks")} className="flex w-full items-center justify-between rounded-2xl bg-[#F7FAF7] p-4 text-left">
+          <button onClick={() => navigate("/tasks")} className="flex w-full items-center justify-between rounded-2xl bg-[#F7FAF7] p-4 text-left hover:bg-[#F0F5EE] transition-colors">
             <div>
               <p className="text-xs font-black text-[#18231D]">Nhiệm vụ hàng ngày</p>
               <p className="mt-1 text-[10px] text-[#8B978F]">Vào xem các thử thách mới để nhận thêm Sao.</p>
@@ -250,19 +253,209 @@ function TaskSection({ tasks }) {
       </div>
     </section>
   );
-          }
-// ============================================
-// PHẦN 2: SHOP, WALLET, ROADMAP, HISTORY
-// ============================================
+}
+
+// ===== CASHBACK HISTORY =====
+function CashbackHistory({ userId }) {
+  const navigate = useNavigate();
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
+  const [totalPending, setTotalPending] = useState(0);
+  const [totalCompleted, setTotalCompleted] = useState(0);
+  const [totalExpected, setTotalExpected] = useState(0);
+
+  React.useEffect(() => {
+    if (!userId) return;
+
+    const fetchHistory = async () => {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('affiliate_transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('transaction_time', { ascending: false })
+        .limit(50);
+
+      if (!error && data) {
+        setHistory(data);
+        
+        const pending = data.filter(t => t.status === 0);
+        const completed = data.filter(t => t.status === 1);
+        const total = data.reduce((sum, t) => sum + (t.star_points_awarded || 0), 0);
+        
+        setTotalPending(pending.reduce((sum, t) => sum + (t.star_points_awarded || 0), 0));
+        setTotalCompleted(completed.reduce((sum, t) => sum + (t.star_points_awarded || 0), 0));
+        setTotalExpected(total);
+      }
+
+      setLoading(false);
+    };
+
+    fetchHistory();
+  }, [userId]);
+
+  const statusMap = {
+    0: { label: "Chờ xác nhận", icon: Clock3, cls: "text-amber-600 bg-amber-50" },
+    1: { label: "Đã hoàn", icon: CheckCircle2, cls: "text-emerald-600 bg-emerald-50" },
+    2: { label: "Bị từ chối", icon: XCircle, cls: "text-rose-600 bg-rose-50" },
+  };
+
+  const tabs = [
+    { key: "all", label: "Tất cả" },
+    { key: "completed", label: "Đã hoàn" },
+    { key: "pending", label: "Chờ xác nhận" },
+    { key: "rejected", label: "Bị từ chối" },
+  ];
+
+  const filteredHistory = history.filter(tx => {
+    if (activeTab === "all") return true;
+    if (activeTab === "completed") return tx.status === 1;
+    if (activeTab === "pending") return tx.status === 0;
+    if (activeTab === "rejected") return tx.status === 2;
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="mt-3 rounded-[18px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Wallet2 size={16} className="text-[#45B967]" />
+            <span className="text-[11px] font-black text-[#18231D]">Lịch sử hoàn tiền</span>
+          </div>
+          <ChevronRight size={16} className="text-[#9CA3AF]" />
+        </div>
+        <div className="mt-3 flex justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#45B967] border-t-transparent" />
+        </div>
+      </div>
+    );
+  }
+
+  if (history.length === 0) {
+    return (
+      <div className="mt-3 rounded-[18px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
+        <button 
+          onClick={() => navigate("/cashback-history")}
+          className="flex w-full items-center justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <Wallet2 size={16} className="text-[#45B967]" />
+            <span className="text-[11px] font-black text-[#18231D]">Lịch sử hoàn tiền</span>
+          </div>
+          <ChevronRight size={16} className="text-[#9CA3AF]" />
+        </button>
+        <div className="mt-3 flex flex-col items-center py-4">
+          <Gift size={32} className="text-[#D1D9D3]" />
+          <p className="mt-2 text-[10px] text-[#9CA3AF]">Chưa có đơn hàng nào</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-[18px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
+      <button 
+        onClick={() => navigate("/cashback-history")}
+        className="flex w-full items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <Wallet2 size={16} className="text-[#45B967]" />
+          <span className="text-[11px] font-black text-[#18231D]">Lịch sử hoàn tiền</span>
+          {totalPending > 0 && (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-white">
+              {totalPending > 99 ? '99+' : totalPending}
+            </span>
+          )}
+        </div>
+        <ChevronRight size={16} className="text-[#9CA3AF]" />
+      </button>
+
+      {/* Tổng tiền */}
+      <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-gradient-to-r from-[#F5F8F4] to-[#EEF3EC] p-3">
+        <div className="text-center">
+          <p className="text-[8px] font-black text-[#7A897F]">Tổng dự kiến</p>
+          <p className="text-[13px] font-black text-[#18231D]">{formatVND(totalExpected)}</p>
+        </div>
+        <div className="text-center border-x border-[#E5E7EB]">
+          <p className="text-[8px] font-black text-[#7A897F]">Chờ xác nhận</p>
+          <p className="text-[13px] font-black text-amber-500">{formatVND(totalPending)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[8px] font-black text-[#7A897F]">Đã hoàn</p>
+          <p className="text-[13px] font-black text-emerald-500">{formatVND(totalCompleted)}</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mt-3 flex gap-1 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-[9px] font-bold transition-all ${
+              activeTab === tab.key
+                ? "bg-[#45B967] text-white shadow-sm"
+                : "bg-[#F5F8F4] text-[#7A897F] hover:bg-[#EAF3E8]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Danh sách đơn hàng */}
+      <div className="mt-3 space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
+        {filteredHistory.slice(0, 5).map((tx) => {
+          const status = statusMap[tx.status] || statusMap[0];
+          const StatusIcon = status.icon;
+          return (
+            <div key={tx.id} className="flex items-center justify-between rounded-xl border border-[#F3F4F6] p-2.5 hover:bg-[#FAFCFA] transition-colors">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-[#18231D]">#{tx.order_id || tx.id.slice(-6)}</span>
+                  <span className="text-[8px] text-[#9CA3AF]">{tx.platform || "TikTok Shop"}</span>
+                </div>
+                <p className="mt-0.5 text-[8px] text-[#9CA3AF]">
+                  {tx.transaction_time ? new Date(tx.transaction_time).toLocaleString("vi-VN") : ""}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[12px] font-black text-emerald-500">+{formatVND(tx.star_points_awarded || 0)}</p>
+                <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-bold ${status.cls}`}>
+                  <StatusIcon size={8} />
+                  {status.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {filteredHistory.length > 5 && (
+        <button 
+          onClick={() => navigate("/cashback-history")}
+          className="mt-2 w-full text-center text-[9px] font-bold text-[#45B967] hover:text-[#3DA85A] transition-colors"
+        >
+          Xem tất cả {filteredHistory.length} đơn hàng →
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ===== SHOP SECTION =====
 function ShopSection({ 
-  platform, setPlatform, productUrl, setProductUrl, 
+  platform, setPlatform, productUrl, setProductUrl,
   generating, genError, handlePaste, handleGenerate,
   setShowGuide, productInfo, setProductInfo, 
-  copied, setCopied, navigate 
+  copied, setCopied, navigate,
+  userId 
 }) {
   return (
-    <section className="overflow-hidden rounded-[24px] bg-[#EAF7E6] p-4 shadow-[0_5px_20px_rgba(31,55,40,0.04)]">
+    <section className="overflow-hidden rounded-[24px] bg-[#EAF7E6] p-4 shadow-[0_5px_20px_rgba(31,55,40,0.04)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#42B866] shadow-sm">
           <ShoppingBag size={20} />
@@ -273,18 +466,16 @@ function ShopSection({
         </div>
       </div>
 
-      {/* Nút hướng dẫn */}
       <div className="mt-2 text-right">
         <button 
           onClick={() => setShowGuide(true)}
-          className="text-[10px] font-black text-[#3FA55A] underline"
+          className="text-[10px] font-black text-[#3FA55A] underline hover:text-[#2D8A45] transition-colors"
         >
           TẠI ĐÂY
         </button>
       </div>
 
-      {/* Input link */}
-      <div className="mt-3 flex items-center gap-2 rounded-2xl border border-[#D8EAD3] bg-white px-3 py-2.5 shadow-sm">
+      <div className="mt-3 flex items-center gap-2 rounded-2xl border border-[#D8EAD3] bg-white px-3 py-2.5 shadow-sm focus-within:ring-2 focus-within:ring-[#45B967] transition-all">
         <Link2 size={16} className="shrink-0 text-[#91A098]" />
         <input
           type="text"
@@ -293,33 +484,39 @@ function ShopSection({
           placeholder="Link sản phẩm"
           className="min-w-0 flex-1 bg-transparent text-xs font-medium text-[#18231D] outline-none placeholder:text-[#A5B0A9]"
         />
-        <button onClick={handlePaste} className="flex shrink-0 items-center gap-1 rounded-xl bg-[#F2F7F1] px-2.5 py-2 text-[9px] font-black text-[#4CA963]">
+        <button onClick={handlePaste} className="flex shrink-0 items-center gap-1 rounded-xl bg-[#F2F7F1] px-2.5 py-2 text-[9px] font-black text-[#4CA963] hover:bg-[#E5F0E3] transition-colors">
           <Copy size={12} /> Dán link
         </button>
       </div>
 
       {genError && <p className="mt-2 text-[10px] font-bold text-rose-500">{genError}</p>}
 
-      {/* Nút lấy link */}
       <button
         onClick={handleGenerate}
         disabled={generating}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#43B967] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(67,185,103,0.2)] disabled:opacity-60"
+        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#43B967] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(67,185,103,0.2)] transition hover:bg-[#3AA85A] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {generating ? <Loader2 size={16} className="animate-spin" /> : <><Link2 size={15} /> Lấy link nhận Sao</>}
       </button>
 
-      {/* Lịch sử link đã tạo */}
+      <p className="mt-3 text-center text-[9px] font-medium leading-4 text-[#77907E]">
+        Sau khi nhập link và mua hàng, đơn sẽ tự động xuất hiện trong Điểm chờ duyệt sau tối đa 48 giờ.
+      </p>
+
+      {/* Lịch sử tạo link */}
       <div className="mt-3.5 flex items-center justify-between border-t border-[#D8EAD3] pt-3">
         <button 
           onClick={() => navigate("/link-history")}
-          className="flex items-center gap-1 text-[10px] font-black text-[#3FA55A]"
+          className="flex items-center gap-1 text-[10px] font-black text-[#3FA55A] hover:text-[#2D8A45] transition-colors"
         >
           <Clock3 size={12} />
           Lịch sử tạo link
         </button>
         <ChevronRight size={14} className="text-[#3FA55A]" />
       </div>
+
+      {/* ===== CASHBACK HISTORY ===== */}
+      {userId && <CashbackHistory userId={userId} />}
 
       {/* Product Info Modal */}
       {productInfo && (
@@ -334,12 +531,15 @@ function ShopSection({
     </section>
   );
 }
+// ============================================
+// PHẦN 3: MODALS & SUB-COMPONENTS
+// ============================================
 
 // ===== PRODUCT INFO MODAL =====
 function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navigate }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-sm rounded-t-[30px] bg-white px-5 pb-6 pt-2.5 shadow-2xl sm:rounded-[30px]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-sm rounded-t-[30px] bg-white px-5 pb-6 pt-2.5 shadow-2xl sm:rounded-[30px] animate-in slide-in-from-bottom duration-300">
         <div className="mx-auto h-1.5 w-12 rounded-full bg-[#D9DED9]" />
         
         <div className="mt-4 flex items-start justify-between gap-3">
@@ -347,27 +547,18 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
             <p className="text-[17px] font-black text-[#42AE5F]">Tạo link mua hàng thành công 🎉</p>
             <p className="mt-1 text-[10px] font-medium text-[#87938B]">Mua hàng từ link Nô Tì để tích điểm đổi quà.</p>
           </div>
-          <button onClick={() => setProductInfo(null)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F4F6F4] text-[#8C978F]">
+          <button onClick={() => setProductInfo(null)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F4F6F4] text-[#8C978F] hover:bg-[#E8EDE8] transition-colors">
             <X size={16} />
           </button>
         </div>
 
-        {/* ===== SẢN PHẨM - ĐÃ SỬA ===== */}
         <div className="mt-4 flex gap-3 rounded-2xl border border-[#E8ECE8] bg-[#F8FAF8] p-3">
-          {productInfo.image && productInfo.image !== "https://via.placeholder.com/200" ? (
+          {productInfo.image ? (
             <img 
               src={productInfo.image} 
               alt={productInfo.name || "Sản phẩm"} 
               className="h-[72px] w-[72px] shrink-0 rounded-xl object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                // Hiển thị fallback
-                const parent = e.target.parentElement;
-                const fallback = document.createElement('div');
-                fallback.className = 'flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-white';
-                fallback.innerHTML = `<svg class="w-8 h-8 text-[#C6CEC8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`;
-                parent?.appendChild(fallback);
-              }}
+              onError={(e) => { e.target.style.display = 'none' }}
             />
           ) : (
             <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl bg-white border border-[#E8ECE8]">
@@ -388,19 +579,14 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
           <button
             onClick={async () => {
               if (navigator.share) {
-                try { 
-                  await navigator.share({ 
-                    title: productInfo.name || "Sản phẩm", 
-                    url: productInfo.link 
-                  }); 
-                } catch {}
+                try { await navigator.share({ title: productInfo.name || "Sản phẩm", url: productInfo.link }); } catch {}
               } else {
                 await navigator.clipboard.writeText(productInfo.link);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }
             }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#48B866] py-3.5 text-xs font-black text-[#42AA5C]"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-[#48B866] py-3.5 text-xs font-black text-[#42AA5C] hover:bg-[#F5FFF5] transition-colors"
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? "Đã sao chép" : "Chia sẻ"}
@@ -408,7 +594,7 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
 
           <button
             onClick={() => navigate(`/redirect?url=${encodeURIComponent(productInfo.link)}&name=${encodeURIComponent(productInfo.name || "Sản phẩm TikTok Shop")}&image=${encodeURIComponent(productInfo.image || "")}`)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#45B967] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(69,185,103,0.18)]"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#45B967] py-3.5 text-xs font-black text-white shadow-[0_7px_16px_rgba(69,185,103,0.18)] hover:bg-[#3DA85A] transition-colors"
           >
             Mua ngay <ChevronRight size={14} />
           </button>
@@ -431,10 +617,19 @@ function ProductInfoModal({ productInfo, setProductInfo, copied, setCopied, navi
   );
 }
 
+function NoteRow({ text }) {
+  return (
+    <div className="flex items-start gap-2">
+      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
+      <p className="text-[10px] leading-4 text-[#6B7280]">{text}</p>
+    </div>
+  );
+}
+
 // ===== WALLET SECTION =====
 function WalletSection({ starPoints, canWithdraw, setShowConvert, setShowWithdraw }) {
   return (
-    <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+    <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
       <div className="flex items-center justify-between">
         <div>
           <p className="flex items-center gap-1.5 text-[10px] font-black tracking-wide text-[#829087]">
@@ -451,14 +646,14 @@ function WalletSection({ starPoints, canWithdraw, setShowConvert, setShowWithdra
         <button
           onClick={() => setShowConvert(true)}
           disabled={starPoints <= 0}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#4DBD69] py-2.5 text-[10px] font-black text-white disabled:opacity-40"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#4DBD69] py-2.5 text-[10px] font-black text-white shadow-sm hover:bg-[#3DA85A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <ArrowLeftRight size={13} /> Đổi sang Xu
         </button>
         <button
           onClick={() => canWithdraw && setShowWithdraw(true)}
           disabled={!canWithdraw}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#E5EAE6] py-2.5 text-[10px] font-black text-[#6F7B73] disabled:opacity-40"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#E5EAE6] py-2.5 text-[10px] font-black text-[#6F7B73] hover:bg-[#F5F8F4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Landmark size={13} /> Rút ngân hàng
         </button>
@@ -476,7 +671,7 @@ function WalletSection({ starPoints, canWithdraw, setShowConvert, setShowWithdra
 // ===== ROADMAP =====
 function Roadmap() {
   return (
-    <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+    <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF8EC] px-2.5 py-1 text-[9px] font-black text-[#4CA662]">
         <Clock3 size={11} /> LỘ TRÌNH NHẬN SAO
       </span>
@@ -565,7 +760,7 @@ function TransactionHistory({ userId }) {
   if (loading || history.length === 0) return null;
 
   return (
-    <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)]">
+    <section className="rounded-[22px] bg-white p-4 shadow-[0_5px_20px_rgba(31,55,40,0.05)] hover:shadow-[0_8px_30px_rgba(31,55,40,0.08)] transition-shadow">
       <p className="mb-3 text-sm font-black text-[#18231D]">Lịch sử đơn hàng</p>
       <div className="space-y-3">
         {history.map((tx) => {
@@ -591,26 +786,26 @@ function TransactionHistory({ userId }) {
       </div>
     </section>
   );
-            }
+                  }
 // ============================================
-// PHẦN 3: MODALS & MAIN COMPONENT
+// PHẦN 4: MODALS & MAIN COMPONENT
 // ============================================
 
 // ===== GUIDE MODAL =====
 function GuideModal({ onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-[25px] bg-white p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
+      <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-[25px] bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-black text-[#18231D]">Cách nhận Sao trong 3 bước</h3>
-          <button onClick={onClose} className="text-[#9CA3AF]"><X size={18} /></button>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280] transition-colors"><X size={18} /></button>
         </div>
         <div className="mt-4 space-y-4">
           <GuideCard number="1" title="Sao chép link sản phẩm" desc="Mở app/web sàn TMĐT, tìm sản phẩm bạn thích rồi sao chép đường dẫn." />
           <GuideCard number="2" title="Dán link & lấy link nhận Sao" desc="Dán link vừa copy vào ô ở trang này để hệ thống tạo link riêng cho bạn." />
           <GuideCard number="3" title="Mua hàng & nhận Sao" desc="Mở link vừa tạo, mua hàng như bình thường. Sao sẽ tự cộng vào ví sau khi đơn được duyệt." />
         </div>
-        <button onClick={onClose} className="mt-5 w-full rounded-2xl bg-[#45B967] py-3 text-sm font-black text-white">Đã hiểu</button>
+        <button onClick={onClose} className="mt-5 w-full rounded-2xl bg-[#45B967] py-3 text-sm font-black text-white shadow-sm hover:bg-[#3DA85A] transition-colors">Đã hiểu</button>
       </div>
     </div>
   );
@@ -658,11 +853,11 @@ function ConvertModal({ starPoints, onClose, onDone }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-[25px] bg-white p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-sm rounded-[25px] bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-black text-[#18231D]">Đổi sang Xu</h3>
-          <button onClick={onClose} className="text-[#9CA3AF]"><X size={18} /></button>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280] transition-colors"><X size={18} /></button>
         </div>
         <p className="mt-1 text-xs text-[#6B7280]">Số dư khả dụng: {formatCoins(starPoints)} ⭐</p>
         
@@ -672,7 +867,7 @@ function ConvertModal({ starPoints, onClose, onDone }) {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="0"
-          className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:border-emerald-400"
+          className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
         />
 
         {numAmount > 0 && (
@@ -691,8 +886,8 @@ function ConvertModal({ starPoints, onClose, onDone }) {
         {error && <p className="mt-2 text-xs font-semibold text-rose-500">{error}</p>}
 
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280]">Huỷ</button>
-          <button onClick={handleConvert} disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white disabled:opacity-60">
+          <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280] hover:bg-[#E5E7EB] transition-colors">Huỷ</button>
+          <button onClick={handleConvert} disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white shadow-sm hover:bg-[#3DA85A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             {saving ? <Loader2 size={15} className="animate-spin" /> : "Xác nhận"}
           </button>
         </div>
@@ -740,11 +935,11 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-sm rounded-[25px] bg-white p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-sm rounded-[25px] bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-black text-[#18231D]">Rút về ngân hàng</h3>
-          <button onClick={onClose} className="text-[#9CA3AF]"><X size={18} /></button>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280] transition-colors"><X size={18} /></button>
         </div>
 
         {success ? (
@@ -757,22 +952,22 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
             <p className="mt-1 text-xs text-[#6B7280]">Số dư khả dụng: {formatCoins(starPoints)} ⭐</p>
             
             <p className="mb-1.5 mt-4 text-xs font-semibold text-[#6B7280]">Số tiền rút (tối thiểu 20.000đ)</p>
-            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="20000" className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none" />
+            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="20000" className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all" />
 
             <p className="mb-1.5 mt-3 text-xs font-semibold text-[#6B7280]">Ngân hàng</p>
-            <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="VD: Agribank, MoMo..." className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none" />
+            <input type="text" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="VD: Agribank, MoMo..." className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all" />
 
             <p className="mb-1.5 mt-3 text-xs font-semibold text-[#6B7280]">Số tài khoản</p>
-            <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none" />
+            <input type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all" />
 
             <p className="mb-1.5 mt-3 text-xs font-semibold text-[#6B7280]">Chủ tài khoản</p>
-            <input type="text" value={accountHolder} onChange={(e) => setAccountHolder(e.target.value.toUpperCase())} className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold uppercase text-[#111827] outline-none" />
+            <input type="text" value={accountHolder} onChange={(e) => setAccountHolder(e.target.value.toUpperCase())} className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-3 text-sm font-semibold uppercase text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all" />
 
             {error && <p className="mt-2 text-xs font-semibold text-rose-500">{error}</p>}
 
             <div className="mt-5 flex gap-3">
-              <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280]">Huỷ</button>
-              <button onClick={handleSubmit} disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white disabled:opacity-60">
+              <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280] hover:bg-[#E5E7EB] transition-colors">Huỷ</button>
+              <button onClick={handleSubmit} disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white shadow-sm hover:bg-[#3DA85A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                 {saving ? <Loader2 size={15} className="animate-spin" /> : "Gửi yêu cầu"}
               </button>
             </div>
@@ -805,11 +1000,9 @@ export default function ShopEarn() {
   const [checkinLoading, setCheckinLoading] = useState(false);
   const [checkinResult, setCheckinResult] = useState(null);
   const [productInfo, setProductInfo] = useState(null);
-
-  // ===== THÊM STATE PENDING POINTS =====
   const [pendingPoints, setPendingPoints] = useState(0);
 
-  // ===== THÊM useEffect FETCH PENDING POINTS =====
+  // Fetch pending points
   React.useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -863,75 +1056,50 @@ export default function ShopEarn() {
   };
 
   const handleGenerate = async () => {
-  const handleGenerate = async () => {
-  if (platform !== "tiktok") {
-    setGenError("Sàn này chưa khả dụng, vui lòng chọn TikTok Shop.");
-    return;
-  }
-  if (!productUrl.trim()) {
-    setGenError("Vui lòng dán link sản phẩm.");
-    return;
-  }
-  setGenerating(true);
-  setGenError("");
-  setResultLink(null);
-  
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData?.session?.access_token;
-  
-  try {
-    const { data, error } = await supabase.functions.invoke("create-affiliate-link", {
-      headers: { Authorization: `Bearer ${token}` },
-      body: { 
-        product_url: productUrl.trim(), 
-        platform: "tiktok",
-        amount: 100000 // Tạm thời, sau này lấy từ API
-      },
-    });
-    
-    if (error) throw error;
-    if (!data?.success) throw new Error(data?.error || "Không tạo được link.");
-    
-    const link = data.short_link || data.full_link;
-    setResultLink(link);
-    
-    // ===== LẤY TÊN SẢN PHẨM TỪ URL =====
-    let productName = data.product_name || "Sản phẩm TikTok Shop";
-    let productImage = data.product_image || null;
-    
-    // Nếu không có tên từ API, thử lấy từ URL
-    if (!data.product_name && productUrl) {
-      try {
-        const urlObj = new URL(productUrl);
-        const pathParts = urlObj.pathname.split('/').filter(Boolean);
-        // Lấy phần cuối của URL làm tên sản phẩm
-        const lastPart = pathParts[pathParts.length - 1];
-        if (lastPart) {
-          productName = lastPart.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
-        }
-      } catch {}
+    if (platform !== "tiktok") {
+      setGenError("Sàn này chưa khả dụng, vui lòng chọn TikTok Shop.");
+      return;
     }
-    
-    setProductInfo({
-      name: productName,
-      image: productImage,
-      link,
-    });
-    
-  } catch (err) {
-    setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
-  } finally {
-    setGenerating(false);
-  }
-};
+    if (!productUrl.trim()) {
+      setGenError("Vui lòng dán link sản phẩm.");
+      return;
+    }
+    setGenerating(true);
+    setGenError("");
+    setResultLink(null);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    try {
+      const { data, error } = await supabase.functions.invoke("create-affiliate-link", {
+        headers: { Authorization: `Bearer ${token}` },
+        body: { 
+          product_url: productUrl.trim(), 
+          platform: "tiktok",
+          amount: 100000
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Không tạo được link.");
+      const link = data.short_link || data.full_link;
+      setResultLink(link);
+      setProductInfo({
+        name: data.product_name || "Sản phẩm TikTok Shop",
+        image: data.product_image || null,
+        link,
+      });
+    } catch (err) {
+      setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F8F4] pb-28 text-[#18231D]">
       <Header />
       
       <main className="mx-auto w-full max-w-md space-y-3.5 px-3.5 pt-3.5">
-        {/* ===== TRUYỀN PENDING POINTS VÀO POINTS CARD ===== */}
         <PointsCard starPoints={starPoints} pendingPoints={pendingPoints} />
-        
         <CheckinSection 
           currentStreak={currentStreak}
           hasCheckedInToday={hasCheckedInToday}
@@ -956,6 +1124,7 @@ export default function ShopEarn() {
           copied={copied}
           setCopied={setCopied}
           navigate={navigate}
+          userId={session?.user?.id}
         />
         <WalletSection 
           starPoints={starPoints}
@@ -970,14 +1139,14 @@ export default function ShopEarn() {
       {/* Modals */}
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
       {checkinResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-          <div className="w-full max-w-xs rounded-[28px] bg-white p-6 text-center shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-xs rounded-[28px] bg-white p-6 text-center shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF3E8]">
               <Flame size={28} className="fill-orange-400 text-orange-500" />
             </div>
             <p className="mt-4 text-lg font-black text-[#18231D]">Điểm danh thành công! 🔥 {checkinResult.streak} ngày</p>
             <p className="mt-1 text-2xl font-black text-amber-500">+{checkinResult.reward} Sao</p>
-            <button onClick={() => setCheckinResult(null)} className="mt-5 w-full rounded-2xl bg-[#45B967] py-3 text-sm font-black text-white">Tuyệt vời</button>
+            <button onClick={() => setCheckinResult(null)} className="mt-5 w-full rounded-2xl bg-[#45B967] py-3 text-sm font-black text-white shadow-sm hover:bg-[#3DA85A] transition-colors">Tuyệt vời</button>
           </div>
         </div>
       )}
@@ -1005,43 +1174,4 @@ export default function ShopEarn() {
       <BottomNav />
     </div>
   );
-     // ===== SHOP SECTION =====
-function ShopSection({ 
-  platform, setPlatform, productUrl, setProductUrl,
-  generating, genError, handlePaste, handleGenerate,
-  setShowGuide, productInfo, setProductInfo, 
-  copied, setCopied, navigate,
-  userId  // <-- THÊM PROP NÀY
-}) {
-  return (
-    <section className="overflow-hidden rounded-[24px] bg-[#EAF7E6] p-4 shadow-[0_5px_20px_rgba(31,55,40,0.04)]">
-      {/* ... code cũ ... */}
-      
-      {/* Lịch sử link đã tạo */}
-      <div className="mt-3.5 flex items-center justify-between border-t border-[#D8EAD3] pt-3">
-        <button 
-          onClick={() => navigate("/link-history")}
-          className="flex items-center gap-1 text-[10px] font-black text-[#3FA55A]"
-        >
-          <Clock3 size={12} />
-          Lịch sử tạo link
-        </button>
-        <ChevronRight size={14} className="text-[#3FA55A]" />
-      </div>
-
-      {/* ===== THÊM CASHBACK HISTORY VÀO ĐÂY ===== */}
-      {userId && <CashbackHistory userId={userId} />}
-
-      {/* Product Info Modal */}
-      {productInfo && (
-        <ProductInfoModal 
-          productInfo={productInfo} 
-          setProductInfo={setProductInfo} 
-          copied={copied} 
-          setCopied={setCopied} 
-          navigate={navigate} 
-        />
-      )}
-    </section>
-  );
-}                                  }     
+}
