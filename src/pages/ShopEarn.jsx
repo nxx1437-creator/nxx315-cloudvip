@@ -17,6 +17,7 @@ import useProfile from "../hooks/useProfile.js";
 import useTasks from "../hooks/useTasks.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+import LuckyDraw from "../components/ShopEarn/LuckyDraw.jsx";
 
 // ========== UTILITY FUNCTIONS ==========
 const formatVND = (v) => Number(v || 0).toLocaleString("vi-VN") + "đ";
@@ -1174,13 +1175,13 @@ function PayRefundModal({ userId, refundAmount, onClose, onDone }) {
 
           <div className="rounded-xl bg-amber-50 p-3 border border-amber-200">
             <p className="text-[9px] text-amber-700">
-              💡 Cần <strong>{formatCoins(coinsNeeded)} Xu</strong> để trả nợ 
+               Cần <strong>{formatCoins(coinsNeeded)} Xu</strong> để trả nợ 
               (tương đương <strong>{formatVND(refundAmount)}</strong>)
             </p>
             <p className="mt-1 text-[8px] text-amber-600">
               {coinBalance >= coinsNeeded 
-                ? `✅ Bạn có đủ ${formatCoins(coinsNeeded)} Xu để trả` 
-                : `⚠️ Bạn thiếu ${formatCoins(coinsNeeded - coinBalance)} Xu. Có thể đổi Sao sang Xu để trả.`}
+                ? ` Bạn có đủ ${formatCoins(coinsNeeded)} Xu để trả` 
+                : ` Bạn thiếu ${formatCoins(coinsNeeded - coinBalance)} Xu. Có thể đổi Sao sang Xu để trả.`}
             </p>
           </div>
 
@@ -1367,7 +1368,17 @@ export default function ShopEarn() {
           daysToNextMilestone={daysToNextMilestone}
           isRefundLocked={isRefundLocked}
         />
-        
+        <LuckyDraw 
+  userId={session?.user?.id}
+  isRefundLocked={isRefundLocked}
+  onDrawComplete={(reward) => {
+    // Refresh điểm sau khi bốc thăm
+    setProfile((prev) => ({
+      ...prev,
+      star_points: (prev.star_points || 0) + reward.value
+    }));
+  }}
+/>
         <RefundLockWarning 
           isLocked={isRefundLocked} 
           reason={refundLockReason}
