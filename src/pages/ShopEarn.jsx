@@ -39,6 +39,7 @@ export default function ShopEarn() {
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [checkinLoading, setCheckinLoading] = useState(false);
   const [checkinResult, setCheckinResult] = useState(null);
+  const [productInfo, setProductInfo] = useState(null);
 
   const todayStr = new Date().toDateString();
   const hasCheckedInToday =
@@ -115,7 +116,11 @@ export default function ShopEarn() {
 
       const link = data.short_link || data.full_link;
       setResultLink(link);
-      window.open(link, "_blank");
+      setProductInfo({
+        name: data.product_name || "Sản phẩm TikTok Shop",
+        image: data.product_image || null,
+        link,
+      });
     } catch (err) {
       setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
     } finally {
@@ -421,6 +426,66 @@ export default function ShopEarn() {
       </main>
 
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      {productInfo && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4">
+          <div className="w-full max-w-sm rounded-t-3xl bg-white p-5 sm:rounded-3xl">
+            <div className="flex items-center justify-between">
+              <p className="text-base font-black text-emerald-600">Tạo link thành công</p>
+              <button onClick={() => setProductInfo(null)} className="text-[#9CA3AF]"><X size={18} /></button>
+            </div>
+
+            <div className="mt-4 flex gap-3 rounded-2xl border border-[#E5E7EB] bg-[#F5F7FB] p-3">
+              {productInfo.image ? (
+                <img src={productInfo.image} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+              ) : (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white">
+                  <ShoppingBag size={22} className="text-[#D1D5DB]" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-xs font-semibold text-[#111827]">{productInfo.name}</p>
+                <span className="mt-1 inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold text-white">TikTok Shop</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2.5">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: productInfo.name, url: productInfo.link });
+                  } else {
+                    navigator.clipboard.writeText(productInfo.link);
+                  }
+                }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-500 py-3 text-sm font-bold text-emerald-600"
+              >
+                Chia sẻ
+              </button>
+              <a
+                href={productInfo.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white"
+              >
+                Mua ngay
+              </a>
+            </div>
+
+            <p className="mt-3 text-center text-xs font-semibold text-emerald-600">
+              Đơn hàng sẽ được cập nhật Sao sau 24-48h
+            </p>
+
+            <div className="mt-4 space-y-2 border-t border-[#F3F4F6] pt-4">
+              <p className="text-xs font-bold text-[#111827]">Lưu ý để được ghi nhận đơn</p>
+              <NoteRow text="Sau mỗi lần đặt hàng, nhớ bấm lại link để nhận Sao cho đơn tiếp theo" />
+              <NoteRow text="Mua đúng sản phẩm được gắn link để nhận Sao chính xác" />
+              <NoteRow text="Không tính Sao cho sản phẩm thêm từ livestream/video" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkinResult && (
       {checkinResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-xs rounded-3xl bg-white p-6 text-center">
@@ -540,6 +605,14 @@ function GuideCard({ number, title, desc }) {
     </div>
   );
         }
+function NoteRow({ text }) {
+  return (
+    <div className="flex items-start gap-2">
+      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
+      <p className="text-[11px] leading-4 text-[#6B7280]">{text}</p>
+    </div>
+  );
+}
 function TransactionHistory({ userId }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
