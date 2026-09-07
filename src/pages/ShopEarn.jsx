@@ -1076,8 +1076,7 @@ function ConvertModal({ starPoints, onClose, onDone }) {
     </div>
   );
 }
-
-// ===== WITHDRAW MODAL =====
+// ===== WITHDRAW MODAL - GIAO DIỆN MỚI =====
 function WithdrawModal({ starPoints, userId, onClose, onDone }) {
   const [amount, setAmount] = useState("");
   const [bankName, setBankName] = useState("");
@@ -1089,10 +1088,33 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedBank, setSelectedBank] = useState("");
+  const [showBankList, setShowBankList] = useState(false);
 
   const numAmount = Number(amount) || 0;
   const fee = Math.round(numAmount * 0.2);
   const netAmount = numAmount - fee;
+
+  // Danh sách ngân hàng Việt Nam
+  const bankList = [
+    { code: "ACB", name: "Ngân hàng Á Châu (ACB)" },
+    { code: "AGRIBANK", name: "Ngân hàng Nông nghiệp (Agribank)" },
+    { code: "BIDV", name: "Ngân hàng Đầu tư (BIDV)" },
+    { code: "DONGABANK", name: "Ngân hàng Đông Á" },
+    { code: "EXIMBANK", name: "Ngân hàng Xuất Nhập khẩu (Eximbank)" },
+    { code: "HDBANK", name: "Ngân hàng HDBank" },
+    { code: "MBBANK", name: "Ngân hàng Quân đội (MB Bank)" },
+    { code: "MOMO", name: "Ví MoMo" },
+    { code: "OCB", name: "Ngân hàng OCB" },
+    { code: "SACOMBANK", name: "Ngân hàng Sài Gòn (Sacombank)" },
+    { code: "SHB", name: "Ngân hàng Sài Gòn - Hà Nội (SHB)" },
+    { code: "TECHCOMBANK", name: "Ngân hàng Kỹ thương (Techcombank)" },
+    { code: "TPBANK", name: "Ngân hàng Tiên Phong (TPBank)" },
+    { code: "VIETCOMBANK", name: "Ngân hàng Ngoại thương (Vietcombank)" },
+    { code: "VIETINBANK", name: "Ngân hàng Công thương (VietinBank)" },
+    { code: "VPBANK", name: "Ngân hàng VPBank" },
+    { code: "ZALOPAY", name: "Ví ZaloPay" },
+  ];
 
   React.useEffect(() => {
     if (!userId || !showHistory) return;
@@ -1115,144 +1137,197 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
       setError("Số tiền rút phải từ 10.000đ và không vượt quá số dư.");
       return;
     }
-    if (!bankName.trim() || !accountNumber.trim() || !accountHolder.trim()) {
+    if (!selectedBank || !accountNumber.trim() || !accountHolder.trim()) {
       setError("Vui lòng điền đầy đủ thông tin ngân hàng.");
       return;
     }
     setSaving(true);
     setError("");
+    
     const { error: insertError } = await supabase.from("star_withdrawals").insert({
       user_id: userId,
       amount: numAmount,
-      bank_name: bankName.trim(),
+      bank_name: selectedBank,
       account_number: accountNumber.trim(),
       account_holder: accountHolder.trim().toUpperCase(),
       fee: fee,
       net_amount: netAmount,
       status: 'pending'
     });
+    
     if (insertError) {
       setSaving(false);
       setError(insertError.message);
       return;
     }
+    
     const { error: deductError } = await supabase
       .from("profiles")
       .update({ star_points: starPoints - numAmount })
       .eq("id", userId);
+      
     if (deductError) {
       setSaving(false);
       setError(deductError.message);
       return;
     }
+    
     setSuccess(true);
     onDone(starPoints - numAmount);
   };
 
+  const getBankDisplay = (code) => {
+    const bank = bankList.find(b => b.code === code);
+    return bank ? bank.name : code;
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-in fade-in duration-200 overflow-y-auto">
-      <div className="w-full max-w-sm rounded-[25px] bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-black text-[#18231D]">Rút về ngân hàng/ví</h3>
-          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280] transition-colors"><X size={18} /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-[#18231D]">Rút về ngân hàng/ví</h3>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280]">
+            <X size={20} />
+          </button>
         </div>
 
         {success ? (
-          <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-emerald-50 p-4">
-            <Check size={17} className="text-emerald-500" />
-            <p className="text-sm font-semibold text-emerald-700">Đã gửi yêu cầu, admin sẽ duyệt trong 1-3 ngày làm việc.</p>
+          <div className="py-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+              <Check size={32} className="text-emerald-500" />
+            </div>
+            <p className="mt-3 text-sm font-semibold text-[#18231D]">Đã gửi yêu cầu thành công!</p>
+            <p className="mt-1 text-xs text-[#6B7280]">Admin sẽ duyệt trong 1-3 ngày làm việc.</p>
+            <button onClick={onClose} className="mt-4 w-full rounded-xl bg-[#45B967] py-2.5 text-sm font-bold text-white">
+              Đóng
+            </button>
           </div>
         ) : (
           <>
-            <div className="mt-4 flex gap-1 rounded-xl bg-[#F3F4F6] p-1">
+            {/* Tabs */}
+            <div className="flex gap-1 rounded-xl bg-[#F3F4F6] p-1 mb-4">
               {['Tổng quan', 'Đổi Main', 'Thẻ cào (Bank/Vi)'].map((tab, idx) => (
-                <button key={idx} className={`flex-1 rounded-lg py-1.5 text-[10px] font-bold ${idx === 2 ? 'bg-white text-[#111827] shadow-sm' : 'text-[#9CA3AF]'}`}>
+                <button key={idx} className={`flex-1 rounded-lg py-1.5 text-[10px] font-semibold ${
+                  idx === 2 ? 'bg-white text-[#111827] shadow-sm' : 'text-[#9CA3AF]'
+                }`}>
                   {tab}
                 </button>
               ))}
             </div>
 
-            <div className="mt-4 space-y-3">
-              <div>
-                <p className="text-[10px] font-semibold text-[#6B7280]">Ngân hàng / Ví</p>
-                <input
-                  type="text"
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  placeholder="VD: MoMo, Vietcombank, ..."
-                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-2.5 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-[#6B7280]">Số tài khoản / SĐT</p>
-                <input
-                  type="text"
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder="Nhập số tài khoản hoặc số điện thoại"
-                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-2.5 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-[#6B7280]">Chủ tài khoản</p>
-                <input
-                  type="text"
-                  value={accountHolder}
-                  onChange={(e) => setAccountHolder(e.target.value.toUpperCase())}
-                  placeholder="Tên chủ tài khoản (viết hoa)"
-                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-2.5 text-sm font-semibold uppercase text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
-                />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-[#6B7280]">Số tiền (VND)</p>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Tối thiểu 10.000 VND"
-                  className="w-full rounded-xl border border-[#E5E7EB] bg-[#F7F9FC] px-3.5 py-2.5 text-sm font-semibold text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
-                />
-              </div>
-
-              {numAmount > 0 && (
-                <div className="rounded-xl bg-[#F7F9FC] p-3 text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-[#6B7280]">Trừ marketing coin</span>
-                    <span className="font-semibold">{numAmount.toLocaleString('vi-VN')} coin</span>
+            {/* Chọn ngân hàng */}
+            <div className="mb-3">
+              <p className="text-[11px] font-medium text-[#6B7280] mb-1.5">Ngân hàng / Ví</p>
+              <div className="relative">
+                <button
+                  onClick={() => setShowBankList(!showBankList)}
+                  className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3.5 py-2.5 text-left text-sm text-[#111827] flex items-center justify-between"
+                >
+                  <span>{selectedBank ? getBankDisplay(selectedBank) : 'Chọn ngân hàng hoặc ví'}</span>
+                  <ChevronRight size={16} className={`text-[#9CA3AF] transition-transform ${showBankList ? 'rotate-90' : ''}`} />
+                </button>
+                
+                {showBankList && (
+                  <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white shadow-lg">
+                    {bankList.map((bank) => (
+                      <button
+                        key={bank.code}
+                        onClick={() => {
+                          setSelectedBank(bank.code);
+                          setShowBankList(false);
+                        }}
+                        className={`w-full px-3.5 py-2 text-left text-[12px] hover:bg-[#F5F8F4] transition-colors ${
+                          selectedBank === bank.code ? 'bg-[#EAF7E6] text-[#45B967]' : 'text-[#18231D]'
+                        }`}
+                      >
+                        {bank.name}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#6B7280]">Phí sàn 20%</span>
-                    <span className="font-semibold text-rose-500">-{fee.toLocaleString('vi-VN')} coin</span>
-                  </div>
-                  <div className="flex justify-between border-t border-[#E5E7EB] pt-1 font-bold">
-                    <span>Thực nhận</span>
-                    <span className="text-[#45B967]">{netAmount.toLocaleString('vi-VN')} VND</span>
-                  </div>
-                </div>
-              )}
-
-              <button onClick={() => {}} className="text-[10px] font-semibold text-[#45B967] underline">
-                Lưu tài khoản
-              </button>
+                )}
+              </div>
             </div>
 
-            {error && <p className="mt-2 text-xs font-semibold text-rose-500">{error}</p>}
+            {/* Số tài khoản */}
+            <div className="mb-3">
+              <p className="text-[11px] font-medium text-[#6B7280] mb-1.5">Số tài khoản / SĐT</p>
+              <input
+                type="text"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="Nhập số tài khoản hoặc số điện thoại"
+                className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
+              />
+            </div>
 
-            <div className="mt-5 flex gap-3">
-              <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280] hover:bg-[#E5E7EB] transition-colors">Huỷ</button>
+            {/* Chủ tài khoản */}
+            <div className="mb-3">
+              <p className="text-[11px] font-medium text-[#6B7280] mb-1.5">Chủ tài khoản</p>
+              <input
+                type="text"
+                value={accountHolder}
+                onChange={(e) => setAccountHolder(e.target.value.toUpperCase())}
+                placeholder="Tên chủ tài khoản (viết hoa)"
+                className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3.5 py-2.5 text-sm uppercase text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
+              />
+            </div>
+
+            {/* Số tiền */}
+            <div className="mb-3">
+              <p className="text-[11px] font-medium text-[#6B7280] mb-1.5">Số tiền (VND)</p>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Tối thiểu 10.000 VND"
+                className="w-full rounded-xl border border-[#E5E7EB] bg-white px-3.5 py-2.5 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#45B967] transition-all"
+              />
+            </div>
+
+            {/* Lưu tài khoản */}
+            <button className="text-[11px] font-medium text-[#45B967] underline mb-3">
+              Lưu tài khoản
+            </button>
+
+            {/* Tính toán */}
+            {numAmount > 0 && (
+              <div className="rounded-xl bg-[#F7F9FC] p-3 text-xs space-y-1.5 mb-4">
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Trừ marketing coin</span>
+                  <span className="font-semibold">{numAmount.toLocaleString('vi-VN')} coin</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Phí sàn 20%</span>
+                  <span className="font-semibold text-rose-500">-{fee.toLocaleString('vi-VN')} coin</span>
+                </div>
+                <div className="flex justify-between border-t border-[#E5E7EB] pt-1.5 font-bold">
+                  <span>Thực nhận</span>
+                  <span className="text-[#45B967]">{netAmount.toLocaleString('vi-VN')} VND</span>
+                </div>
+              </div>
+            )}
+
+            {error && <p className="mb-3 text-xs font-semibold text-rose-500">{error}</p>}
+
+            {/* Nút */}
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 rounded-xl bg-[#F3F4F6] py-2.5 text-sm font-semibold text-[#6B7280] hover:bg-[#E5E7EB] transition-colors">
+                Huỷ
+              </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#45B967] py-2.5 text-sm font-black text-white shadow-sm hover:bg-[#3DA85A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 rounded-xl bg-[#45B967] py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#3DA85A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {saving ? <Loader2 size={15} className="animate-spin" /> : "Gửi yêu cầu"}
+                {saving ? <Loader2 size={18} className="animate-spin mx-auto" /> : "Gửi yêu cầu"}
               </button>
             </div>
 
+            {/* Lịch sử rút */}
             <div className="mt-4">
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className="flex items-center gap-1 text-[10px] font-semibold text-[#45B967]"
+                className="flex items-center gap-1 text-[11px] font-medium text-[#45B967]"
               >
                 🔍 Lịch sử rút
                 <ChevronRight size={14} className={`transition-transform ${showHistory ? 'rotate-90' : ''}`} />
@@ -1262,18 +1337,22 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
                   {loadingHistory ? (
                     <Loader2 size={16} className="animate-spin text-[#9CA3AF]" />
                   ) : history.length === 0 ? (
-                    <p className="text-[10px] text-[#9CA3AF]">Chưa có yêu cầu rút nào.</p>
+                    <p className="text-[11px] text-[#9CA3AF]">Chưa có yêu cầu rút nào.</p>
                   ) : (
                     history.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between border-b border-[#F3F4F6] py-1.5 text-[10px]">
+                      <div key={item.id} className="flex items-center justify-between border-b border-[#F3F4F6] py-2 text-[11px]">
                         <div>
-                          <p className="font-semibold">{item.bank_name}</p>
+                          <p className="font-semibold text-[#18231D]">{getBankDisplay(item.bank_name)}</p>
                           <p className="text-[#9CA3AF]">{new Date(item.created_at).toLocaleString('vi-VN')}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-rose-500">-{item.amount.toLocaleString('vi-VN')} coin</p>
-                          <span className={`text-[8px] font-semibold ${item.status === 'approved' ? 'text-emerald-500' : item.status === 'rejected' ? 'text-rose-500' : 'text-amber-500'}`}>
-                            {item.status === 'pending' ? 'Chờ duyệt' : item.status === 'approved' ? 'Đã duyệt' : 'Từ chối'}
+                          <span className={`text-[8px] font-semibold ${
+                            item.status === 'approved' ? 'text-emerald-500' : 
+                            item.status === 'rejected' ? 'text-rose-500' : 'text-amber-500'
+                          }`}>
+                            {item.status === 'pending' ? 'Chờ duyệt' : 
+                             item.status === 'approved' ? '✅ Đã duyệt' : '❌ Từ chối'}
                           </span>
                         </div>
                       </div>
@@ -1287,8 +1366,7 @@ function WithdrawModal({ starPoints, userId, onClose, onDone }) {
       </div>
     </div>
   );
-}
-
+      }
 // ===== PAY REFUND MODAL =====
 function PayRefundModal({ userId, refundAmount, onClose, onDone }) {
   const [loading, setLoading] = useState(false);
