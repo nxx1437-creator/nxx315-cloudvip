@@ -39,37 +39,27 @@ export default function Redirect() {
    * không bị giữ lại.
    */
   const goNow = () => {
-    if (!destination || opening) return;
+  const goNow = () => {
+  if (!destination || opening) return;
 
-    setOpening(true);
+  setOpening(true);
 
-    try {
-      const newWindow = window.open(
-        destination,
-        "_blank",
-        "noopener,noreferrer"
-      );
+  const newWindow = window.open(
+    destination,
+    "_blank",
+    "noopener,noreferrer"
+  );
 
-      /*
-       * Nếu trình duyệt cho phép mở tab mới,
-       * quay lại giao diện Mua hàng kiếm sao.
-       */
-      if (newWindow) {
-        setTimeout(() => {
-          navigate(-1);
-        }, 250);
-        return;
-      }
+  if (newWindow) {
+    // Không điều hướng lịch sử nữa.
+    // Giữ nguyên trang Redirect để người dùng có thể quay lại.
+    setOpening(false);
+    return;
+  }
 
-      /*
-       * Một số trình duyệt/webview chặn window.open.
-       * Khi đó dùng location để vẫn mở được link.
-       */
-      window.location.href = destination;
-    } catch {
-      window.location.href = destination;
-    }
-  };
+  // Nếu trình duyệt chặn tab mới thì mở trực tiếp.
+  window.location.href = destination;
+};
 
   useEffect(() => {
     if (!destination) return;
