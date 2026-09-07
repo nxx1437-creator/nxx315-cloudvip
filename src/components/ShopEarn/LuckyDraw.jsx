@@ -5,12 +5,12 @@ import { supabase } from "../../lib/supabaseClient.js";
 // ===== CẤU HÌNH PHẦN THƯỞNG - TỈ LỆ =====
 // Tổng tỉ lệ = 100%
 const REWARDS = [
-  { id: 1, label: "May mắn 🍀", value: 5, color: "from-gray-400 to-gray-600", icon: "🍀", rate: 30 },   // 30%
+  { id: 1, label: "May mắn 🍀", value: 5, color: "from-gray-400 to-gray-600", icon: "🍀", rate: 60 },   // 30%
   { id: 2, label: "Sao nhỏ ⭐", value: 10, color: "from-blue-400 to-blue-600", icon: "⭐", rate: 25 },   // 25%
   { id: 3, label: "Sao vàng ✨", value: 20, color: "from-yellow-400 to-yellow-600", icon: "✨", rate: 20 }, // 20%
-  { id: 4, label: "Cực phẩm 🔥", value: 50, color: "from-red-400 to-red-600", icon: "🔥", rate: 15 },    // 15%
-  { id: 5, label: "Thần tài 🧧", value: 100, color: "from-purple-400 to-purple-600", icon: "🧧", rate: 7 }, // 7%
-  { id: 6, label: "Đại phát 🎊", value: 200, color: "from-pink-400 to-pink-600", icon: "🎊", rate: 3 },   // 3%
+  { id: 4, label: "Cực phẩm 🔥", value: 50, color: "from-red-400 to-red-600", icon: "🔥", rate: 10 },    // 15%
+  { id: 5, label: "Thần tài 🧧", value: 100, color: "from-purple-400 to-purple-600", icon: "🧧", rate: 4 }, // 7%
+  { id: 6, label: "Đại phát 🎊", value: 200, color: "from-pink-400 to-pink-600", icon: "🎊", rate: 1 },   // 3%
 ];
 
 // Hàm random theo tỉ lệ
