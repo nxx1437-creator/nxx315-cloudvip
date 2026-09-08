@@ -1,15 +1,16 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, ListChecks, Store, Wallet, User } from "lucide-react";
+import { MessageCircle } from "lucide-react"; // thêm import
 
-const TABS = [
-  { path: "/dashboard", label: "Trang chủ", icon: Home },
-  { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-  { path: "/store", label: "Cửa hàng", icon: Store },
-  { path: "/wallet", label: "Ví", icon: Wallet },
-  { path: "/profile", label: "Tôi", icon: User },
+const tabs = [
+  { key: "/", label: "Trang chủ", icon: Home },
+  { key: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
+  { key: "/store", label: "Cửa hàng", icon: Gift },
+  { key: "/support", label: "Hỗ trợ", icon: MessageCircle }, // THÊM DÒNG NÀY
+  { key: "/wallet", label: "Ví", icon: Wallet },
+  { key: "/profile", label: "Cá nhân", icon: User },
 ];
-
 export default function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
