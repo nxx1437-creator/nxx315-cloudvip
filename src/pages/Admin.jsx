@@ -580,23 +580,27 @@ function EmptyState({ text }) {
   const [detailWithdrawal, setDetailWithdrawal] = useState(null);
 
   const fetchWithdrawals = async () => {
+  const fetchWithdrawals = async () => {
   setLoading(true);
-  
-  // Thêm log để debug
-  console.log("🔄 Đang fetch withdrawals...");
-  
-  const { data, error } = await supabase
-    .from("star_withdrawals")
-    .select("*")
-    .order("created_at", { ascending: false });
-  
-  console.log("📦 Data:", data);
-  console.log("❌ Error:", error);
-  
-  setWithdrawals(data ?? []);
+  try {
+    const { data, error } = await supabase
+      .from("star_withdrawals")
+      .select("*")
+      .order("created_at", { ascending: false });
+    
+    if (error) {
+      console.error("❌ Lỗi fetch:", error);
+      setWithdrawals([]);
+    } else {
+      console.log("✅ Data:", data);
+      setWithdrawals(data ?? []);
+    }
+  } catch (err) {
+    console.error("❌ Lỗi:", err);
+    setWithdrawals([]);
+  }
   setLoading(false);
 };
-
   const pendingCount = withdrawals.filter((w) => w.status === "pending").length;
   const completedCount = withdrawals.filter((w) => w.status === "approved").length;
   const rejectedCount = withdrawals.filter((w) => w.status === "rejected").length;
