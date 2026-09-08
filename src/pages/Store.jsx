@@ -1,862 +1,392 @@
+// src/pages/Store.jsx - PHẦN 1
 import React, { useState } from "react";
-import "./Store.css";
-
-// DANH SÁCH GÓI ROBUX
+import useSession from "../hooks/useSession.js";
+import useProfile from "../hooks/useProfile.js";
+import { supabase } from "../lib/supabaseClient.js";
+import BottomNav from "../components/BottomNav.jsx";
 
 const ROBUX_PACKAGES = [
-  { id: "robux-40", robux: 40, price: 14000, image: "/images/robux-40.jpg", popular: false },
-  { id: "robux-80", robux: 80, price: 28000, image: "/images/robux-80.jpg", popular: false },
-  { id: "robux-145", robux: 145, price: 50000, image: "/images/robux-145.jpg", popular: true },
-  { id: "robux-300", robux: 300, price: 100000, image: "/images/robux-300.jpg", popular: true },
-  { id: "robux-500", robux: 500, bonus: 100, price: 140000, image: "/images/robux-500.jpg", popular: false },
-  { id: "robux-1000", robux: 1000, bonus: 200, price: 280000, image: "/images/robux-1000.jpg", popular: false },
+  { id: "robux-40", robux: 40, price: 14000, coin_cost: 14000, popular: false },
+  { id: "robux-80", robux: 80, price: 28000, coin_cost: 28000, popular: false },
+  { id: "robux-145", robux: 145, price: 50000, coin_cost: 50000, popular: true },
+  { id: "robux-300", robux: 300, price: 100000, coin_cost: 100000, popular: true },
+  { id: "robux-500", robux: 500, bonus: 100, price: 140000, coin_cost: 140000, popular: false },
+  { id: "robux-1000", robux: 1000, bonus: 200, price: 280000, coin_cost: 280000, popular: false },
 ];
 
-/* =========================================================
-   HÀM FORMAT TIỀN
-   ========================================================= */
-
-const formatMoney = (number) => {
-  return new Intl.NumberFormat("vi-VN").format(number) + " VNĐ";
-};
-// ============================================
-// PHẦN 2: MAIN COMPONENT & STATE
-// ============================================
-
+const formatMoney = (n) => new Intl.NumberFormat("vi-VN").format(n) + "đ";
+// src/pages/Store.jsx - PHẦN 2
 export default function Store() {
-  /* ===== SCREEN ===== */
+  const { session } = useSession();
+  const { profile, setProfile } = useProfile();
   const [screen, setScreen] = useState("home");
-
-  /* ===== TÀI KHOẢN ROBLOX ===== */
   const [username, setUsername] = useState("");
   const [account, setAccount] = useState(null);
-
-  /* ===== SẢN PHẨM ĐANG CHỌN ===== */
   const [selectedPackage, setSelectedPackage] = useState(null);
-
-  /* ===== GIỎ HÀNG ===== */
-  const [cart, setCart] = useState([]);
-
-  /* ===== PHƯƠNG THỨC THANH TOÁN ===== */
-  const [paymentMethod, setPaymentMethod] = useState("vietqr");
-
-  /* ===== HIỂN THỊ GIỎ HÀNG ===== */
-  const [cartOpen, setCartOpen] = useState(false);
-
-  /* ===== ĐƠN HÀNG HIỆN TẠI ===== */
-  const [currentOrder, setCurrentOrder] = useState(null);
-
-  /* ===== TRẠNG THÁI KIỂM TRA USERNAME ===== */
-  const [checkingAccount, setCheckingAccount] = useState(false);
-
-  /* ===== THÔNG BÁO ===== */
+  const [paymentMethod, setPaymentMethod] = useState("coin");
   const [toast, setToast] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  /* ===== TÍNH SỐ LƯỢNG SẢN PHẨM TRONG GIỎ ===== */
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-  const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const userCoins = profile?.coins || 0;
 
-  /* ===== HIỂN THỊ TOAST ===== */
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
     setTimeout(() => setToast(null), 2500);
   };
 
-  /* ===== QUAY LẠI ===== */
-  const goBack = () => {
-    if (screen === "account") { setScreen("home"); return; }
-    if (screen === "verify") { setScreen("account"); return; }
-    if (screen === "packages") { setScreen("verify"); return; }
-    if (screen === "checkout") { setScreen("packages"); return; }
-    if (screen === "qr") { setScreen("checkout"); return; }
-    setScreen("home");
-  };
-// ============================================
-// PHẦN 3: HANDLERS (XỬ LÝ)
-// ============================================
-
-  /* ===== KIỂM TRA USERNAME ROBLOX ===== */
-  const verifyUsername = async () => {
-    const cleanUsername = username.trim();
-    if (!cleanUsername) {
-      showToast("Vui lòng nhập tên tài khoản Roblox", "error");
-      return;
-    }
-    setCheckingAccount(true);
+  const verifyUsername = () => {
+    if (!username.trim()) { showToast("Vui lòng nhập username!", "error"); return; }
+    setChecking(true);
     setTimeout(() => {
-      const fakeAccount = {
-        username: cleanUsername,
-        displayName: cleanUsername,
-        userId: "123456789",
-        avatar: `https://tr.rbxcdn.com/30DAY-AvatarHeadshot-${cleanUsername}/150/150/AvatarHeadshot/Png`,
-      };
-      setAccount(fakeAccount);
-      setCheckingAccount(false);
-      setScreen("verify");
-    }, 900);
+      setAccount({ username: username.trim(), userId: "123456789" });
+      setChecking(false);
+      setScreen("packages");
+    }, 1000);
   };
 
-  /* ===== THÊM SẢN PHẨM VÀO GIỎ ===== */
-  const addToCart = (product) => {
-    setCart((currentCart) => {
-      const exists = currentCart.find((item) => item.id === product.id);
-      if (exists) {
-        return currentCart.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
+  const handlePayment = async () => {
+    if (!selectedPackage) return;
+    if (!account) { setScreen("account"); return; }
+
+    if (paymentMethod === "coin") {
+      if (userCoins < selectedPackage.coin_cost) {
+        showToast(`Không đủ Coin! Cần ${formatMoney(selectedPackage.coin_cost)}. Bạn có ${formatMoney(userCoins)}`, "error");
+        return;
       }
-      return [...currentCart, { ...product, quantity: 1 }];
-    });
-    showToast(`${product.robux} Robux đã thêm vào giỏ`);
-  };
-
-  /* ===== TĂNG/GIẢM SỐ LƯỢNG ===== */
-  const increaseQuantity = (productId) => {
-    setCart((currentCart) =>
-      currentCart.map((item) =>
-        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
-  };
-
-  const decreaseQuantity = (productId) => {
-    setCart((currentCart) =>
-      currentCart
-        .map((item) =>
-          item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  /* ===== XÓA SẢN PHẨM ===== */
-  const removeFromCart = (productId) => {
-    setCart((currentCart) => currentCart.filter((item) => item.id !== productId));
-  };
-
-  /* ===== CHỌN GÓI ===== */
-  const choosePackage = (product) => {
-    setSelectedPackage(product);
-    if (!account) { setScreen("account"); return; }
-    setScreen("checkout");
-  };
-
-  /* ===== MUA NGAY ===== */
-  const buyNow = (product) => {
-    setSelectedPackage(product);
-    if (!account) { setScreen("account"); return; }
-    setScreen("checkout");
-  };
-
-  /* ===== TIẾP TỤC ===== */
-  const continueToPackages = () => setScreen("packages");
-  const continueToCheckout = () => {
-    if (!selectedPackage) {
-      showToast("Vui lòng chọn một gói Robux", "error");
-      return;
+      setProcessing(true);
+      const { error: deductError } = await supabase
+        .from('profiles')
+        .update({ coins: userCoins - selectedPackage.coin_cost })
+        .eq('id', session.user.id);
+      if (deductError) {
+        showToast("Lỗi: " + deductError.message, "error");
+        setProcessing(false);
+        return;
+      }
+      const orderId = "NXX" + Math.floor(100000 + Math.random() * 900000);
+      await supabase.from('redemption_orders').insert({
+        user_id: session.user.id,
+        package_name: `${selectedPackage.robux} Robux`,
+        package_id: selectedPackage.id,
+        coins_charged: selectedPackage.coin_cost,
+        delivery_target: account.username,
+        delivery_method: 'coin',
+        status: 'pending',
+        order_code: orderId,
+      });
+      setProfile(prev => ({ ...prev, coins: userCoins - selectedPackage.coin_cost }));
+      setProcessing(false);
+      showToast(`Nạp ${selectedPackage.robux} Robux thành công!`, "success");
+      setScreen("success");
+    } else {
+      const orderId = "NXX" + Math.floor(100000 + Math.random() * 900000);
+      await supabase.from('redemption_orders').insert({
+        user_id: session.user.id,
+        package_name: `${selectedPackage.robux} Robux`,
+        package_id: selectedPackage.id,
+        coins_charged: selectedPackage.coin_cost,
+        delivery_target: account.username,
+        delivery_method: 'bank',
+        status: 'pending',
+        order_code: orderId,
+      });
+      showToast(`Chuyển khoản ${formatMoney(selectedPackage.price)} đến Vietcombank - Nội dung: ${orderId}`, "success");
+      setScreen("bank_info");
     }
-    setScreen("checkout");
   };
 
-  /* ===== TẠO ĐƠN HÀNG ===== */
-  const createOrder = () => {
-    if (!selectedPackage) {
-      showToast("Chưa chọn gói Robux", "error");
-      return;
-    }
-    const orderId = "NXX" + Math.floor(100000 + Math.random() * 900000);
-    const order = {
-      id: orderId,
-      username: account?.username || username,
-      userId: account?.userId || "123456789",
-      product: selectedPackage,
-      amount: selectedPackage.price,
-      payment: paymentMethod,
-      createdAt: new Date().toLocaleString("vi-VN"),
-      status: "pending",
-    };
-    setCurrentOrder(order);
-    setScreen("qr");
+  const goHome = () => {
+    setScreen("home");
+    setSelectedPackage(null);
+    setAccount(null);
+    setUsername("");
   };
-
-  /* ===== HOÀN TẤT THANH TOÁN ===== */
-  const completePayment = () => {
-    if (!currentOrder) return;
-    const completedOrder = { ...currentOrder, status: "success" };
-    setCurrentOrder(completedOrder);
-    if (selectedPackage) {
-      setCart((currentCart) => currentCart.filter((item) => item.id !== selectedPackage.id));
-    }
-    setScreen("success");
-  };
-// ============================================
-// PHẦN 4: SUB-COMPONENTS (Header, Hero, Benefits, ProductCard)
-// ============================================
-
-  /* ===== ROBUX ICON ===== */
-  const RobuxIcon = ({ size = 58 }) => (
-    <div className="robux-icon" style={{ width: size, height: size }}>
-      <span>◇</span>
-    </div>
-  );
-
-  /* ===== PRODUCT CARD ===== */
-  const ProductCard = ({ product }) => {
-    const isSelected = selectedPackage?.id === product.id;
+// src/pages/Store.jsx - PHẦN 3
+  if (screen === "home") {
     return (
-      <div className={`product-card ${isSelected ? "selected" : ""}`}>
-        {product.popular && <div className="popular-badge">🔥 BÁN CHẠY</div>}
-        <div className="product-image">
-          <div className="product-glow"></div>
-          <RobuxIcon size={58} />
-          <span className="product-amount">{product.robux}</span>
-        </div>
-        <div className="product-info">
-          <h3>{product.robux} Robux</h3>
-          {product.bonus && <span className="product-bonus">+{product.bonus} BONUS</span>}
-          <div className="product-bottom">
-            <div className="product-price">{formatMoney(product.price)}</div>
-            <button className="add-button" onClick={() => addToCart(product)}>+</button>
+      <div style={{ minHeight: '100vh', background: '#f5f8ff', paddingBottom: 80 }}>
+        {/* Header */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, padding: '12px 16px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(18px)', borderBottom: '1px solid #e7ebf4', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setScreen("home")}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #2563eb, #60a5fa)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900 }}>◆</div>
+            <div><strong style={{ display: 'block', fontSize: 16 }}>NXX STORE</strong><span style={{ fontSize: 10, color: '#8b95a7' }}>ROBUX SHOP</span></div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, color: '#2563eb', fontWeight: 700 }}>🪙 {userCoins.toLocaleString()}</span>
           </div>
         </div>
-      </div>
-    );
-  };
 
-  /* ===== HEADER ===== */
-  const Header = () => (
-    <header className="store-header">
-      <button className="brand" onClick={() => setScreen("home")}>
-        <div className="brand-mark">◇</div>
-        <div className="brand-text">
-          <strong>NXX STORE</strong>
-          <span>ROBUX SHOP</span>
+        {/* Hero */}
+        <div style={{ margin: '16px', padding: '32px 24px', borderRadius: 24, background: 'linear-gradient(135deg, #155eef, #2563eb 50%, #38bdf8)', color: 'white', boxShadow: '0 22px 55px rgba(37,99,235,0.24)' }}>
+          <div style={{ display: 'inline-block', padding: '4px 12px', borderRadius: 99, background: 'rgba(255,255,255,0.15)', fontSize: 11, fontWeight: 800 }}>⚡ ROBLOX TOP UP</div>
+          <h1 style={{ margin: '16px 0 8px', fontSize: 36, fontWeight: 900, lineHeight: 1 }}>Nạp Robux<br/><span style={{ color: 'rgba(255,255,255,0.7)' }}>nhanh chóng</span></h1>
+          <p style={{ fontSize: 14, opacity: 0.85, margin: '8px 0 20px' }}>Nạp Robux tự động, an toàn và tiện lợi. Hỗ trợ 24/7.</p>
+          <button onClick={() => setScreen("account")} style={{ padding: '12px 24px', borderRadius: 12, background: 'white', color: '#2563eb', border: 'none', fontWeight: 900, fontSize: 14, cursor: 'pointer' }}>
+            Mua Robux ngay →
+          </button>
         </div>
-      </button>
-      <div className="header-right">
-        <button className="header-icon" onClick={() => setCartOpen(true)}>
-          🛒
-          {cartCount > 0 && <span className="header-cart-count">{cartCount}</span>}
-        </button>
-        <button className="header-icon">☰</button>
-      </div>
-    </header>
-  );
 
-  /* ===== HERO ===== */
-  const Hero = () => (
-    <section className="hero-section">
-      <div className="hero-background"></div>
-      <div className="hero-content">
-        <div className="hero-label">⚡ ROBLOX TOP UP</div>
-        <h1>Nạp Robux <span>nhanh chóng</span></h1>
-        <p>Nạp Robux tự động, an toàn và tiện lợi. Hỗ trợ 24/7.</p>
-        <button className="hero-button" onClick={() => setScreen("account")}>
-          <span>Mua Robux ngay</span> <b>→</b>
-        </button>
-      </div>
-      <div className="hero-art">
-        <div className="hero-circle hero-circle-one"></div>
-        <div className="hero-circle hero-circle-two"></div>
-        <div className="hero-robux"><RobuxIcon size={96} /></div>
-        <div className="hero-controller">🎮</div>
-      </div>
-    </section>
-  );
-
-  /* ===== BENEFITS ===== */
-  const Benefits = () => (
-    <section className="benefits-section">
-      <div className="benefit-item">
-        <div className="benefit-icon">⚡</div>
-        <div><strong>Tự động</strong><span>Xử lý nhanh</span></div>
-      </div>
-      <div className="benefit-item">
-        <div className="benefit-icon">🛡️</div>
-        <div><strong>An toàn</strong><span>Bảo mật</span></div>
-      </div>
-      <div className="benefit-item">
-        <div className="benefit-icon">💬</div>
-        <div><strong>Hỗ trợ</strong><span>24/7</span></div>
-      </div>
-    </section>
-  );
-// ============================================
-// PHẦN 5: PRODUCT SECTION, HOW TO BUY, FOOTER
-// ============================================
-
-  /* ===== PRODUCT SECTION ===== */
-  const ProductSection = () => (
-    <section className="products-section">
-      <div className="section-header">
-        <div>
-          <span className="section-label">🔥 SẢN PHẨM NỔI BẬT</span>
-          <h2>Chọn gói Robux</h2>
-        </div>
-        <button className="view-all-button" onClick={() => setScreen("packages")}>
-          Xem tất cả <span>→</span>
-        </button>
-      </div>
-      <div className="products-grid">
-        {ROBUX_PACKAGES.slice(0, 4).map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </section>
-  );
-
-  /* ===== HOW TO BUY ===== */
-  const HowToBuy = () => (
-    <section className="how-section">
-      <div className="how-header">
-        <span>✨ ĐƠN GIẢN</span>
-        <h2>Mua Robux chỉ 3 bước</h2>
-        <p>Không cần thao tác phức tạp.</p>
-      </div>
-      <div className="how-grid">
-        <div className="how-card">
-          <div className="how-number">01</div>
-          <div className="how-icon">👤</div>
-          <h3>Nhập tài khoản</h3>
-          <p>Nhập username Roblox của bạn.</p>
-        </div>
-        <div className="how-card">
-          <div className="how-number">02</div>
-          <div className="how-icon">◇</div>
-          <h3>Chọn gói Robux</h3>
-          <p>Chọn số Robux bạn muốn mua.</p>
-        </div>
-        <div className="how-card">
-          <div className="how-number">03</div>
-          <div className="how-icon">💳</div>
-          <h3>Thanh toán</h3>
-          <p>Thanh toán và nhận Robux.</p>
-        </div>
-      </div>
-    </section>
-  );
-
-  /* ===== FOOTER ===== */
-  const Footer = () => (
-    <footer className="store-footer">
-      <div className="footer-brand">
-        <div className="brand-mark">◇</div>
-        <div><strong>NXX STORE</strong><span>Roblox Top Up</span></div>
-      </div>
-      <p>© 2026 NXX STORE. All rights reserved.</p>
-    </footer>
-  );
-
-  /* ===== BOTTOM NAVIGATION ===== */
-  const BottomNavigation = () => (
-    <nav className="bottom-navigation">
-      <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}>
-        <span>🏠</span><small>Trang chủ</small>
-      </button>
-      <button onClick={() => setScreen("packages")}>
-        <span>◇</span><small>Robux</small>
-      </button>
-      <button onClick={() => setScreen("orders")}>
-        <span>📋</span><small>Đơn hàng</small>
-      </button>
-      <button onClick={() => setScreen("account")}>
-        <span>👤</span><small>Tài khoản</small>
-      </button>
-    </nav>
-  );
-
-  /* ===== HOME SCREEN ===== */
-  const HomeScreen = () => (
-    <>
-      <Header />
-      <main>
-        <Hero />
-        <Benefits />
-        <ProductSection />
-        <HowToBuy />
-      </main>
-      <Footer />
-    </>
-  );
-// ============================================
-// PHẦN 6: CART DRAWER, TOAST, ACCOUNT SCREEN
-// ============================================
-
-  /* ===== CART DRAWER ===== */
-  const CartDrawer = () => {
-    if (!cartOpen) return null;
-    return (
-      <div className="cart-overlay">
-        <div className="cart-backdrop" onClick={() => setCartOpen(false)}></div>
-        <aside className="cart-drawer">
-          <div className="cart-header">
-            <div>
-              <span>GIỎ HÀNG</span>
-              <h2>{cartCount} sản phẩm</h2>
-            </div>
-            <button onClick={() => setCartOpen(false)}>×</button>
-          </div>
-          {cart.length === 0 ? (
-            <div className="empty-cart">
-              <div className="empty-cart-icon">🛒</div>
-              <h3>Giỏ hàng trống</h3>
-              <p>Hãy chọn một gói Robux để bắt đầu.</p>
-              <button className="primary-button" onClick={() => { setCartOpen(false); setScreen("packages"); }}>
-                Xem gói Robux
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="cart-items">
-                {cart.map((item) => (
-                  <div className="cart-item" key={item.id}>
-                    <div className="cart-item-image"><RobuxIcon size={42} /></div>
-                    <div className="cart-item-info">
-                      <strong>{item.robux} Robux</strong>
-                      <span>{formatMoney(item.price)}</span>
-                      <div className="quantity">
-                        <button onClick={() => decreaseQuantity(item.id)}>−</button>
-                        <b>{item.quantity}</b>
-                        <button onClick={() => increaseQuantity(item.id)}>+</button>
-                      </div>
-                    </div>
-                    <button className="remove-item" onClick={() => removeFromCart(item.id)}>×</button>
-                  </div>
-                ))}
-              </div>
-              <div className="cart-bottom">
-                <div className="cart-total">
-                  <span>Tổng cộng</span>
-                  <strong>{formatMoney(cartTotal)}</strong>
-                </div>
-                <button className="primary-button full" onClick={() => {
-                  setCartOpen(false);
-                  if (!account) setScreen("account");
-                  else setScreen("checkout");
-                }}>
-                  Thanh toán →
-                </button>
-              </div>
-            </>
-          )}
-        </aside>
-      </div>
-    );
-  };
-
-  /* ===== TOAST ===== */
-  const Toast = () => {
-    if (!toast) return null;
-    return <div className={`toast ${toast.type === "error" ? "toast-error" : ""}`}>
-      <span>{toast.type === "error" ? "!" : "✓"}</span>
-      {toast.message}
-    </div>;
-  };
-
-  /* ===== ACCOUNT SCREEN ===== */
-  const AccountScreen = () => (
-    <div className="inner-page">
-      <div className="inner-page-header">
-        <button className="back-button" onClick={goBack}>←</button>
-        <div>
-          <span className="page-kicker">NXX STORE</span>
-          <h1>Tài khoản Roblox</h1>
-          <p>Nhập tài khoản nhận Robux</p>
-        </div>
-      </div>
-      <div className="account-card">
-        <div className="account-card-top">
-          <div className="account-big-icon">👤</div>
-          <div>
-            <span className="card-label">BƯỚC 1</span>
-            <h2>Nhập Username</h2>
-          </div>
-        </div>
-        <p className="account-description">Nhập chính xác tên tài khoản Roblox mà bạn muốn nhận Robux.</p>
-        <label className="input-label">Username Roblox</label>
-        <div className="username-input">
-          <span className="input-icon">@</span>
-          <input type="text" value={username} placeholder="Ví dụ: Builderman" onChange={(e) => setUsername(e.target.value)} />
-          {username.length > 0 && <button className="clear-input" onClick={() => setUsername("")}>×</button>}
-        </div>
-        <div className="username-note">
-          <span>🔒</span>
-          <p>Chúng tôi chỉ sử dụng Username để xác định tài khoản nhận Robux.</p>
-        </div>
-        <button className="primary-button full" disabled={checkingAccount} onClick={verifyUsername}>
-          {checkingAccount ? <>⏳ Đang kiểm tra...</> : <>Kiểm tra tài khoản →</>}
-        </button>
-        <button className="text-button" onClick={() => showToast("Hãy nhập Username, không phải Display Name.")}>
-          Không biết Username ở đâu? <span>Xem hướng dẫn</span>
-        </button>
-      </div>
-      <div className="security-card">
-        <div className="security-icon">🛡️</div>
-        <div>
-          <strong>Thông tin của bạn được bảo mật</strong>
-          <p>NXX STORE không yêu cầu mật khẩu Roblox của bạn.</p>
-        </div>
-      </div>
-    </div>
-  );
-// ============================================
-// PHẦN 7: VERIFY, PACKAGES, CHECKOUT SCREENS
-// ============================================
-
-  /* ===== VERIFY SCREEN ===== */
-  const VerifyScreen = () => (
-    <div className="inner-page">
-      <div className="inner-page-header">
-        <button className="back-button" onClick={goBack}>←</button>
-        <div>
-          <span className="page-kicker">NXX STORE</span>
-          <h1>Xác nhận tài khoản</h1>
-          <p>Kiểm tra thông tin trước khi tiếp tục</p>
-        </div>
-      </div>
-      <div className="verified-card">
-        <div className="verified-success">✓</div>
-        <span className="verified-label">TÀI KHOẢN HỢP LỆ</span>
-        <h2>Tìm thấy tài khoản!</h2>
-        <p>Hãy kiểm tra thông tin bên dưới.</p>
-        <div className="roblox-profile">
-          <div className="profile-avatar">{account?.avatar ? <img src={account.avatar} alt="avatar" /> : <span>👤</span>}</div>
-          <div className="profile-info">
-            <span>Username</span>
-            <strong>@{account?.username || username}</strong>
-            <small>ID: {account?.userId || "123456789"}</small>
-          </div>
-          <div className="profile-check">✓</div>
-        </div>
-        <div className="verified-notice">
-          <span>ℹ</span>
-          <p>Robux sẽ được nạp vào đúng tài khoản này. Hãy chắc chắn Username là chính xác.</p>
-        </div>
-        <button className="primary-button full" onClick={continueToPackages}>Chọn gói Robux →</button>
-        <button className="outline-button full" onClick={() => { setAccount(null); setUsername(""); setScreen("account"); }}>
-          ← Nhập tài khoản khác
-        </button>
-      </div>
-    </div>
-  );
-
-  /* ===== PACKAGES SCREEN ===== */
-  const PackagesScreen = () => (
-    <div className="inner-page">
-      <div className="inner-page-header">
-        <button className="back-button" onClick={goBack}>←</button>
-        <div>
-          <span className="page-kicker">NXX STORE</span>
-          <h1>Chọn gói Robux</h1>
-          <p>{account ? `Nạp cho @${account.username}` : "Chọn gói bạn muốn mua"}</p>
-        </div>
-      </div>
-      {account && (
-        <div className="mini-account">
-          <div className="mini-avatar">👤</div>
-          <div className="mini-account-info">
-            <span>ĐANG NẠP CHO</span>
-            <strong>@{account.username}</strong>
-          </div>
-          <div className="mini-account-status">✓</div>
-        </div>
-      )}
-      <div className="packages-grid">
-        {ROBUX_PACKAGES.map((product) => {
-          const selected = selectedPackage?.id === product.id;
-          return (
-            <div key={product.id} className={`package-card ${selected ? "selected" : ""}`} onClick={() => setSelectedPackage(product)}>
-              {product.popular && <div className="package-popular">🔥 BÁN CHẠY</div>}
-              {selected && <div className="package-selected">✓</div>}
-              <div className="package-image"><RobuxIcon size={54} /></div>
-              <div className="package-info">
-                <h3>{product.robux} Robux</h3>
-                {product.bonus && <span className="package-bonus">+{product.bonus} BONUS</span>}
-                <div className="package-footer">
-                  <strong>{formatMoney(product.price)}</strong>
-                  <button className={selected ? "package-add selected" : "package-add"} onClick={(e) => { e.stopPropagation(); setSelectedPackage(product); }}>
-                    {selected ? "✓" : "+"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {selectedPackage && (
-        <div className="selected-package-box">
-          <div className="selected-package-left">
-            <div className="selected-package-icon"><RobuxIcon size={38} /></div>
-            <div>
-              <span>GÓI ĐÃ CHỌN</span>
-              <strong>{selectedPackage.robux} Robux</strong>
-            </div>
-          </div>
-          <div className="selected-package-price">
-            <span>Tổng</span>
-            <strong>{formatMoney(selectedPackage.price)}</strong>
-          </div>
-        </div>
-      )}
-      <button className="primary-button full" disabled={!selectedPackage} onClick={continueToCheckout}>
-        Tiếp tục thanh toán →
-      </button>
-    </div>
-  );
-
-  /* ===== CHECKOUT SCREEN ===== */
-  const CheckoutScreen = () => {
-    if (!selectedPackage) {
-      return (
-        <div className="inner-page">
-          <div className="inner-page-header">
-            <button className="back-button" onClick={goBack}>←</button>
-            <div>
-              <span className="page-kicker">NXX STORE</span>
-              <h1>Thanh toán</h1>
-              <p>Chưa có sản phẩm được chọn</p>
-            </div>
-          </div>
-          <div className="empty-state">
-            <div className="empty-state-icon">🛒</div>
-            <h2>Chưa chọn gói Robux</h2>
-            <p>Hãy chọn một gói Robux trước khi thanh toán.</p>
-            <button className="primary-button" onClick={() => setScreen("packages")}>Chọn gói Robux →</button>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="inner-page">
-        <div className="inner-page-header">
-          <button className="back-button" onClick={goBack}>←</button>
-          <div>
-            <span className="page-kicker">NXX STORE</span>
-            <h1>Thanh toán</h1>
-            <p>Kiểm tra đơn hàng trước khi thanh toán</p>
-          </div>
-        </div>
-        <div className="order-summary">
-          <div className="order-product">
-            <div className="order-product-image"><RobuxIcon size={48} /></div>
-            <div className="order-product-info">
-              <span>Gói Robux</span>
-              <strong>{selectedPackage.robux} Robux</strong>
-              {selectedPackage.bonus && <small>+{selectedPackage.bonus} Robux bonus</small>}
-            </div>
-            <div className="order-product-price"><strong>{formatMoney(selectedPackage.price)}</strong></div>
-          </div>
-          <div className="summary-divider"></div>
-          <div className="summary-row"><span>👤 Tài khoản</span><strong>@{account?.username || username}</strong></div>
-          <div className="summary-row"><span>🆔 User ID</span><strong>{account?.userId || "123456789"}</strong></div>
-          <div className="summary-row"><span>⚡ Phí giao dịch</span><strong className="free-text">Miễn phí</strong></div>
-          <div className="summary-divider"></div>
-          <div className="summary-total"><span>Tổng thanh toán</span><strong>{formatMoney(selectedPackage.price)}</strong></div>
-        </div>
-        <div className="payment-methods">
+        {/* Benefits */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, padding: '0 16px' }}>
           {[
-            { id: 'vietqr', label: 'VietQR', icon: 'QR' },
-            { id: 'momo', label: 'MoMo', icon: 'M' },
-            { id: 'zalopay', label: 'ZaloPay', icon: 'Z' },
-          ].map((method) => (
-            <button key={method.id} className={`payment-method ${paymentMethod === method.id ? "active" : ""}`} onClick={() => setPaymentMethod(method.id)}>
-              <div className="payment-logo">{method.icon}</div>
-              <div className="payment-info"><strong>{method.label}</strong><span>Thanh toán qua {method.label}</span></div>
-              <div className="radio">{paymentMethod === method.id && <div></div>}</div>
-            </button>
+            { icon: '⚡', label: 'Tự động', desc: 'Xử lý nhanh' },
+            { icon: '🛡️', label: 'An toàn', desc: 'Bảo mật' },
+            { icon: '💬', label: 'Hỗ trợ', desc: '24/7' },
+          ].map(b => (
+            <div key={b.label} style={{ padding: 14, borderRadius: 16, background: 'white', border: '1px solid #e9edf5', textAlign: 'center' }}>
+              <div style={{ fontSize: 24 }}>{b.icon}</div>
+              <strong style={{ display: 'block', fontSize: 13, marginTop: 4 }}>{b.label}</strong>
+              <span style={{ fontSize: 11, color: '#7b8495' }}>{b.desc}</span>
+            </div>
           ))}
         </div>
-        <div className="checkout-bottom">
-          <div className="checkout-total"><span>Tổng thanh toán</span><strong>{formatMoney(selectedPackage.price)}</strong></div>
-          <button className="primary-button full" onClick={createOrder}>Thanh toán ngay →</button>
+
+        {/* Products */}
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 20, margin: 0 }}>🔥 Sản phẩm nổi bật</h2>
+            <button onClick={() => setScreen("packages")} style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Xem tất cả →</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+            {ROBUX_PACKAGES.slice(0, 4).map(pkg => (
+              <div key={pkg.id} style={{ padding: 16, borderRadius: 16, background: 'white', border: '1px solid #e9edf5' }}>
+                {pkg.popular && <span style={{ fontSize: 9, fontWeight: 700, color: '#2563eb', background: '#eaf2ff', padding: '2px 8px', borderRadius: 99 }}>🔥 BÁN CHẠY</span>}
+                <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #60a5fa)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 900 }}>R$</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, marginTop: 4 }}>{pkg.robux}</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong>{formatMoney(pkg.price)}</strong>
+                  <button onClick={() => { setSelectedPackage(pkg); setScreen("account"); }} style={{ width: 32, height: 32, borderRadius: '50%', background: '#edf4ff', color: '#2563eb', border: 'none', fontSize: 18, fontWeight: 900, cursor: 'pointer' }}>+</button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <BottomNav />
       </div>
     );
-  };
-// ============================================
-// PHẦN 8: QR, SUCCESS, ORDERS SCREENS & MAIN RENDER
-// ============================================
-
-  /* ===== QR PAYMENT SCREEN ===== */
-  const QRPaymentScreen = () => {
-    if (!currentOrder) {
-      return (
-        <div className="inner-page">
-          <div className="inner-page-header">
-            <button className="back-button" onClick={goBack}>←</button>
-            <div>
-              <span className="page-kicker">NXX STORE</span>
-              <h1>Thanh toán</h1>
-              <p>Không tìm thấy đơn hàng</p>
-            </div>
-          </div>
-          <div className="empty-state">
-            <div className="empty-state-icon">⚠️</div>
-            <h2>Không có đơn hàng</h2>
-            <button className="primary-button" onClick={() => setScreen("packages")}>Chọn gói Robux →</button>
-          </div>
-        </div>
-      );
-    }
+  }
+// src/pages/Store.jsx - PHẦN 4
+  // ===== ACCOUNT SCREEN =====
+  if (screen === "account") {
     return (
-      <div className="inner-page">
-        <div className="inner-page-header">
-          <button className="back-button" onClick={goBack}>←</button>
-          <div>
-            <span className="page-kicker">NXX STORE</span>
-            <h1>Thanh toán</h1>
-            <p>Hoàn tất giao dịch để nhận Robux</p>
+      <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80 }}>
+        <button onClick={goHome} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
+        <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Tài khoản Roblox</h2>
+        <p style={{ color: '#7b8495', fontSize: 14, marginBottom: 20 }}>Nhập tài khoản nhận Robux</p>
+        
+        <div style={{ background: 'white', borderRadius: 20, padding: 20, border: '1px solid #e9edf5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#edf4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>👤</div>
+            <div><span style={{ fontSize: 10, color: '#2563eb', fontWeight: 700 }}>BƯỚC 1</span><h3 style={{ margin: 0 }}>Nhập Username</h3></div>
           </div>
-        </div>
-        <div className="qr-order-header">
-          <div><span className="qr-order-label">MÃ ĐƠN HÀNG</span><strong>#{currentOrder.id}</strong></div>
-          <div className="qr-status waiting">● Đang chờ thanh toán</div>
-        </div>
-        <section className="qr-payment-card">
-          <div className="qr-card-top"><span>THANH TOÁN QUA</span><strong>{paymentMethod === "vietqr" ? "VietQR" : paymentMethod === "momo" ? "MoMo" : "ZaloPay"}</strong></div>
-          <div className="qr-code-wrapper">
-            <div className="qr-code">
-              <div className="qr-corner top-left"></div>
-              <div className="qr-corner top-right"></div>
-              <div className="qr-corner bottom-left"></div>
-              <div className="qr-pattern"></div>
-            </div>
+          <p style={{ fontSize: 13, color: '#6b7280' }}>Nhập chính xác tên tài khoản Roblox mà bạn muốn nhận Robux.</p>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginTop: 12 }}>Username Roblox</label>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#f9fbff', border: '2px solid #e5eaf2', borderRadius: 12, padding: '0 12px', marginTop: 4 }}>
+            <span style={{ color: '#9ca3af' }}>@</span>
+            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Ví dụ: Builderman" style={{ width: '100%', padding: '12px 8px', border: 'none', background: 'transparent', outline: 'none', fontSize: 14 }} />
+            {username && <button onClick={() => setUsername("")} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>✕</button>}
           </div>
-          <p className="qr-scan-text">Mở ứng dụng ngân hàng và quét mã QR</p>
-          <div className="qr-amount"><span>Số tiền cần thanh toán</span><strong>{formatMoney(currentOrder.amount)}</strong></div>
-          <div className="qr-info-list">
-            <div className="qr-info-row"><span>Nội dung chuyển khoản</span><button className="copy-value" onClick={() => { navigator.clipboard?.writeText(currentOrder.id); showToast("Đã sao chép nội dung"); }}>{currentOrder.id} <span>⧉</span></button></div>
-            <div className="qr-info-row"><span>Tài khoản Roblox</span><strong>@{currentOrder.username}</strong></div>
-            <div className="qr-info-row"><span>Gói Robux</span><strong>{currentOrder.product?.robux} Robux</strong></div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+            <span>🔒</span>
+            <p style={{ margin: 0 }}>Chúng tôi chỉ sử dụng Username để xác định tài khoản nhận Robux.</p>
           </div>
-        </section>
-        <div className="payment-countdown">
-          <div className="countdown-icon">⏱</div>
-          <div><span>Mã thanh toán có hiệu lực trong</span><strong>10:00</strong></div>
+          <button onClick={verifyUsername} disabled={checking} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, marginTop: 16, cursor: 'pointer', opacity: checking ? 0.6 : 1 }}>
+            {checking ? '⏳ Đang kiểm tra...' : 'Kiểm tra tài khoản →'}
+          </button>
         </div>
-        <div className="qr-actions">
-          <button className="primary-button full" onClick={completePayment}>Tôi đã thanh toán <span>✓</span></button>
-          <button className="text-button" onClick={() => setScreen("checkout")}>← Quay lại</button>
+        
+        <div style={{ marginTop: 12, padding: 16, borderRadius: 16, background: 'white', border: '1px solid #e9edf5', display: 'flex', gap: 12 }}>
+          <div style={{ fontSize: 24 }}>🛡️</div>
+          <div><strong style={{ fontSize: 13 }}>Thông tin của bạn được bảo mật</strong><p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>NXX STORE không yêu cầu mật khẩu Roblox của bạn.</p></div>
         </div>
-        <div className="payment-warning">⚠️ Vui lòng chuyển đúng số tiền và nội dung chuyển khoản để hệ thống tự động xác nhận.</div>
+        
+        <BottomNav />
       </div>
     );
-  };
+  }
 
-  /* ===== SUCCESS SCREEN ===== */
-  const SuccessScreen = () => {
-    if (!currentOrder) {
-      return (
-        <div className="inner-page">
-          <div className="inner-page-header">
-            <button className="back-button" onClick={goBack}>←</button>
-            <div>
-              <span className="page-kicker">NXX STORE</span>
-              <h1>Hoàn tất</h1>
-              <p>Không tìm thấy đơn hàng</p>
-            </div>
-          </div>
-          <div className="empty-state"><div className="empty-state-icon">⚠️</div><h2>Không có đơn hàng</h2><button className="primary-button" onClick={() => setScreen("home")}>Về trang chủ</button></div>
-        </div>
-      );
-    }
+  // ===== PACKAGES SCREEN =====
+  if (screen === "packages") {
     return (
-      <div className="inner-page">
-        <div className="inner-page-header">
-          <button className="back-button" onClick={goBack}>←</button>
-          <div>
-            <span className="page-kicker">NXX STORE</span>
-            <h1>Thanh toán thành công</h1>
-            <p>Đơn hàng của bạn đã được ghi nhận</p>
-          </div>
-        </div>
-        <div className="success-page">
-          <div className="success-icon">✓</div>
-          <h1>Thanh toán thành công! 🎉</h1>
-          <p className="success-description">Đơn hàng của bạn đã được xác nhận. Robux sẽ được xử lý cho tài khoản Roblox của bạn.</p>
-          <div className="success-order-card">
-            <div className="success-order-header"><span>MÃ ĐƠN HÀNG</span><strong>#{currentOrder.id}</strong></div>
-            <div className="summary-divider"></div>
-            <div className="success-account"><div className="success-avatar">👤</div><div><span>Tài khoản Roblox</span><strong>@{currentOrder.username}</strong></div></div>
-            <div className="success-detail-list">
-              <div className="summary-row"><span>Gói Robux</span><strong>{currentOrder.product?.robux} Robux</strong></div>
-              <div className="summary-row"><span>Phương thức</span><strong>{currentOrder.payment === "vietqr" ? "VietQR" : currentOrder.payment === "momo" ? "MoMo" : "ZaloPay"}</strong></div>
-              <div className="summary-row"><span>Trạng thái</span><strong className="success-text">✓ Đã thanh toán</strong></div>
-              <div className="summary-row"><span>Tổng tiền</span><strong>{formatMoney(currentOrder.amount)}</strong></div>
-            </div>
-            <div className="summary-divider"></div>
-            <div className="success-total"><span>Tổng thanh toán</span><strong>{formatMoney(currentOrder.amount)}</strong></div>
-          </div>
-          <div className="success-actions">
-            <button className="primary-button full" onClick={() => setScreen("orders")}>Xem đơn hàng →</button>
-            <button className="secondary-button full" onClick={() => setScreen("home")}>Về trang chủ</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  /* ===== ORDER HISTORY ===== */
-  const OrdersScreen = () => (
-    <div className="inner-page">
-      <div className="inner-page-header">
-        <button className="back-button" onClick={goBack}>←</button>
-        <div>
-          <span className="page-kicker">NXX STORE</span>
-          <h1>Đơn hàng</h1>
-          <p>Theo dõi các giao dịch của bạn</p>
-        </div>
-      </div>
-      <div className="orders-page">
-        <div className="orders-header"><div><span>LỊCH SỬ</span><h2>Đơn hàng của bạn</h2></div><div className="orders-count">{currentOrder ? "1 đơn" : "0 đơn"}</div></div>
-        {currentOrder ? (
-          <div className="order-history-card">
-            <div className="order-history-top">
-              <div className="order-history-icon"><RobuxIcon size={42} /></div>
-              <div className="order-history-info"><strong>{currentOrder.product?.robux} Robux</strong><span>@{currentOrder.username}</span></div>
-              <div className="order-history-status">✓ Thành công</div>
-            </div>
-            <div className="summary-divider"></div>
-            <div className="order-history-details">
-              <div><span>Mã đơn</span><strong>#{currentOrder.id}</strong></div>
-              <div><span>Số tiền</span><strong>{formatMoney(currentOrder.amount)}</strong></div>
-              <div><span>Thanh toán</span><strong>{currentOrder.payment === "vietqr" ? "VietQR" : currentOrder.payment === "momo" ? "MoMo" : "ZaloPay"}</strong></div>
-            </div>
-            <button className="order-detail-button" onClick={() => setScreen("success")}>Xem chi tiết →</button>
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-state-icon">📦</div>
-            <h2>Chưa có đơn hàng</h2>
-            <p>Các đơn hàng sau khi thanh toán sẽ xuất hiện ở đây.</p>
-            <button className="primary-button" onClick={() => setScreen("packages")}>Mua Robux →</button>
+      <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80 }}>
+        <button onClick={() => account ? setScreen("packages") : setScreen("home")} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
+        <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Chọn gói Robux</h2>
+        <p style={{ color: '#7b8495', fontSize: 14, marginBottom: 16 }}>{account ? `Nạp cho @${account.username}` : "Chọn gói bạn muốn mua"}</p>
+        
+        {account && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, background: '#edf4ff', marginBottom: 12 }}>
+            <span style={{ fontSize: 20 }}>👤</span>
+            <div><span style={{ fontSize: 10, color: '#6b7280' }}>ĐANG NẠP CHO</span><strong style={{ display: 'block', fontSize: 14 }}>@{account.username}</strong></div>
+            <span style={{ marginLeft: 'auto', color: '#16a34a', fontWeight: 700 }}>✓</span>
           </div>
         )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          {ROBUX_PACKAGES.map(pkg => {
+            const selected = selectedPackage?.id === pkg.id;
+            return (
+              <div key={pkg.id} onClick={() => setSelectedPackage(pkg)} style={{ padding: 16, borderRadius: 16, background: 'white', border: selected ? '2px solid #2563eb' : '1px solid #e9edf5', cursor: 'pointer', position: 'relative' }}>
+                {pkg.popular && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#2563eb', background: '#eaf2ff', padding: '2px 8px', borderRadius: 99 }}>🔥 BÁN CHẠY</span>}
+                {selected && <span style={{ position: 'absolute', top: 8, left: 8, width: 24, height: 24, borderRadius: '50%', background: '#2563eb', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✓</span>}
+                <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                  <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #60a5fa)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 900 }}>R$</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, marginTop: 4 }}>{pkg.robux}</div>
+                  {pkg.bonus && <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 700 }}>+{pkg.bonus} BONUS</span>}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <strong>{formatMoney(pkg.price)}</strong>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: selected ? '#2563eb' : '#edf4ff', color: selected ? 'white' : '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900 }}>{selected ? '✓' : '+'}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {selectedPackage && (
+          <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: '#edf4ff', border: '1px solid #bfdbfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div><span style={{ fontSize: 10, color: '#6b7280' }}>GÓI ĐÃ CHỌN</span><strong style={{ display: 'block', fontSize: 16 }}>{selectedPackage.robux} Robux</strong></div>
+            <div><span style={{ fontSize: 10, color: '#6b7280' }}>Tổng</span><strong style={{ display: 'block', fontSize: 16, color: '#2563eb' }}>{formatMoney(selectedPackage.price)}</strong></div>
+          </div>
+        )}
+
+        <button onClick={() => setScreen("checkout")} disabled={!selectedPackage} style={{ width: '100%', padding: '14px', borderRadius: 12, background: selectedPackage ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '#d1d5db', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, marginTop: 16, cursor: selectedPackage ? 'pointer' : 'not-allowed' }}>
+          Tiếp tục thanh toán →
+        </button>
+        
+        <BottomNav />
       </div>
-    </div>
-  );
-
-  /* ===== MAIN RENDER ===== */
-  const renderScreen = () => {
-    switch (screen) {
-      case "home": return <HomeScreen />;
-      case "account": return <AccountScreen />;
-      case "verify": return <VerifyScreen />;
-      case "packages": return <PackagesScreen />;
-      case "checkout": return <CheckoutScreen />;
-      case "qr": return <QRPaymentScreen />;
-      case "success": return <SuccessScreen />;
-      case "orders": return <OrdersScreen />;
-      default: return <HomeScreen />;
+    );
+  }
+// src/pages/Store.jsx - PHẦN 5
+  // ===== CHECKOUT SCREEN =====
+  if (screen === "checkout") {
+    if (!selectedPackage) {
+      return (
+        <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80 }}>
+          <button onClick={goHome} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
+            <h3>Chưa chọn gói Robux</h3>
+            <button onClick={() => setScreen("packages")} style={{ padding: '12px 24px', borderRadius: 12, background: '#2563eb', color: 'white', border: 'none', fontWeight: 700, marginTop: 12, cursor: 'pointer' }}>Chọn gói Robux →</button>
+          </div>
+          <BottomNav />
+        </div>
+      );
     }
-  };
 
-  return (
-    <div className="store-app">
-      {renderScreen()}
-      <CartDrawer />
-      <Toast />
-      <BottomNavigation />
-    </div>
-  );
+    return (
+      <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80 }}>
+        <button onClick={() => setScreen("packages")} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
+        <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Thanh toán</h2>
+        <p style={{ color: '#7b8495', fontSize: 14, marginBottom: 16 }}>Kiểm tra đơn hàng trước khi thanh toán</p>
+
+        <div style={{ background: 'white', borderRadius: 20, padding: 16, border: '1px solid #e9edf5' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', paddingBottom: 12, borderBottom: '1px dashed #dce2eb' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #60a5fa)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>R$</div>
+            <div><span style={{ fontSize: 10, color: '#6b7280' }}>Gói Robux</span><strong style={{ display: 'block', fontSize: 16 }}>{selectedPackage.robux} Robux</strong></div>
+            <div style={{ marginLeft: 'auto' }}><strong>{formatMoney(selectedPackage.price)}</strong></div>
+          </div>
+          <div style={{ padding: '12px 0', borderBottom: '1px dashed #dce2eb' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span>👤 Tài khoản</span><strong>@{account?.username || username}</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 4 }}><span>⚡ Phí giao dịch</span><strong style={{ color: '#16a34a' }}>Miễn phí</strong></div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, fontSize: 16, fontWeight: 700 }}>
+            <span>Tổng thanh toán</span>
+            <span style={{ color: '#2563eb' }}>{formatMoney(selectedPackage.price)}</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 8 }}>Phương thức thanh toán</p>
+          {[
+            { id: 'coin', label: 'Xu', icon: '🪙', desc: `Dùng ${userCoins.toLocaleString()} Xu` },
+            { id: 'bank', label: 'Ngân hàng', icon: '🏦', desc: 'Chuyển khoản ngân hàng' },
+          ].map(method => (
+            <div key={method.id} onClick={() => setPaymentMethod(method.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, border: paymentMethod === method.id ? '2px solid #2563eb' : '1px solid #e9edf5', background: paymentMethod === method.id ? '#f3f7ff' : 'white', marginBottom: 8, cursor: 'pointer' }}>
+              <span style={{ fontSize: 24 }}>{method.icon}</span>
+              <div><strong style={{ display: 'block', fontSize: 13 }}>{method.label}</strong><span style={{ fontSize: 11, color: '#6b7280' }}>{method.desc}</span></div>
+              <div style={{ marginLeft: 'auto', width: 20, height: 20, borderRadius: '50%', border: paymentMethod === method.id ? '2px solid #2563eb' : '2px solid #d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {paymentMethod === method.id && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563eb' }} />}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={handlePayment} disabled={processing} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, marginTop: 16, cursor: 'pointer', opacity: processing ? 0.6 : 1 }}>
+          {processing ? '⏳ Đang xử lý...' : `Thanh toán ${formatMoney(selectedPackage.price)}`}
+        </button>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ===== SUCCESS SCREEN =====
+  if (screen === "success") {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: 'white', borderRadius: 24, padding: 32, textAlign: 'center', maxWidth: 400, width: '100%', border: '1px solid #e9edf5' }}>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontSize: 36 }}>✓</div>
+          <h2 style={{ margin: '16px 0 8px' }}>Thanh toán thành công! 🎉</h2>
+          <p style={{ color: '#6b7280', fontSize: 14 }}>+{selectedPackage?.robux || 0} Robux sẽ được nạp vào tài khoản của bạn.</p>
+          <div style={{ background: '#f7f9fc', borderRadius: 12, padding: 12, textAlign: 'left', margin: '16px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}><span>👤 Tài khoản</span><strong>@{account?.username}</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}><span>📦 Gói</span><strong>{selectedPackage?.robux} Robux</strong></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}><span>💳 Thanh toán</span><strong>{paymentMethod === 'coin' ? 'Xu' : 'Ngân hàng'}</strong></div>
+          </div>
+          <button onClick={goHome} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            Về trang chủ
+          </button>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // ===== BANK INFO SCREEN =====
+  if (screen === "bank_info") {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80 }}>
+        <button onClick={() => setScreen("checkout")} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
+        <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Chuyển khoản ngân hàng</h2>
+        <p style={{ color: '#7b8495', fontSize: 14, marginBottom: 16 }}>Hoàn tất thanh toán qua ngân hàng</p>
+        
+        <div style={{ background: 'white', borderRadius: 20, padding: 20, border: '1px solid #e9edf5' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div style={{ background: '#f7f9fc', padding: 12, borderRadius: 12, textAlign: 'center' }}>
+              <span style={{ fontSize: 10, color: '#6b7280' }}>Ngân hàng</span>
+              <strong style={{ display: 'block', fontSize: 16 }}>Vietcombank</strong>
+            </div>
+            <div style={{ background: '#f7f9fc', padding: 12, borderRadius: 12, textAlign: 'center' }}>
+              <span style={{ fontSize: 10, color: '#6b7280' }}>Số tiền</span>
+              <strong style={{ display: 'block', fontSize: 16, color: '#2563eb' }}>{formatMoney(selectedPackage?.price)}</strong>
+            </div>
+          </div>
+          <div style={{ background: '#f7f9fc', padding: 12, borderRadius: 12, textAlign: 'center', marginBottom: 16 }}>
+            <span style={{ fontSize: 10, color: '#6b7280' }}>Nội dung chuyển khoản</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <strong style={{ fontSize: 16 }}>NXX{Math.floor(100000 + Math.random() * 900000)}</strong>
+              <button onClick={() => { navigator.clipboard?.writeText(`NXX${Math.floor(100000 + Math.random() * 900000)}`); showToast("Đã sao chép!"); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>📋</button>
+            </div>
+          </div>
+          <div style={{ background: '#fef3c7', padding: 12, borderRadius: 12, fontSize: 12, color: '#92400e', display: 'flex', gap: 8 }}>
+            <span>⚠️</span>
+            <p style={{ margin: 0 }}>Sau khi chuyển khoản, đơn hàng sẽ được xử lý trong 15-30 phút. Vui lòng giữ lại biên lai.</p>
+          </div>
+        </div>
+        
+        <button onClick={goHome} style={{ width: '100%', padding: '14px', borderRadius: 12, background: '#2563eb', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, marginTop: 16, cursor: 'pointer' }}>
+          Về trang chủ
+        </button>
+        
+        <BottomNav />
+      </div>
+    );
+  }
+
+  return null;
 }
