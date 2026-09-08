@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, Send, Paperclip, Image, X, Loader2, 
-  MessageCircle, Clock, CheckCheck, User, ChevronRight,
-  Plus, Search, Filter, Phone, Mail, AlertCircle
+  ArrowLeft, Send, Paperclip, X, Loader2, 
+  MessageCircle, CheckCheck, ChevronRight,
+  Search
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
@@ -369,62 +369,8 @@ export default function Support() {
             </div>
           </div>
         ) : (
-          // === LIST TICKETS ===
-          <>
-            {/* Stats */}
-            <div className="bg-white rounded-xl p-3 border border-gray-100 mb-3">
-              <p className="text-[10px] font-medium text-gray-400">Ticket hỗ trợ</p>
-              <div className="flex gap-3 mt-1.5">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">{stats.total}</p>
-                  <p className="text-[8px] text-gray-400">Tất cả</p>
-                </div>
-                <div className="w-px bg-gray-200" />
-                <div className="text-center">
-                  <p className="text-lg font-bold text-emerald-500">{stats.open}</p>
-                  <p className="text-[8px] text-gray-400">Đang mở</p>
-                </div>
-                <div className="w-px bg-gray-200" />
-                <div className="text-center">
-                  <p className="text-lg font-bold text-amber-500">{stats.pending}</p>
-                  <p className="text-[8px] text-gray-400">Đang chờ</p>
-                </div>
-                <div className="w-px bg-gray-200" />
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-400">{stats.closed}</p>
-                  <p className="text-[8px] text-gray-400">Đã đóng</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowNewTicket(true)}
-                className="mt-2 w-full py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
-              >
-                + Tạo ticket
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-1 mb-3 overflow-x-auto">
-              {[
-                { key: 'all', label: 'Tất cả', count: stats.total },
-                { key: 'open', label: 'Đang mở', count: stats.open },
-                { key: 'pending', label: 'Đang chờ', count: stats.pending },
-                { key: 'closed', label: 'Đã đóng', count: stats.closed },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
-                    activeTab === tab.key
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  {tab.label} {tab.count > 0 && `(${tab.count})`}
-                </button>
-              ))}
-            </div>
-          </>
+          // === LIST TICKETS === (TIẾP TỤC PHẦN 2)
+          <></>
         )}
       </main>
 
@@ -432,132 +378,181 @@ export default function Support() {
     </div>
   );
 }
-// src/pages/Support.jsx - PHẦN 2 (TIẾP THEO)
+// src/pages/Support.jsx - PHẦN 2 (THAY THẾ PHẦN <></> Ở TRÊN)
 
-            {/* Tickets list */}
-            <div className="space-y-2">
-              {filteredTickets.length === 0 ? (
-                <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
-                  <MessageCircle size={32} className="mx-auto text-gray-300" />
-                  <p className="mt-2 text-sm text-gray-400">Chưa có ticket hỗ trợ</p>
-                  <p className="text-[10px] text-gray-300">Tạo ticket mới để được hỗ trợ</p>
-                </div>
-              ) : (
-                filteredTickets.map((ticket) => (
-                  <button
-                    key={ticket.id}
-                    onClick={() => openTicket(ticket)}
-                    className="w-full bg-white rounded-xl p-3 border border-gray-100 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-900 truncate">{ticket.title}</span>
-                          <span className={`text-[8px] font-medium px-1.5 py-0.5 rounded-full ${getStatusColor(ticket.status)} flex-shrink-0`}>
-                            {getStatusLabel(ticket.status)}
-                          </span>
-                        </div>
-                        {ticket.profiles && (
-                          <p className="text-[10px] text-gray-400 mt-0.5">
-                            {ticket.profiles.username || ticket.profiles.email}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[9px] text-gray-400">{ticket.category}</span>
-                          <span className="w-1 h-1 rounded-full bg-gray-300" />
-                          <span className="text-[9px] text-gray-400">
-                            {new Date(ticket.created_at).toLocaleString('vi-VN')}
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight size={16} className="text-gray-400 flex-shrink-0 mt-1" />
-                    </div>
-                    {ticket.last_message && (
-                      <p className="mt-1 text-[10px] text-gray-500 truncate">{ticket.last_message}</p>
-                    )}
-                  </button>
-                ))
+// === LIST TICKETS ===
+<>
+  {/* Stats */}
+  <div className="bg-white rounded-xl p-3 border border-gray-100 mb-3">
+    <p className="text-[10px] font-medium text-gray-400">Ticket hỗ trợ</p>
+    <div className="flex gap-3 mt-1.5">
+      <div className="text-center">
+        <p className="text-lg font-bold text-gray-900">{stats.total}</p>
+        <p className="text-[8px] text-gray-400">Tất cả</p>
+      </div>
+      <div className="w-px bg-gray-200" />
+      <div className="text-center">
+        <p className="text-lg font-bold text-emerald-500">{stats.open}</p>
+        <p className="text-[8px] text-gray-400">Đang mở</p>
+      </div>
+      <div className="w-px bg-gray-200" />
+      <div className="text-center">
+        <p className="text-lg font-bold text-amber-500">{stats.pending}</p>
+        <p className="text-[8px] text-gray-400">Đang chờ</p>
+      </div>
+      <div className="w-px bg-gray-200" />
+      <div className="text-center">
+        <p className="text-lg font-bold text-gray-400">{stats.closed}</p>
+        <p className="text-[8px] text-gray-400">Đã đóng</p>
+      </div>
+    </div>
+    <button
+      onClick={() => setShowNewTicket(true)}
+      className="mt-2 w-full py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
+    >
+      + Tạo ticket
+    </button>
+  </div>
+
+  {/* Tabs */}
+  <div className="flex gap-1 mb-3 overflow-x-auto">
+    {[
+      { key: 'all', label: 'Tất cả', count: stats.total },
+      { key: 'open', label: 'Đang mở', count: stats.open },
+      { key: 'pending', label: 'Đang chờ', count: stats.pending },
+      { key: 'closed', label: 'Đã đóng', count: stats.closed },
+    ].map(tab => (
+      <button
+        key={tab.key}
+        onClick={() => setActiveTab(tab.key)}
+        className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
+          activeTab === tab.key
+            ? 'bg-blue-500 text-white'
+            : 'bg-white text-gray-500 hover:bg-gray-50'
+        }`}
+      >
+        {tab.label} {tab.count > 0 && `(${tab.count})`}
+      </button>
+    ))}
+  </div>
+
+  {/* Tickets list */}
+  <div className="space-y-2">
+    {filteredTickets.length === 0 ? (
+      <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+        <MessageCircle size={32} className="mx-auto text-gray-300" />
+        <p className="mt-2 text-sm text-gray-400">Chưa có ticket hỗ trợ</p>
+        <p className="text-[10px] text-gray-300">Tạo ticket mới để được hỗ trợ</p>
+      </div>
+    ) : (
+      filteredTickets.map((ticket) => (
+        <button
+          key={ticket.id}
+          onClick={() => openTicket(ticket)}
+          className="w-full bg-white rounded-xl p-3 border border-gray-100 text-left hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-900 truncate">{ticket.title}</span>
+                <span className={`text-[8px] font-medium px-1.5 py-0.5 rounded-full ${getStatusColor(ticket.status)} flex-shrink-0`}>
+                  {getStatusLabel(ticket.status)}
+                </span>
+              </div>
+              {ticket.profiles && (
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {ticket.profiles.username || ticket.profiles.email}
+                </p>
               )}
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[9px] text-gray-400">{ticket.category}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-300" />
+                <span className="text-[9px] text-gray-400">
+                  {new Date(ticket.created_at).toLocaleString('vi-VN')}
+                </span>
+              </div>
             </div>
-          </>
-        )}
-      </main>
+            <ChevronRight size={16} className="text-gray-400 flex-shrink-0 mt-1" />
+          </div>
+          {ticket.last_message && (
+            <p className="mt-1 text-[10px] text-gray-500 truncate">{ticket.last_message}</p>
+          )}
+        </button>
+      ))
+    )}
+  </div>
 
-      {/* New Ticket Modal */}
-      {showNewTicket && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-          <div className="w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-5 animate-in slide-in-from-bottom duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-900">Ticket mới</h2>
-              <button onClick={() => setShowNewTicket(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
+  {/* New Ticket Modal */}
+  {showNewTicket && (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-5 animate-in slide-in-from-bottom duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-gray-900">Ticket mới</h2>
+          <button onClick={() => setShowNewTicket(false)} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
 
-            <div className="space-y-3">
-              <div>
-                <p className="text-[10px] font-medium text-gray-600 mb-1">Tiêu đề *</p>
-                <input
-                  type="text"
-                  value={newTicketData.title}
-                  onChange={(e) => setNewTicketData({ ...newTicketData, title: e.target.value })}
-                  placeholder="Nhập tiêu đề"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                />
-              </div>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[10px] font-medium text-gray-600 mb-1">Tiêu đề *</p>
+            <input
+              type="text"
+              value={newTicketData.title}
+              onChange={(e) => setNewTicketData({ ...newTicketData, title: e.target.value })}
+              placeholder="Nhập tiêu đề"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+            />
+          </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-[10px] font-medium text-gray-600 mb-1">Danh mục</p>
-                  <select
-                    value={newTicketData.category}
-                    onChange={(e) => setNewTicketData({ ...newTicketData, category: e.target.value })}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                  >
-                    <option>Khác</option>
-                    <option>Tài khoản</option>
-                    <option>Thanh toán</option>
-                    <option>Sản phẩm</option>
-                    <option>Kỹ thuật</option>
-                  </select>
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium text-gray-600 mb-1">Ưu tiên</p>
-                  <select
-                    value={newTicketData.priority}
-                    onChange={(e) => setNewTicketData({ ...newTicketData, priority: e.target.value })}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                  >
-                    <option>Bình thường</option>
-                    <option>Cao</option>
-                    <option>Khẩn cấp</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[10px] font-medium text-gray-600 mb-1">Mô tả vấn đề *</p>
-                <textarea
-                  value={newTicketData.description}
-                  onChange={(e) => setNewTicketData({ ...newTicketData, description: e.target.value })}
-                  placeholder="Mô tả chi tiết vấn đề..."
-                  rows={4}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none"
-                />
-              </div>
-
-              <button
-                onClick={createTicket}
-                className="w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors"
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-medium text-gray-600 mb-1">Danh mục</p>
+              <select
+                value={newTicketData.category}
+                onChange={(e) => setNewTicketData({ ...newTicketData, category: e.target.value })}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
               >
-                Gửi
-              </button>
+                <option>Khác</option>
+                <option>Tài khoản</option>
+                <option>Thanh toán</option>
+                <option>Sản phẩm</option>
+                <option>Kỹ thuật</option>
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium text-gray-600 mb-1">Ưu tiên</p>
+              <select
+                value={newTicketData.priority}
+                onChange={(e) => setNewTicketData({ ...newTicketData, priority: e.target.value })}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+              >
+                <option>Bình thường</option>
+                <option>Cao</option>
+                <option>Khẩn cấp</option>
+              </select>
             </div>
           </div>
-        </div>
-      )}
 
-      <BottomNav />
+          <div>
+            <p className="text-[10px] font-medium text-gray-600 mb-1">Mô tả vấn đề *</p>
+            <textarea
+              value={newTicketData.description}
+              onChange={(e) => setNewTicketData({ ...newTicketData, description: e.target.value })}
+              placeholder="Mô tả chi tiết vấn đề..."
+              rows={4}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none"
+            />
+          </div>
+
+          <button
+            onClick={createTicket}
+            className="w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors"
+          >
+            Gửi
+          </button>
+        </div>
+      </div>
     </div>
-  );
-}
+  )}
+</>
