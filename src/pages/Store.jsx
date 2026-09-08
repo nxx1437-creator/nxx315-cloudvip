@@ -1,13 +1,7 @@
-// ============================================
-// PHẦN 1: IMPORTS, CONSTANTS, UTILITIES
-// ============================================
-
 import React, { useState } from "react";
 import "./Store.css";
 
-/* =========================================================
-   DANH SÁCH GÓI ROBUX
-   ========================================================= */
+// DANH SÁCH GÓI ROBUX
 
 const ROBUX_PACKAGES = [
   { id: "robux-40", robux: 40, price: 14000, image: "/images/robux-40.jpg", popular: false },
