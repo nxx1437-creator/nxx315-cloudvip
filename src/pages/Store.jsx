@@ -16,7 +16,7 @@ import BottomNav from "../components/BottomNav.jsx";
 export default function Store() {
   const navigate = useNavigate();
   const { session } = useSession();
-  const { profile, setProfile } = useProfile();
+  const { profile } = useProfile();
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -32,8 +32,6 @@ export default function Store() {
   const [showQR, setShowQR] = useState(false);
   const [showUserIdGuide, setShowUserIdGuide] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900);
-
-  const userCoins = profile?.coins || 0;
 
   useEffect(() => {
     fetchPackages();
@@ -114,10 +112,6 @@ export default function Store() {
   const formatPrice = (price) => {
     if (!price) return "0₫";
     return Number(price).toLocaleString('vi-VN') + "₫";
-  };
-
-  const formatCoin = (coin) => {
-    return Number(coin).toLocaleString('vi-VN');
   };
 
   const getPackageIcon = (robux) => {
@@ -293,57 +287,16 @@ export default function Store() {
         )}
 
         {/* Step 3: Thanh toán - TIẾP TỤC PHẦN 2 */}
-      </main>
 
-      {/* User ID Guide Modal */}
-      {showUserIdGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm bg-white rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base font-bold text-gray-900">Hướng dẫn tìm ID</h3>
-              <button onClick={() => setShowUserIdGuide(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="space-y-3 text-sm text-gray-600">
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">1</span>
-                <p>Mở ứng dụng Roblox</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">2</span>
-                <p>Vào trang cá nhân của bạn</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">3</span>
-                <p>Nhấn vào avatar của bạn</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">4</span>
-                <p>ID sẽ hiển thị trong URL</p>
-              </div>
-              <div className="bg-gray-100 p-3 rounded-lg text-xs">
-                📌 Ví dụ: roblox.com/users/<span className="font-bold text-blue-500">123456789</span>/profile
-              </div>
-            </div>
-            <button
-              onClick={() => setShowUserIdGuide(false)}
-              className="mt-4 w-full py-2.5 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors"
-            >
-              Đã hiểu
-            </button>
-          </div>
-        </div>
-      )}
+      </main>
 
       <BottomNav />
     </div>
   );
 }
 // src/pages/Store.jsx - PHẦN 2
-// THAY THẾ PHẦN <></> Ở TRÊN BẰNG CODE NÀY
+// THAY THẾ PHẦN { /* Step 3: Thanh toán - TIẾP TỤC PHẦN 2 */ } BẰNG CODE NÀY
 
-{/* Step 3: Thanh toán */}
 {step === 3 && !orderSuccess && !showQR && (
   <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
     <div className="flex items-center justify-between mb-4">
@@ -415,7 +368,6 @@ export default function Store() {
   </div>
 )}
 
-{/* QR Payment */}
 {showQR && !orderSuccess && (
   <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-center">
     <h2 className="text-lg font-bold text-gray-900">Quét mã QR để thanh toán</h2>
@@ -449,7 +401,6 @@ export default function Store() {
   </div>
 )}
 
-{/* Success */}
 {orderSuccess && (
   <div className="animate-in fade-in duration-500">
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
@@ -504,6 +455,45 @@ export default function Store() {
           Về trang chủ
         </button>
       </div>
+    </div>
+  </div>
+)}
+{showUserIdGuide && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="w-full max-w-sm bg-white rounded-2xl p-5">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-base font-bold text-gray-900">Hướng dẫn tìm ID</h3>
+        <button onClick={() => setShowUserIdGuide(false)} className="text-gray-400 hover:text-gray-600">
+          <X size={18} />
+        </button>
+      </div>
+      <div className="space-y-3 text-sm text-gray-600">
+        <div className="flex items-center gap-3">
+          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">1</span>
+          <p>Mở ứng dụng Roblox</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">2</span>
+          <p>Vào trang cá nhân của bạn</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">3</span>
+          <p>Nhấn vào avatar của bạn</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-500 text-xs font-bold flex items-center justify-center">4</span>
+          <p>ID sẽ hiển thị trong URL</p>
+        </div>
+        <div className="bg-gray-100 p-3 rounded-lg text-xs">
+          📌 Ví dụ: roblox.com/users/<span className="font-bold text-blue-500">123456789</span>/profile
+        </div>
+      </div>
+      <button
+        onClick={() => setShowUserIdGuide(false)}
+        className="mt-4 w-full py-2.5 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors"
+      >
+        Đã hiểu
+      </button>
     </div>
   </div>
 )}
