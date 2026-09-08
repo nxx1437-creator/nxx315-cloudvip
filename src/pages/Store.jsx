@@ -1,4 +1,3 @@
-// src/pages/Store.jsx - PHẦN 1
 import React, { useState } from "react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -102,7 +101,7 @@ export default function Store() {
     setAccount(null);
     setUsername("");
   };
-// src/pages/Store.jsx - PHẦN 3
+
   if (screen === "home") {
     return (
       <div style={{ minHeight: '100vh', background: '#f5f8ff', paddingBottom: 80 }}>
@@ -169,7 +168,6 @@ export default function Store() {
       </div>
     );
   }
-// src/pages/Store.jsx - PHẦN 4
   // ===== ACCOUNT SCREEN =====
   if (screen === "account") {
     return (
@@ -201,7 +199,7 @@ export default function Store() {
         
         <div style={{ marginTop: 12, padding: 16, borderRadius: 16, background: 'white', border: '1px solid #e9edf5', display: 'flex', gap: 12 }}>
           <div style={{ fontSize: 24 }}>🛡️</div>
-          <div><strong style={{ fontSize: 13 }}>Thông tin của bạn được bảo mật</strong><p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>NXX STORE không yêu cầu mật khẩu Roblox của bạn.</p></div>
+          <div><strong style={{ fontSize: 13 }}>Thông tin của bạn được bảo mật</strong><p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>NXX315 Studio Rewards không yêu cầu mật khẩu Roblox của bạn.</p></div>
         </div>
         
         <BottomNav />
@@ -209,59 +207,126 @@ export default function Store() {
     );
   }
 
-  // ===== PACKAGES SCREEN =====
-  if (screen === "packages") {
-    return (
-      <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 80 }}>
-        <button onClick={() => account ? setScreen("packages") : setScreen("home")} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
-        <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Chọn gói Robux</h2>
-        <p style={{ color: '#7b8495', fontSize: 14, marginBottom: 16 }}>{account ? `Nạp cho @${account.username}` : "Chọn gói bạn muốn mua"}</p>
-        
-        {account && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, background: '#edf4ff', marginBottom: 12 }}>
-            <span style={{ fontSize: 20 }}>👤</span>
-            <div><span style={{ fontSize: 10, color: '#6b7280' }}>ĐANG NẠP CHO</span><strong style={{ display: 'block', fontSize: 14 }}>@{account.username}</strong></div>
-            <span style={{ marginLeft: 'auto', color: '#16a34a', fontWeight: 700 }}>✓</span>
-          </div>
-        )}
+// ===== PACKAGES SCREEN =====
+if (screen === "packages") {
+  return (
+    <div style={{ minHeight: '100vh', background: '#f5f8ff', padding: '16px', paddingBottom: 100 }}>
+      <button onClick={() => account ? setScreen("packages") : setScreen("home")} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>←</button>
+      <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Chọn gói Robux</h2>
+      <p style={{ color: '#7b8495', fontSize: 14, marginBottom: 16 }}>{account ? `Nạp cho @${account.username}` : "Chọn gói bạn muốn mua"}</p>
+      
+      {/* Hiển thị account */}
+      {account && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, background: '#edf4ff', marginBottom: 12 }}>
+          <span style={{ fontSize: 20 }}>👤</span>
+          <div><span style={{ fontSize: 10, color: '#6b7280' }}>ĐANG NẠP CHO</span><strong style={{ display: 'block', fontSize: 14 }}>@{account.username}</strong></div>
+          <span style={{ marginLeft: 'auto', color: '#16a34a', fontWeight: 700 }}>✓</span>
+        </div>
+      )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-          {ROBUX_PACKAGES.map(pkg => {
-            const selected = selectedPackage?.id === pkg.id;
-            return (
-              <div key={pkg.id} onClick={() => setSelectedPackage(pkg)} style={{ padding: 16, borderRadius: 16, background: 'white', border: selected ? '2px solid #2563eb' : '1px solid #e9edf5', cursor: 'pointer', position: 'relative' }}>
-                {pkg.popular && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#2563eb', background: '#eaf2ff', padding: '2px 8px', borderRadius: 99 }}>🔥 BÁN CHẠY</span>}
-                {selected && <span style={{ position: 'absolute', top: 8, left: 8, width: 24, height: 24, borderRadius: '50%', background: '#2563eb', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✓</span>}
-                <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                  <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #60a5fa)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 900 }}>R$</div>
-                  <div style={{ fontSize: 22, fontWeight: 900, marginTop: 4 }}>{pkg.robux}</div>
-                  {pkg.bonus && <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 700 }}>+{pkg.bonus} BONUS</span>}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                  <strong>{formatMoney(pkg.price)}</strong>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: selected ? '#2563eb' : '#edf4ff', color: selected ? 'white' : '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900 }}>{selected ? '✓' : '+'}</div>
+      {/* Danh sách gói */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+        {ROBUX_PACKAGES.map(pkg => {
+          const selected = selectedPackage?.id === pkg.id;
+          return (
+            <div key={pkg.id} onClick={() => setSelectedPackage(pkg)} style={{ 
+              padding: 16, 
+              borderRadius: 16, 
+              background: 'white', 
+              border: selected ? '3px solid #2563eb' : '1px solid #e9edf5', 
+              cursor: 'pointer', 
+              position: 'relative',
+              boxShadow: selected ? '0 0 0 4px rgba(37,99,235,0.15)' : 'none'
+            }}>
+              {pkg.popular && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#2563eb', background: '#eaf2ff', padding: '2px 8px', borderRadius: 99 }}>🔥 BÁN CHẠY</span>}
+              {selected && <span style={{ position: 'absolute', top: 8, left: 8, width: 24, height: 24, borderRadius: '50%', background: '#2563eb', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>✓</span>}
+              <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #60a5fa)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', fontWeight: 900, fontSize: 18 }}>R$</div>
+                <div style={{ fontSize: 22, fontWeight: 900, marginTop: 4 }}>{pkg.robux}</div>
+                {pkg.bonus && <span style={{ fontSize: 11, color: '#16a34a', fontWeight: 700 }}>+{pkg.bonus} BONUS</span>}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <strong style={{ fontSize: 15, color: '#2563eb' }}>{formatMoney(pkg.price)}</strong>
+                <div style={{ 
+                  width: 32, height: 32, borderRadius: '50%', 
+                  background: selected ? '#2563eb' : '#edf4ff', 
+                  color: selected ? 'white' : '#2563eb', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  fontSize: 18, fontWeight: 900 
+                }}>
+                  {selected ? '✓' : '+'}
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {selectedPackage && (
-          <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: '#edf4ff', border: '1px solid #bfdbfe', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div><span style={{ fontSize: 10, color: '#6b7280' }}>GÓI ĐÃ CHỌN</span><strong style={{ display: 'block', fontSize: 16 }}>{selectedPackage.robux} Robux</strong></div>
-            <div><span style={{ fontSize: 10, color: '#6b7280' }}>Tổng</span><strong style={{ display: 'block', fontSize: 16, color: '#2563eb' }}>{formatMoney(selectedPackage.price)}</strong></div>
-          </div>
-        )}
-
-        <button onClick={() => setScreen("checkout")} disabled={!selectedPackage} style={{ width: '100%', padding: '14px', borderRadius: 12, background: selectedPackage ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : '#d1d5db', color: 'white', border: 'none', fontWeight: 700, fontSize: 14, marginTop: 16, cursor: selectedPackage ? 'pointer' : 'not-allowed' }}>
-          Tiếp tục thanh toán →
-        </button>
-        
-        <BottomNav />
+            </div>
+          );
+        })}
       </div>
-    );
-  }
-// src/pages/Store.jsx - PHẦN 5
+
+      {/* Gói đã chọn + Nút thanh toán - LÀM NỔI BẬT */}
+      {selectedPackage && (
+        <div style={{ 
+          marginTop: 20, 
+          padding: 16, 
+          borderRadius: 16, 
+          background: '#eff6ff', 
+          border: '2px solid #2563eb',
+          boxShadow: '0 4px 20px rgba(37,99,235,0.15)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <span style={{ fontSize: 10, color: '#6b7280', fontWeight: 600 }}>GÓI ĐÃ CHỌN</span>
+              <strong style={{ display: 'block', fontSize: 18 }}>{selectedPackage.robux} Robux</strong>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: 10, color: '#6b7280', fontWeight: 600 }}>Tổng</span>
+              <strong style={{ display: 'block', fontSize: 18, color: '#2563eb' }}>{formatMoney(selectedPackage.price)}</strong>
+            </div>
+          </div>
+          
+          {/* ===== NÚT THANH TOÁN ===== */}
+          <button 
+            onClick={() => setScreen("checkout")} 
+            style={{ 
+              width: '100%', 
+              padding: '16px', 
+              borderRadius: 14, 
+              background: 'linear-gradient(135deg, #2563eb, #3b82f6)', 
+              color: 'white', 
+              border: 'none', 
+              fontWeight: 700, 
+              fontSize: 16, 
+              marginTop: 12,
+              cursor: 'pointer',
+              boxShadow: '0 8px 25px rgba(37,99,235,0.3)',
+              transition: 'transform 0.2s'
+            }}
+            onMouseDown={(e) => e.target.style.transform = 'scale(0.98)'}
+            onMouseUp={(e) => e.target.style.transform = 'scale(1)'}
+          >
+            Tiếp tục thanh toán →
+          </button>
+        </div>
+      )}
+
+      {/* Nếu chưa chọn gói thì hiển thị nút mờ */}
+      {!selectedPackage && (
+        <div style={{ 
+          marginTop: 20, 
+          padding: 16, 
+          borderRadius: 16, 
+          background: '#f3f4f6', 
+          border: '2px dashed #d1d5db',
+          textAlign: 'center',
+          color: '#9ca3af'
+        }}>
+          <p style={{ margin: 0, fontSize: 14 }}>👆 Vui lòng chọn một gói Robux</p>
+        </div>
+      )}
+      
+      <BottomNav />
+    </div>
+  );
+      }
   // ===== CHECKOUT SCREEN =====
   if (screen === "checkout") {
     if (!selectedPackage) {
