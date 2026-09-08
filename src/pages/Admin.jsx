@@ -442,7 +442,7 @@ function UsersTab() {
                 <td className="px-6 py-4">
                   {user.multi_account_flag ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">
-                      ⚠️ Nghi đa tài khoản
+                       Nghi đa tài khoản
                     </span>
                   ) : (
                     <span className="text-xs text-slate-300">—</span>
@@ -580,16 +580,22 @@ function EmptyState({ text }) {
   const [detailWithdrawal, setDetailWithdrawal] = useState(null);
 
   const fetchWithdrawals = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("star_withdrawals")
-      .select("*, profiles!inner(email, username)")
-      .order("created_at", { ascending: false });
-    setWithdrawals(data ?? []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchWithdrawals(); }, []);
+  setLoading(true);
+  
+  // Thêm log để debug
+  console.log("🔄 Đang fetch withdrawals...");
+  
+  const { data, error } = await supabase
+    .from("star_withdrawals")
+    .select("*")
+    .order("created_at", { ascending: false });
+  
+  console.log("📦 Data:", data);
+  console.log("❌ Error:", error);
+  
+  setWithdrawals(data ?? []);
+  setLoading(false);
+};
 
   const pendingCount = withdrawals.filter((w) => w.status === "pending").length;
   const completedCount = withdrawals.filter((w) => w.status === "approved").length;
