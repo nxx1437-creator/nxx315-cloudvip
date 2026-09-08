@@ -54,7 +54,7 @@ export default function Feed() {
 
     const { data: authorsData } = await supabase
       .from("profiles")
-      .select("id, username, is_official, is_admin")
+      .select("id, username, avatar_url, is_official, is_admin")
       .in("id", authorIds);
 
     const authorMap = Object.fromEntries((authorsData || []).map((a) => [a.id, a]));
@@ -259,7 +259,7 @@ function PostCard({ post, liked, onToggleLike, expanded, onToggleComments, userI
 
       const { data: authorsData } = await supabase
         .from("profiles")
-        .select("id, username, is_official")
+        .select("id, username, avatar_url, is_official")
         .in("id", authorIds.length > 0 ? authorIds : [""]);
 
       const authorMap = Object.fromEntries((authorsData || []).map((a) => [a.id, a]));
@@ -294,9 +294,13 @@ function PostCard({ post, liked, onToggleLike, expanded, onToggleComments, userI
   return (
     <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
       <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700">
-          {initial}
-        </span>
+        {author?.avatar_url ? (
+          <img src={author.avatar_url} alt={displayName} className="h-9 w-9 rounded-full object-cover" />
+        ) : (
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-700">
+            {initial}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
             <p className="truncate text-sm font-bold text-[#111827]">{displayName}</p>
