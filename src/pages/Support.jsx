@@ -32,7 +32,6 @@ export default function Support() {
   const messagesEndRef = useRef(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Kiểm tra admin
   useEffect(() => {
     if (!session?.user?.id) return;
     const checkAdmin = async () => {
@@ -46,7 +45,6 @@ export default function Support() {
     checkAdmin();
   }, [session]);
 
-  // Lấy danh sách ticket
   useEffect(() => {
     if (!session?.user?.id) return;
     fetchTickets();
@@ -54,25 +52,16 @@ export default function Support() {
 
   const fetchTickets = async () => {
     setLoading(true);
-    let query = supabase
+    const { data } = await supabase
       .from('support_tickets')
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false });
 
-    if (isAdmin) {
-      query = supabase
-        .from('support_tickets')
-        .select('*, profiles!inner(username, email)')
-        .order('created_at', { ascending: false });
-    }
-
-    const { data } = await query;
     setTickets(data || []);
     setLoading(false);
   };
 
-  // Lấy messages của ticket
   const fetchMessages = async (ticketId) => {
     const { data } = await supabase
       .from('support_messages')
@@ -91,7 +80,6 @@ export default function Support() {
     await fetchMessages(ticket.id);
   };
 
-  // Gửi tin nhắn
   const sendMessage = async () => {
     if (!messageText.trim() && !selectedImage) return;
     if (!selectedTicket) return;
@@ -143,7 +131,6 @@ export default function Support() {
     setSending(false);
   };
 
-  // Tạo ticket mới
   const createTicket = async () => {
     if (!newTicketData.title.trim() || !newTicketData.description.trim()) {
       alert("Vui lòng điền đầy đủ thông tin!");
@@ -231,20 +218,14 @@ export default function Support() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-[72px]">
-      {/* Header */}
       <header className="sticky top-0 z-30 bg-white px-4 py-3 border-b border-gray-100/80">
         <div className="flex items-center gap-3 max-w-md mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-50"
-          >
+          <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-50">
             <ArrowLeft size={18} className="text-gray-700" />
           </button>
           <div className="flex-1">
             <h1 className="text-[17px] font-semibold text-gray-900">Hỗ trợ</h1>
-            {selectedTicket && (
-              <p className="text-[11px] text-gray-400 truncate">{selectedTicket.title}</p>
-            )}
+            {selectedTicket && <p className="text-[11px] text-gray-400 truncate">{selectedTicket.title}</p>}
           </div>
           {!selectedTicket && isAdmin && (
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-500">
@@ -258,7 +239,6 @@ export default function Support() {
         {selectedTicket ? (
           // === CHAT VIEW ===
           <div className="flex flex-col h-[calc(100vh-200px)]">
-            {/* Ticket info */}
             <div className="bg-white rounded-xl p-3 border border-gray-100 mb-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -270,10 +250,7 @@ export default function Support() {
                     <span className="text-[9px] text-gray-400">{selectedTicket.category}</span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedTicket(null)}
-                  className="text-[10px] font-medium text-blue-500"
-                >
+                <button onClick={() => setSelectedTicket(null)} className="text-[10px] font-medium text-blue-500">
                   Đóng
                 </button>
               </div>
@@ -282,40 +259,35 @@ export default function Support() {
               )}
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto space-y-2 pb-2">
-              {messages.length === 0 && (
+              {messages.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageCircle size={32} className="mx-auto text-gray-300" />
                   <p className="mt-2 text-sm text-gray-400">Chưa có tin nhắn nào</p>
                   <p className="text-[10px] text-gray-300">Hãy gửi tin nhắn để bắt đầu</p>
                 </div>
-              )}
-              {messages.map((msg) => {
-                const isMine = msg.user_id === session?.user?.id;
-                return (
-                  <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-xl px-3 py-2 ${isMine ? 'bg-blue-500 text-white' : 'bg-white border border-gray-100'}`}>
-                      {msg.image_url && (
-                        <img src={msg.image_url} alt="attachment" className="rounded-lg max-w-[200px] mb-1" />
-                      )}
-                      {msg.message && (
-                        <p className={`text-[13px] ${isMine ? 'text-white' : 'text-gray-900'}`}>{msg.message}</p>
-                      )}
-                      <div className={`flex items-center gap-1 mt-0.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                        <span className={`text-[9px] ${isMine ? 'text-blue-200' : 'text-gray-400'}`}>
-                          {new Date(msg.created_at).toLocaleTimeString('vi-VN')}
-                        </span>
-                        {isMine && <CheckCheck size={12} className="text-blue-200" />}
+              ) : (
+                messages.map((msg) => {
+                  const isMine = msg.user_id === session?.user?.id;
+                  return (
+                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-xl px-3 py-2 ${isMine ? 'bg-blue-500 text-white' : 'bg-white border border-gray-100'}`}>
+                        {msg.image_url && <img src={msg.image_url} alt="attachment" className="rounded-lg max-w-[200px] mb-1" />}
+                        {msg.message && <p className={`text-[13px] ${isMine ? 'text-white' : 'text-gray-900'}`}>{msg.message}</p>}
+                        <div className={`flex items-center gap-1 mt-0.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                          <span className={`text-[9px] ${isMine ? 'text-blue-200' : 'text-gray-400'}`}>
+                            {new Date(msg.created_at).toLocaleTimeString('vi-VN')}
+                          </span>
+                          {isMine && <CheckCheck size={12} className="text-blue-200" />}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             <div className="bg-white rounded-xl p-2 border border-gray-100">
               <div className="flex items-end gap-2">
                 <div className="flex-1">
@@ -335,28 +307,16 @@ export default function Support() {
                   {imagePreview && (
                     <div className="relative mt-1 inline-block">
                       <img src={imagePreview} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
-                      <button
-                        onClick={removeImage}
-                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center"
-                      >
+                      <button onClick={removeImage} className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center">
                         <X size={12} />
                       </button>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                >
+                <button onClick={() => fileInputRef.current?.click()} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
                   <Paperclip size={16} className="text-gray-500" />
                 </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
                 <button
                   onClick={sendMessage}
                   disabled={sending || (!messageText.trim() && !selectedImage)}
@@ -380,7 +340,6 @@ export default function Support() {
 // src/pages/Support.jsx - PHẦN 2
 // THAY THẾ PHẦN <></> Ở TRÊN BẰNG CODE NÀY
 
-// === LIST TICKETS ===
 <>
   {/* Stats */}
   <div className="bg-white rounded-xl p-3 border border-gray-100 mb-3">
@@ -406,10 +365,7 @@ export default function Support() {
         <p className="text-[8px] text-gray-400">Đã đóng</p>
       </div>
     </div>
-    <button
-      onClick={() => setShowNewTicket(true)}
-      className="mt-2 w-full py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors"
-    >
+    <button onClick={() => setShowNewTicket(true)} className="mt-2 w-full py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors">
       + Tạo ticket
     </button>
   </div>
@@ -426,9 +382,7 @@ export default function Support() {
         key={tab.key}
         onClick={() => setActiveTab(tab.key)}
         className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
-          activeTab === tab.key
-            ? 'bg-blue-500 text-white'
-            : 'bg-white text-gray-500 hover:bg-gray-50'
+          activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
         }`}
       >
         {tab.label} {tab.count > 0 && `(${tab.count})`}
@@ -446,11 +400,7 @@ export default function Support() {
       </div>
     ) : (
       filteredTickets.map((ticket) => (
-        <button
-          key={ticket.id}
-          onClick={() => openTicket(ticket)}
-          className="w-full bg-white rounded-xl p-3 border border-gray-100 text-left hover:bg-gray-50 transition-colors"
-        >
+        <button key={ticket.id} onClick={() => openTicket(ticket)} className="w-full bg-white rounded-xl p-3 border border-gray-100 text-left hover:bg-gray-50 transition-colors">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -546,10 +496,7 @@ export default function Support() {
           />
         </div>
 
-        <button
-          onClick={createTicket}
-          className="w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors"
-        >
+        <button onClick={createTicket} className="w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors">
           Gửi
         </button>
       </div>
