@@ -3,8 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Send, Paperclip, X, Loader2, 
-  MessageCircle, CheckCheck, ChevronRight,
-  Search
+  MessageCircle, CheckCheck, ChevronRight, Search
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
@@ -378,7 +377,8 @@ export default function Support() {
     </div>
   );
 }
-// src/pages/Support.jsx - PHẦN 2 (THAY THẾ PHẦN <></> Ở TRÊN)
+// src/pages/Support.jsx - PHẦN 2
+// THAY THẾ PHẦN <></> Ở TRÊN BẰNG CODE NÀY
 
 // === LIST TICKETS ===
 <>
@@ -481,78 +481,78 @@ export default function Support() {
       ))
     )}
   </div>
+</>
 
-  {/* New Ticket Modal */}
-  {showNewTicket && (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-5 animate-in slide-in-from-bottom duration-300">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-gray-900">Ticket mới</h2>
-          <button onClick={() => setShowNewTicket(false)} className="text-gray-400 hover:text-gray-600">
-            <X size={20} />
-          </button>
+{/* New Ticket Modal */}
+{showNewTicket && (
+  <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+    <div className="w-full max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-5 animate-in slide-in-from-bottom duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-bold text-gray-900">Ticket mới</h2>
+        <button onClick={() => setShowNewTicket(false)} className="text-gray-400 hover:text-gray-600">
+          <X size={20} />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-[10px] font-medium text-gray-600 mb-1">Tiêu đề *</p>
+          <input
+            type="text"
+            value={newTicketData.title}
+            onChange={(e) => setNewTicketData({ ...newTicketData, title: e.target.value })}
+            placeholder="Nhập tiêu đề"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+          />
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <p className="text-[10px] font-medium text-gray-600 mb-1">Tiêu đề *</p>
-            <input
-              type="text"
-              value={newTicketData.title}
-              onChange={(e) => setNewTicketData({ ...newTicketData, title: e.target.value })}
-              placeholder="Nhập tiêu đề"
+            <p className="text-[10px] font-medium text-gray-600 mb-1">Danh mục</p>
+            <select
+              value={newTicketData.category}
+              onChange={(e) => setNewTicketData({ ...newTicketData, category: e.target.value })}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-            />
+            >
+              <option>Khác</option>
+              <option>Tài khoản</option>
+              <option>Thanh toán</option>
+              <option>Sản phẩm</option>
+              <option>Kỹ thuật</option>
+            </select>
           </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-[10px] font-medium text-gray-600 mb-1">Danh mục</p>
-              <select
-                value={newTicketData.category}
-                onChange={(e) => setNewTicketData({ ...newTicketData, category: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-              >
-                <option>Khác</option>
-                <option>Tài khoản</option>
-                <option>Thanh toán</option>
-                <option>Sản phẩm</option>
-                <option>Kỹ thuật</option>
-              </select>
-            </div>
-            <div>
-              <p className="text-[10px] font-medium text-gray-600 mb-1">Ưu tiên</p>
-              <select
-                value={newTicketData.priority}
-                onChange={(e) => setNewTicketData({ ...newTicketData, priority: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-              >
-                <option>Bình thường</option>
-                <option>Cao</option>
-                <option>Khẩn cấp</option>
-              </select>
-            </div>
-          </div>
-
           <div>
-            <p className="text-[10px] font-medium text-gray-600 mb-1">Mô tả vấn đề *</p>
-            <textarea
-              value={newTicketData.description}
-              onChange={(e) => setNewTicketData({ ...newTicketData, description: e.target.value })}
-              placeholder="Mô tả chi tiết vấn đề..."
-              rows={4}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none"
-            />
+            <p className="text-[10px] font-medium text-gray-600 mb-1">Ưu tiên</p>
+            <select
+              value={newTicketData.priority}
+              onChange={(e) => setNewTicketData({ ...newTicketData, priority: e.target.value })}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+            >
+              <option>Bình thường</option>
+              <option>Cao</option>
+              <option>Khẩn cấp</option>
+            </select>
           </div>
-
-          <button
-            onClick={createTicket}
-            className="w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors"
-          >
-            Gửi
-          </button>
         </div>
+
+        <div>
+          <p className="text-[10px] font-medium text-gray-600 mb-1">Mô tả vấn đề *</p>
+          <textarea
+            value={newTicketData.description}
+            onChange={(e) => setNewTicketData({ ...newTicketData, description: e.target.value })}
+            placeholder="Mô tả chi tiết vấn đề..."
+            rows={4}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none"
+          />
+        </div>
+
+        <button
+          onClick={createTicket}
+          className="w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors"
+        >
+          Gửi
+        </button>
       </div>
     </div>
-  )}
-</>
+  </div>
+)}
