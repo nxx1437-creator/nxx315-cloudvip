@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye, Star, Landmark, ShoppingBag } from "lucide-react";
+import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye, Star, Landmark, ShoppingBag, MessageSquare, PenSquare } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import emailjs from '@emailjs/browser';
 import BanUserModal from '../components/BanUserModal.jsx';
@@ -17,8 +17,8 @@ const TABS = [
   { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản & Ban" },
   { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
   { key: "affiliate", label: "Điểm sao", icon: Star, desc: "Đồng bộ & duyệt rút tiền" },
+  { key: "posts", label: "Bài đăng", icon: MessageSquare, desc: "Duyệt bài & cấp quyền" },
 ];
-
 export default function Admin() {
   const [tab, setTab] = useState("orders");
   return (
@@ -56,6 +56,7 @@ export default function Admin() {
         {tab === "users" && <UsersTab />}
         {tab === "support" && <SupportTab />}
         {tab === "affiliate" && <AffiliateTab />}
+        {tab === "posts" && <PostsTab />}
       </main>
     </div>
   );
@@ -377,6 +378,11 @@ function UsersTab() {
 
   useEffect(() => { fetchUsers(); }, []);
 
+  const togglePostPermission = async (user) => {
+    await supabase.from("profiles").update({ can_post: !user.can_post }).eq("id", user.id);
+    await fetchUsers();
+  };
+
   const handleUnban = async (user) => {
     await supabase.from("profiles").update({
       is_banned: false,
@@ -443,11 +449,19 @@ function UsersTab() {
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  {user.is_banned ? (
-                    <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button>
-                  ) : (
-                    <button onClick={() => setBanModalUser(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>
-                  )}
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => togglePostPermission(user)}
+                      className={`rounded-full px-3 py-2 text-xs font-semibold ${user.can_post ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"}`}
+                    >
+                      <PenSquare size={12} className="inline mr-1" /> {user.can_post ? "Đã cấp" : "Cấp đăng bài"}
+                    </button>
+                    {user.is_banned ? (
+                      <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button>
+                    ) : (
+                      <button onClick={() => setBanModalUser(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -852,6 +866,85 @@ function EmptyState({ text }) {
           </div>
         </div>
       )}
+</div>
+  );
+}
+
+function PostsTab() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState(null);
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (!data || data.length === 0) {
+      setPosts([]);
+      setLoading(false);
+      return;
+    }
+
+    const authorIds = [...new Set(data.map((p) => p.author_id))];
+    const { data: authors } = await supabase.from("profiles").select("id, username").in("id", authorIds);
+    const authorMap = Object.fromEntries((authors || []).map((a) => [a.id, a.username]));
+
+    setPosts(data.map((p) => ({ ...p, authorName: authorMap[p.author_id] || "Người dùng" })));
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPosts(); }, []);
+
+  const handleApprove = async (post) => {
+    setProcessingId(post.id);
+    await supabase.rpc("approve_post", { p_post_id: post.id, p_reason: "Admin duyệt thủ công" });
+    setProcessingId(null);
+    await fetchPosts();
+  };
+
+  const handleReject = async (post) => {
+    setProcessingId(post.id);
+    await supabase.rpc("reject_post", { p_post_id: post.id, p_reason: "Admin từ chối thủ công" });
+    setProcessingId(null);
+    await fetchPosts();
+  };
+
+  if (loading) return <Loading text="Loading posts..." />;
+  if (posts.length === 0) return <EmptyState text="Chưa có bài đăng nào." />;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader title="Bài đăng cộng đồng" count={`${posts.length} bài`} onRefresh={fetchPosts} />
+      {posts.map((post) => (
+        <div key={post.id} className={`rounded-2xl border p-5 shadow-sm ${post.status === "visible" ? "bg-emerald-50/30 border-emerald-100" : post.status === "hidden" ? "bg-rose-50/30 border-rose-100" : "bg-white border-slate-200"}`}>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-bold text-slate-900">{post.authorName} • {post.category === "ugc_guide" ? "Khám phá UGC" : "Cộng đồng"}</p>
+              <p className="mt-1 text-xs text-slate-400">{new Date(post.created_at).toLocaleString("vi-VN")}</p>
+            </div>
+            <span className={`rounded-full px-3 py-1 text-xs font-bold ${post.status === "pending" ? "bg-amber-50 text-amber-600" : post.status === "visible" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+              {post.status === "pending" ? "Chờ duyệt" : post.status === "visible" ? "Đã duyệt" : "Đã ẩn"}
+            </span>
+          </div>
+
+          <p className="mt-3 whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-sm text-slate-700">{post.content}</p>
+
+          {post.ai_reason && (
+            <p className="mt-2 rounded-lg bg-slate-100 p-2.5 text-xs italic text-slate-500">AI: {post.ai_reason}</p>
+          )}
+
+          {post.status === "pending" && (
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => handleApprove(post)} disabled={processingId === post.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} className="inline mr-1" /> Duyệt (+20 Xu)</button>
+              <button onClick={() => handleReject(post)} disabled={processingId === post.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><XCircle size={14} className="inline mr-1" /> Từ chối</button>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
-            }
+  }
