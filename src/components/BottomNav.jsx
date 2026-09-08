@@ -1,16 +1,16 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ListChecks, Store, Wallet, User } from "lucide-react";
-import { MessageCircle } from "lucide-react"; // thêm import
+import { Home, ListChecks, Gift, Wallet, User, MessageCircle } from "lucide-react";
 
 const tabs = [
-  { key: "/", label: "Trang chủ", icon: Home },
-  { key: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-  { key: "/store", label: "Cửa hàng", icon: Gift },
-  { key: "/support", label: "Hỗ trợ", icon: MessageCircle }, // THÊM DÒNG NÀY
-  { key: "/wallet", label: "Ví", icon: Wallet },
-  { key: "/profile", label: "Cá nhân", icon: User },
+  { path: "/", label: "Trang chủ", icon: Home },
+  { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
+  { path: "/store", label: "Cửa hàng", icon: Gift },
+  { path: "/support", label: "Hỗ trợ", icon: MessageCircle },
+  { path: "/wallet", label: "Ví", icon: Wallet },
+  { path: "/profile", label: "Cá nhân", icon: User },
 ];
+
 export default function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-4 z-30 px-4">
       <div className="mx-auto flex max-w-md items-center justify-between rounded-3xl border border-slate-100 bg-white p-2 shadow-lg shadow-slate-200/70">
-        {TABS.map(({ path, label, icon: Icon }) => {
+        {tabs.map(({ path, label, icon: Icon }) => {
           const active = pathname === path;
           return (
             <button
