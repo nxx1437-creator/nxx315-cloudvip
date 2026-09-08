@@ -1,12 +1,11 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ListChecks, Gift, Wallet, User, MessageCircle } from "lucide-react";
+import { Home, ListChecks, Gift, Wallet, User } from "lucide-react";
 
 const tabs = [
-  { path: "/", label: "Trang chủ", icon: Home },
+  { path: "/dashboard", label: "Trang chủ", icon: Home },
   { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
   { path: "/store", label: "Cửa hàng", icon: Gift },
-  { path: "/support", label: "Hỗ trợ", icon: MessageCircle },
   { path: "/wallet", label: "Ví", icon: Wallet },
   { path: "/profile", label: "Cá nhân", icon: User },
 ];
