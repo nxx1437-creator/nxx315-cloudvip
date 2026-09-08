@@ -1,1323 +1,449 @@
-import React, { useEffect, useMemo, useState } from "react";
-
-import {
-  ArrowLeft,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  Clock3,
-  Coins,
-  Copy,
-  Gamepad2,
-  Gift,
-  Loader2,
-  QrCode,
-  ShieldCheck,
-  Sparkles,
-  Swords,
-  XCircle,
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  ArrowLeft, Search, Gift, Coins, 
+  Star, ShoppingBag, Clock, ChevronRight,
+  Sparkles, TrendingUp, Package, Zap,
+  CreditCard, Landmark, Wallet, X,
+  Check, AlertCircle, Loader2, User,
+  Eye, Copy, CheckCheck
 } from "lucide-react";
-
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
-
 import BottomNav from "../components/BottomNav.jsx";
-import TopHeader from "../components/TopHeader.jsx";
-
-const ADMIN_CHAT_ID = 6152450878;
-
-const ROBUX_PACKAGE = {
-  id: "robux-vng-40",
-  name: "Gói 40 Robux",
-  robux: 40,
-  coin_cost: 12000,
-  price_vnd: 14500,
-  version: "vng",
-  reward_type: "robux",
-};
-
-const formatCoins = (value = 0) =>
-  new Intl.NumberFormat("vi-VN").format(
-    Number(value || 0)
-  );
-
-const formatVND = (value = 0) =>
-  `${new Intl.NumberFormat("vi-VN").format(
-    Number(value || 0)
-  )}đ`;
-
-const formatDate = (value) => {
-  if (!value) return "";
-
-  return new Date(value).toLocaleString(
-    "vi-VN",
-    {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }
-  );
-};
-
-const statusConfig = {
-  pending: {
-    label: "Đang xử lý",
-    icon: Clock3,
-  },
-
-  delivered: {
-    label: "Đã giao",
-    icon: CheckCircle2,
-  },
-
-  rejected: {
-    label: "Từ chối",
-    icon: XCircle,
-  },
-
-  cancelled: {
-    label: "Đã hủy",
-    icon: XCircle,
-  },
-
-  PENDING: {
-    label: "Chờ thanh toán",
-    icon: Clock3,
-  },
-
-  PAID: {
-    label: "Đã thanh toán",
-    icon: CheckCircle2,
-  },
-
-  EXPIRED: {
-    label: "Hết hạn",
-    icon: XCircle,
-  },
-
-  CANCELLED: {
-    label: "Đã hủy",
-    icon: XCircle,
-  },
-};
-
-/* =====================================================
-   PAYMENT PAGE
-===================================================== */
-
-function NPayPaymentPage({
-  payment,
-  onBack,
-  onCancel,
-  onPaid,
-  onCopy,
-  copied,
-}) {
-  const [secondsLeft, setSecondsLeft] =
-    useState(() => {
-      return Math.max(
-        0,
-        Math.floor(
-          (new Date(
-            payment.expires_at
-          ).getTime() -
-            Date.now()) /
-            1000
-        )
-      );
-    });
-
-  const [showCancel, setShowCancel] =
-    useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const left = Math.max(
-        0,
-        Math.floor(
-          (new Date(
-            payment.expires_at
-          ).getTime() -
-            Date.now()) /
-            1000
-        )
-      );
-
-      setSecondsLeft(left);
-
-      if (left <= 0) {
-        clearInterval(timer);
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [payment.expires_at]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const checkPayment = async () => {
-      const { data, error } =
-        await supabase
-          .from("payment_orders")
-          .select("status, paid_at")
-          .eq("id", payment.id)
-          .maybeSingle();
-
-      if (
-        error ||
-        !mounted ||
-        !data
-      ) {
-        return;
-      }
-
-      if (data.status === "PAID") {
-        onPaid({
-          ...payment,
-          status: "PAID",
-          paid_at: data.paid_at,
-        });
-      }
-    };
-
-    checkPayment();
-
-    const timer = setInterval(
-      checkPayment,
-      3000
-    );
-
-    return () => {
-      mounted = false;
-      clearInterval(timer);
-    };
-  }, [payment.id]);
-
-  const minutes = Math.floor(
-    secondsLeft / 60
-  );
-
-  const seconds = secondsLeft % 60;
-
-  const expired = secondsLeft <= 0;
-
-  return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-28">
-      <TopHeader />
-
-      <main className="mx-auto w-full max-w-md px-4 pt-4">
-
-        <button
-          onClick={onBack}
-          className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700"
-        >
-          <ArrowLeft size={18} />
-
-          Quay lại
-        </button>
-
-        <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 px-5 py-6 text-center text-white">
-
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-              <QrCode size={30} />
-            </div>
-
-            <h1 className="text-xl font-bold">
-              Thanh toán VietQR
-            </h1>
-
-            <p className="mt-1 text-sm text-white/80">
-              Quét mã bằng ứng dụng ngân hàng
-            </p>
-
-          </div>
-
-          <div className="p-5">
-
-            <div className="rounded-2xl bg-gray-50 p-4">
-
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">
-                  Sản phẩm
-                </span>
-
-                <b>
-                  {payment.package_name}
-                </b>
-              </div>
-
-              <div className="mt-2 flex justify-between text-sm">
-                <span className="text-gray-500">
-                  Số tiền
-                </span>
-
-                <b>
-                  {formatVND(payment.amount)}
-                </b>
-              </div>
-
-              <div className="mt-2 flex justify-between text-sm">
-                <span className="text-gray-500">
-                  Phí
-                </span>
-
-                <b>
-                  {formatVND(payment.fee || 0)}
-                </b>
-              </div>
-
-              <div className="my-3 border-t" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">
-                  Tổng thanh toán
-                </span>
-
-                <strong className="text-xl text-blue-600">
-                  {formatVND(payment.total)}
-                </strong>
-              </div>
-
-            </div>
-
-            <div className="mt-5 flex justify-center">
-
-              {payment.qr_url ? (
-                <div className="rounded-3xl border bg-white p-3 shadow-sm">
-
-                  <img
-                    src={payment.qr_url}
-                    alt="VietQR thanh toán"
-                    className="h-64 w-64 object-contain"
-                  />
-
-                </div>
-              ) : (
-                <div className="flex h-64 w-64 items-center justify-center rounded-3xl bg-gray-100">
-
-                  <Loader2
-                    size={32}
-                    className="animate-spin text-blue-600"
-                  />
-
-                </div>
-              )}
-
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
-
-              <p className="text-xs font-medium text-gray-500">
-                Nội dung chuyển khoản
-              </p>
-
-              <div className="mt-2 flex items-center gap-2">
-
-                <div className="min-w-0 flex-1 break-all font-bold text-blue-700">
-                  {payment.payment_code}
-                </div>
-
-                <button
-                  onClick={() =>
-                    onCopy(
-                      payment.payment_code
-                    )
-                  }
-                  className="rounded-xl bg-white p-2 text-blue-600 shadow-sm"
-                >
-                  {copied ? (
-                    <Check size={17} />
-                  ) : (
-                    <Copy size={17} />
-                  )}
-                </button>
-
-              </div>
-
-            </div>
-
-            <div className="mt-4 rounded-2xl border p-4">
-
-              <div className="font-semibold">
-                MB Bank
-              </div>
-
-              <div className="mt-2 text-sm text-gray-600">
-                Số tài khoản:{" "}
-                <b>0939339622</b>
-              </div>
-
-              <div className="mt-1 text-sm text-gray-600">
-                Chủ tài khoản:{" "}
-                <b>NGUYEN VAN CO</b>
-              </div>
-            
-            </div>
-                        <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-600">
-              <Clock3 size={17} />
-
-              {expired
-                ? "Mã thanh toán đã hết hạn"
-                : `Thời gian còn lại: ${String(
-                    minutes
-                  ).padStart(2, "0")}:${String(
-                    seconds
-                  ).padStart(2, "0")}`}
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-gray-50 p-4 text-xs leading-5 text-gray-500">
-              <b className="text-gray-700">
-                Lưu ý:
-              </b>{" "}
-              Chuyển đúng số tiền và giữ nguyên
-              nội dung chuyển khoản để hệ thống
-              tự động xác nhận.
-            </div>
-
-            {!expired && (
-              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-green-600">
-                <ShieldCheck size={18} />
-
-                Hệ thống đang tự động kiểm tra
-                thanh toán
-              </div>
-            )}
-
-            <button
-              onClick={() => setShowCancel(true)}
-              className="mt-5 w-full rounded-2xl border border-red-200 py-3 font-semibold text-red-500"
-            >
-              Hủy giao dịch
-            </button>
-
-          </div>
-        </div>
-      </main>
-
-      {showCancel && (
-        <CancelModal
-          onClose={() =>
-            setShowCancel(false)
-          }
-          onConfirm={() => {
-            setShowCancel(false);
-            onCancel();
-          }}
-        />
-      )}
-
-      <BottomNav />
-    </div>
-  );
-}
-
-/* =====================================================
-   CANCEL MODAL
-===================================================== */
-
-function CancelModal({
-  onClose,
-  onConfirm,
-}) {
-  const [countdown, setCountdown] =
-    useState(3);
-
-  useEffect(() => {
-    if (countdown <= 0) return;
-
-    const timer = setTimeout(() => {
-      setCountdown((value) => value - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [countdown]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-5">
-
-      <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-xl">
-
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50">
-          <XCircle
-            size={25}
-            className="text-red-500"
-          />
-        </div>
-
-        <h2 className="mt-4 text-center text-lg font-bold">
-          Hủy giao dịch?
-        </h2>
-
-        <p className="mt-2 text-center text-sm leading-6 text-gray-500">
-          Nếu bạn đã chuyển khoản thì không
-          nên hủy giao dịch. Hệ thống có thể
-          không tự động xử lý đơn sau khi hủy.
-        </p>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-
-          <button
-            onClick={onClose}
-            className="rounded-2xl bg-gray-100 py-3 font-semibold"
-          >
-            Quay lại
-          </button>
-
-          <button
-            disabled={countdown > 0}
-            onClick={onConfirm}
-            className="rounded-2xl bg-red-500 py-3 font-semibold text-white disabled:opacity-40"
-          >
-            {countdown > 0
-              ? `Hủy (${countdown})`
-              : "Xác nhận hủy"}
-          </button>
-
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =====================================================
-   ORDER PANEL
-===================================================== */
-
-function OrderPanel({
-  pkg,
-  deliveryTarget,
-  setDeliveryTarget,
-  paymentMethod,
-  setPaymentMethod,
-  onClose,
-  onRedeem,
-  loading,
-}) {
-  const validTarget =
-    deliveryTarget.trim().length >= 3;
-
-  const canSubmit =
-    validTarget &&
-    !!paymentMethod &&
-    !loading;
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 sm:items-center">
-
-      <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl">
-
-        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-gray-200" />
-
-        <div className="flex items-start justify-between">
-
-          <div>
-            <h2 className="text-xl font-bold">
-              {pkg.name}
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Nhập Roblox ID để nhận Robux
-            </p>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="rounded-xl bg-gray-100 p-2"
-          >
-            <XCircle size={19} />
-          </button>
-
-        </div>
-
-        <label className="mt-5 block text-sm font-semibold">
-          Roblox ID
-        </label>
-
-        <input
-          value={deliveryTarget}
-          onChange={(event) =>
-            setDeliveryTarget(
-              event.target.value
-            )
-          }
-          placeholder="Nhập Roblox ID"
-          className="mt-2 w-full rounded-2xl border px-4 py-3 outline-none focus:border-blue-500"
-        />
-
-        <div className="mt-4 rounded-2xl bg-gray-50 p-4">
-
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">
-              Gói
-            </span>
-
-            <b>
-              {pkg.robux} Robux
-            </b>
-          </div>
-
-          <div className="mt-2 flex justify-between text-sm">
-            <span className="text-gray-500">
-              Giá
-            </span>
-
-            <b>
-              {formatVND(pkg.price_vnd)}
-            </b>
-          </div>
-
-        </div>
-
-        <div className="mt-5">
-
-          <div className="text-sm font-semibold">
-            Phương thức thanh toán
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-3">
-
-            <button
-              onClick={() =>
-                setPaymentMethod("coins")
-              }
-              className={`rounded-2xl border p-4 text-left ${
-                paymentMethod === "coins"
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200"
-              }`}
-            >
-              <Coins
-                size={22}
-                className="text-yellow-500"
-              />
-
-              <div className="mt-2 font-bold">
-                Dùng xu
-              </div>
-
-              <div className="mt-1 text-xs text-gray-500">
-                {formatCoins(
-                  pkg.coin_cost
-                )}{" "}
-                xu
-              </div>
-            </button>
-
-            <button
-              onClick={() =>
-                setPaymentMethod("vietqr")
-              }
-              className={`rounded-2xl border p-4 text-left ${
-                paymentMethod === "vietqr"
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200"
-              }`}
-            >
-              <QrCode
-                size={22}
-                className="text-blue-600"
-              />
-
-              <div className="mt-2 font-bold">
-                VietQR
-              </div>
-
-              <div className="mt-1 text-xs text-gray-500">
-                {formatVND(
-                  pkg.price_vnd
-                )}
-              </div>
-            </button>
-
-          </div>
-        </div>
-
-        <button
-          disabled={!canSubmit}
-          onClick={onRedeem}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 font-bold text-white disabled:opacity-40"
-        >
-          {loading && (
-            <Loader2
-              size={18}
-              className="animate-spin"
-            />
-          )}
-
-          {paymentMethod === "vietqr"
-            ? "Tạo mã thanh toán"
-            : "Đổi ngay"}
-        </button>
-
-      </div>
-    </div>
-  );
-}
-/* =====================================================
-   STORE
-===================================================== */
 
 export default function Store() {
-  const session = useSession();
-  const profile = useProfile();
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const { profile, setProfile } = useProfile();
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("coin");
+  const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState("");
+  const [showUserIdGuide, setShowUserIdGuide] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [showVoucher, setShowVoucher] = useState(false);
 
-  const user = session?.user;
-  const userId = user?.id;
-
-  const coins = Number(
-    profile?.coins ??
-      profile?.coin ??
-      profile?.balance ??
-      0
-  );
-
-  const [selectedPackage, setSelectedPackage] =
-    useState(null);
-
-  const [deliveryTarget, setDeliveryTarget] =
-    useState("");
-
-  const [paymentMethod, setPaymentMethod] =
-    useState("");
-
-  const [payment, setPayment] =
-    useState(null);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [history, setHistory] =
-    useState([]);
-
-  const [toast, setToast] =
-    useState("");
-
-  const [copied, setCopied] =
-    useState(false);
-
-  const [showHistory, setShowHistory] =
-    useState(false);
-
-  const packages = useMemo(
-    () => [ROBUX_PACKAGE],
-    []
-  );
-
-  /* ===============================
-     TOAST
-  =============================== */
+  const userCoins = profile?.coins || 0;
 
   useEffect(() => {
-    if (!toast) return;
+    fetchPackages();
+  }, []);
 
-    const timer = setTimeout(
-      () => setToast(""),
-      2500
-    );
-
-    return () =>
-      clearTimeout(timer);
-  }, [toast]);
-
-  /* ===============================
-     LOAD HISTORY
-  =============================== */
-
-  const loadHistory = async () => {
-    if (!userId) return;
-
-    const { data, error } =
-      await supabase
-        .from("redemption_orders")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", {
-          ascending: false,
-        });
-
-    if (!error) {
-      setHistory(data || []);
-    }
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, [userId]);
-
-  /* ===============================
-     OPEN PACKAGE
-  =============================== */
-
-  const openPackage = (pkg) => {
-    setSelectedPackage(pkg);
-    setDeliveryTarget("");
-    setPaymentMethod("");
-  };
-
-  const closePackage = () => {
-    if (loading) return;
-
-    setSelectedPackage(null);
-    setDeliveryTarget("");
-    setPaymentMethod("");
-  };
-
-  /* ===============================
-     CREATE NPAY ORDER
-  =============================== */
-
-  const createNPayOrder = async () => {
-    if (!userId) {
-      throw new Error(
-        "Bạn chưa đăng nhập."
-      );
-    }
-
-    if (!selectedPackage) {
-      throw new Error(
-        "Chưa chọn gói."
-      );
-    }
-
-    const target =
-      deliveryTarget.trim();
-
-    if (target.length < 3) {
-      throw new Error(
-        "Roblox ID không hợp lệ."
-      );
-    }
-
-    const { data, error } =
-      await supabase.functions.invoke(
-        "create-npay-order",
-        {
-          body: {
-            package_id:
-              selectedPackage.id,
-
-            package_name:
-              selectedPackage.name,
-
-            delivery_target: target,
-          },
-        }
-      );
-
-    if (error) {
-      throw error;
-    }
-
-    if (
-      !data ||
-      !data.payment
-    ) {
-      throw new Error(
-        "Không tạo được đơn thanh toán."
-      );
-    }
-
-    return data.payment;
-  };
-
-  /* ===============================
-     REDEEM COINS
-  =============================== */
-
-  const redeemWithCoins = async () => {
-    if (!userId) {
-      throw new Error(
-        "Bạn chưa đăng nhập."
-      );
-    }
-
-    if (
-      coins <
-      Number(
-        selectedPackage.coin_cost
-      )
-    ) {
-      throw new Error(
-        "Bạn không đủ xu."
-      );
-    }
-
-    const { error } =
-      await supabase.rpc(
-        "create_redemption_order",
-        {
-          p_user_id: userId,
-
-          p_package_id:
-            selectedPackage.id,
-
-          p_delivery_method:
-            "roblox_id",
-
-          p_delivery_target:
-            deliveryTarget.trim(),
-        }
-      );
-
-    if (error) {
-      throw error;
-    }
-  };
-
-  /* ===============================
-     REDEEM
-  =============================== */
-
-  const handleRedeem = async () => {
-    if (!selectedPackage) return;
-
+  const fetchPackages = async () => {
     setLoading(true);
-
-    try {
-      if (
-        paymentMethod === "coins"
-      ) {
-        await redeemWithCoins();
-
-        setToast(
-          "Đổi xu thành công! Đơn hàng đang được xử lý."
-        );
-
-        closePackage();
-
-        await loadHistory();
-
-        return;
-      }
-
-      if (
-        paymentMethod === "vietqr"
-      ) {
-        const created =
-          await createNPayOrder();
-
-        setPayment(created);
-        setSelectedPackage(null);
-
-        return;
-      }
-
-      throw new Error(
-        "Vui lòng chọn phương thức thanh toán."
-      );
-    } catch (error) {
-      console.error(
-        "Redeem error:",
-        error
-      );
-
-      setToast(
-        error?.message ||
-          "Có lỗi xảy ra, vui lòng thử lại."
-      );
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await supabase
+      .from('redemption_packages')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    setPackages(data || []);
+    setLoading(false);
   };
 
-  /* ===============================
-     CANCEL PAYMENT
-  =============================== */
+  const handleSelectPackage = (pkg) => {
+    setSelectedPackage(pkg);
+    setShowPayment(true);
+    setOrderSuccess(false);
+    setVoucherCode("");
+  };
 
-  const cancelPayment = async () => {
-    if (!payment?.id) return;
-
-    const { error } =
-      await supabase
-        .from("payment_orders")
-        .update({
-          status: "CANCELLED",
-        })
-        .eq("id", payment.id)
-        .eq("user_id", userId)
-        .eq("status", "PENDING");
-
-    if (error) {
-      setToast(
-        "Không thể hủy giao dịch."
-      );
-
+  const handlePayment = async () => {
+    if (!username.trim()) {
+      alert("Vui lòng nhập tên tài khoản Roblox!");
       return;
     }
 
-    setPayment(null);
+    if (!selectedPackage) return;
 
-    setToast(
-      "Đã hủy giao dịch."
-    );
-  };
+    if (paymentMethod === "coin") {
+      if (userCoins < selectedPackage.coin_cost) {
+        alert(`⚠️ Không đủ Coin! Cần ${selectedPackage.coin_cost} Coin. Hiện có ${userCoins} Coin.`);
+        return;
+      }
 
-  /* ===============================
-     PAYMENT SUCCESS
-  =============================== */
+      setProcessing(true);
 
-  const handlePaid = async () => {
-    setToast(
-      "Thanh toán thành công! Đơn hàng đang được xử lý."
-    );
+      // Trừ Coin
+      const { error: deductError } = await supabase
+        .from('profiles')
+        .update({ coins: userCoins - selectedPackage.coin_cost })
+        .eq('id', session.user.id);
 
-    setPayment(null);
+      if (deductError) {
+        alert("Lỗi: " + deductError.message);
+        setProcessing(false);
+        return;
+      }
 
-    await loadHistory();
-  };
+      // Tạo đơn hàng
+      const { error: orderError } = await supabase
+        .from('redemption_orders')
+        .insert({
+          user_id: session.user.id,
+          package_name: selectedPackage.name,
+          package_id: selectedPackage.id,
+          coins_charged: selectedPackage.coin_cost,
+          delivery_target: username.trim(),
+          delivery_method: 'coin',
+          status: 'pending',
+        });
 
-  /* ===============================
-     COPY
-  =============================== */
+      if (orderError) {
+        alert("Lỗi tạo đơn: " + orderError.message);
+        setProcessing(false);
+        return;
+      }
 
-  const copyText = async (text) => {
-    try {
-      await navigator.clipboard.writeText(
-        text
-      );
+      // Cập nhật profile
+      setProfile(prev => ({
+        ...prev,
+        coins: userCoins - selectedPackage.coin_cost
+      }));
 
-      setCopied(true);
+      setProcessing(false);
+      setOrderSuccess(true);
+      
+      setTimeout(() => {
+        setShowPayment(false);
+        setSelectedPackage(null);
+        setUsername("");
+        setOrderSuccess(false);
+      }, 3000);
 
-      setTimeout(
-        () => setCopied(false),
-        1500
-      );
-    } catch {
-      setToast(
-        "Không thể sao chép."
-      );
+    } else {
+      // Thanh toán bằng ngân hàng - chuyển sang trang hướng dẫn
+      alert("💳 Vui lòng chuyển khoản theo thông tin bên dưới:\n\n" +
+        "🏦 Ngân hàng: Vietcombank\n" +
+        "📌 Số TK: 123456789\n" +
+        "👤 Chủ TK: NXX315\n" +
+        "📝 Nội dung: " + session.user.id.slice(0, 8) + "\n\n" +
+        "💰 Số tiền: " + selectedPackage.price?.toLocaleString('vi-VN') + "đ\n\n" +
+        "⏳ Sau khi chuyển khoản, đơn sẽ được xử lý trong 15-30 phút.");
+      
+      // Tạo đơn chờ thanh toán
+      const { error: orderError } = await supabase
+        .from('redemption_orders')
+        .insert({
+          user_id: session.user.id,
+          package_name: selectedPackage.name,
+          package_id: selectedPackage.id,
+          coins_charged: selectedPackage.coin_cost,
+          delivery_target: username.trim(),
+          delivery_method: 'bank',
+          status: 'pending',
+        });
+
+      if (!orderError) {
+        setShowPayment(false);
+        setSelectedPackage(null);
+        setUsername("");
+      }
     }
   };
 
-  /* ===============================
-     PAYMENT PAGE
-  =============================== */
+  const copyUserId = () => {
+    navigator.clipboard.writeText(session?.user?.id || "");
+  };
 
-  if (payment) {
+  const formatPrice = (price) => {
+    if (!price) return "0đ";
+    return Number(price).toLocaleString('vi-VN') + "đ";
+  };
+
+  if (loading) {
     return (
-      <NPayPaymentPage
-        payment={payment}
-        onBack={() =>
-          setPayment(null)
-        }
-        onCancel={
-          cancelPayment
-        }
-        onPaid={
-          handlePaid
-        }
-        onCopy={copyText}
-        copied={copied}
-      />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-blue-500" />
+      </div>
     );
   }
 
-  /* ===============================
-     MAIN STORE
-  =============================== */
-
   return (
-    <div className="min-h-screen bg-[#f5f7fb] pb-24">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 shadow-lg">
+        <div className="flex items-center gap-3 max-w-md mx-auto">
+          <button onClick={() => navigate(-1)} className="text-white/80 hover:text-white">
+            <ArrowLeft size={20} />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-lg font-bold text-white">Cửa hàng Roblox</h1>
+            <div className="flex items-center gap-1 mt-0.5">
+              <Coins size={14} className="text-yellow-300" />
+              <span className="text-sm font-semibold text-white">{userCoins.toLocaleString('vi-VN')} Coin</span>
+            </div>
+          </div>
+          <button className="text-white/80 hover:text-white">
+            <Search size={20} />
+          </button>
+        </div>
+      </header>
 
-      <TopHeader />
-
-      <main className="mx-auto w-full max-w-md px-4 pt-4">
-
-        {/* HEADER */}
-
-        <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 p-5 text-white shadow-sm">
-
+      <main className="max-w-md mx-auto px-4 pt-4">
+        {/* Banner */}
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 mb-4 text-white">
           <div className="flex items-center gap-3">
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Gift size={25} />
-            </div>
-
+            <Gift size={28} className="text-yellow-300" />
             <div>
-              <div className="text-xl font-bold">
-                Cửa hàng
-              </div>
-
-              <div className="text-sm text-white/80">
-                Đổi xu hoặc thanh toán VietQR
-              </div>
+              <p className="font-bold">🎉 Ưu đãi đặc biệt</p>
+              <p className="text-sm opacity-90">Giảm 10% khi mua gói 500 Robux trở lên</p>
             </div>
-
           </div>
-
-          <div className="mt-5 flex items-center justify-between rounded-2xl bg-white/10 p-4">
-
-            <span className="text-sm">
-              Số dư xu
-            </span>
-
-            <div className="flex items-center gap-2 font-bold">
-
-              <Coins
-                size={18}
-                className="text-yellow-300"
-              />
-
-              {formatCoins(coins)}
-
-            </div>
-
-          </div>
-
         </div>
 
-        {/* ROBLOX */}
-
-        <div className="mt-6">
-
-          <div className="mb-3 flex items-center justify-between">
-
-            <h2 className="text-lg font-bold">
-              Roblox
-            </h2>
-
-            <Gamepad2
-              size={20}
-              className="text-blue-600"
-            />
-
-          </div>
-
-          <div className="space-y-3">
-
-            {/* VNG */}
-
-            <div className="rounded-2xl border bg-white p-4 shadow-sm">
-
-              <div className="flex items-center gap-3">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50">
-
-                  <Sparkles
-                    className="text-red-500"
-                  />
-
-                </div>
-
+        {/* Danh sách gói */}
+        <div className="grid grid-cols-2 gap-3">
+          {packages.map((pkg) => (
+            <button
+              key={pkg.id}
+              onClick={() => handleSelectPackage(pkg)}
+              className="bg-white rounded-2xl p-4 border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all text-left"
+            >
+              <div className="flex items-start justify-between">
                 <div>
-
-                  <div className="font-bold">
-                    VNG – Nạp trực tiếp
+                  <div className="flex items-center gap-1.5">
+                    <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                    <span className="text-xs font-bold text-gray-500">{pkg.robux || "Robux"}</span>
                   </div>
-
-                  <div className="text-xs text-gray-500">
-                    Nạp Robux trực tiếp vào Roblox ID
-                  </div>
-
+                  <p className="text-sm font-bold text-gray-900 mt-1">{pkg.name}</p>
                 </div>
-
+                <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full">
+                  <Coins size={12} className="text-yellow-500" />
+                  <span className="text-xs font-bold text-gray-700">{pkg.coin_cost.toLocaleString('vi-VN')}</span>
+                </div>
               </div>
-
-              <button
-                onClick={() =>
-                  openPackage(
-                    ROBUX_PACKAGE
-                  )
-                }
-                className="mt-4 flex w-full items-center justify-between rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white"
-              >
-
-                <span>
-                  40 Robux ·{" "}
-                  {formatVND(
-                    ROBUX_PACKAGE.price_vnd
-                  )}
+              {pkg.price && (
+                <p className="text-xs text-gray-400 mt-1.5">{formatPrice(pkg.price)}</p>
+              )}
+              {pkg.discount && (
+                <span className="inline-block mt-1.5 text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+                  -{pkg.discount}%
                 </span>
-
-                <ChevronRight
-                  size={18}
-                />
-
-              </button>
-
-            </div>
-
-            {/* CARD ROBUX */}
-
-            <div className="rounded-2xl border bg-white p-4 shadow-sm">
-
-              <div className="flex items-center gap-3">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50">
-
-                  <Swords
-                    className="text-purple-500"
-                  />
-
-                </div>
-
-                <div>
-
-                  <div className="font-bold">
-                    Card Robux
-                  </div>
-
-                  <div className="text-xs text-gray-500">
-                    Danh mục đang cập nhật
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* HISTORY BUTTON */}
-
-        <button
-          onClick={() =>
-            setShowHistory(
-              (value) => !value
-            )
-          }
-          className="mt-6 flex w-full items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
+        {/* Lịch sử đơn hàng */}
+        <button 
+          onClick={() => navigate("/order-history")}
+          className="mt-4 w-full flex items-center justify-between bg-white rounded-xl p-3 border border-gray-200"
         >
-
-          <div className="font-bold">
-            Lịch sử đơn hàng
+          <div className="flex items-center gap-2">
+            <Package size={18} className="text-blue-500" />
+            <span className="text-sm font-medium text-gray-700">Lịch sử đơn hàng</span>
           </div>
-
-          <ChevronRight
-            size={19}
-            className={
-              showHistory
-                ? "rotate-90 transition"
-                : "transition"
-            }
-          />
-
+          <ChevronRight size={18} className="text-gray-400" />
         </button>
-
-        {/* HISTORY */}
-
-        {showHistory && (
-          <div className="mt-3 space-y-3">
-
-            {history.length === 0 ? (
-
-              <div className="rounded-2xl bg-white p-6 text-center text-sm text-gray-500">
-                Chưa có đơn hàng.
-              </div>
-
-            ) : (
-
-              history.map((order) => {
-
-                const config =
-                  statusConfig[
-                    order.status
-                  ] ||
-                  statusConfig.pending;
-
-                const Icon =
-                  config.icon;
-
-                return (
-                  <div
-                    key={order.id}
-                    className="rounded-2xl bg-white p-4 shadow-sm"
-                  >
-
-                    <div className="flex items-start justify-between gap-3">
-
-                      <div>
-
-                        <div className="font-semibold">
-                          {order.package_name}
-                        </div>
-
-                        <div className="mt-1 text-xs text-gray-500">
-                          {formatDate(
-                            order.created_at
-                          )}
-                        </div>
-
-                      </div>
-
-                      <div className="flex items-center gap-1 text-xs font-semibold">
-
-                        <Icon size={15} />
-
-                        {config.label}
-
-                      </div>
-
-                    </div>
-
-                    {order.order_code && (
-                      <div className="mt-3 text-xs text-gray-500">
-
-                        Mã đơn:{" "}
-
-                        <b>
-                          {order.order_code}
-                        </b>
-
-                      </div>
-                    )}
-
-                  </div>
-                );
-              })
-
-            )}
-
-          </div>
-        )}
-
       </main>
 
-      {/* ORDER PANEL */}
+      {/* Payment Modal */}
+      {showPayment && selectedPackage && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
+          <div className="w-full max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-5 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Xác nhận đơn hàng</h2>
+              <button 
+                onClick={() => {
+                  setShowPayment(false);
+                  setSelectedPackage(null);
+                  setUsername("");
+                  setOrderSuccess(false);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-      {selectedPackage && (
-        <OrderPanel
-          pkg={selectedPackage}
-          deliveryTarget={
-            deliveryTarget
-          }
-          setDeliveryTarget={
-            setDeliveryTarget
-          }
-          paymentMethod={
-            paymentMethod
-          }
-          setPaymentMethod={
-            setPaymentMethod
-          }
-          onClose={
-            closePackage
-          }
-          onRedeem={
-            handleRedeem
-          }
-          loading={loading}
-        />
+            {orderSuccess ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <Check size={32} className="text-green-500" />
+                </div>
+                <p className="mt-3 text-lg font-bold text-gray-900">Đặt hàng thành công! 🎉</p>
+                <p className="text-sm text-gray-500">Đơn hàng đang được xử lý</p>
+              </div>
+            ) : (
+              <>
+                {/* Step 1: Username */}
+                <div className="bg-blue-50 rounded-xl p-3 mb-4">
+                  <p className="text-xs font-bold text-blue-600">1. Đăng nhập bằng tên tài khoản</p>
+                  <button 
+                    onClick={() => setShowUserIdGuide(true)}
+                    className="text-[10px] text-blue-500 underline mt-0.5"
+                  >
+                    Hướng dẫn tìm ID
+                  </button>
+                  <div className="flex items-center gap-2 mt-2">
+                    <User size={16} className="text-gray-400" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Tên tài khoản"
+                      className="flex-1 bg-white rounded-lg px-3 py-2 text-sm outline-none border border-gray-200 focus:border-blue-400"
+                    />
+                  </div>
+                  {session?.user?.id && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] text-gray-400">ID: {session.user.id.slice(0, 8)}...</span>
+                      <button onClick={copyUserId} className="text-[10px] text-blue-500">
+                        <Copy size={12} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 2: Package info */}
+                <div className="bg-gray-50 rounded-xl p-3 mb-4">
+                  <p className="text-xs font-bold text-gray-600">2. Chọn gói</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">{selectedPackage.name}</p>
+                      <p className="text-xs text-gray-500">{selectedPackage.robux || ""} Robux</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-blue-600">{selectedPackage.coin_cost.toLocaleString('vi-VN')} Coin</p>
+                      {selectedPackage.price && (
+                        <p className="text-xs text-gray-400 line-through">{formatPrice(selectedPackage.price)}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Methods */}
+                <div className="mb-4">
+                  <p className="text-xs font-bold text-gray-600 mb-2">Phương thức thanh toán</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setPaymentMethod("coin")}
+                      className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                        paymentMethod === "coin" 
+                          ? "border-blue-500 bg-blue-50" 
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <Coins size={18} className="text-yellow-500" />
+                      <div className="text-left">
+                        <p className="text-xs font-semibold">Coin</p>
+                        <p className="text-[8px] text-gray-400">Dùng Coin</p>
+                      </div>
+                      {paymentMethod === "coin" && <Check size={14} className="text-blue-500 ml-auto" />}
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod("bank")}
+                      className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                        paymentMethod === "bank" 
+                          ? "border-blue-500 bg-blue-50" 
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <Landmark size={18} className="text-green-500" />
+                      <div className="text-left">
+                        <p className="text-xs font-semibold">Ngân hàng</p>
+                        <p className="text-[8px] text-gray-400">VietQR / Bank</p>
+                      </div>
+                      {paymentMethod === "bank" && <Check size={14} className="text-blue-500 ml-auto" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Voucher */}
+                <button 
+                  onClick={() => setShowVoucher(!showVoucher)}
+                  className="flex items-center gap-2 text-xs text-blue-500 mb-3"
+                >
+                  <Gift size={14} /> Mã giảm giá
+                  <ChevronRight size={14} className={`transition-transform ${showVoucher ? 'rotate-90' : ''}`} />
+                </button>
+
+                {showVoucher && (
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value)}
+                      placeholder="Nhập mã giảm giá"
+                      className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                    />
+                    <button className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium">
+                      Áp dụng
+                    </button>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="border-t border-gray-200 pt-3 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-600">Tổng thanh toán</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {paymentMethod === "coin" 
+                        ? selectedPackage.coin_cost.toLocaleString('vi-VN') + " Coin"
+                        : formatPrice(selectedPackage.price || selectedPackage.coin_cost * 100)
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                {/* Button */}
+                <button
+                  onClick={handlePayment}
+                  disabled={processing || !username.trim()}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none transition-all"
+                >
+                  {processing ? (
+                    <Loader2 size={18} className="animate-spin mx-auto" />
+                  ) : (
+                    paymentMethod === "coin" ? `Thanh toán ${selectedPackage.coin_cost} Coin` : "Thanh toán ngay"
+                  )}
+                </button>
+
+                <p className="mt-2 text-[9px] text-gray-400 text-center">
+                  Bằng việc nhấn nút “Thanh toán”, bạn đồng ý rằng giao dịch này không hoàn, không hủy.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* TOAST */}
-
-      {toast && (
-        <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-2xl bg-gray-900 px-4 py-3 text-sm font-medium text-white shadow-xl">
-          {toast}
+      {/* User ID Guide */}
+      {showUserIdGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-bold text-gray-900">Hướng dẫn tìm ID</h3>
+              <button onClick={() => setShowUserIdGuide(false)} className="text-gray-400">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm text-gray-600">
+              <p>1. Mở ứng dụng Roblox</p>
+              <p>2. Vào trang cá nhân của bạn</p>
+              <p>3. Nhấn vào avatar của bạn</p>
+              <p>4. ID sẽ hiển thị trong URL</p>
+              <div className="bg-gray-100 p-2 rounded-lg text-xs">
+                📌 Ví dụ: roblox.com/users/<span className="font-bold text-blue-500">123456789</span>/profile
+              </div>
+            </div>
+            <button
+              onClick={() => setShowUserIdGuide(false)}
+              className="mt-4 w-full py-2 rounded-lg bg-blue-500 text-white font-semibold"
+            >
+              Đã hiểu
+            </button>
+          </div>
         </div>
       )}
 
       <BottomNav />
-
     </div>
   );
-        }
+}
