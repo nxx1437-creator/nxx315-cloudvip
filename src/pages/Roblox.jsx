@@ -108,47 +108,73 @@ function PackageImage({ image, robux }) {
 // =====================================================
 
 async function findRobloxUser(username) {
+  const cleanUsername = username.trim();
+
   const response = await fetch(
     'https://users.roblox.com/v1/usernames/users',
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
-        usernames: [username],
+        usernames: [cleanUsername],
         excludeBannedUsers: false,
       }),
     }
   );
 
+  // Lấy response để biết Roblox thực sự trả gì
   if (!response.ok) {
-    throw new Error('Không thể kết nối Roblox');
+    let message = '';
+
+    try {
+      const errorData = await response.json();
+      message =
+        errorData?.errors?.[0]?.message ||
+        errorData?.message ||
+        '';
+    } catch {
+      // Không đọc được JSON
+    }
+
+    throw new Error(
+      message || `Roblox API lỗi HTTP ${response.status}`
+    );
   }
 
   const data = await response.json();
 
-  if (!data.data || data.data.length === 0) {
+  if (!Array.isArray(data.data) || data.data.length === 0) {
     return null;
   }
 
   const user = data.data[0];
 
+  // ===================================================
+  // LẤY AVATAR
+  // ===================================================
+
   let avatar = null;
 
   try {
     const avatarResponse = await fetch(
-      `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${user.id}&size=150x150&format=Png&isCircular=false`
+      `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${user.id}&size=150x150&format=Png&isCircular=false`,
+      {
+        headers: {
+          Accept: 'application/json',
+        },
+      }
     );
 
     if (avatarResponse.ok) {
       const avatarData = await avatarResponse.json();
 
-      avatar =
-        avatarData.data?.[0]?.imageUrl || null;
+      avatar = avatarData?.data?.[0]?.imageUrl || null;
     }
   } catch {
-    // Không lấy được avatar thì vẫn tiếp tục
+    // Avatar lỗi thì vẫn cho phép tài khoản được xác nhận
   }
 
   return {
