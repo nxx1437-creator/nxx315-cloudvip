@@ -1,10 +1,21 @@
+// src/pages/Store.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Gift, Coins, Star, ShoppingBag, ChevronRight, Sparkles, TrendingUp, Package, Zap, Gamepad2, Smartphone, Laptop } from "lucide-react";
+import { 
+  ArrowLeft, Search, Gift, Coins, Star, ShoppingBag, 
+  ChevronRight, Sparkles, TrendingUp, Package, Zap, 
+  Gamepad2, Smartphone, Laptop 
+} from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+
+// ============================================
+// SUPABASE CONFIG
+// ============================================
+const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
+const STORAGE_BUCKET = 'game_logos';
 
 // ============================================
 // DANH SÁCH GAME
@@ -13,56 +24,56 @@ const GAMES = [
   { 
     id: "play-together", 
     name: "Play Together VNG", 
-    icon: "🎮", 
     platform: "mobile",
     path: "/store/play-together",
     bg: "from-purple-500 to-pink-500",
-    popular: true
+    popular: true,
+    logo: "play-together.png"
   },
   { 
     id: "roblox-vn", 
     name: "Roblox VN", 
-    icon: "🧊", 
     platform: "mobile",
     path: "/shop-earn",
     bg: "from-blue-500 to-cyan-500",
-    popular: true
+    popular: true,
+    logo: "roblox-vn.png"
   },
   { 
     id: "pubg-mobile", 
     name: "PUBG Mobile VN", 
-    icon: "🔫", 
     platform: "mobile",
     path: "/store/pubg",
     bg: "from-orange-500 to-red-500",
-    popular: false
+    popular: false,
+    logo: "pubg-mobile.png"
   },
   { 
     id: "valorant", 
     name: "VALORANT", 
-    icon: "💀", 
     platform: "pc",
     path: "/store/valorant",
     bg: "from-red-600 to-red-800",
-    popular: false
+    popular: false,
+    logo: "valorant.png"
   },
   { 
     id: "zing-speed", 
     name: "ZingSpeed Mobile", 
-    icon: "🏎️", 
     platform: "mobile",
     path: "/store/zing-speed",
     bg: "from-yellow-500 to-orange-500",
-    popular: true
+    popular: true,
+    logo: "zing-speed.png"
   },
   { 
     id: "lien-minh", 
-    name: "Liên Minh Huyền Thoại: Tốc Chiến", 
-    icon: "⚔️", 
+    name: "Liên Minh Tốc Chiến", 
     platform: "mobile",
     path: "/store/lien-minh",
     bg: "from-blue-600 to-indigo-800",
-    popular: false
+    popular: false,
+    logo: "lien-minh.png"
   },
 ];
 
@@ -88,6 +99,22 @@ export default function Store() {
     const matchSearch = game.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchTab && matchSearch;
   });
+
+  // ===== TẠO URL LOGO =====
+  const getLogoUrl = (fileName) => {
+    return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+  };
+
+  // ===== XỬ LÝ LỖI ẢNH =====
+  const handleImageError = (e) => {
+    e.target.style.display = 'none';
+    // Hiển thị fallback icon
+    const parent = e.target.parentElement;
+    const fallback = document.createElement('span');
+    fallback.style.fontSize = '28px';
+    fallback.textContent = '🎮';
+    parent.appendChild(fallback);
+  };
 
   const popularGames = GAMES.filter(g => g.popular);
 
@@ -231,49 +258,68 @@ export default function Store() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-          {filteredGames.map(game => (
-            <button
-              key={game.id}
-              onClick={() => navigate(game.path)}
-              style={{
-                padding: '16px',
-                borderRadius: 16,
-                background: `linear-gradient(135deg, ${game.bg})`,
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                textAlign: 'left',
-                position: 'relative',
-                overflow: 'hidden',
-                minHeight: 100
-              }}
-            >
-              <div style={{ fontSize: 32, marginBottom: 4 }}>{game.icon}</div>
-              <p style={{ fontSize: 12, fontWeight: 700, margin: 0 }}>{game.name}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                <span style={{ fontSize: 9, opacity: 0.7, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>
-                  {game.platform === 'mobile' ? '📱 Mobile' : '💻 PC'}
-                </span>
-                <span style={{ fontSize: 9, opacity: 0.7, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>
-                  Nạp ngay
-                </span>
-              </div>
-              {game.popular && (
-                <span style={{ 
-                  position: 'absolute', 
-                  top: 8, 
-                  right: 8, 
-                  fontSize: 8, 
-                  fontWeight: 700, 
-                  background: 'rgba(255,255,255,0.2)', 
-                  padding: '2px 8px', 
-                  borderRadius: 10 
-                }}>
-                  🔥 HOT
-                </span>
-              )}
-            </button>
-          ))}
+          {filteredGames.map(game => {
+            const logoUrl = getLogoUrl(game.logo);
+            return (
+              <button
+                key={game.id}
+                onClick={() => navigate(game.path)}
+                style={{
+                  padding: '16px',
+                  borderRadius: 16,
+                  background: `linear-gradient(135deg, ${game.bg})`,
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  minHeight: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}
+              >
+                {/* Logo */}
+                <img 
+                  src={logoUrl}
+                  alt={game.name}
+                  onError={handleImageError}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    objectFit: 'cover',
+                    background: 'rgba(255,255,255,0.1)',
+                    marginBottom: 4
+                  }}
+                />
+                <p style={{ fontSize: 12, fontWeight: 700, margin: 0 }}>{game.name}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  <span style={{ fontSize: 9, opacity: 0.7, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>
+                    {game.platform === 'mobile' ? '📱 Mobile' : '💻 PC'}
+                  </span>
+                  <span style={{ fontSize: 9, opacity: 0.7, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>
+                    Nạp ngay
+                  </span>
+                </div>
+                {game.popular && (
+                  <span style={{ 
+                    position: 'absolute', 
+                    top: 8, 
+                    right: 8, 
+                    fontSize: 8, 
+                    fontWeight: 700, 
+                    background: 'rgba(255,255,255,0.2)', 
+                    padding: '2px 8px', 
+                    borderRadius: 10 
+                  }}>
+                    🔥 HOT
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
