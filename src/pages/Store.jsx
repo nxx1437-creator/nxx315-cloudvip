@@ -19,7 +19,7 @@ const BENEFITS = [
 ];
 
 const GAMES = [
-  { id: 1, name: 'Roblox VN', category: 'mobile',logo: roblox-vn.png },
+  { id: 1, name: 'Roblox VN', category: 'mobile', imageUrl: null },
   { id: 2, name: 'PUBG Mobile VN', category: 'mobile', imageUrl: null },
   { id: 3, name: 'VALORANT', category: 'pc', imageUrl: null },
   { id: 4, name: 'Play Together VNG', category: 'mobile', imageUrl: null },
