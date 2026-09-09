@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 
-const CHECK_INTERVAL = 60000; // 60s, chỉnh tùy ý
+const CHECK_INTERVAL = 60000; // 60s
+const AUTO_RELOAD_DELAY = 3000; // chờ 3s rồi tự reload
 
 export default function VersionChecker() {
-  const [hasNewVersion, setHasNewVersion] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const currentVersion = useRef(null);
 
   useEffect(() => {
@@ -17,10 +18,13 @@ export default function VersionChecker() {
         if (currentVersion.current === null) {
           currentVersion.current = data.version;
         } else if (data.version !== currentVersion.current) {
-          setHasNewVersion(true);
+          setUpdating(true);
+          setTimeout(() => {
+            window.location.reload();
+          }, AUTO_RELOAD_DELAY);
         }
       } catch (err) {
-        // im lặng bỏ qua, không làm phiền user vì lỗi mạng tạm thời
+        // bỏ qua lỗi mạng tạm thời
       }
     };
 
@@ -29,48 +33,24 @@ export default function VersionChecker() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!hasNewVersion) return null;
+  if (!updating) return null;
 
   return (
-    <div style={overlayStyle}>
-      <div style={cardStyle}>
-        <div style={iconStyle}>⚠️</div>
-        <p style={labelStyle}>APPLICATION UPDATE</p>
-        <h2 style={titleStyle}>Đã có bản cập nhật mới</h2>
-        <p style={descStyle}>
-          Trang web vừa được cập nhật. Vui lòng tải lại để dùng phiên bản mới nhất.
-        </p>
-        <button style={btnStyle} onClick={() => window.location.reload()}>
-          ↻ Tải lại ngay
-        </button>
-      </div>
+    <div style={toastStyle}>
+      <span style={dotStyle} />
+      Đang cập nhật phiên bản mới...
     </div>
   );
 }
 
-const overlayStyle = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  zIndex: 9999, padding: 20,
+const toastStyle = {
+  position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+  background: '#111', color: '#fff', padding: '12px 20px', borderRadius: 999,
+  fontSize: 14, display: 'flex', alignItems: 'center', gap: 8,
+  zIndex: 9999, fontFamily: 'system-ui, sans-serif', boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
 };
 
-const cardStyle = {
-  background: '#fff', borderRadius: 16, padding: '40px 28px',
-  maxWidth: 340, width: '100%', textAlign: 'center',
-  borderTop: '6px solid #d4ff3f', fontFamily: 'system-ui, sans-serif',
-};
-
-const iconStyle = {
-  width: 56, height: 56, background: '#e8ff4d', border: '2px solid #111',
-  borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  margin: '0 auto 20px', fontSize: 26,
-};
-
-const labelStyle = { fontSize: 11, letterSpacing: 2, color: '#888', margin: 0 };
-const titleStyle = { fontSize: 22, margin: '10px 0' };
-const descStyle = { color: '#666', fontSize: 14, marginBottom: 24 };
-
-const btnStyle = {
-  background: '#111', color: '#fff', border: 'none', borderRadius: 999,
-  padding: '14px 28px', fontSize: 15, cursor: 'pointer', width: '100%',
+const dotStyle = {
+  width: 8, height: 8, borderRadius: '50%', background: '#4ade80',
+  animation: 'pulse 1s infinite',
 };
