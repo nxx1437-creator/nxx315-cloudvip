@@ -3,6 +3,7 @@ import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, G
 import { supabase } from "../lib/supabaseClient.js";
 import emailjs from '@emailjs/browser';
 import BanUserModal from '../components/BanUserModal.jsx';
+import RobloxOrdersTab from "./RobloxOrdersTab.jsx";
 
 const ADMIN_CHAT_ID = 6152450878; 
 
@@ -11,8 +12,27 @@ const TEMPLATE_ID_REPLY = 'template_i16qct';
 const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
 
 const TABS = [
-  { key: "orders", label: "Đơn hàng", icon: Package, desc: "Quản lý đơn đổi thưởng" },
-  { key: "tasks", label: "Nhiệm vụ", icon: ListChecks, desc: "Cấu hình nhiệm vụ" },
+  {
+    key: "orders",
+    label: "Đơn hàng",
+    icon: Package,
+    desc: "Quản lý đơn đổi thưởng",
+  },
+
+  {
+    key: "roblox-orders",
+    label: "Đơn Roblox",
+    icon: ShoppingBag,
+    desc: "Quản lý đơn nạp Robux",
+  },
+
+  {
+    key: "tasks",
+    label: "Nhiệm vụ",
+    icon: ListChecks,
+    desc: "Cấu hình nhiệm vụ",
+  },
+
   { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
   { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản & Ban" },
   { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
@@ -51,6 +71,7 @@ export default function Admin() {
 
       <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
         {tab === "orders" && <OrdersTab />}
+        {tab === "roblox-orders" && <RobloxOrdersTab />}
         {tab === "tasks" && <TasksTab />}
         {tab === "packages" && <PackagesTab />}
         {tab === "users" && <UsersTab />}
