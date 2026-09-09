@@ -14,10 +14,10 @@ const STORAGE_BUCKET = 'game_logos';
 // DATA
 // ============================================
 const BENEFITS = [
-  { id: 1, icon: Gift, label: 'Ưu đãi hấp dẫn' },
-  { id: 2, icon: Trophy, label: 'Vật phẩm độc quyền' },
-  { id: 3, icon: CreditCard, label: 'Thanh toán trực tiếp' },
-  { id: 4, icon: Percent, label: 'Giá tốt nhất' },
+  { icon: Gift, label: 'Ưu đãi hấp dẫn' },
+  { icon: Trophy, label: 'Vật phẩm độc quyền' },
+  { icon: CreditCard, label: 'Thanh toán trực tiếp' },
+  { icon: Percent, label: 'Giá tốt nhất' },
 ];
 
 const GAMES = [
@@ -30,7 +30,7 @@ const GAMES = [
 ];
 
 // ============================================
-// COMPONENT CHÍNH
+// MAIN
 // ============================================
 export default function Store() {
   const navigate = useNavigate();
@@ -51,28 +51,24 @@ export default function Store() {
   });
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-[#f5f7fa] pb-20">
       
       {/* ===== HEADER ===== */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">G</div>
-            <span className="font-bold text-gray-800 text-sm">UNGAMES Shop</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
-              🪙 {userCoins.toLocaleString()}
-            </span>
-            <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-              🔔
-            </button>
-          </div>
+      <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100 sticky top-0 z-30">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">G</div>
+          <span className="font-bold text-gray-800 text-sm">UNGAMES Shop</span>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+            🪙 {userCoins.toLocaleString()}
+          </span>
+          <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-sm">🔔</button>
+        </div>
+      </div>
 
       {/* ===== BANNER ===== */}
-      <div className="max-w-md mx-auto px-4 pt-3">
+      <div className="mx-4 mt-3">
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 aspect-[4/3] flex items-center justify-center p-5">
           <div className="absolute right-3 top-3 text-right">
             <div className="text-2xl font-black text-white">12</div>
@@ -93,8 +89,23 @@ export default function Store() {
         </div>
       </div>
 
+      {/* ===== LỢI ÍCH ===== */}
+      <div className="px-4 mt-4">
+        <div className="grid grid-cols-4 gap-2">
+          {BENEFITS.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div key={index} className="bg-white rounded-xl py-2.5 flex flex-col items-center gap-0.5 border border-gray-100 shadow-sm">
+                <Icon size={18} className="text-blue-500" />
+                <span className="text-[8px] font-medium text-gray-600 text-center leading-tight">{item.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ===== DÀNH CHO BẠN ===== */}
-      <div className="max-w-md mx-auto px-4 pt-4">
+      <div className="px-4 mt-4">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-bold text-gray-800">🎮 DÀNH CHO BẠN</h2>
           <button className="text-[10px] text-blue-500 font-medium">Xem thêm</button>
@@ -114,7 +125,7 @@ export default function Store() {
                 <p className="text-[10px] font-semibold text-gray-700 truncate">{game.name}</p>
                 <button 
                   onClick={() => navigate(game.path)}
-                  className="mt-1 w-full bg-blue-500 text-white text-[9px] font-bold rounded-full py-1"
+                  className="mt-1 w-full bg-blue-500 text-white text-[9px] font-bold rounded-full py-1 hover:bg-blue-600 transition"
                 >
                   Nạp ngay
                 </button>
@@ -124,23 +135,11 @@ export default function Store() {
         </div>
       </div>
 
-      {/* ===== LỢI ÍCH ===== */}
-      <div className="max-w-md mx-auto px-4 pt-5">
-        <h2 className="text-sm font-bold text-gray-800 mb-2">✨ Lợi ích khi nạp</h2>
-        <div className="grid grid-cols-4 gap-2">
-          {BENEFITS.map(({ id, icon: Icon, label }) => (
-            <div key={id} className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl py-2.5 flex flex-col items-center gap-0.5 border border-blue-100">
-              <Icon size={18} className="text-blue-500" />
-              <span className="text-[8px] font-medium text-gray-600 text-center leading-tight">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ===== DANH SÁCH GAME ===== */}
-      <div className="max-w-md mx-auto px-4 pt-5 pb-20">
+      <div className="px-4 mt-4 pb-20">
         <h2 className="text-sm font-bold text-gray-800 mb-2">📋 DANH SÁCH GAME</h2>
 
+        {/* Tabs */}
         <div className="flex gap-1.5 mb-3">
           {[
             { key: 'all', label: 'TẤT CẢ' },
@@ -151,7 +150,7 @@ export default function Store() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`px-3 py-1 rounded-full text-[9px] font-bold transition ${
-                activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'
+                activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
               }`}
             >
               {tab.label}
@@ -160,7 +159,7 @@ export default function Store() {
         </div>
 
         {/* Search */}
-        <div className="flex items-center bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 mb-3">
+        <div className="flex items-center bg-white rounded-xl px-3 py-2 border border-gray-200 mb-3">
           <Search size={14} className="text-gray-400" />
           <input
             value={search}
@@ -170,12 +169,12 @@ export default function Store() {
           />
         </div>
 
-        {/* Game Grid */}
+        {/* Game Grid - 3 cột như ảnh mẫu */}
         <div className="grid grid-cols-3 gap-2.5">
           {filteredGames.map(game => (
             <div 
               key={game.id} 
-              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer"
+              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition"
               onClick={() => navigate(game.path)}
             >
               <div className={`aspect-square bg-gradient-to-br ${game.bg} flex items-center justify-center p-3`}>
@@ -188,7 +187,7 @@ export default function Store() {
               </div>
               <div className="p-1.5 text-center">
                 <p className="text-[8px] font-semibold text-gray-700 truncate">{game.name}</p>
-                <button className="mt-0.5 w-full bg-blue-500 text-white text-[7px] font-bold rounded-full py-0.5">
+                <button className="mt-0.5 w-full bg-blue-500 text-white text-[7px] font-bold rounded-full py-0.5 hover:bg-blue-600 transition">
                   Nạp
                 </button>
               </div>
