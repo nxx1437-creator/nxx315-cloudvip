@@ -18,6 +18,7 @@ import {
 
 import TopHeader from '../components/TopHeader';
 import BottomNav from '../components/BottomNav';
+import { supabase } from '../lib/supabaseClient.js';
 
 const SUPABASE_URL =
   'https://rwglwovohbyqmbbzdvdj.supabase.co';
@@ -58,37 +59,18 @@ const VNG_PACKAGES = [
 ];
 
 const CARD_TYPES = [
-  {
-    name: 'Viettel',
-    discount: 19,
-  },
-  {
-    name: 'Mobifone',
-    discount: 19.5,
-  },
-  {
-    name: 'Vinaphone',
-    discount: 19.5,
-  },
-  {
-    name: 'Garena',
-    discount: 14.5,
-  },
-  {
-    name: 'Zing',
-    discount: 13.5,
-  },
+  { name: 'Viettel', discount: 19 },
+  { name: 'Mobifone', discount: 19.5 },
+  { name: 'Vinaphone', discount: 19.5 },
+  { name: 'Garena', discount: 14.5 },
+  { name: 'Zing', discount: 13.5 },
 ];
 
 function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price);
 }
 
-function PackageCard({
-  pkg,
-  selected,
-  onClick,
-}) {
+function PackageCard({ pkg, selected, onClick }) {
   return (
     <button
       type="button"
@@ -231,34 +213,20 @@ function PackageSection({
           <PackageCard
             key={pkg.id}
             pkg={pkg}
-            selected={
-              selectedPackage?.id === pkg.id
-            }
-            onClick={() =>
-              setSelectedPackage(pkg)
-            }
+            selected={selectedPackage?.id === pkg.id}
+            onClick={() => setSelectedPackage(pkg)}
           />
         ))}
       </div>
     </section>
   );
 }
-
-// =====================================================
-// PAYMENT METHODS
-// =====================================================
-
 function PaymentSection({
   totalPrice,
+  order,
   onBack,
 }) {
   const [paymentMethod, setPaymentMethod] =
-    useState('');
-
-  const [cardType, setCardType] =
-    useState('Viettel');
-
-  const [cardValue, setCardValue] =
     useState('');
 
   const [cards, setCards] = useState([
@@ -270,6 +238,25 @@ function PaymentSection({
       code: '',
     },
   ]);
+
+  const [copied, setCopied] = useState('');
+
+  const transferNote = order
+    ? `NAP ROBLOX ${order.order_code} ${order.roblox_username} ${order.robux}ROBUX`
+    : '';
+
+  const copyText = async (text, type) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(type);
+
+      setTimeout(() => {
+        setCopied('');
+      }, 1500);
+    } catch (error) {
+      console.error('Copy error:', error);
+    }
+  };
 
   const addCard = () => {
     setCards((prev) => [
@@ -290,11 +277,7 @@ function PaymentSection({
     );
   };
 
-  const updateCard = (
-    id,
-    field,
-    value
-  ) => {
+  const updateCard = (id, field, value) => {
     setCards((prev) =>
       prev.map((card) =>
         card.id === id
@@ -329,16 +312,27 @@ function PaymentSection({
             {formatPrice(totalPrice)} VNĐ
           </span>
         </p>
+
+        {order?.order_code && (
+          <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3">
+            <div className="text-xs font-semibold text-slate-500">
+              Mã đơn hàng
+            </div>
+
+            <div className="mt-1 font-black text-blue-600">
+              {order.order_code}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* PAYMENT METHOD */}
-
       <div className="grid gap-3 sm:grid-cols-3">
+
+        {/* COIN */}
+
         <button
           type="button"
-          onClick={() =>
-            setPaymentMethod('coin')
-          }
+          onClick={() => setPaymentMethod('coin')}
           className={`rounded-2xl border p-4 text-left transition ${
             paymentMethod === 'coin'
               ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
@@ -359,11 +353,11 @@ function PaymentSection({
           </div>
         </button>
 
+        {/* BANK */}
+
         <button
           type="button"
-          onClick={() =>
-            setPaymentMethod('bank')
-          }
+          onClick={() => setPaymentMethod('bank')}
           className={`rounded-2xl border p-4 text-left transition ${
             paymentMethod === 'bank'
               ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
@@ -384,11 +378,11 @@ function PaymentSection({
           </div>
         </button>
 
+        {/* CARD */}
+
         <button
           type="button"
-          onClick={() =>
-            setPaymentMethod('card')
-          }
+          onClick={() => setPaymentMethod('card')}
           className={`rounded-2xl border p-4 text-left transition ${
             paymentMethod === 'card'
               ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
@@ -410,7 +404,9 @@ function PaymentSection({
         </button>
       </div>
 
-      {/* COIN */}
+      {/* =========================================
+          THANH TOÁN COIN
+      ========================================= */}
 
       {paymentMethod === 'coin' && (
         <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5">
@@ -450,21 +446,25 @@ function PaymentSection({
         </div>
       )}
 
-      {/* BANK */}
+      {/* =========================================
+          CHUYỂN KHOẢN
+      ========================================= */}
 
       {paymentMethod === 'bank' && (
         <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5">
+
           <div className="mb-4">
             <h3 className="font-bold text-slate-900">
               Chuyển khoản MB Bank
             </h3>
 
             <p className="mt-1 text-sm text-slate-500">
-              Vui lòng chuyển đúng số tiền bên dưới.
+              Vui lòng chuyển đúng số tiền và nội dung.
             </p>
           </div>
 
           <div className="space-y-3 rounded-2xl bg-white p-4">
+
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-slate-500">
                 Ngân hàng
@@ -506,35 +506,102 @@ function PaymentSection({
                 {formatPrice(totalPrice)} VNĐ
               </span>
             </div>
+
+          </div>
+
+          {/* MÃ ĐƠN */}
+
+          <div className="mt-4 rounded-2xl border border-blue-200 bg-white p-4">
+            <div className="text-sm text-slate-500">
+              Mã đơn
+            </div>
+
+            <div className="mt-1 text-xl font-black text-blue-600">
+              {order?.order_code}
+            </div>
+          </div>
+
+          {/* NỘI DUNG CHUYỂN KHOẢN */}
+
+          <div className="mt-4 rounded-2xl border border-blue-200 bg-white p-4">
+
+            <div className="font-bold text-slate-900">
+              Nội dung chuyển khoản
+            </div>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Nhập đúng nội dung này để Admin nhận diện đơn.
+            </p>
+
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 p-3">
+
+              <div className="min-w-0 flex-1 break-all text-sm font-bold text-slate-800">
+                {transferNote}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  copyText(
+                    transferNote,
+                    'note'
+                  )
+                }
+                className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-3 text-sm font-bold text-white hover:bg-blue-700"
+              >
+                <Copy size={16} />
+
+                {copied === 'note'
+                  ? 'Đã copy'
+                  : 'Copy'}
+              </button>
+
+            </div>
           </div>
 
           <button
             type="button"
             onClick={() =>
-              navigator.clipboard?.writeText(
-                '0939339622'
+              copyText(
+                '0939339622',
+                'account'
               )
             }
             className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white font-bold text-blue-600 hover:bg-blue-50"
           >
             <Copy size={17} />
-            Sao chép số tài khoản
+
+            {copied === 'account'
+              ? 'Đã copy'
+              : 'Sao chép số tài khoản'}
           </button>
+
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+            Sau khi chuyển khoản, vui lòng giữ lại
+            biên lai. Admin sẽ kiểm tra đơn hàng.
+          </div>
+
         </div>
       )}
 
-      {/* CARD */}
+      {/* =========================================
+          THẺ CÀO
+      ========================================= */}
 
       {paymentMethod === 'card' && (
         <div className="mt-5">
+
           <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+
             <div className="flex gap-3">
+
               <AlertTriangle
                 className="shrink-0 text-red-600"
                 size={21}
               />
 
               <div>
+
                 <div className="font-bold text-red-700">
                   Nguy hiểm
                 </div>
@@ -544,17 +611,23 @@ function PaymentSection({
                   thẻ! Nạp sai quá 5 lần vui lòng liên
                   hệ Admin.
                 </div>
+
               </div>
+
             </div>
+
           </div>
 
           <div className="mt-5 space-y-4">
+
             {cards.map((card, index) => (
               <div
                 key={card.id}
                 className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
               >
+
                 <div className="mb-4 flex items-center justify-between">
+
                   <div className="font-bold text-slate-900">
                     Thẻ cào #{index + 1}
                   </div>
@@ -571,9 +644,11 @@ function PaymentSection({
                       Xóa thẻ
                     </button>
                   )}
+
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
+
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Loại thẻ *
@@ -661,12 +736,15 @@ function PaymentSection({
                       className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
                     />
                   </div>
+
                 </div>
               </div>
             ))}
+
           </div>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+
             <button
               type="button"
               onClick={addCard}
@@ -682,33 +760,51 @@ function PaymentSection({
             >
               Nạp tiền
             </button>
+
           </div>
+
         </div>
       )}
     </section>
   );
-          }
-// =====================================================
-// MAIN ROBLOX
-// =====================================================
-
-export default function Roblox() {
+              }
+      export default function Roblox() {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
   const [player, setPlayer] = useState(null);
+
   const [selectedPackage, setSelectedPackage] =
     useState(null);
 
   const [loading, setLoading] = useState(false);
+
+  const [creatingOrder, setCreatingOrder] =
+    useState(false);
+
   const [error, setError] = useState('');
 
   const [showPayment, setShowPayment] =
     useState(false);
 
-  // ===================================================
-  // ROBLOX LOOKUP
-  // ===================================================
+  const [order, setOrder] = useState(null);
+
+  // ==========================================
+  // CHỌN GÓI
+  // ==========================================
+
+  const handleSelectPackage = (pkg) => {
+    setSelectedPackage(pkg);
+
+    // Gói mới = đơn cũ không còn phù hợp
+    setOrder(null);
+    setShowPayment(false);
+    setError('');
+  };
+
+  // ==========================================
+  // KIỂM TRA USERNAME ROBLOX
+  // ==========================================
 
   const handleConfirm = async () => {
     const cleanUsername = username.trim();
@@ -723,6 +819,10 @@ export default function Roblox() {
     setLoading(true);
     setError('');
     setPlayer(null);
+
+    // Username mới thì đơn cũ không còn phù hợp
+    setOrder(null);
+    setShowPayment(false);
 
     try {
       const response = await fetch(
@@ -756,11 +856,11 @@ export default function Roblox() {
     }
   };
 
-  // ===================================================
-  // CONTINUE
-  // ===================================================
+  // ==========================================
+  // TẠO ĐƠN HÀNG
+  // ==========================================
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!player) {
       setError(
         'Vui lòng kiểm tra tài khoản Roblox trước.'
@@ -775,17 +875,147 @@ export default function Roblox() {
       return;
     }
 
-    setError('');
-    setShowPayment(true);
+    // Nếu đã có đơn đúng với tài khoản + gói
+    // thì không tạo đơn mới
+    if (
+      order &&
+      Number(order.roblox_user_id) ===
+        Number(player.id) &&
+      order.package_id ===
+        selectedPackage.id
+    ) {
+      setError('');
+      setShowPayment(true);
 
-    setTimeout(() => {
-      document
-        .getElementById('payment-section')
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-    }, 50);
+      setTimeout(() => {
+        document
+          .getElementById(
+            'payment-section'
+          )
+          ?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+      }, 100);
+
+      return;
+    }
+
+    setCreatingOrder(true);
+    setError('');
+
+    try {
+      // ========================================
+      // LẤY SESSION NGƯỜI DÙNG
+      // ========================================
+
+      const {
+        data: sessionData,
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        throw new Error(
+          'Không thể kiểm tra phiên đăng nhập.'
+        );
+      }
+
+      const session =
+        sessionData?.session;
+
+      if (!session?.access_token) {
+        throw new Error(
+          'Bạn cần đăng nhập tài khoản Nxx315 để tạo đơn.'
+        );
+      }
+
+      // ========================================
+      // GỌI SUPABASE EDGE FUNCTION
+      // ========================================
+
+      const {
+        data,
+        error: functionError,
+      } = await supabase.functions.invoke(
+        'create-roblox-order',
+        {
+          body: {
+            roblox_user_id: player.id,
+
+            roblox_username:
+              player.username,
+
+            roblox_display_name:
+              player.displayName,
+
+            package_id:
+              selectedPackage.id,
+          },
+
+          headers: {
+            Authorization:
+              `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (functionError) {
+        console.error(
+          'Edge Function error:',
+          functionError
+        );
+
+        throw new Error(
+          functionError.message ||
+            'Không thể tạo đơn hàng.'
+        );
+      }
+
+      if (
+        !data?.success ||
+        !data?.order
+      ) {
+        throw new Error(
+          data?.error ||
+            'Không thể tạo đơn hàng.'
+        );
+      }
+
+      // ========================================
+      // LƯU ĐƠN
+      // ========================================
+
+      setOrder(data.order);
+      setShowPayment(true);
+
+      // ========================================
+      // CUỘN XUỐNG THANH TOÁN
+      // ========================================
+
+      setTimeout(() => {
+        document
+          .getElementById(
+            'payment-section'
+          )
+          ?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+      }, 100);
+
+    } catch (err) {
+      console.error(
+        'Create Roblox order error:',
+        err
+      );
+
+      setError(
+        err?.message ||
+          'Không thể tạo đơn hàng. Vui lòng thử lại.'
+      );
+    } finally {
+      setCreatingOrder(false);
+    }
   };
 
   const totalRobux = selectedPackage
@@ -798,24 +1028,28 @@ export default function Roblox() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
+
       <TopHeader />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
 
-        {/* BACK */}
+        {/* QUAY LẠI STORE */}
 
         <button
           type="button"
-          onClick={() => navigate('/store')}
+          onClick={() =>
+            navigate('/store')
+          }
           className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-blue-600"
         >
           <ArrowLeft size={18} />
           Quay lại cửa hàng
         </button>
 
-        {/* TITLE */}
+        {/* TIÊU ĐỀ */}
 
         <div className="mb-6">
+
           <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600">
             <Zap size={14} />
             ROBLOX
@@ -826,20 +1060,26 @@ export default function Roblox() {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            Nhập tài khoản Roblox và chọn gói Robux
-            bạn muốn nạp.
+            Nhập tài khoản Roblox và chọn gói
+            Robux bạn muốn nạp.
           </p>
+
         </div>
 
-        {/* ACCOUNT */}
+        {/* ======================================
+            TÀI KHOẢN ROBLOX
+        ====================================== */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+
           <div className="mb-4 flex items-center gap-3">
+
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <User size={20} />
             </div>
 
             <div>
+
               <h2 className="font-bold text-slate-900">
                 Tài khoản Roblox
               </h2>
@@ -847,11 +1087,15 @@ export default function Roblox() {
               <p className="text-xs text-slate-500">
                 Kiểm tra chính xác tài khoản trước khi nạp
               </p>
+
             </div>
+
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
+
             <div className="relative flex-1">
+
               <Search
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -863,6 +1107,8 @@ export default function Roblox() {
                 onChange={(e) => {
                   setUsername(e.target.value);
                   setPlayer(null);
+                  setOrder(null);
+                  setShowPayment(false);
                   setError('');
                 }}
                 onKeyDown={(e) => {
@@ -873,6 +1119,7 @@ export default function Roblox() {
                 placeholder="Nhập username Roblox..."
                 className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
               />
+
             </div>
 
             <button
@@ -885,7 +1132,10 @@ export default function Roblox() {
                 ? 'Đang kiểm tra...'
                 : 'Kiểm tra'}
             </button>
+
           </div>
+
+          {/* ERROR */}
 
           {error && (
             <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
@@ -893,9 +1143,13 @@ export default function Roblox() {
             </div>
           )}
 
+          {/* PLAYER */}
+
           {player && (
             <div className="mt-4 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
+
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white">
+
                 {player.avatar ? (
                   <img
                     src={player.avatar}
@@ -907,10 +1161,13 @@ export default function Roblox() {
                     <User size={24} />
                   </div>
                 )}
+
               </div>
 
               <div className="min-w-0">
+
                 <div className="flex items-center gap-2">
+
                   <span className="truncate font-bold text-slate-900">
                     {player.displayName}
                   </span>
@@ -919,6 +1176,7 @@ export default function Roblox() {
                     size={16}
                     className="shrink-0 rounded-full bg-blue-500 p-0.5 text-white"
                   />
+
                 </div>
 
                 <div className="truncate text-sm text-slate-500">
@@ -928,26 +1186,35 @@ export default function Roblox() {
                 <div className="mt-1 text-xs font-semibold text-blue-600">
                   ID: {player.id}
                 </div>
+
               </div>
+
             </div>
           )}
+
         </section>
 
-        {/* PACKAGES */}
+        {/* ======================================
+            CHỌN GÓI
+        ====================================== */}
 
         {!showPayment && (
           <>
             <PackageSection
               selectedPackage={selectedPackage}
               setSelectedPackage={
-                setSelectedPackage
+                handleSelectPackage
               }
             />
 
-            {/* SUMMARY */}
+            {/* ==================================
+                THÔNG TIN ĐƠN
+            ================================== */}
 
             <section className="mt-6 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+
               <div className="mb-4">
+
                 <h2 className="font-bold text-slate-900">
                   Thông tin đơn hàng
                 </h2>
@@ -955,10 +1222,13 @@ export default function Roblox() {
                 <p className="mt-1 text-xs text-slate-500">
                   Kiểm tra thông tin trước khi thanh toán.
                 </p>
+
               </div>
 
               <div className="space-y-3">
+
                 <div className="flex items-center justify-between gap-4 text-sm">
+
                   <span className="text-slate-500">
                     Tài khoản
                   </span>
@@ -968,9 +1238,11 @@ export default function Roblox() {
                       ? `@${player.username}`
                       : 'Chưa kiểm tra'}
                   </span>
+
                 </div>
 
                 <div className="flex items-center justify-between gap-4 text-sm">
+
                   <span className="text-slate-500">
                     Gói Robux
                   </span>
@@ -980,12 +1252,15 @@ export default function Roblox() {
                       ? `${selectedPackage.robux} Robux`
                       : 'Chưa chọn'}
                   </span>
+
                 </div>
 
                 <div className="h-px bg-slate-100" />
 
                 <div className="flex items-end justify-between gap-4">
+
                   <div>
+
                     <div className="text-sm text-slate-500">
                       Tổng Robux
                     </div>
@@ -993,9 +1268,11 @@ export default function Roblox() {
                     <div className="mt-1 text-2xl font-black text-blue-600">
                       {totalRobux} Robux
                     </div>
+
                   </div>
 
                   <div className="text-right">
+
                     <div className="text-sm text-slate-500">
                       Tổng tiền
                     </div>
@@ -1003,8 +1280,11 @@ export default function Roblox() {
                     <div className="mt-1 text-xl font-black text-slate-900">
                       {formatPrice(totalPrice)} VNĐ
                     </div>
+
                   </div>
+
                 </div>
+
               </div>
 
               <button
@@ -1012,32 +1292,52 @@ export default function Roblox() {
                 onClick={handleContinue}
                 disabled={
                   !player ||
-                  !selectedPackage
+                  !selectedPackage ||
+                  creatingOrder
                 }
                 className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
               >
-                <Check size={18} />
-                Tiếp tục
+
+                {creatingOrder ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Đang tạo đơn...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Tiếp tục
+                  </>
+                )}
+
               </button>
+
             </section>
           </>
         )}
 
-        {/* PAYMENT */}
+        {/* ======================================
+            THANH TOÁN
+        ====================================== */}
 
         {showPayment && (
           <div id="payment-section">
+
             <PaymentSection
               totalPrice={totalPrice}
+              order={order}
               onBack={() =>
                 setShowPayment(false)
               }
             />
+
           </div>
         )}
+
       </main>
 
       <BottomNav />
+
     </div>
   );
-          }
+            }
