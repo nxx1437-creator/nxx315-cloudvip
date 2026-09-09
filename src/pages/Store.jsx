@@ -1,14 +1,31 @@
 import { useState } from 'react';
 import { Search, Globe, ChevronDown, Gift, Trophy, CreditCard, Percent } from 'lucide-react';
+import TopHeader from '../components/TopHeader.jsx';
+import BottomNav from '../components/BottomNav.jsx';
 
-// ===== MOCK DATA (thay bằng data thật / Supabase sau) =====
+// ============================================
+// SUPABASE CONFIG
+// ============================================
+const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
+const STORAGE_BUCKET = 'game_logos';
+
+// ============================================
+// GET LOGO URL
+// ============================================
+const getLogoUrl = (fileName) => {
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+};
+
+// ============================================
+// MOCK DATA
+// ============================================
 const BANNERS = [
   { id: 1, imageUrl: null, title: 'CHỐT DEAL TRONG NGÀY', subtitle: 'CHIẾN GAME LIỀN TAY' },
 ];
 
 const RECOMMENDED = [
-  { id: 1, name: 'Roblox VN', imageUrl: null },
-  { id: 2, name: 'Play Together VNG', imageUrl: null },
+  { id: 1, name: 'Roblox VN', logo: 'roblox-vn.png', path: '/shop-earn' },
+  { id: 2, name: 'Play Together VNG', logo: 'play-together.png', path: '/store/play-together' },
 ];
 
 const BENEFITS = [
@@ -19,13 +36,17 @@ const BENEFITS = [
 ];
 
 const GAMES = [
-  { id: 1, name: 'Roblox VN', category: 'mobile', imageUrl: null },
-  { id: 2, name: 'PUBG Mobile VN', category: 'mobile', imageUrl: null },
-  { id: 3, name: 'VALORANT', category: 'pc', imageUrl: null },
-  { id: 4, name: 'Play Together VNG', category: 'mobile', imageUrl: null },
+  { id: 1, name: 'Roblox VN', category: 'mobile', logo: 'roblox-vn.png', path: '/shop-earn' },
+  { id: 2, name: 'PUBG Mobile VN', category: 'mobile', logo: 'pubg-mobile.png', path: '/store/pubg' },
+  { id: 3, name: 'VALORANT', category: 'pc', logo: 'valorant.png', path: '/store/valorant' },
+  { id: 4, name: 'Play Together VNG', category: 'mobile', logo: 'play-together.png', path: '/store/play-together' },
+  { id: 5, name: 'ZingSpeed Mobile', category: 'mobile', logo: 'zing-speed.png', path: '/store/zing-speed' },
+  { id: 6, name: 'Liên Minh Tốc Chiến', category: 'mobile', logo: 'lien-minh.png', path: '/store/lien-minh' },
 ];
 
-// ===== HEADER =====
+// ============================================
+// HEADER
+// ============================================
 function Header({ search, setSearch }) {
   return (
     <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-sky-100">
@@ -59,7 +80,9 @@ function Header({ search, setSearch }) {
   );
 }
 
-// ===== BANNER CAROUSEL =====
+// ============================================
+// BANNER CAROUSEL
+// ============================================
 function BannerCarousel() {
   const banner = BANNERS[0];
   return (
@@ -83,24 +106,38 @@ function BannerCarousel() {
   );
 }
 
-// ===== RECOMMENDED SECTION =====
-function RecommendedSection() {
+// ============================================
+// RECOMMENDED SECTION - CÓ LOGO
+// ============================================
+function RecommendedSection({ navigate }) {
   return (
     <section className="max-w-5xl mx-auto px-4 pt-8">
       <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">Dành cho bạn</h2>
       <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
         {RECOMMENDED.map((item) => (
-          <div key={item.id} className="shrink-0 w-40 bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden">
-            <div className="aspect-square bg-sky-50 flex items-center justify-center">
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+          <div 
+            key={item.id} 
+            className="shrink-0 w-40 bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition"
+            onClick={() => navigate(item.path)}
+          >
+            <div className="aspect-square bg-sky-50 flex items-center justify-center p-4">
+              {item.logo ? (
+                <img 
+                  src={getLogoUrl(item.logo)} 
+                  alt={item.name} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
               ) : (
                 <span className="text-sky-300 text-xs">No image</span>
               )}
             </div>
             <div className="p-3">
               <p className="text-sm font-semibold text-slate-700 line-clamp-1">{item.name}</p>
-              <button className="mt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition">
+              <button 
+                onClick={() => navigate(item.path)}
+                className="mt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition"
+              >
                 Nạp ngay
               </button>
             </div>
@@ -111,7 +148,9 @@ function RecommendedSection() {
   );
 }
 
-// ===== BENEFITS SECTION =====
+// ============================================
+// BENEFITS SECTION
+// ============================================
 function BenefitsSection() {
   return (
     <section className="max-w-5xl mx-auto px-4 pt-10">
@@ -130,8 +169,10 @@ function BenefitsSection() {
   );
 }
 
-// ===== GAME LIST SECTION =====
-function GameListSection({ activeTab, setActiveTab, games }) {
+// ============================================
+// GAME LIST SECTION - CÓ LOGO
+// ============================================
+function GameListSection({ activeTab, setActiveTab, games, navigate }) {
   const tabs = [
     { key: 'all', label: 'TẤT CẢ' },
     { key: 'mobile', label: 'MOBILE' },
@@ -160,17 +201,29 @@ function GameListSection({ activeTab, setActiveTab, games }) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {games.map((game) => (
-          <div key={game.id} className="bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="aspect-square bg-sky-50 flex items-center justify-center">
-              {game.imageUrl ? (
-                <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
+          <div 
+            key={game.id} 
+            className="bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition"
+            onClick={() => navigate(game.path)}
+          >
+            <div className="aspect-square bg-sky-50 flex items-center justify-center p-4">
+              {game.logo ? (
+                <img 
+                  src={getLogoUrl(game.logo)} 
+                  alt={game.name} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
               ) : (
                 <span className="text-sky-300 text-xs">No image</span>
               )}
             </div>
             <div className="p-3 flex flex-col flex-1">
               <p className="text-sm font-semibold text-slate-700 line-clamp-1">{game.name}</p>
-              <button className="mt-auto pt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition">
+              <button 
+                onClick={() => navigate(game.path)}
+                className="mt-auto pt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition"
+              >
                 Nạp ngay
               </button>
             </div>
@@ -181,7 +234,9 @@ function GameListSection({ activeTab, setActiveTab, games }) {
   );
 }
 
-// ===== MAIN PAGE =====
+// ============================================
+// MAIN PAGE
+// ============================================
 export default function Store() {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
@@ -193,12 +248,19 @@ export default function Store() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/40 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/40 to-white pb-20">
+      <TopHeader />
       <Header search={search} setSearch={setSearch} />
       <BannerCarousel />
-      <RecommendedSection />
+      <RecommendedSection navigate={useNavigate()} />
       <BenefitsSection />
-      <GameListSection activeTab={activeTab} setActiveTab={setActiveTab} games={filteredGames} />
+      <GameListSection 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        games={filteredGames} 
+        navigate={useNavigate()} 
+      />
+      <BottomNav />
     </div>
   );
 }
