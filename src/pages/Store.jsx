@@ -39,7 +39,7 @@ const GAMES = [
   id: 1,
   name: 'Roblox VN',
   category: 'pc',
-  logo: 'roblox-vn.png',
+  logo: 'roblox.png',
   path: '/store/roblox'
 },
   {
