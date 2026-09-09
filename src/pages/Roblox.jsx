@@ -1,34 +1,28 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  User,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  Gamepad2,
-  ChevronRight,
-  Loader2,
+  ArrowLeft,
+  Check,
   CreditCard,
+  Search,
+  User,
   Zap,
 } from 'lucide-react';
+import TopHeader from '../components/TopHeader';
+import BottomNav from '../components/BottomNav';
 
-import TopHeader from '../components/TopHeader.jsx';
-import BottomNav from '../components/BottomNav.jsx';
+const SUPABASE_URL =
+  'https://rwglwovohbyqmbbzdvdj.supabase.co';
 
-// =====================================================
-// SUPABASE STORAGE
-// =====================================================
-
-const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
-const STORAGE_BUCKET = 'game_logos';
+const BUCKET = 'game_logos';
 
 const getImageUrl = (fileName) =>
-  `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+  `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${fileName}`;
 
 // =====================================================
-// ROBUX PACKAGES
+// PACKAGES
 // =====================================================
 
-// Card Robux
 const CARD_PACKAGES = [
   {
     id: 'card-400',
@@ -38,7 +32,6 @@ const CARD_PACKAGES = [
   },
 ];
 
-// Nạp trực tiếp VNG
 const VNG_PACKAGES = [
   {
     id: 'vng-40',
@@ -61,55 +54,23 @@ const VNG_PACKAGES = [
 ];
 
 // =====================================================
-// FORMAT MONEY
+// FORMAT
 // =====================================================
 
-const formatMoney = (number) =>
-  new Intl.NumberFormat('vi-VN').format(number) + ' VNĐ';
-
-// =====================================================
-// PACKAGE IMAGE
-// =====================================================
-
-function PackageImage({ image, robux }) {
-  const [error, setError] = useState(false);
-
-  if (!image || error) {
-    return (
-      <div className="w-full h-full min-h-[150px] bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center">
-        <Gamepad2
-          size={42}
-          className="text-blue-300 mb-2"
-          strokeWidth={1.5}
-        />
-
-        <span className="text-xs font-bold text-blue-400">
-          {robux} ROBUX
-        </span>
-
-        <span className="text-[10px] text-gray-400 mt-1">
-          Ảnh đang cập nhật
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={getImageUrl(image)}
-      alt={`${robux} Robux`}
-      className="w-full h-full object-cover"
-      onError={() => setError(true)}
-    />
-  );
+function formatPrice(price) {
+  return new Intl.NumberFormat('vi-VN').format(price);
 }
 
 // =====================================================
-// ROBLOX USER LOOKUP
+// ROBLOX USER API
 // =====================================================
 
 async function findRobloxUser(username) {
   const cleanUsername = username.trim();
+
+  if (!cleanUsername) {
+    throw new Error('Vui lòng nhập username Roblox.');
+  }
 
   const response = await fetch(
     'https://users.roblox.com/v1/usernames/users',
@@ -136,9 +97,7 @@ async function findRobloxUser(username) {
         errorData?.errors?.[0]?.message ||
         errorData?.message ||
         '';
-    } catch {
-      // Không đọc được JSON
-    }
+    } catch {}
 
     throw new Error(
       message || `Roblox API lỗi HTTP ${response.status}`
@@ -152,10 +111,6 @@ async function findRobloxUser(username) {
   }
 
   const user = data.data[0];
-
-  // ===================================================
-  // LẤY AVATAR
-  // ===================================================
 
   let avatar = null;
 
@@ -172,11 +127,10 @@ async function findRobloxUser(username) {
     if (avatarResponse.ok) {
       const avatarData = await avatarResponse.json();
 
-      avatar = avatarData?.data?.[0]?.imageUrl || null;
+      avatar =
+        avatarData?.data?.[0]?.imageUrl || null;
     }
-  } catch {
-    // Avatar lỗi vẫn cho phép tiếp tục
-  }
+  } catch {}
 
   return {
     id: user.id,
@@ -187,336 +141,11 @@ async function findRobloxUser(username) {
 }
 
 // =====================================================
-// PLAYER SECTION
-// =====================================================
-
-function PlayerSection({
-  username,
-  setUsername,
-  player,
-  setPlayer,
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleConfirm = async () => {
-    const value = username.trim();
-
-    if (!value) {
-      setError('Vui lòng nhập tên tài khoản Roblox.');
-      setPlayer(null);
-      return;
-    }
-
-    if (value.length < 3 || value.length > 20) {
-      setError('Tên tài khoản Roblox không hợp lệ.');
-      setPlayer(null);
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setPlayer(null);
-
-    try {
-      const user = await findRobloxUser(value);
-
-      if (!user) {
-        setError('Không tìm thấy tài khoản Roblox này.');
-        return;
-      }
-
-      setPlayer(user);
-    } catch (err) {
-      console.error('Roblox lookup error:', err);
-
-      setError(
-        err?.message ||
-        'Không thể kiểm tra tài khoản Roblox. Vui lòng thử lại.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <section className="px-4 pt-5">
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-
-          <div className="p-5 pb-3">
-            <div className="flex items-center gap-3">
-
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
-                <User
-                  size={20}
-                  className="text-blue-500"
-                />
-              </div>
-
-              <div>
-                <h2 className="text-base font-extrabold text-gray-900">
-                  1. Thông tin nhân vật
-                </h2>
-
-                <p className="text-[11px] text-gray-400 mt-0.5">
-                  Nhập username Roblox của bạn
-                </p>
-              </div>
-
-            </div>
-          </div>
-
-          <div className="px-5 pb-5">
-
-            <div
-              className={`
-                flex items-center gap-3
-                border rounded-2xl
-                px-4 py-3
-                transition
-                ${
-                  error
-                    ? 'border-red-300 bg-red-50'
-                    : 'border-gray-200 bg-gray-50 focus-within:border-blue-400 focus-within:bg-white'
-                }
-              `}
-            >
-
-              <Search
-                size={18}
-                className="text-gray-400 shrink-0"
-              />
-
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setError('');
-                  setPlayer(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleConfirm();
-                  }
-                }}
-                placeholder="Tên tài khoản Roblox"
-                className="
-                  flex-1 min-w-0
-                  bg-transparent
-                  outline-none
-                  text-sm
-                  text-gray-800
-                  placeholder:text-gray-400
-                "
-              />
-
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 mt-3 text-red-500">
-                <AlertCircle size={15} />
-
-                <p className="text-xs font-medium">
-                  {error}
-                </p>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={loading}
-              className="
-                mt-3
-                w-full
-                rounded-2xl
-                bg-blue-500
-                hover:bg-blue-600
-                active:scale-[0.99]
-                disabled:opacity-60
-                text-white
-                font-bold
-                text-sm
-                py-3.5
-                transition
-                flex items-center justify-center gap-2
-              "
-            >
-
-              {loading ? (
-                <>
-                  <Loader2
-                    size={17}
-                    className="animate-spin"
-                  />
-
-                  Đang kiểm tra...
-                </>
-              ) : (
-                <>
-                  Xác nhận
-                  <ChevronRight size={17} />
-                </>
-              )}
-
-            </button>
-
-            {player && (
-              <div className="
-                mt-4
-                rounded-2xl
-                border border-blue-100
-                bg-blue-50/60
-                p-4
-              ">
-
-                <div className="flex items-center gap-3">
-
-                  <div className="
-                    w-14 h-14
-                    rounded-2xl
-                    overflow-hidden
-                    bg-white
-                    border border-blue-100
-                    flex items-center justify-center
-                    shrink-0
-                  ">
-
-                    {player.avatar ? (
-                      <img
-                        src={player.avatar}
-                        alt={player.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User
-                        size={25}
-                        className="text-blue-400"
-                      />
-                    )}
-
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-
-                    <div className="flex items-center gap-1.5">
-
-                      <p className="font-extrabold text-gray-900 truncate">
-                        {player.displayName}
-                      </p>
-
-                      <CheckCircle2
-                        size={15}
-                        className="text-blue-500 shrink-0"
-                      />
-
-                    </div>
-
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
-                      @{player.username}
-                    </p>
-
-                    <p className="text-[10px] text-gray-400 mt-1">
-                      ID: {player.id}
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-            )}
-
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// =====================================================
-// ROBLOX BANNER
-// =====================================================
-
-function RobloxBanner() {
-  const [error, setError] = useState(false);
-
-  return (
-    <section className="px-4 pt-3">
-      <div className="max-w-5xl mx-auto">
-
-        <div className="
-          relative
-          overflow-hidden
-          rounded-3xl
-          aspect-[16/7]
-          bg-gradient-to-br
-          from-blue-700
-          via-blue-500
-          to-cyan-400
-          shadow-lg
-        ">
-
-          {!error ? (
-            <img
-              src={getImageUrl(BANNER)}
-              alt="Roblox VN"
-              className="
-                absolute inset-0
-                w-full h-full
-                object-cover
-              "
-              onError={() => setError(true)}
-            />
-          ) : (
-            <div className="
-              absolute inset-0
-              flex items-center justify-center
-              text-white
-            ">
-
-              <div className="text-center">
-
-                <Gamepad2
-                  size={35}
-                  className="mx-auto mb-2"
-                />
-
-                <p className="font-extrabold text-lg">
-                  ROBLOX VN
-                </p>
-
-                <p className="text-xs opacity-80">
-                  Nạp Robux nhanh chóng
-                </p>
-
-              </div>
-
-            </div>
-          )}
-
-          <div className="
-            absolute inset-0
-            bg-gradient-to-t
-            from-black/20
-            to-transparent
-            pointer-events-none
-          " />
-
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// =====================================================
 // PACKAGE CARD
 // =====================================================
 
 function PackageCard({
-  pack,
+  pkg,
   selected,
   onClick,
 }) {
@@ -524,100 +153,47 @@ function PackageCard({
     <button
       type="button"
       onClick={onClick}
-      className={`
-        text-left
-        bg-white
-        rounded-2xl
-        overflow-hidden
-        border-2
-        w-full
-        transition-all
-        ${
-          selected
-            ? 'border-blue-500 shadow-lg shadow-blue-100'
-            : 'border-gray-100 shadow-sm hover:shadow-md'
-        }
-      `}
+      className={`group relative w-full overflow-hidden rounded-2xl border bg-white text-left transition-all duration-200 ${
+        selected
+          ? 'border-blue-500 ring-2 ring-blue-100 shadow-lg'
+          : 'border-slate-200 hover:border-blue-300 hover:shadow-md'
+      }`}
     >
-
-      <div className="
-        relative
-        aspect-[1.55/1]
-        overflow-hidden
-        bg-gray-50
-      ">
-
-        <PackageImage
-          image={pack.image}
-          robux={pack.robux}
+      <div className="aspect-[16/9] overflow-hidden bg-slate-100">
+        <img
+          src={getImageUrl(pkg.image)}
+          alt={`${pkg.robux} Robux`}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-
-        {selected && (
-          <div className="
-            absolute
-            top-2
-            right-2
-            w-7
-            h-7
-            rounded-full
-            bg-blue-500
-            text-white
-            flex items-center justify-center
-            shadow-md
-          ">
-            <CheckCircle2 size={17} />
-          </div>
-        )}
-
       </div>
 
-      <div className="p-3">
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-lg font-bold text-slate-900">
+              {pkg.robux} Robux
+            </div>
 
-        <p className="font-bold text-sm text-gray-800">
-          Gói {pack.robux.toLocaleString('vi-VN')} Robux
-        </p>
+            <div className="mt-1 text-sm font-semibold text-blue-600">
+              {formatPrice(pkg.price)} VNĐ
+            </div>
+          </div>
 
-        <div className="
-          flex
-          items-center
-          justify-between
-          gap-2
-          mt-2
-        ">
-
-          <p className="text-sm font-extrabold text-blue-500">
-            {formatMoney(pack.price)}
-          </p>
-
-          <div className={`
-            w-8 h-8
-            rounded-xl
-            flex items-center justify-center
-            shrink-0
-            ${
+          <div
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${
               selected
-                ? 'bg-blue-500 text-white'
-                : 'bg-blue-50 text-blue-500'
-            }
-          `}>
-
-            {selected ? (
-              <CheckCircle2 size={17} />
-            ) : (
-              <span className="text-lg font-bold">
-                +
-              </span>
-            )}
-
+                ? 'border-blue-500 bg-blue-500 text-white'
+                : 'border-slate-300 bg-white text-transparent'
+            }`}
+          >
+            <Check size={16} strokeWidth={3} />
           </div>
-
         </div>
-
       </div>
-
     </button>
   );
-        }
+}
+
 // =====================================================
 // PACKAGE SECTION
 // =====================================================
@@ -639,343 +215,407 @@ function PackageSection({
   };
 
   return (
-    <section className="px-4 pt-6 pb-28">
-      <div className="max-w-5xl mx-auto">
+    <section className="mt-6">
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-slate-900">
+          Chọn phương thức nạp
+        </h2>
 
-        {/* TITLE */}
+        <p className="mt-1 text-sm text-slate-500">
+          Chọn một phương thức và gói Robux bạn muốn nạp.
+        </p>
+      </div>
 
-        <div className="mb-4">
+      {/* METHOD TABS */}
 
-          <h2 className="text-base font-extrabold text-gray-900">
-            2. Chọn phương thức nạp
-          </h2>
-
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            Chọn hình thức và gói Robux bạn muốn nạp
-          </p>
-
-        </div>
-
-        {/* METHOD TABS */}
-
-        <div className="
-          grid
-          grid-cols-2
-          gap-3
-          mb-4
-        ">
-
-          {/* CARD ROBUX */}
-
-          <button
-            type="button"
-            onClick={() => handleMethodChange('card')}
-            className={`
-              relative
-              text-left
-              rounded-2xl
-              border-2
-              p-4
-              transition-all
-              ${
-                method === 'card'
-                  ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100'
-                  : 'border-gray-100 bg-white shadow-sm'
-              }
-            `}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() =>
+            handleMethodChange('card')
+          }
+          className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
+            method === 'card'
+              ? 'border-blue-500 bg-blue-50 shadow-sm'
+              : 'border-slate-200 bg-white hover:border-blue-300'
+          }`}
+        >
+          <div
+            className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+              method === 'card'
+                ? 'bg-blue-500 text-white'
+                : 'bg-slate-100 text-slate-500'
+            }`}
           >
-
-            <div className="
-              w-10 h-10
-              rounded-xl
-              flex items-center justify-center
-              bg-blue-100
-              text-blue-500
-              mb-3
-            ">
-              <CreditCard size={20} />
-            </div>
-
-            <p className="font-extrabold text-sm text-gray-900">
-              Card Robux
-            </p>
-
-            <p className="text-[10px] text-gray-400 mt-1">
-              Nạp bằng Card Robux
-            </p>
-
-            {method === 'card' && (
-              <div className="
-                absolute
-                top-3
-                right-3
-                text-blue-500
-              ">
-                <CheckCircle2 size={18} />
-              </div>
-            )}
-
-          </button>
-
-          {/* NẠP TRỰC TIẾP VNG */}
-
-          <button
-            type="button"
-            onClick={() => handleMethodChange('vng')}
-            className={`
-              relative
-              text-left
-              rounded-2xl
-              border-2
-              p-4
-              transition-all
-              ${
-                method === 'vng'
-                  ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100'
-                  : 'border-gray-100 bg-white shadow-sm'
-              }
-            `}
-          >
-
-            <div className="
-              w-10 h-10
-              rounded-xl
-              flex items-center justify-center
-              bg-blue-100
-              text-blue-500
-              mb-3
-            ">
-              <Zap size={20} />
-            </div>
-
-            <p className="font-extrabold text-sm text-gray-900">
-              Nạp trực tiếp (VNG)
-            </p>
-
-            <p className="text-[10px] text-gray-400 mt-1">
-              Nạp Robux trực tiếp
-            </p>
-
-            {method === 'vng' && (
-              <div className="
-                absolute
-                top-3
-                right-3
-                text-blue-500
-              ">
-                <CheckCircle2 size={18} />
-              </div>
-            )}
-
-          </button>
-
-        </div>
-
-        {/* PACKAGE TITLE */}
-
-        <div className="
-          flex
-          items-center
-          justify-between
-          mb-3
-        ">
-
-          <div>
-
-            <p className="text-sm font-extrabold text-gray-900">
-              {method === 'card'
-                ? 'Gói Card Robux'
-                : 'Gói nạp trực tiếp (VNG)'}
-            </p>
-
-            <p className="text-[10px] text-gray-400 mt-0.5">
-              {method === 'card'
-                ? 'Chọn gói Card Robux'
-                : 'Chọn gói Robux muốn nạp'}
-            </p>
-
+            <CreditCard size={21} />
           </div>
 
-          <span className="
-            text-[10px]
-            font-bold
-            text-blue-500
-            bg-blue-50
-            px-3 py-1.5
-            rounded-full
-          ">
-            {packages.length} gói
-          </span>
+          <div>
+            <div className="font-bold text-slate-900">
+              Card Robux
+            </div>
 
-        </div>
+            <div className="text-xs text-slate-500">
+              Nạp bằng Card
+            </div>
+          </div>
+        </button>
 
-        {/* PACKAGES */}
+        <button
+          type="button"
+          onClick={() =>
+            handleMethodChange('vng')
+          }
+          className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
+            method === 'vng'
+              ? 'border-blue-500 bg-blue-50 shadow-sm'
+              : 'border-slate-200 bg-white hover:border-blue-300'
+          }`}
+        >
+          <div
+            className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+              method === 'vng'
+                ? 'bg-blue-500 text-white'
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            <Zap size={21} />
+          </div>
 
-        <div className="
-          grid
-          grid-cols-2
-          sm:grid-cols-3
-          lg:grid-cols-4
-          gap-3
-        ">
+          <div>
+            <div className="font-bold text-slate-900">
+              Nạp trực tiếp
+            </div>
 
-          {packages.map((pack) => (
-            <PackageCard
-              key={pack.id}
-              pack={pack}
-              selected={selectedPackage?.id === pack.id}
-              onClick={() => setSelectedPackage(pack)}
-            />
-          ))}
+            <div className="text-xs text-slate-500">
+              VNG
+            </div>
+          </div>
+        </button>
+      </div>
 
-        </div>
+      {/* PACKAGE TITLE */}
 
+      <div className="mb-3 mt-6">
+        <h3 className="font-bold text-slate-900">
+          {method === 'card'
+            ? 'Mục 1: Card Robux'
+            : 'Mục 2: Nạp trực tiếp (VNG)'}
+        </h3>
+      </div>
+
+      {/* PACKAGES */}
+
+      <div
+        className={`grid gap-4 ${
+          packages.length === 1
+            ? 'grid-cols-1'
+            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+        }`}
+      >
+        {packages.map((pkg) => (
+          <PackageCard
+            key={pkg.id}
+            pkg={pkg}
+            selected={
+              selectedPackage?.id === pkg.id
+            }
+            onClick={() =>
+              setSelectedPackage(pkg)
+            }
+          />
+        ))}
       </div>
     </section>
   );
 }
-
-// =====================================================
-// SUMMARY
-// =====================================================
-
-function Summary({
-  player,
-  selectedPackage,
-}) {
-  return (
-    <div className="
-      fixed
-      bottom-0
-      left-0
-      right-0
-      z-40
-      bg-white/95
-      backdrop-blur-xl
-      border-t
-      border-gray-100
-      shadow-[0_-8px_30px_rgba(0,0,0,0.08)]
-    ">
-
-      <div className="
-        max-w-5xl
-        mx-auto
-        px-4
-        py-3
-      ">
-
-        <div className="flex items-center gap-3">
-
-          <div className="flex-1 min-w-0">
-
-            <p className="text-[10px] text-gray-400">
-              Tổng Robux
-            </p>
-
-            <p className="
-              text-base
-              font-extrabold
-              text-gray-900
-            ">
-              {selectedPackage
-                ? `${selectedPackage.robux.toLocaleString('vi-VN')} Robux`
-                : '0 Robux'}
-            </p>
-
-          </div>
-
-          <div className="text-right">
-
-            <p className="text-[10px] text-gray-400">
-              Tổng tiền
-            </p>
-
-            <p className="
-              text-base
-              font-extrabold
-              text-blue-500
-            ">
-              {selectedPackage
-                ? formatMoney(selectedPackage.price)
-                : '0 VNĐ'}
-            </p>
-
-          </div>
-
-        </div>
-
-        <button
-          type="button"
-          disabled={!player || !selectedPackage}
-          className="
-            mt-2
-            w-full
-            rounded-2xl
-            bg-blue-500
-            hover:bg-blue-600
-            disabled:bg-gray-200
-            disabled:text-gray-400
-            text-white
-            font-extrabold
-            text-sm
-            py-3
-            transition
-          "
-        >
-          {selectedPackage
-            ? 'Tiếp tục'
-            : 'Chọn gói Robux'}
-        </button>
-
-      </div>
-    </div>
-  );
-}
-
 // =====================================================
 // MAIN ROBLOX PAGE
 // =====================================================
 
 export default function Roblox() {
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
   const [player, setPlayer] = useState(null);
-  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [selectedPackage, setSelectedPackage] =
+    useState(null);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // ===================================================
+  // CHECK ROBLOX ACCOUNT
+  // ===================================================
+
+  const handleConfirm = async () => {
+    if (!username.trim()) {
+      setError('Vui lòng nhập username Roblox.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setPlayer(null);
+
+    try {
+      const user = await findRobloxUser(username);
+
+      if (!user) {
+        setError(
+          'Không tìm thấy tài khoản Roblox này.'
+        );
+        return;
+      }
+
+      setPlayer(user);
+    } catch (err) {
+      console.error(
+        'Roblox lookup error:',
+        err
+      );
+
+      setError(
+        err?.message ||
+          'Không thể kiểm tra tài khoản Roblox. Vui lòng thử lại.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===================================================
+  // TOTAL
+  // ===================================================
+
+  const totalRobux = selectedPackage
+    ? selectedPackage.robux
+    : 0;
+
+  const totalPrice = selectedPackage
+    ? selectedPackage.price
+    : 0;
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc]">
-
+    <div className="min-h-screen bg-slate-50 pb-24">
       <TopHeader />
 
-      {/* BANNER */}
+      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+        {/* BACK */}
 
-      <RobloxBanner />
+        <button
+          type="button"
+          onClick={() => navigate('/store')}
+          className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-blue-600"
+        >
+          <ArrowLeft size={18} />
+          Quay lại cửa hàng
+        </button>
 
-      {/* THÔNG TIN NHÂN VẬT */}
+        {/* TITLE */}
 
-      <PlayerSection
-        username={username}
-        setUsername={setUsername}
-        player={player}
-        setPlayer={setPlayer}
-      />
+        <div className="mb-6">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600">
+            <Zap size={14} />
+            ROBLOX
+          </div>
 
-      {/* CHỌN PHƯƠNG THỨC + GÓI */}
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            Nạp Robux
+          </h1>
 
-      <PackageSection
-        selectedPackage={selectedPackage}
-        setSelectedPackage={setSelectedPackage}
-      />
+          <p className="mt-2 text-sm text-slate-500">
+            Nhập tài khoản Roblox và chọn gói Robux
+            bạn muốn nạp.
+          </p>
+        </div>
 
-      {/* TỔNG */}
+        {/* PLAYER */}
 
-      <Summary
-        player={player}
-        selectedPackage={selectedPackage}
-      />
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <User size={20} />
+            </div>
+
+            <div>
+              <h2 className="font-bold text-slate-900">
+                Tài khoản Roblox
+              </h2>
+
+              <p className="text-xs text-slate-500">
+                Kiểm tra chính xác tài khoản trước khi nạp
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="relative flex-1">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                type="text"
+                value={username}
+                onChange={(e) =>
+                  setUsername(e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleConfirm();
+                  }
+                }}
+                placeholder="Nhập username Roblox..."
+                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={loading}
+              className="h-12 rounded-xl bg-blue-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading
+                ? 'Đang kiểm tra...'
+                : 'Kiểm tra'}
+            </button>
+          </div>
+
+          {/* ERROR */}
+
+          {error && (
+            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* PLAYER RESULT */}
+
+          {player && (
+            <div className="mt-4 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
+              <div className="h-14 w-14 overflow-hidden rounded-xl bg-white">
+                {player.avatar ? (
+                  <img
+                    src={player.avatar}
+                    alt={player.username}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-blue-500">
+                    <User size={24} />
+                  </div>
+                )}
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-bold text-slate-900">
+                    {player.displayName}
+                  </span>
+
+                  <Check
+                    size={16}
+                    className="shrink-0 rounded-full bg-blue-500 p-0.5 text-white"
+                  />
+                </div>
+
+                <div className="truncate text-sm text-slate-500">
+                  @{player.username}
+                </div>
+
+                <div className="mt-1 text-xs font-semibold text-blue-600">
+                  ID: {player.id}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* PACKAGES */}
+
+        <PackageSection
+          selectedPackage={selectedPackage}
+          setSelectedPackage={setSelectedPackage}
+        />
+
+        {/* SUMMARY */}
+
+        <section className="mt-6 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+          <div className="mb-4">
+            <h2 className="font-bold text-slate-900">
+              Thông tin đơn hàng
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Hiện tại chỉ tính tổng, chưa thực hiện thanh toán.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-4 text-sm">
+              <span className="text-slate-500">
+                Tài khoản
+              </span>
+
+              <span className="max-w-[60%] truncate font-semibold text-slate-900">
+                {player
+                  ? `@${player.username}`
+                  : 'Chưa kiểm tra'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 text-sm">
+              <span className="text-slate-500">
+                Gói Robux
+              </span>
+
+              <span className="font-semibold text-slate-900">
+                {selectedPackage
+                  ? `${selectedPackage.robux} Robux`
+                  : 'Chưa chọn'}
+              </span>
+            </div>
+
+            <div className="h-px bg-slate-100" />
+
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <div className="text-sm text-slate-500">
+                  Tổng Robux
+                </div>
+
+                <div className="mt-1 text-2xl font-black text-blue-600">
+                  {totalRobux} Robux
+                </div>
+              </div>
+
+              <div className="text-right">
+                <div className="text-sm text-slate-500">
+                  Tổng tiền
+                </div>
+
+                <div className="mt-1 text-xl font-black text-slate-900">
+                  {formatPrice(totalPrice)} VNĐ
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={!player || !selectedPackage}
+            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+          >
+            <Check size={18} />
+            Tiếp tục
+          </button>
+        </section>
+      </main>
 
       <BottomNav />
-
     </div>
   );
-              }
+          }
