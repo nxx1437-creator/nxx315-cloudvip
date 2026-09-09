@@ -34,49 +34,180 @@ import AccountReview from "./pages/AccountReview.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
-import VersionChecker from './VersionChecker';
+import VersionChecker from "./VersionChecker";
 import Feed from "./pages/Feed.jsx";
-import Roblox from './pages/Roblox.jsx';
+import Roblox from "./pages/Roblox.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<CloudVIPLanding />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
-        <Route path="/redirect" element={<ProtectedRoute><RedirectPage /></ProtectedRoute>} />
+
+        <Route
+          path="/invite"
+          element={
+            <ProtectedRoute>
+              <Invite />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/redirect"
+          element={
+            <ProtectedRoute>
+              <RedirectPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/banned" element={<Banned />} />
         <Route path="/account-review" element={<AccountReview />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-        <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
-        <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Tasks />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/store"
+          element={
+            <ProtectedRoute>
+              <Store />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ShopEarn cũ */}
+        <Route
+          path="/shop-earn"
+          element={
+            <ProtectedRoute>
+              <ShopEarn />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Roblox Store */}
+        <Route
+          path="/store/roblox"
+          element={
+            <ProtectedRoute>
+              <Roblox />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/link-history" element={<LinkHistory />} />
         <Route path="/refund-history" element={<RefundHistoryPage />} />
-        <Route path="/minigames" element={<ProtectedRoute><MiniGames /></ProtectedRoute>} />
-        <Route path="/minigames/wheel" element={<ProtectedRoute><WheelGame /></ProtectedRoute>} />
-        <Route path="/minigames/scratch" element={<ProtectedRoute><ScratchGame /></ProtectedRoute>} />
-        <Route path="/minigames/dice" element={<ProtectedRoute><DiceGame /></ProtectedRoute>} />
-        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+
+        <Route
+          path="/minigames"
+          element={
+            <ProtectedRoute>
+              <MiniGames />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/minigames/wheel"
+          element={
+            <ProtectedRoute>
+              <WheelGame />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/minigames/scratch"
+          element={
+            <ProtectedRoute>
+              <ScratchGame />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/minigames/dice"
+          element={
+            <ProtectedRoute>
+              <DiceGame />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
+          }
+        />
+
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
         <Route path="/support" element={<Support />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/fraud" element={<Fraud />} />
-        <Route path="/redemption-policy" element={<RedemptionPolicy />} />
-        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route
+          path="/redemption-policy"
+          element={<RedemptionPolicy />}
+        />
+
+        <Route
+          path="/wallet"
+          element={
+            <ProtectedRoute>
+              <Wallet />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/task/callback" element={<TaskCallback />} />
-        <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-        <Route path="/shop-earn" element={<Roblox />} />
+
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoute>
+              <Feed />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    <VersionChecker />
+
+      <VersionChecker />
     </BrowserRouter>
   );
 }
