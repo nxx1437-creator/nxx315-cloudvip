@@ -36,12 +36,12 @@ const BANNER = 'store-banner.png';
 
 const GAMES = [
   {
-    id: 1,
-    name: 'Roblox VN',
-    category: 'pc',
-    logo: 'roblox-vn.png',
-    path: './pages/Roblox.jsx',
-  },
+  id: 1,
+  name: 'Roblox VN',
+  category: 'pc',
+  logo: 'roblox-vn.png',
+  path: '/store/roblox'
+},
   {
     id: 2,
     name: 'Play Together VNG',
