@@ -1,47 +1,47 @@
 import React, { useEffect, useState } from "react";
 import {
-  Check,
-  Clock,
-  Copy,
+  CheckCircle2,
+  XCircle,
   RefreshCw,
   Search,
-  X,
   Loader2,
+  Copy,
 } from "lucide-react";
+import { supabase } from "../lib/supabaseClient.js";
 
-import { supabase } from "../../lib/supabaseClient.js";
-
-const STATUS = {
+const statusInfo = {
   pending: {
-    label: "Chờ thanh toán",
+    text: "Chờ thanh toán",
+    className: "bg-amber-50 text-amber-600",
   },
   paid: {
-    label: "Chờ kiểm tra",
+    text: "Chờ kiểm tra",
+    className: "bg-blue-50 text-blue-600",
   },
   processing: {
-    label: "Đang xử lý",
+    text: "Đang xử lý",
+    className: "bg-purple-50 text-purple-600",
   },
   completed: {
-    label: "Hoàn thành",
+    text: "Hoàn thành",
+    className: "bg-emerald-50 text-emerald-600",
   },
   cancelled: {
-    label: "Đã hủy",
+    text: "Đã từ chối",
+    className: "bg-rose-50 text-rose-600",
   },
 };
 
-const formatPrice = (price) =>
-  new Intl.NumberFormat("vi-VN").format(price) + "đ";
-
-const formatDate = (date) =>
-  new Date(date).toLocaleString("vi-VN");
+const money = (value) =>
+  Number(value || 0).toLocaleString("vi-VN") + "đ";
 
 export default function RobloxOrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionId, setActionId] = useState(null);
+  const [processing, setProcessing] = useState(null);
   const [search, setSearch] = useState("");
 
-  const loadOrders = async () => {
+  const fetchOrders = async () => {
     setLoading(true);
 
     const { data, error } = await supabase
@@ -50,166 +50,202 @@ export default function RobloxOrdersTab() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Load Roblox orders:", error);
-      alert("Không thể tải đơn Roblox: " + error.message);
-    } else {
-      setOrders(data || []);
+      console.error("Lỗi tải đơn Roblox:", error);
+      alert("Không tải được đơn Roblox: " + error.message);
     }
 
+    setOrders(data || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadOrders();
+    fetchOrders();
   }, []);
 
-  const updateStatus = async (id, status) => {
-    setActionId(id);
+  const updateStatus = async (order, newStatus) => {
+    setProcessing(order.id);
 
     const { error } = await supabase
       .from("orders")
       .update({
-        status,
+        status: newStatus,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", order.id);
 
     if (error) {
-      alert("Không thể cập nhật đơn: " + error.message);
+      alert("Lỗi cập nhật đơn: " + error.message);
     } else {
-      await loadOrders();
+      await fetchOrders();
     }
 
-    setActionId(null);
+    setProcessing(null);
   };
 
-  const copyText = async (text) => {
+  const copy = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-    } catch {
-      // Không làm gì nếu trình duyệt không cho copy
-    }
+    } catch {}
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const keyword = search.toLowerCase();
+  const filtered = orders.filter((order) => {
+    const q = search.trim().toLowerCase();
+
+    if (!q) return true;
 
     return (
-      order.order_code?.toLowerCase().includes(keyword) ||
-      order.roblox_username?.toLowerCase().includes(keyword) ||
-      order.roblox_display_name?.toLowerCase().includes(keyword)
+      order.order_code?.toLowerCase().includes(q) ||
+      order.roblox_username?.toLowerCase().includes(q) ||
+      order.roblox_display_name?.toLowerCase().includes(q)
     );
   });
 
+  const waiting = orders.filter((o) => o.status === "paid").length;
+  const processingCount = orders.filter(
+    (o) => o.status === "processing"
+  ).length;
+  const completed = orders.filter(
+    (o) => o.status === "completed"
+  ).length;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2
+          size={28}
+          className="animate-spin text-blue-500"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
+
       {/* HEADER */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">
-            Đơn Roblox
+          <h2 className="text-lg font-bold text-slate-900">
+            Đơn nạp Roblox
           </h2>
 
-          <p className="text-sm text-slate-500">
-            Quản lý và duyệt đơn nạp Robux
+          <p className="text-sm text-slate-400">
+            Quản lý đơn nạp Robux thủ công
           </p>
         </div>
 
         <button
-          onClick={loadOrders}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+          onClick={fetchOrders}
+          className="rounded-full bg-blue-50 p-2.5 text-blue-600 hover:bg-blue-100"
         >
-          <RefreshCw
-            size={16}
-            className={loading ? "animate-spin" : ""}
-          />
-
-          Làm mới
+          <RefreshCw size={17} />
         </button>
       </div>
 
+      {/* STATS */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-2xl bg-blue-50 p-4 text-center">
+          <p className="text-2xl font-bold text-blue-600">
+            {waiting}
+          </p>
+          <p className="text-xs text-blue-600">
+            Chờ kiểm tra
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-purple-50 p-4 text-center">
+          <p className="text-2xl font-bold text-purple-600">
+            {processingCount}
+          </p>
+          <p className="text-xs text-purple-600">
+            Đang xử lý
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-emerald-50 p-4 text-center">
+          <p className="text-2xl font-bold text-emerald-600">
+            {completed}
+          </p>
+          <p className="text-xs text-emerald-600">
+            Hoàn thành
+          </p>
+        </div>
+      </div>
+
       {/* SEARCH */}
-      <div className="relative">
-        <Search
-          size={18}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-        />
+      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <Search size={16} className="text-slate-400" />
 
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm mã đơn hoặc username Roblox..."
-          className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-blue-500"
+          placeholder="Tìm mã đơn / username Roblox..."
+          className="w-full bg-transparent text-sm outline-none"
         />
       </div>
 
       {/* ORDERS */}
-      {loading ? (
-        <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16">
-          <Loader2
-            size={28}
-            className="animate-spin text-blue-600"
-          />
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center">
-          <p className="font-semibold text-slate-700">
-            Không có đơn Roblox
-          </p>
+      <div className="space-y-4">
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl bg-white py-12 text-center">
+            <p className="text-sm text-slate-400">
+              Chưa có đơn Roblox.
+            </p>
+          </div>
+        ) : (
+          filtered.map((order) => {
+            const status =
+              statusInfo[order.status] || {
+                text: order.status,
+                className: "bg-slate-100 text-slate-500",
+              };
 
-          <p className="mt-1 text-sm text-slate-400">
-            Các đơn nạp Robux sẽ xuất hiện ở đây.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredOrders.map((order) => {
-            const status = STATUS[order.status] || {
-              label: order.status,
-            };
-
-            const isAction = actionId === order.id;
+            const busy = processing === order.id;
 
             return (
               <div
                 key={order.id}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
-                {/* TOP */}
-                <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+
+                {/* ORDER HEADER */}
+                <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900">
+                      <p className="font-bold text-slate-900">
                         {order.order_code}
-                      </span>
+                      </p>
 
                       <button
-                        onClick={() => copyText(order.order_code)}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600"
+                        onClick={() => copy(order.order_code)}
+                        className="text-slate-400 hover:text-blue-500"
                       >
                         <Copy size={14} />
                       </button>
                     </div>
 
                     <p className="mt-1 text-xs text-slate-400">
-                      {formatDate(order.created_at)}
+                      {new Date(
+                        order.created_at
+                      ).toLocaleString("vi-VN")}
                     </p>
                   </div>
 
-                  <span className="w-fit rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
-                    {status.label}
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}
+                  >
+                    {status.text}
                   </span>
                 </div>
 
                 {/* INFO */}
-                <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4">
                   <div>
                     <p className="text-xs text-slate-400">
                       Roblox
                     </p>
 
-                    <p className="mt-1 font-semibold text-slate-900">
+                    <p className="font-bold text-slate-900">
                       {order.roblox_username}
                     </p>
 
@@ -222,10 +258,10 @@ export default function RobloxOrdersTab() {
 
                   <div>
                     <p className="text-xs text-slate-400">
-                      Robux
+                      Gói
                     </p>
 
-                    <p className="mt-1 font-bold text-blue-600">
+                    <p className="font-bold text-blue-600">
                       {order.robux} Robux
                     </p>
                   </div>
@@ -235,8 +271,8 @@ export default function RobloxOrdersTab() {
                       Số tiền
                     </p>
 
-                    <p className="mt-1 font-bold text-slate-900">
-                      {formatPrice(order.amount)}
+                    <p className="font-bold text-slate-900">
+                      {money(order.amount)}
                     </p>
                   </div>
 
@@ -245,118 +281,108 @@ export default function RobloxOrdersTab() {
                       Thanh toán
                     </p>
 
-                    <p className="mt-1 font-semibold text-slate-700">
+                    <p className="font-semibold text-slate-700">
                       {order.payment_method || "Chưa chọn"}
                     </p>
                   </div>
                 </div>
 
-                {/* NOTE */}
+                {/* TRANSFER NOTE */}
                 {order.note && (
-                  <div className="mx-4 mb-4 rounded-xl bg-slate-50 p-3">
-                    <p className="text-xs font-medium text-slate-400">
+                  <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                    <p className="text-xs font-semibold text-blue-600">
                       Nội dung chuyển khoản
                     </p>
 
-                    <div className="mt-1 flex items-center justify-between gap-3">
-                      <p className="break-all text-sm font-semibold text-slate-700">
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p className="break-all text-sm font-bold text-slate-700">
                         {order.note}
                       </p>
 
                       <button
-                        onClick={() => copyText(order.note)}
-                        className="shrink-0 rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:text-blue-600"
+                        onClick={() => copy(order.note)}
+                        className="shrink-0 rounded-lg bg-white p-2 text-slate-500"
                       >
-                        <Copy size={15} />
+                        <Copy size={14} />
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* ACTIONS */}
-                <div className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50 p-4">
-                  {order.status === "paid" && (
-                    <>
-                      <button
-                        disabled={isAction}
-                        onClick={() =>
-                          updateStatus(order.id, "processing")
-                        }
-                        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {isAction ? (
-                          <Loader2
-                            size={16}
-                            className="animate-spin"
-                          />
-                        ) : (
-                          <Check size={16} />
-                        )}
+                {/* ACTION */}
+                {order.status === "paid" && (
+                  <div className="mt-4 flex gap-2">
 
-                        Duyệt đơn
-                      </button>
-
-                      <button
-                        disabled={isAction}
-                        onClick={() =>
-                          updateStatus(order.id, "cancelled")
-                        }
-                        className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                      >
-                        <X size={16} />
-
-                        Từ chối
-                      </button>
-                    </>
-                  )}
-
-                  {order.status === "processing" && (
                     <button
-                      disabled={isAction}
+                      disabled={busy}
                       onClick={() =>
-                        updateStatus(order.id, "completed")
+                        updateStatus(order, "processing")
                       }
-                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      className="flex-1 rounded-full bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
                     >
-                      {isAction ? (
+                      {busy ? (
                         <Loader2
-                          size={16}
-                          className="animate-spin"
+                          size={15}
+                          className="mx-auto animate-spin"
                         />
                       ) : (
-                        <Check size={16} />
+                        <>
+                          <CheckCircle2
+                            size={15}
+                            className="mr-1 inline"
+                          />
+                          Duyệt đơn
+                        </>
                       )}
-
-                      Hoàn thành
                     </button>
-                  )}
 
-                  {order.status === "pending" && (
-                    <div className="flex items-center gap-2 text-sm text-amber-600">
-                      <Clock size={16} />
-                      Đang chờ khách thanh toán
-                    </div>
-                  )}
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        updateStatus(order, "cancelled")
+                      }
+                      className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-bold text-white hover:bg-rose-600 disabled:opacity-50"
+                    >
+                      <XCircle
+                        size={15}
+                        className="mr-1 inline"
+                      />
+                      Từ chối
+                    </button>
 
-                  {order.status === "completed" && (
-                    <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                      <Check size={16} />
-                      Đơn đã hoàn thành
-                    </div>
-                  )}
+                  </div>
+                )}
 
-                  {order.status === "cancelled" && (
-                    <div className="flex items-center gap-2 text-sm font-semibold text-red-600">
-                      <X size={16} />
-                      Đơn đã bị từ chối
-                    </div>
-                  )}
-                </div>
+                {/* COMPLETE */}
+                {order.status === "processing" && (
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      updateStatus(order, "completed")
+                    }
+                    className="mt-4 w-full rounded-full bg-emerald-500 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    {busy ? (
+                      <Loader2
+                        size={15}
+                        className="mx-auto animate-spin"
+                      />
+                    ) : (
+                      <>
+                        <CheckCircle2
+                          size={15}
+                          className="mr-1 inline"
+                        />
+                        Đã nạp Robux — Hoàn thành
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
-    }
+      }
