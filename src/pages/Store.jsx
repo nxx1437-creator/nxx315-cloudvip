@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Globe, ChevronDown, Gift, Trophy, CreditCard, Percent, Coins, Flame } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.js';
 import useProfile from '../hooks/useProfile.js';
