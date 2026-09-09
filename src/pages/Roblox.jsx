@@ -104,7 +104,7 @@ function PackageImage({ image, robux }) {
 }
 
 // =====================================================
-// PLAYER LOOKUP
+// ROBLOX USER LOOKUP
 // =====================================================
 
 async function findRobloxUser(username) {
@@ -143,10 +143,12 @@ async function findRobloxUser(username) {
 
     if (avatarResponse.ok) {
       const avatarData = await avatarResponse.json();
-      avatar = avatarData.data?.[0]?.imageUrl || null;
+
+      avatar =
+        avatarData.data?.[0]?.imageUrl || null;
     }
   } catch {
-    // Không có avatar vẫn cho tiếp tục
+    // Không lấy được avatar thì vẫn tiếp tục
   }
 
   return {
@@ -217,6 +219,7 @@ function PlayerSection({
 
           <div className="p-5 pb-3">
             <div className="flex items-center gap-3">
+
               <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <User
                   size={20}
@@ -233,6 +236,7 @@ function PlayerSection({
                   Nhập username Roblox của bạn
                 </p>
               </div>
+
             </div>
           </div>
 
@@ -253,6 +257,7 @@ function PlayerSection({
                 }
               `}
             >
+
               <Search
                 size={18}
                 className="text-gray-400 shrink-0"
@@ -281,20 +286,24 @@ function PlayerSection({
                   placeholder:text-gray-400
                 "
               />
+
             </div>
 
             {/* ERROR */}
 
             {error && (
               <div className="flex items-center gap-2 mt-3 text-red-500">
+
                 <AlertCircle size={15} />
+
                 <p className="text-xs font-medium">
                   {error}
                 </p>
+
               </div>
             )}
 
-            {/* CONFIRM */}
+            {/* CONFIRM BUTTON */}
 
             <button
               type="button"
@@ -316,20 +325,24 @@ function PlayerSection({
                 flex items-center justify-center gap-2
               "
             >
+
               {loading ? (
                 <>
                   <Loader2
                     size={17}
                     className="animate-spin"
                   />
+
                   Đang kiểm tra...
                 </>
               ) : (
                 <>
                   Xác nhận
+
                   <ChevronRight size={17} />
                 </>
               )}
+
             </button>
 
             {/* PLAYER RESULT */}
@@ -342,6 +355,7 @@ function PlayerSection({
                 bg-blue-50/60
                 p-4
               ">
+
                 <div className="flex items-center gap-3">
 
                   <div className="
@@ -353,6 +367,7 @@ function PlayerSection({
                     flex items-center justify-center
                     shrink-0
                   ">
+
                     {player.avatar ? (
                       <img
                         src={player.avatar}
@@ -365,10 +380,13 @@ function PlayerSection({
                         className="text-blue-400"
                       />
                     )}
+
                   </div>
 
                   <div className="min-w-0 flex-1">
+
                     <div className="flex items-center gap-1.5">
+
                       <p className="font-extrabold text-gray-900 truncate">
                         {player.displayName}
                       </p>
@@ -377,6 +395,7 @@ function PlayerSection({
                         size={15}
                         className="text-blue-500 shrink-0"
                       />
+
                     </div>
 
                     <p className="text-xs text-gray-500 mt-0.5 truncate">
@@ -386,9 +405,11 @@ function PlayerSection({
                     <p className="text-[10px] text-gray-400 mt-1">
                       ID: {player.id}
                     </p>
+
                   </div>
 
                 </div>
+
               </div>
             )}
 
@@ -400,7 +421,7 @@ function PlayerSection({
 }
 
 // =====================================================
-// BANNER
+// ROBLOX BANNER
 // =====================================================
 
 function RobloxBanner() {
@@ -439,7 +460,9 @@ function RobloxBanner() {
               flex items-center justify-center
               text-white
             ">
+
               <div className="text-center">
+
                 <Gamepad2
                   size={35}
                   className="mx-auto mb-2"
@@ -452,7 +475,9 @@ function RobloxBanner() {
                 <p className="text-xs opacity-80">
                   Nạp Robux nhanh chóng
                 </p>
+
               </div>
+
             </div>
           )}
 
@@ -463,6 +488,7 @@ function RobloxBanner() {
             to-transparent
             pointer-events-none
           " />
+
         </div>
       </div>
     </section>
@@ -497,7 +523,14 @@ function PackageCard({
         }
       `}
     >
-      <div className="relative aspect-[1.55/1] overflow-hidden bg-gray-50">
+
+      <div className="
+        relative
+        aspect-[1.55/1]
+        overflow-hidden
+        bg-gray-50
+      ">
+
         <PackageImage
           image={pack.image}
           robux={pack.robux}
@@ -519,6 +552,7 @@ function PackageCard({
             <CheckCircle2 size={17} />
           </div>
         )}
+
       </div>
 
       <div className="p-3">
@@ -527,7 +561,13 @@ function PackageCard({
           Gói {pack.robux.toLocaleString('vi-VN')} Robux
         </p>
 
-        <div className="flex items-center justify-between gap-2 mt-2">
+        <div className="
+          flex
+          items-center
+          justify-between
+          gap-2
+          mt-2
+        ">
 
           <p className="text-sm font-extrabold text-blue-500">
             {formatMoney(pack.price)}
@@ -544,6 +584,7 @@ function PackageCard({
                 : 'bg-blue-50 text-blue-500'
             }
           `}>
+
             {selected ? (
               <CheckCircle2 size={17} />
             ) : (
@@ -551,14 +592,16 @@ function PackageCard({
                 +
               </span>
             )}
+
           </div>
 
         </div>
+
       </div>
+
     </button>
   );
-}
-
+                }
 // =====================================================
 // PACKAGE SECTION
 // =====================================================
@@ -618,6 +661,7 @@ function PackageSection({
   );
 }
 
+
 // =====================================================
 // SUMMARY
 // =====================================================
@@ -639,6 +683,7 @@ function Summary({
       border-gray-100
       shadow-[0_-8px_30px_rgba(0,0,0,0.08)]
     ">
+
       <div className="
         max-w-5xl
         mx-auto
@@ -648,12 +693,10 @@ function Summary({
 
         <div className="flex items-center gap-3">
 
-          {/* ROBUX */}
+          {/* TỔNG ROBUX */}
 
-          <div className="
-            flex-1
-            min-w-0
-          ">
+          <div className="flex-1 min-w-0">
+
             <p className="text-[10px] text-gray-400">
               Tổng Robux
             </p>
@@ -667,9 +710,11 @@ function Summary({
                 ? `${selectedPackage.robux.toLocaleString('vi-VN')} Robux`
                 : '0 Robux'}
             </p>
+
           </div>
 
-          {/* MONEY */}
+
+          {/* TỔNG TIỀN */}
 
           <div className="text-right">
 
@@ -690,6 +735,9 @@ function Summary({
           </div>
 
         </div>
+
+
+        {/* TIẾP TỤC */}
 
         <button
           type="button"
@@ -719,11 +767,13 @@ function Summary({
   );
 }
 
+
 // =====================================================
-// MAIN
+// MAIN ROBLOX PAGE
 // =====================================================
 
 export default function Roblox() {
+
   const [username, setUsername] = useState('');
   const [player, setPlayer] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -733,7 +783,12 @@ export default function Roblox() {
 
       <TopHeader />
 
+      {/* BANNER */}
+
       <RobloxBanner />
+
+
+      {/* NHẬP USERNAME */}
 
       <PlayerSection
         username={username}
@@ -742,18 +797,25 @@ export default function Roblox() {
         setPlayer={setPlayer}
       />
 
+
+      {/* CHỌN GÓI */}
+
       <PackageSection
         selectedPackage={selectedPackage}
         setSelectedPackage={setSelectedPackage}
       />
+
+
+      {/* TỔNG TIỀN */}
 
       <Summary
         player={player}
         selectedPackage={selectedPackage}
       />
 
+
       <BottomNav />
 
     </div>
   );
-    }
+}
