@@ -49,7 +49,7 @@ const PACKAGES = [
     id: 3,
     robux: 400,
     price: 170000,
-    image: null,
+    image: 'roblox-400.png',
   },
   {
     id: 4,
