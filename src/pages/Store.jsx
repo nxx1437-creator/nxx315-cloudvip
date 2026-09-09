@@ -37,7 +37,7 @@ const BANNER = 'store-banner.png';
 const GAMES = [
   {
   id: 1,
-  name: 'Roblox VN',
+  name: 'Roblox ',
   category: 'pc',
   logo: 'roblox.png',
   path: '/store/roblox'
