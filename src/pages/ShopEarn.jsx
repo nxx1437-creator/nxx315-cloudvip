@@ -1,105 +1,38 @@
-// ============================================
-// PHẦN 1: IMPORTS, UTILITIES, BOTTOM NAV, HEADER, POINTS CARD
-// ============================================
-
+// src/pages/ShopEarn.jsx - PHẦN 1
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Star, Flame, CalendarCheck, Check, ShoppingBag,
   Link2, Copy, Loader2, Clock3, ChevronRight, Sparkles,
-  Wallet2, ArrowLeftRight, Landmark, Info, AlertTriangle, Lock,
-  Gift, X, HelpCircle, CheckCircle2, XCircle, Home, ListChecks,
-  Gift as GiftIcon, User
+  Wallet2, AlertTriangle, Lock, X, HelpCircle, Gift
 } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import useTasks from "../hooks/useTasks.js";
 import { supabase } from "../lib/supabaseClient.js";
+import BottomNav from "../components/BottomNav.jsx";
 
-// ========== UTILITIES ==========
+// ========== UTILITY ==========
 const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
-const formatVND = (v) => Number(v || 0).toLocaleString("vi-VN") + "đ";
 const rewardForDay = (day) => day <= 10 ? 5 : day <= 20 ? 10 : 15;
-
-// ============================================
-// BOTTOM NAVIGATION
-// ============================================
-
-function BottomNav() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const currentPath = location.pathname;
-
-  const tabs = [
-    { key: "/", label: "Trang chủ", icon: Home },
-    { key: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-    { key: "/store", label: "Cửa hàng", icon: GiftIcon },
-    { key: "/wallet", label: "Ví", icon: Wallet2 },
-    { key: "/profile", label: "Cá nhân", icon: User },
-  ];
-
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100/80 safe-area-bottom">
-      <div className="flex items-center justify-around max-w-md mx-auto h-[62px] px-2">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = currentPath === tab.key ||
-            (tab.key === "/" && currentPath === "/shop-earn");
-
-          return (
-            <button
-              key={tab.key}
-              onClick={() => navigate(tab.key)}
-              className="flex flex-col items-center gap-0.5 min-w-[44px] py-1 relative"
-            >
-              <Icon
-                size={20}
-                className={`transition-colors ${
-                  isActive ? "text-blue-600" : "text-gray-400"
-                }`}
-              />
-              <span
-                className={`text-[9px] font-medium transition-colors ${
-                  isActive ? "text-blue-600 font-semibold" : "text-gray-400"
-                }`}
-              >
-                {tab.label}
-              </span>
-              {isActive && (
-                <div className="absolute -top-0.5 w-4 h-0.5 rounded-full bg-blue-600" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 // ============================================
 // HEADER
 // ============================================
-
 function Header() {
   const navigate = useNavigate();
   return (
-    <header className="sticky top-0 z-30 bg-white px-4 py-2.5 border-b border-gray-100/80">
-      <div className="flex items-center justify-between max-w-md mx-auto">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-50 active:bg-gray-100 transition-colors"
-        >
-          <ArrowLeft size={18} className="text-gray-700" />
+    <header className="sticky top-0 z-30 bg-white px-4 py-3 border-b border-gray-100">
+      <div className="flex items-center gap-3 max-w-md mx-auto">
+        <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+          <ArrowLeft size={20} className="text-gray-700" />
         </button>
-        <div className="flex-1 px-2">
+        <div className="flex-1">
           <h1 className="text-[15px] font-bold text-gray-900">Mua hàng kiếm sao</h1>
-          <p className="text-[10px] text-gray-400">Mua sắm · nhận thưởng mỗi ngày</p>
+          <p className="text-[11px] text-gray-400">Mua sắm vui vẻ · nhận Sao mỗi ngày ✨</p>
         </div>
-        <button
-          onClick={() => navigate("/tasks")}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 active:bg-blue-200 transition-colors"
-        >
-          <Sparkles size={17} />
+        <button onClick={() => navigate("/tasks")} className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition">
+          <Sparkles size={18} />
         </button>
       </div>
     </header>
@@ -109,108 +42,79 @@ function Header() {
 // ============================================
 // POINTS CARD
 // ============================================
-
 function PointsCard({ starPoints, pendingPoints = 0 }) {
   const navigate = useNavigate();
   const progress = Math.min(100, (starPoints / 2000) * 100);
-  const remaining = Math.max(0, 2000 - starPoints);
   const level = starPoints >= 2000 ? "Săn sale chuyên nghiệp" : "Tập sự săn sale";
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-blue-500 to-blue-600 p-4">
-      <div className="absolute -right-8 -top-8 w-20 h-20 rounded-full bg-white/5" />
-      <div className="absolute -bottom-6 -left-6 w-16 h-16 rounded-full bg-white/5" />
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 p-5 shadow-lg shadow-blue-500/20">
+      <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-white/5" />
+      <div className="absolute -bottom-8 -left-8 w-20 h-20 rounded-full bg-white/5" />
 
-      <div className="relative">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[9px] font-medium text-blue-100/80">Điểm tích lũy</p>
-            <div className="flex items-end gap-1 mt-0.5">
-              <span className="text-[28px] font-black text-white leading-none">
-                {formatCoins(starPoints)}
-              </span>
-              <Star size={16} className="fill-yellow-300 text-yellow-300 mb-1" />
-            </div>
-            <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-white/15 text-[8px] font-semibold text-white">
-              {level}
-            </span>
+      <div className="relative flex items-start justify-between">
+        <div>
+          <p className="text-[10px] font-medium text-blue-100">Điểm tích lũy</p>
+          <div className="flex items-end gap-1 mt-0.5">
+            <span className="text-[28px] font-bold text-white">{formatCoins(starPoints)}</span>
+            <Star size={16} className="fill-yellow-300 text-yellow-300 mb-1" />
           </div>
-          <div className="text-right">
-            <p className="text-[7px] font-medium text-blue-100/70">Điểm chờ duyệt</p>
-            <p className="text-[14px] font-bold text-white">{formatCoins(pendingPoints)} ⭐</p>
-            {pendingPoints > 0 && (
-              <p className="text-[6px] text-blue-200/70 animate-pulse">⏳ Đang xử lý</p>
-            )}
-          </div>
+          <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-white/20 text-[9px] font-semibold text-white">
+            {level}
+          </span>
         </div>
+        <div className="text-right">
+          <p className="text-[8px] font-medium text-blue-100">Điểm chờ duyệt</p>
+          <p className="text-[14px] font-bold text-white">{formatCoins(pendingPoints)} ⭐</p>
+        </div>
+      </div>
 
-        <div className="mt-3 border-t border-white/10 pt-2.5">
-          <p className="text-[9px] font-medium text-blue-100/80">
-            Thêm {formatCoins(remaining)} ⭐ trước ngày 01-01 để lên hạng nhaaa
-          </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <div className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
-              <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${progress}%` }} />
-            </div>
-            <span className="text-[9px] font-semibold text-white/80">{Math.round(progress)}%</span>
+      <div className="mt-3 pt-3 border-t border-white/10">
+        <p className="text-[9px] font-medium text-blue-100">
+          Thêm {formatCoins(Math.max(0, 2000 - starPoints))} ⭐ để nâng hạng
+        </p>
+        <div className="flex items-center gap-2 mt-1.5">
+          <div className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
+            <div className="h-full rounded-full bg-white transition-all" style={{ width: `${progress}%` }} />
           </div>
-          <div className="flex items-center justify-between mt-2">
-            <button
-              onClick={() => navigate("/point-history")}
-              className="text-[8px] font-medium text-blue-100/60 flex items-center gap-0.5"
-            >
-              Chi tiết lịch sử <ChevronRight size={10} />
-            </button>
-            <div className="flex items-center gap-1">
-              <span className="text-[8px] font-bold text-yellow-300">×3</span>
-              <span className="text-[7px] text-blue-100/50">Đang chờ sử dụng</span>
-            </div>
-          </div>
+          <span className="text-[9px] font-medium text-white">{Math.round(progress)}%</span>
         </div>
+        <button onClick={() => navigate("/point-history")} className="mt-1.5 text-[8px] font-medium text-blue-100 hover:text-white transition">
+          Chi tiết lịch sử điểm →
+        </button>
       </div>
     </div>
   );
-  }
-// ============================================
-// PHẦN 2: CHECKIN SECTION
-// ============================================
+}
 
-function CheckinSection({
-  currentStreak,
-  hasCheckedInToday,
-  checkinLoading,
-  handleCheckin,
-  daysToNextMilestone,
-  isRefundLocked = false
-}) {
+// ============================================
+// CHECKIN SECTION
+// ============================================
+function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, handleCheckin, daysToNextMilestone }) {
   const nextReward = rewardForDay(currentStreak + 1);
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-100">
+    <div className="bg-white rounded-2xl p-4 border border-gray-100">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-1 h-5 rounded-full bg-blue-500" />
-          <p className="text-[11px] font-bold text-gray-900">CHUỖI ĐIỂM DANH</p>
+          <p className="text-[10px] font-bold text-gray-400">CHUỖI ĐIỂM DANH</p>
         </div>
         <div className="flex items-center gap-1.5">
-          <Flame size={14} className={isRefundLocked ? 'text-gray-300' : 'text-orange-500'} />
-          <span className={`text-sm font-bold ${isRefundLocked ? 'text-gray-400' : 'text-gray-900'}`}>
-            {isRefundLocked ? '🔒' : currentStreak}
-          </span>
-          <span className={`text-[10px] font-medium ${isRefundLocked ? 'text-gray-400' : 'text-gray-500'}`}>
-            ngày
-          </span>
+          <Flame size={14} className="text-orange-500" />
+          <span className="text-sm font-bold text-gray-900">{currentStreak}</span>
+          <span className="text-[10px] text-gray-400">ngày</span>
         </div>
       </div>
 
-      <div className="mt-2.5 flex gap-1">
+      <div className="mt-2.5 grid grid-cols-4 gap-1">
         {[
           { label: "N1-N10", reward: "5" },
           { label: "N11-N20", reward: "10" },
           { label: "N21-N30", reward: "15" },
           { label: "N31 trở đi", reward: "15" },
         ].map((tier) => (
-          <div key={tier.label} className={`flex-1 py-1 rounded-lg text-center ${isRefundLocked ? 'opacity-30' : 'bg-gray-50'}`}>
+          <div key={tier.label} className="py-1 rounded-lg text-center bg-gray-50">
             <p className="text-[7px] font-medium text-gray-400">{tier.label}</p>
             <p className="text-[9px] font-bold text-blue-500">+{tier.reward}⭐</p>
           </div>
@@ -223,145 +127,87 @@ function CheckinSection({
           const dayNumber = baseDay + offset;
           const isToday = hasCheckedInToday ? offset === 3 : offset === 4;
           const isDone = dayNumber <= currentStreak;
-          const isFuture = dayNumber > currentStreak && !isToday;
 
           return (
-            <div
-              key={offset}
-              className={`flex flex-col items-center py-2 rounded-lg transition-all border ${
-                isDone ? 'border-green-200 bg-green-50' :
-                isToday ? 'border-2 border-blue-500 bg-blue-50' :
-                isFuture ? 'border-gray-100 bg-gray-50' :
-                'border-gray-100 bg-gray-50'
-              } ${isRefundLocked ? 'opacity-30' : ''}`}
-            >
-              <span className={`text-[8px] font-medium ${
-                isToday ? 'text-blue-600' :
-                isDone ? 'text-green-600' :
-                'text-gray-400'
-              }`}>
+            <div key={offset} className={`flex flex-col items-center py-1.5 rounded-lg border ${
+              isToday ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/30' :
+              isDone ? 'border-green-200 bg-green-50' :
+              'border-gray-100 bg-gray-50'
+            }`}>
+              <span className={`text-[7px] font-medium ${isToday ? 'text-blue-600' : isDone ? 'text-green-600' : 'text-gray-400'}`}>
                 {isToday ? 'Hôm nay' : `Ngày ${dayNumber}`}
               </span>
-              <span className={`text-[9px] font-bold ${
-                isDone ? 'text-green-500' :
-                isToday ? 'text-blue-600' :
-                'text-gray-400'
-              }`}>
+              <span className={`text-[8px] font-bold ${isToday || isDone ? 'text-blue-600' : 'text-gray-400'}`}>
                 +{rewardForDay(dayNumber)}⭐
               </span>
-              {isDone && <Check size={10} className="text-green-500 mt-0.5" />}
-              {isToday && !isDone && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-0.5 animate-pulse" />
-              )}
+              {isDone && <Check size={8} className="text-green-500 mt-0.5" />}
             </div>
           );
         })}
       </div>
 
-      {isRefundLocked ? (
-        <div className="mt-2.5 w-full py-2.5 rounded-lg bg-gray-100 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-400">
-          <Lock size={13} /> Đã khóa
-        </div>
-      ) : (
-        <button
-          onClick={handleCheckin}
-          disabled={hasCheckedInToday || checkinLoading}
-          className="mt-2.5 w-full py-2.5 rounded-lg bg-blue-500 text-white font-bold text-sm active:scale-[0.98] transition-all disabled:bg-gray-200 disabled:text-gray-400 flex items-center justify-center gap-2"
-        >
-          {checkinLoading ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : hasCheckedInToday ? (
-            <><Check size={15} /> Đã điểm danh</>
-          ) : (
-            <><CalendarCheck size={15} /> Điểm danh</>
-          )}
-        </button>
-      )}
+      <button
+        onClick={handleCheckin}
+        disabled={hasCheckedInToday || checkinLoading}
+        className="mt-3 w-full py-2.5 rounded-xl bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition active:scale-[0.98] disabled:bg-gray-200 disabled:text-gray-400 disabled:active:scale-100"
+      >
+        {checkinLoading ? <Loader2 size={16} className="animate-spin" /> : hasCheckedInToday ? '✅ Đã điểm danh' : 'Điểm danh'}
+      </button>
 
-      <p className="mt-2 text-center text-[9px] font-medium text-gray-500">
-        {isRefundLocked
-          ? '🔒 Hoàn trả tiền để mở khóa'
-          : daysToNextMilestone > 0
-            ? `⏳ Còn ${daysToNextMilestone} ngày nữa để đạt mốc ${currentStreak < 10 ? '10' : '15'}⭐/ngày`
-            : '🔥 Bạn đang ở mốc thưởng cao nhất'}
+      <p className="mt-2 text-center text-[9px] text-gray-400">
+        {daysToNextMilestone > 0 
+          ? `⏳ Còn ${daysToNextMilestone} ngày để đạt mốc ${currentStreak < 10 ? '10' : '15'}⭐/ngày` 
+          : '🔥 Bạn đang ở mốc thưởng cao nhất'}
       </p>
     </div>
   );
 }
-// ============================================
-// PHẦN 3: TASK, REFUND WARNING, SHOP SECTIONS
-// ============================================
-
+// src/pages/ShopEarn.jsx - PHẦN 2
 // ============================================
 // TASK SECTION
 // ============================================
-
 function TaskSection({ tasks }) {
   const navigate = useNavigate();
-
-  if (!tasks || tasks.length === 0) {
-    return (
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-4 rounded-full bg-blue-500" />
-            <p className="text-[11px] font-bold text-gray-900">THỬ THÁCH NHẬN ĐIỂM</p>
-          </div>
-          <button
-            onClick={() => navigate("/tasks")}
-            className="text-[10px] font-medium text-blue-500 flex items-center gap-0.5"
-          >
-            Tất cả <ChevronRight size={13} />
-          </button>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-100 text-center">
-          <p className="text-sm text-gray-400">Chưa có nhiệm vụ nào</p>
-        </div>
-      </div>
-    );
-  }
+  
+  if (tasks.length === 0) return null;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 rounded-full bg-blue-500" />
-          <p className="text-[11px] font-bold text-gray-900">THỬ THÁCH NHẬN ĐIỂM</p>
+          <p className="text-[10px] font-bold text-gray-400">THỬ THÁCH NHẬN ĐIỂM</p>
         </div>
-        <button
-          onClick={() => navigate("/tasks")}
-          className="text-[10px] font-medium text-blue-500 flex items-center gap-0.5"
-        >
+        <button onClick={() => navigate("/tasks")} className="text-[9px] font-medium text-blue-500 flex items-center gap-0.5 hover:text-blue-600 transition">
           Tất cả <ChevronRight size={13} />
         </button>
       </div>
-
       <div className="space-y-1.5">
         {tasks.slice(0, 3).map((task) => {
           const isDone = task.remainingToday <= 0;
           return (
-            <div key={task.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100">
+            <div key={task.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 hover:shadow-sm transition">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-xs font-bold text-blue-500">
                   {task.logo_url ? (
                     <img src={task.logo_url} alt={task.provider} className="w-7 h-7 rounded-lg object-cover" />
                   ) : (
-                    <span className="text-[10px] font-bold text-blue-500">{task.provider?.slice(0, 2) || "NV"}</span>
+                    task.provider?.slice(0, 2) || 'NV'
                   )}
                 </div>
                 <div>
-                  <p className="text-[12px] font-semibold text-gray-900">{task.provider}</p>
-                  <p className="text-[9px] text-gray-400">Nhiệm vụ hàng ngày</p>
+                  <p className="text-[11px] font-semibold text-gray-900">{task.provider}</p>
+                  <p className="text-[8px] text-gray-400">Nhiệm vụ hàng ngày</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-blue-500">+{task.reward_coins}⭐</span>
-                <button
+                <span className="text-[9px] font-bold text-blue-500">+{task.reward_coins}⭐</span>
+                <button 
                   onClick={() => navigate("/tasks")}
                   disabled={isDone}
-                  className="px-3 py-1 rounded-lg text-[9px] font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
+                  className="px-3 py-1 rounded-full bg-blue-500 text-white text-[8px] font-bold hover:bg-blue-600 transition disabled:bg-gray-200 disabled:text-gray-400"
                 >
-                  {isDone ? "Xong" : "Đến"}
+                  {isDone ? 'Xong' : 'Đến'}
                 </button>
               </div>
             </div>
@@ -373,327 +219,211 @@ function TaskSection({ tasks }) {
 }
 
 // ============================================
-// REFUND LOCK WARNING
-// ============================================
-
-function RefundLockWarning({ isLocked, reason, onPayRefund }) {
-  const navigate = useNavigate();
-  if (!isLocked) return null;
-
-  return (
-    <div className="bg-red-50 rounded-xl p-3 border border-red-200 animate-pulse">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-          <AlertTriangle size={14} className="text-red-500" />
-        </div>
-        <div className="flex-1">
-          <p className="text-[11px] font-semibold text-red-600">Tài khoản đã bị khóa</p>
-          <p className="text-[9px] text-red-500 leading-relaxed">
-            {reason || 'Vui lòng hoàn trả tiền để mở khóa'}
-          </p>
-        </div>
-        <div className="flex gap-1.5">
-          <button
-            onClick={() => navigate("/refund-history")}
-            className="text-[9px] font-semibold text-red-600 underline"
-          >
-            Chi tiết
-          </button>
-          {onPayRefund && (
-            <button
-              onClick={onPayRefund}
-              className="px-3 py-1 rounded-full bg-red-500 text-[9px] font-semibold text-white hover:bg-red-600 transition-colors"
-            >
-              Trả nợ
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================
 // SHOP SECTION
 // ============================================
-
-function ShopSection({
-  platform,
-  setPlatform,
-  productUrl,
-  setProductUrl,
-  generating,
-  genError,
-  handlePaste,
-  handleGenerate,
-  setShowGuide,
-  productInfo,
-  setProductInfo,
-  copied,
-  setCopied,
-  navigate,
-  userId,
-  isRefundLocked = false
+function ShopSection({ 
+  productUrl, setProductUrl, generating, genError, 
+  handlePaste, handleGenerate, setShowGuide 
 }) {
   return (
-    <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100/50">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100">
+      <div className="flex items-center gap-2 mb-1">
         <Star size={14} className="text-blue-500" />
-        <p className="text-[12px] font-bold text-gray-900">MUA HÀNG TÍCH ĐIỂM</p>
+        <p className="text-[11px] font-bold text-gray-900">MUA HÀNG TÍCH ĐIỂM</p>
       </div>
-
-      <div className="flex items-center gap-2 mb-2.5">
-        <span className="text-[9px] text-gray-500">Link đã tạo</span>
-        <button
-          onClick={() => setShowGuide(true)}
-          className="text-[9px] font-medium text-blue-500 hover:text-blue-600"
-        >
+      <div className="flex items-center gap-1">
+        <span className="text-[8px] text-gray-400">Link đã tạo</span>
+        <button onClick={() => setShowGuide(true)} className="text-[9px] font-medium text-blue-500 underline hover:text-blue-600 transition">
           TẠI ĐÂY
         </button>
       </div>
 
-      <div className="flex items-center gap-2 bg-white rounded-lg px-2.5 py-2 border border-gray-200 focus-within:ring-2 focus-within:ring-blue-400 transition-all">
-        <Link2 size={14} className="text-gray-400 flex-shrink-0" />
+      <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200 mt-2 focus-within:ring-2 focus-within:ring-blue-400 transition">
+        <Link2 size={14} className="text-gray-400" />
         <input
           type="text"
           value={productUrl}
           onChange={(e) => setProductUrl(e.target.value)}
           placeholder="Link sản phẩm"
-          className="flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 min-w-0"
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400 min-w-0"
         />
-        <button
-          onClick={handlePaste}
-          className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-500 text-white text-[9px] font-medium hover:bg-blue-600 transition-colors"
-        >
-          <Copy size={11} /> Dán link
+        <button onClick={handlePaste} className="px-3 py-1 rounded-lg bg-blue-500 text-white text-[8px] font-bold hover:bg-blue-600 transition">
+          Dán link
         </button>
       </div>
 
-      {genError && <p className="mt-1.5 text-[10px] font-medium text-red-500">{genError}</p>}
+      {genError && <p className="mt-1 text-[9px] text-red-500">{genError}</p>}
 
-      {isRefundLocked ? (
-        <div className="mt-2 py-2.5 rounded-lg bg-red-50 border border-red-200 text-center">
-          <Lock size={14} className="mx-auto text-red-400 mb-0.5" />
-          <p className="text-[10px] font-semibold text-red-500">Tạm khóa</p>
-        </div>
-      ) : (
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="mt-2 w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-        >
-          {generating ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : (
-            <><Link2 size={14} /> Lấy link nhận sao</>
-          )}
-        </button>
-      )}
+      <button
+        onClick={handleGenerate}
+        disabled={generating}
+        className="mt-2 w-full py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+      >
+        {generating ? <Loader2 size={16} className="animate-spin" /> : 'Lấy link nhận sao'}
+      </button>
 
-      <p className="mt-2 text-center text-[8px] text-gray-400">
-        Sau khi Nhập link và Mua hàng, đơn sẽ tự động xuất hiện trong Điểm chờ duyệt sau tối đa 48 giờ.
+      <p className="mt-2 text-center text-[7px] text-gray-400">
+        Sau khi Nhập link và Mua hàng, đơn sẽ xuất hiện trong Điểm chờ duyệt sau 24-48h.
       </p>
     </div>
   );
-      }
-// ============================================
-// PHẦN 4: WALLET, PAYMENT RULES, MAIN COMPONENT
-// ============================================
+}
 
 // ============================================
-// WALLET SECTION
+// PRODUCT INFO MODAL
 // ============================================
+function ProductInfoModal({ productInfo, setProductInfo }) {
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
-function WalletSection({
-  starPoints,
-  canWithdraw,
-  setShowConvert,
-  setShowWithdraw,
-  isRefundLocked = false,
-  refundLockReason = ""
-}) {
+  if (!productInfo) return null;
+
   return (
-    <div className="bg-white rounded-xl p-3 border border-gray-100">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Star size={14} className="fill-yellow-400 text-yellow-400" />
-          <span className="text-[10px] font-medium text-gray-500">Sao của bạn</span>
-          <span className="text-base font-bold text-gray-900">{formatCoins(starPoints)}</span>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4">
+      <div className="w-full max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-5 animate-in slide-in-from-bottom duration-300">
+        <div className="mx-auto w-12 h-1 rounded-full bg-gray-300" />
+
+        <div className="flex items-start justify-between mt-3">
+          <div>
+            <p className="text-[15px] font-bold text-blue-600">Tạo link mua hàng thành công 🎉</p>
+            <p className="text-[10px] text-gray-400">Mua hàng từ link để tích điểm đổi quà.</p>
+          </div>
+          <button onClick={() => setProductInfo(null)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">
+            <X size={16} />
+          </button>
         </div>
-        <div className="flex gap-1.5">
-          <button
-            onClick={() => setShowConvert(true)}
-            disabled={starPoints <= 0 || isRefundLocked}
-            className="px-3 py-1.5 rounded-lg text-[9px] font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
+
+        <div className="mt-3 flex gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+          <div className="w-16 h-16 rounded-xl bg-gray-200 flex items-center justify-center flex-shrink-0">
+            {productInfo.image ? (
+              <img src={productInfo.image} alt={productInfo.name} className="w-full h-full rounded-xl object-cover" />
+            ) : (
+              <ShoppingBag size={24} className="text-gray-400" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-gray-900 line-clamp-2">{productInfo.name}</p>
+            <span className="inline-block mt-1 px-1.5 py-0.5 bg-black text-white text-[8px] font-bold rounded">Shopee</span>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-3">
+          <button 
+            onClick={async () => {
+              await navigator.clipboard.writeText(productInfo.link);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="flex-1 py-2.5 rounded-xl border border-blue-500 text-blue-500 text-xs font-bold hover:bg-blue-50 transition"
           >
-            Đổi Xu
+            {copied ? '✅ Đã sao chép' : '📋 Chia sẻ'}
           </button>
-          <button
-            onClick={() => canWithdraw && setShowWithdraw(true)}
-            disabled={!canWithdraw || isRefundLocked}
-            className="px-3 py-1.5 rounded-lg text-[9px] font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          <button 
+            onClick={() => navigate(`/redirect?url=${encodeURIComponent(productInfo.link)}&name=${encodeURIComponent(productInfo.name)}&image=${encodeURIComponent(productInfo.image || '')}`)}
+            className="flex-1 py-2.5 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 transition"
           >
-            Rút
+            Mua ngay →
           </button>
+        </div>
+
+        <div className="mt-3 p-2.5 rounded-xl bg-blue-50 text-center border border-blue-100">
+          <p className="text-[9px] font-medium text-blue-600">Đơn hàng của Sếp sẽ được cập nhật điểm sau 24-48h</p>
+        </div>
+
+        <div className="mt-3 border-t border-gray-100 pt-3">
+          <p className="text-[9px] font-bold text-gray-700">📝 Lưu ý để được ghi nhận đơn</p>
+          <div className="mt-1.5 space-y-1">
+            {[
+              'Sau mỗi lần đặt hàng, nhớ bấm lại link để nhận Sao cho đơn tiếp theo.',
+              'Mua đúng sản phẩm được gắn link hoặc sản phẩm cùng shop để nhận Sao chính xác.',
+              'Không tính Sao cho sản phẩm được thêm từ livestream/video KOC.'
+            ].map((note, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <Check size={10} className="text-blue-500 mt-0.5 shrink-0" />
+                <p className="text-[8px] text-gray-500 leading-relaxed">{note}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-      {isRefundLocked && (
-        <div className="mt-1.5 p-1.5 rounded-lg bg-red-50">
-          <p className="text-[8px] text-red-500 flex items-center gap-1">
-            <Lock size={10} /> Tạm khóa: {refundLockReason || 'Cần hoàn trả tiền'}
-          </p>
-        </div>
-      )}
-
-      {!canWithdraw && !isRefundLocked && (
-        <p className="mt-1 text-[8px] text-gray-400">💡 Cần tối thiểu 20.000đ để rút</p>
-      )}
     </div>
   );
 }
 
 // ============================================
-// PAYMENT RULES
+// GUIDE MODAL
 // ============================================
-
-function PaymentRules() {
-  const [expanded, setExpanded] = useState(false);
-
+function GuideModal({ onClose }) {
   return (
-    <div className="bg-white rounded-xl p-3 border border-gray-100">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between"
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-3 rounded-full bg-blue-500" />
-          <span className="text-[11px] font-semibold text-gray-900">Quy tắc thanh toán</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold text-gray-900">Cách nhận Sao trong 3 bước</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
         </div>
-        <ChevronRight
-          size={15}
-          className={`text-gray-400 transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}
-        />
-      </button>
-
-      {expanded && (
-        <div className="mt-2.5 pt-2.5 border-t border-gray-100 space-y-2">
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="py-2 px-2 rounded-lg bg-gray-50 text-center">
-              <p className="text-[8px] text-gray-400">Tổng nhận VND</p>
-              <p className="text-[13px] font-bold text-gray-900">0đ</p>
+        <div className="space-y-3">
+          {[
+            { n: '1', title: 'Sao chép link sản phẩm', desc: 'Mở app/web sàn TMĐT, tìm sản phẩm bạn thích rồi sao chép đường dẫn.' },
+            { n: '2', title: 'Dán link & lấy link nhận Sao', desc: 'Dán link vừa copy vào ô ở trang này để hệ thống tạo link riêng cho bạn.' },
+            { n: '3', title: 'Mua hàng & nhận Sao', desc: 'Mở link vừa tạo, mua hàng như bình thường. Sao sẽ tự cộng vào ví sau khi đơn được duyệt.' },
+          ].map((step) => (
+            <div key={step.n} className="flex gap-3">
+              <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{step.n}</div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{step.title}</p>
+                <p className="text-xs text-gray-500">{step.desc}</p>
+              </div>
             </div>
-            <div className="py-2 px-2 rounded-lg bg-gray-50 text-center">
-              <p className="text-[8px] text-gray-400">Đã đổi Main</p>
-              <p className="text-[13px] font-bold text-gray-900">0</p>
-            </div>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-[8px] font-semibold text-gray-400 uppercase tracking-wider">Quy tắc</p>
-            <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-gray-50">
-              <span className="text-[10px]">💵</span>
-              <p className="text-[10px] text-gray-600">1 sao = 10 VND khi rút tiền</p>
-            </div>
-            <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-gray-50">
-              <span className="text-[10px]">🔄</span>
-              <p className="text-[10px] text-gray-600">Đổi 1.000 mkt → 900 main (phí 10%)</p>
-            </div>
-            <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-gray-50">
-              <span className="text-[10px]">🏦</span>
-              <p className="text-[10px] text-gray-600">Rút bank/ví: phí 20%</p>
-            </div>
-            <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-gray-50">
-              <span className="text-[10px]">📌</span>
-              <p className="text-[10px] text-gray-600">Tối thiểu 10.000 VND</p>
-            </div>
-            <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-gray-50">
-              <span className="text-[10px]">🔀</span>
-              <p className="text-[10px] text-gray-600">Sao tách riêng khỏi Main coin</p>
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+        <button onClick={onClose} className="mt-4 w-full py-2.5 rounded-xl bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition">Đã hiểu</button>
+      </div>
     </div>
   );
 }
 
 // ============================================
-// MAIN COMPONENT
+// MAIN
 // ============================================
-
 export default function ShopEarn() {
   const navigate = useNavigate();
   const { session } = useSession();
   const { profile, setProfile } = useProfile();
   const { tasks } = useTasks(session?.user?.id);
 
-  const [platform, setPlatform] = useState("tiktok");
   const [productUrl, setProductUrl] = useState("");
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState("");
-  const [resultLink, setResultLink] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const [showConvert, setShowConvert] = useState(false);
-  const [showWithdraw, setShowWithdraw] = useState(false);
   const [checkinLoading, setCheckinLoading] = useState(false);
-  const [checkinResult, setCheckinResult] = useState(null);
-  const [productInfo, setProductInfo] = useState(null);
   const [pendingPoints, setPendingPoints] = useState(0);
-  const [isRefundLocked, setIsRefundLocked] = useState(false);
-  const [refundLockReason, setRefundLockReason] = useState("");
-  const [showPayRefund, setShowPayRefund] = useState(false);
-  const [refundAmount, setRefundAmount] = useState(0);
+  const [productInfo, setProductInfo] = useState(null);
 
   useEffect(() => {
     if (!session?.user?.id) return;
-    const fetchPendingPoints = async () => {
-      const { data, error } = await supabase
+    const fetchPending = async () => {
+      const { data } = await supabase
         .from('pending_transactions')
         .select('star_points_expected')
         .eq('user_id', session.user.id)
         .eq('status', 'pending');
-      if (!error && data) {
-        const total = data.reduce((sum, item) => sum + item.star_points_expected, 0);
-        setPendingPoints(total);
-      }
+      if (data) setPendingPoints(data.reduce((s, i) => s + i.star_points_expected, 0));
     };
-    fetchPendingPoints();
-  }, [session?.user?.id]);
+    fetchPending();
+  }, [session]);
 
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    const fetchLockStatus = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_refund_locked, refund_lock_reason')
-        .eq('id', session.user.id)
-        .single();
-      if (!error && data) {
-        setIsRefundLocked(data.is_refund_locked || false);
-        setRefundLockReason(data.refund_lock_reason || "");
-      }
-    };
-    fetchLockStatus();
-  }, [session?.user?.id]);
-
+  const starPoints = Number(profile?.star_points || 0);
+  const currentStreak = profile?.checkin_streak || 0;
   const todayStr = new Date().toDateString();
   const hasCheckedInToday = profile?.last_checkin_date && new Date(profile.last_checkin_date).toDateString() === todayStr;
-  const currentStreak = profile?.checkin_streak || 0;
-  const starPoints = Number(profile?.star_points || 0);
-  const canWithdraw = starPoints >= 20000;
   const daysToNextMilestone = currentStreak < 10 ? 10 - currentStreak : currentStreak < 20 ? 20 - currentStreak : 0;
 
   const handleCheckin = async () => {
-    if (hasCheckedInToday || checkinLoading || isRefundLocked) return;
+    if (hasCheckedInToday || checkinLoading) return;
     setCheckinLoading(true);
     const { data, error } = await supabase.rpc("daily_checkin", { p_user_id: session.user.id });
     setCheckinLoading(false);
-    if (error || !data?.success) {
-      alert(data?.message || error?.message || "Có lỗi xảy ra.");
-      return;
-    }
-    setCheckinResult(data);
+    if (error || !data?.success) return alert(data?.message || "Lỗi");
     setProfile(prev => ({
       ...prev,
       checkin_streak: data.streak,
@@ -710,49 +440,34 @@ export default function ShopEarn() {
   };
 
   const handleGenerate = async () => {
-    if (isRefundLocked) {
-      setGenError("Tài khoản bị khóa do nợ hoàn trả.");
-      return;
-    }
-    if (platform !== "tiktok") {
-      setGenError("Sàn này chưa khả dụng, vui lòng chọn TikTok Shop.");
-      return;
-    }
-    if (!productUrl.trim()) {
-      setGenError("Vui lòng dán link sản phẩm.");
-      return;
-    }
+    if (!productUrl.trim()) return setGenError("Vui lòng dán link sản phẩm.");
     setGenerating(true);
     setGenError("");
-    setResultLink(null);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke("create-affiliate-link", {
-        headers: { Authorization: `Bearer ${token}` },
-        body: { product_url: productUrl.trim(), platform: "tiktok", amount: 100000 },
+        headers: { Authorization: `Bearer ${sessionData?.session?.access_token}` },
+        body: { product_url: productUrl.trim(), platform: "tiktok" },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Không tạo được link.");
-      const link = data.short_link || data.full_link;
-      setResultLink(link);
+      
       setProductInfo({
         name: data.product_name || "Sản phẩm TikTok Shop",
         image: data.product_image || null,
-        link,
+        link: data.full_link || data.short_link,
       });
     } catch (err) {
-      setGenError(err.message || "Có lỗi xảy ra, thử lại sau.");
+      setGenError(err.message);
     } finally {
       setGenerating(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/80 pb-[72px]">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <Header />
-
-      <main className="max-w-md mx-auto px-4 pt-3 space-y-3">
+      <div className="max-w-md mx-auto px-4 pt-3 space-y-3">
         <PointsCard starPoints={starPoints} pendingPoints={pendingPoints} />
         <CheckinSection
           currentStreak={currentStreak}
@@ -760,17 +475,9 @@ export default function ShopEarn() {
           checkinLoading={checkinLoading}
           handleCheckin={handleCheckin}
           daysToNextMilestone={daysToNextMilestone}
-          isRefundLocked={isRefundLocked}
-        />
-        <RefundLockWarning
-          isLocked={isRefundLocked}
-          reason={refundLockReason}
-          onPayRefund={() => setShowPayRefund(true)}
         />
         <TaskSection tasks={tasks} />
         <ShopSection
-          platform={platform}
-          setPlatform={setPlatform}
           productUrl={productUrl}
           setProductUrl={setProductUrl}
           generating={generating}
@@ -778,27 +485,13 @@ export default function ShopEarn() {
           handlePaste={handlePaste}
           handleGenerate={handleGenerate}
           setShowGuide={setShowGuide}
-          productInfo={productInfo}
-          setProductInfo={setProductInfo}
-          copied={copied}
-          setCopied={setCopied}
-          navigate={navigate}
-          userId={session?.user?.id}
-          isRefundLocked={isRefundLocked}
         />
-        <WalletSection
-          starPoints={starPoints}
-          canWithdraw={canWithdraw}
-          setShowConvert={setShowConvert}
-          setShowWithdraw={setShowWithdraw}
-          isRefundLocked={isRefundLocked}
-          refundLockReason={refundLockReason}
-        />
-        <PaymentRules />
-      </main>
-
+      </div>
+      
+      <ProductInfoModal productInfo={productInfo} setProductInfo={setProductInfo} />
+      {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      
       <BottomNav />
     </div>
   );
-      }
-    
+}
