@@ -36,6 +36,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import VersionChecker from './VersionChecker';
 import Feed from "./pages/Feed.jsx";
+import Roblox from './pages/Roblox.jsx';
 
 export default function App() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/task/callback" element={<TaskCallback />} />
         <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+        <Route path="/shop-earn" element={<Roblox />} />
       </Routes>
     <VersionChecker />
     </BrowserRouter>
