@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Globe, ChevronDown, Gift, Trophy, CreditCard, Percent } from 'lucide-react';
+import { Search, Gift, Trophy, CreditCard, Percent } from 'lucide-react';
 import TopHeader from '../components/TopHeader.jsx';
 import BottomNav from '../components/BottomNav.jsx';
 
@@ -10,9 +10,6 @@ import BottomNav from '../components/BottomNav.jsx';
 const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
 const STORAGE_BUCKET = 'game_logos';
 
-// ============================================
-// GET LOGO URL
-// ============================================
 const getLogoUrl = (fileName) => {
   return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 };
@@ -21,7 +18,7 @@ const getLogoUrl = (fileName) => {
 // DATA
 // ============================================
 const BANNERS = [
-  { id: 1, imageUrl: null, title: 'CHỐT DEAL TRONG NGÀY', subtitle: 'CHIẾN GAME LIỀN TAY' },
+  { id: 1, title: 'CHỐT DEAL TRONG NGÀY', subtitle: 'CHIẾN GAME LIỀN TAY' },
 ];
 
 const RECOMMENDED = [
@@ -50,57 +47,20 @@ const GAMES = [
 // ============================================
 function Header({ search, setSearch }) {
   return (
-    <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-sky-100">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-        <span className="font-baloo text-xl font-bold text-sky-600 shrink-0">
-          Nxx315
-        </span>
-
-        <div className="flex-1 flex items-center gap-2 bg-sky-50 rounded-full px-4 py-2.5 border border-sky-100">
-          <Search size={18} className="text-sky-400 shrink-0" />
+    <div className="bg-white px-4 py-2.5 border-b border-gray-100">
+      <div className="max-w-md mx-auto flex items-center gap-3">
+        <span className="text-sm font-bold text-blue-600 shrink-0">NXX315</span>
+        <div className="flex-1 flex items-center bg-gray-100 rounded-full px-3 py-1.5">
+          <Search size={15} className="text-gray-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm game, vật phẩm..."
-            className="bg-transparent outline-none text-sm w-full placeholder:text-slate-400"
+            className="flex-1 bg-transparent outline-none text-xs ml-1.5 placeholder:text-gray-400"
           />
         </div>
-
-        <button className="hidden sm:flex items-center gap-1 text-slate-500 shrink-0">
-          <Globe size={20} />
-        </button>
-
-        <button className="flex items-center gap-1 shrink-0">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
-            N
-          </div>
-          <ChevronDown size={16} className="text-slate-400 hidden sm:block" />
-        </button>
-      </div>
-    </header>
-  );
-}
-
-// ============================================
-// BANNER CAROUSEL
-// ============================================
-function BannerCarousel() {
-  const banner = BANNERS[0];
-  return (
-    <div className="max-w-5xl mx-auto px-4 pt-4">
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-500 aspect-[16/9] sm:aspect-[21/9] flex items-center justify-center">
-        {banner.imageUrl ? (
-          <img src={banner.imageUrl} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
-        ) : (
-          <div className="text-center text-white px-6">
-            <p className="font-baloo text-2xl sm:text-3xl font-extrabold">{banner.title}</p>
-            <p className="text-sm sm:text-base mt-1 opacity-90">{banner.subtitle}</p>
-          </div>
-        )}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {BANNERS.map((b, i) => (
-            <span key={b.id} className={`h-1.5 rounded-full transition-all ${i === 0 ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`} />
-          ))}
+        <div className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold">
+          N
         </div>
       </div>
     </div>
@@ -108,70 +68,78 @@ function BannerCarousel() {
 }
 
 // ============================================
-// RECOMMENDED SECTION
+// BANNER
+// ============================================
+function BannerCarousel() {
+  const banner = BANNERS[0];
+  return (
+    <div className="px-4 pt-3">
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 aspect-[16/9] flex items-center justify-center p-4">
+        <div className="text-center text-white">
+          <p className="text-lg font-black">{banner.title}</p>
+          <p className="text-xs opacity-80 mt-1">{banner.subtitle}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// RECOMMENDED
 // ============================================
 function RecommendedSection({ navigate }) {
   return (
-    <section className="max-w-5xl mx-auto px-4 pt-8">
-      <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">Dành cho bạn</h2>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+    <div className="px-4 pt-4">
+      <h2 className="text-sm font-bold text-gray-800 mb-2">🎮 Dành cho bạn</h2>
+      <div className="flex gap-3 overflow-x-auto pb-1">
         {RECOMMENDED.map((item) => (
           <div 
             key={item.id} 
-            className="shrink-0 w-40 bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition"
+            className="shrink-0 w-32 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer"
             onClick={() => navigate(item.path)}
           >
-            <div className="aspect-square bg-sky-50 flex items-center justify-center p-4">
-              {item.logo ? (
-                <img 
-                  src={getLogoUrl(item.logo)} 
-                  alt={item.name} 
-                  className="w-full h-full object-contain"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : (
-                <span className="text-sky-300 text-xs">No image</span>
-              )}
+            <div className="aspect-square bg-gray-50 flex items-center justify-center p-3">
+              <img 
+                src={getLogoUrl(item.logo)} 
+                alt={item.name} 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
             </div>
-            <div className="p-3">
-              <p className="text-sm font-semibold text-slate-700 line-clamp-1">{item.name}</p>
-              <button 
-                onClick={() => navigate(item.path)}
-                className="mt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition"
-              >
+            <div className="p-2 text-center">
+              <p className="text-[10px] font-semibold text-gray-700 truncate">{item.name}</p>
+              <button className="mt-1 w-full bg-blue-500 text-white text-[9px] font-bold rounded-full py-1">
                 Nạp ngay
               </button>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
 // ============================================
-// BENEFITS SECTION
+// BENEFITS
 // ============================================
 function BenefitsSection() {
   return (
-    <section className="max-w-5xl mx-auto px-4 pt-10">
-      <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">
-        Lợi ích khi nạp tại Nxx315
-      </h2>
-      <div className="grid grid-cols-2 gap-3">
+    <div className="px-4 pt-4">
+      <h2 className="text-sm font-bold text-gray-800 mb-2">✨ Lợi ích khi nạp</h2>
+      <div className="grid grid-cols-4 gap-2">
         {BENEFITS.map(({ id, icon: Icon, label }) => (
-          <div key={id} className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl p-5 flex flex-col items-center text-center gap-2 border border-sky-100">
-            <Icon size={28} className="text-sky-500" />
-            <span className="text-sm font-semibold text-slate-700">{label}</span>
+          <div key={id} className="bg-blue-50 rounded-xl py-2.5 flex flex-col items-center gap-0.5">
+            <Icon size={18} className="text-blue-500" />
+            <span className="text-[8px] font-medium text-gray-600 text-center leading-tight">{label}</span>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
 // ============================================
-// GAME LIST SECTION
+// GAME LIST
 // ============================================
 function GameListSection({ activeTab, setActiveTab, games, navigate }) {
   const tabs = [
@@ -181,18 +149,16 @@ function GameListSection({ activeTab, setActiveTab, games, navigate }) {
   ];
 
   return (
-    <section className="max-w-5xl mx-auto px-4 pt-10 pb-16">
-      <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">Danh sách game</h2>
+    <div className="px-4 pt-4 pb-20">
+      <h2 className="text-sm font-bold text-gray-800 mb-2">📋 Danh sách game</h2>
 
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-1.5 mb-3">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition ${
-              activeTab === tab.key
-                ? 'bg-sky-500 text-white'
-                : 'bg-slate-100 text-slate-500'
+            className={`px-3 py-1 rounded-full text-[9px] font-bold transition ${
+              activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
             }`}
           >
             {tab.label}
@@ -200,43 +166,36 @@ function GameListSection({ activeTab, setActiveTab, games, navigate }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2.5">
         {games.map((game) => (
           <div 
             key={game.id} 
-            className="bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition"
+            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer"
             onClick={() => navigate(game.path)}
           >
-            <div className="aspect-square bg-sky-50 flex items-center justify-center p-4">
-              {game.logo ? (
-                <img 
-                  src={getLogoUrl(game.logo)} 
-                  alt={game.name} 
-                  className="w-full h-full object-contain"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : (
-                <span className="text-sky-300 text-xs">No image</span>
-              )}
+            <div className="aspect-square bg-gray-50 flex items-center justify-center p-3">
+              <img 
+                src={getLogoUrl(game.logo)} 
+                alt={game.name} 
+                className="w-full h-full object-contain"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
             </div>
-            <div className="p-3 flex flex-col flex-1">
-              <p className="text-sm font-semibold text-slate-700 line-clamp-1">{game.name}</p>
-              <button 
-                onClick={() => navigate(game.path)}
-                className="mt-auto pt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition"
-              >
-                Nạp ngay
+            <div className="p-1.5 text-center">
+              <p className="text-[8px] font-semibold text-gray-700 truncate">{game.name}</p>
+              <button className="mt-0.5 w-full bg-blue-500 text-white text-[7px] font-bold rounded-full py-0.5">
+                Nạp
               </button>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
 
 // ============================================
-// MAIN PAGE
+// MAIN
 // ============================================
 export default function Store() {
   const navigate = useNavigate();
@@ -250,7 +209,7 @@ export default function Store() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/40 to-white pb-20">
+    <div className="min-h-screen bg-white pb-20">
       <TopHeader />
       <Header search={search} setSearch={setSearch} />
       <BannerCarousel />
