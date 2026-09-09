@@ -25,12 +25,6 @@ const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
 // =====================================================
-// BANNER
-// =====================================================
-
-const BANNER = 'store-banner.png';
-
-// =====================================================
 // ROBUX PACKAGES
 // =====================================================
 
