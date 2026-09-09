@@ -75,13 +75,13 @@ function BannerCarousel() {
     <div className="px-4 pt-3">
       <div className="rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 aspect-[16/9] flex items-center justify-center p-4">
         <div className="text-center text-white">
-          <p className="text-sm font-bold text-yellow-300">ZingSpeed Mobile</p>
-          <p className="text-[10px] opacity-80">Duy nhất 10:00 - 23:59 | 09.09.2026</p>
+          <p className="text-[10px] font-semibold text-yellow-300">ZingSpeed Mobile</p>
+          <p className="text-[8px] opacity-80">Duy nhất 10:00 - 23:59 | 09.09.2026</p>
           <div className="mt-1 flex items-center justify-center gap-2">
             <span className="text-3xl font-black">9.9</span>
             <span className="text-[10px] font-bold">CHỐT DEAL</span>
           </div>
-          <button className="mt-2 px-5 py-1 bg-yellow-400 text-blue-900 text-xs font-bold rounded-full">
+          <button className="mt-2 px-5 py-1 bg-yellow-400 text-blue-900 text-[10px] font-bold rounded-full">
             Khám phá ngay →
           </button>
         </div>
