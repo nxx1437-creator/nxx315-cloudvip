@@ -8,6 +8,7 @@ import {
   User,
   Zap,
 } from 'lucide-react';
+
 import TopHeader from '../components/TopHeader';
 import BottomNav from '../components/BottomNav';
 
@@ -54,90 +55,11 @@ const VNG_PACKAGES = [
 ];
 
 // =====================================================
-// FORMAT
+// FORMAT PRICE
 // =====================================================
 
 function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price);
-}
-
-// =====================================================
-// ROBLOX USER API
-// =====================================================
-
-async function findRobloxUser(username) {
-  const cleanUsername = username.trim();
-
-  if (!cleanUsername) {
-    throw new Error('Vui lòng nhập username Roblox.');
-  }
-
-  const response = await fetch(
-    'https://users.roblox.com/v1/usernames/users',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        usernames: [cleanUsername],
-        excludeBannedUsers: false,
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    let message = '';
-
-    try {
-      const errorData = await response.json();
-
-      message =
-        errorData?.errors?.[0]?.message ||
-        errorData?.message ||
-        '';
-    } catch {}
-
-    throw new Error(
-      message || `Roblox API lỗi HTTP ${response.status}`
-    );
-  }
-
-  const data = await response.json();
-
-  if (!Array.isArray(data.data) || data.data.length === 0) {
-    return null;
-  }
-
-  const user = data.data[0];
-
-  let avatar = null;
-
-  try {
-    const avatarResponse = await fetch(
-      `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${user.id}&size=150x150&format=Png&isCircular=false`,
-      {
-        headers: {
-          Accept: 'application/json',
-        },
-      }
-    );
-
-    if (avatarResponse.ok) {
-      const avatarData = await avatarResponse.json();
-
-      avatar =
-        avatarData?.data?.[0]?.imageUrl || null;
-    }
-  } catch {}
-
-  return {
-    id: user.id,
-    username: user.name,
-    displayName: user.displayName,
-    avatar,
-  };
 }
 
 // =====================================================
@@ -209,7 +131,7 @@ function PackageSection({
       ? CARD_PACKAGES
       : VNG_PACKAGES;
 
-  const handleMethodChange = (newMethod) => {
+  const changeMethod = (newMethod) => {
     setMethod(newMethod);
     setSelectedPackage(null);
   };
@@ -226,14 +148,12 @@ function PackageSection({
         </p>
       </div>
 
-      {/* METHOD TABS */}
+      {/* METHOD */}
 
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={() =>
-            handleMethodChange('card')
-          }
+          onClick={() => changeMethod('card')}
           className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
             method === 'card'
               ? 'border-blue-500 bg-blue-50 shadow-sm'
@@ -241,7 +161,7 @@ function PackageSection({
           }`}
         >
           <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
               method === 'card'
                 ? 'bg-blue-500 text-white'
                 : 'bg-slate-100 text-slate-500'
@@ -263,9 +183,7 @@ function PackageSection({
 
         <button
           type="button"
-          onClick={() =>
-            handleMethodChange('vng')
-          }
+          onClick={() => changeMethod('vng')}
           className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
             method === 'vng'
               ? 'border-blue-500 bg-blue-50 shadow-sm'
@@ -273,7 +191,7 @@ function PackageSection({
           }`}
         >
           <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
               method === 'vng'
                 ? 'bg-blue-500 text-white'
                 : 'bg-slate-100 text-slate-500'
@@ -294,7 +212,7 @@ function PackageSection({
         </button>
       </div>
 
-      {/* PACKAGE TITLE */}
+      {/* TITLE */}
 
       <div className="mb-3 mt-6">
         <h3 className="font-bold text-slate-900">
@@ -329,8 +247,9 @@ function PackageSection({
     </section>
   );
 }
+
 // =====================================================
-// MAIN ROBLOX PAGE
+// MAIN
 // =====================================================
 
 export default function Roblox() {
@@ -345,11 +264,13 @@ export default function Roblox() {
   const [error, setError] = useState('');
 
   // ===================================================
-  // CHECK ROBLOX ACCOUNT
+  // ROBLOX LOOKUP
   // ===================================================
 
   const handleConfirm = async () => {
-    if (!username.trim()) {
+    const cleanUsername = username.trim();
+
+    if (!cleanUsername) {
       setError('Vui lòng nhập username Roblox.');
       return;
     }
@@ -359,16 +280,22 @@ export default function Roblox() {
     setPlayer(null);
 
     try {
-      const user = await findRobloxUser(username);
+      const response = await fetch(
+        `/api/roblox-user?username=${encodeURIComponent(
+          cleanUsername
+        )}`
+      );
 
-      if (!user) {
-        setError(
-          'Không tìm thấy tài khoản Roblox này.'
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            'Không thể kiểm tra tài khoản Roblox.'
         );
-        return;
       }
 
-      setPlayer(user);
+      setPlayer(data);
     } catch (err) {
       console.error(
         'Roblox lookup error:',
@@ -396,11 +323,16 @@ export default function Roblox() {
     ? selectedPackage.price
     : 0;
 
+  // ===================================================
+  // UI
+  // ===================================================
+
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <TopHeader />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+
         {/* BACK */}
 
         <button
@@ -425,12 +357,11 @@ export default function Roblox() {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            Nhập tài khoản Roblox và chọn gói Robux
-            bạn muốn nạp.
+            Nhập tài khoản Roblox và chọn gói Robux bạn muốn nạp.
           </p>
         </div>
 
-        {/* PLAYER */}
+        {/* ACCOUNT */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="mb-4 flex items-center gap-3">
@@ -448,6 +379,8 @@ export default function Roblox() {
               </p>
             </div>
           </div>
+
+          {/* INPUT */}
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
@@ -492,11 +425,11 @@ export default function Roblox() {
             </div>
           )}
 
-          {/* PLAYER RESULT */}
+          {/* PLAYER */}
 
           {player && (
             <div className="mt-4 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
-              <div className="h-14 w-14 overflow-hidden rounded-xl bg-white">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white">
                 {player.avatar ? (
                   <img
                     src={player.avatar}
@@ -618,4 +551,4 @@ export default function Roblox() {
       <BottomNav />
     </div>
   );
-          }
+      }
