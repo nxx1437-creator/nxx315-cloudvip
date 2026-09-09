@@ -28,7 +28,7 @@ const getImageUrl = (fileName) =>
 // BANNER
 // =====================================================
 
-const BANNER = 'store-banner.png';
+const BANNER = 'store-banner.jpg';
 
 // =====================================================
 // GAMES
