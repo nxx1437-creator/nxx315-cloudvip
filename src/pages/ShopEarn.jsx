@@ -150,7 +150,7 @@ function CheckinSection({ currentStreak, hasCheckedInToday, checkinLoading, hand
         disabled={hasCheckedInToday || checkinLoading}
         className="mt-3 w-full py-3 rounded-xl bg-blue-500 text-white font-semibold text-base hover:bg-blue-600 transition active:scale-[0.98] disabled:bg-gray-200 disabled:text-gray-400"
       >
-        {checkinLoading ? <Loader2 size={18} className="animate-spin" /> : hasCheckedInToday ? '✅ Đã điểm danh' : 'Điểm danh'}
+        {checkinLoading ? <Loader2 size={18} className="animate-spin" /> : hasCheckedInToday ? ' Đã điểm danh' : 'Điểm danh'}
       </button>
 
       <p className="mt-2 text-center text-[10px] text-gray-400">
@@ -278,7 +278,7 @@ function ProductInfoModal({ productInfo, setProductInfo }) {
         <div className="mx-auto w-12 h-1 rounded-full bg-gray-300" />
         <div className="flex items-start justify-between mt-3">
           <div>
-            <p className="text-[17px] font-bold text-blue-600">Tạo link mua hàng thành công 🎉</p>
+            <p className="text-[17px] font-bold text-blue-600">Tạo link mua hàng thành công </p>
             <p className="text-[11px] text-gray-400">Mua hàng từ link để tích điểm đổi quà.</p>
           </div>
           <button onClick={() => setProductInfo(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
