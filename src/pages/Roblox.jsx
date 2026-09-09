@@ -7,6 +7,8 @@ import {
   Gamepad2,
   ChevronRight,
   Loader2,
+  CreditCard,
+  Zap,
 } from 'lucide-react';
 
 import TopHeader from '../components/TopHeader.jsx';
@@ -32,27 +34,32 @@ const BANNER = 'store-banner.png';
 // ROBUX PACKAGES
 // =====================================================
 
-const PACKAGES = [
+// Card Robux
+const CARD_PACKAGES = [
   {
-    id: 1,
+    id: 'card-400',
+    robux: 400,
+    price: 170000,
+    image: 'roblox-400.png',
+  },
+];
+
+// Nạp trực tiếp VNG
+const VNG_PACKAGES = [
+  {
+    id: 'vng-40',
     robux: 40,
     price: 14500,
     image: 'roblox-40.png',
   },
   {
-    id: 2,
+    id: 'vng-80',
     robux: 80,
     price: 28500,
     image: 'roblox-80.png',
   },
   {
-    id: 3,
-    robux: 400,
-    price: 170000,
-    image: 'roblox-400.png',
-  },
-  {
-    id: 4,
+    id: 'vng-500',
     robux: 500,
     price: 140500,
     image: 'roblox-500.png',
@@ -116,7 +123,7 @@ async function findRobloxUser(username) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         usernames: [cleanUsername],
@@ -125,12 +132,12 @@ async function findRobloxUser(username) {
     }
   );
 
-  // Lấy response để biết Roblox thực sự trả gì
   if (!response.ok) {
     let message = '';
 
     try {
       const errorData = await response.json();
+
       message =
         errorData?.errors?.[0]?.message ||
         errorData?.message ||
@@ -174,7 +181,7 @@ async function findRobloxUser(username) {
       avatar = avatarData?.data?.[0]?.imageUrl || null;
     }
   } catch {
-    // Avatar lỗi thì vẫn cho phép tài khoản được xác nhận
+    // Avatar lỗi vẫn cho phép tiếp tục
   }
 
   return {
@@ -184,6 +191,7 @@ async function findRobloxUser(username) {
     avatar,
   };
 }
+
 // =====================================================
 // PLAYER SECTION
 // =====================================================
@@ -225,8 +233,11 @@ function PlayerSection({
       }
 
       setPlayer(user);
-    } catch {
+    } catch (err) {
+      console.error('Roblox lookup error:', err);
+
       setError(
+        err?.message ||
         'Không thể kiểm tra tài khoản Roblox. Vui lòng thử lại.'
       );
     } finally {
@@ -237,10 +248,7 @@ function PlayerSection({
   return (
     <section className="px-4 pt-5">
       <div className="max-w-5xl mx-auto">
-
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-
-          {/* TITLE */}
 
           <div className="p-5 pb-3">
             <div className="flex items-center gap-3">
@@ -264,8 +272,6 @@ function PlayerSection({
 
             </div>
           </div>
-
-          {/* INPUT */}
 
           <div className="px-5 pb-5">
 
@@ -314,21 +320,15 @@ function PlayerSection({
 
             </div>
 
-            {/* ERROR */}
-
             {error && (
               <div className="flex items-center gap-2 mt-3 text-red-500">
-
                 <AlertCircle size={15} />
 
                 <p className="text-xs font-medium">
                   {error}
                 </p>
-
               </div>
             )}
-
-            {/* CONFIRM BUTTON */}
 
             <button
               type="button"
@@ -363,14 +363,11 @@ function PlayerSection({
               ) : (
                 <>
                   Xác nhận
-
                   <ChevronRight size={17} />
                 </>
               )}
 
             </button>
-
-            {/* PLAYER RESULT */}
 
             {player && (
               <div className="
@@ -626,7 +623,7 @@ function PackageCard({
 
     </button>
   );
-                }
+        }
 // =====================================================
 // PACKAGE SECTION
 // =====================================================
@@ -635,20 +632,174 @@ function PackageSection({
   selectedPackage,
   setSelectedPackage,
 }) {
+  const [method, setMethod] = useState('card');
+
+  const packages =
+    method === 'card'
+      ? CARD_PACKAGES
+      : VNG_PACKAGES;
+
+  const handleMethodChange = (newMethod) => {
+    setMethod(newMethod);
+    setSelectedPackage(null);
+  };
+
   return (
     <section className="px-4 pt-6 pb-28">
       <div className="max-w-5xl mx-auto">
 
-        <div className="flex items-center justify-between mb-3">
+        {/* TITLE */}
+
+        <div className="mb-4">
+
+          <h2 className="text-base font-extrabold text-gray-900">
+            2. Chọn phương thức nạp
+          </h2>
+
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            Chọn hình thức và gói Robux bạn muốn nạp
+          </p>
+
+        </div>
+
+        {/* METHOD TABS */}
+
+        <div className="
+          grid
+          grid-cols-2
+          gap-3
+          mb-4
+        ">
+
+          {/* CARD ROBUX */}
+
+          <button
+            type="button"
+            onClick={() => handleMethodChange('card')}
+            className={`
+              relative
+              text-left
+              rounded-2xl
+              border-2
+              p-4
+              transition-all
+              ${
+                method === 'card'
+                  ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100'
+                  : 'border-gray-100 bg-white shadow-sm'
+              }
+            `}
+          >
+
+            <div className="
+              w-10 h-10
+              rounded-xl
+              flex items-center justify-center
+              bg-blue-100
+              text-blue-500
+              mb-3
+            ">
+              <CreditCard size={20} />
+            </div>
+
+            <p className="font-extrabold text-sm text-gray-900">
+              Card Robux
+            </p>
+
+            <p className="text-[10px] text-gray-400 mt-1">
+              Nạp bằng Card Robux
+            </p>
+
+            {method === 'card' && (
+              <div className="
+                absolute
+                top-3
+                right-3
+                text-blue-500
+              ">
+                <CheckCircle2 size={18} />
+              </div>
+            )}
+
+          </button>
+
+          {/* NẠP TRỰC TIẾP VNG */}
+
+          <button
+            type="button"
+            onClick={() => handleMethodChange('vng')}
+            className={`
+              relative
+              text-left
+              rounded-2xl
+              border-2
+              p-4
+              transition-all
+              ${
+                method === 'vng'
+                  ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100'
+                  : 'border-gray-100 bg-white shadow-sm'
+              }
+            `}
+          >
+
+            <div className="
+              w-10 h-10
+              rounded-xl
+              flex items-center justify-center
+              bg-blue-100
+              text-blue-500
+              mb-3
+            ">
+              <Zap size={20} />
+            </div>
+
+            <p className="font-extrabold text-sm text-gray-900">
+              Nạp trực tiếp (VNG)
+            </p>
+
+            <p className="text-[10px] text-gray-400 mt-1">
+              Nạp Robux trực tiếp
+            </p>
+
+            {method === 'vng' && (
+              <div className="
+                absolute
+                top-3
+                right-3
+                text-blue-500
+              ">
+                <CheckCircle2 size={18} />
+              </div>
+            )}
+
+          </button>
+
+        </div>
+
+        {/* PACKAGE TITLE */}
+
+        <div className="
+          flex
+          items-center
+          justify-between
+          mb-3
+        ">
 
           <div>
-            <h2 className="text-base font-extrabold text-gray-900">
-              2. Chọn gói Robux
-            </h2>
 
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              Chọn gói bạn muốn nạp
+            <p className="text-sm font-extrabold text-gray-900">
+              {method === 'card'
+                ? 'Gói Card Robux'
+                : 'Gói nạp trực tiếp (VNG)'}
             </p>
+
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {method === 'card'
+                ? 'Chọn gói Card Robux'
+                : 'Chọn gói Robux muốn nạp'}
+            </p>
+
           </div>
 
           <span className="
@@ -659,10 +810,12 @@ function PackageSection({
             px-3 py-1.5
             rounded-full
           ">
-            {PACKAGES.length} gói
+            {packages.length} gói
           </span>
 
         </div>
+
+        {/* PACKAGES */}
 
         <div className="
           grid
@@ -671,7 +824,8 @@ function PackageSection({
           lg:grid-cols-4
           gap-3
         ">
-          {PACKAGES.map((pack) => (
+
+          {packages.map((pack) => (
             <PackageCard
               key={pack.id}
               pack={pack}
@@ -679,13 +833,13 @@ function PackageSection({
               onClick={() => setSelectedPackage(pack)}
             />
           ))}
+
         </div>
 
       </div>
     </section>
   );
 }
-
 
 // =====================================================
 // SUMMARY
@@ -718,8 +872,6 @@ function Summary({
 
         <div className="flex items-center gap-3">
 
-          {/* TỔNG ROBUX */}
-
           <div className="flex-1 min-w-0">
 
             <p className="text-[10px] text-gray-400">
@@ -737,9 +889,6 @@ function Summary({
             </p>
 
           </div>
-
-
-          {/* TỔNG TIỀN */}
 
           <div className="text-right">
 
@@ -760,9 +909,6 @@ function Summary({
           </div>
 
         </div>
-
-
-        {/* TIẾP TỤC */}
 
         <button
           type="button"
@@ -792,7 +938,6 @@ function Summary({
   );
 }
 
-
 // =====================================================
 // MAIN ROBLOX PAGE
 // =====================================================
@@ -812,8 +957,7 @@ export default function Roblox() {
 
       <RobloxBanner />
 
-
-      {/* NHẬP USERNAME */}
+      {/* THÔNG TIN NHÂN VẬT */}
 
       <PlayerSection
         username={username}
@@ -822,25 +966,22 @@ export default function Roblox() {
         setPlayer={setPlayer}
       />
 
-
-      {/* CHỌN GÓI */}
+      {/* CHỌN PHƯƠNG THỨC + GÓI */}
 
       <PackageSection
         selectedPackage={selectedPackage}
         setSelectedPackage={setSelectedPackage}
       />
 
-
-      {/* TỔNG TIỀN */}
+      {/* TỔNG */}
 
       <Summary
         player={player}
         selectedPackage={selectedPackage}
       />
 
-
       <BottomNav />
 
     </div>
   );
-}
+              }
