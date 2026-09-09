@@ -1,1343 +1,792 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Check,
-  CreditCard,
-  Search,
-  User,
-  Zap,
-  Coins,
-  Building2,
-  Ticket,
-  AlertTriangle,
-  Plus,
-  Trash2,
+  CheckCircle2,
+  ChevronRight,
   Copy,
-} from 'lucide-react';
+  CreditCard,
+  Loader2,
+  Search,
+  ShieldCheck,
+  User,
+  Wallet,
+  XCircle,
+} from "lucide-react";
 
-import TopHeader from '../components/TopHeader';
-import BottomNav from '../components/BottomNav';
-import { supabase } from '../lib/supabaseClient.js';
+import { supabase } from "../lib/supabaseClient.js";
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 
-const SUPABASE_URL =
-  'https://rwglwovohbyqmbbzdvdj.supabase.co';
-
-const BUCKET = 'game_logos';
-
-const getImageUrl = (fileName) =>
-  `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${fileName}`;
-
-const CARD_PACKAGES = [
+const PACKAGES = [
   {
-    id: 'card-400',
+    id: "card-400",
+    name: "Card Robux",
     robux: 400,
     price: 170000,
-    image: 'roblox-400.png',
+    image:
+      "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-400.png",
+    method: "Card Robux",
   },
-];
-
-const VNG_PACKAGES = [
   {
-    id: 'vng-40',
+    id: "vng-40",
+    name: "Nạp trực tiếp",
     robux: 40,
     price: 14500,
-    image: 'roblox-40.png',
+    image:
+      "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-40.png",
+    method: "VNG",
   },
   {
-    id: 'vng-80',
+    id: "vng-80",
+    name: "Nạp trực tiếp",
     robux: 80,
     price: 28500,
-    image: 'roblox-80.png',
+    image:
+      "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-80.png",
+    method: "VNG",
   },
   {
-    id: 'vng-500',
+    id: "vng-500",
+    name: "Nạp trực tiếp",
     robux: 500,
     price: 140500,
-    image: 'roblox-500.png',
+    image:
+      "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
+    method: "VNG",
   },
 ];
 
-const CARD_TYPES = [
-  { name: 'Viettel', discount: 19 },
-  { name: 'Mobifone', discount: 19.5 },
-  { name: 'Vinaphone', discount: 19.5 },
-  { name: 'Garena', discount: 14.5 },
-  { name: 'Zing', discount: 13.5 },
-];
+const BANK = {
+  name: "MB Bank",
+  account: "0939339622",
+  holder: "NGUYEN VAN CO",
+};
 
-function formatPrice(price) {
-  return new Intl.NumberFormat('vi-VN').format(price);
+const formatPrice = (value) =>
+  new Intl.NumberFormat("vi-VN").format(value) + "đ";
+
+function copyText(text) {
+  navigator.clipboard?.writeText(text);
 }
 
-function PackageCard({ pkg, selected, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group relative w-full overflow-hidden rounded-2xl border bg-white text-left transition-all ${
-        selected
-          ? 'border-blue-500 ring-2 ring-blue-100 shadow-lg'
-          : 'border-slate-200 hover:border-blue-300 hover:shadow-md'
-      }`}
-    >
-      <div className="aspect-[16/9] overflow-hidden bg-slate-100">
-        <img
-          src={getImageUrl(pkg.image)}
-          alt={`${pkg.robux} Robux`}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      </div>
-
-      <div className="p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-lg font-bold text-slate-900">
-              {pkg.robux} Robux
-            </div>
-
-            <div className="mt-1 text-sm font-semibold text-blue-600">
-              {formatPrice(pkg.price)} VNĐ
-            </div>
-          </div>
-
-          <div
-            className={`flex h-7 w-7 items-center justify-center rounded-full border ${
-              selected
-                ? 'border-blue-500 bg-blue-500 text-white'
-                : 'border-slate-300 text-transparent'
-            }`}
-          >
-            <Check size={16} strokeWidth={3} />
-          </div>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function PackageSection({
-  selectedPackage,
-  setSelectedPackage,
-}) {
-  const [method, setMethod] = useState('card');
-
-  const packages =
-    method === 'card'
-      ? CARD_PACKAGES
-      : VNG_PACKAGES;
-
-  const changeMethod = (newMethod) => {
-    setMethod(newMethod);
-    setSelectedPackage(null);
-  };
-
-  return (
-    <section className="mt-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-slate-900">
-          Chọn phương thức nạp
-        </h2>
-
-        <p className="mt-1 text-sm text-slate-500">
-          Chọn phương thức và gói Robux.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => changeMethod('card')}
-          className={`flex items-center gap-3 rounded-2xl border p-4 text-left ${
-            method === 'card'
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-slate-200 bg-white'
-          }`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500 text-white">
-            <CreditCard size={21} />
-          </div>
-
-          <div>
-            <div className="font-bold text-slate-900">
-              Card Robux
-            </div>
-
-            <div className="text-xs text-slate-500">
-              Nạp bằng Card
-            </div>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => changeMethod('vng')}
-          className={`flex items-center gap-3 rounded-2xl border p-4 text-left ${
-            method === 'vng'
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-slate-200 bg-white'
-          }`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500 text-white">
-            <Zap size={21} />
-          </div>
-
-          <div>
-            <div className="font-bold text-slate-900">
-              Nạp trực tiếp
-            </div>
-
-            <div className="text-xs text-slate-500">
-              VNG
-            </div>
-          </div>
-        </button>
-      </div>
-
-      <div className="mb-3 mt-6">
-        <h3 className="font-bold text-slate-900">
-          {method === 'card'
-            ? 'Mục 1: Card Robux'
-            : 'Mục 2: Nạp trực tiếp (VNG)'}
-        </h3>
-      </div>
-
-      <div
-        className={`grid gap-4 ${
-          packages.length === 1
-            ? 'grid-cols-1'
-            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-        }`}
-      >
-        {packages.map((pkg) => (
-          <PackageCard
-            key={pkg.id}
-            pkg={pkg}
-            selected={selectedPackage?.id === pkg.id}
-            onClick={() => setSelectedPackage(pkg)}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-function PaymentSection({
-  totalPrice,
-  order,
-  onBack,
-}) {
-  const [paymentMethod, setPaymentMethod] =
-    useState('');
-
-  const [cards, setCards] = useState([
-    {
-      id: Date.now(),
-      type: 'Viettel',
-      value: '',
-      serial: '',
-      code: '',
-    },
-  ]);
-
-  const [copied, setCopied] = useState('');
-
-  const transferNote = order
-    ? `NAP ROBLOX ${order.order_code} ${order.roblox_username} ${order.robux}ROBUX`
-    : '';
-
-  const copyText = async (text, type) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(type);
-
-      setTimeout(() => {
-        setCopied('');
-      }, 1500);
-    } catch (error) {
-      console.error('Copy error:', error);
-    }
-  };
-
-  const addCard = () => {
-    setCards((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: 'Viettel',
-        value: '',
-        serial: '',
-        code: '',
-      },
-    ]);
-  };
-
-  const removeCard = (id) => {
-    setCards((prev) =>
-      prev.filter((card) => card.id !== id)
-    );
-  };
-
-  const updateCard = (id, field, value) => {
-    setCards((prev) =>
-      prev.map((card) =>
-        card.id === id
-          ? {
-              ...card,
-              [field]: value,
-            }
-          : card
-      )
-    );
-  };
-
-  return (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600"
-      >
-        <ArrowLeft size={18} />
-        Quay lại chọn gói
-      </button>
-
-      <div className="mb-5">
-        <h2 className="text-xl font-bold text-slate-900">
-          Chọn phương thức thanh toán
-        </h2>
-
-        <p className="mt-1 text-sm text-slate-500">
-          Tổng tiền cần thanh toán:{' '}
-          <span className="font-bold text-blue-600">
-            {formatPrice(totalPrice)} VNĐ
-          </span>
-        </p>
-
-        {order?.order_code && (
-          <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3">
-            <div className="text-xs font-semibold text-slate-500">
-              Mã đơn hàng
-            </div>
-
-            <div className="mt-1 font-black text-blue-600">
-              {order.order_code}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-
-        {/* COIN */}
-
-        <button
-          type="button"
-          onClick={() => setPaymentMethod('coin')}
-          className={`rounded-2xl border p-4 text-left transition ${
-            paymentMethod === 'coin'
-              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
-              : 'border-slate-200 hover:border-blue-300'
-          }`}
-        >
-          <Coins
-            className="mb-3 text-blue-600"
-            size={25}
-          />
-
-          <div className="font-bold text-slate-900">
-            Đổi bằng Coin
-          </div>
-
-          <div className="mt-1 text-xs text-slate-500">
-            1 Coin = 1đ
-          </div>
-        </button>
-
-        {/* BANK */}
-
-        <button
-          type="button"
-          onClick={() => setPaymentMethod('bank')}
-          className={`rounded-2xl border p-4 text-left transition ${
-            paymentMethod === 'bank'
-              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
-              : 'border-slate-200 hover:border-blue-300'
-          }`}
-        >
-          <Building2
-            className="mb-3 text-blue-600"
-            size={25}
-          />
-
-          <div className="font-bold text-slate-900">
-            Chuyển khoản ngân hàng
-          </div>
-
-          <div className="mt-1 text-xs text-slate-500">
-            MB Bank
-          </div>
-        </button>
-
-        {/* CARD */}
-
-        <button
-          type="button"
-          onClick={() => setPaymentMethod('card')}
-          className={`rounded-2xl border p-4 text-left transition ${
-            paymentMethod === 'card'
-              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100'
-              : 'border-slate-200 hover:border-blue-300'
-          }`}
-        >
-          <Ticket
-            className="mb-3 text-blue-600"
-            size={25}
-          />
-
-          <div className="font-bold text-slate-900">
-            Thẻ cào
-          </div>
-
-          <div className="mt-1 text-xs text-slate-500">
-            Viettel, Mobi, Vina...
-          </div>
-        </button>
-      </div>
-
-      {/* =========================================
-          THANH TOÁN COIN
-      ========================================= */}
-
-      {paymentMethod === 'coin' && (
-        <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5">
-          <div className="flex items-center gap-3">
-            <Coins
-              className="text-blue-600"
-              size={28}
-            />
-
-            <div>
-              <div className="font-bold text-slate-900">
-                Thanh toán bằng Coin
-              </div>
-
-              <div className="text-sm text-slate-500">
-                1 Coin = 1 VNĐ
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-xl bg-white p-4">
-            <div className="text-sm text-slate-500">
-              Số Coin cần dùng
-            </div>
-
-            <div className="mt-1 text-2xl font-black text-blue-600">
-              {formatPrice(totalPrice)} Coin
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="mt-4 h-12 w-full rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700"
-          >
-            Xác nhận thanh toán
-          </button>
-        </div>
-      )}
-
-      {/* =========================================
-          CHUYỂN KHOẢN
-      ========================================= */}
-
-      {paymentMethod === 'bank' && (
-        <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5">
-
-          <div className="mb-4">
-            <h3 className="font-bold text-slate-900">
-              Chuyển khoản MB Bank
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Vui lòng chuyển đúng số tiền và nội dung.
-            </p>
-          </div>
-
-          <div className="space-y-3 rounded-2xl bg-white p-4">
-
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-500">
-                Ngân hàng
-              </span>
-
-              <span className="font-bold text-slate-900">
-                MB Bank
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-500">
-                Số tài khoản
-              </span>
-
-              <span className="font-bold text-slate-900">
-                0939339622
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-500">
-                Chủ tài khoản
-              </span>
-
-              <span className="text-right font-bold text-slate-900">
-                NGUYEN VAN CO
-              </span>
-            </div>
-
-            <div className="h-px bg-slate-100" />
-
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-500">
-                Số tiền
-              </span>
-
-              <span className="text-lg font-black text-blue-600">
-                {formatPrice(totalPrice)} VNĐ
-              </span>
-            </div>
-
-          </div>
-
-          {/* MÃ ĐƠN */}
-
-          <div className="mt-4 rounded-2xl border border-blue-200 bg-white p-4">
-            <div className="text-sm text-slate-500">
-              Mã đơn
-            </div>
-
-            <div className="mt-1 text-xl font-black text-blue-600">
-              {order?.order_code}
-            </div>
-          </div>
-
-          {/* NỘI DUNG CHUYỂN KHOẢN */}
-
-          <div className="mt-4 rounded-2xl border border-blue-200 bg-white p-4">
-
-            <div className="font-bold text-slate-900">
-              Nội dung chuyển khoản
-            </div>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Nhập đúng nội dung này để Admin nhận diện đơn.
-            </p>
-
-            <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 p-3">
-
-              <div className="min-w-0 flex-1 break-all text-sm font-bold text-slate-800">
-                {transferNote}
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  copyText(
-                    transferNote,
-                    'note'
-                  )
-                }
-                className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-3 text-sm font-bold text-white hover:bg-blue-700"
-              >
-                <Copy size={16} />
-
-                {copied === 'note'
-                  ? 'Đã copy'
-                  : 'Copy'}
-              </button>
-
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              copyText(
-                '0939339622',
-                'account'
-              )
-            }
-            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white font-bold text-blue-600 hover:bg-blue-50"
-          >
-            <Copy size={17} />
-
-            {copied === 'account'
-              ? 'Đã copy'
-              : 'Sao chép số tài khoản'}
-          </button>
-
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
-            Sau khi chuyển khoản, vui lòng giữ lại
-            biên lai. Admin sẽ kiểm tra đơn hàng.
-          </div>
-
-        </div>
-      )}
-
-      {/* =========================================
-          THẺ CÀO
-      ========================================= */}
-
-      {paymentMethod === 'card' && (
-        <div className="mt-5">
-
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-
-            <div className="flex gap-3">
-
-              <AlertTriangle
-                className="shrink-0 text-red-600"
-                size={21}
-              />
-
-              <div>
-
-                <div className="font-bold text-red-700">
-                  Nguy hiểm
-                </div>
-
-                <div className="mt-1 text-sm leading-6 text-red-600">
-                  Quý khách điền sai Mệnh Giá sẽ bị mất
-                  thẻ! Nạp sai quá 5 lần vui lòng liên
-                  hệ Admin.
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="mt-5 space-y-4">
-
-            {cards.map((card, index) => (
-              <div
-                key={card.id}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-              >
-
-                <div className="mb-4 flex items-center justify-between">
-
-                  <div className="font-bold text-slate-900">
-                    Thẻ cào #{index + 1}
-                  </div>
-
-                  {cards.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeCard(card.id)
-                      }
-                      className="flex items-center gap-1 text-sm font-semibold text-red-500"
-                    >
-                      <Trash2 size={16} />
-                      Xóa thẻ
-                    </button>
-                  )}
-
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Loại thẻ *
-                    </label>
-
-                    <select
-                      value={card.type}
-                      onChange={(e) =>
-                        updateCard(
-                          card.id,
-                          'type',
-                          e.target.value
-                        )
-                      }
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
-                    >
-                      {CARD_TYPES.map((type) => (
-                        <option
-                          key={type.name}
-                          value={type.name}
-                        >
-                          {type.name} - Chiết khấu{' '}
-                          {type.discount}%
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Mệnh giá *
-                    </label>
-
-                    <input
-                      type="number"
-                      value={card.value}
-                      onChange={(e) =>
-                        updateCard(
-                          card.id,
-                          'value',
-                          e.target.value
-                        )
-                      }
-                      placeholder="Nhập mệnh giá"
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Số Seri Thẻ *
-                    </label>
-
-                    <input
-                      type="text"
-                      value={card.serial}
-                      onChange={(e) =>
-                        updateCard(
-                          card.id,
-                          'serial',
-                          e.target.value
-                        )
-                      }
-                      placeholder="Nhập số seri"
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Mã Thẻ *
-                    </label>
-
-                    <input
-                      type="password"
-                      value={card.code}
-                      onChange={(e) =>
-                        updateCard(
-                          card.id,
-                          'code',
-                          e.target.value
-                        )
-                      }
-                      placeholder="Nhập mã thẻ"
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                </div>
-              </div>
-            ))}
-
-          </div>
-
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-
-            <button
-              type="button"
-              onClick={addCard}
-              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 font-bold text-blue-600 hover:bg-blue-100"
-            >
-              <Plus size={18} />
-              Thêm thẻ
-            </button>
-
-            <button
-              type="button"
-              className="h-11 flex-1 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700"
-            >
-              Nạp tiền
-            </button>
-
-          </div>
-
-        </div>
-      )}
-    </section>
-  );
-              }
-      export default function Roblox() {
+export default function Roblox() {
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState('');
-  const [player, setPlayer] = useState(null);
+  const [step, setStep] = useState("package");
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
-  const [selectedPackage, setSelectedPackage] =
-    useState(null);
-
-  const [loading, setLoading] = useState(false);
-
-  const [creatingOrder, setCreatingOrder] =
-    useState(false);
-
-  const [error, setError] = useState('');
-
-  const [showPayment, setShowPayment] =
-    useState(false);
+  const [username, setUsername] = useState("");
+  const [robloxUser, setRobloxUser] = useState(null);
+  const [checkingUser, setCheckingUser] = useState(false);
 
   const [order, setOrder] = useState(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
-  // ==========================================
-  // CHỌN GÓI
-  // ==========================================
+  const checkRobloxUser = async () => {
+    const value = username.trim();
 
-  const handleSelectPackage = (pkg) => {
-    setSelectedPackage(pkg);
-
-    // Gói mới = đơn cũ không còn phù hợp
-    setOrder(null);
-    setShowPayment(false);
-    setError('');
-  };
-
-  // ==========================================
-  // KIỂM TRA USERNAME ROBLOX
-  // ==========================================
-
-  const handleConfirm = async () => {
-    const cleanUsername = username.trim();
-
-    if (!cleanUsername) {
-      setError(
-        'Vui lòng nhập username Roblox.'
-      );
+    if (!value) {
+      alert("Vui lòng nhập username Roblox.");
       return;
     }
 
-    setLoading(true);
-    setError('');
-    setPlayer(null);
-
-    // Username mới thì đơn cũ không còn phù hợp
-    setOrder(null);
-    setShowPayment(false);
+    setCheckingUser(true);
+    setRobloxUser(null);
 
     try {
       const response = await fetch(
-        `/api/roblox-user?username=${encodeURIComponent(
-          cleanUsername
-        )}`
+        `/api/roblox-user?username=${encodeURIComponent(value)}`
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data?.error ||
-            'Không thể kiểm tra tài khoản Roblox.'
-        );
+        throw new Error(data?.error || "Không tìm thấy tài khoản Roblox.");
       }
 
-      setPlayer(data);
-    } catch (err) {
-      console.error(
-        'Roblox lookup error:',
-        err
-      );
-
-      setError(
-        err?.message ||
-          'Không thể kiểm tra tài khoản Roblox. Vui lòng thử lại.'
-      );
+      setRobloxUser(data);
+    } catch (error) {
+      alert(error.message || "Không thể kiểm tra tài khoản Roblox.");
     } finally {
-      setLoading(false);
+      setCheckingUser(false);
     }
   };
 
-  // ==========================================
-  // TẠO ĐƠN HÀNG
-  // ==========================================
-
-  const handleContinue = async () => {
-    if (!player) {
-      setError(
-        'Vui lòng kiểm tra tài khoản Roblox trước.'
-      );
-      return;
-    }
-
+  const createOrder = async () => {
     if (!selectedPackage) {
-      setError(
-        'Vui lòng chọn gói Robux.'
-      );
+      alert("Vui lòng chọn gói Robux.");
       return;
     }
 
-    // Nếu đã có đơn đúng với tài khoản + gói
-    // thì không tạo đơn mới
-    if (
-      order &&
-      Number(order.roblox_user_id) ===
-        Number(player.id) &&
-      order.package_id ===
-        selectedPackage.id
-    ) {
-      setError('');
-      setShowPayment(true);
-
-      setTimeout(() => {
-        document
-          .getElementById(
-            'payment-section'
-          )
-          ?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-      }, 100);
-
+    if (!robloxUser) {
+      alert("Vui lòng kiểm tra username Roblox trước.");
       return;
     }
 
     setCreatingOrder(true);
-    setError('');
 
     try {
-      // ========================================
-      // LẤY SESSION NGƯỜI DÙNG
-      // ========================================
-
       const {
-        data: sessionData,
-        error: sessionError,
+        data: { session },
       } = await supabase.auth.getSession();
 
-      if (sessionError) {
-        throw new Error(
-          'Không thể kiểm tra phiên đăng nhập.'
-        );
-      }
-
-      const session =
-        sessionData?.session;
-
       if (!session?.access_token) {
-        throw new Error(
-          'Bạn cần đăng nhập tài khoản Nxx315 để tạo đơn.'
-        );
+        alert("Bạn chưa đăng nhập.");
+        return;
       }
 
-      // ========================================
-      // GỌI SUPABASE EDGE FUNCTION
-      // ========================================
-
-      const {
-        data,
-        error: functionError,
-      } = await supabase.functions.invoke(
-        'create-roblox-order',
+      const response = await fetch(
+        "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/create-roblox-order",
         {
-          body: {
-            roblox_user_id: player.id,
-
-            roblox_username:
-              player.username,
-
-            roblox_display_name:
-              player.displayName,
-
-            package_id:
-              selectedPackage.id,
-          },
-
+          method: "POST",
           headers: {
-            Authorization:
-              `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
+          body: JSON.stringify({
+            roblox_user_id: robloxUser.id,
+            roblox_username: robloxUser.username,
+            roblox_display_name: robloxUser.displayName,
+            package_id: selectedPackage.id,
+          }),
         }
       );
 
-      if (functionError) {
-        console.error(
-          'Edge Function error:',
-          functionError
-        );
+      const data = await response.json();
 
-        throw new Error(
-          functionError.message ||
-            'Không thể tạo đơn hàng.'
-        );
+      if (!response.ok) {
+        throw new Error(data?.error || "Không thể tạo đơn hàng.");
       }
-
-      if (
-        !data?.success ||
-        !data?.order
-      ) {
-        throw new Error(
-          data?.error ||
-            'Không thể tạo đơn hàng.'
-        );
-      }
-
-      // ========================================
-      // LƯU ĐƠN
-      // ========================================
 
       setOrder(data.order);
-      setShowPayment(true);
-
-      // ========================================
-      // CUỘN XUỐNG THANH TOÁN
-      // ========================================
-
-      setTimeout(() => {
-        document
-          .getElementById(
-            'payment-section'
-          )
-          ?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-      }, 100);
-
-    } catch (err) {
-      console.error(
-        'Create Roblox order error:',
-        err
-      );
-
-      setError(
-        err?.message ||
-          'Không thể tạo đơn hàng. Vui lòng thử lại.'
-      );
+      setStep("payment");
+    } catch (error) {
+      alert(error.message || "Có lỗi xảy ra khi tạo đơn.");
     } finally {
       setCreatingOrder(false);
     }
   };
 
-  const totalRobux = selectedPackage
-    ? selectedPackage.robux
-    : 0;
-
-  const totalPrice = selectedPackage
-    ? selectedPackage.price
-    : 0;
+  const goToUsername = () => {
+    setStep("username");
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-
       <TopHeader />
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
-
-        {/* QUAY LẠI STORE */}
-
+      <main className="mx-auto w-full max-w-6xl px-4 py-6">
         <button
-          type="button"
-          onClick={() =>
-            navigate('/store')
-          }
-          className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-blue-600"
+          onClick={() => navigate("/store")}
+          className="mb-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
         >
           <ArrowLeft size={18} />
           Quay lại cửa hàng
         </button>
 
-        {/* TIÊU ĐỀ */}
-
-        <div className="mb-6">
-
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600">
-            <Zap size={14} />
-            ROBLOX
+        <div className="mb-7">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-600">
+            <Wallet size={17} />
+            Roblox
           </div>
 
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">
             Nạp Robux
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            Nhập tài khoản Roblox và chọn gói
-            Robux bạn muốn nạp.
+            Chọn gói Robux và nhập username Roblox để tiếp tục.
           </p>
-
         </div>
 
-        {/* ======================================
-            TÀI KHOẢN ROBLOX
-        ====================================== */}
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-
-          <div className="mb-4 flex items-center gap-3">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <User size={20} />
-            </div>
-
-            <div>
-
-              <h2 className="font-bold text-slate-900">
-                Tài khoản Roblox
-              </h2>
-
-              <p className="text-xs text-slate-500">
-                Kiểm tra chính xác tài khoản trước khi nạp
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-
-            <div className="relative flex-1">
-
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setPlayer(null);
-                  setOrder(null);
-                  setShowPayment(false);
-                  setError('');
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleConfirm();
-                  }
-                }}
-                placeholder="Nhập username Roblox..."
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-              />
-
-            </div>
-
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={loading}
-              className="h-12 rounded-xl bg-blue-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading
-                ? 'Đang kiểm tra...'
-                : 'Kiểm tra'}
-            </button>
-
-          </div>
-
-          {/* ERROR */}
-
-          {error && (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-              {error}
-            </div>
-          )}
-
-          {/* PLAYER */}
-
-          {player && (
-            <div className="mt-4 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
-
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-white">
-
-                {player.avatar ? (
-                  <img
-                    src={player.avatar}
-                    alt={player.username}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-blue-500">
-                    <User size={24} />
-                  </div>
-                )}
-
-              </div>
-
-              <div className="min-w-0">
-
-                <div className="flex items-center gap-2">
-
-                  <span className="truncate font-bold text-slate-900">
-                    {player.displayName}
-                  </span>
-
-                  <Check
-                    size={16}
-                    className="shrink-0 rounded-full bg-blue-500 p-0.5 text-white"
-                  />
-
-                </div>
-
-                <div className="truncate text-sm text-slate-500">
-                  @{player.username}
-                </div>
-
-                <div className="mt-1 text-xs font-semibold text-blue-600">
-                  ID: {player.id}
-                </div>
-
-              </div>
-
-            </div>
-          )}
-
-        </section>
-
-        {/* ======================================
-            CHỌN GÓI
-        ====================================== */}
-
-        {!showPayment && (
-          <>
-            <PackageSection
-              selectedPackage={selectedPackage}
-              setSelectedPackage={
-                handleSelectPackage
-              }
-            />
-
-            {/* ==================================
-                THÔNG TIN ĐƠN
-            ================================== */}
-
-            <section className="mt-6 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-
-              <div className="mb-4">
-
-                <h2 className="font-bold text-slate-900">
-                  Thông tin đơn hàng
-                </h2>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  Kiểm tra thông tin trước khi thanh toán.
-                </p>
-
-              </div>
-
-              <div className="space-y-3">
-
-                <div className="flex items-center justify-between gap-4 text-sm">
-
-                  <span className="text-slate-500">
-                    Tài khoản
-                  </span>
-
-                  <span className="max-w-[60%] truncate font-semibold text-slate-900">
-                    {player
-                      ? `@${player.username}`
-                      : 'Chưa kiểm tra'}
-                  </span>
-
-                </div>
-
-                <div className="flex items-center justify-between gap-4 text-sm">
-
-                  <span className="text-slate-500">
-                    Gói Robux
-                  </span>
-
-                  <span className="font-semibold text-slate-900">
-                    {selectedPackage
-                      ? `${selectedPackage.robux} Robux`
-                      : 'Chưa chọn'}
-                  </span>
-
-                </div>
-
-                <div className="h-px bg-slate-100" />
-
-                <div className="flex items-end justify-between gap-4">
-
-                  <div>
-
-                    <div className="text-sm text-slate-500">
-                      Tổng Robux
-                    </div>
-
-                    <div className="mt-1 text-2xl font-black text-blue-600">
-                      {totalRobux} Robux
-                    </div>
-
-                  </div>
-
-                  <div className="text-right">
-
-                    <div className="text-sm text-slate-500">
-                      Tổng tiền
-                    </div>
-
-                    <div className="mt-1 text-xl font-black text-slate-900">
-                      {formatPrice(totalPrice)} VNĐ
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              <button
-                type="button"
-                onClick={handleContinue}
-                disabled={
-                  !player ||
-                  !selectedPackage ||
-                  creatingOrder
-                }
-                className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
-              >
-
-                {creatingOrder ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Đang tạo đơn...
-                  </>
-                ) : (
-                  <>
-                    <Check size={18} />
-                    Tiếp tục
-                  </>
-                )}
-
-              </button>
-
-            </section>
-          </>
+        {step === "package" && (
+          <PackageSection
+            selectedPackage={selectedPackage}
+            onSelect={setSelectedPackage}
+            onContinue={goToUsername}
+          />
         )}
 
-        {/* ======================================
-            THANH TOÁN
-        ====================================== */}
-
-        {showPayment && (
-          <div id="payment-section">
-
-            <PaymentSection
-              totalPrice={totalPrice}
-              order={order}
-              onBack={() =>
-                setShowPayment(false)
-              }
-            />
-
-          </div>
+        {step === "username" && (
+          <UsernameSection
+            username={username}
+            setUsername={setUsername}
+            robloxUser={robloxUser}
+            checkingUser={checkingUser}
+            onCheck={checkRobloxUser}
+            onBack={() => setStep("package")}
+            onContinue={createOrder}
+            creatingOrder={creatingOrder}
+            selectedPackage={selectedPackage}
+          />
         )}
 
+        {step === "payment" && (
+          <PaymentSection
+            order={order}
+            onBack={() => setStep("username")}
+            onPaid={(updatedOrder) => setOrder(updatedOrder)}
+          />
+        )}
       </main>
 
       <BottomNav />
-
     </div>
   );
-            }
+}
+function PackageSection({
+  selectedPackage,
+  onSelect,
+  onContinue,
+}) {
+  const cardPackages = PACKAGES.filter(
+    (pkg) => pkg.method === "Card Robux"
+  );
+
+  const vngPackages = PACKAGES.filter(
+    (pkg) => pkg.method === "VNG"
+  );
+
+  return (
+    <div className="space-y-8">
+      <PackageGroup
+        title="Card Robux"
+        icon={<CreditCard size={20} />}
+        packages={cardPackages}
+        selectedPackage={selectedPackage}
+        onSelect={onSelect}
+      />
+
+      <PackageGroup
+        title="Nạp trực tiếp (VNG)"
+        icon={<Wallet size={20} />}
+        packages={vngPackages}
+        selectedPackage={selectedPackage}
+        onSelect={onSelect}
+      />
+
+      <button
+        onClick={onContinue}
+        disabled={!selectedPackage}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Tiếp tục
+        <ChevronRight size={19} />
+      </button>
+    </div>
+  );
+}
+
+function PackageGroup({
+  title,
+  icon,
+  packages,
+  selectedPackage,
+  onSelect,
+}) {
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+          {icon}
+        </div>
+
+        <h2 className="text-xl font-black text-slate-900">
+          {title}
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {packages.map((pkg) => {
+          const active = selectedPackage?.id === pkg.id;
+
+          return (
+            <button
+              key={pkg.id}
+              onClick={() => onSelect(pkg)}
+              className={`relative overflow-hidden rounded-2xl bg-white p-4 text-left shadow-sm ring-1 transition ${
+                active
+                  ? "ring-2 ring-blue-600 shadow-lg shadow-blue-600/10"
+                  : "ring-slate-200 hover:-translate-y-0.5 hover:ring-blue-300"
+              }`}
+            >
+              {active && (
+                <div className="absolute right-3 top-3 rounded-full bg-blue-600 p-1 text-white">
+                  <CheckCircle2 size={17} />
+                </div>
+              )}
+
+              <div className="flex items-center gap-4">
+                <img
+                  src={pkg.image}
+                  alt={`${pkg.robux} Robux`}
+                  className="h-20 w-20 rounded-2xl object-contain"
+                />
+
+                <div className="min-w-0">
+                  <p className="text-lg font-black text-slate-900">
+                    {pkg.robux.toLocaleString("vi-VN")} Robux
+                  </p>
+
+                  <p className="mt-1 text-sm font-bold text-blue-600">
+                    {formatPrice(pkg.price)}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    {pkg.method}
+                  </p>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function UsernameSection({
+  username,
+  setUsername,
+  robloxUser,
+  checkingUser,
+  onCheck,
+  onBack,
+  onContinue,
+  creatingOrder,
+  selectedPackage,
+}) {
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-7">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+            <User size={21} />
+          </div>
+
+          <div>
+            <h2 className="font-black text-slate-900">
+              Tài khoản Roblox
+            </h2>
+
+            <p className="text-sm text-slate-500">
+              Nhập username Roblox cần nhận Robux
+            </p>
+          </div>
+        </div>
+
+        <label className="mb-2 block text-sm font-bold text-slate-700">
+          Username Roblox
+        </label>
+
+        <div className="flex gap-2">
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onCheck();
+            }}
+            placeholder="Ví dụ: Builderman"
+            className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+          />
+
+          <button
+            onClick={onCheck}
+            disabled={checkingUser || !username.trim()}
+            className="flex shrink-0 items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          >
+            {checkingUser ? (
+              <Loader2 size={19} className="animate-spin" />
+            ) : (
+              <Search size={19} />
+            )}
+
+            <span className="hidden sm:inline">
+              {checkingUser ? "Đang kiểm tra..." : "Kiểm tra"}
+            </span>
+          </button>
+        </div>
+
+        {robloxUser && (
+          <div className="mt-5 flex items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            {robloxUser.avatar ? (
+              <img
+                src={robloxUser.avatar}
+                alt={robloxUser.username}
+                className="h-16 w-16 rounded-2xl object-cover"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+                <User size={28} />
+              </div>
+            )}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <CheckCircle2
+                  size={17}
+                  className="shrink-0 text-emerald-600"
+                />
+
+                <p className="truncate font-black text-slate-900">
+                  {robloxUser.displayName || robloxUser.username}
+                </p>
+              </div>
+
+              <p className="mt-1 truncate text-sm text-slate-500">
+                @{robloxUser.username}
+              </p>
+
+              <p className="mt-1 text-xs font-medium text-emerald-600">
+                Đã xác minh tài khoản
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 rounded-2xl bg-blue-50 p-4">
+          <div className="flex gap-3">
+            <ShieldCheck
+              size={20}
+              className="mt-0.5 shrink-0 text-blue-600"
+            />
+
+            <div>
+              <p className="text-sm font-bold text-blue-900">
+                Kiểm tra chính xác trước khi thanh toán
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-blue-700">
+                Hãy kiểm tra kỹ username Roblox. Robux sẽ được
+                xử lý theo tài khoản đã xác nhận.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {selectedPackage && (
+          <div className="mt-5 flex items-center justify-between rounded-2xl bg-slate-50 p-4">
+            <div>
+              <p className="text-xs text-slate-400">
+                Gói đã chọn
+              </p>
+
+              <p className="font-black text-slate-900">
+                {selectedPackage.robux.toLocaleString("vi-VN")} Robux
+              </p>
+            </div>
+
+            <p className="font-black text-blue-600">
+              {formatPrice(selectedPackage.price)}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onBack}
+            className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            Quay lại
+          </button>
+
+          <button
+            onClick={onContinue}
+            disabled={!robloxUser || creatingOrder}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3.5 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {creatingOrder ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Đang tạo đơn...
+              </>
+            ) : (
+              <>
+                Tạo đơn
+                <ChevronRight size={18} />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+                }
+function PaymentSection({ order, onBack, onPaid }) {
+  const [confirming, setConfirming] = useState(false);
+  const [confirmed, setConfirmed] = useState(order?.status === "paid");
+
+  if (!order) {
+    return (
+      <div className="rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+        <XCircle className="mx-auto mb-3 text-red-500" size={42} />
+
+        <h2 className="font-black text-slate-900">
+          Không tìm thấy đơn hàng
+        </h2>
+
+        <button
+          onClick={onBack}
+          className="mt-5 rounded-2xl bg-blue-600 px-5 py-3 font-bold text-white"
+        >
+          Quay lại
+        </button>
+      </div>
+    );
+  }
+
+  const transferContent =
+    `NAP ROBLOX ${order.order_code} ${order.roblox_username} ${order.robux}ROBUX`;
+
+  const handleConfirmTransfer = async () => {
+    if (!order.id || order.status !== "pending") return;
+
+    const ok = window.confirm(
+      "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
+    );
+
+    if (!ok) return;
+
+    setConfirming(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          status: "paid",
+          payment_method: "bank",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id)
+        .eq("status", "pending")
+        .select("*")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setConfirmed(true);
+      onPaid?.(data);
+    } catch (error) {
+      alert(
+        error?.message ||
+          "Không thể xác nhận chuyển khoản. Vui lòng thử lại."
+      );
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+          <CreditCard size={21} />
+        </div>
+
+        <div>
+          <h2 className="font-black text-slate-900">
+            Thanh toán
+          </h2>
+
+          <p className="text-sm text-slate-500">
+            Chuyển khoản theo thông tin bên dưới
+          </p>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
+          <p className="text-sm font-medium text-blue-100">
+            Tổng thanh toán
+          </p>
+
+          <p className="mt-1 text-3xl font-black">
+            {formatPrice(order.amount)}
+          </p>
+
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-bold">
+            Mã đơn: {order.order_code}
+          </div>
+        </div>
+
+        <div className="space-y-5 p-5 sm:p-6">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-black text-slate-900">
+                Thông tin ngân hàng
+              </h3>
+
+              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                {BANK.name}
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <BankRow
+                label="Ngân hàng"
+                value={BANK.name}
+              />
+
+              <BankRow
+                label="Số tài khoản"
+                value={BANK.account}
+                copy
+              />
+
+              <BankRow
+                label="Chủ tài khoản"
+                value={BANK.holder}
+              />
+
+              <BankRow
+                label="Số tiền"
+                value={formatPrice(order.amount)}
+                copyValue={String(order.amount)}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+            <p className="text-sm font-black text-amber-900">
+              Nội dung chuyển khoản
+            </p>
+
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-white p-3">
+              <code className="min-w-0 flex-1 break-all text-sm font-bold text-slate-800">
+                {transferContent}
+              </code>
+
+              <button
+                onClick={() => copyText(transferContent)}
+                className="shrink-0 rounded-xl bg-amber-100 p-2.5 text-amber-700 transition hover:bg-amber-200"
+                title="Sao chép"
+              >
+                <Copy size={17} />
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs leading-5 text-amber-800">
+              Vui lòng ghi chính xác nội dung trên để admin dễ
+              dàng kiểm tra giao dịch.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+            <div className="flex gap-3">
+              <ShieldCheck
+                size={21}
+                className="mt-0.5 shrink-0 text-blue-600"
+              />
+
+              <div>
+                <p className="font-bold text-blue-900">
+                  Đơn hàng của bạn
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-blue-700">
+                  {order.robux.toLocaleString("vi-VN")} Robux →{" "}
+                  <span className="font-bold">
+                    @{order.roblox_username}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {confirmed || order.status === "paid" ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+              <div className="flex items-center gap-3">
+                <CheckCircle2
+                  size={25}
+                  className="shrink-0 text-emerald-600"
+                />
+
+                <div>
+                  <p className="font-black text-emerald-900">
+                    Đã gửi xác nhận
+                  </p>
+
+                  <p className="mt-1 text-sm text-emerald-700">
+                    Đơn hàng đang chờ admin kiểm tra giao dịch.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-xl bg-white/70 p-3 text-sm">
+                <span className="font-bold">Trạng thái:</span>{" "}
+                <span className="font-semibold text-emerald-700">
+                  Chờ kiểm tra
+                </span>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleConfirmTransfer}
+              disabled={confirming}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {confirming ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Đang xác nhận...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={20} />
+                  Tôi đã chuyển khoản
+                </>
+              )}
+            </button>
+          )}
+
+          <button
+            onClick={onBack}
+            disabled={confirming}
+            className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BankRow({
+  label,
+  value,
+  copy = false,
+  copyValue,
+}) {
+  const handleCopy = () => {
+    copyText(copyValue || value);
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+      <span className="text-sm text-slate-500">
+        {label}
+      </span>
+
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="break-all text-right text-sm font-black text-slate-900">
+          {value}
+        </span>
+
+        {(copy || copyValue) && (
+          <button
+            onClick={handleCopy}
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-blue-600"
+            title="Sao chép"
+          >
+            <Copy size={15} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
