@@ -834,9 +834,10 @@ export default function Store() {
       <TopHeader />
 
       <StoreHeader
-        search={search}
-        setSearch={setSearch}
-      />
+  search={search}
+  setSearch={setSearch}
+  navigate={navigate}
+/>
 
       <Banner />
 
