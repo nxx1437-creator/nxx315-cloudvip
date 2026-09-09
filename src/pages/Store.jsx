@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Globe, ChevronDown, Gift, Trophy, CreditCard, Percent } from 'lucide-react';
 import TopHeader from '../components/TopHeader.jsx';
 import BottomNav from '../components/BottomNav.jsx';
@@ -17,7 +18,7 @@ const getLogoUrl = (fileName) => {
 };
 
 // ============================================
-// MOCK DATA
+// DATA
 // ============================================
 const BANNERS = [
   { id: 1, imageUrl: null, title: 'CHỐT DEAL TRONG NGÀY', subtitle: 'CHIẾN GAME LIỀN TAY' },
@@ -107,7 +108,7 @@ function BannerCarousel() {
 }
 
 // ============================================
-// RECOMMENDED SECTION - CÓ LOGO
+// RECOMMENDED SECTION
 // ============================================
 function RecommendedSection({ navigate }) {
   return (
@@ -170,7 +171,7 @@ function BenefitsSection() {
 }
 
 // ============================================
-// GAME LIST SECTION - CÓ LOGO
+// GAME LIST SECTION
 // ============================================
 function GameListSection({ activeTab, setActiveTab, games, navigate }) {
   const tabs = [
@@ -238,6 +239,7 @@ function GameListSection({ activeTab, setActiveTab, games, navigate }) {
 // MAIN PAGE
 // ============================================
 export default function Store() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -252,13 +254,13 @@ export default function Store() {
       <TopHeader />
       <Header search={search} setSearch={setSearch} />
       <BannerCarousel />
-      <RecommendedSection navigate={useNavigate()} />
+      <RecommendedSection navigate={navigate} />
       <BenefitsSection />
       <GameListSection 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         games={filteredGames} 
-        navigate={useNavigate()} 
+        navigate={navigate} 
       />
       <BottomNav />
     </div>
