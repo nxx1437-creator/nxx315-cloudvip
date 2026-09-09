@@ -1,16 +1,18 @@
-import { useState } from 'react';
-import { Search, Globe, ChevronDown, Gift, Trophy, CreditCard, Percent } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Gift, Trophy, CreditCard, Percent, Coins, Flame, Gamepad2, Smartphone, Laptop } from 'lucide-react';
+import useProfile from '../hooks/useProfile.js';
+import BottomNav from '../components/BottomNav.jsx';
 
-// ===== MOCK DATA (thay bằng data thật / Supabase sau) =====
-const BANNERS = [
-  { id: 1, imageUrl: null, title: 'CHỐT DEAL TRONG NGÀY', subtitle: 'CHIẾN GAME LIỀN TAY' },
-];
+// ============================================
+// SUPABASE CONFIG
+// ============================================
+const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
+const STORAGE_BUCKET = 'game_logos';
 
-const RECOMMENDED = [
-  { id: 1, name: 'Roblox VN', imageUrl: null },
-  { id: 2, name: 'Play Together VNG', imageUrl: null },
-];
-
+// ============================================
+// DATA
+// ============================================
 const BENEFITS = [
   { id: 1, icon: Gift, label: 'Ưu đãi hấp dẫn' },
   { id: 2, icon: Trophy, label: 'Vật phẩm độc quyền' },
@@ -19,172 +21,28 @@ const BENEFITS = [
 ];
 
 const GAMES = [
-  { id: 1, name: 'Roblox VN', category: 'mobile', imageUrl: null },
-  { id: 2, name: 'PUBG Mobile VN', category: 'mobile', imageUrl: null },
-  { id: 3, name: 'VALORANT', category: 'pc', imageUrl: null },
-  { id: 4, name: 'Play Together VNG', category: 'mobile', imageUrl: null },
+  { id: 1, name: 'Play Together VNG', category: 'mobile', logo: 'play-together.png', path: '/store/play-together', bg: 'from-purple-500 to-pink-500' },
+  { id: 2, name: 'Roblox VN', category: 'mobile', logo: 'roblox-vn.png', path: '/shop-earn', bg: 'from-blue-500 to-cyan-500' },
+  { id: 3, name: 'PUBG Mobile VN', category: 'mobile', logo: 'pubg-mobile.png', path: '/store/pubg', bg: 'from-orange-500 to-red-500' },
+  { id: 4, name: 'VALORANT', category: 'pc', logo: 'valorant.png', path: '/store/valorant', bg: 'from-red-600 to-red-800' },
+  { id: 5, name: 'ZingSpeed Mobile', category: 'mobile', logo: 'zing-speed.png', path: '/store/zing-speed', bg: 'from-yellow-500 to-orange-500' },
+  { id: 6, name: 'Liên Minh Tốc Chiến', category: 'mobile', logo: 'lien-minh.png', path: '/store/lien-minh', bg: 'from-blue-600 to-indigo-800' },
 ];
 
-// ===== HEADER =====
-function Header({ search, setSearch }) {
-  return (
-    <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-sky-100">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-        <span className="font-baloo text-xl font-bold text-sky-600 shrink-0">
-          Nxx315
-        </span>
-
-        <div className="flex-1 flex items-center gap-2 bg-sky-50 rounded-full px-4 py-2.5 border border-sky-100">
-          <Search size={18} className="text-sky-400 shrink-0" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm game, vật phẩm..."
-            className="bg-transparent outline-none text-sm w-full placeholder:text-slate-400"
-          />
-        </div>
-
-        <button className="hidden sm:flex items-center gap-1 text-slate-500 shrink-0">
-          <Globe size={20} />
-        </button>
-
-        <button className="flex items-center gap-1 shrink-0">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
-            N
-          </div>
-          <ChevronDown size={16} className="text-slate-400 hidden sm:block" />
-        </button>
-      </div>
-    </header>
-  );
-}
-
-// ===== BANNER CAROUSEL =====
-function BannerCarousel() {
-  const banner = BANNERS[0];
-  return (
-    <div className="max-w-5xl mx-auto px-4 pt-4">
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-sky-500 via-cyan-500 to-blue-500 aspect-[16/9] sm:aspect-[21/9] flex items-center justify-center">
-        {banner.imageUrl ? (
-          <img src={banner.imageUrl} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
-        ) : (
-          <div className="text-center text-white px-6">
-            <p className="font-baloo text-2xl sm:text-3xl font-extrabold">{banner.title}</p>
-            <p className="text-sm sm:text-base mt-1 opacity-90">{banner.subtitle}</p>
-          </div>
-        )}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {BANNERS.map((b, i) => (
-            <span key={b.id} className={`h-1.5 rounded-full transition-all ${i === 0 ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ===== RECOMMENDED SECTION =====
-function RecommendedSection() {
-  return (
-    <section className="max-w-5xl mx-auto px-4 pt-8">
-      <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">Dành cho bạn</h2>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-        {RECOMMENDED.map((item) => (
-          <div key={item.id} className="shrink-0 w-40 bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden">
-            <div className="aspect-square bg-sky-50 flex items-center justify-center">
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-sky-300 text-xs">No image</span>
-              )}
-            </div>
-            <div className="p-3">
-              <p className="text-sm font-semibold text-slate-700 line-clamp-1">{item.name}</p>
-              <button className="mt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition">
-                Nạp ngay
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ===== BENEFITS SECTION =====
-function BenefitsSection() {
-  return (
-    <section className="max-w-5xl mx-auto px-4 pt-10">
-      <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">
-        Lợi ích khi nạp tại Nxx315
-      </h2>
-      <div className="grid grid-cols-2 gap-3">
-        {BENEFITS.map(({ id, icon: Icon, label }) => (
-          <div key={id} className="bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl p-5 flex flex-col items-center text-center gap-2 border border-sky-100">
-            <Icon size={28} className="text-sky-500" />
-            <span className="text-sm font-semibold text-slate-700">{label}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ===== GAME LIST SECTION =====
-function GameListSection({ activeTab, setActiveTab, games }) {
-  const tabs = [
-    { key: 'all', label: 'TẤT CẢ' },
-    { key: 'mobile', label: 'MOBILE' },
-    { key: 'pc', label: 'PC' },
-  ];
-
-  return (
-    <section className="max-w-5xl mx-auto px-4 pt-10 pb-16">
-      <h2 className="font-baloo text-xl font-bold text-slate-800 mb-4">Danh sách game</h2>
-
-      <div className="flex gap-2 mb-5">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition ${
-              activeTab === tab.key
-                ? 'bg-sky-500 text-white'
-                : 'bg-slate-100 text-slate-500'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {games.map((game) => (
-          <div key={game.id} className="bg-white rounded-2xl border border-sky-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="aspect-square bg-sky-50 flex items-center justify-center">
-              {game.imageUrl ? (
-                <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-sky-300 text-xs">No image</span>
-              )}
-            </div>
-            <div className="p-3 flex flex-col flex-1">
-              <p className="text-sm font-semibold text-slate-700 line-clamp-1">{game.name}</p>
-              <button className="mt-auto pt-2 w-full border border-sky-400 text-sky-600 text-xs font-bold rounded-full py-1.5 hover:bg-sky-50 transition">
-                Nạp ngay
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ===== MAIN PAGE =====
+// ============================================
+// COMPONENT CHÍNH
+// ============================================
 export default function Store() {
+  const navigate = useNavigate();
+  const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
+
+  const userCoins = profile?.coins || 0;
+
+  const getLogoUrl = (fileName) => {
+    return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+  };
 
   const filteredGames = GAMES.filter((g) => {
     const matchesTab = activeTab === 'all' || g.category === activeTab;
@@ -193,12 +51,153 @@ export default function Store() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/40 to-white">
-      <Header search={search} setSearch={setSearch} />
-      <BannerCarousel />
-      <RecommendedSection />
-      <BenefitsSection />
-      <GameListSection activeTab={activeTab} setActiveTab={setActiveTab} games={filteredGames} />
+    <div className="min-h-screen bg-white pb-20">
+      
+      {/* ===== HEADER ===== */}
+      <header className="sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">G</div>
+            <span className="font-bold text-gray-800 text-sm">UNGAMES Shop</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+              🪙 {userCoins.toLocaleString()}
+            </span>
+            <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+              🔔
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ===== BANNER ===== */}
+      <div className="max-w-md mx-auto px-4 pt-3">
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 aspect-[4/3] flex items-center justify-center p-5">
+          <div className="absolute right-3 top-3 text-right">
+            <div className="text-2xl font-black text-white">12</div>
+            <div className="text-[8px] text-white/60">BÁN ĐÃ XEM</div>
+            <div className="text-[9px] font-bold text-yellow-300">UNGAMES</div>
+          </div>
+          <div className="text-center text-white">
+            <p className="text-[10px] font-semibold text-yellow-300">ZingSpeed Mobile</p>
+            <p className="text-[8px] opacity-70">Duy nhất 10:00 - 23:59 | 09.09.2026</p>
+            <div className="mt-1 flex items-center justify-center gap-2">
+              <span className="text-3xl font-black">9.9</span>
+              <span className="text-[10px] font-bold">CHỐT DEAL</span>
+            </div>
+            <button className="mt-2 px-5 py-1 bg-yellow-400 text-blue-900 text-xs font-bold rounded-full">
+              Khám phá ngay →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== DÀNH CHO BẠN ===== */}
+      <div className="max-w-md mx-auto px-4 pt-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-bold text-gray-800">🎮 DÀNH CHO BẠN</h2>
+          <button className="text-[10px] text-blue-500 font-medium">Xem thêm</button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {GAMES.filter(g => g.id === 2 || g.id === 5).map(game => (
+            <div key={game.id} className="shrink-0 w-32 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className={`aspect-square bg-gradient-to-br ${game.bg} flex items-center justify-center p-3`}>
+                <img 
+                  src={getLogoUrl(game.logo)} 
+                  alt={game.name} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+              <div className="p-2 text-center">
+                <p className="text-[10px] font-semibold text-gray-700 truncate">{game.name}</p>
+                <button 
+                  onClick={() => navigate(game.path)}
+                  className="mt-1 w-full bg-blue-500 text-white text-[9px] font-bold rounded-full py-1"
+                >
+                  Nạp ngay
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== LỢI ÍCH ===== */}
+      <div className="max-w-md mx-auto px-4 pt-5">
+        <h2 className="text-sm font-bold text-gray-800 mb-2">✨ Lợi ích khi nạp</h2>
+        <div className="grid grid-cols-4 gap-2">
+          {BENEFITS.map(({ id, icon: Icon, label }) => (
+            <div key={id} className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl py-2.5 flex flex-col items-center gap-0.5 border border-blue-100">
+              <Icon size={18} className="text-blue-500" />
+              <span className="text-[8px] font-medium text-gray-600 text-center leading-tight">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== DANH SÁCH GAME ===== */}
+      <div className="max-w-md mx-auto px-4 pt-5 pb-20">
+        <h2 className="text-sm font-bold text-gray-800 mb-2">📋 DANH SÁCH GAME</h2>
+
+        <div className="flex gap-1.5 mb-3">
+          {[
+            { key: 'all', label: 'TẤT CẢ' },
+            { key: 'mobile', label: 'MOBILE' },
+            { key: 'pc', label: 'PC' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold transition ${
+                activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="flex items-center bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 mb-3">
+          <Search size={14} className="text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm game..."
+            className="flex-1 bg-transparent outline-none text-xs ml-2 placeholder:text-gray-400"
+          />
+        </div>
+
+        {/* Game Grid */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {filteredGames.map(game => (
+            <div 
+              key={game.id} 
+              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer"
+              onClick={() => navigate(game.path)}
+            >
+              <div className={`aspect-square bg-gradient-to-br ${game.bg} flex items-center justify-center p-3`}>
+                <img 
+                  src={getLogoUrl(game.logo)} 
+                  alt={game.name} 
+                  className="w-full h-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+              <div className="p-1.5 text-center">
+                <p className="text-[8px] font-semibold text-gray-700 truncate">{game.name}</p>
+                <button className="mt-0.5 w-full bg-blue-500 text-white text-[7px] font-bold rounded-full py-0.5">
+                  Nạp
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <BottomNav />
     </div>
   );
 }
