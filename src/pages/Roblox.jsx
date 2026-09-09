@@ -135,14 +135,9 @@ async function findRobloxUser(username) {
         errorData?.errors?.[0]?.message ||
         errorData?.message ||
         '';
-    } catch (err) {
-  console.error('Roblox lookup error:', err);
-
-  setError(
-    err?.message ||
-    'Không thể kiểm tra tài khoản Roblox. Vui lòng thử lại.'
-  );
-} finally {
+    } catch {
+      // Không đọc được JSON
+    }
 
     throw new Error(
       message || `Roblox API lỗi HTTP ${response.status}`
@@ -189,7 +184,6 @@ async function findRobloxUser(username) {
     avatar,
   };
 }
-
 // =====================================================
 // PLAYER SECTION
 // =====================================================
