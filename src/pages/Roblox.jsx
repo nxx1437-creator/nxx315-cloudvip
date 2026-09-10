@@ -781,52 +781,109 @@ function UsernameSection({
   };
 
   const handleCardPayment = async () => {
-    for (const card of cards) {
-      if (!card.type || !card.amount || !card.serial || !card.code) {
-        alert("Vui lòng nhập đầy đủ thông tin tất cả thẻ.");
-        return;
-      }
+  for (const card of cards) {
+    if (!card.type || !card.amount || !card.serial || !card.code) {
+      alert("Vui lòng nhập đầy đủ thông tin tất cả thẻ.");
+      return;
     }
+  }
 
-    const invalidAmount = cards.some(
-      (card) => Number(card.amount) <= 0
-    );
+  const invalidAmount = cards.some(
+    (card) => Number(card.amount) <= 0
+  );
 
-    if (invalidAmount) {
-      alert("Mệnh giá thẻ không hợp lệ.");
+  if (invalidAmount) {
+    alert("Mệnh giá thẻ không hợp lệ.");
+    return;
+  }
+
+  const ok = window.confirm(
+    "Bạn đã kiểm tra kỹ loại thẻ và mệnh giá chưa?\n\n" +
+      "Điền sai mệnh giá có thể khiến thẻ bị mất."
+  );
+
+  if (!ok) return;
+
+  setProcessing(true);
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       return;
     }
 
-    const ok = window.confirm(
-      "Bạn đã kiểm tra kỹ loại thẻ và mệnh giá chưa?\n\n" +
-        "Điền sai mệnh giá có thể khiến thẻ bị mất."
+    const results = [];
+
+    for (const card of cards) {
+      const { data, error } = await supabase.functions.invoke(
+        "submit-card",
+        {
+          body: {
+            telco: card.type,
+            denomination: Number(card.amount),
+            serial: card.serial.trim(),
+            code: card.code.trim(),
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (error) {
+        throw new Error(error.message || "Không thể gửi thẻ.");
+      }
+
+      if (data?.success === false) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "API từ chối thẻ."
+        );
+      }
+
+      results.push(data);
+    }
+
+    console.log("Roblox card payment submitted:", {
+      order_id: order.id,
+      cards: cards.map((card) => ({
+        type: card.type,
+        amount: Number(card.amount),
+      })),
+      results,
+    });
+
+    alert(
+      cards.length === 1
+        ? "Đã gửi thẻ thành công! Hệ thống đang xử lý thẻ."
+        : `Đã gửi ${cards.length} thẻ thành công! Hệ thống đang xử lý.`
     );
 
-    if (!ok) return;
+    setCards([
+      {
+        id: Date.now(),
+        type: "Viettel",
+        amount: "",
+        serial: "",
+        code: "",
+      },
+    ]);
+  } catch (error) {
+    console.error("Submit card error:", error);
 
-    setProcessing(true);
-
-    try {
-      /*
-       * Chưa gửi thẻ đi đâu ở đây.
-       *
-       * Khi có API/Edge Function xử lý thẻ cào,
-       * nối request vào đây.
-       */
-
-      console.log("Roblox card order:", {
-        order_id: order.id,
-        cards,
-      });
-
-      alert(
-        "Thông tin thẻ đã được kiểm tra trên giao diện.\n\n" +
-          "Cần nối API thẻ cào để gửi thẻ và xử lý đơn."
-      );
-    } finally {
-      setProcessing(false);
-    }
-  };
+    alert(
+      "Không thể gửi thẻ.\n\n" +
+        (error?.message || "Vui lòng thử lại sau.")
+    );
+  } finally {
+    setProcessing(false);
+  }
+};
 
   return (
     <div className="mx-auto max-w-2xl">
