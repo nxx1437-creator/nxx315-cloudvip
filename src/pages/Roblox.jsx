@@ -1186,3 +1186,43 @@ function UsernameSection({
     </div>
   );
 }
+function BankRow({
+  label,
+  value,
+  copy = false,
+  copyValue,
+}) {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard?.writeText(copyValue || value);
+      alert("Đã sao chép!");
+    } catch (error) {
+      console.error("Copy error:", error);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+      <span className="text-sm text-slate-500">
+        {label}
+      </span>
+
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="break-all text-right text-sm font-black text-slate-900">
+          {value}
+        </span>
+
+        {(copy || copyValue) && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-blue-600"
+            title="Sao chép"
+          >
+            <Copy size={15} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
