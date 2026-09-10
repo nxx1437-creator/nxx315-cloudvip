@@ -541,45 +541,50 @@ function PaymentSection({ order, onBack, onPaid }) {
     `NAP ROBLOX ${order.order_code} ${order.roblox_username} ${order.robux}ROBUX`;
 
   const handleConfirmTransfer = async () => {
-    if (!order.id || order.status !== "pending") return;
+  if (!order?.id || order.status !== "pending") return;
 
-    const ok = window.confirm(
-      "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
-    );
+  const ok = window.confirm(
+    "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
+  );
 
-    if (!ok) return;
+  if (!ok) return;
 
-    setConfirming(true);
+  setConfirming(true);
 
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          status: "paid",
-          payment_method: "bank",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", order.id)
-        .eq("status", "pending")
-        .select("*")
-        .single();
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "paid",
+        payment_method: "bank",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .eq("status", "pending");
 
-      if (error) {
-        throw error;
-      }
-
-      setConfirmed(true);
-      onPaid?.(data);
-    } catch (error) {
-      alert(
-        error?.message ||
-          "Không thể xác nhận chuyển khoản. Vui lòng thử lại."
-      );
-    } finally {
-      setConfirming(false);
+    if (error) {
+      throw error;
     }
-  };
 
+    const updatedOrder = {
+      ...order,
+      status: "paid",
+      payment_method: "bank",
+    };
+
+    setConfirmed(true);
+    onPaid?.(updatedOrder);
+  } catch (error) {
+    console.error("Confirm payment error:", error);
+
+    alert(
+      "Không thể xác nhận đơn hàng.\n\n" +
+      (error?.message || "Vui lòng thử lại.")
+    );
+  } finally {
+    setConfirming(false);
+  }
+};
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-5 flex items-center gap-3">
