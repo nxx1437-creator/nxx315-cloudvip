@@ -1038,12 +1038,11 @@ function UsernameSection({
 
               <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
                 <p className="text-sm font-black text-red-700">
-                  ⚠️ Nguy hiểm
+                   Nguy hiểm
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-red-600">
                   Quý khách điền sai Mệnh Giá sẽ bị mất thẻ!
-                  Nạp sai quá 5 lần vui lòng liên hệ Admin.
                 </p>
               </div>
 
