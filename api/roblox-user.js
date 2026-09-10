@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.ROBLOX_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.ROBLOX_SUPABASE_ANON_KEY;
+const SUPABASE_URL =
+  process.env.ROBLOX_SUPABASE_URL;
+
+const SUPABASE_ANON_KEY =
+  process.env.ROBLOX_SUPABASE_ANON_KEY;
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
