@@ -83,6 +83,7 @@ export default function Roblox() {
   const [order, setOrder] = useState(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
 
+  // FIX: kiểm tra Roblox kèm access token
   const checkRobloxUser = async () => {
     const value = username.trim();
 
@@ -95,18 +96,42 @@ export default function Roblox() {
     setRobloxUser(null);
 
     try {
-  const {
-  const data = await response.json();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-if (!response.ok) {
-  throw new Error(
-    data?.error || "Không tìm thấy tài khoản Roblox."
-  );
-}
+      if (!session?.access_token) {
+        alert("Bạn chưa đăng nhập.");
+        return;
+      }
 
-setRobloxUser(data);
+      const response = await fetch(
+        `/api/roblox-user?username=${encodeURIComponent(value)}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            "Không tìm thấy tài khoản Roblox."
+        );
+      }
+
+      setRobloxUser(data);
     } catch (error) {
-      alert(error.message || "Không thể kiểm tra tài khoản Roblox.");
+      console.error("Roblox check error:", error);
+
+      alert(
+        error?.message ||
+          "Không thể kiểm tra tài khoản Roblox."
+      );
     } finally {
       setCheckingUser(false);
     }
@@ -147,7 +172,8 @@ setRobloxUser(data);
           body: JSON.stringify({
             roblox_user_id: robloxUser.id,
             roblox_username: robloxUser.username,
-            roblox_display_name: robloxUser.displayName,
+            roblox_display_name:
+              robloxUser.displayName,
             package_id: selectedPackage.id,
           }),
         }
@@ -156,13 +182,21 @@ setRobloxUser(data);
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "Không thể tạo đơn hàng.");
+        throw new Error(
+          data?.error ||
+            "Không thể tạo đơn hàng."
+        );
       }
 
       setOrder(data.order);
       setStep("payment");
     } catch (error) {
-      alert(error.message || "Có lỗi xảy ra khi tạo đơn.");
+      console.error("Create order error:", error);
+
+      alert(
+        error?.message ||
+          "Có lỗi xảy ra khi tạo đơn."
+      );
     } finally {
       setCreatingOrder(false);
     }
@@ -226,7 +260,9 @@ setRobloxUser(data);
           <PaymentSection
             order={order}
             onBack={() => setStep("username")}
-            onPaid={(updatedOrder) => setOrder(updatedOrder)}
+            onPaid={(updatedOrder) =>
+              setOrder(updatedOrder)
+            }
           />
         )}
       </main>
@@ -299,7 +335,8 @@ function PackageGroup({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {packages.map((pkg) => {
-          const active = selectedPackage?.id === pkg.id;
+          const active =
+            selectedPackage?.id === pkg.id;
 
           return (
             <button
@@ -383,9 +420,13 @@ function UsernameSection({
         <div className="flex gap-2">
           <input
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) =>
+              setUsername(e.target.value)
+            }
             onKeyDown={(e) => {
-              if (e.key === "Enter") onCheck();
+              if (e.key === "Enter") {
+                onCheck();
+              }
             }}
             placeholder="Ví dụ: Builderman"
             className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
@@ -393,17 +434,25 @@ function UsernameSection({
 
           <button
             onClick={onCheck}
-            disabled={checkingUser || !username.trim()}
+            disabled={
+              checkingUser ||
+              !username.trim()
+            }
             className="flex shrink-0 items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
           >
             {checkingUser ? (
-              <Loader2 size={19} className="animate-spin" />
+              <Loader2
+                size={19}
+                className="animate-spin"
+              />
             ) : (
               <Search size={19} />
             )}
 
             <span className="hidden sm:inline">
-              {checkingUser ? "Đang kiểm tra..." : "Kiểm tra"}
+              {checkingUser
+                ? "Đang kiểm tra..."
+                : "Kiểm tra"}
             </span>
           </button>
         </div>
@@ -430,7 +479,8 @@ function UsernameSection({
                 />
 
                 <p className="truncate font-black text-slate-900">
-                  {robloxUser.displayName || robloxUser.username}
+                  {robloxUser.displayName ||
+                    robloxUser.username}
                 </p>
               </div>
 
@@ -458,8 +508,8 @@ function UsernameSection({
               </p>
 
               <p className="mt-1 text-xs leading-5 text-blue-700">
-                Hãy kiểm tra kỹ username Roblox. Robux sẽ được
-                xử lý theo tài khoản đã xác nhận.
+                Hãy kiểm tra kỹ username Roblox.
+                Robux sẽ được xử lý theo tài khoản đã xác nhận.
               </p>
             </div>
           </div>
@@ -473,7 +523,10 @@ function UsernameSection({
               </p>
 
               <p className="font-black text-slate-900">
-                {selectedPackage.robux.toLocaleString("vi-VN")} Robux
+                {selectedPackage.robux.toLocaleString(
+                  "vi-VN"
+                )}{" "}
+                Robux
               </p>
             </div>
 
@@ -498,7 +551,10 @@ function UsernameSection({
           >
             {creatingOrder ? (
               <>
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2
+                  size={18}
+                  className="animate-spin"
+                />
                 Đang tạo đơn...
               </>
             ) : (
@@ -512,11 +568,12 @@ function UsernameSection({
       </div>
     </div>
   );
-                }
-  function PaymentSection({ order, onBack, onPaid }) {
+}
+function PaymentSection({ order, onBack, onPaid }) {
   const [method, setMethod] = useState("coin");
   const [profile, setProfile] = useState(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingProfile, setLoadingProfile] =
+    useState(true);
   const [processing, setProcessing] = useState(false);
 
   const [cards, setCards] = useState([
@@ -556,7 +613,10 @@ function UsernameSection({
 
       setProfile(data);
     } catch (error) {
-      console.error("Load coins error:", error);
+      console.error(
+        "Load coins error:",
+        error
+      );
     } finally {
       setLoadingProfile(false);
     }
@@ -565,7 +625,10 @@ function UsernameSection({
   if (!order) {
     return (
       <div className="rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-        <XCircle className="mx-auto mb-3 text-red-500" size={42} />
+        <XCircle
+          className="mx-auto mb-3 text-red-500"
+          size={42}
+        />
 
         <h2 className="font-black text-slate-900">
           Không tìm thấy đơn hàng
@@ -584,9 +647,14 @@ function UsernameSection({
   const transferContent =
     `NAP ROBLOX ${order.order_code} ${order.roblox_username} ${order.robux}ROBUX`;
 
-  const coinBalance = Number(profile?.coins || 0);
-  const requiredCoins = Number(order.amount || 0);
-  const enoughCoins = coinBalance >= requiredCoins;
+  const coinBalance =
+    Number(profile?.coins || 0);
+
+  const requiredCoins =
+    Number(order.amount || 0);
+
+  const enoughCoins =
+    coinBalance >= requiredCoins;
 
   const cardDiscounts = {
     Viettel: 19,
@@ -596,7 +664,8 @@ function UsernameSection({
     Zing: 14,
   };
 
-  const cardTypes = Object.keys(cardDiscounts);
+  const cardTypes =
+    Object.keys(cardDiscounts);
 
   const addCard = () => {
     setCards((current) => [
@@ -613,12 +682,21 @@ function UsernameSection({
 
   const removeCard = (id) => {
     setCards((current) => {
-      if (current.length === 1) return current;
-      return current.filter((card) => card.id !== id);
+      if (current.length === 1) {
+        return current;
+      }
+
+      return current.filter(
+        (card) => card.id !== id
+      );
     });
   };
 
-  const updateCard = (id, field, value) => {
+  const updateCard = (
+    id,
+    field,
+    value
+  ) => {
     setCards((current) =>
       current.map((card) =>
         card.id === id
@@ -635,9 +713,14 @@ function UsernameSection({
     if (!enoughCoins) {
       alert(
         `Bạn không đủ Coin.\n\n` +
-          `Cần: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Hiện có: ${coinBalance.toLocaleString("vi-VN")} Coin`
+          `Cần: ${requiredCoins.toLocaleString(
+            "vi-VN"
+          )} Coin\n` +
+          `Hiện có: ${coinBalance.toLocaleString(
+            "vi-VN"
+          )} Coin`
       );
+
       return;
     }
 
@@ -652,13 +735,6 @@ function UsernameSection({
     setProcessing(true);
 
     try {
-      /*
-       * QUAN TRỌNG:
-       * Chỗ này chưa tự trừ Coin ở frontend.
-       *
-       * Cần dùng RPC / Edge Function để trừ Coin an toàn.
-       */
-
       alert(
         "Phần thanh toán bằng Coin đã sẵn sàng giao diện.\n\n" +
           "Cần nối RPC/Edge Function để trừ Coin an toàn."
@@ -669,7 +745,12 @@ function UsernameSection({
   };
 
   const handleConfirmTransfer = async () => {
-    if (!order?.id || order.status !== "pending") return;
+    if (
+      !order?.id ||
+      order.status !== "pending"
+    ) {
+      return;
+    }
 
     const ok = window.confirm(
       "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
@@ -685,7 +766,8 @@ function UsernameSection({
         .update({
           status: "paid",
           payment_method: "bank",
-          updated_at: new Date().toISOString(),
+          updated_at:
+            new Date().toISOString(),
         })
         .eq("id", order.id)
         .eq("status", "pending");
@@ -700,11 +782,15 @@ function UsernameSection({
 
       onPaid?.(updatedOrder);
     } catch (error) {
-      console.error("Confirm payment error:", error);
+      console.error(
+        "Confirm payment error:",
+        error
+      );
 
       alert(
         "Không thể xác nhận đơn hàng.\n\n" +
-          (error?.message || "Vui lòng thử lại.")
+          (error?.message ||
+            "Vui lòng thử lại.")
       );
     } finally {
       setProcessing(false);
@@ -713,8 +799,15 @@ function UsernameSection({
 
   const handleCardPayment = async () => {
     for (const card of cards) {
-      if (!card.type || !card.amount || !card.serial || !card.code) {
-        alert("Vui lòng nhập đầy đủ thông tin tất cả thẻ.");
+      if (
+        !card.type ||
+        !card.amount ||
+        !card.serial ||
+        !card.code
+      ) {
+        alert(
+          "Vui lòng nhập đầy đủ thông tin tất cả thẻ."
+        );
         return;
       }
     }
@@ -724,7 +817,9 @@ function UsernameSection({
     );
 
     if (invalidAmount) {
-      alert("Mệnh giá thẻ không hợp lệ.");
+      alert(
+        "Mệnh giá thẻ không hợp lệ."
+      );
       return;
     }
 
@@ -738,17 +833,13 @@ function UsernameSection({
     setProcessing(true);
 
     try {
-      /*
-       * Chưa gửi thẻ đi đâu ở đây.
-       *
-       * Khi có API/Edge Function xử lý thẻ cào,
-       * nối request vào đây.
-       */
-
-      console.log("Roblox card order:", {
-        order_id: order.id,
-        cards,
-      });
+      console.log(
+        "Roblox card order:",
+        {
+          order_id: order.id,
+          cards,
+        }
+      );
 
       alert(
         "Thông tin thẻ đã được kiểm tra trên giao diện.\n\n" +
@@ -761,8 +852,6 @@ function UsernameSection({
 
   return (
     <div className="mx-auto max-w-2xl">
-      {/* HEADER */}
-
       <div className="mb-5 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
           <CreditCard size={21} />
@@ -780,8 +869,6 @@ function UsernameSection({
       </div>
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
-        {/* ORDER SUMMARY */}
-
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
           <p className="text-sm font-medium text-blue-100">
             Tổng thanh toán
@@ -797,11 +884,11 @@ function UsernameSection({
         </div>
 
         <div className="space-y-5 p-5 sm:p-6">
-          {/* PAYMENT METHODS */}
-
           <div className="grid grid-cols-3 gap-2">
             <button
-              onClick={() => setMethod("coin")}
+              onClick={() =>
+                setMethod("coin")
+              }
               className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
                 method === "coin"
                   ? "border-blue-600 bg-blue-50 text-blue-700"
@@ -812,7 +899,9 @@ function UsernameSection({
             </button>
 
             <button
-              onClick={() => setMethod("bank")}
+              onClick={() =>
+                setMethod("bank")
+              }
               className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
                 method === "bank"
                   ? "border-blue-600 bg-blue-50 text-blue-700"
@@ -823,7 +912,9 @@ function UsernameSection({
             </button>
 
             <button
-              onClick={() => setMethod("card")}
+              onClick={() =>
+                setMethod("card")
+              }
               className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
                 method === "card"
                   ? "border-blue-600 bg-blue-50 text-blue-700"
@@ -833,8 +924,6 @@ function UsernameSection({
               🎫 Thẻ cào
             </button>
           </div>
-
-          {/* COIN */}
 
           {method === "coin" && (
             <div className="space-y-4">
@@ -847,7 +936,9 @@ function UsernameSection({
                   <span className="text-xl font-black text-blue-700">
                     {loadingProfile
                       ? "..."
-                      : `${coinBalance.toLocaleString("vi-VN")} Coin`}
+                      : `${coinBalance.toLocaleString(
+                          "vi-VN"
+                        )} Coin`}
                   </span>
                 </div>
               </div>
@@ -859,7 +950,10 @@ function UsernameSection({
                   </span>
 
                   <span className="font-black text-slate-900">
-                    {requiredCoins.toLocaleString("vi-VN")} Coin
+                    {requiredCoins.toLocaleString(
+                      "vi-VN"
+                    )}{" "}
+                    Coin
                   </span>
                 </div>
 
@@ -876,16 +970,21 @@ function UsernameSection({
                     }`}
                   >
                     {Math.max(
-                      coinBalance - requiredCoins,
+                      coinBalance -
+                        requiredCoins,
                       0
-                    ).toLocaleString("vi-VN")}{" "}
+                    ).toLocaleString(
+                      "vi-VN"
+                    )}{" "}
                     Coin
                   </span>
                 </div>
               </div>
 
               <button
-                onClick={handleCoinPayment}
+                onClick={
+                  handleCoinPayment
+                }
                 disabled={
                   processing ||
                   loadingProfile ||
@@ -903,9 +1002,6 @@ function UsernameSection({
               </button>
             </div>
           )}
-
-          {/* BANK */}
-
           {method === "bank" && (
             <div className="space-y-5">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -938,8 +1034,12 @@ function UsernameSection({
 
                   <BankRow
                     label="Số tiền"
-                    value={formatPrice(order.amount)}
-                    copyValue={String(order.amount)}
+                    value={formatPrice(
+                      order.amount
+                    )}
+                    copyValue={String(
+                      order.amount
+                    )}
                   />
                 </div>
               </div>
@@ -955,7 +1055,11 @@ function UsernameSection({
                   </code>
 
                   <button
-                    onClick={() => copyText(transferContent)}
+                    onClick={() =>
+                      copyText(
+                        transferContent
+                      )
+                    }
                     className="shrink-0 rounded-xl bg-amber-100 p-2.5 text-amber-700"
                   >
                     <Copy size={17} />
@@ -967,7 +1071,8 @@ function UsernameSection({
                 </p>
               </div>
 
-              {order.status === "paid" ? (
+              {order.status ===
+              "paid" ? (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                   <div className="flex items-center gap-3">
                     <CheckCircle2
@@ -988,7 +1093,9 @@ function UsernameSection({
                 </div>
               ) : (
                 <button
-                  onClick={handleConfirmTransfer}
+                  onClick={
+                    handleConfirmTransfer
+                  }
                   disabled={processing}
                   className="w-full rounded-2xl bg-blue-600 px-5 py-4 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-50"
                 >
@@ -999,8 +1106,6 @@ function UsernameSection({
               )}
             </div>
           )}
-
-          {/* CARD */}
 
           {method === "card" && (
             <div className="space-y-5">
@@ -1014,30 +1119,28 @@ function UsernameSection({
                 </p>
               </div>
 
-              {/* DISCOUNTS */}
-
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                {cardTypes.map((type) => (
-                  <div
-                    key={type}
-                    className="rounded-xl bg-slate-50 p-3 text-center"
-                  >
-                    <p className="text-xs font-bold text-slate-600">
-                      {type}
-                    </p>
+                {cardTypes.map(
+                  (type) => (
+                    <div
+                      key={type}
+                      className="rounded-xl bg-slate-50 p-3 text-center"
+                    >
+                      <p className="text-xs font-bold text-slate-600">
+                        {type}
+                      </p>
 
-                    <p className="mt-1 text-sm font-black text-blue-600">
-                      {cardDiscounts[type]}%
-                    </p>
-                  </div>
-                ))}
+                      <p className="mt-1 text-sm font-black text-blue-600">
+                        {cardDiscounts[type]}%
+                      </p>
+                    </div>
+                  )
+                )}
               </div>
-
-              {/* WARNING */}
 
               <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
                 <p className="text-sm font-black text-red-700">
-                   Nguy hiểm
+                  Nguy hiểm
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-red-600">
@@ -1045,129 +1148,156 @@ function UsernameSection({
                 </p>
               </div>
 
-              {/* CARDS */}
+              {cards.map(
+                (card, index) => (
+                  <div
+                    key={card.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <p className="font-black text-slate-900">
+                        Thẻ #{index + 1}
+                      </p>
 
-              {cards.map((card, index) => (
-                <div
-                  key={card.id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <p className="font-black text-slate-900">
-                      Thẻ #{index + 1}
-                    </p>
+                      {cards.length >
+                        1 && (
+                        <button
+                          onClick={() =>
+                            removeCard(
+                              card.id
+                            )
+                          }
+                          className="rounded-xl px-3 py-2 text-sm font-bold text-red-500 hover:bg-red-50"
+                        >
+                          Xóa thẻ
+                        </button>
+                      )}
+                    </div>
 
-                    {cards.length > 1 && (
-                      <button
-                        onClick={() => removeCard(card.id)}
-                        className="rounded-xl px-3 py-2 text-sm font-bold text-red-500 hover:bg-red-50"
-                      >
-                        Xóa thẻ
-                      </button>
-                    )}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-bold text-slate-700">
+                          Loại thẻ *
+                        </label>
+
+                        <select
+                          value={
+                            card.type
+                          }
+                          onChange={(e) =>
+                            updateCard(
+                              card.id,
+                              "type",
+                              e.target.value
+                            )
+                          }
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                        >
+                          {cardTypes.map(
+                            (type) => (
+                              <option
+                                key={type}
+                                value={type}
+                              >
+                                {type} — Chiết khấu{" "}
+                                {
+                                  cardDiscounts[
+                                    type
+                                  ]
+                                }
+                                %
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-bold text-slate-700">
+                          Mệnh giá *
+                        </label>
+
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={
+                            card.amount
+                          }
+                          onChange={(e) =>
+                            updateCard(
+                              card.id,
+                              "amount",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Ví dụ: 10000"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-bold text-slate-700">
+                          Số Seri Thẻ *
+                        </label>
+
+                        <input
+                          value={
+                            card.serial
+                          }
+                          onChange={(e) =>
+                            updateCard(
+                              card.id,
+                              "serial",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Nhập số seri"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-bold text-slate-700">
+                          Mã Thẻ *
+                        </label>
+
+                        <input
+                          value={
+                            card.code
+                          }
+                          onChange={(e) =>
+                            updateCard(
+                              card.id,
+                              "code",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Nhập mã thẻ"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Loại thẻ *
-                      </label>
-
-                      <select
-                        value={card.type}
-                        onChange={(e) =>
-                          updateCard(
-                            card.id,
-                            "type",
-                            e.target.value
-                          )
-                        }
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
-                      >
-                        {cardTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type} — Chiết khấu{" "}
-                            {cardDiscounts[type]}%
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Mệnh giá *
-                      </label>
-
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={card.amount}
-                        onChange={(e) =>
-                          updateCard(
-                            card.id,
-                            "amount",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Ví dụ: 10000"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Số Seri Thẻ *
-                      </label>
-
-                      <input
-                        value={card.serial}
-                        onChange={(e) =>
-                          updateCard(
-                            card.id,
-                            "serial",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Nhập số seri"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Mã Thẻ *
-                      </label>
-
-                      <input
-                        value={card.code}
-                        onChange={(e) =>
-                          updateCard(
-                            card.id,
-                            "code",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Nhập mã thẻ"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              )}
 
               <button
                 onClick={addCard}
                 className="w-full rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 px-5 py-3.5 font-black text-blue-600 transition hover:bg-blue-100"
               >
                 + Thêm thẻ
-               </button>
+              </button>
 
               <button
-                onClick={handleCardPayment}
+                onClick={
+                  handleCardPayment
+                }
                 disabled={processing}
                 className="w-full rounded-2xl bg-blue-600 px-5 py-4 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-50"
               >
-                {processing ? "Đang xử lý..." : "Nạp tiền"}
+                {processing
+                  ? "Đang xử lý..."
+                  : "Nạp tiền"}
               </button>
             </div>
           )}
@@ -1184,6 +1314,7 @@ function UsernameSection({
     </div>
   );
 }
+
 function BankRow({
   label,
   value,
@@ -1192,10 +1323,16 @@ function BankRow({
 }) {
   const handleCopy = async () => {
     try {
-      await navigator.clipboard?.writeText(copyValue || value);
+      await navigator.clipboard?.writeText(
+        copyValue || value
+      );
+
       alert("Đã sao chép!");
     } catch (error) {
-      console.error("Copy error:", error);
+      console.error(
+        "Copy error:",
+        error
+      );
     }
   };
 
