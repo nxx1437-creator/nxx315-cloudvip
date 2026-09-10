@@ -514,9 +514,54 @@ function UsernameSection({
     </div>
   );
                 }
-function PaymentSection({ order, onBack, onPaid }) {
-  const [confirming, setConfirming] = useState(false);
-  const [confirmed, setConfirmed] = useState(order?.status === "paid");
+  function PaymentSection({ order, onBack, onPaid }) {
+  const [method, setMethod] = useState("coin");
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [processing, setProcessing] = useState(false);
+
+  const [cards, setCards] = useState([
+    {
+      id: Date.now(),
+      type: "Viettel",
+      amount: "",
+      serial: "",
+      code: "",
+    },
+  ]);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    setLoadingProfile(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("coins")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+
+      setProfile(data);
+    } catch (error) {
+      console.error("Load coins error:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
   if (!order) {
     return (
@@ -540,53 +585,185 @@ function PaymentSection({ order, onBack, onPaid }) {
   const transferContent =
     `NAP ROBLOX ${order.order_code} ${order.roblox_username} ${order.robux}ROBUX`;
 
-  const handleConfirmTransfer = async () => {
-  if (!order?.id || order.status !== "pending") return;
+  const coinBalance = Number(profile?.coins || 0);
+  const requiredCoins = Number(order.amount || 0);
+  const enoughCoins = coinBalance >= requiredCoins;
 
-  const ok = window.confirm(
-    "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
-  );
+  const cardDiscounts = {
+    Viettel: 19,
+    Mobifone: 19.5,
+    Vinaphone: 19.5,
+    Garena: 14.5,
+    Zing: 14,
+  };
 
-  if (!ok) return;
+  const cardTypes = Object.keys(cardDiscounts);
 
-  setConfirming(true);
+  const addCard = () => {
+    setCards((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        type: "Viettel",
+        amount: "",
+        serial: "",
+        code: "",
+      },
+    ]);
+  };
 
-  try {
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        status: "paid",
-        payment_method: "bank",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", order.id)
-      .eq("status", "pending");
+  const removeCard = (id) => {
+    setCards((current) => {
+      if (current.length === 1) return current;
+      return current.filter((card) => card.id !== id);
+    });
+  };
 
-    if (error) {
-      throw error;
+  const updateCard = (id, field, value) => {
+    setCards((current) =>
+      current.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              [field]: value,
+            }
+          : card
+      )
+    );
+  };
+
+  const handleCoinPayment = async () => {
+    if (!enoughCoins) {
+      alert(
+        `Bạn không đủ Coin.\n\n` +
+          `Cần: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
+          `Hiện có: ${coinBalance.toLocaleString("vi-VN")} Coin`
+      );
+      return;
     }
 
-    const updatedOrder = {
-      ...order,
-      status: "paid",
-      payment_method: "bank",
-    };
-
-    setConfirmed(true);
-    onPaid?.(updatedOrder);
-  } catch (error) {
-    console.error("Confirm payment error:", error);
-
-    alert(
-      "Không thể xác nhận đơn hàng.\n\n" +
-      (error?.message || "Vui lòng thử lại.")
+    const ok = window.confirm(
+      `Bạn có chắc muốn dùng ${requiredCoins.toLocaleString(
+        "vi-VN"
+      )} Coin để thanh toán đơn này?`
     );
-  } finally {
-    setConfirming(false);
-  }
-};
+
+    if (!ok) return;
+
+    setProcessing(true);
+
+    try {
+      /*
+       * QUAN TRỌNG:
+       * Chỗ này chưa tự trừ Coin ở frontend.
+       *
+       * Cần dùng RPC / Edge Function để trừ Coin an toàn.
+       */
+
+      alert(
+        "Phần thanh toán bằng Coin đã sẵn sàng giao diện.\n\n" +
+          "Cần nối RPC/Edge Function để trừ Coin an toàn."
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleConfirmTransfer = async () => {
+    if (!order?.id || order.status !== "pending") return;
+
+    const ok = window.confirm(
+      "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
+    );
+
+    if (!ok) return;
+
+    setProcessing(true);
+
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          status: "paid",
+          payment_method: "bank",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", order.id)
+        .eq("status", "pending");
+
+      if (error) throw error;
+
+      const updatedOrder = {
+        ...order,
+        status: "paid",
+        payment_method: "bank",
+      };
+
+      onPaid?.(updatedOrder);
+    } catch (error) {
+      console.error("Confirm payment error:", error);
+
+      alert(
+        "Không thể xác nhận đơn hàng.\n\n" +
+          (error?.message || "Vui lòng thử lại.")
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCardPayment = async () => {
+    for (const card of cards) {
+      if (!card.type || !card.amount || !card.serial || !card.code) {
+        alert("Vui lòng nhập đầy đủ thông tin tất cả thẻ.");
+        return;
+      }
+    }
+
+    const invalidAmount = cards.some(
+      (card) => Number(card.amount) <= 0
+    );
+
+    if (invalidAmount) {
+      alert("Mệnh giá thẻ không hợp lệ.");
+      return;
+    }
+
+    const ok = window.confirm(
+      "Bạn đã kiểm tra kỹ loại thẻ và mệnh giá chưa?\n\n" +
+        "Điền sai mệnh giá có thể khiến thẻ bị mất."
+    );
+
+    if (!ok) return;
+
+    setProcessing(true);
+
+    try {
+      /*
+       * Chưa gửi thẻ đi đâu ở đây.
+       *
+       * Khi có API/Edge Function xử lý thẻ cào,
+       * nối request vào đây.
+       */
+
+      console.log("Roblox card order:", {
+        order_id: order.id,
+        cards,
+      });
+
+      alert(
+        "Thông tin thẻ đã được kiểm tra trên giao diện.\n\n" +
+          "Cần nối API thẻ cào để gửi thẻ và xử lý đơn."
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl">
+      {/* HEADER */}
+
       <div className="mb-5 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
           <CreditCard size={21} />
@@ -598,12 +775,14 @@ function PaymentSection({ order, onBack, onPaid }) {
           </h2>
 
           <p className="text-sm text-slate-500">
-            Chuyển khoản theo thông tin bên dưới
+            Chọn phương thức thanh toán
           </p>
         </div>
       </div>
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+        {/* ORDER SUMMARY */}
+
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
           <p className="text-sm font-medium text-blue-100">
             Tổng thanh toán
@@ -619,178 +798,390 @@ function PaymentSection({ order, onBack, onPaid }) {
         </div>
 
         <div className="space-y-5 p-5 sm:p-6">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-black text-slate-900">
-                Thông tin ngân hàng
-              </h3>
+          {/* PAYMENT METHODS */}
 
-              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                {BANK.name}
-              </span>
-            </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => setMethod("coin")}
+              className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
+                method === "coin"
+                  ? "border-blue-600 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              🪙 Coin
+            </button>
 
+            <button
+              onClick={() => setMethod("bank")}
+              className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
+                method === "bank"
+                  ? "border-blue-600 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              🏦 Chuyển khoản
+            </button>
+
+            <button
+              onClick={() => setMethod("card")}
+              className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
+                method === "card"
+                  ? "border-blue-600 bg-blue-50 text-blue-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              🎫 Thẻ cào
+            </button>
+          </div>
+
+          {/* COIN */}
+
+          {method === "coin" && (
             <div className="space-y-4">
-              <BankRow
-                label="Ngân hàng"
-                value={BANK.name}
-              />
-
-              <BankRow
-                label="Số tài khoản"
-                value={BANK.account}
-                copy
-              />
-
-              <BankRow
-                label="Chủ tài khoản"
-                value={BANK.holder}
-              />
-
-              <BankRow
-                label="Số tiền"
-                value={formatPrice(order.amount)}
-                copyValue={String(order.amount)}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-            <p className="text-sm font-black text-amber-900">
-              Nội dung chuyển khoản
-            </p>
-
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-white p-3">
-              <code className="min-w-0 flex-1 break-all text-sm font-bold text-slate-800">
-                {transferContent}
-              </code>
-
-              <button
-                onClick={() => copyText(transferContent)}
-                className="shrink-0 rounded-xl bg-amber-100 p-2.5 text-amber-700 transition hover:bg-amber-200"
-                title="Sao chép"
-              >
-                <Copy size={17} />
-              </button>
-            </div>
-
-            <p className="mt-3 text-xs leading-5 text-amber-800">
-              Vui lòng ghi chính xác nội dung trên để admin dễ
-              dàng kiểm tra giao dịch.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-            <div className="flex gap-3">
-              <ShieldCheck
-                size={21}
-                className="mt-0.5 shrink-0 text-blue-600"
-              />
-
-              <div>
-                <p className="font-bold text-blue-900">
-                  Đơn hàng của bạn
-                </p>
-
-                <p className="mt-1 text-sm leading-6 text-blue-700">
-                  {order.robux.toLocaleString("vi-VN")} Robux →{" "}
-                  <span className="font-bold">
-                    @{order.roblox_username}
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-blue-800">
+                    Số dư Coin
                   </span>
-                </p>
-              </div>
-            </div>
-          </div>
 
-          {confirmed || order.status === "paid" ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-              <div className="flex items-center gap-3">
-                <CheckCircle2
-                  size={25}
-                  className="shrink-0 text-emerald-600"
-                />
-
-                <div>
-                  <p className="font-black text-emerald-900">
-                    Đã gửi xác nhận
-                  </p>
-
-                  <p className="mt-1 text-sm text-emerald-700">
-                    Đơn hàng đang chờ admin kiểm tra giao dịch.
-                  </p>
+                  <span className="text-xl font-black text-blue-700">
+                    {loadingProfile
+                      ? "..."
+                      : `${coinBalance.toLocaleString("vi-VN")} Coin`}
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl bg-white/70 p-3 text-sm">
-                <span className="font-bold">Trạng thái:</span>{" "}
-                <span className="font-semibold text-emerald-700">
-                  Chờ kiểm tra
-                </span>
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-500">
+                    Cần thanh toán
+                  </span>
+
+                  <span className="font-black text-slate-900">
+                    {requiredCoins.toLocaleString("vi-VN")} Coin
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-sm text-slate-500">
+                    Sau thanh toán
+                  </span>
+
+                  <span
+                    className={`font-black ${
+                      enoughCoins
+                        ? "text-emerald-600"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {Math.max(
+                      coinBalance - requiredCoins,
+                      0
+                    ).toLocaleString("vi-VN")}{" "}
+                    Coin
+                  </span>
+                </div>
               </div>
+
+              <button
+                onClick={handleCoinPayment}
+                disabled={
+                  processing ||
+                  loadingProfile ||
+                  !enoughCoins
+                }
+                className="w-full rounded-2xl bg-blue-600 px-5 py-4 font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {processing
+                  ? "Đang xử lý..."
+                  : enoughCoins
+                  ? `Thanh toán ${requiredCoins.toLocaleString(
+                      "vi-VN"
+                    )} Coin`
+                  : "Không đủ Coin"}
+              </button>
             </div>
-          ) : (
-            <button
-              onClick={handleConfirmTransfer}
-              disabled={confirming}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {confirming ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Đang xác nhận...
-                </>
+          )}
+
+          {/* BANK */}
+
+          {method === "bank" && (
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-black text-slate-900">
+                    Thông tin ngân hàng
+                  </h3>
+
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                    MB Bank
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  <BankRow
+                    label="Ngân hàng"
+                    value={BANK.name}
+                  />
+
+                  <BankRow
+                    label="Số tài khoản"
+                    value={BANK.account}
+                    copy
+                  />
+
+                  <BankRow
+                    label="Chủ tài khoản"
+                    value={BANK.holder}
+                  />
+
+                  <BankRow
+                    label="Số tiền"
+                    value={formatPrice(order.amount)}
+                    copyValue={String(order.amount)}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                <p className="text-sm font-black text-amber-900">
+                  Nội dung chuyển khoản
+                </p>
+
+                <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-white p-3">
+                  <code className="min-w-0 flex-1 break-all text-sm font-bold text-slate-800">
+                    {transferContent}
+                  </code>
+
+                  <button
+                    onClick={() => copyText(transferContent)}
+                    className="shrink-0 rounded-xl bg-amber-100 p-2.5 text-amber-700"
+                  >
+                    <Copy size={17} />
+                  </button>
+                </div>
+
+                <p className="mt-3 text-xs leading-5 text-amber-800">
+                  Vui lòng ghi chính xác nội dung chuyển khoản.
+                </p>
+              </div>
+
+              {order.status === "paid" ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2
+                      size={25}
+                      className="text-emerald-600"
+                    />
+
+                    <div>
+                      <p className="font-black text-emerald-900">
+                        Đã gửi xác nhận
+                      </p>
+
+                      <p className="mt-1 text-sm text-emerald-700">
+                        Đơn đang chờ admin kiểm tra.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <CheckCircle2 size={20} />
-                  Tôi đã chuyển khoản
-                </>
+                <button
+                  onClick={handleConfirmTransfer}
+                  disabled={processing}
+                  className="w-full rounded-2xl bg-blue-600 px-5 py-4 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {processing
+                    ? "Đang xác nhận..."
+                    : "✓ Tôi đã chuyển khoản"}
+                </button>
               )}
-            </button>
+            </div>
+          )}
+
+          {/* CARD */}
+
+          {method === "card" && (
+            <div className="space-y-5">
+              <div>
+                <h3 className="text-xl font-black text-slate-900">
+                  Thẻ cào
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Chọn loại thẻ và nhập thông tin thẻ
+                </p>
+              </div>
+
+              {/* DISCOUNTS */}
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                {cardTypes.map((type) => (
+                  <div
+                    key={type}
+                    className="rounded-xl bg-slate-50 p-3 text-center"
+                  >
+                    <p className="text-xs font-bold text-slate-600">
+                      {type}
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-blue-600">
+                      {cardDiscounts[type]}%
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* WARNING */}
+
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-black text-red-700">
+                  ⚠️ Nguy hiểm
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-red-600">
+                  Quý khách điền sai Mệnh Giá sẽ bị mất thẻ!
+                  Nạp sai quá 5 lần vui lòng liên hệ Admin.
+                </p>
+              </div>
+
+              {/* CARDS */}
+
+              {cards.map((card, index) => (
+                <div
+                  key={card.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="font-black text-slate-900">
+                      Thẻ #{index + 1}
+                    </p>
+
+                    {cards.length > 1 && (
+                      <button
+                        onClick={() => removeCard(card.id)}
+                        className="rounded-xl px-3 py-2 text-sm font-bold text-red-500 hover:bg-red-50"
+                      >
+                        Xóa thẻ
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                        Loại thẻ *
+                      </label>
+
+                      <select
+                        value={card.type}
+                        onChange={(e) =>
+                          updateCard(
+                            card.id,
+                            "type",
+                            e.target.value
+                          )
+                        }
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                      >
+                        {cardTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type} — Chiết khấu{" "}
+                            {cardDiscounts[type]}%
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                        Mệnh giá *
+                      </label>
+
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={card.amount}
+                        onChange={(e) =>
+                          updateCard(
+                            card.id,
+                            "amount",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Ví dụ: 10000"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                        Số Seri Thẻ *
+                      </label>
+
+                      <input
+                        value={card.serial}
+                        onChange={(e) =>
+                          updateCard(
+                            card.id,
+                            "serial",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Nhập số seri"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                        Mã Thẻ *
+                      </label>
+
+                      <input
+                        value={card.code}
+                        onChange={(e) =>
+                          updateCard(
+                            card.id,
+                            "code",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Nhập mã thẻ"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={addCard}
+                className="w-full rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 px-5 py-3.5 font-black text-blue-600 transition hover:bg-blue-100"
+              >
+                + Thêm thẻ
+               </button>
+
+              <button
+                onClick={handleCardPayment}
+                disabled={processing}
+                className="w-full rounded-2xl bg-blue-600 px-5 py-4 font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:opacity-50"
+              >
+                {processing ? "Đang xử lý..." : "Nạp tiền"}
+              </button>
+            </div>
           )}
 
           <button
             onClick={onBack}
-            disabled={confirming}
+            disabled={processing}
             className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
           >
             Quay lại
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function BankRow({
-  label,
-  value,
-  copy = false,
-  copyValue,
-}) {
-  const handleCopy = () => {
-    copyText(copyValue || value);
-  };
-
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 last:border-0 last:pb-0">
-      <span className="text-sm text-slate-500">
-        {label}
-      </span>
-
-      <div className="flex min-w-0 items-center gap-2">
-        <span className="break-all text-right text-sm font-black text-slate-900">
-          {value}
-        </span>
-
-        {(copy || copyValue) && (
-          <button
-            onClick={handleCopy}
-            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-blue-600"
-            title="Sao chép"
-          >
-            <Copy size={15} />
-          </button>
-        )}
       </div>
     </div>
   );
