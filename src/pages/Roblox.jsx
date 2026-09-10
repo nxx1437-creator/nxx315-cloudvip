@@ -95,9 +95,33 @@ export default function Roblox() {
     setRobloxUser(null);
 
     try {
-      const response = await fetch(
-        `/api/roblox-user?username=${encodeURIComponent(value)}`
-      );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    return;
+  }
+
+  const response = await fetch(
+    `/api/roblox-user?username=${encodeURIComponent(value)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error || "Không thể kiểm tra tài khoản Roblox."
+    );
+  }
+
+  // Phần xử lý data bên dưới của code cũ giữ nguyên
 
       const data = await response.json();
 
