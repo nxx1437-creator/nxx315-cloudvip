@@ -107,7 +107,14 @@ const GAMES = [
     category: 'pc',
     logo: 'fc-mobile-vn.png',
     path: '/store/fc-mobile',
-  },    
+  }, 
+  {
+    id: 11,
+    name: 'Liên Minh Huyền Thoại',
+    category: 'pc',
+    logo: 'lienminhhuyenthoai.png',
+    path: '/store/lien-minh',
+  },  
 ];
 
 // =====================================================
