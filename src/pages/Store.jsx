@@ -125,37 +125,6 @@ const GAMES = [
 ];
 
 // =====================================================
-// BENEFITS
-// =====================================================
-
-const BENEFITS = [
-  {
-    id: 1,
-    icon: Gift,
-    title: 'Ưu đãi',
-    text: 'Nhiều ưu đãi',
-  },
-  {
-    id: 2,
-    icon: Trophy,
-    title: 'Độc quyền',
-    text: 'Vật phẩm hot',
-  },
-  {
-    id: 3,
-    icon: CreditCard,
-    title: 'An toàn',
-    text: 'Thanh toán nhanh',
-  },
-  {
-    id: 4,
-    icon: Percent,
-    title: 'Giá tốt',
-    text: 'Tiết kiệm hơn',
-  },
-];
-
-// =====================================================
 // IMAGE FALLBACK
 // =====================================================
 
