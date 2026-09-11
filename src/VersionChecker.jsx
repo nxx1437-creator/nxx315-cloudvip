@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-const CHECK_INTERVAL = 60000; // 60s
+const CHECK_INTERVAL = 6000; // 60s
 const AUTO_RELOAD_DELAY = 3000; // chờ 3s rồi tự reload
 
 export default function VersionChecker() {
