@@ -79,7 +79,7 @@ const GAMES = [
     category: 'pc',
     logo: 'valorant.png',
     path: '/store/valorant',
-  }
+  },
   {
     id: 7,
     name: 'ZingSpeed Mobile',
