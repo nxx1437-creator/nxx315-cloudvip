@@ -847,109 +847,122 @@ function UsernameSection({
         "Điền sai mệnh giá có thể khiến thẻ bị mất."
     );
     if (!ok) return;
-
-    setProcessing(true);
-    setCardResult(null);
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error(
-          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
-        );
       }
+    const checkCardTransactions = async (requestIds) => {
+  setCardChecking(true);
 
-      const requestIds = [];
+  try {
+    const results = [];
 
-      for (const card of cards) {
-        const { data, error } = await supabase.functions.invoke(
-          "submit-card",
-          {
-            body: {
-              telco: card.type,
-              denomination: Number(card.amount),
-              serial: card.serial.trim(),
-              code: card.code.trim(),
-            },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
+    for (const requestId of requestIds) {
+      let finalResult = null;
+
+      for (let attempt = 0; attempt < 40; attempt++) {
+        try {
+          const response = await fetch(
+            `${SUPABASE_URL}/functions/v1/apidoithe-webhook`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: SUPABASE_ANON_KEY,
+              },
+              body: JSON.stringify({
+                transaction_id: requestId,
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (data?.status === "success") {
+            finalResult = {
+              requestId,
+              status: "success",
+              netAmount: Number(data?.net_amount || 0),
+              reason: data?.reason || data?.message || "",
+            };
+
+            break;
           }
-        );
 
-        if (error) {
-          throw new Error(error.message || "Không thể gửi thẻ.");
-        }
+          if (
+            data?.status === "failed" ||
+            data?.status === "error"
+          ) {
+            finalResult = {
+              requestId,
+              status: "failed",
+              netAmount: 0,
+              reason:
+                data?.reason ||
+                data?.message ||
+                "Thẻ không hợp lệ hoặc giao dịch bị từ chối.",
+            };
 
-        if (!data?.success || !data?.request_id) {
-          throw new Error(
-            data?.message || data?.error || "API không chấp nhận thẻ."
+            break;
+          }
+
+          await new Promise((resolve) =>
+            setTimeout(resolve, 2500)
+          );
+        } catch (error) {
+          console.error(
+            "Check card transaction error:",
+            error
+          );
+
+          await new Promise((resolve) =>
+            setTimeout(resolve, 2500)
           );
         }
-
-        requestIds.push(data.request_id);
       }
 
-      setProcessing(false);
-
-      const checked = await checkCardTransactions(requestIds);
-      const cardInfo = cards.map((card) => ({
-        type: card.type,
-        amount: Number(card.amount),
-      }));
-
-      if (checked.status === "success") {
-        const totalNetAmount = checked.results.reduce(
-          (sum, item) => sum + Number(item.netAmount || 0),
-          0
-        );
-
-        setCardResult({
-  status: checked.status,
-  requestIds,
-  results: checked.results,
-  cards: cardInfo,
-  reason:
-    checked.results?.find(
-      (item) => item.status === "failed"
-    )?.reason ||
-    "Giao dịch không thành công.",
-});
-
-        await loadProfile();
-
-        setCards([
-          {
-            id: Date.now(),
-            type: "Viettel",
-            amount: "",
-            serial: "",
-            code: "",
-          },
-        ]);
-        return;
+      if (!finalResult) {
+        finalResult = {
+          requestId,
+          status: "processing",
+          netAmount: 0,
+          reason:
+            "Giao dịch vẫn đang được xử lý.",
+        };
       }
 
-      setCardResult({
-        status: checked.status,
-        requestIds,
-        results: checked.results,
-        cards: cardInfo,
-      });
-    } catch (error) {
-      console.error("Card payment error:", error);
-      setCardResult({
-        status: "error",
-        message:
-          error?.message || "Không thể xử lý thẻ. Vui lòng thử lại.",
-      });
-    } finally {
-      setProcessing(false);
+      results.push(finalResult);
     }
-  };
+
+    const hasFailed = results.some(
+      (item) => item.status === "failed"
+    );
+
+    const allSuccess =
+      results.length > 0 &&
+      results.every(
+        (item) => item.status === "success"
+      );
+
+    if (allSuccess) {
+      return {
+        status: "success",
+        results,
+      };
+    }
+
+    if (hasFailed) {
+      return {
+        status: "failed",
+        results,
+      };
+    }
+
+    return {
+      status: "processing",
+      results,
+    };
+  } finally {
+    setCardChecking(false);
+  }
+};
 
   return (
     <div className="mx-auto max-w-2xl">
