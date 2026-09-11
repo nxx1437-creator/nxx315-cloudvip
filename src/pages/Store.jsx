@@ -114,6 +114,13 @@ const GAMES = [
     category: 'pc',
     logo: 'lienminhhuyenthoai.png',
     path: '/store/lien-minh',
+  }, 
+  {
+    id: 12,
+    name: 'Ngôi sao thời trang',
+    category: 'pc',
+    logo: 'ngoi-sao.png',
+    path: '/store/ngoi-sao',
   },  
 ];
 
