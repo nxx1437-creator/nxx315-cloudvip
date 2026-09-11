@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import PostForm from "../components/community/PostForm";
-import PostCard from "../components/community/PostCard";
 import CommentDrawer from "../components/community/CommentDrawer";
 import { fetchPosts, getMyReactions, toggleLike, toggleSave, recordShare } from "../lib/community";
 import useProfile from "../hooks/useProfile";
