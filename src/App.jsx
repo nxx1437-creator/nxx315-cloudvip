@@ -37,6 +37,7 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import VersionChecker from "./VersionChecker";
 import Feed from "./pages/Feed.jsx";
 import Roblox from "./pages/Roblox.jsx";
+import PlayTogether from "./pages/PlayTogether.jsx";
 
 export default function App() {
   return (
@@ -117,7 +118,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route path="/store/play-together" element={<PlayTogether />} />.   
         <Route path="/link-history" element={<LinkHistory />} />
         <Route path="/refund-history" element={<RefundHistoryPage />} />
 
