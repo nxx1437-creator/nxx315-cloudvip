@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Gamepad2,
   Sparkles,
-  History as HistoryIcon,
 } from 'lucide-react';
 
 import TopHeader from '../components/TopHeader.jsx';
