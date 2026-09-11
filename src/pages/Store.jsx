@@ -101,6 +101,13 @@ const GAMES = [
     logo: 'minecraft.png',
     path: '/store/minecraft',
   },
+  {
+    id: 10,
+    name: 'FC Mobile VN',
+    category: 'pc',
+    logo: 'fc-mobile-vn.png',
+    path: '/store/fc-mobile',
+  },    
 ];
 
 // =====================================================
