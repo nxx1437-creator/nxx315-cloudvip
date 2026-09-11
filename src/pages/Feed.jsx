@@ -98,7 +98,6 @@ export default function Feed() {
 
   return (
     <div className="max-w-lg mx-auto px-3 py-4">
-      <PostForm onPostCreated={handlePostCreated} />
 
       {loading ? (
         <p className="text-center text-white/50 text-sm py-8">Đang tải bảng tin...</p>
