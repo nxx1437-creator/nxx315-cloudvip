@@ -804,12 +804,14 @@ function UsernameSection({
           }
 
           results.push({
-            requestId,
-            status: String(data?.status || "").toLowerCase(),
-            netAmount: Number(data?.net_amount || 0),
-          });
-        }
-
+  requestId,
+  status: String(data?.status || "").toLowerCase(),
+  netAmount: Number(data?.net_amount || 0),
+  reason:
+    data?.reason ||
+    data?.message ||
+    "Giao dịch không thành công.",
+});
         if (results.some((item) => item.status === "failed")) {
           return { status: "failed", results };
         }
@@ -906,12 +908,16 @@ function UsernameSection({
         );
 
         setCardResult({
-          status: "success",
-          requestIds,
-          totalNetAmount,
-          results: checked.results,
-          cards: cardInfo,
-        });
+  status: checked.status,
+  requestIds,
+  results: checked.results,
+  cards: cardInfo,
+  reason:
+    checked.results?.find(
+      (item) => item.status === "failed"
+    )?.reason ||
+    "Giao dịch không thành công.",
+});
 
         await loadProfile();
 
@@ -1275,18 +1281,42 @@ function UsernameSection({
               )}
 
               {cardResult?.status === "failed" && (
-                <div className="rounded-3xl border border-red-200 bg-red-50 p-5">
-                  <div className="flex items-start gap-3">
-                    <XCircle className="mt-0.5 shrink-0 text-red-600" size={25} />
-                    <div>
-                      <p className="font-black text-red-900">Thẻ bị từ chối</p>
-                      <p className="mt-1 text-sm text-red-700">
-                        Coin không được cộng cho giao dịch thất bại.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+  <div className="rounded-3xl border border-red-200 bg-red-50 p-6">
+    <div className="flex items-start gap-4">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
+        <XCircle size={27} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-xl font-black text-red-900">
+          Thanh toán không thành công
+        </p>
+
+        <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-red-100">
+          <p className="text-sm font-semibold text-slate-500">
+            Lý do
+          </p>
+
+          <p className="mt-1 text-sm font-black text-red-700">
+            {cardResult.reason ||
+              "Thẻ không hợp lệ hoặc giao dịch bị từ chối."}
+          </p>
+        </div>
+
+        {cardResult.requestIds?.length > 0 && (
+          <p className="mt-3 break-all text-xs text-red-700">
+            Mã giao dịch:{" "}
+            {cardResult.requestIds.join(", ")}
+          </p>
+        )}
+
+        <p className="mt-3 text-xs text-red-600">
+          Coin không được cộng cho giao dịch thất bại.
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 
               {cardResult?.status === "processing" && (
                 <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
