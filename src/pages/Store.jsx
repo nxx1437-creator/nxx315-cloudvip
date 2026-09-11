@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -14,12 +14,15 @@ import {
 
 import TopHeader from '../components/TopHeader.jsx';
 import BottomNav from '../components/BottomNav.jsx';
+import { supabase } from '../lib/supabaseClient.js';
 
 // =====================================================
 // SUPABASE STORAGE
 // =====================================================
 
-const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
+const SUPABASE_URL =
+  'https://rwglwovohbyqmbbzdvdj.supabase.co';
+
 const STORAGE_BUCKET = 'game_logos';
 
 const getImageUrl = (fileName) =>
@@ -37,12 +40,12 @@ const BANNER = 'store-banner.jpg';
 
 const GAMES = [
   {
-  id: 1,
-  name: 'Roblox ',
-  category: 'mobile',
-  logo: 'roblox.png',
-  path: '/store/roblox'
-},
+    id: 1,
+    name: 'Roblox',
+    category: 'pc',
+    logo: 'roblox.png',
+    path: '/store/roblox',
+  },
   {
     id: 2,
     name: 'Play Together VNG',
@@ -64,8 +67,6 @@ const GAMES = [
     logo: 'free-fire.png',
     path: '/store/free-fire',
   },
-
-  // Các game bên dưới bạn có thể thêm logo vào Supabase sau
   {
     id: 5,
     name: 'PUBG Mobile VN',
@@ -82,46 +83,46 @@ const GAMES = [
   },
   {
     id: 7,
+    name: 'Liên Minh Huyền Thoại',
+    category: 'pc',
+    logo: 'lien-minh-huyen-thoai.png',
+    path: '/store/lien-minh-huyen-thoai',
+  },
+  {
+    id: 8,
+    name: 'Tốc Chiến',
+    category: 'mobile',
+    logo: 'toc-chien.png',
+    path: '/store/toc-chien',
+  },
+  {
+    id: 9,
     name: 'ZingSpeed Mobile',
     category: 'mobile',
     logo: 'zing-speed-mobile.png',
     path: '/store/zing-speed',
   },
   {
-    id: 8,
+    id: 10,
     name: 'FC Online',
     category: 'pc',
     logo: 'fc-online.png',
     path: '/store/fc-online',
   },
   {
-    id: 9,
-    name: 'Cloud Song',
+    id: 11,
+    name: 'Minecraft',
     category: 'pc',
-    logo: 'cloud-song.png',
+    logo: 'minecraft.png',
     path: '/store/minecraft',
   },
   {
-    id: 10,
-    name: 'FC Mobile VN',
-    category: 'pc',
-    logo: 'fc-mobile-vn.png',
-    path: '/store/fc-mobile',
-  }, 
-  {
-    id: 11,
-    name: 'Liên Minh Huyền Thoại',
-    category: 'pc',
-    logo: 'lienminhhuyenthoai.png',
-    path: '/store/lien-minh',
-  }, 
-  {
     id: 12,
-    name: 'Ngôi sao thời trang',
-    category: 'pc',
-    logo: 'ngoi-sao.png',
-    path: '/store/ngoi-sao',
-  },  
+    name: 'Among Us',
+    category: 'mobile',
+    logo: 'among-us.png',
+    path: '/store/among-us',
+  },
 ];
 
 // =====================================================
@@ -166,7 +167,9 @@ function GameImage({ src, alt }) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
         <Gamepad2 size={34} strokeWidth={1.5} />
-        <span className="text-[9px] mt-1">Đang cập nhật</span>
+        <span className="text-[9px] mt-1">
+          Đang cập nhật
+        </span>
       </div>
     );
   }
@@ -209,16 +212,13 @@ function StoreHeader({
 
   const handleKeyDown = (e) => {
     if (e.key !== 'Enter') return;
-
     if (!keyword) return;
 
-    // Ưu tiên tên game trùng hoàn toàn
     const exactMatch = GAMES.find(
       (game) =>
         game.name.toLowerCase() === keyword
     );
 
-    // Nếu không trùng hoàn toàn thì lấy kết quả đầu tiên
     const firstMatch =
       exactMatch ||
       GAMES.find((game) =>
@@ -233,8 +233,6 @@ function StoreHeader({
   return (
     <div className="px-4 pt-3 pb-2">
       <div className="max-w-5xl mx-auto relative">
-
-        {/* SEARCH BOX */}
         <div
           className="
             flex items-center gap-3
@@ -274,7 +272,6 @@ function StoreHeader({
           />
         </div>
 
-        {/* SEARCH RESULTS */}
         {focused && keyword && (
           <div
             className="
@@ -291,10 +288,8 @@ function StoreHeader({
               overflow-hidden
             "
           >
-
             {results.length > 0 ? (
               <div className="py-1">
-
                 {results.map((game) => (
                   <button
                     key={game.id}
@@ -313,17 +308,13 @@ function StoreHeader({
                       transition
                     "
                   >
-
-                    {/* LOGO */}
                     <div
                       className="
-                        w-10
-                        h-10
+                        w-10 h-10
                         rounded-xl
                         bg-gray-50
                         border border-gray-100
-                        flex
-                        items-center
+                        flex items-center
                         justify-center
                         shrink-0
                         overflow-hidden
@@ -335,40 +326,21 @@ function StoreHeader({
                       />
                     </div>
 
-                    {/* NAME */}
                     <div className="flex-1 min-w-0">
-
-                      <p
-                        className="
-                          text-xs
-                          font-bold
-                          text-gray-800
-                          truncate
-                        "
-                      >
+                      <p className="text-xs font-bold text-gray-800 truncate">
                         {game.name}
                       </p>
 
-                      <p
-                        className="
-                          text-[9px]
-                          text-gray-400
-                          mt-0.5
-                        "
-                      >
+                      <p className="text-[9px] text-gray-400 mt-0.5">
                         {game.category === 'pc'
                           ? 'PC'
                           : 'Mobile'}
                       </p>
-
                     </div>
 
-                    {/* ACTION */}
                     <div
                       className="
-                        flex
-                        items-center
-                        gap-1
+                        flex items-center gap-1
                         text-blue-500
                         text-[9px]
                         font-bold
@@ -378,53 +350,32 @@ function StoreHeader({
                       Nạp
                       <ChevronRight size={12} />
                     </div>
-
                   </button>
                 ))}
-
               </div>
             ) : (
               <div className="py-8 text-center">
-
                 <Search
                   size={28}
-                  className="
-                    mx-auto
-                    text-gray-300
-                    mb-2
-                  "
+                  className="mx-auto text-gray-300 mb-2"
                 />
 
-                <p
-                  className="
-                    text-xs
-                    font-bold
-                    text-gray-600
-                  "
-                >
+                <p className="text-xs font-bold text-gray-600">
                   Không tìm thấy game
                 </p>
 
-                <p
-                  className="
-                    text-[10px]
-                    text-gray-400
-                    mt-1
-                  "
-                >
+                <p className="text-[10px] text-gray-400 mt-1">
                   Thử nhập tên game khác
                 </p>
-
               </div>
             )}
-
           </div>
         )}
-
       </div>
     </div>
   );
 }
+
 // =====================================================
 // BANNER
 // =====================================================
@@ -452,7 +403,11 @@ function Banner() {
             <img
               src={getImageUrl(BANNER)}
               alt="Store banner"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="
+                absolute inset-0
+                w-full h-full
+                object-cover
+              "
               onError={() => setError(true)}
             />
           ) : (
@@ -462,9 +417,11 @@ function Banner() {
                   size={28}
                   className="mx-auto mb-2"
                 />
+
                 <p className="font-bold text-lg">
                   NẠP GAME NHANH CHÓNG
                 </p>
+
                 <p className="text-xs opacity-80">
                   Chọn game và bắt đầu ngay
                 </p>
@@ -472,13 +429,20 @@ function Banner() {
             </div>
           )}
 
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/10 to-transparent" />
+          <div
+            className="
+              absolute inset-0
+              pointer-events-none
+              bg-gradient-to-t
+              from-black/10
+              to-transparent
+            "
+          />
         </div>
       </div>
     </section>
   );
-}
-
+        }
 // =====================================================
 // RECOMMENDED
 // =====================================================
@@ -532,7 +496,15 @@ function Recommended({ navigate }) {
                 transition-all
               "
             >
-              <div className="aspect-[1.25/1] bg-gray-50 flex items-center justify-center p-4">
+              <div
+                className="
+                  aspect-[1.25/1]
+                  bg-gray-50
+                  flex items-center
+                  justify-center
+                  p-4
+                "
+              >
                 <GameImage
                   src={getImageUrl(game.logo)}
                   alt={game.name}
@@ -551,7 +523,11 @@ function Recommended({ navigate }) {
 
                   <ChevronRight
                     size={13}
-                    className="text-blue-500 group-hover:translate-x-0.5 transition"
+                    className="
+                      text-blue-500
+                      group-hover:translate-x-0.5
+                      transition
+                    "
                   />
                 </div>
               </div>
@@ -576,44 +552,47 @@ function Benefits() {
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {BENEFITS.map(({ id, icon: Icon, title, text }) => (
-            <div
-              key={id}
-              className="
-                bg-white
-                border border-gray-100
-                rounded-2xl
-                p-3
-                flex items-center gap-3
-                shadow-sm
-              "
-            >
+          {BENEFITS.map(
+            ({ id, icon: Icon, title, text }) => (
               <div
+                key={id}
                 className="
-                  w-9 h-9
-                  rounded-xl
-                  bg-blue-50
-                  flex items-center justify-center
-                  shrink-0
+                  bg-white
+                  border border-gray-100
+                  rounded-2xl
+                  p-3
+                  flex items-center gap-3
+                  shadow-sm
                 "
               >
-                <Icon
-                  size={17}
-                  className="text-blue-500"
-                />
-              </div>
+                <div
+                  className="
+                    w-9 h-9
+                    rounded-xl
+                    bg-blue-50
+                    flex items-center
+                    justify-center
+                    shrink-0
+                  "
+                >
+                  <Icon
+                    size={17}
+                    className="text-blue-500"
+                  />
+                </div>
 
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold text-gray-800">
-                  {title}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-gray-800">
+                    {title}
+                  </p>
 
-                <p className="text-[9px] text-gray-400 truncate">
-                  {text}
-                </p>
+                  <p className="text-[9px] text-gray-400 truncate">
+                    {text}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
     </section>
@@ -643,7 +622,16 @@ function GameCard({ game, navigate }) {
         w-full
       "
     >
-      <div className="relative aspect-square bg-gray-50 flex items-center justify-center p-5">
+      <div
+        className="
+          relative
+          aspect-square
+          bg-gray-50
+          flex items-center
+          justify-center
+          p-5
+        "
+      >
         <GameImage
           src={getImageUrl(game.logo)}
           alt={game.name}
@@ -662,7 +650,9 @@ function GameCard({ game, navigate }) {
             text-gray-500
           "
         >
-          {game.category === 'mobile' ? 'MOBILE' : 'PC'}
+          {game.category === 'mobile'
+            ? 'MOBILE'
+            : 'PC'}
         </span>
       </div>
 
@@ -710,7 +700,7 @@ function GameList({
   ];
 
   return (
-    <section className="px-4 pt-7 pb-28">
+    <section className="px-4 pt-7">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-end justify-between mb-3">
           <div>
@@ -730,13 +720,16 @@ function GameList({
 
         <div className="flex gap-2 mb-4">
           {tabs.map((tab) => {
-            const active = activeTab === tab.id;
+            const active =
+              activeTab === tab.id;
 
             return (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() =>
+                  setActiveTab(tab.id)
+                }
                 className={`
                   px-4 py-2
                   rounded-full
@@ -803,7 +796,537 @@ function GameList({
     </section>
   );
 }
+// =====================================================
+// HISTORY PREVIEW
+// =====================================================
 
+function formatHistoryDate(value) {
+  if (!value) return '—';
+
+  return new Date(value).toLocaleString(
+    'vi-VN',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  );
+}
+
+function getHistoryStatus(status) {
+  const key = String(status || '').toLowerCase();
+
+  if (
+    ['completed', 'success', 'done'].includes(key)
+  ) {
+    return {
+      label: 'Hoàn thành',
+      className:
+        'bg-emerald-50 text-emerald-600 border-emerald-100',
+    };
+  }
+
+  if (
+    key === 'paid' ||
+    ['pending', 'processing'].includes(key)
+  ) {
+    return {
+      label: 'Đang kiểm tra',
+      className:
+        'bg-amber-50 text-amber-600 border-amber-100',
+    };
+  }
+
+  if (
+    [
+      'cancelled',
+      'canceled',
+      'failed',
+      'rejected',
+    ].includes(key)
+  ) {
+    return {
+      label:
+        key === 'failed' ||
+        key === 'rejected'
+          ? 'Thất bại'
+          : 'Đã hủy',
+      className:
+        'bg-rose-50 text-rose-500 border-rose-100',
+    };
+  }
+
+  return {
+    label: 'Đang xử lý',
+    className:
+      'bg-amber-50 text-amber-600 border-amber-100',
+  };
+}
+
+function getHistoryAmount(order) {
+  const coins =
+    order?.coin_cost ??
+    order?.coins ??
+    order?.coin_amount ??
+    order?.amount_coins ??
+    order?.price_coins;
+
+  if (coins != null) {
+    return `${Number(coins).toLocaleString(
+      'vi-VN'
+    )} xu`;
+  }
+
+  const money =
+    order?.price_vnd ??
+    order?.amount_vnd ??
+    order?.amount ??
+    order?.amount_money;
+
+  if (money != null) {
+    return `${Number(money).toLocaleString(
+      'vi-VN'
+    )}đ`;
+  }
+
+  return '—';
+}
+
+function getHistoryName(order) {
+  return (
+    order?.package_name ||
+    order?.product_name ||
+    order?.game_name ||
+    order?.game ||
+    (order?.historySource === 'orders'
+      ? 'Đơn nạp game'
+      : 'Đơn đổi thưởng')
+  );
+}
+
+function getHistoryImage(order) {
+  const directImage =
+    order?.image_url ||
+    order?.product_image ||
+    order?.package_image ||
+    order?.image;
+
+  if (directImage) {
+    return directImage;
+  }
+
+  const text = `
+    ${order?.game_name || ''}
+    ${order?.game || ''}
+    ${order?.product_name || ''}
+    ${order?.package_name || ''}
+  `.toLowerCase();
+
+  if (text.includes('play together')) {
+    return getImageUrl(
+      'play-together-vng.png'
+    );
+  }
+
+  if (
+    text.includes('liên quân') ||
+    text.includes('quan huy')
+  ) {
+    return getImageUrl(
+      'lien-quan-mobile.png'
+    );
+  }
+
+  if (text.includes('free fire')) {
+    return getImageUrl(
+      'free-fire.png'
+    );
+  }
+
+  if (
+    text.includes('roblox') ||
+    text.includes('robux')
+  ) {
+    return getImageUrl(
+      'roblox.png'
+    );
+  }
+
+  return getImageUrl('store-banner.jpg');
+}
+
+function StoreHistoryPreview() {
+  const navigate = useNavigate();
+
+  const [history, setHistory] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadHistory = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          if (alive) {
+            setLoading(false);
+          }
+
+          return;
+        }
+
+        // =================================================
+        // LẤY CẢ 2 LOẠI ĐƠN
+        // orders = đơn nạp game
+        // redemption_orders = đơn đổi thưởng
+        // =================================================
+
+        const [
+          ordersResult,
+          redemptionResult,
+        ] = await Promise.all([
+          supabase
+            .from('orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', {
+              ascending: false,
+            })
+            .limit(5),
+
+          supabase
+            .from('redemption_orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', {
+              ascending: false,
+            })
+            .limit(5),
+        ]);
+
+        if (ordersResult.error) {
+          throw ordersResult.error;
+        }
+
+        if (redemptionResult.error) {
+          throw redemptionResult.error;
+        }
+
+        const merged = [
+          ...(ordersResult.data || []).map(
+            (order) => ({
+              ...order,
+              historySource: 'orders',
+            })
+          ),
+
+          ...(redemptionResult.data || []).map(
+            (order) => ({
+              ...order,
+              historySource:
+                'redemption_orders',
+            })
+          ),
+        ]
+          .sort(
+            (a, b) =>
+              new Date(
+                b.created_at || 0
+              ) -
+              new Date(
+                a.created_at || 0
+              )
+          )
+          .slice(0, 5);
+
+        if (alive) {
+          setHistory(merged);
+        }
+      } catch (error) {
+        console.error(
+          'Store history error:',
+          error
+        );
+
+        if (alive) {
+          setHistory([]);
+        }
+      } finally {
+        if (alive) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return (
+    <section className="px-4 pt-7 pb-28">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-end justify-between gap-3 mb-3">
+          <div>
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-blue-500
+              "
+            >
+              Giao dịch
+            </p>
+
+            <h2 className="mt-1 text-xl font-black text-gray-900">
+              Lịch sử
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/history')
+            }
+            className="
+              flex items-center gap-1
+              text-[10px]
+              font-bold
+              text-blue-500
+            "
+          >
+            Xem tất cả
+            <ChevronRight size={14} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div
+            className="
+              bg-white
+              border border-gray-100
+              rounded-2xl
+              p-5
+              shadow-sm
+            "
+          >
+            <div
+              className="
+                h-4 w-28
+                rounded
+                bg-gray-100
+                animate-pulse
+              "
+            />
+
+            <div
+              className="
+                h-3 w-40
+                rounded
+                bg-gray-100
+                animate-pulse
+                mt-3
+              "
+            />
+          </div>
+        ) : history.length === 0 ? (
+          <div
+            className="
+              bg-white
+              border border-gray-100
+              rounded-2xl
+              p-6
+              text-center
+              shadow-sm
+            "
+          >
+            <div
+              className="
+                w-11 h-11
+                mx-auto
+                rounded-full
+                bg-blue-50
+                flex items-center
+                justify-center
+              "
+            >
+              <HistoryIcon
+                size={20}
+                className="text-blue-400"
+              />
+            </div>
+
+            <p className="mt-3 text-sm font-bold text-gray-700">
+              Chưa có giao dịch
+            </p>
+
+            <p className="mt-1 text-xs text-gray-400">
+              Đơn hàng của mày sẽ xuất hiện ở đây.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {history.map((order) => {
+              const status =
+                getHistoryStatus(
+                  order.status
+                );
+
+              return (
+                <button
+                  key={`
+                    ${order.historySource}
+                    -
+                    ${order.id}
+                  `}
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/history/order/${encodeURIComponent(
+                        order.id
+                      )}?source=${
+                        order.historySource
+                      }`
+                    )
+                  }
+                  className="
+                    w-full
+                    rounded-2xl
+                    bg-white
+                    border border-gray-100
+                    p-3.5
+                    text-left
+                    shadow-sm
+                    transition
+                    hover:border-blue-100
+                    hover:shadow-md
+                    active:scale-[0.995]
+                  "
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="
+                        w-12 h-12
+                        rounded-xl
+                        bg-gray-50
+                        border border-gray-100
+                        flex items-center
+                        justify-center
+                        shrink-0
+                        overflow-hidden
+                      "
+                    >
+                      <img
+                        src={getHistoryImage(
+                          order
+                        )}
+                        alt=""
+                        className="
+                          w-full
+                          h-full
+                          object-contain
+                          p-1.5
+                        "
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            getImageUrl(
+                              'store-banner.jpg'
+                            );
+                        }}
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="
+                          truncate
+                          text-sm
+                          font-black
+                          text-gray-900
+                        "
+                      >
+                        {getHistoryName(
+                          order
+                        )}
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          text-[10px]
+                          text-gray-400
+                        "
+                      >
+                        {formatHistoryDate(
+                          order.created_at
+                        )}
+                      </p>
+
+                      <div
+                        className="
+                          mt-2
+                          flex
+                          items-center
+                          justify-between
+                          gap-2
+                        "
+                      >
+                        <span
+                          className={`
+                            rounded-full
+                            border
+                            px-2 py-1
+                            text-[9px]
+                            font-bold
+                            ${status.className}
+                          `}
+                        >
+                          {status.label}
+                        </span>
+
+                        <span
+                          className="
+                            text-[10px]
+                            font-bold
+                            text-blue-600
+                          "
+                        >
+                          {getHistoryAmount(
+                            order
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <ChevronRight
+                      size={17}
+                      className="
+                        shrink-0
+                        text-blue-300
+                      "
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+          }
 // =====================================================
 // MAIN STORE
 // =====================================================
@@ -811,11 +1334,15 @@ function GameList({
 export default function Store() {
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [search, setSearch] =
+    useState('');
+
+  const [activeTab, setActiveTab] =
+    useState('all');
 
   const filteredGames = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword =
+      search.trim().toLowerCase();
 
     return GAMES.filter((game) => {
       const matchesCategory =
@@ -824,25 +1351,37 @@ export default function Store() {
 
       const matchesSearch =
         !keyword ||
-        game.name.toLowerCase().includes(keyword);
+        game.name
+          .toLowerCase()
+          .includes(keyword);
 
-      return matchesCategory && matchesSearch;
+      return (
+        matchesCategory &&
+        matchesSearch
+      );
     });
   }, [search, activeTab]);
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc]">
+    <div
+      className="
+        min-h-screen
+        bg-[#f7f9fc]
+      "
+    >
       <TopHeader />
 
       <StoreHeader
-  search={search}
-  setSearch={setSearch}
-  navigate={navigate}
-/>
+        search={search}
+        setSearch={setSearch}
+        navigate={navigate}
+      />
 
       <Banner />
 
-      <Recommended navigate={navigate} />
+      <Recommended
+        navigate={navigate}
+      />
 
       <Benefits />
 
@@ -853,7 +1392,13 @@ export default function Store() {
         navigate={navigate}
       />
 
+      {/* ============================================
+          LỊCH SỬ GIAO DỊCH
+          Lấy cả orders + redemption_orders
+          ============================================ */}
+      <StoreHistoryPreview />
+
       <BottomNav />
     </div>
   );
-              }
+}
