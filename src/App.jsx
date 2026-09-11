@@ -118,7 +118,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/store/play-together" element={<PlayTogether />} />.   
+        <Route
+  path="/store/play-together"
+  element={
+    <ProtectedRoute>
+      <PlayTogether />
+    </ProtectedRoute>
+  }
+/>  
         <Route path="/link-history" element={<LinkHistory />} />
         <Route path="/refund-history" element={<RefundHistoryPage />} />
 
