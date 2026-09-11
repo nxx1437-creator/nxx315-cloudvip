@@ -125,37 +125,6 @@ const GAMES = [
 ];
 
 // =====================================================
-// BENEFITS
-// =====================================================
-
-const BENEFITS = [
-  {
-    id: 1,
-    icon: Gift,
-    title: 'Ưu đãi',
-    text: 'Nhiều ưu đãi',
-  },
-  {
-    id: 2,
-    icon: Trophy,
-    title: 'Độc quyền',
-    text: 'Vật phẩm hot',
-  },
-  {
-    id: 3,
-    icon: CreditCard,
-    title: 'An toàn',
-    text: 'Thanh toán nhanh',
-  },
-  {
-    id: 4,
-    icon: Percent,
-    title: 'Giá tốt',
-    text: 'Tiết kiệm hơn',
-  },
-];
-
-// =====================================================
 // IMAGE FALLBACK
 // =====================================================
 
@@ -556,63 +525,6 @@ function Recommended({ navigate }) {
                 </div>
               </div>
             </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// =====================================================
-// BENEFITS
-// =====================================================
-
-function Benefits() {
-  return (
-    <section className="px-4 pt-6">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="text-base font-extrabold text-gray-900 mb-3">
-          Vì sao nên nạp tại NXX315 Studio Rewards?
-        </h2>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {BENEFITS.map(({ id, icon: Icon, title, text }) => (
-            <div
-              key={id}
-              className="
-                bg-white
-                border border-gray-100
-                rounded-2xl
-                p-3
-                flex items-center gap-3
-                shadow-sm
-              "
-            >
-              <div
-                className="
-                  w-9 h-9
-                  rounded-xl
-                  bg-blue-50
-                  flex items-center justify-center
-                  shrink-0
-                "
-              >
-                <Icon
-                  size={17}
-                  className="text-blue-500"
-                />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold text-gray-800">
-                  {title}
-                </p>
-
-                <p className="text-[9px] text-gray-400 truncate">
-                  {text}
-                </p>
-              </div>
-            </div>
           ))}
         </div>
       </div>
