@@ -79,48 +79,27 @@ const GAMES = [
     category: 'pc',
     logo: 'valorant.png',
     path: '/store/valorant',
-  },
+  }
   {
     id: 7,
-    name: 'Liên Minh Huyền Thoại',
-    category: 'pc',
-    logo: 'lien-minh-huyen-thoai.png',
-    path: '/store/lien-minh-huyen-thoai',
-  },
-  {
-    id: 8,
-    name: 'Tốc Chiến',
-    category: 'mobile',
-    logo: 'toc-chien.png',
-    path: '/store/toc-chien',
-  },
-  {
-    id: 9,
     name: 'ZingSpeed Mobile',
     category: 'mobile',
     logo: 'zing-speed-mobile.png',
     path: '/store/zing-speed',
   },
   {
-    id: 10,
+    id: 8,
     name: 'FC Online',
     category: 'pc',
     logo: 'fc-online.png',
     path: '/store/fc-online',
   },
   {
-    id: 11,
+    id: 9,
     name: 'Minecraft',
     category: 'pc',
     logo: 'minecraft.png',
     path: '/store/minecraft',
-  },
-  {
-    id: 12,
-    name: 'Among Us',
-    category: 'mobile',
-    logo: 'among-us.png',
-    path: '/store/among-us',
   },
 ];
 
