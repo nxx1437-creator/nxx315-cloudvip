@@ -531,6 +531,7 @@ function UsernameSection({
   );
                 }
   function PaymentSection({ order, onBack, onPaid }) {
+  const navigate = useNavigate();
   const [method, setMethod] = useState("coin");
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
