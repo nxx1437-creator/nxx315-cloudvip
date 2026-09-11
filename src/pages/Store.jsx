@@ -96,9 +96,9 @@ const GAMES = [
   },
   {
     id: 9,
-    name: 'Minecraft',
+    name: 'Cloud Song',
     category: 'pc',
-    logo: 'minecraft.png',
+    logo: 'cloud-song.png',
     path: '/store/minecraft',
   },
   {
