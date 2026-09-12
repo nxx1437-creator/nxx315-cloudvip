@@ -715,43 +715,91 @@ function UsernameSection({
     );
   };
 
-  const handleCoinPayment = async () => {
-    if (!enoughCoins) {
-      alert(
-        `Bạn không đủ Coin.\n\n` +
-          `Cần: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Hiện có: ${coinBalance.toLocaleString("vi-VN")} Coin`
-      );
-      return;
+const handleCoinPayment = async () => {
+  if (!selectedPackage) {
+    alert("Vui lòng chọn gói Robux.");
+    return;
+  }
+
+  if (!robloxUserId) {
+    alert("Vui lòng nhập Roblox ID.");
+    return;
+  }
+
+  if (!user) {
+    alert("Vui lòng đăng nhập.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // Tạo đơn trước
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        user_id: user.id,
+        roblox_user_id: Number(robloxUserId),
+        roblox_username: robloxUsername?.trim() || "",
+        roblox_display_name: robloxDisplayName?.trim() || null,
+        package_id: selectedPackage.id,
+        robux: selectedPackage.robux,
+        amount: selectedPackage.amount,
+        payment_method: null,
+        status: "pending",
+        note: null,
+      })
+      .select("*")
+      .single();
+
+    if (orderError) {
+      console.error("Create order error:", orderError);
+      throw new Error("Không thể tạo đơn hàng.");
     }
 
-    const ok = window.confirm(
-      `Bạn có chắc muốn dùng ${requiredCoins.toLocaleString(
-        "vi-VN"
-      )} Coin để thanh toán đơn này?`
+    // Thanh toán Coin bằng RPC
+    const { data: paymentResult, error: paymentError } = await supabase
+      .rpc("pay_roblox_order_with_coins", {
+        p_order_id: order.id,
+      });
+
+    if (paymentError) {
+      console.error("Coin payment error:", paymentError);
+
+      if (
+        paymentError.message?.includes("INSUFFICIENT_COINS")
+      ) {
+        throw new Error("Không đủ Coin để thanh toán.");
+      }
+
+      if (
+        paymentError.message?.includes("ORDER_NOT_PENDING")
+      ) {
+        throw new Error("Đơn hàng này đã được thanh toán.");
+      }
+
+      throw new Error("Thanh toán bằng Coin thất bại.");
+    }
+
+    console.log("Coin payment success:", paymentResult);
+
+    alert(
+      `Thanh toán thành công!\n\n` +
+      `Đơn: ${order.order_code}\n` +
+      `Robux: ${selectedPackage.robux} RB\n` +
+      `Đã trừ: ${selectedPackage.amount.toLocaleString()} Coin`
     );
 
-    if (!ok) return;
+    // Chuyển sang lịch sử
+    navigate("/history");
 
-    setProcessing(true);
-
-    try {
-      /*
-       * QUAN TRỌNG:
-       * Chỗ này chưa tự trừ Coin ở frontend.
-       *
-       * Cần dùng RPC / Edge Function để trừ Coin an toàn.
-       */
-
-      alert(
-        "Phần thanh toán bằng Coin đã sẵn sàng giao diện.\n\n" +
-          "Cần nối RPC/Edge Function để trừ Coin an toàn."
-      );
-    } finally {
-      setProcessing(false);
-    }
-  };
-
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Có lỗi xảy ra.");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleConfirmTransfer = async () => {
     if (!order?.id || order.status !== "pending") return;
 
