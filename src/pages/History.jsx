@@ -11,7 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
+import { supabase } from "./lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader";
 import BottomNav from "../components/BottomNav";
 
