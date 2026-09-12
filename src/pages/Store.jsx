@@ -84,16 +84,16 @@ const GAMES = [
   {
     id: 7,
     name: 'OMG 3Q',
-    category: 'pc',
+    category: 'mobile',
     logo: 'omg-3q.png',
     path: '/store/omg-3q',
   },
   {
     id: 8,
-    name: 'Tốc Chiến',
+    name: 'Delta Force',
     category: 'mobile',
-    logo: 'toc-chien.png',
-    path: '/store/toc-chien',
+    logo: 'Delta.png',
+    path: '/store/Delta-Force',
   },
   {
     id: 9,
