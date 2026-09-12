@@ -109,20 +109,6 @@ const GAMES = [
     logo: 'fc-online.png',
     path: '/store/fc-online',
   },
-  {
-    id: 11,
-    name: 'Minecraft',
-    category: 'pc',
-    logo: 'minecraft.png',
-    path: '/store/minecraft',
-  },
-  {
-    id: 12,
-    name: 'Among Us',
-    category: 'mobile',
-    logo: 'among-us.png',
-    path: '/store/among-us',
-  },
 ];
 
 // =====================================================
