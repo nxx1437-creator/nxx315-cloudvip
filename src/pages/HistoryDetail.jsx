@@ -249,13 +249,27 @@ export default function HistoryDetail() {
       ? `${order.robux} Robux`
       : "Giao dịch");
 
-  const image =
-    order?.image_url ||
-    order?.package_image ||
-    order?.product_image ||
-    order?.logo_url ||
-    pkg?.image_url ||
-    null;
+  const PACKAGE_IMAGES = {
+  "card-400":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-400.png",
+
+  "vng-40":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-40.png",
+
+  "vng-80":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-80.png",
+
+  "vng-500":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
+};
+
+const image =
+  order?.image_url ||
+  order?.package_image ||
+  order?.product_image ||
+  order?.logo_url ||
+  PACKAGE_IMAGES[order?.package_id] ||
+  null;
 
   const coin =
     order?.coin_cost ??
