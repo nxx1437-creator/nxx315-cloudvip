@@ -139,7 +139,6 @@ export default function HistoryDetail() {
       console.log("URL ID:", id);
       console.log("USER ID:", user.id);
       console.log("SOURCE:", source);
-      alert(`URL ID: ${id}\nUSER ID: ${user.id}\nSOURCE: ${source}`);
       
       const tables = source
         ? [source]
