@@ -30,7 +30,7 @@ import {
 import { supabase } from "../lib/supabaseClient";
 import emailjs from "@emailjs/browser";
 import BanUserModal from "../components/BanUserModal";
-import RobloxOrdersTab from "../components/RobloxOrdersTab";
+import RobloxOrdersTab from "../pages/RobloxOrdersTab";
 
 const ADMIN_CHAT_ID = "6152450878";
 
