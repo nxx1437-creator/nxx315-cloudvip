@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+
 import {
   ArrowLeft,
   CheckCircle2,
@@ -50,7 +55,18 @@ const fmtDate = (value) => {
 function getStatus(status) {
   const key = String(status || "").toLowerCase();
 
-  if (["success", "completed", "delivered"].includes(key)) {
+  if (key === "delivered") {
+    return {
+      text: "Đã giao",
+      Icon: CheckCircle2,
+      className:
+        "bg-emerald-50 border-emerald-100 text-emerald-600",
+    };
+  }
+
+  if (
+    ["success", "completed", "done"].includes(key)
+  ) {
     return {
       text: "Hoàn thành",
       Icon: CheckCircle2,
@@ -59,7 +75,18 @@ function getStatus(status) {
     };
   }
 
-  if (["cancelled", "canceled"].includes(key)) {
+  if (key === "rejected") {
+    return {
+      text: "Đã từ chối",
+      Icon: XCircle,
+      className:
+        "bg-rose-50 border-rose-100 text-rose-500",
+    };
+  }
+
+  if (
+    ["cancelled", "canceled"].includes(key)
+  ) {
     return {
       text: "Đã hủy",
       Icon: XCircle,
@@ -68,21 +95,32 @@ function getStatus(status) {
     };
   }
 
-  if (["failed", "rejected"].includes(key)) {
+  if (key === "failed") {
     return {
-      text: key === "failed" ? "Thất bại" : "Đã từ chối",
+      text: "Thất bại",
       Icon: XCircle,
       className:
         "bg-rose-50 border-rose-100 text-rose-500",
     };
   }
 
-  if (["paid", "processing"].includes(key)) {
+  if (
+    ["paid", "processing"].includes(key)
+  ) {
     return {
       text: "Đang kiểm tra",
       Icon: Clock3,
       className:
         "bg-blue-50 border-blue-100 text-blue-600",
+    };
+  }
+
+  if (key === "pending") {
+    return {
+      text: "Chờ thanh toán",
+      Icon: Clock3,
+      className:
+        "bg-amber-50 border-amber-100 text-amber-600",
     };
   }
 
@@ -94,12 +132,23 @@ function getStatus(status) {
   };
 }
 
-function InfoRow({ label, value, copyable = false }) {
+function InfoRow({
+  label,
+  value,
+  copyable = false,
+}) {
   const handleCopy = async () => {
-    if (value === null || value === undefined) return;
+    if (
+      value === null ||
+      value === undefined
+    ) {
+      return;
+    }
 
     try {
-      await navigator.clipboard.writeText(String(value));
+      await navigator.clipboard.writeText(
+        String(value)
+      );
     } catch (error) {
       console.error("Copy error:", error);
     }
@@ -132,6 +181,7 @@ function InfoRow({ label, value, copyable = false }) {
     </div>
   );
 }
+
 function Skeleton({ className = "" }) {
   return (
     <div
@@ -143,12 +193,10 @@ function Skeleton({ className = "" }) {
 function HistoryDetailSkeleton() {
   return (
     <div className="space-y-3">
-      {/* Trạng thái tiến trình */}
       <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-center gap-5">
           <div className="flex flex-col items-center gap-2">
             <Skeleton className="h-12 w-12 rounded-2xl" />
-
             <Skeleton className="h-3 w-12" />
           </div>
 
@@ -156,79 +204,64 @@ function HistoryDetailSkeleton() {
 
           <div className="flex flex-col items-center gap-2">
             <Skeleton className="h-12 w-12 rounded-2xl" />
-
             <Skeleton className="h-3 w-16" />
           </div>
         </div>
       </section>
 
-      {/* Thông tin sản phẩm */}
       <section className="overflow-hidden rounded-3xl border border-blue-50 bg-white shadow-sm">
         <div className="flex items-center gap-4 p-5">
-          {/* Ảnh */}
           <Skeleton className="h-24 w-24 shrink-0 rounded-2xl" />
 
           <div className="min-w-0 flex-1 space-y-3">
-            {/* Đơn hàng */}
             <Skeleton className="h-2.5 w-14" />
-
-            {/* Tên */}
             <Skeleton className="h-5 w-32 rounded-md" />
-
-            {/* Robux */}
             <Skeleton className="h-3.5 w-24" />
-
-            {/* Phương thức */}
             <Skeleton className="h-3 w-20" />
           </div>
         </div>
 
-        {/* Trạng thái */}
         <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4">
           <Skeleton className="h-3 w-14" />
-
           <Skeleton className="h-6 w-24 rounded-full" />
         </div>
       </section>
 
-      {/* Thông tin đơn hàng */}
       <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <Skeleton className="h-4 w-4 rounded" />
-
           <Skeleton className="h-4 w-32" />
         </div>
 
-        {Array.from({ length: 9 }).map((_, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between gap-4 border-b border-slate-100 py-3 last:border-0"
-          >
-            <Skeleton className="h-3 w-16" />
+        {Array.from({ length: 9 }).map(
+          (_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-4 border-b border-slate-100 py-3 last:border-0"
+            >
+              <Skeleton className="h-3 w-16" />
 
-            <Skeleton
-              className={`h-3 ${
-                index % 3 === 0
-                  ? "w-28"
-                  : index % 3 === 1
-                  ? "w-36"
-                  : "w-20"
-              }`}
-            />
-          </div>
-        ))}
+              <Skeleton
+                className={`h-3 ${
+                  index % 3 === 0
+                    ? "w-28"
+                    : index % 3 === 1
+                    ? "w-36"
+                    : "w-20"
+                }`}
+              />
+            </div>
+          )
+        )}
       </section>
 
-      {/* Box trạng thái */}
       <section className="rounded-3xl border border-blue-50 bg-blue-50 p-5">
         <div className="flex items-start gap-3">
           <Skeleton className="h-10 w-10 shrink-0 rounded-xl bg-white" />
 
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-40 bg-white" />
-
             <Skeleton className="h-3 w-full bg-white" />
-
             <Skeleton className="h-3 w-4/5 bg-white" />
           </div>
         </div>
@@ -317,6 +350,7 @@ export default function HistoryDetail() {
         setError(
           `Không tìm thấy đơn hàng #${id} của tài khoản hiện tại.`
         );
+
         return;
       }
 
@@ -328,13 +362,6 @@ export default function HistoryDetail() {
         __source: foundTable,
       });
 
-      /*
-       * Chỉ thử lấy package nếu package_id là UUID.
-       *
-       * Với các đơn Roblox hiện tại:
-       * card-400 / vng-40 / vng-80 / vng-500
-       * không phải UUID nên bỏ qua.
-       */
       if (
         foundOrder.package_id &&
         /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -362,7 +389,10 @@ export default function HistoryDetail() {
         setPkg(null);
       }
     } catch (err) {
-      console.error("HistoryDetail error:", err);
+      console.error(
+        "HistoryDetail error:",
+        err
+      );
 
       setError(
         err?.message ||
@@ -376,8 +406,13 @@ export default function HistoryDetail() {
   useEffect(() => {
     loadOrder();
   }, [id, source]);
-    const status = getStatus(order?.status);
+
+  const status = getStatus(order?.status);
   const StatusIcon = status.Icon;
+
+  const statusKey = String(
+    order?.status || ""
+  ).toLowerCase();
 
   const name =
     order?.package_name ||
@@ -428,14 +463,13 @@ export default function HistoryDetail() {
       : order?.payment_method === "coins"
       ? "Thanh toán bằng xu"
       : order?.payment_method || null;
-
-  return (
+    return (
     <div className="min-h-screen bg-[#f7faff] pb-28 text-slate-900">
       <TopHeader />
 
       <main className="px-4 pt-5">
         <div className="mx-auto max-w-2xl">
-          {/* Quay lại */}
+          {/* QUAY LẠI */}
           <button
             type="button"
             onClick={() => navigate("/history")}
@@ -485,6 +519,7 @@ export default function HistoryDetail() {
               {/* PROCESS */}
               <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-center gap-5">
+                  {/* ĐẶT HÀNG */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
                       <CheckCircle2 size={23} />
@@ -497,6 +532,7 @@ export default function HistoryDetail() {
 
                   <div className="h-px w-14 bg-blue-100" />
 
+                  {/* TRẠNG THÁI */}
                   <div className="flex flex-col items-center gap-2">
                     <div
                       className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${status.className}`}
@@ -514,12 +550,11 @@ export default function HistoryDetail() {
               {/* PRODUCT */}
               <section className="mt-3 overflow-hidden rounded-3xl border border-blue-50 bg-white shadow-sm">
                 <div className="flex items-center gap-4 p-5">
-                  {/* IMAGE */}
                   <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-blue-50 bg-blue-50">
                     {image ? (
                       <img
                         src={image}
-                        alt=""
+                        alt={name}
                         className="h-full w-full object-cover"
                         onError={(event) => {
                           event.currentTarget.style.display =
@@ -536,7 +571,6 @@ export default function HistoryDetail() {
                     )}
                   </div>
 
-                  {/* PRODUCT INFO */}
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
                       Đơn hàng
@@ -563,13 +597,13 @@ export default function HistoryDetail() {
 
                     {order.delivery_method && (
                       <p className="mt-1 text-xs text-slate-400">
-                        Giao: {order.delivery_method}
+                        Giao:{" "}
+                        {order.delivery_method}
                       </p>
                     )}
                   </div>
                 </div>
 
-                {/* STATUS */}
                 <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-4">
                   <span className="text-xs text-slate-400">
                     Trạng thái
@@ -617,7 +651,9 @@ export default function HistoryDetail() {
 
                 <InfoRow
                   label="Thời gian"
-                  value={fmtDate(order.created_at)}
+                  value={fmtDate(
+                    order.created_at
+                  )}
                 />
 
                 <InfoRow
@@ -630,7 +666,9 @@ export default function HistoryDetail() {
                     label="Robux"
                     value={`${Number(
                       order.robux
-                    ).toLocaleString("vi-VN")} Robux`}
+                    ).toLocaleString(
+                      "vi-VN"
+                    )} Robux`}
                   />
                 )}
 
@@ -639,7 +677,9 @@ export default function HistoryDetail() {
                     label="Số xu"
                     value={`${Number(
                       coin
-                    ).toLocaleString("vi-VN")} xu`}
+                    ).toLocaleString(
+                      "vi-VN"
+                    )} xu`}
                   />
                 )}
 
@@ -648,7 +688,9 @@ export default function HistoryDetail() {
                     label="Số tiền"
                     value={`${Number(
                       money
-                    ).toLocaleString("vi-VN")}đ`}
+                    ).toLocaleString(
+                      "vi-VN"
+                    )}đ`}
                   />
                 )}
 
@@ -658,7 +700,8 @@ export default function HistoryDetail() {
                     value={paymentMethod}
                   />
                 )}
-                                {order.roblox_username && (
+
+                {order.roblox_username && (
                   <InfoRow
                     label="Roblox"
                     value={`@${order.roblox_username}`}
@@ -676,7 +719,9 @@ export default function HistoryDetail() {
                 {order.roblox_display_name && (
                   <InfoRow
                     label="Display Name"
-                    value={order.roblox_display_name}
+                    value={
+                      order.roblox_display_name
+                    }
                   />
                 )}
 
@@ -691,21 +736,25 @@ export default function HistoryDetail() {
                 {order.delivery_target && (
                   <InfoRow
                     label="Thông tin nhận"
-                    value={order.delivery_target}
+                    value={
+                      order.delivery_target
+                    }
                   />
                 )}
 
-                {order.note && (
-                  <InfoRow
-                    label="Ghi chú"
-                    value={order.note}
-                  />
-                )}
+                {/* GHI CHÚ THƯỜNG */}
+                {order.note &&
+                  statusKey !== "rejected" && (
+                    <InfoRow
+                      label="Ghi chú"
+                      value={order.note}
+                    />
+                  )}
               </section>
 
-              {/* PAID / PROCESSING */}
+              {/* ĐANG KIỂM TRA */}
               {["paid", "processing"].includes(
-                String(order.status || "").toLowerCase()
+                statusKey
               ) && (
                 <section className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-5">
                   <div className="flex items-start gap-3">
@@ -719,18 +768,18 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-blue-600">
-                        Hệ thống đang chờ kiểm tra giao dịch.
-                        Khi thanh toán được xác nhận,
-                        trạng thái đơn sẽ được cập nhật.
+                        Hệ thống đang chờ kiểm tra
+                        giao dịch. Khi thanh toán
+                        được xác nhận, trạng thái
+                        đơn sẽ được cập nhật.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* PENDING */}
-              {String(order.status || "").toLowerCase() ===
-                "pending" && (
+              {/* CHỜ THANH TOÁN */}
+              {statusKey === "pending" && (
                 <section className="mt-3 rounded-3xl border border-amber-100 bg-amber-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-500">
@@ -743,19 +792,56 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-amber-600">
-                        Đơn hàng đang chờ thanh toán.
-                        Hãy hoàn tất thanh toán theo hướng
-                        dẫn của đơn hàng.
+                        Đơn hàng đang chờ thanh
+                        toán. Hãy hoàn tất thanh
+                        toán theo hướng dẫn của
+                        đơn hàng.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* FAILED */}
-              {["failed", "rejected", "cancelled", "canceled"].includes(
-                String(order.status || "").toLowerCase()
-              ) && (
+              {/* TỪ CHỐI */}
+              {statusKey === "rejected" && (
+                <section className="mt-3 rounded-3xl border border-rose-100 bg-rose-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-500">
+                      <XCircle size={20} />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-rose-700">
+                        Đơn hàng đã bị từ chối
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-rose-600">
+                        Quản trị viên đã từ chối
+                        giao dịch này.
+                      </p>
+
+                      {order.note && (
+                        <div className="mt-3 rounded-2xl border border-rose-200 bg-white p-3">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-rose-500">
+                            Lý do từ chối
+                          </p>
+
+                          <p className="mt-1 whitespace-pre-wrap break-words text-sm font-bold leading-6 text-rose-800">
+                            {order.note}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* FAILED / CANCELLED */}
+              {[
+                "failed",
+                "cancelled",
+                "canceled",
+              ].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-rose-100 bg-rose-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-500">
@@ -768,19 +854,45 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-rose-600">
-                        Giao dịch này hiện không thể tiếp tục.
-                        Nếu mày cho rằng đây là lỗi, hãy liên hệ
-                        quản trị viên.
+                        Giao dịch này hiện không
+                        thể tiếp tục. Nếu mày cho
+                        rằng đây là lỗi, hãy liên
+                        hệ quản trị viên.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* SUCCESS */}
-              {["success", "completed", "delivered"].includes(
-                String(order.status || "").toLowerCase()
-              ) && (
+              {/* ĐÃ GIAO */}
+              {statusKey === "delivered" && (
+                <section className="mt-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-500">
+                      <CheckCircle2 size={20} />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-black text-emerald-700">
+                        Đơn hàng đã giao
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-emerald-600">
+                        Đơn hàng đã được quản trị
+                        viên xác nhận giao thành
+                        công.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* HOÀN THÀNH */}
+              {[
+                "success",
+                "completed",
+                "done",
+              ].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-500">
@@ -793,7 +905,8 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-emerald-600">
-                        Giao dịch đã được xác nhận thành công.
+                        Giao dịch đã được xác nhận
+                        thành công.
                       </p>
                     </div>
                   </div>
@@ -807,4 +920,4 @@ export default function HistoryDetail() {
       <BottomNav />
     </div>
   );
-                    }
+          }
