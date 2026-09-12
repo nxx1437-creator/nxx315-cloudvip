@@ -1,1089 +1,697 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  CheckCircle2,
-  ChevronRight,
   Clock3,
-  Copy,
-  Gift,
-  Loader2,
-  Wallet,
+  CheckCircle2,
   XCircle,
+  PackageCheck,
+  CreditCard,
+  Coins,
+  RefreshCw,
 } from "lucide-react";
 
-import { supabase } from "../lib/supabaseClient.js";
-import TopHeader from "../components/TopHeader.jsx";
-import BottomNav from "../components/BottomNav.jsx";
+import { supabase } from "../lib/supabase";
+import TopHeader from "../components/TopHeader";
+import BottomNav from "../components/BottomNav";
 
-const SUPABASE_STORAGE =
-  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/";
+const statusInfo = (status) => {
+  switch (status) {
+    case "pending":
+      return {
+        label: "Chờ thanh toán",
+        icon: Clock3,
+        className: "text-amber-600 bg-amber-50",
+      };
 
-const ROBLOX_IMAGES = {
-  40: `${SUPABASE_STORAGE}roblox-40.png`,
-  80: `${SUPABASE_STORAGE}roblox-80.png`,
-  400: `${SUPABASE_STORAGE}roblox-400.png`,
-  500: `${SUPABASE_STORAGE}roblox-500.png`,
+    case "paid":
+      return {
+        label: "Đang kiểm tra",
+        icon: CreditCard,
+        className: "text-blue-600 bg-blue-50",
+      };
+
+    case "processing":
+      return {
+        label: "Đang xử lý",
+        icon: RefreshCw,
+        className: "text-indigo-600 bg-indigo-50",
+      };
+
+    case "delivered":
+      return {
+        label: "Đã giao",
+        icon: CheckCircle2,
+        className: "text-emerald-600 bg-emerald-50",
+      };
+
+    case "rejected":
+      return {
+        label: "Đã từ chối",
+        icon: XCircle,
+        className: "text-red-600 bg-red-50",
+      };
+
+    case "cancelled":
+    case "canceled":
+      return {
+        label: "Đã hủy",
+        icon: XCircle,
+        className: "text-gray-600 bg-gray-100",
+      };
+
+    case "failed":
+      return {
+        label: "Thất bại",
+        icon: XCircle,
+        className: "text-red-600 bg-red-50",
+      };
+
+    default:
+      return {
+        label: "Đang xử lý",
+        icon: RefreshCw,
+        className: "text-indigo-600 bg-indigo-50",
+      };
+  }
 };
 
-function formatDate(value) {
+const formatMoney = (value) => {
+  const number = Number(value || 0);
+  return `${number.toLocaleString("vi-VN")}đ`;
+};
+
+const formatDate = (value) => {
   if (!value) return "—";
 
-  return new Date(value).toLocaleString(
-    "vi-VN",
-    {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }
-  );
-}
+  try {
+    return new Date(value).toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return value;
+  }
+};
 
-function formatMoney(value) {
-  if (value == null || value === "") {
-    return "—";
+const getOrderAmount = (order) => {
+  if (order?.amount != null) return order.amount;
+  if (order?.price != null) return order.price;
+  if (order?.coin_cost != null) return order.coin_cost;
+  return 0;
+};
+
+const getOrderTitle = (order) => {
+  if (order?.robux != null) {
+    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
   }
 
-  return `${Number(value).toLocaleString(
-    "vi-VN"
-  )}đ`;
-}
+  if (order?.package_name) return order.package_name;
+  if (order?.title) return order.title;
 
-function formatCoins(value) {
-  if (value == null || value === "") {
-    return "—";
-  }
+  return order?.type === "redemption"
+    ? "Đổi thưởng"
+    : "Đơn hàng";
+};
 
-  return `${Number(value).toLocaleString(
-    "vi-VN"
-  )} xu`;
-}
-
-/*
- * TRẠNG THÁI
- */
-function statusInfo(status) {
-  const key = String(
-    status || ""
-  ).toLowerCase();
-
-  if (key === "delivered") {
-    return {
-      label: "Đã giao",
-      className:
-        "bg-emerald-50 text-emerald-700 border-emerald-100",
-      icon: CheckCircle2,
-    };
-  }
-
-  if (
-    ["completed", "success", "done"].includes(
-      key
-    )
-  ) {
-    return {
-      label: "Hoàn thành",
-      className:
-        "bg-emerald-50 text-emerald-700 border-emerald-100",
-      icon: CheckCircle2,
-    };
-  }
-
-  if (key === "paid") {
-    return {
-      label: "Đang kiểm tra",
-      className:
-        "bg-blue-50 text-blue-700 border-blue-100",
-      icon: Clock3,
-    };
-  }
-
-  if (key === "processing") {
-    return {
-      label: "Đang xử lý",
-      className:
-        "bg-purple-50 text-purple-700 border-purple-100",
-      icon: Clock3,
-    };
-  }
-
-  if (key === "pending") {
-    return {
-      label: "Chờ thanh toán",
-      className:
-        "bg-amber-50 text-amber-700 border-amber-100",
-      icon: Clock3,
-    };
-  }
-
-  if (key === "rejected") {
-    return {
-      label: "Đã từ chối",
-      className:
-        "bg-rose-50 text-rose-700 border-rose-100",
-      icon: XCircle,
-    };
-  }
-
-  if (
-    ["cancelled", "canceled"].includes(
-      key
-    )
-  ) {
-    return {
-      label: "Đã hủy",
-      className:
-        "bg-rose-50 text-rose-700 border-rose-100",
-      icon: XCircle,
-    };
-  }
-
-  if (key === "failed") {
-    return {
-      label: "Thất bại",
-      className:
-        "bg-rose-50 text-rose-700 border-rose-100",
-      icon: XCircle,
-    };
-  }
-
-  return {
-    label: "Đang xử lý",
-    className:
-      "bg-sky-50 text-sky-700 border-sky-100",
-    icon: Loader2,
-  };
-}
-
-function normalizeHistory(
-  rows,
-  type
-) {
-  return (rows || []).map((row) => ({
-    ...row,
-    history_type: type,
-  }));
-}
-
-function getImage(order) {
-  if (order?.image_url) {
-    return order.image_url;
-  }
-
-  if (order?.product_image) {
-    return order.product_image;
-  }
-
-  if (order?.package_image) {
-    return order.package_image;
-  }
-
-  if (
-    order?.history_type === "order"
-  ) {
-    return (
-      ROBLOX_IMAGES[
-        Number(order?.robux)
-      ] || ""
-    );
-  }
-
-  return "";
-}
-
-function getName(order) {
-  if (
-    order?.history_type === "order"
-  ) {
-    return order?.robux
-      ? `${Number(
-          order.robux
-        ).toLocaleString(
-          "vi-VN"
-        )} Robux`
-      : order?.package_name ||
-        "Đơn Roblox";
-  }
-
-  return (
-    order?.package_name ||
-    "Đơn đổi thưởng"
-  );
-}
-
-export default function HistoryPage() {
+export default function History() {
   const navigate = useNavigate();
-
   const { id } = useParams();
 
-  const [history, setHistory] =
-    useState([]);
+  const [history, setHistory] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [selected, setSelected] =
-    useState(null);
+  const selectedSource = useMemo(() => {
+    if (!selected) return null;
+    return selected._source;
+  }, [selected]);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [copied, setCopied] =
-    useState("");
-
-  /*
-   * TẢI LỊCH SỬ
-   */
-  const loadHistory = async (
-    showLoading = false
-  ) => {
+  const loadHistory = async (showLoading = false) => {
     if (showLoading) {
       setLoading(true);
     }
 
-    const {
-      data: { user },
-    } =
-      await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      setHistory([]);
-      setSelected(null);
-      setLoading(false);
-      return;
-    }
+      if (authError) {
+        throw authError;
+      }
 
-    const [
-      ordersResult,
-      redemptionResult,
-    ] = await Promise.all([
-      supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", {
-          ascending: false,
-        }),
+      if (!user) {
+        setHistory([]);
+        setSelected(null);
+        return;
+      }
 
-      supabase
-        .from("redemption_orders")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", {
-          ascending: false,
-        }),
-    ]);
+      const [ordersResult, redemptionResult] =
+        await Promise.all([
+          supabase
+            .from("orders")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", {
+              ascending: false,
+            }),
 
-    if (ordersResult.error) {
-      console.error(
-        "Lỗi tải orders:",
-        ordersResult.error
-      );
-    }
+          supabase
+            .from("redemption_orders")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", {
+              ascending: false,
+            }),
+        ]);
 
-    if (redemptionResult.error) {
-      console.error(
-        "Lỗi tải redemption_orders:",
-        redemptionResult.error
-      );
-    }
+      if (ordersResult.error) {
+        throw ordersResult.error;
+      }
 
-    const merged = [
-      ...normalizeHistory(
-        ordersResult.data,
-        "order"
-      ),
+      if (redemptionResult.error) {
+        throw redemptionResult.error;
+      }
 
-      ...normalizeHistory(
-        redemptionResult.data,
-        "redemption"
-      ),
-    ].sort(
-      (a, b) =>
-        new Date(
-          b.created_at || 0
-        ).getTime() -
-        new Date(
-          a.created_at || 0
-        ).getTime()
-    );
-
-    setHistory(merged);
-
-    if (id) {
-      const found = merged.find(
-        (item) =>
-          String(item.id) ===
-            String(id) &&
-          item.history_type ===
-            "order"
+      const normalOrders = (ordersResult.data || []).map(
+        (order) => ({
+          ...order,
+          _source: "orders",
+        })
       );
 
-      const redemptionFound =
-        merged.find(
-          (item) =>
-            String(item.id) ===
-              String(id) &&
-            item.history_type ===
-              "redemption"
+      const redemptionOrders = (
+        redemptionResult.data || []
+      ).map((order) => ({
+        ...order,
+        _source: "redemption_orders",
+      }));
+
+      const merged = [
+        ...normalOrders,
+        ...redemptionOrders,
+      ].sort(
+        (a, b) =>
+          new Date(b.created_at || 0).getTime() -
+          new Date(a.created_at || 0).getTime()
+      );
+
+      setHistory(merged);
+
+      if (id) {
+        const found = merged.find(
+          (order) =>
+            String(order.id) === String(id) &&
+            (!selectedSource ||
+              order._source === selectedSource)
         );
 
-      setSelected(
-        found ||
-          redemptionFound ||
-          null
-      );
+        if (found) {
+          setSelected(found);
+        } else if (!selected) {
+          setSelected(null);
+        }
+      }
+    } catch (error) {
+      console.error("History load error:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    setLoading(false);
   };
+    useEffect(() => {
+    loadHistory(true);
 
-  /*
-   * LOAD + REALTIME
-   */
-  useEffect(() => {
-    let alive = true;
+    const ordersChannel = supabase
+      .channel("history-orders-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+        },
+        (payload) => {
+          console.log("orders realtime:", payload);
+          loadHistory(false);
+        }
+      )
+      .subscribe();
 
-    const initialLoad =
-      async () => {
-        if (!alive) return;
+    const redemptionChannel = supabase
+      .channel("history-redemption-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "redemption_orders",
+        },
+        (payload) => {
+          console.log(
+            "redemption realtime:",
+            payload
+          );
 
-        await loadHistory(true);
-      };
+          loadHistory(false);
+        }
+      )
+      .subscribe();
 
-    initialLoad();
-
-    /*
-     * Lắng nghe thay đổi bảng orders.
-     *
-     * Khi Admin:
-     * paid -> processing
-     * processing -> delivered
-     * paid -> rejected
-     *
-     * History sẽ tự tải lại.
-     */
-    const ordersChannel =
-      supabase
-        .channel(
-          `history-orders-${Date.now()}`
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "orders",
-          },
-          async () => {
-            if (!alive) return;
-
-            await loadHistory(false);
-          }
-        )
-        .subscribe();
-
-    /*
-     * Lắng nghe redemption_orders
-     * để không làm mất realtime
-     * của phần đổi thưởng.
-     */
-    const redemptionChannel =
-      supabase
-        .channel(
-          `history-redemption-${Date.now()}`
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "redemption_orders",
-          },
-          async () => {
-            if (!alive) return;
-
-            await loadHistory(false);
-          }
-        )
-        .subscribe();
-
-    /*
-     * Fallback:
-     * Nếu Realtime chưa được bật cho bảng,
-     * cứ 15 giây kiểm tra lại một lần.
-     */
-    const interval = window.setInterval(
-      () => {
-        if (!alive) return;
-
-        loadHistory(false);
-      },
-      15000
-    );
+    const interval = setInterval(() => {
+      loadHistory(false);
+    }, 5000);
 
     return () => {
-      alive = false;
+      clearInterval(interval);
 
-      window.clearInterval(
-        interval
-      );
-
-      supabase.removeChannel(
-        ordersChannel
-      );
-
+      supabase.removeChannel(ordersChannel);
       supabase.removeChannel(
         redemptionChannel
       );
     };
   }, [id]);
 
-  /*
-   * COPY
-   */
-  const copyText = async (
-    value
-  ) => {
-    if (!value) return;
-
-    try {
-      await navigator.clipboard.writeText(
-        String(value)
-      );
-
-      setCopied(
-        String(value)
-      );
-
-      window.setTimeout(
-        () => setCopied(""),
-        1500
-      );
-    } catch {
-      // Không làm gián đoạn trang.
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadHistory(false);
   };
 
-  const title = useMemo(
-    () =>
-      selected
-        ? getName(selected)
-        : "Lịch sử giao dịch",
-    [selected]
-  );
-
-  /*
-   * LOADING
-   */
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F7FAFC] pb-24 text-slate-900">
-        <TopHeader />
-
-        <main className="mx-auto max-w-3xl px-4 py-6">
-          <div className="h-10 w-36 animate-pulse rounded-2xl bg-white" />
-
-          <div className="mt-5 h-64 animate-pulse rounded-[28px] bg-white" />
-        </main>
-
-        <BottomNav />
-      </div>
-    );
-  }
-
-  /*
-   * DETAIL
-   */
   if (id) {
-    return (
-      <HistoryDetail
-        order={selected}
-        title={title}
-        copied={copied}
-        onCopy={copyText}
-        onBack={() =>
-          navigate("/history")
-        }
-      />
-    );
-  }
+    const order = selected;
 
-  /*
-   * LIST
-   */
-  return (
-    <div className="min-h-screen bg-[#F7FAFC] pb-24 text-slate-900">
-      <TopHeader />
+    if (loading && !order) {
+      return (
+        <div className="min-h-screen bg-slate-50">
+          <TopHeader />
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-5">
-        <button
-          type="button"
-          onClick={() =>
-            navigate("/store")
-          }
-          className="mb-5 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-sm ring-1 ring-slate-100"
-        >
-          <ArrowLeft size={18} />
-          Quay lại cửa hàng
-        </button>
+          <main className="mx-auto max-w-2xl px-4 py-8">
+            <div className="animate-pulse rounded-3xl bg-white p-6 shadow-sm">
+              <div className="mb-5 h-8 w-32 rounded bg-slate-200" />
 
-        <div className="mb-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-500">
-            Giao dịch
-          </p>
+              <div className="mb-3 h-5 w-48 rounded bg-slate-200" />
 
-          <h1 className="mt-1 text-2xl font-black text-slate-900">
-            Lịch sử
-          </h1>
+              <div className="h-4 w-72 rounded bg-slate-200" />
+            </div>
+          </main>
 
-          <p className="mt-1 text-sm text-slate-400">
-            Tất cả đơn hàng và giao dịch
-            của bạn.
-          </p>
+          <BottomNav />
         </div>
+      );
+    }
 
-        {!history.length ? (
-          <EmptyHistory />
-        ) : (
-          <div className="space-y-3">
-            {history.map(
-              (order) => {
-                const status =
-                  statusInfo(
-                    order.status
-                  );
+    if (!order) {
+      return (
+        <div className="min-h-screen bg-slate-50">
+          <TopHeader />
 
-                const StatusIcon =
-                  status.icon;
+          <main className="mx-auto max-w-2xl px-4 py-8">
+            <button
+              onClick={() => navigate("/history")}
+              className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-700"
+            >
+              <ArrowLeft size={18} />
+              Quay lại lịch sử
+            </button>
 
-                const image =
-                  getImage(order);
+            <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
+              <PackageCheck
+                className="mx-auto mb-3 text-slate-400"
+                size={42}
+              />
 
-                return (
-                  <button
-                    key={`${order.history_type}-${order.id}`}
-                    type="button"
-                    onClick={() =>
-                      navigate(
-                        `/history/order/${order.id}?source=${order.history_type === "order" ? "orders" : "redemption_orders"}`
-                      )
-                    }
-                    className="w-full rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-sky-50">
-                        {image ? (
-                          <img
-                            src={image}
-                            alt={getName(
-                              order
-                            )}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <Gift
-                              size={25}
-                              className="text-sky-400"
-                            />
-                          </div>
-                        )}
-                      </div>
+              <h1 className="text-lg font-bold text-slate-900">
+                Không tìm thấy đơn hàng
+              </h1>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-black text-slate-900">
-                          {getName(
-                            order
-                          )}
-                        </p>
+              <p className="mt-2 text-sm text-slate-500">
+                Đơn hàng có thể không tồn tại hoặc
+                không thuộc tài khoản này.
+              </p>
+            </div>
+          </main>
 
-                        <p className="mt-1 text-[11px] text-slate-400">
-                          {formatDate(
-                            order.created_at
-                          )}
-                        </p>
+          <BottomNav />
+        </div>
+      );
+    }
 
-                        <div className="mt-2 flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${status.className}`}
-                          >
-                            <StatusIcon
-                              size={11}
-                            />
+    const status = statusInfo(order.status);
+    const StatusIcon = status.icon;
 
-                            {
-                              status.label
-                            }
-                          </span>
-
-                          <span className="text-xs font-black text-sky-600">
-                            {order.history_type ===
-                            "order"
-                              ? formatMoney(
-                                  order.amount
-                                )
-                              : formatCoins(
-                                  order.coin_cost
-                                )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <ChevronRight
-                        size={19}
-                        className="shrink-0 text-slate-300"
-                      />
-                    </div>
-                  </button>
-                );
-              }
-            )}
-          </div>
-        )}
-      </main>
-
-      <BottomNav />
-    </div>
-  );
-}
-
-/*
- * CHI TIẾT
- */
-function HistoryDetail({
-  order,
-  title,
-  copied,
-  onCopy,
-  onBack,
-}) {
-  if (!order) {
     return (
-      <div className="min-h-screen bg-[#F7FAFC] pb-24 text-slate-900">
+      <div className="min-h-screen bg-slate-50 pb-24">
         <TopHeader />
 
-        <main className="mx-auto max-w-2xl px-4 py-6">
-          <div className="rounded-[28px] bg-white p-8 text-center shadow-sm ring-1 ring-slate-100">
-            <XCircle
-              size={45}
-              className="mx-auto text-rose-500"
-            />
+        <main className="mx-auto max-w-2xl px-4 py-5">
+          <button
+            onClick={() => navigate("/history")}
+            className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700"
+          >
+            <ArrowLeft size={18} />
+            Quay lại lịch sử
+          </button>
 
-            <h1 className="mt-4 text-xl font-black">
-              Không tìm thấy đơn hàng
-            </h1>
+          <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+            <div className="border-b border-slate-100 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium text-slate-400">
+                    Chi tiết đơn hàng
+                  </p>
 
-            <p className="mt-2 text-sm text-slate-400">
-              Đơn này không tồn tại hoặc
-              không thuộc tài khoản của bạn.
-            </p>
+                  <h1 className="mt-1 text-xl font-bold text-slate-900">
+                    {getOrderTitle(order)}
+                  </h1>
 
-            <button
-              type="button"
-              onClick={onBack}
-              className="mt-5 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white"
-            >
-              Xem lịch sử
-            </button>
-          </div>
-        </main>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Mã đơn: {order.id}
+                  </p>
+                </div>
 
-        <BottomNav />
-      </div>
-    );
-  }
-
-  const status =
-    statusInfo(order.status);
-
-  const StatusIcon =
-    status.icon;
-
-  const image =
-    getImage(order);
-
-  const isRobloxOrder =
-    order.history_type ===
-    "order";
-
-  const isDelivered =
-    String(
-      order.status || ""
-    ).toLowerCase() ===
-    "delivered";
-
-  const isRejected =
-    String(
-      order.status || ""
-    ).toLowerCase() ===
-    "rejected";
-
-  return (
-    <div className="min-h-screen bg-[#F7FAFC] pb-24 text-slate-900">
-      <TopHeader />
-
-      <main className="mx-auto w-full max-w-2xl px-4 py-5">
-        <button
-          type="button"
-          onClick={onBack}
-          className="mb-5 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-600 shadow-sm ring-1 ring-slate-100"
-        >
-          <ArrowLeft size={18} />
-          Lịch sử
-        </button>
-
-        <div className="mb-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-500">
-            Chi tiết giao dịch
-          </p>
-
-          <h1 className="mt-1 text-2xl font-black text-slate-900">
-            {title}
-          </h1>
-        </div>
-
-        {/* TRẠNG THÁI */}
-        <section className="overflow-hidden rounded-[28px] bg-white shadow-sm ring-1 ring-slate-100">
-          <div className="bg-gradient-to-r from-blue-600 to-sky-500 p-5 text-white">
-            <p className="text-xs font-bold text-white/70">
-              TRẠNG THÁI ĐƠN HÀNG
-            </p>
-
-            <div className="mt-3 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-                <StatusIcon size={25} />
-              </div>
-
-              <div>
-                <p className="text-xl font-black">
+                <div
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
+                >
+                  <StatusIcon size={15} />
                   {status.label}
-                </p>
+                </div>
+              </div>
+            </div>
 
-                <p className="mt-0.5 text-xs text-white/70">
-                  {formatDate(
-                    order.updated_at ||
-                      order.created_at
+            <div className="space-y-4 p-5">
+              {order.roblox_username && (
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-400">
+                    Tài khoản Roblox
+                  </p>
+
+                  <p className="mt-1 font-semibold text-slate-900">
+                    {order.roblox_username}
+                  </p>
+
+                  {order.roblox_user_id && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      User ID: {order.roblox_user_id}
+                    </p>
                   )}
-                </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-400">
+                    Giá trị
+                  </p>
+
+                  <p className="mt-1 font-bold text-slate-900">
+                    {formatMoney(
+                      getOrderAmount(order)
+                    )}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-400">
+                    Phương thức
+                  </p>
+
+                  <p className="mt-1 font-bold capitalize text-slate-900">
+                    {order.payment_method || "—"}
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* SẢN PHẨM */}
-          <div className="p-5">
-            <div className="flex items-center gap-4 rounded-2xl bg-sky-50 p-4">
-              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-sky-100">
-                {image ? (
-                  <img
-                    src={image}
-                    alt={title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Gift
-                      size={30}
-                      className="text-sky-400"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-sky-500">
-                  Sản phẩm
-                </p>
-
-                <p className="mt-1 text-base font-black text-slate-900">
-                  {title}
+                            <div className="rounded-2xl border border-slate-100 p-4">
+                <p className="text-xs text-slate-400">
+                  Thời gian tạo đơn
                 </p>
 
-                <p className="mt-1 text-xs text-slate-400">
-                  {isRobloxOrder
-                    ? "Roblox"
-                    : "Đổi thưởng"}
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {formatDate(order.created_at)}
                 </p>
               </div>
-            </div>
 
-            {/* THÔNG TIN */}
-            <div className="mt-5">
-              <h2 className="mb-3 text-sm font-black text-slate-900">
-                Thông tin đơn hàng
-              </h2>
+              {order.updated_at && (
+                <div className="rounded-2xl border border-slate-100 p-4">
+                  <p className="text-xs text-slate-400">
+                    Cập nhật gần nhất
+                  </p>
 
-              <div className="space-y-3 rounded-2xl border border-slate-100 p-4">
-                <InfoRow
-                  label="Mã đơn"
-                  value={
-                    order.order_code ||
-                    order.id
-                  }
-                  copy={onCopy}
-                  copied={copied}
-                />
+                  <p className="mt-1 text-sm font-semibold text-slate-800">
+                    {formatDate(order.updated_at)}
+                  </p>
+                </div>
+              )}
 
-                <InfoRow
-                  label="Thời gian"
-                  value={formatDate(
-                    order.created_at
-                  )}
-                />
-
-                <InfoRow
-                  label="Trạng thái"
-                  value={
-                    status.label
-                  }
-                />
-
-                {isRobloxOrder && (
-                  <>
-                    <InfoRow
-                      label="Roblox"
-                      value={
-                        order.roblox_display_name ||
-                        order.roblox_username ||
-                        "—"
-                      }
-                    />
-
-                    <InfoRow
-                      label="Username"
-                      value={
-                        order.roblox_username
-                          ? `@${order.roblox_username}`
-                          : "—"
-                      }
-                    />
-
-                    <InfoRow
-                      label="Robux"
-                      value={
-                        order.robux
-                          ? `${Number(
-                              order.robux
-                            ).toLocaleString(
-                              "vi-VN"
-                            )} Robux`
-                          : "—"
-                      }
-                    />
-
-                    <InfoRow
-                      label="Thanh toán"
-                      value={
-                        order.payment_method ===
-                        "bank"
-                          ? "Chuyển khoản"
-                          : order.payment_method ||
-                            "—"
-                      }
-                    />
-
-                    <InfoRow
-                      label="Số tiền"
-                      value={formatMoney(
-                        order.amount
-                      )}
-                    />
-                  </>
-                )}
-
-                {!isRobloxOrder && (
-                  <>
-                    <InfoRow
-                      label="Phương thức nhận"
-                      value={
-                        order.delivery_method ||
-                        "—"
-                      }
-                    />
-
-                    <InfoRow
-                      label="Thông tin nhận"
-                      value={
-                        order.delivery_target ||
-                        "—"
-                      }
-                    />
-
-                    <InfoRow
-                      label="Số xu"
-                      value={formatCoins(
-                        order.coin_cost
-                      )}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* ĐÃ CHUYỂN KHOẢN */}
-            {isRobloxOrder &&
-              String(
-                order.status || ""
-              ).toLowerCase() ===
-                "paid" && (
-                <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+              {order.status === "paid" && (
+                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                   <div className="flex items-start gap-3">
-                    <Wallet
-                      size={20}
-                      className="mt-0.5 text-blue-600"
+                    <CreditCard
+                      className="mt-0.5 shrink-0"
+                      size={19}
                     />
 
                     <div>
-                      <p className="text-sm font-black text-blue-900">
+                      <p className="font-bold">
                         Đã ghi nhận chuyển khoản
                       </p>
 
-                      <p className="mt-1 text-xs leading-5 text-blue-700">
-                        Hệ thống đã nhận xác nhận
-                        của bạn. Đơn đang chờ kiểm
-                        tra giao dịch và xử lý.
+                      <p className="mt-1 text-xs leading-5">
+                        Hệ thống đã ghi nhận thanh toán.
+                        Đơn hàng đang được kiểm tra.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-            {/* ĐÃ GIAO */}
-            {isDelivered && (
-              <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2
-                    size={21}
-                    className="mt-0.5 text-emerald-600"
-                  />
+              {order.status === "processing" && (
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
+                  <div className="flex items-start gap-3">
+                    <RefreshCw
+                      className="mt-0.5 shrink-0"
+                      size={19}
+                    />
 
-                  <div>
-                    <p className="text-sm font-black text-emerald-900">
-                      Đơn hàng đã giao
-                    </p>
+                    <div>
+                      <p className="font-bold">
+                        Đang xử lý đơn hàng
+                      </p>
 
-                    <p className="mt-1 text-xs leading-5 text-emerald-700">
-                      Robux đã được giao thành
-                      công cho tài khoản Roblox
-                      của bạn.
-                    </p>
+                      <p className="mt-1 text-xs leading-5">
+                        Đơn đã được duyệt và đang được
+                        xử lý để giao Robux.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* TỪ CHỐI */}
-            {isRejected && (
-              <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 p-4">
-                <div className="flex items-start gap-3">
-                  <XCircle
-                    size={21}
-                    className="mt-0.5 text-rose-600"
-                  />
+              {order.status === "delivered" && (
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2
+                      className="mt-0.5 shrink-0"
+                      size={19}
+                    />
 
-                  <div className="min-w-0">
-                    <p className="text-sm font-black text-rose-900">
-                      Đơn hàng đã từ chối
-                    </p>
+                    <div>
+                      <p className="font-bold">
+                        Đơn hàng đã giao
+                      </p>
 
-                    <p className="mt-2 text-xs font-bold text-rose-600">
-                      Lý do từ chối
-                    </p>
-
-                    <p className="mt-1 break-all text-sm leading-5 text-rose-800">
-                      {order.note ||
-                        "Không có lý do được cung cấp."}
-                    </p>
+                      <p className="mt-1 text-xs leading-5">
+                        Robux đã được giao thành công.
+                        Cảm ơn bạn đã sử dụng dịch vụ.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* LƯU Ý */}
-            <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-xs font-black text-slate-700">
-                Lưu ý
-              </p>
+              {order.status === "rejected" && (
+                <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
+                  <div className="flex items-start gap-3">
+                    <XCircle
+                      className="mt-0.5 shrink-0"
+                      size={19}
+                    />
 
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                Không chia sẻ mã đơn hoặc thông tin
-                giao dịch cho người khác nếu không cần
-                thiết.
-              </p>
+                    <div>
+                      <p className="font-bold">
+                        Đơn hàng bị từ chối
+                      </p>
+
+                      {order.note && (
+                        <p className="mt-1 text-xs leading-5">
+                          Lý do: {order.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {order.coin_cost != null && (
+                <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <Coins
+                      className="text-amber-600"
+                      size={19}
+                    />
+
+                    <span className="text-sm font-semibold text-slate-700">
+                      Coin đã sử dụng
+                    </span>
+                  </div>
+
+                  <span className="font-bold text-amber-700">
+                    {Number(
+                      order.coin_cost
+                    ).toLocaleString("vi-VN")}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        </section>
+        </main>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-24">
+      <TopHeader />
+
+      <main className="mx-auto max-w-2xl px-4 py-5">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Lịch sử đơn hàng
+            </h1>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Theo dõi trạng thái các đơn hàng của bạn
+            </p>
+          </div>
+
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm transition hover:bg-slate-100 disabled:opacity-50"
+            title="Làm mới"
+          >
+            <RefreshCw
+              size={18}
+              className={
+                refreshing ? "animate-spin" : ""
+              }
+            />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="animate-pulse rounded-3xl bg-white p-5 shadow-sm"
+              >
+                <div className="mb-3 h-5 w-40 rounded bg-slate-200" />
+
+                <div className="mb-2 h-4 w-28 rounded bg-slate-200" />
+
+                <div className="h-4 w-52 rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
+        ) : history.length === 0 ? (
+          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
+            <PackageCheck
+              className="mx-auto mb-4 text-slate-300"
+              size={50}
+            />
+
+            <h2 className="text-lg font-bold text-slate-800">
+              Chưa có đơn hàng
+            </h2>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Các đơn hàng của bạn sẽ xuất hiện ở đây.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {history.map((order) => {
+              const status = statusInfo(order.status);
+              const StatusIcon = status.icon;
+
+              return (
+                <button
+                  key={`${order._source}-${order.id}`}
+                  onClick={() =>
+                    navigate(
+                      `/history/order/${order.id}?source=${order._source}`
+                    )
+                  }
+                  className="w-full rounded-3xl bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate font-bold text-slate-900">
+                        {getOrderTitle(order)}
+                      </h2>
+
+                      <p className="mt-1 text-xs text-slate-400">
+                        #{order.id}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
+                    >
+                      <StatusIcon size={14} />
+                      {status.label}
+                    </div>
+                  </div>
+                                    <div className="mt-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-400">
+                        Giá trị
+                      </p>
+
+                      <p className="mt-1 font-bold text-slate-900">
+                        {formatMoney(
+                          getOrderAmount(order)
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400">
+                        Ngày tạo
+                      </p>
+
+                      <p className="mt-1 text-xs font-medium text-slate-600">
+                        {formatDate(order.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </main>
 
       <BottomNav />
-    </div>
-  );
-}
-
-function InfoRow({
-  label,
-  value,
-  copy,
-  copied,
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-      <span className="shrink-0 text-xs text-slate-400">
-        {label}
-      </span>
-
-      <div className="flex min-w-0 items-start gap-2 text-right">
-        <span className="break-all text-sm font-black text-slate-800">
-          {value}
-        </span>
-
-        {copy && (
-          <button
-            type="button"
-            onClick={() =>
-              copy(value)
-            }
-            className="shrink-0 rounded-lg p-1.5 text-sky-500 hover:bg-sky-50"
-            title="Sao chép"
-          >
-            {copied ===
-            String(value) ? (
-              <CheckCircle2
-                size={15}
-              />
-            ) : (
-              <Copy size={15} />
-            )}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function EmptyHistory() {
-  return (
-    <div className="rounded-[28px] border border-dashed border-slate-200 bg-white px-5 py-14 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50">
-        <Clock3
-          size={28}
-          className="text-sky-400"
-        />
-      </div>
-
-      <p className="mt-4 text-base font-black text-slate-800">
-        Chưa có giao dịch
-      </p>
-
-      <p className="mt-1 text-sm text-slate-400">
-        Khi bạn đặt đơn, lịch sử sẽ xuất hiện
-        ở đây.
-      </p>
     </div>
   );
 }
