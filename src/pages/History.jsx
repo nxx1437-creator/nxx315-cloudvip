@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Clock3,
@@ -16,7 +16,7 @@ import TopHeader from "../components/TopHeader";
 import BottomNav from "../components/BottomNav";
 
 const statusInfo = (status) => {
-  switch (status) {
+  switch (String(status || "").toLowerCase()) {
     case "pending":
       return {
         label: "Chờ thanh toán",
@@ -93,7 +93,7 @@ const formatDate = (value) => {
       minute: "2-digit",
     });
   } catch {
-    return value;
+    return "—";
   }
 };
 
@@ -101,6 +101,7 @@ const getOrderAmount = (order) => {
   if (order?.amount != null) return order.amount;
   if (order?.price != null) return order.price;
   if (order?.coin_cost != null) return order.coin_cost;
+
   return 0;
 };
 
@@ -109,29 +110,88 @@ const getOrderTitle = (order) => {
     return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
   }
 
-  if (order?.package_name) return order.package_name;
-  if (order?.title) return order.title;
+  if (order?.package_name) {
+    return order.package_name;
+  }
 
-  return order?.type === "redemption"
-    ? "Đổi thưởng"
-    : "Đơn hàng";
+  if (order?.title) {
+    return order.title;
+  }
+
+  if (order?.type === "redemption") {
+    return "Đổi thưởng";
+  }
+
+  return "Đơn hàng";
+};
+
+const mergeOrder = (oldOrder, newOrder) => {
+  return {
+    ...oldOrder,
+    ...newOrder,
+    _source: oldOrder?._source || newOrder?._source,
+  };
 };
 
 export default function History() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const sourceFromUrl = searchParams.get("source");
 
   const [history, setHistory] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
+
   const selectedSource = useMemo(() => {
-    if (!selected) return null;
-    return selected._source;
-  }, [selected]);
+    if (selected?._source) {
+      return selected._source;
+    }
+
+    return sourceFromUrl || null;
+  }, [selected, sourceFromUrl]);
+
+  const sortHistory = (items) => {
+    return [...items].sort(
+      (a, b) =>
+        new Date(b.created_at || 0).getTime() -
+        new Date(a.created_at || 0).getTime()
+    );
+  };
+
+  const updateSelectedFromHistory = (items) => {
+    if (!id) {
+      setSelected(null);
+      return;
+    }
+
+    const found = items.find((item) => {
+      const sameId = String(item.id) === String(id);
+
+      if (!sameId) {
+        return false;
+      }
+
+      if (selectedSource) {
+        return item._source === selectedSource;
+      }
+
+      return true;
+    });
+
+    if (found) {
+      setSelected(found);
+    }
+  };
 
   const loadHistory = async (showLoading = false) => {
+    const currentRequestId = ++requestIdRef.current;
+
     if (showLoading) {
       setLoading(true);
     }
@@ -147,29 +207,32 @@ export default function History() {
       }
 
       if (!user) {
+        if (!mountedRef.current) return;
+
         setHistory([]);
         setSelected(null);
+        setLoading(false);
+        setRefreshing(false);
         return;
       }
 
-      const [ordersResult, redemptionResult] =
-        await Promise.all([
-          supabase
-            .from("orders")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", {
-              ascending: false,
-            }),
+      const [ordersResult, redemptionResult] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", {
+            ascending: false,
+          }),
 
-          supabase
-            .from("redemption_orders")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", {
-              ascending: false,
-            }),
-        ]);
+        supabase
+          .from("redemption_orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", {
+            ascending: false,
+          }),
+      ]);
 
       if (ordersResult.error) {
         throw ordersResult.error;
@@ -177,6 +240,13 @@ export default function History() {
 
       if (redemptionResult.error) {
         throw redemptionResult.error;
+      }
+
+      if (
+        !mountedRef.current ||
+        currentRequestId !== requestIdRef.current
+      ) {
+        return;
       }
 
       const normalOrders = (ordersResult.data || []).map(
@@ -193,39 +263,141 @@ export default function History() {
         _source: "redemption_orders",
       }));
 
-      const merged = [
+      const merged = sortHistory([
         ...normalOrders,
         ...redemptionOrders,
-      ].sort(
-        (a, b) =>
-          new Date(b.created_at || 0).getTime() -
-          new Date(a.created_at || 0).getTime()
-      );
+      ]);
 
       setHistory(merged);
-
-      if (id) {
-        const found = merged.find(
-          (order) =>
-            String(order.id) === String(id) &&
-            (!selectedSource ||
-              order._source === selectedSource)
-        );
-
-        if (found) {
-          setSelected(found);
-        } else if (!selected) {
-          setSelected(null);
-        }
-      }
+      updateSelectedFromHistory(merged);
     } catch (error) {
       console.error("History load error:", error);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (mountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
-    useEffect(() => {
+    const applyRealtimeChange = (source, payload) => {
+    if (!mountedRef.current) {
+      return;
+    }
+
+    const eventType = payload.eventType;
+
+    console.log(
+      `[History Realtime] ${source}`,
+      eventType,
+      payload
+    );
+
+    if (eventType === "DELETE") {
+      const deletedId = payload.old?.id;
+
+      if (deletedId == null) {
+        return;
+      }
+
+      setHistory((current) => {
+        const updated = current.filter(
+          (item) =>
+            !(
+              item._source === source &&
+              String(item.id) === String(deletedId)
+            )
+        );
+
+        updateSelectedFromHistory(updated);
+
+        return updated;
+      });
+
+      return;
+    }
+
+    const newRow = payload.new;
+
+    if (!newRow?.id) {
+      return;
+    }
+
+    setHistory((current) => {
+      const index = current.findIndex(
+        (item) =>
+          item._source === source &&
+          String(item.id) === String(newRow.id)
+      );
+
+      let updated;
+
+      if (index === -1) {
+        updated = [
+          {
+            ...newRow,
+            _source: source,
+          },
+          ...current,
+        ];
+      } else {
+        updated = [...current];
+
+        updated[index] = mergeOrder(
+          updated[index],
+          {
+            ...newRow,
+            _source: source,
+          }
+        );
+      }
+
+      updated = sortHistory(updated);
+
+      updateSelectedFromHistory(updated);
+
+      return updated;
+    });
+
+    setSelected((current) => {
+      if (!current) {
+        return current;
+      }
+
+      if (current._source !== source) {
+        return current;
+      }
+
+      if (
+        String(current.id) !== String(newRow.id)
+      ) {
+        return current;
+      }
+
+      /*
+       * QUAN TRỌNG:
+       *
+       * Nếu Admin đổi:
+       *
+       * paid -> processing
+       *
+       * hoặc:
+       *
+       * processing -> delivered
+       *
+       * thì payload.new.status sẽ được lấy trực tiếp
+       * và ghi đè vào selected.
+       */
+      return {
+        ...current,
+        ...newRow,
+        _source: source,
+      };
+    });
+  };
+
+  useEffect(() => {
+    mountedRef.current = true;
+
     loadHistory(true);
 
     const ordersChannel = supabase
@@ -238,11 +410,18 @@ export default function History() {
           table: "orders",
         },
         (payload) => {
-          console.log("orders realtime:", payload);
-          loadHistory(false);
+          applyRealtimeChange(
+            "orders",
+            payload
+          );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(
+          "[History] orders realtime:",
+          status
+        );
+      });
 
     const redemptionChannel = supabase
       .channel("history-redemption-realtime")
@@ -254,29 +433,43 @@ export default function History() {
           table: "redemption_orders",
         },
         (payload) => {
-          console.log(
-            "redemption realtime:",
+          applyRealtimeChange(
+            "redemption_orders",
             payload
           );
-
-          loadHistory(false);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(
+          "[History] redemption realtime:",
+          status
+        );
+      });
 
+    /*
+     * Fallback:
+     *
+     * Nếu Realtime không hoạt động vì chưa bật
+     * publication thì vẫn kiểm tra DB định kỳ.
+     */
     const interval = setInterval(() => {
       loadHistory(false);
     }, 5000);
 
     return () => {
+      mountedRef.current = false;
+
       clearInterval(interval);
 
-      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(
+        ordersChannel
+      );
+
       supabase.removeChannel(
         redemptionChannel
       );
     };
-  }, [id]);
+  }, [id, sourceFromUrl]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -361,7 +554,7 @@ export default function History() {
           <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
             <div className="border-b border-slate-100 p-5">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-medium text-slate-400">
                     Chi tiết đơn hàng
                   </p>
@@ -371,20 +564,20 @@ export default function History() {
                   </h1>
 
                   <p className="mt-1 text-xs text-slate-400">
-                    Mã đơn: {order.id}
+                    Mã đơn: {order.order_code || order.id}
                   </p>
                 </div>
 
                 <div
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
                 >
                   <StatusIcon size={15} />
+
                   {status.label}
                 </div>
               </div>
             </div>
-
-            <div className="space-y-4 p-5">
+                             <div className="space-y-4 p-5">
               {order.roblox_username && (
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs text-slate-400">
@@ -398,6 +591,36 @@ export default function History() {
                   {order.roblox_user_id && (
                     <p className="mt-1 text-xs text-slate-500">
                       User ID: {order.roblox_user_id}
+                    </p>
+                  )}
+
+                  {order.roblox_display_name &&
+                    order.roblox_display_name !==
+                      order.roblox_username && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Display Name:{" "}
+                        {order.roblox_display_name}
+                      </p>
+                    )}
+                </div>
+              )}
+
+              {order.package_id && (
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-400">
+                    Gói đã chọn
+                  </p>
+
+                  <p className="mt-1 font-semibold text-slate-900">
+                    {order.package_id}
+                  </p>
+
+                  {order.robux != null && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      {Number(order.robux).toLocaleString(
+                        "vi-VN"
+                      )}{" "}
+                      Robux
                     </p>
                   )}
                 </div>
@@ -426,7 +649,8 @@ export default function History() {
                   </p>
                 </div>
               </div>
-                            <div className="rounded-2xl border border-slate-100 p-4">
+
+              <div className="rounded-2xl border border-slate-100 p-4">
                 <p className="text-xs text-slate-400">
                   Thời gian tạo đơn
                 </p>
@@ -445,6 +669,29 @@ export default function History() {
                   <p className="mt-1 text-sm font-semibold text-slate-800">
                     {formatDate(order.updated_at)}
                   </p>
+                </div>
+              )}
+
+              {order.status === "pending" && (
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
+                  <div className="flex items-start gap-3">
+                    <Clock3
+                      className="mt-0.5 shrink-0"
+                      size={19}
+                    />
+
+                    <div>
+                      <p className="font-bold">
+                        Đơn hàng đang chờ thanh toán
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5">
+                        Vui lòng hoàn tất thanh toán
+                        theo hướng dẫn để đơn hàng
+                        được kiểm tra.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -530,6 +777,29 @@ export default function History() {
                       {order.note && (
                         <p className="mt-1 text-xs leading-5">
                           Lý do: {order.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {order.status === "failed" && (
+                <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
+                  <div className="flex items-start gap-3">
+                    <XCircle
+                      className="mt-0.5 shrink-0"
+                      size={19}
+                    />
+
+                    <div>
+                      <p className="font-bold">
+                        Đơn hàng thất bại
+                      </p>
+
+                      {order.note && (
+                        <p className="mt-1 text-xs leading-5">
+                          {order.note}
                         </p>
                       )}
                     </div>
@@ -630,7 +900,10 @@ export default function History() {
         ) : (
           <div className="space-y-3">
             {history.map((order) => {
-              const status = statusInfo(order.status);
+              const status = statusInfo(
+                order.status
+              );
+
               const StatusIcon = status.icon;
 
               return (
@@ -650,7 +923,9 @@ export default function History() {
                       </h2>
 
                       <p className="mt-1 text-xs text-slate-400">
-                        #{order.id}
+                        {order.order_code
+                          ? `#${order.order_code}`
+                          : `#${order.id}`}
                       </p>
                     </div>
 
@@ -658,6 +933,7 @@ export default function History() {
                       className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
                     >
                       <StatusIcon size={14} />
+
                       {status.label}
                     </div>
                   </div>
@@ -680,10 +956,24 @@ export default function History() {
                       </p>
 
                       <p className="mt-1 text-xs font-medium text-slate-600">
-                        {formatDate(order.created_at)}
+                        {formatDate(
+                          order.created_at
+                        )}
                       </p>
                     </div>
                   </div>
+
+                  {order.roblox_username && (
+                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                      <span className="text-xs text-slate-400">
+                        Roblox
+                      </span>
+
+                      <span className="max-w-[60%] truncate text-xs font-semibold text-slate-700">
+                        {order.roblox_username}
+                      </span>
+                    </div>
+                  )}
                 </button>
               );
             })}
