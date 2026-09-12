@@ -15,10 +15,30 @@ import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
+const PACKAGE_IMAGES = {
+  "card-400":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-400.png",
+
+  "vng-40":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-40.png",
+
+  "vng-80":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-80.png",
+
+  "vng-500":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
+};
+
 const fmtDate = (value) => {
   if (!value) return "—";
 
-  return new Date(value).toLocaleString("vi-VN", {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -34,7 +54,8 @@ function getStatus(status) {
     return {
       text: "Hoàn thành",
       Icon: CheckCircle2,
-      className: "bg-emerald-50 border-emerald-100 text-emerald-600",
+      className:
+        "bg-emerald-50 border-emerald-100 text-emerald-600",
     };
   }
 
@@ -42,7 +63,8 @@ function getStatus(status) {
     return {
       text: "Đã hủy",
       Icon: XCircle,
-      className: "bg-rose-50 border-rose-100 text-rose-500",
+      className:
+        "bg-rose-50 border-rose-100 text-rose-500",
     };
   }
 
@@ -50,7 +72,8 @@ function getStatus(status) {
     return {
       text: key === "failed" ? "Thất bại" : "Đã từ chối",
       Icon: XCircle,
-      className: "bg-rose-50 border-rose-100 text-rose-500",
+      className:
+        "bg-rose-50 border-rose-100 text-rose-500",
     };
   }
 
@@ -58,14 +81,16 @@ function getStatus(status) {
     return {
       text: "Đang kiểm tra",
       Icon: Clock3,
-      className: "bg-blue-50 border-blue-100 text-blue-600",
+      className:
+        "bg-blue-50 border-blue-100 text-blue-600",
     };
   }
 
   return {
     text: "Đang xử lý",
     Icon: Clock3,
-    className: "bg-amber-50 border-amber-100 text-amber-600",
+    className:
+      "bg-amber-50 border-amber-100 text-amber-600",
   };
 }
 
@@ -91,19 +116,127 @@ function InfoRow({ label, value, copyable = false }) {
           {value ?? "—"}
         </span>
 
-        {copyable && value !== null && value !== undefined && (
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="shrink-0 text-blue-500"
-          >
-            <Copy size={14} />
-          </button>
-        )}
+        {copyable &&
+          value !== null &&
+          value !== undefined && (
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="shrink-0 text-blue-500"
+              aria-label={`Sao chép ${label}`}
+            >
+              <Copy size={14} />
+            </button>
+          )}
       </div>
     </div>
   );
-      }
+}
+function Skeleton({ className = "" }) {
+  return (
+    <div
+      className={`animate-pulse rounded-lg bg-slate-100 ${className}`}
+    />
+  );
+}
+
+function HistoryDetailSkeleton() {
+  return (
+    <div className="space-y-3">
+      {/* Trạng thái tiến trình */}
+      <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-center gap-5">
+          <div className="flex flex-col items-center gap-2">
+            <Skeleton className="h-12 w-12 rounded-2xl" />
+
+            <Skeleton className="h-3 w-12" />
+          </div>
+
+          <Skeleton className="h-px w-14" />
+
+          <div className="flex flex-col items-center gap-2">
+            <Skeleton className="h-12 w-12 rounded-2xl" />
+
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      </section>
+
+      {/* Thông tin sản phẩm */}
+      <section className="overflow-hidden rounded-3xl border border-blue-50 bg-white shadow-sm">
+        <div className="flex items-center gap-4 p-5">
+          {/* Ảnh */}
+          <Skeleton className="h-24 w-24 shrink-0 rounded-2xl" />
+
+          <div className="min-w-0 flex-1 space-y-3">
+            {/* Đơn hàng */}
+            <Skeleton className="h-2.5 w-14" />
+
+            {/* Tên */}
+            <Skeleton className="h-5 w-32 rounded-md" />
+
+            {/* Robux */}
+            <Skeleton className="h-3.5 w-24" />
+
+            {/* Phương thức */}
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+
+        {/* Trạng thái */}
+        <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4">
+          <Skeleton className="h-3 w-14" />
+
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      </section>
+
+      {/* Thông tin đơn hàng */}
+      <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+
+          <Skeleton className="h-4 w-32" />
+        </div>
+
+        {Array.from({ length: 9 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between gap-4 border-b border-slate-100 py-3 last:border-0"
+          >
+            <Skeleton className="h-3 w-16" />
+
+            <Skeleton
+              className={`h-3 ${
+                index % 3 === 0
+                  ? "w-28"
+                  : index % 3 === 1
+                  ? "w-36"
+                  : "w-20"
+              }`}
+            />
+          </div>
+        ))}
+      </section>
+
+      {/* Box trạng thái */}
+      <section className="rounded-3xl border border-blue-50 bg-blue-50 p-5">
+        <div className="flex items-start gap-3">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-xl bg-white" />
+
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-40 bg-white" />
+
+            <Skeleton className="h-3 w-full bg-white" />
+
+            <Skeleton className="h-3 w-4/5 bg-white" />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function HistoryDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -113,6 +246,7 @@ export default function HistoryDetail() {
 
   const [order, setOrder] = useState(null);
   const [pkg, setPkg] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -139,7 +273,7 @@ export default function HistoryDetail() {
       console.log("URL ID:", id);
       console.log("USER ID:", user.id);
       console.log("SOURCE:", source);
-      
+
       const tables = source
         ? [source]
         : ["orders", "redemption_orders"];
@@ -169,10 +303,6 @@ export default function HistoryDetail() {
             queryError
           );
 
-          setError(
-            `Lỗi tải đơn hàng: ${queryError.message}`
-          );
-
           continue;
         }
 
@@ -198,7 +328,19 @@ export default function HistoryDetail() {
         __source: foundTable,
       });
 
-      if (foundOrder.package_id) {
+      /*
+       * Chỉ thử lấy package nếu package_id là UUID.
+       *
+       * Với các đơn Roblox hiện tại:
+       * card-400 / vng-40 / vng-80 / vng-500
+       * không phải UUID nên bỏ qua.
+       */
+      if (
+        foundOrder.package_id &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          String(foundOrder.package_id)
+        )
+      ) {
         const {
           data: packageData,
           error: packageError,
@@ -234,8 +376,7 @@ export default function HistoryDetail() {
   useEffect(() => {
     loadOrder();
   }, [id, source]);
-
-  const status = getStatus(order?.status);
+    const status = getStatus(order?.status);
   const StatusIcon = status.Icon;
 
   const name =
@@ -244,31 +385,26 @@ export default function HistoryDetail() {
     order?.name ||
     pkg?.name ||
     order?.game_name ||
-    (order?.robux
+    (order?.package_id === "card-400"
+      ? "Card Robux"
+      : order?.package_id === "vng-40"
+      ? "Nạp trực tiếp"
+      : order?.package_id === "vng-80"
+      ? "Nạp trực tiếp"
+      : order?.package_id === "vng-500"
+      ? "Nạp trực tiếp"
+      : order?.robux
       ? `${order.robux} Robux`
       : "Giao dịch");
 
-  const PACKAGE_IMAGES = {
-  "card-400":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-400.png",
-
-  "vng-40":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-40.png",
-
-  "vng-80":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-80.png",
-
-  "vng-500":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
-};
-
-const image =
-  order?.image_url ||
-  order?.package_image ||
-  order?.product_image ||
-  order?.logo_url ||
-  PACKAGE_IMAGES[order?.package_id] ||
-  null;
+  const image =
+    order?.image_url ||
+    order?.package_image ||
+    order?.product_image ||
+    order?.logo_url ||
+    PACKAGE_IMAGES[order?.package_id] ||
+    pkg?.image_url ||
+    null;
 
   const coin =
     order?.coin_cost ??
@@ -292,32 +428,30 @@ const image =
       : order?.payment_method === "coins"
       ? "Thanh toán bằng xu"
       : order?.payment_method || null;
-          return (
+
+  return (
     <div className="min-h-screen bg-[#f7faff] pb-28 text-slate-900">
       <TopHeader />
 
       <main className="px-4 pt-5">
         <div className="mx-auto max-w-2xl">
-
+          {/* Quay lại */}
           <button
             type="button"
             onClick={() => navigate("/history")}
             className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-500"
           >
             <ArrowLeft size={17} />
+
             Quay lại lịch sử
           </button>
 
-          {loading && (
-            <div className="space-y-3">
-              <div className="h-40 animate-pulse rounded-3xl bg-white" />
-              <div className="h-72 animate-pulse rounded-3xl bg-white" />
-            </div>
-          )}
+          {/* SKELETON */}
+          {loading && <HistoryDetailSkeleton />}
 
+          {/* ERROR */}
           {!loading && error && (
             <div className="rounded-3xl border border-rose-100 bg-white p-8 text-center shadow-sm">
-
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50">
                 <XCircle
                   size={28}
@@ -339,17 +473,18 @@ const image =
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-xs font-bold text-white"
               >
                 <RefreshCw size={14} />
+
                 Thử lại
               </button>
-
             </div>
           )}
 
+          {/* DATA */}
           {!loading && !error && order && (
             <>
+              {/* PROCESS */}
               <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-center gap-5">
-
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
                       <CheckCircle2 size={23} />
@@ -373,31 +508,36 @@ const image =
                       {status.text}
                     </span>
                   </div>
-
                 </div>
               </section>
 
+              {/* PRODUCT */}
               <section className="mt-3 overflow-hidden rounded-3xl border border-blue-50 bg-white shadow-sm">
-
                 <div className="flex items-center gap-4 p-5">
-
-                  {image ? (
-                    <img
-                      src={image}
-                      alt=""
-                      className="h-24 w-24 shrink-0 rounded-2xl border border-blue-50 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
-                      <Package
-                        size={32}
-                        className="text-blue-400"
+                  {/* IMAGE */}
+                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-blue-50 bg-blue-50">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        onError={(event) => {
+                          event.currentTarget.style.display =
+                            "none";
+                        }}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Package
+                          size={32}
+                          className="text-blue-400"
+                        />
+                      </div>
+                    )}
+                  </div>
 
+                  {/* PRODUCT INFO */}
                   <div className="min-w-0 flex-1">
-
                     <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
                       Đơn hàng
                     </p>
@@ -406,9 +546,18 @@ const image =
                       {name}
                     </h1>
 
-                    {order.robux && (
+                    {order.robux != null && (
                       <p className="mt-1 text-xs font-bold text-blue-500">
-                        {Number(order.robux).toLocaleString("vi-VN")} Robux
+                        {Number(
+                          order.robux
+                        ).toLocaleString("vi-VN")}{" "}
+                        Robux
+                      </p>
+                    )}
+
+                    {order.package_id && (
+                      <p className="mt-1 text-xs text-slate-400">
+                        Gói: {order.package_id}
                       </p>
                     )}
 
@@ -417,12 +566,11 @@ const image =
                         Giao: {order.delivery_method}
                       </p>
                     )}
-
                   </div>
                 </div>
 
+                {/* STATUS */}
                 <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-4">
-
                   <span className="text-xs text-slate-400">
                     Trạng thái
                   </span>
@@ -432,11 +580,11 @@ const image =
                   >
                     {status.text}
                   </span>
-
                 </div>
               </section>
-                            <section className="mt-3 rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
 
+              {/* ORDER INFO */}
+              <section className="mt-3 rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
                 <div className="mb-1 flex items-center gap-2">
                   <FileText
                     size={17}
@@ -480,21 +628,27 @@ const image =
                 {order.robux != null && (
                   <InfoRow
                     label="Robux"
-                    value={`${Number(order.robux).toLocaleString("vi-VN")} Robux`}
+                    value={`${Number(
+                      order.robux
+                    ).toLocaleString("vi-VN")} Robux`}
                   />
                 )}
 
                 {coin != null && (
                   <InfoRow
                     label="Số xu"
-                    value={`${Number(coin).toLocaleString("vi-VN")} xu`}
+                    value={`${Number(
+                      coin
+                    ).toLocaleString("vi-VN")} xu`}
                   />
                 )}
 
                 {money != null && (
                   <InfoRow
                     label="Số tiền"
-                    value={`${Number(money).toLocaleString("vi-VN")}đ`}
+                    value={`${Number(
+                      money
+                    ).toLocaleString("vi-VN")}đ`}
                   />
                 )}
 
@@ -504,8 +658,7 @@ const image =
                     value={paymentMethod}
                   />
                 )}
-
-                {order.roblox_username && (
+                                {order.roblox_username && (
                   <InfoRow
                     label="Roblox"
                     value={`@${order.roblox_username}`}
@@ -548,15 +701,14 @@ const image =
                     value={order.note}
                   />
                 )}
-
               </section>
 
+              {/* PAID / PROCESSING */}
               {["paid", "processing"].includes(
                 String(order.status || "").toLowerCase()
               ) && (
                 <section className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-5">
                   <div className="flex items-start gap-3">
-
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-500">
                       <Clock3 size={20} />
                     </div>
@@ -572,16 +724,15 @@ const image =
                         trạng thái đơn sẽ được cập nhật.
                       </p>
                     </div>
-
                   </div>
                 </section>
               )}
 
+              {/* PENDING */}
               {String(order.status || "").toLowerCase() ===
                 "pending" && (
                 <section className="mt-3 rounded-3xl border border-amber-100 bg-amber-50 p-5">
                   <div className="flex items-start gap-3">
-
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-500">
                       <Clock3 size={20} />
                     </div>
@@ -597,7 +748,54 @@ const image =
                         dẫn của đơn hàng.
                       </p>
                     </div>
+                  </div>
+                </section>
+              )}
 
+              {/* FAILED */}
+              {["failed", "rejected", "cancelled", "canceled"].includes(
+                String(order.status || "").toLowerCase()
+              ) && (
+                <section className="mt-3 rounded-3xl border border-rose-100 bg-rose-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-500">
+                      <XCircle size={20} />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-black text-rose-700">
+                        Giao dịch không thành công
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-rose-600">
+                        Giao dịch này hiện không thể tiếp tục.
+                        Nếu mày cho rằng đây là lỗi, hãy liên hệ
+                        quản trị viên.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* SUCCESS */}
+              {["success", "completed", "delivered"].includes(
+                String(order.status || "").toLowerCase()
+              ) && (
+                <section className="mt-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-500">
+                      <CheckCircle2 size={20} />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-black text-emerald-700">
+                        Đơn hàng đã hoàn thành
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-emerald-600">
+                        Giao dịch đã được xác nhận thành công.
+                      </p>
+                    </div>
                   </div>
                 </section>
               )}
@@ -609,4 +807,4 @@ const image =
       <BottomNav />
     </div>
   );
-}
+                    }
