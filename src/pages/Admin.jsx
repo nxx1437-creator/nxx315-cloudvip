@@ -1,84 +1,120 @@
-import React, { useState, useEffect } from "react";
-import { ShieldCheck, Package, ListChecks, Users, Loader2, Plus, Trash2, Save, Gift, RefreshCw, CheckCircle2, XCircle, LifeBuoy, Ban, Undo2, Search, Eye, Star, Landmark, ShoppingBag, MessageSquare, PenSquare } from "lucide-react";
-import { supabase } from "../lib/supabaseClient.js";
-import emailjs from '@emailjs/browser';
-import BanUserModal from '../components/BanUserModal.jsx';
-import RobloxOrdersTab from "./RobloxOrdersTab.jsx";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Search,
+  RefreshCw,
+  Check,
+  X,
+  Ban,
+  ShieldCheck,
+  MessageCircle,
+  Package,
+  Users,
+  ListTodo,
+  HandCoins,
+  FileText,
+  ChevronRight,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Send,
+  UserCheck,
+  UserX,
+  Gift,
+  Coins,
+  Loader2,
+  Image as ImageIcon,
+} from "lucide-react";
 
-const ADMIN_CHAT_ID = 6152450878; 
+import { supabase } from "../lib/supabaseClient";
+import emailjs from "@emailjs/browser";
+import BanUserModal from "../components/BanUserModal";
+import RobloxOrdersTab from "../components/RobloxOrdersTab";
 
-const SERVICE_ID = 'service_i4wv7md';
-const TEMPLATE_ID_REPLY = 'template_i16qct';
-const PUBLIC_KEY = 'RCMv-hwVtokArn48n';
+const ADMIN_CHAT_ID = "6152450878";
 
-const TABS = [
-  {
-    key: "orders",
-    label: "Đơn hàng",
-    icon: Package,
-    desc: "Quản lý đơn đổi thưởng",
-  },
+const EMAIL_SERVICE_ID = "YOUR_EMAIL_SERVICE_ID";
+const EMAIL_TEMPLATE_ID = "YOUR_EMAIL_TEMPLATE_ID";
+const EMAIL_PUBLIC_KEY = "YOUR_EMAIL_PUBLIC_KEY";
 
-  {
-    key: "roblox-orders",
-    label: "Đơn Roblox",
-    icon: ShoppingBag,
-    desc: "Quản lý đơn nạp Robux",
-  },
+const PACKAGE_IMAGES = {
+  "card-400":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-400.png",
+  "vng-40":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-40.png",
+  "vng-80":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-80.png",
+  "vng-500":
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
+};
 
-  {
-    key: "tasks",
-    label: "Nhiệm vụ",
-    icon: ListChecks,
-    desc: "Cấu hình nhiệm vụ",
-  },
-
-  { key: "packages", label: "Gói Robux", icon: Gift, desc: "Quản lý cửa hàng" },
-  { key: "users", label: "Người dùng", icon: Users, desc: "Quản lý tài khoản & Ban" },
-  { key: "support", label: "Hỗ trợ", icon: LifeBuoy, desc: "Xem yêu cầu hỗ trợ" },
-  { key: "affiliate", label: "Điểm sao", icon: Star, desc: "Đồng bộ & duyệt rút tiền" },
-  { key: "posts", label: "Bài đăng", icon: MessageSquare, desc: "Duyệt bài & cấp quyền" },
+const tabs = [
+  { id: "orders", label: "Đơn hàng", icon: Package },
+  { id: "roblox-orders", label: "Roblox", icon: Gift },
+  { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
+  { id: "packages", label: "Gói nạp", icon: Coins },
+  { id: "users", label: "Người dùng", icon: Users },
+  { id: "support", label: "Hỗ trợ", icon: MessageCircle },
+  { id: "affiliate", label: "Affiliate", icon: HandCoins },
+  { id: "posts", label: "Bài viết", icon: FileText },
 ];
+
 export default function Admin() {
-  const [tab, setTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState("orders");
+
   return (
-    <div className="min-h-screen bg-[#F0F6FF] pb-16">
-      <header className="sticky top-0 z-20 border-b border-blue-100 bg-white/90 px-4 py-4 shadow-sm backdrop-blur-xl md:px-6">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+    <div className="min-h-screen bg-slate-50">
+      <div className="border-b bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30"><ShieldCheck size={22} /></div>
-            <div><h1 className="text-lg font-extrabold text-slate-900 md:text-xl">Nxx315 Admin Panel</h1><p className="text-xs font-medium text-slate-500">Rewards Management</p></div>
-          </div>
-          <div className="hidden items-center gap-2 md:flex">
-            <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-600"><span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" /> System Online</span>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
+              <ShieldCheck size={23} />
+            </div>
+
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">
+                Admin Dashboard
+              </h1>
+              <p className="text-sm text-slate-500">
+                Quản lý CloudVIP
+              </p>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="mx-auto max-w-7xl px-4 pt-5 md:px-6 md:pt-6">
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {TABS.map((item) => {
-            const Icon = item.icon;
+      <div className="mx-auto max-w-7xl px-4 py-5">
+        <div className="mb-5 flex gap-2 overflow-x-auto rounded-2xl border bg-white p-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+
             return (
-              <button key={item.key} onClick={() => setTab(item.key)} className={`flex min-w-max items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all ${tab === item.key ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-blue-500/30" : "border border-blue-100 bg-white text-slate-600 shadow-sm hover:bg-blue-50"}`}>
-                <Icon size={20} className={tab === item.key ? "text-white" : "text-blue-500"} />
-                <div><div className="text-sm font-bold">{item.label}</div><div className={`text-[11px] ${tab === item.key ? "text-white/80" : "text-slate-400"}`}>{item.desc}</div></div>
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                  activeTab === tab.id
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <Icon size={17} />
+                {tab.label}
               </button>
             );
           })}
         </div>
-      </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-6">
-        {tab === "orders" && <OrdersTab />}
-        {tab === "roblox-orders" && <RobloxOrdersTab />}
-        {tab === "tasks" && <TasksTab />}
-        {tab === "packages" && <PackagesTab />}
-        {tab === "users" && <UsersTab />}
-        {tab === "support" && <SupportTab />}
-        {tab === "affiliate" && <AffiliateTab />}
-        {tab === "posts" && <PostsTab />}
-      </main>
+        {activeTab === "orders" && <OrdersTab />}
+        {activeTab === "roblox-orders" && <RobloxOrdersTab />}
+        {activeTab === "tasks" && <TasksTab />}
+        {activeTab === "packages" && <PackagesTab />}
+        {activeTab === "users" && <UsersTab />}
+        {activeTab === "support" && <SupportTab />}
+        {activeTab === "affiliate" && <AffiliateTab />}
+        {activeTab === "posts" && <PostsTab />}
+      </div>
     </div>
   );
 }
@@ -86,301 +122,505 @@ export default function Admin() {
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [detailOrder, setDetailOrder] = useState(null);
-  const [rejectModal, setRejectModal] = useState(null);
+  const [rejectOrder, setRejectOrder] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [savingId, setSavingId] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data } = await supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
-    setOrders(data ?? []);
+
+    const { data, error } = await supabase
+      .from("redemption_orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setOrders(data || []);
+    }
+
     setLoading(false);
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-  const filteredOrders = orders.filter(o => {
-    const matchFilter = filter === "all" ? true : o.status === filter;
-    const matchSearch = search.trim() === "" ? true : (o.package_name?.toLowerCase().includes(search.trim().toLowerCase()) || o.delivery_target?.toLowerCase().includes(search.trim().toLowerCase()) || String(o.id).toLowerCase().includes(search.trim().toLowerCase()));
-    return matchFilter && matchSearch;
-  });
+  const filteredOrders = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
 
-  const pendingCount = orders.filter(o => o.status === "pending").length;
-  const deliveredCount = orders.filter(o => o.status === "delivered").length;
-  const rejectedCount = orders.filter(o => o.status === "rejected").length;
+    if (!keyword) return orders;
+
+    return orders.filter((order) =>
+      [
+        order.id,
+        order.order_code,
+        order.roblox_username,
+        order.roblox_user_id,
+        order.status,
+        order.package_id,
+      ]
+        .filter(Boolean)
+        .some((value) =>
+          String(value).toLowerCase().includes(keyword)
+        )
+    );
+  }, [orders, search]);
+
+  const notifyTelegram = async (message) => {
+    try {
+      await fetch("/api/telegram", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text: message,
+        }),
+      });
+    } catch {
+      // Không làm fail thao tác chính
+    }
+  };
 
   const handleDelivered = async (order) => {
-    setSavingId(order.id);
-    const { error } = await supabase.from("redemption_orders").update({ status: "delivered", processed_at: new Date().toISOString() }).eq("id", order.id);
-    setSavingId(null);
-    if (error) { alert(error.message); return; }
-    
-    try {
-      await supabase.functions.invoke("telegram-webhook", {
-        body: {
-          message: {
-            text: `✅ Đã duyệt đơn hàng!\n📦 Gói: ${order.package_name}\n👤 User: ${order.user_id}\n💰 Coin: ${order.coins_charged}\n🆔 Mã đơn: ${order.id}`,
-            chat: { id: ADMIN_CHAT_ID }
-          }
-        }
-      });
-    } catch (teleError) {
-      console.error("Lỗi gửi Telegram:", teleError);
+    if (processing) return;
+
+    setProcessing(true);
+
+    const { error } = await supabase
+      .from("redemption_orders")
+      .update({
+        status: "delivered",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id);
+
+    if (!error) {
+      await notifyTelegram(
+        `✅ Đơn hàng #${order.order_code || order.id} đã giao thành công.`
+      );
+
+      await fetchOrders();
+      setDetailOrder(null);
     }
-    
-    await fetchOrders();
+
+    setProcessing(false);
   };
 
   const handleReject = async () => {
-    if (!rejectReason.trim()) { alert("Vui lòng nhập lý do từ chối!"); return; }
-    setSavingId(rejectModal.id);
-    const { error } = await supabase.rpc("refund_order_points", { p_order_id: rejectModal.id, p_reason: rejectReason.trim() });
-    setSavingId(null);
-    if (error) { alert(error.message); return; }
-    
-    try {
-      await supabase.functions.invoke("telegram-webhook", {
-        body: {
-          message: {
-            text: `❌ Đã từ chối đơn hàng!\n📦 Gói: ${rejectModal.package_name}\n👤 User: ${rejectModal.user_id}\n💰 Coin: ${rejectModal.coins_charged}\n🆔 Mã đơn: ${rejectModal.id}\n📝 Lý do: ${rejectReason}`,
-            chat: { id: ADMIN_CHAT_ID }
-          }
-        }
-      });
-    } catch (teleError) {
-      console.error("Lỗi gửi Telegram:", teleError);
-    }
-    
-    setRejectModal(null);
-    setRejectReason("");
-    await fetchOrders();
-  };
+    if (!rejectOrder || processing) return;
 
-  if (loading) return <Loading text="Loading orders..." />;
+    setProcessing(true);
+
+    const { error } = await supabase
+      .from("redemption_orders")
+      .update({
+        status: "rejected",
+        note: rejectReason.trim() || "Đơn hàng bị từ chối",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", rejectOrder.id);
+
+    if (!error) {
+      await notifyTelegram(
+        `❌ Đơn hàng #${
+          rejectOrder.order_code || rejectOrder.id
+        } bị từ chối.\nLý do: ${
+          rejectReason.trim() || "Không có lý do"
+        }`
+      );
+
+      await fetchOrders();
+
+      setRejectOrder(null);
+      setRejectReason("");
+      setDetailOrder(null);
+    }
+
+    setProcessing(false);
+  };
 
   return (
     <div className="space-y-5">
-      <SectionHeader title="Đơn đổi thưởng" count={`${orders.length} Đơn`} onRefresh={fetchOrders} />
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-amber-50 p-4 text-center"><p className="text-2xl font-bold text-amber-600">{pendingCount}</p><p className="text-xs text-amber-600">Chờ xử lý</p></div>
-        <div className="rounded-2xl bg-emerald-50 p-4 text-center"><p className="text-2xl font-bold text-emerald-600">{deliveredCount}</p><p className="text-xs text-emerald-600">Đã giao</p></div>
-        <div className="rounded-2xl bg-rose-50 p-4 text-center"><p className="text-2xl font-bold text-rose-600">{rejectedCount}</p><p className="text-xs text-rose-600">Từ chối</p></div>
+      <SectionHeader
+        title="Đơn hàng"
+        description="Quản lý đơn hàng đổi thưởng"
+        onRefresh={fetchOrders}
+        loading={loading}
+      />
+
+      <div className="rounded-2xl border bg-white p-4">
+        <div className="relative">
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm mã đơn, Roblox ID, username..."
+            className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none transition focus:border-blue-500"
+          />
+        </div>
       </div>
-      <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <Search size={16} className="text-slate-400" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm mã đơn / username..." className="w-full bg-transparent text-sm outline-none" />
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {["all", "pending", "delivered", "rejected"].map((f) => (
-          <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-full text-xs font-semibold ${filter === f ? "bg-blue-500 text-white" : "bg-white text-slate-500"}`}>
-            {f === "all" ? "Tất cả" : f === "pending" ? "Chờ xử lý" : f === "delivered" ? "Đã giao" : "Từ chối"}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-4">
-        {filteredOrders.length === 0 ? <EmptyState text="Không tìm thấy đơn hàng." /> : filteredOrders.map((order) => (
-          <div key={order.id} className={`rounded-2xl border p-5 shadow-sm ${order.status === "delivered" ? "bg-emerald-50/30 border-emerald-100" : order.status === "rejected" ? "bg-rose-50/30 border-rose-100" : "bg-white border-slate-200"}`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-bold text-slate-900">{order.package_name} • #{String(order.id).slice(0, 8)}</p>
-                <p className="mt-1 text-xs text-slate-400">Người dùng: {order.delivery_target || order.user_id}</p>
-                <p className="mt-1 text-xs text-slate-400">Ngày: {new Date(order.created_at).toLocaleString("vi-VN")}</p>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${order.status === "pending" ? "bg-amber-50 text-amber-600" : order.status === "delivered" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
-                {order.status === "pending" ? "Chờ xử lý" : order.status === "delivered" ? "Đã giao" : "Từ chối"}
-              </span>
-            </div>
-            <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm">
-              <p><span className="font-bold">Phương thức:</span> {order.delivery_method || "Nạp thẳng"}</p>
-              <p><span className="font-bold">Thông tin nhận:</span> {order.delivery_target || order.target_username || "—"}</p>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button onClick={() => setDetailOrder(order)} className="flex-1 rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-600"><Eye size={14} className="inline mr-1" /> Xem chi tiết</button>
-              {order.status === "pending" && (
-                <>
-                  <button onClick={() => handleDelivered(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} className="inline mr-1" /> Đã giao</button>
-                  <button onClick={() => setRejectModal(order)} disabled={savingId === order.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><XCircle size={14} className="inline mr-1" /> Từ chối</button>
-                </>
-              )}
-            </div>
-            {order.admin_note && <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs italic text-slate-500">Lý do: {order.admin_note}</p>}
-          </div>
-        ))}
-      </div>
-      {detailOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Đơn #{String(detailOrder.id).slice(0, 8)}</h2>
-            <p className="mt-1 text-sm text-slate-500">{detailOrder.package_name} • {detailOrder.coins_charged} Coin</p>
-            <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
-              <p><span className="font-bold">Người dùng:</span> {detailOrder.user_id}</p>
-              <p><span className="font-bold">Phương thức:</span> {detailOrder.delivery_method || "—"}</p>
-              <p><span className="font-bold">Thông tin nhận:</span> {detailOrder.delivery_target || "—"}</p>
-            </div>
-            <p className="mt-3 text-sm font-semibold text-slate-700">Lịch sử xử lý</p>
-            <div className="mt-2 space-y-2 text-xs">
-              <p><span className="text-amber-500">🟡</span> {new Date(detailOrder.created_at).toLocaleString("vi-VN")} - Đơn được tạo</p>
-              {detailOrder.status === "delivered" && <p><span className="text-emerald-500">🟢</span> {new Date(detailOrder.processed_at).toLocaleString("vi-VN")} - Đã giao</p>}
-              {detailOrder.status === "rejected" && (
-                <>
-                  <p><span className="text-rose-500">🔴</span> {new Date(detailOrder.processed_at).toLocaleString("vi-VN")} - Bị từ chối</p>
-                  <p className="text-emerald-600">🪙 Hoàn {detailOrder.coins_charged} coin</p>
-                </>
-              )}
-            </div>
-            <button onClick={() => setDetailOrder(null)} className="mt-6 w-full rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Đóng</button>
+
+      {loading ? (
+        <Loading />
+      ) : filteredOrders.length === 0 ? (
+        <EmptyState text="Không có đơn hàng nào" />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-sm">
+              <thead className="border-b bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">Đơn</th>
+                  <th className="px-4 py-3 text-left">Roblox</th>
+                  <th className="px-4 py-3 text-left">Gói</th>
+                  <th className="px-4 py-3 text-left">Số tiền</th>
+                  <th className="px-4 py-3 text-left">Trạng thái</th>
+                  <th className="px-4 py-3 text-left">Thời gian</th>
+                  <th className="px-4 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y">
+                {filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-4 font-semibold">
+                      #{order.order_code || order.id}
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <div className="font-medium text-slate-900">
+                        {order.roblox_username || "-"}
+                      </div>
+
+                      <div className="text-xs text-slate-500">
+                        {order.roblox_user_id || "-"}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      {order.package_id || "-"}
+                    </td>
+
+                    <td className="px-4 py-4 font-semibold">
+                      {Number(order.amount || 0).toLocaleString("vi-VN")}đ
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <StatusBadge status={order.status} />
+                    </td>
+
+                    <td className="px-4 py-4 text-slate-500">
+                      {order.created_at
+                        ? new Date(order.created_at).toLocaleString("vi-VN")
+                        : "-"}
+                    </td>
+
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        onClick={() => setDetailOrder(order)}
+                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
-      {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Từ chối đơn #{String(rejectModal.id).slice(0, 8)}</h2>
-            <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} placeholder="Lý do từ chối..." className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" />
-            <p className="mt-2 text-sm font-semibold text-emerald-600">💰 Coin sẽ được hoàn: {rejectModal.coins_charged} coin</p>
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
-              <button onClick={handleReject} disabled={savingId === rejectModal.id} className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white disabled:opacity-50">
-                {savingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn coin"}
-              </button>
+
+      {detailOrder && (
+        <Modal
+          title={`Đơn #${detailOrder.order_code || detailOrder.id}`}
+          onClose={() => setDetailOrder(null)}
+        >
+          <div className="space-y-3">
+            <InfoBox
+              label="Roblox"
+              value={
+                detailOrder.roblox_username ||
+                detailOrder.roblox_user_id ||
+                "-"
+              }
+            />
+
+            <InfoBox
+              label="Gói"
+              value={detailOrder.package_id || "-"}
+            />
+
+            <InfoBox
+              label="Số tiền"
+              value={`${Number(
+                detailOrder.amount || 0
+              ).toLocaleString("vi-VN")}đ`}
+            />
+
+            <InfoBox
+              label="Phương thức"
+              value={detailOrder.payment_method || "-"}
+            />
+
+            <InfoBox
+              label="Trạng thái"
+              value={<StatusBadge status={detailOrder.status} />}
+            />
+
+            {detailOrder.note && (
+              <InfoBox label="Ghi chú" value={detailOrder.note} />
+            )}
+
+            <div className="flex gap-2 pt-3">
+              {detailOrder.status !== "delivered" && (
+                <button
+                  disabled={processing}
+                  onClick={() => handleDelivered(detailOrder)}
+                  className="flex-1 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  <Check size={17} className="mr-2 inline" />
+                  Đã giao
+                </button>
+              )}
+
+              {detailOrder.status !== "rejected" && (
+                <button
+                  disabled={processing}
+                  onClick={() => setRejectOrder(detailOrder)}
+                  className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  <X size={17} className="mr-2 inline" />
+                  Từ chối
+                </button>
+              )}
             </div>
           </div>
-        </div>
+        </Modal>
+      )}
+
+      {rejectOrder && (
+        <Modal
+          title="Từ chối đơn hàng"
+          onClose={() => {
+            setRejectOrder(null);
+            setRejectReason("");
+          }}
+        >
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Nhập lý do từ chối..."
+            rows={4}
+            className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
+          />
+
+          <button
+            disabled={processing}
+            onClick={handleReject}
+            className="mt-3 w-full rounded-xl bg-red-600 py-3 font-semibold text-white disabled:opacity-50"
+          >
+            {processing ? "Đang xử lý..." : "Xác nhận từ chối"}
+          </button>
+        </Modal>
       )}
     </div>
   );
-            }
+  }
 function SupportTab() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [replyText, setReplyText] = useState('');
-  const [replyingId, setReplyingId] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
 
   const fetchTickets = async () => {
     setLoading(true);
-    const { data } = await supabase.from("support_tickets").select("*").order("created_at", { ascending: false });
-    setTickets(data ?? []);
+
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setTickets(data || []);
+    }
+
     setLoading(false);
   };
 
-  useEffect(() => { fetchTickets(); }, []);
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
-  const handleReply = async (ticketId) => {
-    if (!replyText.trim()) {
-      alert('Vui lòng nhập nội dung phản hồi!');
-      return;
-    }
+  const sendReply = async () => {
+    if (!selected || !reply.trim() || sending) return;
 
-    setReplyingId(ticketId);
+    setSending(true);
 
-    try {
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (!ticket) throw new Error('Không tìm thấy ticket');
+    const message = reply.trim();
 
-      const { error: dbError } = await supabase
-        .from('support_tickets')
-        .update({
-          admin_reply: replyText,
-          status: 'replied',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', ticketId);
+    const { error } = await supabase
+      .from("support_tickets")
+      .update({
+        admin_reply: message,
+        status: "answered",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", selected.id);
 
-      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
-
-      if (dbError) throw new Error('Lỗi DB: ' + dbError.message);
-
+    if (!error) {
       try {
-        const result = await emailjs.send(
-          SERVICE_ID,
-          TEMPLATE_ID_REPLY,
+        await emailjs.send(
+          EMAIL_SERVICE_ID,
+          EMAIL_TEMPLATE_ID,
           {
-            user_name: ticket.user_name || 'Khách',
-            admin_reply: replyText,
-            user_subject: ticket.subject || 'Không có chủ đề',
-            user_message: ticket.message || 'Không có nội dung'
+            to_email: selected.email,
+            message,
           },
-          PUBLIC_KEY
+          EMAIL_PUBLIC_KEY
         );
-
-        if (result.status !== 200) {
-          throw new Error('EmailJS status: ' + result.status);
-        }
-      } catch (emailError) {
-        console.error('EmailJS error:', emailError);
-        alert('⚠️ Đã lưu phản hồi nhưng gửi email thất bại: ' + (emailError.message || 'Lỗi không xác định'));
-        setReplyText('');
-        await fetchTickets();
-        setReplyingId(null);
-        return;
+      } catch {
+        // Email lỗi không làm fail reply trong DB
       }
 
       try {
-        await supabase.functions.invoke("telegram-webhook", {
-          body: {
-            message: {
-              text: `💬 Đã phản hồi yêu cầu hỗ trợ!\n👤 User: ${ticket.user_name}\n📌 Chủ đề: ${ticket.subject}\n📝 Nội dung: ${replyText}`,
-              chat: { id: ADMIN_CHAT_ID }
-            }
-          }
+        await fetch("/api/telegram", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            chat_id: ADMIN_CHAT_ID,
+            text: `💬 Đã trả lời ticket #${selected.id}`,
+          }),
         });
-      } catch (teleError) {
-        console.error("Lỗi gửi Telegram:", teleError);
-      }
+      } catch {}
 
-      setReplyText('');
+      setReply("");
       await fetchTickets();
-      alert('✅ Đã gửi phản hồi thành công!');
 
-    } catch (err) {
-      alert('❌ Lỗi: ' + err.message);
-      console.error('Error:', err);
-    } finally {
-      setReplyingId(null);
+      const updated = {
+        ...selected,
+        admin_reply: message,
+        status: "answered",
+      };
+
+      setSelected(updated);
     }
+
+    setSending(false);
   };
 
-  if (loading) return <Loading text="Loading tickets..." />;
-  if (tickets.length === 0) return <EmptyState text="Chưa có yêu cầu hỗ trợ nào." />;
-
   return (
-    <div className="space-y-4">
-      <SectionHeader title="Yêu cầu hỗ trợ" count={`${tickets.length} Yêu cầu`} onRefresh={fetchTickets} />
-      {tickets.map((ticket) => (
-        <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900">{ticket.user_name || 'Khách'}</span>
-                <span className="text-xs text-slate-400">• {ticket.user_email}</span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ticket.status === 'pending' ? 'bg-amber-50 text-amber-600' : ticket.status === 'replied' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                  {ticket.status === 'pending' ? '⏳ Chờ xử lý' : ticket.status === 'replied' ? '💬 Đã phản hồi' : '✅ Đã xử lý'}
+    <div className="space-y-5">
+      <SectionHeader
+        title="Hỗ trợ"
+        description="Quản lý yêu cầu hỗ trợ của người dùng"
+        onRefresh={fetchTickets}
+        loading={loading}
+      />
+
+      {loading ? (
+        <Loading />
+      ) : tickets.length === 0 ? (
+        <EmptyState text="Không có ticket hỗ trợ" />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {tickets.map((ticket) => (
+            <button
+              key={ticket.id}
+              onClick={() => setSelected(ticket)}
+              className="rounded-2xl border bg-white p-5 text-left transition hover:border-blue-300 hover:shadow-sm"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <span className="font-bold">
+                  Ticket #{ticket.id}
                 </span>
+
+                <StatusBadge status={ticket.status} />
               </div>
-              <p className="mt-2 font-semibold text-slate-900">📌 {ticket.subject}</p>
-              <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap">{ticket.message}</p>
-              <p className="mt-2 text-xs text-slate-400">{new Date(ticket.created_at).toLocaleString('vi-VN')}</p>
-              {ticket.admin_reply && (
-                <div className="mt-3 rounded-xl bg-sky-50 p-3 border border-sky-200">
-                  <p className="text-xs font-semibold text-sky-700">💬 Phản hồi từ admin:</p>
-                  <p className="mt-1 text-sm text-slate-700">{ticket.admin_reply}</p>
-                </div>
-              )}
-            </div>
-          </div>
-          {ticket.status === 'pending' && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
-              <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} rows={3} placeholder="Nhập nội dung phản hồi..." className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400" />
-              <button onClick={() => handleReply(ticket.id)} disabled={replyingId === ticket.id} className="mt-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-md disabled:opacity-50">
-                {replyingId === ticket.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : '📤 Gửi phản hồi'}
-              </button>
-            </div>
-          )}
+
+              <p className="line-clamp-2 text-slate-600">
+                {ticket.message ||
+                  ticket.content ||
+                  ticket.subject ||
+                  "Không có nội dung"}
+              </p>
+
+              <div className="mt-3 text-xs text-slate-400">
+                {ticket.created_at
+                  ? new Date(ticket.created_at).toLocaleString("vi-VN")
+                  : "-"}
+              </div>
+            </button>
+          ))}
         </div>
-      ))}
+      )}
+
+      {selected && (
+        <Modal
+          title={`Ticket #${selected.id}`}
+          onClose={() => setSelected(null)}
+        >
+          <div className="space-y-4">
+            <InfoBox
+              label="Email"
+              value={selected.email || "-"}
+            />
+
+            <div className="rounded-xl bg-slate-50 p-4">
+              <div className="mb-2 text-xs font-bold uppercase text-slate-400">
+                Nội dung
+              </div>
+
+              <p className="whitespace-pre-wrap text-sm text-slate-700">
+                {selected.message ||
+                  selected.content ||
+                  selected.subject ||
+                  "-"}
+              </p>
+            </div>
+
+            {selected.admin_reply && (
+              <div className="rounded-xl bg-blue-50 p-4">
+                <div className="mb-2 text-xs font-bold uppercase text-blue-500">
+                  Admin đã trả lời
+                </div>
+
+                <p className="whitespace-pre-wrap text-sm text-slate-700">
+                  {selected.admin_reply}
+                </p>
+              </div>
+            )}
+
+            <textarea
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              placeholder="Nhập câu trả lời..."
+              rows={5}
+              className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
+            />
+
+            <button
+              disabled={sending || !reply.trim()}
+              onClick={sendReply}
+              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Send size={17} className="mr-2 inline" />
+              {sending ? "Đang gửi..." : "Gửi trả lời"}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -388,144 +628,281 @@ function SupportTab() {
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [banModalUser, setBanModalUser] = useState(null);
+  const [search, setSearch] = useState("");
+  const [banUser, setBanUser] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data } = await supabase.from("profiles").select("*").order("coins", { ascending: false });
-    setUsers(data ?? []);
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setUsers(data || []);
+    }
+
     setLoading(false);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    if (!keyword) return users;
+
+    return users.filter((user) =>
+      [
+        user.username,
+        user.email,
+        user.id,
+        user.roblox_username,
+      ]
+        .filter(Boolean)
+        .some((value) =>
+          String(value).toLowerCase().includes(keyword)
+        )
+    );
+  }, [users, search]);
 
   const togglePostPermission = async (user) => {
-    await supabase.from("profiles").update({ can_post: !user.can_post }).eq("id", user.id);
-    await fetchUsers();
-  };
+    const nextValue = !user.can_post;
 
-  const handleUnban = async (user) => {
-    await supabase.from("profiles").update({
-      is_banned: false,
-      ban_reason: null,
-      ban_note: null,
-      banned_until: null,
-      banned_at: null,
-    }).eq("id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        can_post: nextValue,
+      })
+      .eq("id", user.id);
 
-    try {
-      await supabase.functions.invoke("telegram-webhook", {
-        body: {
-          message: {
-            text: `✅ Đã mở ban user!\n👤 User: ${user.username || user.id}`,
-            chat: { id: ADMIN_CHAT_ID }
-          }
-        }
-      });
-    } catch (teleError) {
-      console.error("Lỗi gửi Telegram:", teleError);
+    if (!error) {
+      setUsers((prev) =>
+        prev.map((item) =>
+          item.id === user.id
+            ? { ...item, can_post: nextValue }
+            : item
+        )
+      );
     }
-
-    await fetchUsers();
   };
 
-  if (loading) return <Loading text="Loading users..." />;
-  if (users.length === 0) return <EmptyState text="No users found." />;
+  const unbanUser = async (user) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        banned: false,
+        ban_reason: null,
+      })
+      .eq("id", user.id);
+
+    if (!error) {
+      await fetchUsers();
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <SectionHeader title="Người dùng" count={`${users.length} Users`} onRefresh={fetchUsers} />
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full min-w-[800px] text-left text-sm">
-          <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-6 py-4">Username</th>
-              <th className="px-6 py-4">Level</th>
-              <th className="px-6 py-4">Coins</th>
-              <th className="px-6 py-4">Trạng thái</th>
-              <th className="px-6 py-4">Cảnh báo</th>
-              <th className="px-6 py-4 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {users.map((user) => (
-              <tr key={user.id} className="transition hover:bg-blue-50/40">
-                <td className="px-6 py-4 font-bold text-slate-900">{user.username || "Không tên"}</td>
-                <td className="px-6 py-4">Lv.{user.level}</td>
-                <td className="px-6 py-4 font-bold text-amber-500">{user.coins}</td>
-                <td className="px-6 py-4">
-                  {user.is_banned ? (
-                    <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">Bị ban</span>
-                  ) : (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">Hoạt động</span>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  {user.multi_account_flag ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-600">
-                       Nghi đa tài khoản
-                    </span>
-                  ) : (
-                    <span className="text-xs text-slate-300">—</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => togglePostPermission(user)}
-                      className={`rounded-full px-3 py-2 text-xs font-semibold ${user.can_post ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"}`}
-                    >
-                      <PenSquare size={12} className="inline mr-1" /> {user.can_post ? "Đã cấp" : "Cấp đăng bài"}
-                    </button>
-                    {user.is_banned ? (
-                      <button onClick={() => handleUnban(user)} className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white"><Undo2 size={12} className="inline mr-1" /> Mở khóa</button>
-                    ) : (
-                      <button onClick={() => setBanModalUser(user)} className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white"><Ban size={12} className="inline mr-1" /> Ban</button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="space-y-5">
+      <SectionHeader
+        title="Người dùng"
+        description="Quản lý tài khoản người dùng"
+        onRefresh={fetchUsers}
+        loading={loading}
+      />
+
+      <div className="rounded-2xl border bg-white p-4">
+        <div className="relative">
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm username, email..."
+            className="w-full rounded-xl border py-3 pl-10 pr-4 outline-none focus:border-blue-500"
+          />
+        </div>
       </div>
 
-      {banModalUser && (
+      {loading ? (
+        <Loading />
+      ) : filteredUsers.length === 0 ? (
+        <EmptyState text="Không tìm thấy người dùng" />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-sm">
+              <thead className="border-b bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">Người dùng</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Coin</th>
+                  <th className="px-4 py-3 text-left">Đăng bài</th>
+                  <th className="px-4 py-3 text-left">Trạng thái</th>
+                  <th className="px-4 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-4 py-4">
+                      <div className="font-semibold">
+                        {user.username || "Không tên"}
+                      </div>
+
+                      <div className="text-xs text-slate-400">
+                        {user.id}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      {user.email || "-"}
+                    </td>
+
+                    <td className="px-4 py-4 font-semibold">
+                      {Number(user.coins || 0).toLocaleString("vi-VN")}
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => togglePostPermission(user)}
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          user.can_post
+                            ? "bg-green-100 text-green-700"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {user.can_post ? "Được phép" : "Không"}
+                      </button>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      {user.banned ? (
+                        <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                          Đã ban
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                          Hoạt động
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-4 text-right">
+                      {user.banned ? (
+                        <button
+                          onClick={() => unbanUser(user)}
+                          className="rounded-lg bg-green-50 p-2 text-green-600 hover:bg-green-100"
+                        >
+                          <UserCheck size={18} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setBanUser(user)}
+                          className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100"
+                        >
+                          <Ban size={18} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {banUser && (
         <BanUserModal
-          user={banModalUser}
-          onClose={() => setBanModalUser(null)}
-          onBanned={fetchUsers}
+          user={banUser}
+          onClose={() => setBanUser(null)}
+          onSuccess={async () => {
+            setBanUser(null);
+            await fetchUsers();
+          }}
         />
       )}
     </div>
   );
-      }
-function TasksTab() {
+        }
+                function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTasks = async () => {
     setLoading(true);
-    const { data } = await supabase.from("tasks").select("*").order("sort_order", { ascending: true });
-    setTasks(data ?? []);
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setTasks(data || []);
+    }
+
     setLoading(false);
   };
 
-  useEffect(() => { fetchTasks(); }, []);
-  if (loading) return <Loading text="Loading tasks..." />;
-  if (tasks.length === 0) return <EmptyState text="No tasks found." />;
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   return (
-    <div className="space-y-4">
-      <SectionHeader title="Nhiệm vụ" count={`${tasks.length} Tasks`} onRefresh={fetchTasks} />
-      {tasks.map((task) => (
-        <div key={task.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-900">{task.provider}</span>
-            <span className="text-xs text-slate-400">Coin: {task.reward_coins}/lượt</span>
-          </div>
+    <div className="space-y-5">
+      <SectionHeader
+        title="Nhiệm vụ"
+        description="Quản lý nhiệm vụ kiếm coin"
+        onRefresh={fetchTasks}
+        loading={loading}
+      />
+
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div
+              key={item}
+              className="animate-pulse rounded-2xl border bg-white p-5"
+            >
+              <div className="mb-4 h-5 w-32 rounded bg-slate-200" />
+              <div className="mb-2 h-4 w-full rounded bg-slate-200" />
+              <div className="h-4 w-2/3 rounded bg-slate-200" />
+            </div>
+          ))}
         </div>
-      ))}
+      ) : tasks.length === 0 ? (
+        <EmptyState text="Chưa có nhiệm vụ" />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className="rounded-2xl border bg-white p-5"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h3 className="font-bold text-slate-900">
+                  {task.name || task.title || "Nhiệm vụ"}
+                </h3>
+
+                <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                  +{Number(task.reward || task.coins || 0)}
+                </span>
+              </div>
+
+              <p className="text-sm text-slate-500">
+                {task.description || "Không có mô tả"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -536,371 +913,595 @@ function PackagesTab() {
 
   const fetchPackages = async () => {
     setLoading(true);
-    const { data } = await supabase.from("redemption_packages").select("*").order("sort_order", { ascending: true });
-    setPackages(data ?? []);
+
+    const { data, error } = await supabase
+      .from("redemption_packages")
+      .select("*")
+      .order("coin_cost", { ascending: true });
+
+    if (!error) {
+      setPackages(data || []);
+    }
+
     setLoading(false);
   };
 
-  useEffect(() => { fetchPackages(); }, []);
-  if (loading) return <Loading text="Loading packages..." />;
-  if (packages.length === 0) return <EmptyState text="No packages found." />;
+  useEffect(() => {
+    fetchPackages();
+  }, []);
 
   return (
-    <div className="space-y-4">
-      <SectionHeader title="Gói Robux" count={`${packages.length} Gói`} onRefresh={fetchPackages} />
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="font-bold text-slate-900">{pkg.name}</p>
-          <p className="mt-1 text-xs text-slate-400">Giá: {pkg.coin_cost} Coin</p>
+    <div className="space-y-5">
+      <SectionHeader
+        title="Gói nạp"
+        description="Quản lý các gói Robux"
+        onRefresh={fetchPackages}
+        loading={loading}
+      />
+
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((item) => (
+            <PackageSkeleton key={item} />
+          ))}
+        </div>
+      ) : packages.length === 0 ? (
+        <EmptyState text="Chưa có gói nạp" />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {packages.map((pkg) => {
+            const image =
+              pkg.image_url ||
+              pkg.image ||
+              PACKAGE_IMAGES[pkg.id];
+
+            return (
+              <div
+                key={pkg.id}
+                className="overflow-hidden rounded-2xl border bg-white transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex h-40 items-center justify-center bg-slate-50 p-5">
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={pkg.name || pkg.id}
+                      className="h-full max-w-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.nextElementSibling.style.display =
+                          "flex";
+                      }}
+                    />
+                  ) : null}
+
+                  <div
+                    className={`${
+                      image ? "hidden" : "flex"
+                    } h-20 w-20 items-center justify-center rounded-2xl bg-blue-50 text-blue-500`}
+                  >
+                    <ImageIcon size={32} />
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <h3 className="font-bold text-slate-900">
+                    {pkg.name || pkg.id}
+                  </h3>
+
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-sm text-slate-500">
+                      Robux
+                    </span>
+
+                    <span className="font-bold text-blue-600">
+                      {Number(
+                        pkg.robux || pkg.amount || 0
+                      ).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-sm text-slate-500">
+                      Giá coin
+                    </span>
+
+                    <span className="font-bold text-slate-900">
+                      {Number(
+                        pkg.coin_cost || pkg.coins || 0
+                      ).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                    ID: {pkg.id}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PackageSkeleton() {
+  return (
+    <div className="animate-pulse overflow-hidden rounded-2xl border bg-white">
+      <div className="h-40 bg-slate-200" />
+
+      <div className="space-y-3 p-4">
+        <div className="h-5 w-32 rounded bg-slate-200" />
+
+        <div className="flex justify-between">
+          <div className="h-4 w-16 rounded bg-slate-200" />
+          <div className="h-4 w-14 rounded bg-slate-200" />
+        </div>
+
+        <div className="flex justify-between">
+          <div className="h-4 w-16 rounded bg-slate-200" />
+          <div className="h-4 w-20 rounded bg-slate-200" />
+        </div>
+
+        <div className="h-8 rounded-lg bg-slate-200" />
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  title,
+  description,
+  onRefresh,
+  loading,
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900">
+          {title}
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          {description}
+        </p>
+      </div>
+
+      <button
+        onClick={onRefresh}
+        disabled={loading}
+        className="rounded-xl border bg-white p-2.5 text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+      >
+        <RefreshCw
+          size={18}
+          className={loading ? "animate-spin" : ""}
+        />
+      </button>
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3, 4, 5, 6].map((item) => (
+        <div
+          key={item}
+          className="animate-pulse rounded-2xl border bg-white p-5"
+        >
+          <div className="mb-4 h-5 w-32 rounded bg-slate-200" />
+          <div className="mb-2 h-4 w-full rounded bg-slate-200" />
+          <div className="h-4 w-2/3 rounded bg-slate-200" />
         </div>
       ))}
     </div>
   );
 }
 
-function SectionHeader({ title, count, onRefresh }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        <span className="text-sm font-semibold text-slate-400">{count}</span>
-      </div>
-      <button onClick={onRefresh} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100">
-        <RefreshCw size={16} />
-      </button>
-    </div>
-  );
-}
-
-function Loading({ text }) {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 size={24} className="animate-spin text-blue-500" />
-      <p className="ml-3 text-sm text-slate-500">{text}</p>
-    </div>
-  );
-}
-
 function EmptyState({ text }) {
   return (
-    <div className="py-12 text-center">
-      <p className="text-sm text-slate-400">{text}</p>
+    <div className="rounded-2xl border bg-white px-6 py-14 text-center">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+        <Package size={22} />
+      </div>
+
+      <p className="text-sm font-medium text-slate-500">
+        {text}
+      </p>
     </div>
   );
 }
 
-  function AffiliateTab() {
-          
+function StatusBadge({ status }) {
+  const config = {
+    pending: {
+      text: "Đang chờ",
+      className: "bg-yellow-100 text-yellow-700",
+    },
+    paid: {
+      text: "Đang kiểm tra",
+      className: "bg-blue-100 text-blue-700",
+    },
+    processing: {
+      text: "Đang xử lý",
+      className: "bg-blue-100 text-blue-700",
+    },
+    delivered: {
+      text: "Đã giao",
+      className: "bg-green-100 text-green-700",
+    },
+    completed: {
+      text: "Hoàn thành",
+      className: "bg-green-100 text-green-700",
+    },
+    rejected: {
+      text: "Từ chối",
+      className: "bg-red-100 text-red-700",
+    },
+    cancelled: {
+      text: "Đã hủy",
+      className: "bg-slate-100 text-slate-600",
+    },
+    answered: {
+      text: "Đã trả lời",
+      className: "bg-green-100 text-green-700",
+    },
+  };
+
+  const item = config[status] || {
+    text: status || "Không rõ",
+    className: "bg-slate-100 text-slate-600",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${item.className}`}
+    >
+      {item.text}
+    </span>
+  );
+}
+
+function InfoBox({ label, value }) {
+  return (
+    <div className="rounded-xl border bg-slate-50 p-3">
+      <div className="mb-1 text-xs font-semibold uppercase text-slate-400">
+        {label}
+      </div>
+
+      <div className="text-sm font-medium text-slate-800">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Modal({ title, children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b px-5 py-4">
+          <h3 className="font-bold text-slate-900">
+            {title}
+          </h3>
+
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+      }
+    function AffiliateTab() {
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState(null);
-  const [processingId, setProcessingId] = useState(null);
-  const [rejectModal, setRejectModal] = useState(null);
-  const [rejectNote, setRejectNote] = useState("");
   const [detailWithdrawal, setDetailWithdrawal] = useState(null);
+  const [rejectWithdrawal, setRejectWithdrawal] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [processing, setProcessing] = useState(false);
+
+  const statusText = {
+    pending: "Đang chờ",
+    processing: "Đang xử lý",
+    approved: "Đã duyệt",
+    completed: "Đã thanh toán",
+    rejected: "Đã từ chối",
+    cancelled: "Đã hủy",
+  };
 
   const fetchWithdrawals = async () => {
-  const fetchWithdrawals = async () => {
-  setLoading(true);
-  try {
+    setLoading(true);
+
     const { data, error } = await supabase
       .from("star_withdrawals")
       .select("*")
       .order("created_at", { ascending: false });
-    
-    if (error) {
-      console.error("❌ Lỗi fetch:", error);
-      setWithdrawals([]);
-    } else {
-      console.log("✅ Data:", data);
-      setWithdrawals(data ?? []);
+
+    if (!error) {
+      setWithdrawals(data || []);
     }
-  } catch (err) {
-    console.error("❌ Lỗi:", err);
-    setWithdrawals([]);
-  }
-  setLoading(false);
-};
-  const pendingCount = withdrawals.filter((w) => w.status === "pending").length;
-  const completedCount = withdrawals.filter((w) => w.status === "approved").length;
-  const rejectedCount = withdrawals.filter((w) => w.status === "rejected").length;
 
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncResult(null);
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
-
-    try {
-      const { data, error } = await supabase.functions.invoke("sync-affiliate-transactions", {
-        headers: { Authorization: `Bearer ${token}` },
-        body: {},
-      });
-
-      if (error) throw error;
-      setSyncResult(data);
-    } catch (err) {
-      setSyncResult({ error: err.message || "Đồng bộ thất bại." });
-    } finally {
-      setSyncing(false);
-    }
+    setLoading(false);
   };
 
-  const handleApprove = async (withdrawal) => {
-    if (!confirm(`Duyệt rút ${Number(withdrawal.amount).toLocaleString("vi-VN")}đ cho ${withdrawal.account_holder}?`)) return;
-    
-    setProcessingId(withdrawal.id);
-    
+  useEffect(() => {
+    fetchWithdrawals();
+  }, []);
+
+  const updateWithdrawal = async (withdrawal, status, extra = {}) => {
+    if (processing) return;
+
+    setProcessing(true);
+
     const { error } = await supabase
       .from("star_withdrawals")
-      .update({ 
-        status: "approved", 
-        processed_at: new Date().toISOString() 
+      .update({
+        status,
+        ...extra,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", withdrawal.id);
 
-    if (error) {
-      alert("Lỗi: " + error.message);
-      setProcessingId(null);
-      return;
+    if (!error) {
+      await fetchWithdrawals();
+      setDetailWithdrawal(null);
+      setRejectWithdrawal(null);
+      setRejectReason("");
     }
 
-    // Gửi thông báo Telegram
-    try {
-      await supabase.functions.invoke("telegram-webhook", {
-        body: {
-          message: {
-            text: `✅ Đã duyệt rút tiền!\n💰 Số tiền: ${Number(withdrawal.amount).toLocaleString("vi-VN")}đ\n🏦 Ngân hàng: ${withdrawal.bank_name}\n👤 Chủ TK: ${withdrawal.account_holder}\n📱 Số TK: ${withdrawal.account_number}`,
-            chat: { id: ADMIN_CHAT_ID }
-          }
-        }
-      });
-    } catch (teleError) {
-      console.error("Lỗi gửi Telegram:", teleError);
-    }
+    setProcessing(false);
+  };
 
-    setProcessingId(null);
-    await fetchWithdrawals();
+  const handleApprove = async (withdrawal) => {
+    await updateWithdrawal(withdrawal, "approved");
   };
 
   const handleReject = async () => {
-    if (!rejectNote.trim()) { 
-      alert("Vui lòng nhập lý do từ chối!"); 
-      return; 
-    }
-    
-    setProcessingId(rejectModal.id);
+    if (!rejectWithdrawal) return;
 
-    // Cập nhật status thành rejected và hoàn điểm
-    const { error } = await supabase.rpc("reject_star_withdrawal", {
-      p_withdrawal_id: rejectModal.id,
-      p_note: rejectNote.trim(),
-    });
-
-    setProcessingId(null);
-    if (error) { 
-      alert(error.message); 
-      return; 
-    }
-
-    // Gửi thông báo Telegram
-    try {
-      await supabase.functions.invoke("telegram-webhook", {
-        body: {
-          message: {
-            text: `❌ Đã từ chối rút tiền!\n💰 Số tiền: ${Number(rejectModal.amount).toLocaleString("vi-VN")}đ\n📝 Lý do: ${rejectNote}`,
-            chat: { id: ADMIN_CHAT_ID }
-          }
-        }
-      });
-    } catch (teleError) {
-      console.error("Lỗi gửi Telegram:", teleError);
-    }
-
-    setRejectModal(null);
-    setRejectNote("");
-    await fetchWithdrawals();
+    await updateWithdrawal(
+      rejectWithdrawal,
+      "rejected",
+      {
+        reject_reason:
+          rejectReason.trim() || "Không có lý do",
+      }
+    );
   };
-
-  if (loading) return <Loading text="Loading withdrawals..." />;
 
   return (
     <div className="space-y-5">
-      <SectionHeader title="💳 Quản lý rút tiền" count={`${pendingCount} chờ duyệt`} onRefresh={fetchWithdrawals} />
+      <SectionHeader
+        title="Affiliate"
+        description="Quản lý yêu cầu rút tiền affiliate"
+        onRefresh={fetchWithdrawals}
+        loading={loading}
+      />
 
-      {/* Thống kê */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-amber-50 p-4 text-center">
-          <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
-          <p className="text-xs text-amber-600">Chờ duyệt</p>
-        </div>
-        <div className="rounded-2xl bg-emerald-50 p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{completedCount}</p>
-          <p className="text-xs text-emerald-600">Đã duyệt</p>
-        </div>
-        <div className="rounded-2xl bg-rose-50 p-4 text-center">
-          <p className="text-2xl font-bold text-rose-600">{rejectedCount}</p>
-          <p className="text-xs text-rose-600">Từ chối</p>
-        </div>
-      </div>
+      {loading ? (
+        <Loading />
+      ) : withdrawals.length === 0 ? (
+        <EmptyState text="Chưa có yêu cầu rút tiền" />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] text-sm">
+              <thead className="border-b bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">ID</th>
+                  <th className="px-4 py-3 text-left">User</th>
+                  <th className="px-4 py-3 text-left">Số tiền</th>
+                  <th className="px-4 py-3 text-left">Ngân hàng</th>
+                  <th className="px-4 py-3 text-left">Trạng thái</th>
+                  <th className="px-4 py-3 text-left">Thời gian</th>
+                  <th className="px-4 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
 
-      {/* Nút đồng bộ */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600"><ShoppingBag size={20} /></span>
-          <div>
-            <p className="font-bold text-slate-900">Đồng bộ đơn hàng Affiliate</p>
-            <p className="text-xs text-slate-400">Lấy đơn hàng 7 ngày gần nhất từ AccessTrade</p>
-          </div>
-        </div>
-
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50"
-        >
-          {syncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={15} />}
-          {syncing ? "Đang đồng bộ..." : "Đồng bộ ngay"}
-        </button>
-
-        {syncResult && (
-          <div className={`mt-3 rounded-xl p-3 text-xs font-semibold ${syncResult.error ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}`}>
-            {syncResult.error ? `❌ ${syncResult.error}` : `✅ Đã quét ${syncResult.synced} đơn, cộng điểm cho ${syncResult.credited} đơn mới.`}
-          </div>
-        )}
-      </div>
-
-      {/* Danh sách yêu cầu rút */}
-      <div className="space-y-4">
-        {withdrawals.length === 0 ? (
-          <EmptyState text="Chưa có yêu cầu rút tiền nào." />
-        ) : (
-          withdrawals.map((w) => {
-            const statusColors = {
-              pending: "bg-amber-50 text-amber-600",
-              approved: "bg-emerald-50 text-emerald-600",
-              rejected: "bg-rose-50 text-rose-600",
-            };
-            const statusText = {
-              pending: "⏳ Chờ duyệt",
-              approved: "✅ Đã duyệt",
-              rejected: "❌ Từ chối",
-            };
-
-            return (
-              <div key={w.id} className={`rounded-2xl border p-5 shadow-sm ${
-                w.status === "approved" ? "bg-emerald-50/30 border-emerald-100" : 
-                w.status === "rejected" ? "bg-rose-50/30 border-rose-100" : 
-                "bg-white border-slate-200"
-              }`}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-slate-900 text-lg">{Number(w.amount).toLocaleString("vi-VN")}đ</p>
-                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColors[w.status]}`}>
-                        {statusText[w.status]}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-400">🏦 {w.bank_name}</p>
-                    <p className="text-xs text-slate-400">👤 {w.account_holder} • 📱 {w.account_number}</p>
-                    <p className="text-xs text-slate-400">📧 {w.profiles?.email || w.user_id}</p>
-                    <p className="mt-1 text-xs text-slate-400">{new Date(w.created_at).toLocaleString("vi-VN")}</p>
-                    {w.fee > 0 && (
-                      <p className="text-xs text-slate-400">Phí: {Number(w.fee).toLocaleString("vi-VN")}đ • Thực nhận: <span className="font-bold text-emerald-600">{Number(w.net_amount).toLocaleString("vi-VN")}đ</span></p>
-                    )}
-                  </div>
-                  <button 
-                    onClick={() => setDetailWithdrawal(w)} 
-                    className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200"
+              <tbody className="divide-y">
+                {withdrawals.map((withdrawal) => (
+                  <tr
+                    key={withdrawal.id}
+                    className="hover:bg-slate-50"
                   >
-                    <Eye size={16} />
-                  </button>
-                </div>
+                    <td className="px-4 py-4 font-semibold">
+                      #{withdrawal.id}
+                    </td>
 
-                {w.status === "pending" && (
-                  <div className="mt-4 flex gap-2">
-                    <button 
-                      onClick={() => handleApprove(w)} 
-                      disabled={processingId === w.id} 
-                      className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition disabled:opacity-50"
-                    >
-                      {processingId === w.id ? <Loader2 size={14} className="animate-spin mx-auto" /> : <><CheckCircle2 size={14} className="inline mr-1" /> Duyệt</>}
-                    </button>
-                    <button 
-                      onClick={() => setRejectModal(w)} 
-                      disabled={processingId === w.id} 
-                      className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white hover:bg-rose-600 transition disabled:opacity-50"
-                    >
-                      <XCircle size={14} className="inline mr-1" /> Từ chối
-                    </button>
-                  </div>
-                )}
+                    <td className="px-4 py-4">
+                      {withdrawal.user_id || "-"}
+                    </td>
 
-                {w.admin_note && (
-                  <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs italic text-slate-500">
-                    📝 Lý do: {w.admin_note}
-                  </p>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
+                    <td className="px-4 py-4 font-bold">
+                      {Number(
+                        withdrawal.amount ||
+                          withdrawal.coins ||
+                          0
+                      ).toLocaleString("vi-VN")}
+                    </td>
 
-      {/* Modal reject */}
-      {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Từ chối yêu cầu rút tiền</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {Number(rejectModal.amount).toLocaleString("vi-VN")}đ sẽ được hoàn lại vào điểm sao của user.
-            </p>
-            <textarea 
-              value={rejectNote} 
-              onChange={(e) => setRejectNote(e.target.value)} 
-              rows={3} 
-              placeholder="Nhập lý do từ chối..." 
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400" 
-            />
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setRejectModal(null)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition">Hủy</button>
-              <button 
-                onClick={handleReject} 
-                disabled={processingId === rejectModal.id} 
-                className="flex-1 rounded-xl bg-rose-500 py-3 text-sm font-semibold text-white hover:bg-rose-600 transition disabled:opacity-50"
-              >
-                {processingId === rejectModal.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Từ chối & hoàn điểm"}
-              </button>
-            </div>
+                    <td className="px-4 py-4">
+                      <div className="font-medium">
+                        {withdrawal.bank_name ||
+                          withdrawal.bank ||
+                          "-"}
+                      </div>
+
+                      <div className="text-xs text-slate-500">
+                        {withdrawal.account_number || "-"}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                        {statusText[withdrawal.status] ||
+                          withdrawal.status ||
+                          "Không rõ"}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-4 text-slate-500">
+                      {withdrawal.created_at
+                        ? new Date(
+                            withdrawal.created_at
+                          ).toLocaleString("vi-VN")
+                        : "-"}
+                    </td>
+
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        onClick={() =>
+                          setDetailWithdrawal(withdrawal)
+                        }
+                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* Modal detail */}
       {detailWithdrawal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Chi tiết yêu cầu rút</h2>
-            <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
-              <p><span className="font-bold">Số tiền:</span> {Number(detailWithdrawal.amount).toLocaleString("vi-VN")}đ</p>
-              <p><span className="font-bold">Ngân hàng:</span> {detailWithdrawal.bank_name}</p>
-              <p><span className="font-bold">Số tài khoản:</span> {detailWithdrawal.account_number}</p>
-              <p><span className="font-bold">Chủ tài khoản:</span> {detailWithdrawal.account_holder}</p>
-              <p><span className="font-bold">Phí:</span> {Number(detailWithdrawal.fee).toLocaleString("vi-VN")}đ</p>
-              <p><span className="font-bold">Thực nhận:</span> {Number(detailWithdrawal.net_amount).toLocaleString("vi-VN")}đ</p>
-              <p><span className="font-bold">Trạng thái:</span> {statusText[detailWithdrawal.status]}</p>
-              <p><span className="font-bold">Ngày tạo:</span> {new Date(detailWithdrawal.created_at).toLocaleString("vi-VN")}</p>
-            </div>
-            <button onClick={() => setDetailWithdrawal(null)} className="mt-6 w-full rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition">Đóng</button>
-          </div>
-        </div>
-      )}
-</div>
-  );
-}
+        <Modal
+          title={`Yêu cầu #${detailWithdrawal.id}`}
+          onClose={() => setDetailWithdrawal(null)}
+        >
+          <div className="space-y-3">
+            <InfoBox
+              label="User ID"
+              value={detailWithdrawal.user_id || "-"}
+            />
 
+            <InfoBox
+              label="Số tiền"
+              value={Number(
+                detailWithdrawal.amount ||
+                  detailWithdrawal.coins ||
+                  0
+              ).toLocaleString("vi-VN")}
+            />
+
+            <InfoBox
+              label="Ngân hàng"
+              value={
+                detailWithdrawal.bank_name ||
+                detailWithdrawal.bank ||
+                "-"
+              }
+            />
+
+            <InfoBox
+              label="Số tài khoản"
+              value={
+                detailWithdrawal.account_number || "-"
+              }
+            />
+
+            <InfoBox
+              label="Chủ tài khoản"
+              value={
+                detailWithdrawal.account_name ||
+                detailWithdrawal.holder_name ||
+                "-"
+              }
+            />
+
+            <InfoBox
+              label="Trạng thái"
+              value={
+                statusText[detailWithdrawal.status] ||
+                detailWithdrawal.status ||
+                "-"
+              }
+            />
+
+            {detailWithdrawal.reject_reason && (
+              <InfoBox
+                label="Lý do từ chối"
+                value={detailWithdrawal.reject_reason}
+              />
+            )}
+
+            <div className="flex gap-2 pt-3">
+              {detailWithdrawal.status === "pending" && (
+                <>
+                  <button
+                    disabled={processing}
+                    onClick={() =>
+                      handleApprove(detailWithdrawal)
+                    }
+                    className="flex-1 rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                  >
+                    <Check
+                      size={17}
+                      className="mr-2 inline"
+                    />
+                    Duyệt
+                  </button>
+
+                  <button
+                    disabled={processing}
+                    onClick={() =>
+                      setRejectWithdrawal(detailWithdrawal)
+                    }
+                    className="flex-1 rounded-xl bg-red-600 py-3 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    <X
+                      size={17}
+                      className="mr-2 inline"
+                    />
+                    Từ chối
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {rejectWithdrawal && (
+        <Modal
+          title="Từ chối rút tiền"
+          onClose={() => {
+            setRejectWithdrawal(null);
+            setRejectReason("");
+          }}
+        >
+          <textarea
+            value={rejectReason}
+            onChange={(e) =>
+              setRejectReason(e.target.value)
+            }
+            rows={4}
+            placeholder="Nhập lý do từ chối..."
+            className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
+          />
+
+          <button
+            disabled={processing}
+            onClick={handleReject}
+            className="mt-3 w-full rounded-xl bg-red-600 py-3 font-semibold text-white disabled:opacity-50"
+          >
+            {processing
+              ? "Đang xử lý..."
+              : "Xác nhận từ chối"}
+          </button>
+        </Modal>
+      )}
+    </div>
+  );
+    }
 function PostsTab() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -908,75 +1509,154 @@ function PostsTab() {
 
   const fetchPosts = async () => {
     setLoading(true);
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("posts")
       .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
+      .order("created_at", { ascending: false });
 
-    if (!data || data.length === 0) {
-      setPosts([]);
-      setLoading(false);
-      return;
+    if (!error) {
+      setPosts(data || []);
     }
 
-    const authorIds = [...new Set(data.map((p) => p.author_id))];
-    const { data: authors } = await supabase.from("profiles").select("id, username").in("id", authorIds);
-    const authorMap = Object.fromEntries((authors || []).map((a) => [a.id, a.username]));
-
-    setPosts(data.map((p) => ({ ...p, authorName: authorMap[p.author_id] || "Người dùng" })));
     setLoading(false);
   };
 
-  useEffect(() => { fetchPosts(); }, []);
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
-  const handleApprove = async (post) => {
+  const updatePost = async (post, action) => {
+    if (processingId) return;
+
     setProcessingId(post.id);
-    await supabase.rpc("approve_post", { p_post_id: post.id, p_reason: "Admin duyệt thủ công" });
-    setProcessingId(null);
-    await fetchPosts();
-  };
 
-  const handleReject = async (post) => {
-    setProcessingId(post.id);
-    await supabase.rpc("reject_post", { p_post_id: post.id, p_reason: "Admin từ chối thủ công" });
-    setProcessingId(null);
-    await fetchPosts();
-  };
+    let status = action;
 
-  if (loading) return <Loading text="Loading posts..." />;
-  if (posts.length === 0) return <EmptyState text="Chưa có bài đăng nào." />;
+    if (action === "approve") {
+      status = "approved";
+    }
+
+    if (action === "reject") {
+      status = "rejected";
+    }
+
+    const { error } = await supabase
+      .from("posts")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", post.id);
+
+    if (!error) {
+      await fetchPosts();
+    }
+
+    setProcessingId(null);
+  };
 
   return (
-    <div className="space-y-4">
-      <SectionHeader title="Bài đăng cộng đồng" count={`${posts.length} bài`} onRefresh={fetchPosts} />
-      {posts.map((post) => (
-        <div key={post.id} className={`rounded-2xl border p-5 shadow-sm ${post.status === "visible" ? "bg-emerald-50/30 border-emerald-100" : post.status === "hidden" ? "bg-rose-50/30 border-rose-100" : "bg-white border-slate-200"}`}>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-bold text-slate-900">{post.authorName} • {post.category === "ugc_guide" ? "Khám phá UGC" : "Cộng đồng"}</p>
-              <p className="mt-1 text-xs text-slate-400">{new Date(post.created_at).toLocaleString("vi-VN")}</p>
+    <div className="space-y-5">
+      <SectionHeader
+        title="Bài viết"
+        description="Duyệt và quản lý bài viết cộng đồng"
+        onRefresh={fetchPosts}
+        loading={loading}
+      />
+
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="animate-pulse rounded-2xl border bg-white p-5"
+            >
+              <div className="mb-4 h-6 w-2/3 rounded bg-slate-200" />
+              <div className="mb-2 h-4 w-full rounded bg-slate-200" />
+              <div className="mb-2 h-4 w-5/6 rounded bg-slate-200" />
+              <div className="h-4 w-2/3 rounded bg-slate-200" />
             </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-bold ${post.status === "pending" ? "bg-amber-50 text-amber-600" : post.status === "visible" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
-              {post.status === "pending" ? "Chờ duyệt" : post.status === "visible" ? "Đã duyệt" : "Đã ẩn"}
-            </span>
-          </div>
-
-          <p className="mt-3 whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-sm text-slate-700">{post.content}</p>
-
-          {post.ai_reason && (
-            <p className="mt-2 rounded-lg bg-slate-100 p-2.5 text-xs italic text-slate-500">AI: {post.ai_reason}</p>
-          )}
-
-          {post.status === "pending" && (
-            <div className="mt-4 flex gap-2">
-              <button onClick={() => handleApprove(post)} disabled={processingId === post.id} className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CheckCircle2 size={14} className="inline mr-1" /> Duyệt (+20 Xu)</button>
-              <button onClick={() => handleReject(post)} disabled={processingId === post.id} className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><XCircle size={14} className="inline mr-1" /> Từ chối</button>
-            </div>
-          )}
+          ))}
         </div>
-      ))}
+      ) : posts.length === 0 ? (
+        <EmptyState text="Chưa có bài viết" />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              className="rounded-2xl border bg-white p-5"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    {post.title || "Bài viết không có tiêu đề"}
+                  </h3>
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    {post.created_at
+                      ? new Date(
+                          post.created_at
+                        ).toLocaleString("vi-VN")
+                      : "-"}
+                  </p>
+                </div>
+
+                <StatusBadge status={post.status} />
+              </div>
+
+              {post.image_url && (
+                <div className="mb-4 overflow-hidden rounded-xl bg-slate-100">
+                  <img
+                    src={post.image_url}
+                    alt=""
+                    className="max-h-60 w-full object-cover"
+                  />
+                </div>
+              )}
+
+              <p className="line-clamp-4 whitespace-pre-wrap text-sm text-slate-600">
+                {post.content || post.description || "-"}
+              </p>
+
+              <div className="mt-4 flex gap-2">
+                {post.status !== "approved" && (
+                  <button
+                    disabled={processingId === post.id}
+                    onClick={() =>
+                      updatePost(post, "approve")
+                    }
+                    className="flex-1 rounded-xl bg-green-600 py-2.5 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                  >
+                    <Check
+                      size={16}
+                      className="mr-1 inline"
+                    />
+                    Duyệt
+                  </button>
+                )}
+
+                {post.status !== "rejected" && (
+                  <button
+                    disabled={processingId === post.id}
+                    onClick={() =>
+                      updatePost(post, "reject")
+                    }
+                    className="flex-1 rounded-xl bg-red-600 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    <X
+                      size={16}
+                      className="mr-1 inline"
+                    />
+                    Từ chối
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-        }
-  }
+}
