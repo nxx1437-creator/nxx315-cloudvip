@@ -83,10 +83,10 @@ const GAMES = [
   },
   {
     id: 7,
-    name: 'Liên Minh Huyền Thoại',
+    name: 'OMG 3Q',
     category: 'pc',
-    logo: 'lien-minh-huyen-thoai.png',
-    path: '/store/lien-minh-huyen-thoai',
+    logo: 'omg-3q.png',
+    path: '/store/omg-3q',
   },
   {
     id: 8,
