@@ -93,93 +93,94 @@ export default function TopHeader() {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 shadow-sm backdrop-blur-md">
-       <div className="mx-auto flex max-w-md md:max-w-5xl items-center gap-2 px-4 py-3">
-         <button
-          onClick={() => navigate("/dashboard")}
-          className="shrink-0 font-[Baloo_2] text-base font-extrabold tracking-tight text-slate-900"
-        >
-          NXX315 <span className="text-sky-500">Studio</span>
-        </button>
+        <div className="mx-auto flex max-w-md md:max-w-5xl items-center gap-2 px-4 py-3">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="shrink-0 font-[Baloo_2] text-base font-extrabold tracking-tight text-slate-900"
+          >
+            NXX315 <span className="text-sky-500">Studio</span>
+          </button>
 
-        <div ref={searchRef} className="relative min-w-0 flex-1">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
-            <Search size={15} className="shrink-0" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => setSearchOpen(true)}
-              placeholder="Tìm trang, tính năng..."
-              className="w-full min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
-            />
-            {query && (
-              <button onClick={() => setQuery("")} className="shrink-0 text-slate-300">
-                <X size={13} />
-              </button>
+          <div ref={searchRef} className="relative min-w-0 flex-1">
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
+              <Search size={15} className="shrink-0" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setSearchOpen(true)}
+                placeholder="Tìm trang, tính năng..."
+                className="w-full min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+              />
+              {query && (
+                <button onClick={() => setQuery("")} className="shrink-0 text-slate-300">
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            {searchOpen && query.trim() && (
+              <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
+                {matches.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-xs text-slate-400">Không tìm thấy kết quả.</p>
+                ) : (
+                  matches.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.path}
+                        onClick={() => handleSelectResult(item.path)}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-sky-50"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-500">
+                          <Icon size={15} />
+                        </span>
+                        <span className="text-sm font-semibold text-slate-700">{item.label}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             )}
           </div>
 
-          {searchOpen && query.trim() && (
-            <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
-              {matches.length === 0 ? (
-                <p className="px-3 py-4 text-center text-xs text-slate-400">Không tìm thấy kết quả.</p>
-              ) : (
-                matches.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => handleSelectResult(item.path)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-sky-50"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-500">
-                        <Icon size={15} />
-                      </span>
-                      <span className="text-sm font-semibold text-slate-700">{item.label}</span>
-                    </button>
-                  );
-                })
+          <div ref={notifRef} className="relative shrink-0">
+            <button
+              onClick={handleOpenNotif}
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
+            >
+              <Bell size={16} className="text-slate-600" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-rose-500" />
               )}
-            </div>
-          )}
-        </div>
+            </button>
 
-        <div ref={notifRef} className="relative shrink-0">
-          <button
-            onClick={handleOpenNotif}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
-          >
-            <Bell size={16} className="text-slate-600" />
-            {unreadCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-rose-500" />
+            {notifOpen && (
+              <div className="absolute right-0 top-full mt-2 max-h-80 w-72 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
+                <p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Thông báo</p>
+                {notifications.length === 0 ? (
+                  <p className="px-3 py-6 text-center text-xs text-slate-400">Chưa có thông báo nào.</p>
+                ) : (
+                  notifications.map((n) => (
+                    <div key={n.id} className="rounded-xl px-3 py-2.5 hover:bg-slate-50">
+                      <p className="text-xs font-bold text-slate-800">{n.title}</p>
+                      {n.body && <p className="mt-0.5 text-[11px] text-slate-500">{n.body}</p>}
+                      <p className="mt-1 text-[10px] text-slate-300">
+                        {new Date(n.created_at).toLocaleString("vi-VN")}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
+          </div>
+
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
+          >
+            <Menu size={19} />
           </button>
-
-          {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 max-h-80 w-72 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
-              <p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Thông báo</p>
-              {notifications.length === 0 ? (
-                <p className="px-3 py-6 text-center text-xs text-slate-400">Chưa có thông báo nào.</p>
-              ) : (
-                notifications.map((n) => (
-                  <div key={n.id} className="rounded-xl px-3 py-2.5 hover:bg-slate-50">
-                    <p className="text-xs font-bold text-slate-800">{n.title}</p>
-                    {n.body && <p className="mt-0.5 text-[11px] text-slate-500">{n.body}</p>}
-                    <p className="mt-1 text-[10px] text-slate-300">
-                      {new Date(n.created_at).toLocaleString("vi-VN")}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </div>
-
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
-        >
-          <Menu size={19} />
-        </button>
       </header>
 
       <Sidebar
@@ -192,4 +193,4 @@ export default function TopHeader() {
       />
     </>
   );
-          }
+  }
