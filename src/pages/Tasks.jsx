@@ -67,7 +67,7 @@ function ProviderLogo({ task }) {
       loading="lazy"
       decoding="async"
       onError={() => setError(true)}
-      className="h-11 w-11 rounded-xl object-cover shrink-0 bg-slate-900"
+      className="h-11 w-11 rounded-xl object-contain p-1 shrink-0 bg-white border border-slate-100"
     />
   );
 }
@@ -509,4 +509,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-    }
+                   }
