@@ -8,25 +8,32 @@ export default function useTasks(userId) {
   const hasLoadedOnce = useRef(false);
 
   const reload = useCallback(async () => {
+    console.log("🔥 reload chạy, userId =", userId);
+
     const isFirstLoad = !hasLoadedOnce.current;
     if (isFirstLoad) setLoading(true);
 
     try {
-      const { data: taskRows } = await supabase
+      const { data: taskRows, error: taskErr } = await supabase
         .from("tasks")
         .select("*")
         .eq("active", true)
         .order("sort_order", { ascending: true });
 
-      // Nếu DB chưa có nhiệm vụ nào, hiện dữ liệu mẫu để giao diện sống động
+      console.log("📦 taskRows =", taskRows, "error =", taskErr);
+
+      if (taskErr) throw taskErr;
+
+      // Nếu DB chưa có nhiệm vụ nào, hiện dữ liệu mẫu
       if (!taskRows || taskRows.length === 0) {
+        console.log("⚠️ Không có task active, dùng data demo");
         setTasks([
           { id: "demo-1", title: "Làm 1 nhiệm vụ", provider: "Demo", reward_coins: 50, daily_limit: 1, completedToday: 1, remainingToday: 0 },
           { id: "demo-2", title: "Làm 5 nhiệm vụ", provider: "Demo", reward_coins: 200, daily_limit: 5, completedToday: 3, remainingToday: 2 },
           { id: "demo-3", title: "Làm 10 nhiệm vụ", provider: "Demo", reward_coins: 400, daily_limit: 10, completedToday: 8, remainingToday: 2 },
         ]);
         setCompletedToday(3);
-        return;   // ✅ vẫn return, nhưng finally bên dưới LUÔN chạy
+        return; // finally vẫn chạy
       }
 
       let doneMap = {};
@@ -37,11 +44,13 @@ export default function useTasks(userId) {
         startOfDay.setHours(0, 0, 0, 0);
 
         // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
-        const { data: allCompletions } = await supabase
+        const { data: allCompletions, error: allErr } = await supabase
           .from("task_completions")
           .select("completed_at")
           .eq("user_id", userId)
           .order("completed_at", { ascending: false });
+
+        console.log("📜 allCompletions count =", allCompletions?.length, "error =", allErr);
 
         // Tính số lượng hoàn thành hôm nay
         const todayCompletions = (allCompletions || []).filter(
@@ -69,6 +78,8 @@ export default function useTasks(userId) {
           currentDate.setDate(currentDate.getDate() - 1);
         }
 
+        console.log("🔥 streak =", streak);
+
         // Tự động cập nhật streak vào database (nếu có thay đổi)
         const { data: profileData } = await supabase
           .from("profiles")
@@ -89,11 +100,13 @@ export default function useTasks(userId) {
         }
 
         // Lấy dữ liệu task theo ngày hôm nay
-        const { data: completions } = await supabase
+        const { data: completions, error: compErr } = await supabase
           .from("task_completions")
           .select("task_id")
           .eq("user_id", userId)
           .gte("completed_at", startOfDay.toISOString());
+
+        console.log("✅ completions hôm nay =", completions, "error =", compErr);
 
         doneMap = (completions || []).reduce((acc, c) => {
           acc[c.task_id] = (acc[c.task_id] || 0) + 1;
@@ -101,18 +114,20 @@ export default function useTasks(userId) {
         }, {});
       }
 
-      setTasks(
-        taskRows.map((t) => ({
-          ...t,
-          completedToday: doneMap[t.id] || 0,
-          remainingToday: Math.max(0, t.daily_limit - (doneMap[t.id] || 0)),
-        }))
-      );
+      const mapped = taskRows.map((t) => ({
+        ...t,
+        completedToday: doneMap[t.id] || 0,
+        remainingToday: Math.max(0, t.daily_limit - (doneMap[t.id] || 0)),
+      }));
+
+      console.log("🎯 mapped tasks =", mapped);
+
+      setTasks(mapped);
       setCompletedToday(completed);
     } catch (err) {
-      console.error("useTasks error:", err);
+      console.error("❌ useTasks error:", err);
     } finally {
-      // ✅ LUÔN chạy — kể cả khi return sớm hoặc lỗi
+      console.log("✅ finally chạy, isFirstLoad =", isFirstLoad);
       if (isFirstLoad) {
         setLoading(false);
         hasLoadedOnce.current = true;
