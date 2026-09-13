@@ -92,8 +92,9 @@ export default function TopHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-slate-100 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-md">
-        <button
+      <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 shadow-sm backdrop-blur-md">
+       <div className="mx-auto flex max-w-md md:max-w-5xl items-center gap-2 px-4 py-3">
+         <button
           onClick={() => navigate("/dashboard")}
           className="shrink-0 font-[Baloo_2] text-base font-extrabold tracking-tight text-slate-900"
         >
