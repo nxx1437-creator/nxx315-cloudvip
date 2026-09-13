@@ -386,10 +386,6 @@ function Banner() {
     <section className="px-4 pt-2">
       <div className="max-w-5xl mx-auto">
         <div
-          className="
-            relative
-            overflow-hidden
-            rounded-3xl
   className="
     relative
     overflow-hidden
