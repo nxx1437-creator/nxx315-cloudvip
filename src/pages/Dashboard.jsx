@@ -152,45 +152,32 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        if (data) {
-          setProfile(data);
-        }
-      } catch (err) {
-        console.error("fetchProfile error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchChart = async () => {
-      if (!user?.id) {
-        setChartLoading(false);
-        return;
-      }
-
-      try {
-        const WEEKDAY_LABELS = ["CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-
-        const days = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          d.setHours(0, 0, 0, 0);
-          days.push(d);
-        }
+  if (!user?.id) {
+    setLoading(false);
+    return;
+  }
+  
+  // ⏱️ Đảm bảo skeleton hiện ít nhất 500ms (cho đẹp)
+  const startTime = Date.now();
+  
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    if (data) {
+      setProfile(data);
+    }
+  } catch (err) {
+    console.error("fetchProfile error:", err);
+  } finally {
+    // Chờ cho đủ 500ms rồi mới tắt skeleton
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 500 - elapsed);
+    setTimeout(() => setLoading(false), remaining);
+  }
+};
 
         const rangeStart = days[0];
 
