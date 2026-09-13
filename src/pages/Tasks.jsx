@@ -29,7 +29,7 @@ const STORAGE_BUCKET = 'game_logos';
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
-// Map tên provider -> file ảnh trong bucket
+// Map tên provider (lowercase) -> file ảnh trong bucket
 const PROVIDER_LOGOS = {
   layma: 'layma.png',
   link4m: 'link4m.png',
@@ -46,6 +46,43 @@ const getProviderLogo = (task) => {
   const file = PROVIDER_LOGOS[key];
   return file ? getImageUrl(file) : null;
 };
+
+function ProviderLogo({ task }) {
+  const [error, setError] = useState(false);
+  const src = getProviderLogo(task);
+  const initials = String(task?.provider || '?').slice(0, 2).toUpperCase();
+
+  if (error || !src) {
+    return (
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shrink-0">
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={task.provider}
+      loading="lazy"
+      decoding="async"
+      onError={() => setError(true)}
+      className="h-11 w-11 rounded-xl object-cover shrink-0 bg-slate-900"
+    />
+  );
+}
+
+// =====================================================
+// HELPERS
+// =====================================================
+
+function hoursUntilMidnight() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  return Math.max(1, Math.round((midnight - now) / 1000 / 60 / 60));
+}
+
 function MiniStat({ value, label, icon: Icon, bg, valueColor, iconColor }) {
   return (
     <div className={`rounded-xl p-3.5 ${bg}`}>
@@ -58,6 +95,10 @@ function MiniStat({ value, label, icon: Icon, bg, valueColor, iconColor }) {
   );
 }
 
+// =====================================================
+// MAIN
+// =====================================================
+
 export default function Tasks() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -69,7 +110,7 @@ export default function Tasks() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // 👉 Theo dõi NHIỀU nhiệm vụ đang chờ xác nhận cùng lúc (thay vì 1 biến chung)
+  // Theo dõi NHIỀU nhiệm vụ đang chờ xác nhận cùng lúc
   const [pollingTaskIds, setPollingTaskIds] = useState([]);
   const pollingRefs = useRef({}); // logId -> intervalId
   const tasksRef = useRef(tasks);
@@ -152,11 +193,11 @@ export default function Tasks() {
             },
           }).then((res) => {
             if (res.error) {
-              alert("LỖI PUSH: " + JSON.stringify(res.error));
+              console.error("PUSH error:", res.error);
             } else {
-              alert("PUSH OK: " + JSON.stringify(res.data));
+              console.log("PUSH ok:", res.data);
             }
-          }).catch((err) => alert("PUSH CATCH: " + err.message))
+          }).catch((err) => console.error("PUSH catch:", err));
         }
         if (data?.error === "Đã hết hạn") {
           clearInterval(pollingRefs.current[logId]);
@@ -169,7 +210,7 @@ export default function Tasks() {
             .eq("id", logId);
 
           showToast("Một nhiệm vụ đã hết hạn.", "error");
-          
+
           reload();
         }
       } catch (err) {
@@ -180,7 +221,7 @@ export default function Tasks() {
     pollingRefs.current[logId] = interval;
   };
 
-  // Khôi phục TẤT CẢ nhiệm vụ đang chờ khi tải lại trang (không chỉ 1 cái)
+  // Khôi phục TẤT CẢ nhiệm vụ đang chờ khi tải lại trang
   useEffect(() => {
     const restorePolling = async () => {
       if (!user?.id) return;
@@ -219,7 +260,8 @@ export default function Tasks() {
       Object.values(pollingRefs.current).forEach((intervalId) => clearInterval(intervalId));
     };
   }, []);
-const handleStart = async (task) => {
+
+  const handleStart = async (task) => {
     if (isLoading) return;
 
     if (!user?.id) {
@@ -322,7 +364,7 @@ const handleStart = async (task) => {
         </div>
       )}
 
-<TopHeader />
+      <TopHeader />
 
       <main className="mx-auto max-w-md space-y-4 px-4 py-5">
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5 shadow-lg shadow-sky-100">
@@ -409,13 +451,7 @@ const handleStart = async (task) => {
                 <div className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {task.logo_url ? (
-                        <img src={task.logo_url} alt={task.provider} className="h-11 w-11 rounded-xl object-cover" />
-                      ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white">
-                          {task.provider.slice(0, 2)}
-                        </div>
-                      )}
+                      <ProviderLogo task={task} />
                       <span className="text-base font-bold text-slate-900">{task.provider}</span>
                     </div>
                     {task.is_hot && (
@@ -473,4 +509,4 @@ const handleStart = async (task) => {
       <BottomNav />
     </div>
   );
-}
+    }
