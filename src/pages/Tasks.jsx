@@ -29,7 +29,6 @@ const STORAGE_BUCKET = 'game_logos';
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
-// Map tên provider (lowercase) -> file ảnh trong bucket
 const PROVIDER_LOGOS = {
   layma: 'layma.png',
   link4m: 'link4m.png',
@@ -53,7 +52,6 @@ function ProviderLogo({ task }) {
   const src = getProviderLogo(task);
   const initials = String(task?.provider || '?').slice(0, 2).toUpperCase();
 
-  // Fallback: ô đen chữ viết tắt
   if (error || !src) {
     return (
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shrink-0">
@@ -64,11 +62,9 @@ function ProviderLogo({ task }) {
 
   return (
     <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-white border border-slate-100">
-      {/* Skeleton hiện khi ảnh chưa load xong */}
       {!loaded && (
         <div className="absolute inset-0 bg-slate-100 animate-pulse" />
       )}
-
       <img
         src={src}
         alt={task.provider}
@@ -110,6 +106,49 @@ function MiniStat({ value, label, icon: Icon, bg, valueColor, iconColor }) {
 }
 
 // =====================================================
+// SKELETON CARD
+// =====================================================
+
+function TaskCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
+      <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
+      <div className="p-4">
+        {/* Header: logo + tên + HOT */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-slate-100 animate-pulse shrink-0" />
+            <div className="h-4 w-24 rounded bg-slate-100 animate-pulse" />
+          </div>
+          <div className="h-6 w-14 rounded-full bg-slate-100 animate-pulse" />
+        </div>
+
+        {/* Phần thưởng */}
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
+          <div>
+            <div className="h-2.5 w-20 rounded bg-slate-200 animate-pulse" />
+            <div className="mt-2 h-4 w-24 rounded bg-slate-200 animate-pulse" />
+          </div>
+          <div className="h-5 w-14 rounded-full bg-slate-200 animate-pulse" />
+        </div>
+
+        {/* Progress */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between">
+            <div className="h-2.5 w-14 rounded bg-slate-100 animate-pulse" />
+            <div className="h-2.5 w-10 rounded bg-slate-100 animate-pulse" />
+          </div>
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 animate-pulse" />
+        </div>
+
+        {/* Button */}
+        <div className="mt-4 h-11 w-full rounded-full bg-slate-100 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+// =====================================================
 // MAIN
 // =====================================================
 
@@ -124,9 +163,8 @@ export default function Tasks() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Theo dõi NHIỀU nhiệm vụ đang chờ xác nhận cùng lúc
   const [pollingTaskIds, setPollingTaskIds] = useState([]);
-  const pollingRefs = useRef({}); // logId -> intervalId
+  const pollingRefs = useRef({});
   const tasksRef = useRef(tasks);
 
   useEffect(() => {
@@ -235,7 +273,6 @@ export default function Tasks() {
     pollingRefs.current[logId] = interval;
   };
 
-  // Khôi phục TẤT CẢ nhiệm vụ đang chờ khi tải lại trang
   useEffect(() => {
     const restorePolling = async () => {
       if (!user?.id) return;
@@ -448,56 +485,66 @@ export default function Tasks() {
           </div>
         )}
 
-        {loading && <p className="py-8 text-center text-sm text-slate-400">Đang tải nhiệm vụ...</p>}
+        {/* ============ SKELETON KHI ĐANG LOAD ============ */}
+        {loading && (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <TaskCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {/* ============ RỖNG ============ */}
         {!loading && filteredTasks.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-400">Không có nhiệm vụ nào.</p>
         )}
 
-        <div className="space-y-4">
-          {filteredTasks.map((task) => {
-            const progressPct = Math.min(100, Math.round((task.completedToday / task.daily_limit) * 100));
-            const isDone = task.remainingToday <= 0;
-            const isThisPolling = pollingTaskIds.includes(task.id);
+        {/* ============ LIST TASK THẬT ============ */}
+        {!loading && filteredTasks.length > 0 && (
+          <div className="space-y-4">
+            {filteredTasks.map((task) => {
+              const progressPct = Math.min(100, Math.round((task.completedToday / task.daily_limit) * 100));
+              const isDone = task.remainingToday <= 0;
+              const isThisPolling = pollingTaskIds.includes(task.id);
 
-            return (
-              <div key={task.id} className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
-                <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <ProviderLogo task={task} />
-                      <span className="text-base font-bold text-slate-900">{task.provider}</span>
+              return (
+                <div key={task.id} className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
+                  <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <ProviderLogo task={task} />
+                        <span className="text-base font-bold text-slate-900">{task.provider}</span>
+                      </div>
+                      {task.is_hot && (
+                        <span className="flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-500">
+                          <Flame size={12} /> HOT
+                        </span>
+                      )}
                     </div>
-                    {task.is_hot && (
-                      <span className="flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-500">
-                        <Flame size={12} /> HOT
+
+                    <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-slate-400">Phần thưởng</p>
+                        <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
+                          <Coins size={15} /> {task.reward_coins} <span className="text-xs font-normal text-slate-400">/lượt</span>
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+                        {task.remainingToday} còn
                       </span>
-                    )}
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wide text-slate-400">Phần thưởng</p>
-                      <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
-                        <Coins size={15} /> {task.reward_coins} <span className="text-xs font-normal text-slate-400">/lượt</span>
-                      </p>
                     </div>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                      {task.remainingToday} còn
-                    </span>
-                  </div>
 
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span>Hôm nay</span>
-                      <span>{task.completedToday}/{task.daily_limit}</span>
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Hôm nay</span>
+                        <span>{task.completedToday}/{task.daily_limit}</span>
+                      </div>
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${progressPct}%` }} />
+                      </div>
                     </div>
-                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${progressPct}%` }} />
-                    </div>
-                  </div>
 
-                  {!loading && (
                     <button
                       onClick={() => handleStart(task)}
                       disabled={isDone || startingTaskId === task.id || isBlocked || isThisPolling || isLoading}
@@ -512,15 +559,16 @@ export default function Tasks() {
                         ? "Đã hết lượt hôm nay"
                         : "Làm nhiệm vụ"}
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </main>
 
       <BottomNav />
     </div>
   );
-                   }
+}
+       
