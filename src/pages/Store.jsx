@@ -399,10 +399,6 @@ function Banner() {
     aspect-[16/7]
   "
 >
-            shadow-lg
-            aspect-[16/7]
-          "
-        >
           {showSkeleton && !loaded && !error && (
             <div className="absolute inset-0 z-20 bg-gray-100 animate-pulse" />
           )}
