@@ -143,6 +143,7 @@ function TaskCardSkeleton() {
     </div>
   );
 }
+
 // =====================================================
 // MAIN
 // =====================================================
@@ -481,19 +482,19 @@ export default function Tasks() {
         )}
 
         {loading && (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {Array.from({ length: 6 }).map((_, i) => (
-      <TaskCardSkeleton key={i} />
-    ))}
-  </div>
-)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <TaskCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {!loading && filteredTasks.length === 0 && (
+          <p className="py-8 text-center text-sm text-slate-400">Không có nhiệm vụ nào.</p>
+        )}
 
         {!loading && filteredTasks.length > 0 && (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {filteredTasks.map((task) => {
-
-        {!loading && filteredTasks.length > 0 && (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTasks.map((task) => {
               const progressPct = Math.min(100, Math.round((task.completedToday / task.daily_limit) * 100));
               const isDone = task.remainingToday <= 0;
@@ -529,7 +530,7 @@ export default function Tasks() {
 
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-slate-400">
-                        <span>Hôm nay</span>
+                          <span>Hôm nay</span>
                         <span>{task.completedToday}/{task.daily_limit}</span>
                       </div>
                       <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -563,3 +564,4 @@ export default function Tasks() {
     </div>
   );
 }
+                        
