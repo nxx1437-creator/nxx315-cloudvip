@@ -114,7 +114,6 @@ function TaskCardSkeleton() {
     <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
       <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
       <div className="p-4">
-        {/* Header: logo + tên + HOT */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-11 w-11 rounded-xl bg-slate-100 animate-pulse shrink-0" />
@@ -123,7 +122,6 @@ function TaskCardSkeleton() {
           <div className="h-6 w-14 rounded-full bg-slate-100 animate-pulse" />
         </div>
 
-        {/* Phần thưởng */}
         <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
           <div>
             <div className="h-2.5 w-20 rounded bg-slate-200 animate-pulse" />
@@ -132,7 +130,6 @@ function TaskCardSkeleton() {
           <div className="h-5 w-14 rounded-full bg-slate-200 animate-pulse" />
         </div>
 
-        {/* Progress */}
         <div className="mt-3">
           <div className="flex items-center justify-between">
             <div className="h-2.5 w-14 rounded bg-slate-100 animate-pulse" />
@@ -141,13 +138,11 @@ function TaskCardSkeleton() {
           <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 animate-pulse" />
         </div>
 
-        {/* Button */}
         <div className="mt-4 h-11 w-full rounded-full bg-slate-100 animate-pulse" />
       </div>
     </div>
   );
 }
-
 // =====================================================
 // MAIN
 // =====================================================
@@ -485,7 +480,6 @@ export default function Tasks() {
           </div>
         )}
 
-        {/* ============ SKELETON KHI ĐANG LOAD ============ */}
         {loading && (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -494,12 +488,10 @@ export default function Tasks() {
           </div>
         )}
 
-        {/* ============ RỖNG ============ */}
         {!loading && filteredTasks.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-400">Không có nhiệm vụ nào.</p>
         )}
 
-        {/* ============ LIST TASK THẬT ============ */}
         {!loading && filteredTasks.length > 0 && (
           <div className="space-y-4">
             {filteredTasks.map((task) => {
@@ -537,7 +529,7 @@ export default function Tasks() {
 
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-slate-400">
-                          <span>Hôm nay</span>
+                        <span>Hôm nay</span>
                         <span>{task.completedToday}/{task.daily_limit}</span>
                       </div>
                       <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -571,4 +563,3 @@ export default function Tasks() {
     </div>
   );
 }
-       
