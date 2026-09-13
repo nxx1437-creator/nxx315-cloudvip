@@ -49,9 +49,11 @@ const getProviderLogo = (task) => {
 
 function ProviderLogo({ task }) {
   const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const src = getProviderLogo(task);
   const initials = String(task?.provider || '?').slice(0, 2).toUpperCase();
 
+  // Fallback: ô đen chữ viết tắt
   if (error || !src) {
     return (
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shrink-0">
@@ -61,14 +63,26 @@ function ProviderLogo({ task }) {
   }
 
   return (
-    <img
-      src={src}
-      alt={task.provider}
-      loading="lazy"
-      decoding="async"
-      onError={() => setError(true)}
-      className="h-11 w-11 rounded-xl object-contain p-1 shrink-0 bg-white border border-slate-100"
-    />
+    <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-white border border-slate-100">
+      {/* Skeleton hiện khi ảnh chưa load xong */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-slate-100 animate-pulse" />
+      )}
+
+      <img
+        src={src}
+        alt={task.provider}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+        className={`
+          h-full w-full object-contain p-1
+          transition-opacity duration-200
+          ${loaded ? "opacity-100" : "opacity-0"}
+        `}
+      />
+    </div>
   );
 }
 
