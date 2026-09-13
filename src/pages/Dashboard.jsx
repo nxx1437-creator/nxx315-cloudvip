@@ -77,26 +77,26 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-        <div className="h-5 w-48 rounded-full bg-slate-100 animate-pulse" />
-        <div className="mt-3 h-7 w-40 rounded bg-slate-100 animate-pulse" />
-        <div className="mt-2 h-4 w-56 rounded bg-slate-100 animate-pulse" />
+        <div className="h-5 w-48 rounded-full skeleton-shimmer" />
+        <div className="mt-3 h-7 w-40 rounded skeleton-shimmer" />
+        <div className="mt-2 h-4 w-56 rounded skeleton-shimmer" />
         <div className="mt-4 flex gap-2.5">
-          <div className="h-10 w-40 rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-10 w-28 rounded-xl bg-slate-100 animate-pulse" />
+          <div className="h-10 w-40 rounded-xl skeleton-shimmer" />
+          <div className="h-10 w-28 rounded-xl skeleton-shimmer" />
         </div>
         <div className="mt-4 rounded-2xl bg-[#F5F7FB] p-4">
-          <div className="h-3 w-16 rounded bg-slate-200 animate-pulse" />
-          <div className="mt-2 h-8 w-40 rounded bg-slate-200 animate-pulse" />
-          <div className="mt-3 h-2 w-full rounded-full bg-slate-200 animate-pulse" />
+          <div className="h-3 w-16 rounded skeleton-shimmer" />
+          <div className="mt-2 h-8 w-40 rounded skeleton-shimmer" />
+          <div className="mt-3 h-2 w-full rounded-full skeleton-shimmer" />
         </div>
       </div>
 
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-slate-100 animate-pulse" />
+          <div className="h-10 w-10 rounded-full skeleton-shimmer" />
           <div className="flex-1">
-            <div className="h-4 w-32 rounded bg-slate-100 animate-pulse" />
-            <div className="mt-1.5 h-3 w-48 rounded bg-slate-100 animate-pulse" />
+            <div className="h-4 w-32 rounded skeleton-shimmer" />
+            <div className="mt-1.5 h-3 w-48 rounded skeleton-shimmer" />
           </div>
         </div>
       </div>
@@ -105,35 +105,35 @@ function DashboardSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
             <div className="flex items-start justify-between">
-              <div className="h-7 w-10 rounded bg-slate-100 animate-pulse" />
-              <div className="h-9 w-9 rounded-full bg-slate-100 animate-pulse" />
+              <div className="h-7 w-10 rounded skeleton-shimmer" />
+              <div className="h-9 w-9 rounded-full skeleton-shimmer" />
             </div>
-            <div className="mt-2 h-3 w-24 rounded bg-slate-100 animate-pulse" />
+            <div className="mt-2 h-3 w-24 rounded skeleton-shimmer" />
           </div>
         ))}
       </div>
 
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-slate-100 animate-pulse" />
+          <div className="h-12 w-12 rounded-full skeleton-shimmer" />
           <div className="flex-1">
-            <div className="h-3 w-16 rounded bg-slate-100 animate-pulse" />
-            <div className="mt-1.5 h-6 w-24 rounded bg-slate-100 animate-pulse" />
+            <div className="h-3 w-16 rounded skeleton-shimmer" />
+            <div className="mt-1.5 h-6 w-24 rounded skeleton-shimmer" />
           </div>
         </div>
       </div>
 
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-        <div className="mx-auto h-4 w-32 rounded bg-slate-100 animate-pulse" />
-        <div className="mx-auto mt-4 h-32 w-32 rounded-full bg-slate-100 animate-pulse" />
-        <div className="mx-auto mt-4 h-9 w-40 rounded-xl bg-slate-100 animate-pulse" />
+        <div className="mx-auto h-4 w-32 rounded skeleton-shimmer" />
+        <div className="mx-auto mt-4 h-32 w-32 rounded-full skeleton-shimmer" />
+        <div className="mx-auto mt-4 h-9 w-40 rounded-xl skeleton-shimmer" />
       </div>
 
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-        <div className="h-4 w-40 rounded bg-slate-100 animate-pulse" />
+        <div className="h-4 w-40 rounded skeleton-shimmer" />
         <div className="mt-3 grid grid-cols-3 gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-2xl bg-slate-100 animate-pulse" />
+            <div key={i} className="h-20 rounded-2xl skeleton-shimmer" />
           ))}
         </div>
       </div>
@@ -156,15 +156,20 @@ export default function Dashboard() {
         setLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      if (data) {
-        setProfile(data);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        if (data) {
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error("fetchProfile error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchProfile();
   }, [user]);
@@ -176,38 +181,43 @@ export default function Dashboard() {
         return;
       }
 
-      const WEEKDAY_LABELS = ["CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+      try {
+        const WEEKDAY_LABELS = ["CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 
-      const days = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
-        days.push(d);
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          d.setHours(0, 0, 0, 0);
+          days.push(d);
+        }
+
+        const rangeStart = days[0];
+
+        const { data: rows } = await supabase
+          .from("task_completions")
+          .select("completed_at, coins_earned")
+          .eq("user_id", user.id)
+          .gte("completed_at", rangeStart.toISOString());
+
+        const sumByDate = {};
+        (rows || []).forEach((r) => {
+          const key = new Date(r.completed_at).toDateString();
+          sumByDate[key] = (sumByDate[key] || 0) + (r.coins_earned || 0);
+        });
+
+        const result = days.map((d) => ({
+          label: WEEKDAY_LABELS[d.getDay()],
+          value: sumByDate[d.toDateString()] || 0,
+          isToday: d.toDateString() === new Date().toDateString(),
+        }));
+
+        setChartData(result);
+      } catch (err) {
+        console.error("fetchChart error:", err);
+      } finally {
+        setChartLoading(false);
       }
-
-      const rangeStart = days[0];
-
-      const { data: rows } = await supabase
-        .from("task_completions")
-        .select("completed_at, coins_earned")
-        .eq("user_id", user.id)
-        .gte("completed_at", rangeStart.toISOString());
-
-      const sumByDate = {};
-      (rows || []).forEach((r) => {
-        const key = new Date(r.completed_at).toDateString();
-        sumByDate[key] = (sumByDate[key] || 0) + (r.coins_earned || 0);
-      });
-
-      const result = days.map((d) => ({
-        label: WEEKDAY_LABELS[d.getDay()],
-        value: sumByDate[d.toDateString()] || 0,
-        isToday: d.toDateString() === new Date().toDateString(),
-      }));
-
-      setChartData(result);
-      setChartLoading(false);
     };
 
     fetchChart();
@@ -251,6 +261,23 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .skeleton-shimmer {
+          background-image: linear-gradient(
+            90deg,
+            #f1f5f9 0%,
+            #e2e8f0 50%,
+            #f1f5f9 100%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+        }
+      `}</style>
+
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
@@ -494,4 +521,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-                  }
+            }
