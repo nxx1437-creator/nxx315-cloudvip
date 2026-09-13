@@ -25,17 +25,17 @@ export default function useTasks(userId) {
           { id: "demo-2", title: "Làm 5 nhiệm vụ", provider: "Demo", reward_coins: 200, daily_limit: 5, completedToday: 3, remainingToday: 2 },
           { id: "demo-3", title: "Làm 10 nhiệm vụ", provider: "Demo", reward_coins: 400, daily_limit: 10, completedToday: 8, remainingToday: 2 },
         ]);
-        setCompletedToday(3); 
-        return;
+        setCompletedToday(3);
+        return;   // ✅ vẫn return, nhưng finally bên dưới LUÔN chạy
       }
 
       let doneMap = {};
       let completed = 0;
-      
+
       if (userId) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
-        
+
         // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
         const { data: allCompletions } = await supabase
           .from("task_completions")
@@ -44,25 +44,25 @@ export default function useTasks(userId) {
           .order("completed_at", { ascending: false });
 
         // Tính số lượng hoàn thành hôm nay
-        const todayCompletions = (allCompletions || []).filter(c => 
-          new Date(c.completed_at) >= startOfDay
+        const todayCompletions = (allCompletions || []).filter(
+          (c) => new Date(c.completed_at) >= startOfDay
         );
         completed = todayCompletions.length;
 
         // Tính streak (chuỗi ngày liên tiếp)
         const uniqueDays = new Set(
-          (allCompletions || []).map(c => new Date(c.completed_at).toDateString())
+          (allCompletions || []).map((c) => new Date(c.completed_at).toDateString())
         );
-        
+
         let streak = 0;
         let currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
-        
-        // Nếu hôm nay CHƯA làm, bắt đầu kiểm tra từ hôm qua (vì có thể hôm nay chưa làm nhưng hôm qua đã làm)
+
+        // Nếu hôm nay CHƯA làm, bắt đầu kiểm tra từ hôm qua
         if (!uniqueDays.has(currentDate.toDateString())) {
           currentDate.setDate(currentDate.getDate() - 1);
         }
-        
+
         // Đếm số ngày liên tiếp có hoàn thành nhiệm vụ
         while (uniqueDays.has(currentDate.toDateString())) {
           streak++;
@@ -77,13 +77,12 @@ export default function useTasks(userId) {
           .single();
 
         if (profileData) {
-          // Nếu chuỗi hiện tại lớn hơn chuỗi cũ, cập nhật
           if (streak !== profileData.streak_days || streak > profileData.streak_record) {
             await supabase
               .from("profiles")
-              .update({ 
-                streak_days: streak, 
-                streak_record: Math.max(streak, profileData.streak_record || 0) 
+              .update({
+                streak_days: streak,
+                streak_record: Math.max(streak, profileData.streak_record || 0),
               })
               .eq("id", userId);
           }
@@ -110,7 +109,10 @@ export default function useTasks(userId) {
         }))
       );
       setCompletedToday(completed);
+    } catch (err) {
+      console.error("useTasks error:", err);
     } finally {
+      // ✅ LUÔN chạy — kể cả khi return sớm hoặc lỗi
       if (isFirstLoad) {
         setLoading(false);
         hasLoadedOnce.current = true;
@@ -120,12 +122,19 @@ export default function useTasks(userId) {
 
   useEffect(() => {
     reload();
+
     const handleFocus = () => reload();
     window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", () => {
+
+    const handleVisibility = () => {
       if (document.visibilityState === "visible") handleFocus();
-    });
-    return () => window.removeEventListener("focus", handleFocus);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [reload]);
 
   return { tasks, loading, completedToday, reload };
