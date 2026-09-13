@@ -19,6 +19,32 @@ import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
+// =====================================================
+// =====================================================
+// SUPABASE STORAGE (dùng chung bucket với Store)
+// =====================================================
+
+const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
+const STORAGE_BUCKET = 'game_logos';
+
+const getImageUrl = (fileName) =>
+  `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+
+// Lấy ảnh provider: ưu tiên logo_url từ DB, fallback sang bucket
+const getProviderLogo = (task) => {
+  if (task?.logo_url) return task.logo_url;
+
+  // Tạo slug từ tên provider: "LAYMA" -> "layma", "YeuMoney" -> "yeumoney"
+  const slug = String(task?.provider || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')   // bỏ dấu tiếng Việt
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, '-')       // ký tự lạ -> gạch ngang
+    .replace(/^-+|-+$/g, '');          // bỏ gạch đầu/cuối
+
+  return slug ? getImageUrl(`${slug}.png`) : null;
+};
 function hoursUntilMidnight() {
   const now = new Date();
   const midnight = new Date(now);
