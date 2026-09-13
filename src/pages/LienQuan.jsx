@@ -111,7 +111,6 @@ export default function LienQuan() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-5 pb-12">
-        <div className="mb-5 rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-5 text-white shadow-sm">
           <div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15"><Gamepad2 size={26} /></div><div><div className="text-lg font-extrabold">Nạp Liên Quân Mobile</div><div className="text-sm text-white/80">Nhanh chóng · An toàn · Tiện lợi</div></div></div>
         </div>
 
