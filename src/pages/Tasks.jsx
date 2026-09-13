@@ -33,7 +33,7 @@ const getImageUrl = (fileName) =>
 const PROVIDER_LOGOS = {
   layma: 'layma.png',
   link4m: 'link4m.png',
-  SITE2S: 'site2s.png'
+  site2s: 'site2s.png',
 };
 
 const getProviderLogo = (task) => {
