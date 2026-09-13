@@ -412,7 +412,7 @@ export default function Tasks() {
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-4 px-4 py-5">
+      <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             <Sparkles size={12} /> TRUNG TÂM NHIỆM VỤ
@@ -481,16 +481,16 @@ export default function Tasks() {
         )}
 
         {loading && (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <TaskCardSkeleton key={i} />
-            ))}
-          </div>
-        )}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <TaskCardSkeleton key={i} />
+    ))}
+  </div>
+)}
 
-        {!loading && filteredTasks.length === 0 && (
-          <p className="py-8 text-center text-sm text-slate-400">Không có nhiệm vụ nào.</p>
-        )}
+        {!loading && filteredTasks.length > 0 && (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {filteredTasks.map((task) => {
 
         {!loading && filteredTasks.length > 0 && (
           <div className="space-y-4">
