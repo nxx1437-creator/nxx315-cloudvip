@@ -152,28 +152,28 @@ export default function Dashboard() {
   const [chartLoading, setChartLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
+  const fetchProfile = async () => {
+    // ⚠️ KHÔNG setLoading(false) ở đây!
+    // Chờ session load xong đã (user?.id có giá trị)
+    if (!user?.id) return;
+
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      if (data) {
+        setProfile(data);
       }
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        if (data) {
-          setProfile(data);
-        }
-      } catch (err) {
-        console.error("fetchProfile error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [user]);
+    } catch (err) {
+      console.error("fetchProfile error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchProfile();
+}, [user]);
 
   useEffect(() => {
     const fetchChart = async () => {
