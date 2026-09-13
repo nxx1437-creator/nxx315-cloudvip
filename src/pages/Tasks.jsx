@@ -20,8 +20,7 @@ import TopHeader from "../components/TopHeader.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 // =====================================================
-// =====================================================
-// SUPABASE STORAGE (dùng chung bucket với Store)
+// PROVIDER LOGO (dùng chung bucket với Store)
 // =====================================================
 
 const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
@@ -30,28 +29,23 @@ const STORAGE_BUCKET = 'game_logos';
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
-// Lấy ảnh provider: ưu tiên logo_url từ DB, fallback sang bucket
+// Map tên provider -> file ảnh trong bucket
+const PROVIDER_LOGOS = {
+  layma: 'layma.png',
+  link4m: 'link4m.png',
+  SITE2S: 'site2s.png'
+};
+
 const getProviderLogo = (task) => {
   if (task?.logo_url) return task.logo_url;
 
-  // Tạo slug từ tên provider: "LAYMA" -> "layma", "YeuMoney" -> "yeumoney"
-  const slug = String(task?.provider || '')
+  const key = String(task?.provider || '')
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')   // bỏ dấu tiếng Việt
-    .replace(/đ/g, 'd')
-    .replace(/[^a-z0-9]+/g, '-')       // ký tự lạ -> gạch ngang
-    .replace(/^-+|-+$/g, '');          // bỏ gạch đầu/cuối
+    .trim();
 
-  return slug ? getImageUrl(`${slug}.png`) : null;
+  const file = PROVIDER_LOGOS[key];
+  return file ? getImageUrl(file) : null;
 };
-function hoursUntilMidnight() {
-  const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  return Math.max(1, Math.round((midnight - now) / 1000 / 60 / 60));
-}
-
 function MiniStat({ value, label, icon: Icon, bg, valueColor, iconColor }) {
   return (
     <div className={`rounded-xl p-3.5 ${bg}`}>
