@@ -390,10 +390,15 @@ function Banner() {
             relative
             overflow-hidden
             rounded-3xl
-            bg-gradient-to-br
-            from-blue-600
-            via-blue-500
-            to-cyan-400
+            <div
+  className="
+    relative
+    overflow-hidden
+    rounded-3xl
+    bg-[#f7f9fc]
+    aspect-[16/7]
+  "
+>
             shadow-lg
             aspect-[16/7]
           "
@@ -827,68 +832,74 @@ function formatHistoryDate(value) {
 }
 
 function getHistoryStatus(status) {
-  const key = String(status || '').toLowerCase();
+  switch (String(status || "").toLowerCase()) {
+    case "pending":
+      return {
+        label: "Chờ thanh toán",
+        className:
+          "bg-gray-50 text-gray-500 border-gray-100",
+      };
 
-  if (
-    ['completed', 'success', 'done'].includes(key)
-  ) {
-    return {
-      label: 'Hoàn thành',
-      className:
-        'bg-emerald-50 text-emerald-600 border-emerald-100',
-    };
+    case "paid":
+      return {
+        label: "Đang kiểm tra",
+        className:
+          "bg-blue-50 text-blue-600 border-blue-100",
+      };
+
+    case "processing":
+      return {
+        label: "Đang xử lý",
+        className:
+          "bg-indigo-50 text-indigo-600 border-indigo-100",
+      };
+
+    case "delivered":
+      return {
+        label: "Đã giao",
+        className:
+          "bg-emerald-50 text-emerald-600 border-emerald-100",
+      };
+
+    case "rejected":
+      return {
+        label: "Đã từ chối",
+        className:
+          "bg-red-50 text-red-600 border-red-100",
+      };
+
+    case "cancelled":
+    case "canceled":
+      return {
+        label: "Đã hủy",
+        className:
+          "bg-gray-50 text-gray-600 border-gray-100",
+      };
+
+    case "failed":
+      return {
+        label: "Thất bại",
+        className:
+          "bg-red-50 text-red-600 border-red-100",
+      };
+
+    case "completed":
+    case "success":
+    case "done":
+      return {
+        label: "Hoàn thành",
+        className:
+          "bg-emerald-50 text-emerald-600 border-emerald-100",
+      };
+
+    default:
+      return {
+        label: "Đang xử lý",
+        className:
+          "bg-indigo-50 text-indigo-600 border-indigo-100",
+      };
   }
-
-  if (key === 'paid') {
-    return {
-      label: 'Đang kiểm tra',
-      className:
-        'bg-amber-50 text-amber-600 border-amber-100',
-    };
-  }
-
-  if (key === 'processing') {
-    return {
-      label: 'Đang xử lý',
-      className:
-        'bg-blue-50 text-blue-600 border-blue-100',
-    };
-  }
-
-  if (key === 'pending') {
-    return {
-      label: 'Chờ thanh toán',
-      className:
-        'bg-gray-50 text-gray-500 border-gray-100',
-    };
-  }
-
-  if (
-    [
-      'cancelled',
-      'canceled',
-      'failed',
-      'rejected',
-    ].includes(key)
-  ) {
-    return {
-      label:
-        key === 'failed' ||
-        key === 'rejected'
-          ? 'Thất bại'
-          : 'Đã hủy',
-      className:
-        'bg-rose-50 text-rose-500 border-rose-100',
-    };
-  }
-
-  return {
-    label: 'Đang xử lý',
-    className:
-      'bg-amber-50 text-amber-600 border-amber-100',
-  };
 }
-
 function getHistoryAmount(order) {
   const coins =
     order?.coin_cost ??
