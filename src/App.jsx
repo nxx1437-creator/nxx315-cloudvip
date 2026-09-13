@@ -38,6 +38,7 @@ import VersionChecker from "./VersionChecker";
 import Feed from "./pages/Feed.jsx";
 import Roblox from "./pages/Roblox.jsx";
 import PlayTogether from "./pages/PlayTogether.jsx";
+import LienQuan from "./pages/LienQuan.jsx";
 import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
 
@@ -145,7 +146,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
+<Route
+  path="/store/lien-quan"
+  element={
+    <ProtectedRoute>
+      <LienQuan />
+    </ProtectedRoute>
+  }
+/>
         <Route path="/link-history" element={<LinkHistory />} />
         <Route path="/refund-history" element={<RefundHistoryPage />} />
 
