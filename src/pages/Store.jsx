@@ -398,7 +398,7 @@ function Banner() {
             <div className="absolute inset-0 z-20 bg-gray-100 animate-pulse" />
           )}
 
-          <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400" />
+          <div className="absolute inset-0 z-0 bg-transparent" />
 
           {!error && (
             <img
