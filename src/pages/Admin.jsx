@@ -348,7 +348,7 @@ function OrdersTab() {
           title={`Đơn #${detailOrder.order_code || detailOrder.id}`}
           onClose={() => setDetailOrder(null)}
         >
-           <Eye size={18} />
+          <Eye size={18} />
                       </button>
                     </td>
                   </tr>
