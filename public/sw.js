@@ -17,13 +17,15 @@ self.addEventListener("push", (event) => {
   const title = data.title || "NXX315 Studio";
   const options = {
     body: data.body || "",
-    icon: "/favicon-outline.svg",
-    badge: "/favicon-outline.svg",
     data: { url: data.url || "/dashboard" },
     vibrate: [100, 50, 100],
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).catch((err) => {
+      console.error("showNotification thất bại:", err);
+    })
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
