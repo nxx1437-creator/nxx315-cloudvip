@@ -105,7 +105,7 @@ export default function LienQuan() {
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <button onClick={() => navigate("/store")} className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50"><ArrowLeft size={20} /></button>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Gamepad2 size={21} /></div>
-          <div><h1 className="text-base font-bold">Liên Quân Mobile</h1><p 
+          <div><h1 className="text-base font-bold">Liên Quân Mobile</h1><p className="text-xs text-slate-500">Trung tâm nạp thẻ </p></div>
           <div className="ml-auto hidden items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600 sm:flex"><ShieldCheck size={14} /> Thanh toán an toàn 100%</div>
         </div>
       </header>
