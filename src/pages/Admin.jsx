@@ -25,6 +25,7 @@ import {
   Coins,
   Loader2,
   Image as ImageIcon,
+  Bell,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient";
@@ -59,6 +60,7 @@ const tabs = [
   { id: "support", label: "Hỗ trợ", icon: MessageCircle },
   { id: "affiliate", label: "Affiliate", icon: HandCoins },
   { id: "posts", label: "Bài viết", icon: FileText },
+  { id: "notify", label: "Thông báo", icon: Bell },
 ];
 
 export default function Admin() {
@@ -115,6 +117,7 @@ export default function Admin() {
         {activeTab === "support" && <SupportTab />}
         {activeTab === "affiliate" && <AffiliateTab />}
         {activeTab === "posts" && <PostsTab />}
+        {activeTab === "notify" && <BroadcastForm />}
       </div>
     </div>
   );
@@ -330,6 +333,22 @@ function OrdersTab() {
                         className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
                       >
                         <Eye size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {detailOrder && (
+        <Modal
+          title={`Đơn #${detailOrder.order_code || detailOrder.id}`}
+          onClose={() => setDetailOrder(null)}
+        >
+           <Eye size={18} />
                       </button>
                     </td>
                   </tr>
@@ -1024,9 +1043,7 @@ function PackagesTab() {
       )}
     </div>
   );
-}
-
-function PackageSkeleton() {
+      function PackageSkeleton() {
   return (
     <div className="animate-pulse overflow-hidden rounded-2xl border bg-white">
       <div className="h-40 bg-slate-200" />
@@ -1317,7 +1334,7 @@ function Modal({ title, children, onClose }) {
 
                     <td className="px-4 py-4">
                       {withdrawal.user_id || "-"}
-                    </td>
+                       </td>
 
                     <td className="px-4 py-4 font-bold">
                       {Number(
@@ -1620,8 +1637,7 @@ function PostsTab() {
               <p className="line-clamp-4 whitespace-pre-wrap text-sm text-slate-600">
                 {post.content || post.description || "-"}
               </p>
-
-              <div className="mt-4 flex gap-2">
+                   <div className="mt-4 flex gap-2">
                 {post.status !== "approved" && (
                   <button
                     disabled={processingId === post.id}
@@ -1660,4 +1676,5 @@ function PostsTab() {
       )}
     </div>
   );
-}
+      }
+      
