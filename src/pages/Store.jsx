@@ -390,7 +390,6 @@ function Banner() {
             relative
             overflow-hidden
             rounded-3xl
-            <div
   className="
     relative
     overflow-hidden
