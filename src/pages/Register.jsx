@@ -85,54 +85,54 @@ export default function Register() {
         <div className="relative">
           <User
             size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400"
           />
           <input
             type="text"
             value={form.username}
             onChange={(e) => setForm({ ...form, username: e.target.value })}
             placeholder="Tên hiển thị (tùy chọn)"
-            className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
           />
         </div>
 
         <div className="relative">
           <Mail
             size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400"
           />
           <input
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             placeholder="Email"
-            className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
           />
         </div>
 
         <div className="relative">
           <Lock
             size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400"
           />
           <input
             type={showPassword ? "text" : "password"}
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             placeholder="Mật khẩu (tối thiểu 6 ký tự)"
-            className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+            className="absolute right-3.5 top-1/2 z-10 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5">
             <p className="text-xs font-medium text-rose-600">{error}</p>
           </div>
         )}
@@ -140,7 +140,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:shadow-sky-500/50 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -150,11 +150,25 @@ export default function Register() {
           ) : (
             <>
               Tạo tài khoản
-              <ArrowRight size={16} />
+              <ArrowRight
+                size={16}
+                className="transition group-hover:translate-x-0.5"
+              />
             </>
           )}
         </button>
       </form>
+
+      <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
+        Bằng cách đăng ký, bạn đồng ý với{" "}
+        <Link to="/terms" className="font-medium text-sky-600 hover:underline">
+          Điều khoản
+        </Link>{" "}
+        và{" "}
+        <Link to="/privacy" className="font-medium text-sky-600 hover:underline">
+          Chính sách bảo mật
+        </Link>
+      </p>
     </AuthShell>
   );
 }
