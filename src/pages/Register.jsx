@@ -93,19 +93,16 @@ export default function Register() {
         )}
 
         <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
-        >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Đang tạo tài khoản...
-            </>
-          ) : (
-            "Đăng ký"
-          )}
-        </button>
+  type="submit"
+  disabled={loading}
+  className="flex h-13 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
+>
+  {loading ? (
+    <Loader2 size={20} className="animate-spin" />
+  ) : (
+    "Đăng ký"
+  )}
+</button>
       </form>
 
       {/* OR */}
