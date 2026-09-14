@@ -56,7 +56,7 @@ export default function ProfilePage() {
   const [pushState, setPushState] = useState("default");
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState("");
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [usernameCooldown, setUsernameCooldown] = useState({ canChange: true, remainingText: "" });
 
   const displayName = profile.username || "Thành viên";
