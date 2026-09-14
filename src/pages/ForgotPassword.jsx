@@ -45,8 +45,8 @@ export default function ForgotPassword() {
 
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
-    if (otp.length !== 8) {
-      setError("Vui lòng nhập đủ 8 số.");
+    if (otp.length !== 6) {
+      setError("Vui lòng nhập đủ 6 số.");
       return;
     }
     if (newPassword.length < 6) {
