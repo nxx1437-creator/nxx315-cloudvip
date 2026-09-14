@@ -83,36 +83,38 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!session?.user?.id) {
-        setProfileLoading(false);
-        return;
+  if (!session?.user?.id) return;
+
+  const skeletonTimer = setTimeout(() => {
+    setProfileLoading(true);
+  }, 300);
+
+  const loadProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*, last_username_change")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile(data);
+        setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
       }
+    } catch (err) {
+      console.error("Load profile error:", err);
+    } finally {
+      clearTimeout(skeletonTimer);
+      setProfileLoading(false);
+    }
+  };
 
-      setProfileLoading(true);
+  loadProfile();
 
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*, last_username_change")
-          .eq("id", session.user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setProfile(data);
-          setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
-        }
-      } catch (err) {
-        console.error("Load profile error:", err);
-      } finally {
-        setTimeout(() => setProfileLoading(false), 300);
-      }
-    };
-
-    loadProfile();
-  }, [session?.user?.id]);
+  return () => clearTimeout(skeletonTimer);
+}, [session?.user?.id]);
 
   const handleTogglePush = async () => {
     setPushError("");
