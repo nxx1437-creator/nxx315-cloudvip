@@ -526,8 +526,8 @@ export default function Dashboard() {
         )}
       </main>
 
-      <Footer />
-      <BottomNav />
+      {!loading && <Footer />}
+<BottomNav />
     </div>
   );
               }
