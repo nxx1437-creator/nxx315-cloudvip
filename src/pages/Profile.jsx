@@ -34,7 +34,7 @@ const THEME_OPTIONS = [
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { session } = useSession();
-  const { profile, setProfile } = useProfile();
+  const { profile, loading: profileHookLoading, setProfile } = useProfile();
   const { themeMode, accentColor, setThemeMode, setAccentColor } = useTheme();
 
   const [activeSection, setActiveSection] = useState(null);
@@ -264,9 +264,9 @@ export default function ProfilePage() {
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-3xl space-y-5 px-4 py-6">
-        {profileLoading ? (
-          <ProfileSkeleton />
-        ) : (
+        {profileLoading || profileHookLoading || !profile?.username ? (
+  <ProfileSkeleton />
+) : (
           <>
             <div>
               <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
