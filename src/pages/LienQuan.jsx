@@ -51,18 +51,21 @@ function money(value) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
 }
 
-function PackageCard({ item, selected, onClick }) {
+function PackageCard({ item, selected, disabled, onClick }) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={`relative rounded-2xl border p-3 text-left transition active:scale-[0.98] ${
-        selected
+        disabled
+          ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-50"
+          : selected
           ? "border-blue-500 bg-blue-50/70 ring-2 ring-blue-100"
           : "border-slate-100 bg-white hover:border-blue-200 hover:bg-slate-50"
       }`}
     >
-      {selected && (
+      {selected && !disabled && (
         <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white">
           <Check size={12} strokeWidth={3} />
         </span>
@@ -132,7 +135,9 @@ export default function LienQuan() {
 
   const [uid, setUid] = useState("");
   const [player, setPlayer] = useState(null);
-  const [checking, setChecking] = useState(false);
+  const [checkingPlayer, setCheckingPlayer] = useState(false);
+  const [playerError, setPlayerError] = useState("");
+
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("coin");
   const [coinBalance, setCoinBalance] = useState(null);
@@ -142,9 +147,7 @@ export default function LienQuan() {
   const enoughCoins = useMemo(() => {
     if (coinBalance == null || !selectedPackage) return false;
 
-    return (
-      Number(coinBalance) >= Number(selectedPackage.amount)
-    );
+    return Number(coinBalance) >= Number(selectedPackage.amount);
   }, [coinBalance, selectedPackage]);
 
   useEffect(() => {
@@ -165,43 +168,63 @@ export default function LienQuan() {
     setCoinBalance(Number(data?.coins || 0));
   }
 
-  async function checkPlayer() {
-    setError("");
+  const checkPlayer = async () => {
+    const cleanUid = String(uid || "").trim();
 
-    const cleanUid = uid.trim();
+    setPlayerError("");
+    setPlayer(null);
 
     if (!cleanUid) {
-      setError("Vui lòng nhập UID Liên Quân.");
+      setPlayerError("Vui lòng nhập ID người chơi.");
       return;
     }
 
     if (!/^\d+$/.test(cleanUid)) {
-      setError("UID chỉ được chứa số.");
+      setPlayerError("ID người chơi chỉ được chứa số.");
       return;
     }
 
-    setChecking(true);
+    setCheckingPlayer(true);
 
     try {
-      /*
-       * Chưa kết nối API xác thực UID Liên Quân.
-       * Không tự hiển thị tên người chơi giả.
-       */
+      const { data, error } = await supabase.functions.invoke(
+        "check-lienquan-player",
+        {
+          body: { uid: cleanUid },
+        }
+      );
+
+      if (error) {
+        console.error("check-lienquan-player:", error);
+        throw new Error("Không thể kiểm tra ID người chơi.");
+      }
+
+      if (!data?.success || !data?.data?.username) {
+        throw new Error(
+          data?.message || "Không tìm thấy người chơi."
+        );
+      }
+
       setPlayer({
-        uid: cleanUid,
-        username: null,
+        userId: data.data.userId || cleanUid,
+        username: data.data.username,
       });
 
       setSelectedPackage(null);
+    } catch (err) {
+      console.error(err);
+      setPlayerError(
+        err?.message || "Không tìm thấy người chơi."
+      );
     } finally {
-      setChecking(false);
+      setCheckingPlayer(false);
     }
-  }
+  };
 
   async function createOrder() {
     setError("");
 
-    if (!player?.uid) {
+    if (!player?.userId) {
       setError("Vui lòng nhập và xác nhận UID trước.");
       return;
     }
@@ -233,7 +256,7 @@ export default function LienQuan() {
           "create-lienquan-order",
           {
             body: {
-              uid: Number(player.uid),
+              uid: Number(player.userId),
               amount: Number(selectedPackage.amount),
               quanhuy: Number(selectedPackage.quanhuy),
               package_id: selectedPackage.id,
@@ -252,14 +275,10 @@ export default function LienQuan() {
 
       navigate(`/history/order/${data.order.id}`);
     } catch (err) {
-      console.error(
-        "Create Liên Quân order:",
-        err
-      );
+      console.error("Create Liên Quân order:", err);
 
       setError(
-        err?.message ||
-          "Không thể tạo đơn. Hãy thử lại sau."
+        err?.message || "Không thể tạo đơn. Hãy thử lại sau."
       );
     } finally {
       setCreating(false);
@@ -325,6 +344,7 @@ export default function LienQuan() {
                 onChange={(e) => {
                   setUid(e.target.value);
                   setPlayer(null);
+                  setPlayerError("");
                   setError("");
                 }}
                 inputMode="numeric"
@@ -334,29 +354,42 @@ export default function LienQuan() {
 
               <button
                 onClick={checkPlayer}
-                disabled={checking}
+                disabled={checkingPlayer}
                 className="h-12 rounded-xl bg-blue-600 px-6 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {checking
-                  ? "Đang kiểm tra..."
-                  : "Đăng nhập"}
+                {checkingPlayer ? "Đang kiểm tra..." : "Đăng nhập"}
               </button>
             </div>
 
-            {player && (
-              <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-emerald-600">
-                  <Check size={17} strokeWidth={3} />
+            {/* CHECKING */}
+            {checkingPlayer && (
+              <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm font-medium text-blue-600">
+                Đang kiểm tra thông tin người chơi...
+              </div>
+            )}
+
+            {/* PLAYER ERROR */}
+            {playerError && !checkingPlayer && (
+              <div className="mt-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                {playerError}
+              </div>
+            )}
+
+            {/* PLAYER SUCCESS */}
+            {player && !checkingPlayer && (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-green-600">
+                  <Check size={18} strokeWidth={3} />
                 </div>
 
-                <div className="text-sm">
-                  <div className="font-bold text-emerald-700">
-                    UID đã được xác nhận
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-bold text-green-700">
+                    {player.username}
+                  </p>
 
-                  <div className="text-xs text-emerald-600">
-                    UID: {player.uid}
-                  </div>
+                  <p className="text-xs text-green-600">
+                    UID: {player.userId}
+                  </p>
                 </div>
               </div>
             )}
@@ -380,6 +413,12 @@ export default function LienQuan() {
             </h2>
           </div>
 
+          {!player && (
+            <p className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+              ⚠️ Vui lòng kiểm tra ID người chơi trước khi chọn mệnh giá.
+            </p>
+          )}
+
           <div className="mb-4 flex rounded-xl bg-slate-100 p-1">
             <button className="flex-1 rounded-lg bg-white px-3 py-2.5 text-sm font-bold text-blue-600 shadow-sm">
               Nạp Online
@@ -397,20 +436,27 @@ export default function LienQuan() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {PACKAGES.map((item) => (
-              <PackageCard
-                key={item.id}
-                item={item}
-                selected={
-                  selectedPackage?.id === item.id
-                }
-                onClick={() => {
-                  setSelectedPackage(item);
-                  setError("");
-                }}
-              />
-            ))}
+          <div
+            className={
+              !player
+                ? "pointer-events-none select-none opacity-50"
+                : ""
+            }
+          >
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {PACKAGES.map((item) => (
+                <PackageCard
+                  key={item.id}
+                  item={item}
+                  disabled={!player}
+                  selected={selectedPackage?.id === item.id}
+                  onClick={() => {
+                    setSelectedPackage(item);
+                    setError("");
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </section>
 
@@ -431,9 +477,7 @@ export default function LienQuan() {
               <PaymentCard
                 key={method.id}
                 method={method}
-                selected={
-                  paymentMethod === method.id
-                }
+                selected={paymentMethod === method.id}
                 onClick={() => {
                   setPaymentMethod(method.id);
                   setError("");
@@ -451,9 +495,7 @@ export default function LienQuan() {
               <span className="font-extrabold text-amber-700">
                 {coinBalance == null
                   ? "—"
-                  : `${coinBalance.toLocaleString(
-                      "vi-VN"
-                    )} Coin`}
+                  : `${coinBalance.toLocaleString("vi-VN")} Coin`}
               </span>
             </div>
           )}
@@ -511,4 +553,4 @@ export default function LienQuan() {
       </main>
     </div>
   );
-    }
+        }
