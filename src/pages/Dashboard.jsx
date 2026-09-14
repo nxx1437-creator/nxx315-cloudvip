@@ -152,28 +152,31 @@ export default function Dashboard() {
   const [chartLoading, setChartLoading] = useState(true);
 
   useEffect(() => {
-  const fetchProfile = async () => {
-    // ⚠️ KHÔNG setLoading(false) ở đây!
-    // Chờ session load xong đã (user?.id có giá trị)
-    if (!user?.id) return;
+    const fetchProfile = async () => {
+      if (!user?.id) return;
 
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      if (data) {
-        setProfile(data);
+      const startTime = Date.now();
+
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        if (data) {
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error("fetchProfile error:", err);
+      } finally {
+        // ⏱️ Đảm bảo skeleton hiện ít nhất 1200ms
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 1200 - elapsed);
+        setTimeout(() => setLoading(false), remaining);
       }
-    } catch (err) {
-      console.error("fetchProfile error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchProfile();
-}, [user]);
+    };
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     const fetchChart = async () => {
@@ -425,7 +428,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Mini Game */}
+               {/* Mini Game */}
             <button
               onClick={() => navigate("/minigames")}
               className="w-full overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white text-left transition hover:border-sky-200"
@@ -458,7 +461,7 @@ export default function Dashboard() {
               </div>
             </button>
 
-                 {/* Coin 7 ngày qua */}
+            {/* Coin 7 ngày qua */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="flex items-center justify-between">
                 <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
