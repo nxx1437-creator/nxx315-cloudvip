@@ -108,9 +108,12 @@ function getHistoryStatus(status) {
     case "completed":
     case "success":
     case "done":
+    case "verified":
       return { label: "Hoàn thành", cls: "bg-emerald-50 text-emerald-600 border-emerald-100" };
     case "expired":
       return { label: "Hết hạn", cls: "bg-slate-100 text-slate-500 border-slate-200" };
+    case "cancelled":
+      return { label: "Đã hủy", cls: "bg-amber-50 text-amber-600 border-amber-100" };
     case "failed":
       return { label: "Thất bại", cls: "bg-rose-50 text-rose-600 border-rose-100" };
     default:
@@ -127,23 +130,6 @@ function formatDateTime(d) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function getOrCreateDeviceFingerprint() {
-  if (typeof window === "undefined") return null;
-  let fp = localStorage.getItem("device_fp");
-  if (!fp) {
-    fp = `fp_${navigator.userAgent.slice(0, 40)}_${screen.width}x${screen.height}_${Date.now()}`;
-    // hash đơn giản
-    let hash = 0;
-    for (let i = 0; i < fp.length; i++) {
-      hash = ((hash << 5) - hash) + fp.charCodeAt(i);
-      hash = hash & hash;
-    }
-    fp = `fp_${Math.abs(hash).toString(36)}`;
-    localStorage.setItem("device_fp", fp);
-  }
-  return fp;
 }
 
 function TaskCardSkeleton() {
@@ -193,7 +179,7 @@ function HistorySkeleton() {
       </div>
     </div>
   );
-      }
+}
 // =====================================================
 // MAIN
 // =====================================================
@@ -210,25 +196,13 @@ export default function Tasks() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
+  const [pendingTaskId, setPendingTaskId] = useState(null);
 
   // History state
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  // ============ ANTI-ABUSE: Đo thời gian rời tab ============
-  const awayStartRef = useRef(null);
-  const [totalTimeAway, setTotalTimeAway] = useState(0);
-
-  const [pollingTaskIds, setPollingTaskIds] = useState([]);
-  const pollingRefs = useRef({});
-  const tasksRef = useRef(tasks);
-
-  useEffect(() => {
-    tasksRef.current = tasks;
-  }, [tasks]);
-
-  // Delay skeleton
   useEffect(() => {
     if (!loading) {
       setShowSkeleton(false);
@@ -238,32 +212,55 @@ export default function Tasks() {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // ============ ANTI-ABUSE: Track visibility ============
+  // ============ PHÁT HIỆN USER QUAY LẠI ============
+  // Khi user mở link task (tab khác) rồi quay lại tab web,
+  // nếu có token đang chờ trong localStorage → navigate sang callback
   useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        awayStartRef.current = Date.now();
-      } else if (document.visibilityState === "visible" && awayStartRef.current) {
-        const away = Math.floor((Date.now() - awayStartRef.current) / 1000);
-        setTotalTimeAway((prev) => prev + away);
-        awayStartRef.current = null;
+    const checkPendingToken = () => {
+      const pendingToken = localStorage.getItem("pending_task_token");
+      if (!pendingToken) return;
+
+      const pendingTime = parseInt(localStorage.getItem("pending_task_time") || "0", 10);
+      const elapsed = Date.now() - pendingTime;
+
+      // Chỉ điều hướng nếu token < 15 phút
+      if (elapsed < 15 * 60 * 1000) {
+        // Xóa để không lặp lại
+        localStorage.removeItem("pending_task_token");
+        localStorage.removeItem("pending_task_time");
+        localStorage.removeItem("pending_task_id");
+
+        navigate(`/task/callback?token=${pendingToken}`);
+      } else {
+        // Token quá cũ → xóa
+        localStorage.removeItem("pending_task_token");
+        localStorage.removeItem("pending_task_time");
+        localStorage.removeItem("pending_task_id");
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, []);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkPendingToken();
+        reload();
+        setHistoryLoaded(false);
+      }
+    };
 
-  // Khởi tạo device fingerprint
-  useEffect(() => {
-    getOrCreateDeviceFingerprint();
-  }, []);
+    // Check ngay khi component mount (phòng trường hợp user quay lại bằng cách khác)
+    checkPendingToken();
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
+  }, [navigate, reload]);
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
-
-  const displayName =
-    profile.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
 
   const filteredTasks = useMemo(() => {
     let list = tasks;
@@ -298,7 +295,7 @@ export default function Tasks() {
       setHistoryLoading(true);
       try {
         const { data, error } = await supabase
-          .from("task_logs")
+          .from("task_tokens")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
@@ -317,123 +314,7 @@ export default function Tasks() {
     fetchHistory();
   }, [activeTab, user?.id, historyLoaded]);
 
-  const startPolling = (logId, taskId) => {
-    if (pollingRefs.current[logId]) return;
-    setPollingTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
-
-    const interval = setInterval(async () => {
-      try {
-        const deviceFp = getOrCreateDeviceFingerprint();
-
-        const { data, error } = await supabase.functions.invoke("check-task-status", {
-          body: {
-            task_log_id: logId,
-            time_away_seconds: totalTimeAway,
-            device_fingerprint: deviceFp,
-          },
-        });
-
-        if (error) {
-          if (error.message?.includes("429") || error.status === 429) {
-            console.warn("Rate limit exceeded, waiting...");
-          }
-          return;
-        }
-
-        // Đang chờ đủ thời gian → tiếp tục poll
-        if (data?.waiting) {
-          return;
-        }
-
-        if (data?.completed) {
-          clearInterval(pollingRefs.current[logId]);
-          delete pollingRefs.current[logId];
-          setPollingTaskIds((prev) => prev.filter((id) => id !== taskId));
-
-          const completedTask = tasksRef.current.find((t) => t.id === taskId);
-
-          try {
-            await supabase.functions.invoke("telegram-webhook", {
-              body: {
-                message: {
-                  text: `✅ Hoàn thành nhiệm vụ!\n👤 User: ${user.email}\n📦 Provider: ${completedTask?.provider || taskId}\n💰 Thưởng: +${completedTask?.reward_coins || 0} Coin`,
-                  chat: { id: 6152450878 },
-                },
-              },
-            });
-          } catch (teleError) {
-            console.error("Lỗi gửi Telegram:", teleError);
-          }
-
-          showToast(`✅ Hoàn thành ${completedTask?.provider || "nhiệm vụ"}! +${data.reward || completedTask?.reward_coins || 0} Coin`);
-          setHistoryLoaded(false);
-          setTotalTimeAway(0);
-          reload();
-
-          supabase.functions.invoke("send-push", {
-            body: {
-              title: "🎉 Hoàn thành nhiệm vụ",
-              body: `Bạn vừa nhận được +${data.reward || completedTask?.reward_coins || 0} Coin từ ${completedTask?.provider || "nhiệm vụ"}!`,
-              url: "/tasks",
-            },
-          }).then((res) => {
-            if (res.error) console.error("PUSH error:", res.error);
-          }).catch((err) => console.error("PUSH catch:", err));
-        }
-
-        if (data?.error) {
-          clearInterval(pollingRefs.current[logId]);
-          delete pollingRefs.current[logId];
-          setPollingTaskIds((prev) => prev.filter((id) => id !== taskId));
-
-          showToast(data.error, "error");
-          setHistoryLoaded(false);
-          setTotalTimeAway(0);
-          reload();
-        }
-      } catch (err) {
-        console.error("Polling error:", err);
-      }
-    }, 5000);
-
-    pollingRefs.current[logId] = interval;
-  };
-
-  // Khôi phục polling khi tải lại trang
-  useEffect(() => {
-    const restorePolling = async () => {
-      if (!user?.id) return;
-
-      const { data, error } = await supabase
-        .from("task_logs")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("is_polling", true);
-
-      if (error) return;
-      if (!data || data.length === 0) return;
-
-      for (const row of data) {
-        if (new Date(row.expires_at) < new Date()) {
-          await supabase
-            .from("task_logs")
-            .update({ status: "expired", is_polling: false })
-            .eq("id", row.id);
-          continue;
-        }
-        startPolling(row.id, row.task_id);
-      }
-    };
-
-    restorePolling();
-  }, [user?.id]);
-
-  useEffect(() => {
-    return () => {
-      Object.values(pollingRefs.current).forEach((intervalId) => clearInterval(intervalId));
-    };
-  }, []);
-
+  // ============ HANDLE START — Bỏ polling, chỉ mở link ============
   const handleStart = async (task) => {
     if (isLoading) return;
 
@@ -447,17 +328,8 @@ export default function Tasks() {
       return;
     }
 
-    if (pollingTaskIds.includes(task.id)) {
-      showToast("Nhiệm vụ này đang chờ xác nhận rồi!", "error");
-      return;
-    }
-
     setIsLoading(true);
     setStartingTaskId(task.id);
-
-    // Reset timer khi bắt đầu task mới
-    setTotalTimeAway(0);
-    awayStartRef.current = null;
 
     try {
       const { data, error } = await supabase.functions.invoke("start-task", {
@@ -482,37 +354,25 @@ export default function Tasks() {
         return;
       }
 
-      if (data?.shortUrl) {
-        const urlParts = data.shortUrl.split("/");
-        const slug = urlParts[urlParts.length - 1];
+      if (data?.shortUrl && data?.token) {
+        // Lưu token vào localStorage để khi user quay lại tab web sẽ tự chuyển sang callback
+        localStorage.setItem("pending_task_token", data.token);
+        localStorage.setItem("pending_task_time", Date.now().toString());
+        localStorage.setItem("pending_task_id", task.id);
 
-        const { data: logData, error: logError } = await supabase
-          .from("task_logs")
-          .insert({
-            user_id: user.id,
-            task_id: task.id,
-            token: data.token,
-            provider: task.provider,
-            provider_slug: slug,
-            reward_coins: task.reward_coins,
-            expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-            is_polling: true,
-            status: "pending",
-          })
-          .select()
-          .single();
-
-        if (logError) {
-          showToast("Lỗi lưu task log: " + logError.message, "error");
-          setIsLoading(false);
-          return;
-        }
-
+        // Mở link provider
         window.open(data.shortUrl, "_blank");
-        startPolling(logData.id, task.id);
-        setHistoryLoaded(false);
 
-        showToast(`Đã mở link ${task.provider}! Quay lại sau ít nhất 45s để nhận thưởng.`);
+        showToast(`Đã mở link ${task.provider}! Làm xong quay lại tab này để nhận thưởng.`);
+
+        // Lưu task id đang chờ để hiển thị banner
+        setPendingTaskId(task.id);
+
+        // Reload tasks sau 2s để update "đang chờ"
+        setTimeout(() => {
+          reload();
+          setHistoryLoaded(false);
+        }, 2000);
       } else {
         showToast("Không lấy được link nhiệm vụ!", "error");
       }
@@ -523,10 +383,7 @@ export default function Tasks() {
       setIsLoading(false);
     }
   };
-
-  // ============ UI REALTIME: Hiện thời gian rời tab ============
-  const totalAwayDisplay = totalTimeAway;
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
@@ -614,26 +471,35 @@ export default function Tasks() {
           </div>
         </div>
 
-        {/* Cảnh báo anti-abuse (chỉ hiện khi đang làm task) */}
-        {pollingTaskIds.length > 0 && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-500/30 dark:bg-amber-500/10">
+        {/* Banner nhắc nhở khi có task đang chờ */}
+        {pendingTaskId && (
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
             <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
                 <Clock size={16} />
               </span>
               <div className="flex-1">
-                <p className="text-sm font-bold text-amber-800">
-                  Đang làm nhiệm vụ — Cần ở lại tab ít nhất 45s
+                <p className="text-sm font-bold text-sky-800">
+                  Đang chờ xác nhận nhiệm vụ
                 </p>
-                <p className="mt-0.5 text-xs text-amber-700">
-                  Thời gian rời tab: <span className="font-bold">{totalAwayDisplay}s</span>
-                  {totalAwayDisplay < 45 && (
-                    <> · Cần thêm <span className="font-bold">{45 - totalAwayDisplay}s</span> nữa</>
-                  )}
-                  {totalAwayDisplay >= 45 && <> · ✅ Đủ điều kiện!</>}
+                <p className="mt-0.5 text-xs text-sky-700">
+                  Làm xong nhiệm vụ bên nhà cung cấp, quay lại tab này và bấm vào thông báo để nhận thưởng.
                 </p>
               </div>
+              <button
+                onClick={() => setPendingTaskId(null)}
+                className="shrink-0 text-sky-400 hover:text-sky-600"
+              >
+                <XCircle size={16} />
+              </button>
             </div>
+          </div>
+        )}
+
+        {isBlocked && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
+            <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
+            <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
           </div>
         )}
 
@@ -694,13 +560,6 @@ export default function Tasks() {
           </div>
         </div>
 
-        {isBlocked && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
-            <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
-            <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
-          </div>
-        )}
-
         {/* ============ TAB: HOT / ALL ============ */}
         {(activeTab === "hot" || activeTab === "all") && (
           <>
@@ -725,7 +584,7 @@ export default function Tasks() {
                 {filteredTasks.map((task) => {
                   const progressPct = Math.min(100, Math.round((task.completedToday / task.daily_limit) * 100));
                   const isDone = task.remainingToday <= 0;
-                  const isThisPolling = pollingTaskIds.includes(task.id);
+                  const isThisStarting = startingTaskId === task.id;
 
                   return (
                     <div key={task.id} className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
@@ -767,18 +626,16 @@ export default function Tasks() {
 
                         <button
                           onClick={() => handleStart(task)}
-                          disabled={isDone || startingTaskId === task.id || isBlocked || isThisPolling || isLoading}
+                          disabled={isDone || isThisStarting || isBlocked || isLoading}
                           className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <ExternalLink size={15} />
-                          {startingTaskId === task.id
+                          {isThisStarting
                             ? "Đang mở..."
                             : isBlocked
                             ? "Tài khoản bị khóa"
                             : isDone
                             ? "Đã hết lượt hôm nay"
-                            : isThisPolling
-                            ? "Đang chờ xác nhận..."
                             : "Làm nhiệm vụ"}
                         </button>
                       </div>
@@ -813,7 +670,7 @@ export default function Tasks() {
                 <div className="divide-y divide-slate-100">
                   {history.map((log) => {
                     const status = getHistoryStatus(log.status);
-                    const isCompleted = ["completed", "success", "done"].includes(String(log.status || "").toLowerCase());
+                    const isCompleted = ["completed", "success", "done", "verified"].includes(String(log.status || "").toLowerCase());
 
                     return (
                       <div key={log.id} className="px-4 py-3 md:grid md:grid-cols-12 md:gap-3 md:items-center">
