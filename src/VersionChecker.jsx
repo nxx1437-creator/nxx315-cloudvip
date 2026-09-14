@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-const CHECK_INTERVAL = 30000; // 60s
+const CHECK_INTERVAL = 60000; // 60 giây
 const AUTO_RELOAD_DELAY = 3000; // chờ 3s rồi tự reload
 
 export default function VersionChecker() {
@@ -30,7 +30,19 @@ export default function VersionChecker() {
 
     checkVersion();
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
-    return () => clearInterval(interval);
+
+    // Check khi user quay lại tab
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkVersion();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   if (!updating) return null;
@@ -45,7 +57,7 @@ export default function VersionChecker() {
 
 const toastStyle = {
   position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-  background: '#111', color: '#fff', padding: '12px 20px', borderRadius: 999,
+  background: '#111', color: '#fff', padding: '12px 20px', borderRadius: 12,
   fontSize: 14, display: 'flex', alignItems: 'center', gap: 8,
   zIndex: 9999, fontFamily: 'system-ui, sans-serif', boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
 };
