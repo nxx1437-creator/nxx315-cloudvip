@@ -3,13 +3,11 @@ import React from "react";
 export default function ProfileSkeleton() {
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div>
         <div className="h-8 w-32 rounded skeleton-shimmer" />
         <div className="mt-2 h-4 w-64 rounded skeleton-shimmer" />
       </div>
 
-      {/* Profile card */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col items-center">
           <div className="h-24 w-24 rounded-full skeleton-shimmer" />
@@ -28,7 +26,6 @@ export default function ProfileSkeleton() {
         </div>
       </div>
 
-      {/* Settings groups */}
       {Array.from({ length: 2 }).map((_, gi) => (
         <div key={gi}>
           <div className="mb-2 h-3 w-24 rounded skeleton-shimmer" />
@@ -55,4 +52,4 @@ export default function ProfileSkeleton() {
       ))}
     </div>
   );
-                    }
+}
