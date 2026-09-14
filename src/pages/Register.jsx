@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { UserPlus, Mail, Lock, Eye, EyeOff, User, Loader2 } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,109 +59,43 @@ export default function Register() {
   return (
     <AuthShell
       title="Tạo tài khoản"
-      subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí"
-      icon={UserPlus}
-      promo={{
-        heading: "Đã có tài khoản?",
-        ctaLabel: "Đăng nhập",
-        ctaHref: "/login",
-      }}
+      subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
     >
-      {/* Social */}
-      <SocialRow onSelect={handleSocial} />
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <input
+          type="text"
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          placeholder="Tên hiển thị (tùy chọn)"
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+        />
 
-      {/* Divider */}
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-xs font-medium text-slate-400">
-            hoặc đăng ký bằng email
-          </span>
-        </div>
-      </div>
+        <input
+          type="email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          placeholder="Email của bạn"
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+        />
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Username */}
-        <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Tên hiển thị
-          </label>
-          <div className="relative">
-            <User
-              size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              placeholder="Tên của bạn (tùy chọn)"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
-            />
-          </div>
-        </div>
+        <input
+          type="password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          placeholder="Mật khẩu (ít nhất 6 ký tự)"
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+        />
 
-        {/* Email */}
-        <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Email
-          </label>
-          <div className="relative">
-            <Mail
-              size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="your@email.com"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
-            />
-          </div>
-        </div>
-
-        {/* Password */}
-        <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Mật khẩu
-          </label>
-          <div className="relative">
-            <Lock
-              size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type={showPassword ? "text" : "password"}
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Ít nhất 6 ký tự"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pl-10 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Error */}
         {error && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-            <p className="text-xs font-medium text-rose-600">{error}</p>
-          </div>
+          <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+            {error}
+          </p>
         )}
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 py-4 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition-all hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-xl hover:shadow-sky-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
         >
           {loading ? (
             <>
@@ -170,13 +103,31 @@ export default function Register() {
               Đang tạo tài khoản...
             </>
           ) : (
-            <>
-              <UserPlus size={16} />
-              Đăng ký miễn phí
-            </>
+            "Đăng ký"
           )}
         </button>
       </form>
+
+      {/* OR */}
+      <div className="relative my-7">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white px-3 text-xs font-medium uppercase tracking-wider text-slate-400">
+            Hoặc
+          </span>
+        </div>
+      </div>
+
+      <SocialRow onSelect={handleSocial} />
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Đã có tài khoản?{" "}
+        <Link to="/login" className="font-semibold text-slate-900 hover:underline">
+          Đăng nhập
+        </Link>
+      </p>
     </AuthShell>
   );
 }
