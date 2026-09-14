@@ -154,7 +154,7 @@ export default function ForgotPassword() {
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Mã OTP
             </label>
-            <OtpInput value={otp} onChange={setOtp} length={8} disabled={loading} />
+            <OtpInput value={otp} onChange={setOtp} length={6} disabled={loading} />
           </div>
 
           <div>
