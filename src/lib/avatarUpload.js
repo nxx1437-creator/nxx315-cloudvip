@@ -3,9 +3,6 @@ import { supabase } from "./supabaseClient.js";
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-/**
- * Kiểm tra file hợp lệ (loại, kích thước, độ phân giải tối thiểu)
- */
 export async function validateAvatarFile(file) {
   if (!file) {
     throw new Error("Vui lòng chọn ảnh.");
@@ -53,8 +50,7 @@ function getImageDimensions(file) {
  * @returns URL công khai của ảnh
  */
 export async function uploadAvatar(userId, file) {
-  const ext = file.name.split(".").pop().toLowerCase();
-  const fileName = `${userId}/avatar.${ext}`;
+  const fileName = `${userId}/avatar.jpg`;
 
   console.log(" Uploading to:", `avatars/${fileName}`);
 
