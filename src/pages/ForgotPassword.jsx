@@ -35,7 +35,8 @@ export default function ForgotPassword() {
 
     setLoading(false);
     if (otpError) {
-      setError("Không thể gửi mã. Vui lòng kiểm tra email và thử lại.");
+      console.error("Send OTP error:", otpError);
+      setError(otpError.message || "Không thể gửi mã. Vui lòng thử lại.");
       return;
     }
 
@@ -44,8 +45,8 @@ export default function ForgotPassword() {
 
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
-    if (otp.length !== 6) {
-      setError("Vui lòng nhập đủ 6 số.");
+    if (otp.length !== 8) {
+      setError("Vui lòng nhập đủ 8 số.");
       return;
     }
     if (newPassword.length < 6) {
@@ -55,34 +56,49 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
 
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: otp,
-      type: "email",
-    });
+    try {
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp,
+        type: "email",
+      });
 
-    if (verifyError) {
+      if (verifyError) {
+        console.error("Verify OTP error:", verifyError);
+        setLoading(false);
+        setError(verifyError.message || "Mã OTP không đúng hoặc đã hết hạn.");
+        return;
+      }
+
+      // Log để debug
+      console.log("Verify success, session:", verifyData?.session);
+
+      // Đợi 500ms để session được lưu
+      await new Promise((r) => setTimeout(r, 500));
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
       setLoading(false);
-      setError("Mã OTP không đúng hoặc đã hết hạn.");
-      return;
+
+      if (updateError) {
+        console.error("Update password error:", updateError);
+        setError(updateError.message || "Không thể đổi mật khẩu. Vui lòng thử lại.");
+        return;
+      }
+
+      // Đăng xuất để user login lại với mật khẩu mới
+      await supabase.auth.signOut();
+
+      navigate("/login", {
+        state: { message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." },
+      });
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setLoading(false);
+      setError(err.message || "Có lỗi xảy ra. Vui lòng thử lại.");
     }
-
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    setLoading(false);
-
-    if (updateError) {
-      setError("Không thể đổi mật khẩu. Vui lòng thử lại.");
-      return;
-    }
-
-    await supabase.auth.signOut();
-
-    navigate("/login", {
-      state: { message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." },
-    });
   };
 
   const handleBackToEmail = () => {
@@ -138,7 +154,7 @@ export default function ForgotPassword() {
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Mã OTP
             </label>
-            <OtpInput value={otp} onChange={setOtp} length={6} disabled={loading} />
+            <OtpInput value={otp} onChange={setOtp} length={8} disabled={loading} />
           </div>
 
           <div>
@@ -204,4 +220,4 @@ export default function ForgotPassword() {
       </p>
     </AuthShell>
   );
-  }
+      }
