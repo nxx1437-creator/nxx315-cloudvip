@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabaseClient.js";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  const [step, setStep] = useState("email"); // "email" | "otp"
+  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -15,7 +15,6 @@ export default function ForgotPassword() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Gửi OTP
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     if (!email.trim()) {
@@ -43,7 +42,6 @@ export default function ForgotPassword() {
     setStep("otp");
   };
 
-  // Xác thực OTP + đổi mật khẩu
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     if (otp.length !== 6) {
@@ -57,8 +55,7 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
 
-    // Verify OTP
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+    const { error: verifyError } = await supabase.auth.verifyOtp({
       email: email.trim(),
       token: otp,
       type: "email",
@@ -70,7 +67,6 @@ export default function ForgotPassword() {
       return;
     }
 
-    // Update password
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
@@ -82,7 +78,6 @@ export default function ForgotPassword() {
       return;
     }
 
-    // Đăng xuất để user login lại với mật khẩu mới
     await supabase.auth.signOut();
 
     navigate("/login", {
@@ -114,7 +109,7 @@ export default function ForgotPassword() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email của bạn"
             autoFocus
-            className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+            className="h-14 w-full rounded-full border border-slate-300 bg-white px-5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
           />
 
           {error && (
@@ -126,7 +121,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-13 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
+            className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
           >
             {loading ? (
               <Loader2 size={20} className="animate-spin" />
@@ -139,7 +134,6 @@ export default function ForgotPassword() {
 
       {step === "otp" && (
         <form onSubmit={handleVerifyOtp} className="space-y-4">
-          {/* OTP Input */}
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Mã OTP
@@ -147,7 +141,6 @@ export default function ForgotPassword() {
             <OtpInput value={otp} onChange={setOtp} length={6} disabled={loading} />
           </div>
 
-          {/* New Password */}
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Mật khẩu mới
@@ -162,7 +155,7 @@ export default function ForgotPassword() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Ít nhất 6 ký tự"
-                className="w-full rounded-full border border-slate-300 bg-white py-3.5 pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+                className="h-14 w-full rounded-full border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
               />
               <button
                 type="button"
@@ -183,7 +176,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-13 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
+            className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
           >
             {loading ? (
               <Loader2 size={20} className="animate-spin" />
@@ -211,4 +204,4 @@ export default function ForgotPassword() {
       </p>
     </AuthShell>
   );
-}
+  }
