@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { LogIn, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
-import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -16,10 +15,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
       return;
     }
+
     setError("");
     setLoading(true);
 
@@ -29,8 +30,9 @@ export default function Login() {
     });
 
     setLoading(false);
+
     if (authError) {
-      setError(authError.message);
+      setError("Email hoặc mật khẩu không đúng.");
       return;
     }
 
@@ -42,7 +44,7 @@ export default function Login() {
         return;
       }
 
-      window.location.href = '/dashboard';
+      window.location.href = "/dashboard";
     }
   };
 
@@ -51,88 +53,109 @@ export default function Login() {
     setShowMfa(false);
   };
 
-  const handleSocial = async (provider, supported) => {
-  setError("");
-  if (!supported) {
-    setError("Đăng nhập bằng " + provider + " sắp ra mắt, bạn dùng cách khác giúp mình nhé.");
-    return;
-  }
-  const { error: authError } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}/dashboard` },
-  });
-  if (authError) setError(authError.message);
-};
-  
   return (
     <AuthShell
-      title="Đăng nhập"
-      subtitle="Đăng nhập với tài khoản mạng xã hội"
+      title="Chào mừng trở lại"
+      subtitle="Đăng nhập vào NXX315 Studio Rewards để tiếp tục"
+      icon={LogIn}
       promo={{
         heading: "Chưa có tài khoản?",
-        body: "Tạo tài khoản ngay để bắt đầu kiếm Coin và nhận thưởng.",
-        ctaLabel: "Đăng ký",
+        ctaLabel: "Đăng ký miễn phí",
         ctaHref: "/register",
       }}
     >
-      <SocialRow onSelect={handleSocial} />
-
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div className="relative">
-          <Mail size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
-          <input
-  type="email"
-  value={form.email}
-  onChange={(e) => setForm({ ...form, email: e.target.value })}
-  placeholder="Email"
-  className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-4 text-sm !text-slate-900 outline-none transition placeholder:!text-slate-500 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
-/>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Email */}
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Email
+          </label>
+          <div className="relative">
+            <Mail
+              size={16}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="your@email.com"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+            />
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div className="relative flex-1">
-            <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
+        {/* Password */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Mật khẩu
+            </label>
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium text-sky-600 hover:underline"
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
+          <div className="relative">
+            <Lock
+              size={16}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type={showPassword ? "text" : "password"}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Mật khẩu"
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-11 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
+              placeholder="Nhập mật khẩu của bạn"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 pl-10 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-sky-300/50 hover:text-sky-200"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            aria-label="Đăng nhập"
-            className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:opacity-60"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
-          </button>
         </div>
 
-        {error && <p className="text-sm text-rose-400">{error}</p>}
+        {/* Error */}
+        {error && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <p className="text-xs font-medium text-rose-600">{error}</p>
+          </div>
+        )}
 
-        <div className="text-center">
-          <Link to="/forgot-password" className="text-xs text-sky-400 hover:underline">
-            Quên mật khẩu?
-          </Link>
-        </div>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 py-4 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition-all hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-xl hover:shadow-sky-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Đang đăng nhập...
+            </>
+          ) : (
+            <>
+              <LogIn size={16} />
+              Đăng nhập
+            </>
+          )}
+        </button>
       </form>
 
       {showMfa && (
         <MfaChallenge
-          onVerified={() => { window.location.href = '/dashboard'; }}
+          onVerified={() => {
+            window.location.href = "/dashboard";
+          }}
           onCancel={handleMfaCancel}
         />
       )}
     </AuthShell>
-   );
- }
+  );
+}
