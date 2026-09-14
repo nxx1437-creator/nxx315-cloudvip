@@ -292,27 +292,54 @@ export default function Tasks() {
     if (activeTab !== "history" || historyLoaded || !user?.id) return;
 
     const fetchHistory = async () => {
-      setHistoryLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("task_tokens")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+  setHistoryLoading(true);
+  try {
+    // 1. Lấy tokens
+    const { data: tokens, error: tokensErr } = await supabase
+      .from("task_tokens")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-        if (error) throw error;
-        setHistory(data || []);
-        setHistoryLoaded(true);
-      } catch (err) {
-        console.error("Fetch history error:", err);
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
+    if (tokensErr) throw tokensErr;
 
-    fetchHistory();
-  }, [activeTab, user?.id, historyLoaded]);
+    if (!tokens || tokens.length === 0) {
+      setHistory([]);
+      setHistoryLoaded(true);
+      return;
+    }
+
+    // 2. Lấy danh sách task_id unique
+    const taskIds = [...new Set(tokens.map((t) => t.task_id).filter(Boolean))];
+
+    // 3. Query tasks
+    const { data: tasksList } = await supabase
+      .from("tasks")
+      .select("id, provider, reward_coins")
+      .in("id", taskIds);
+
+    // 4. Map task_id → { provider, reward_coins }
+    const taskMap = {};
+    (tasksList || []).forEach((t) => {
+      taskMap[t.id] = t;
+    });
+
+    // 5. Gộp vào token
+    const enriched = tokens.map((t) => ({
+      ...t,
+      provider: taskMap[t.task_id]?.provider || "—",
+      reward_coins: taskMap[t.task_id]?.reward_coins || 0,
+    }));
+
+    setHistory(enriched);
+    setHistoryLoaded(true);
+  } catch (err) {
+    console.error("Fetch history error:", err);
+  } finally {
+    setHistoryLoading(false);
+  }
+};
 
   // ============ HANDLE START — Bỏ polling, chỉ mở link ============
   const handleStart = async (task) => {
