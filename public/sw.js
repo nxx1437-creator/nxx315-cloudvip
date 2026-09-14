@@ -1,48 +1,65 @@
+const CACHE_NAME = "nxx315-v1";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/manifest.json",
+];
+
+// Cài đặt
 self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
   self.skipWaiting();
 });
 
+// Kích hoạt
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener("push", (event) => {
-  let data = {};
-  try {
-    data = event.data ? event.data.json() : {};
-  } catch {
-    data = { title: "NXX315 Studio", body: event.data ? event.data.text() : "" };
-  }
-
-  const title = data.title || "NXX315 Studio";
-  const options = {
-    body: data.body || "",
-    data: { url: data.url || "/dashboard" },
-    vibrate: [100, 50, 100],
-  };
-
   event.waitUntil(
-    self.registration.showNotification(title, options).catch((err) => {
-      console.error("showNotification thất bại:", err);
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      );
     })
   );
+  self.clients.claim();
 });
 
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const url = event.notification.data?.url || "/dashboard";
+// Fetch — cache-first cho JS/CSS/images
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
 
-  event.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && "focus" in client) {
-          client.navigate(url);
-          return client.focus();
+  // Không cache các request tới Supabase
+  if (url.hostname.includes("supabase")) return;
+
+  // Bỏ qua request không phải GET
+  if (request.method !== "GET") return;
+
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(request).then((response) => {
+        // Chỉ cache response hợp lệ
+        if (!response || response.status !== 200 || response.type === "opaque") {
+          return response;
         }
-      }
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(url);
-      }
+
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseClone);
+        });
+
+        return response;
+      }).catch(() => {
+        // Nếu offline → trả về trang chủ (cho navigation)
+        if (request.mode === "navigate") {
+          return caches.match("/index.html");
+        }
+      });
     })
   );
 });
