@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Sparkles } from "lucide-react";
 
 export default function AuthShell({ title, subtitle, children, promo }) {
   return (
@@ -26,14 +25,6 @@ export default function AuthShell({ title, subtitle, children, promo }) {
 
         {/* Card */}
         <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-[0_8px_32px_rgba(15,23,42,0.06)]">
-          {/* Badge */}
-          <div className="mb-4 flex justify-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold text-sky-700">
-              <Sparkles size={11} />
-              Miễn phí 100% — Không cần nạp tiền
-            </span>
-          </div>
-
           <h1 className="text-center text-2xl font-bold tracking-tight text-slate-900">
             {title}
           </h1>
