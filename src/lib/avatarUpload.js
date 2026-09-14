@@ -53,7 +53,7 @@ function getImageDimensions(file) {
  */
 export async function uploadAvatar(userId, file) {
   const ext = file.name.split(".").pop().toLowerCase();
-  const fileName = `${userId}/avatar-${Date.now()}.${ext}`;
+  const fileName = `${userId}/avatar.${ext}`; 
 
   const { error: uploadError } = await supabase.storage
     .from("avatars")
