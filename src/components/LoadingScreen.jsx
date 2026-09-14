@@ -1,5 +1,8 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+
+const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
+const STORAGE_BUCKET = "game_logos";
+const LOGO_URL = `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/logo.png`;
 
 export default function LoadingScreen() {
   return (
@@ -13,25 +16,44 @@ export default function LoadingScreen() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes floatLogo {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
         .loading-dot {
           animation: bounceIn 1.4s infinite ease-in-out both;
         }
         .loading-dot-1 { animation-delay: -0.32s; }
         .loading-dot-2 { animation-delay: -0.16s; }
         .loading-logo {
-          animation: fadeInUp 0.5s ease-out;
+          animation: fadeInUp 0.5s ease-out, floatLogo 3s ease-in-out infinite;
+        }
+        .loading-text {
+          animation: fadeInUp 0.6s ease-out;
         }
       `}</style>
 
       <div className="text-center">
-        <div className="loading-logo mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-lg shadow-sky-500/30">
-          <Sparkles size={28} className="text-white" />
-        </div>
+        {/* Logo */}
+        <img
+          src={LOGO_URL}
+          alt="NXX315 Studio"
+          className="loading-logo mx-auto h-32 w-32 object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
 
-        <h1 className="loading-logo mt-4 font-[Baloo_2] text-xl font-bold text-slate-900">
+        {/* Tên */}
+        <h1 className="loading-text mt-2 font-[Baloo_2] text-2xl font-bold text-slate-900">
           NXX315 <span className="text-sky-500">Studio</span>
         </h1>
 
+        <p className="loading-text mt-1 text-xs text-slate-500">
+          Nền tảng nhiệm vụ & phần thưởng
+        </p>
+
+        {/* 3 chấm loading */}
         <div className="mt-6 flex items-center justify-center gap-1.5">
           <span className="loading-dot loading-dot-1 h-2 w-2 rounded-full bg-sky-500" />
           <span className="loading-dot loading-dot-2 h-2 w-2 rounded-full bg-sky-500" />
