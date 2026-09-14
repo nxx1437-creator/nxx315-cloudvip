@@ -750,7 +750,7 @@ export default function Tasks() {
         )}
       </main>
 
-      <BottomNav />
+            <BottomNav />
     </div>
   );
-              }
+  }
