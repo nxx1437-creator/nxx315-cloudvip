@@ -129,6 +129,23 @@ function formatDateTime(d) {
   });
 }
 
+function getOrCreateDeviceFingerprint() {
+  if (typeof window === "undefined") return null;
+  let fp = localStorage.getItem("device_fp");
+  if (!fp) {
+    fp = `fp_${navigator.userAgent.slice(0, 40)}_${screen.width}x${screen.height}_${Date.now()}`;
+    // hash đơn giản
+    let hash = 0;
+    for (let i = 0; i < fp.length; i++) {
+      hash = ((hash << 5) - hash) + fp.charCodeAt(i);
+      hash = hash & hash;
+    }
+    fp = `fp_${Math.abs(hash).toString(36)}`;
+    localStorage.setItem("device_fp", fp);
+  }
+  return fp;
+}
+
 function TaskCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
@@ -176,8 +193,7 @@ function HistorySkeleton() {
       </div>
     </div>
   );
-}
-
+      }
 // =====================================================
 // MAIN
 // =====================================================
@@ -200,6 +216,10 @@ export default function Tasks() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
+  // ============ ANTI-ABUSE: Đo thời gian rời tab ============
+  const awayStartRef = useRef(null);
+  const [totalTimeAway, setTotalTimeAway] = useState(0);
+
   const [pollingTaskIds, setPollingTaskIds] = useState([]);
   const pollingRefs = useRef({});
   const tasksRef = useRef(tasks);
@@ -218,6 +238,27 @@ export default function Tasks() {
     return () => clearTimeout(timer);
   }, [loading]);
 
+  // ============ ANTI-ABUSE: Track visibility ============
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        awayStartRef.current = Date.now();
+      } else if (document.visibilityState === "visible" && awayStartRef.current) {
+        const away = Math.floor((Date.now() - awayStartRef.current) / 1000);
+        setTotalTimeAway((prev) => prev + away);
+        awayStartRef.current = null;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
+  // Khởi tạo device fingerprint
+  useEffect(() => {
+    getOrCreateDeviceFingerprint();
+  }, []);
+
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
 
@@ -229,8 +270,6 @@ export default function Tasks() {
 
     if (activeTab === "hot") {
       list = list.filter((t) => t.is_hot);
-    } else if (activeTab === "all") {
-      list = list;
     }
 
     const kw = query.trim().toLowerCase();
@@ -251,7 +290,7 @@ export default function Tasks() {
     window.__taskToast = window.setTimeout(() => setToast(null), 3500);
   };
 
-  // Fetch history khi tab history
+  // Fetch history
   useEffect(() => {
     if (activeTab !== "history" || historyLoaded || !user?.id) return;
 
@@ -284,8 +323,14 @@ export default function Tasks() {
 
     const interval = setInterval(async () => {
       try {
+        const deviceFp = getOrCreateDeviceFingerprint();
+
         const { data, error } = await supabase.functions.invoke("check-task-status", {
-          body: { task_log_id: logId },
+          body: {
+            task_log_id: logId,
+            time_away_seconds: totalTimeAway,
+            device_fingerprint: deviceFp,
+          },
         });
 
         if (error) {
@@ -295,15 +340,15 @@ export default function Tasks() {
           return;
         }
 
+        // Đang chờ đủ thời gian → tiếp tục poll
+        if (data?.waiting) {
+          return;
+        }
+
         if (data?.completed) {
           clearInterval(pollingRefs.current[logId]);
           delete pollingRefs.current[logId];
           setPollingTaskIds((prev) => prev.filter((id) => id !== taskId));
-
-          await supabase
-            .from("task_logs")
-            .update({ is_polling: false })
-            .eq("id", logId);
 
           const completedTask = tasksRef.current.find((t) => t.id === taskId);
 
@@ -320,31 +365,30 @@ export default function Tasks() {
             console.error("Lỗi gửi Telegram:", teleError);
           }
 
-          showToast(`✅ Hoàn thành ${completedTask?.provider || "nhiệm vụ"}! +${completedTask?.reward_coins || 0} Coin`);
+          showToast(`✅ Hoàn thành ${completedTask?.provider || "nhiệm vụ"}! +${data.reward || completedTask?.reward_coins || 0} Coin`);
           setHistoryLoaded(false);
+          setTotalTimeAway(0);
+          reload();
 
           supabase.functions.invoke("send-push", {
             body: {
               title: "🎉 Hoàn thành nhiệm vụ",
-              body: `Bạn vừa nhận được +${completedTask?.reward_coins || 0} Coin từ ${completedTask?.provider || "nhiệm vụ"}!`,
+              body: `Bạn vừa nhận được +${data.reward || completedTask?.reward_coins || 0} Coin từ ${completedTask?.provider || "nhiệm vụ"}!`,
               url: "/tasks",
             },
           }).then((res) => {
             if (res.error) console.error("PUSH error:", res.error);
           }).catch((err) => console.error("PUSH catch:", err));
         }
-        if (data?.error === "Đã hết hạn") {
+
+        if (data?.error) {
           clearInterval(pollingRefs.current[logId]);
           delete pollingRefs.current[logId];
           setPollingTaskIds((prev) => prev.filter((id) => id !== taskId));
 
-          await supabase
-            .from("task_logs")
-            .update({ is_polling: false })
-            .eq("id", logId);
-
-          showToast("Một nhiệm vụ đã hết hạn.", "error");
+          showToast(data.error, "error");
           setHistoryLoaded(false);
+          setTotalTimeAway(0);
           reload();
         }
       } catch (err) {
@@ -355,6 +399,7 @@ export default function Tasks() {
     pollingRefs.current[logId] = interval;
   };
 
+  // Khôi phục polling khi tải lại trang
   useEffect(() => {
     const restorePolling = async () => {
       if (!user?.id) return;
@@ -410,6 +455,10 @@ export default function Tasks() {
     setIsLoading(true);
     setStartingTaskId(task.id);
 
+    // Reset timer khi bắt đầu task mới
+    setTotalTimeAway(0);
+    awayStartRef.current = null;
+
     try {
       const { data, error } = await supabase.functions.invoke("start-task", {
         body: { task_id: task.id },
@@ -463,7 +512,7 @@ export default function Tasks() {
         startPolling(logData.id, task.id);
         setHistoryLoaded(false);
 
-        showToast(`Đã mở link ${task.provider}!`);
+        showToast(`Đã mở link ${task.provider}! Quay lại sau ít nhất 45s để nhận thưởng.`);
       } else {
         showToast("Không lấy được link nhiệm vụ!", "error");
       }
@@ -474,7 +523,10 @@ export default function Tasks() {
       setIsLoading(false);
     }
   };
-      return (
+
+  // ============ UI REALTIME: Hiện thời gian rời tab ============
+  const totalAwayDisplay = totalTimeAway;
+  return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
@@ -561,6 +613,29 @@ export default function Tasks() {
             <MiniStat value={hoursUntilMidnight()} label="CÒN LẠI" icon={Clock} bg="bg-sky-100/70" valueColor="text-sky-700" iconColor="text-sky-500" />
           </div>
         </div>
+
+        {/* Cảnh báo anti-abuse (chỉ hiện khi đang làm task) */}
+        {pollingTaskIds.length > 0 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <Clock size={16} />
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-amber-800">
+                  Đang làm nhiệm vụ — Cần ở lại tab ít nhất 45s
+                </p>
+                <p className="mt-0.5 text-xs text-amber-700">
+                  Thời gian rời tab: <span className="font-bold">{totalAwayDisplay}s</span>
+                  {totalAwayDisplay < 45 && (
+                    <> · Cần thêm <span className="font-bold">{45 - totalAwayDisplay}s</span> nữa</>
+                  )}
+                  {totalAwayDisplay >= 45 && <> · ✅ Đủ điều kiện!</>}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search + Tabs */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -728,7 +803,6 @@ export default function Tasks() {
               </div>
             ) : (
               <div className="fade-in overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                {/* Header - Desktop */}
                 <div className="hidden md:grid grid-cols-12 gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <div className="col-span-3">Nhiệm vụ</div>
                   <div className="col-span-3">Trạng thái</div>
@@ -736,7 +810,6 @@ export default function Tasks() {
                   <div className="col-span-3 text-right">Thời gian</div>
                 </div>
 
-                {/* Rows */}
                 <div className="divide-y divide-slate-100">
                   {history.map((log) => {
                     const status = getHistoryStatus(log.status);
@@ -744,7 +817,6 @@ export default function Tasks() {
 
                     return (
                       <div key={log.id} className="px-4 py-3 md:grid md:grid-cols-12 md:gap-3 md:items-center">
-                        {/* Mobile layout */}
                         <div className="flex items-start justify-between gap-3 md:hidden">
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-slate-800 truncate">
@@ -764,7 +836,6 @@ export default function Tasks() {
                           </div>
                         </div>
 
-                        {/* Desktop layout */}
                         <div className="hidden md:block md:col-span-3">
                           <p className="text-sm font-semibold text-slate-800 truncate">
                             {log.provider || "—"}
@@ -798,4 +869,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-            }
+              }
