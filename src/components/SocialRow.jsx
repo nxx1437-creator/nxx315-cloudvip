@@ -30,7 +30,7 @@ export default function SocialRow({ onSelect }) {
       label: "TikTok",
       supported: false,
       icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="#000000">
           <path d="M16.6 5.82c-1.02-.9-1.6-2.2-1.6-3.62h-3.2v13.3c0 1.6-1.3 2.9-2.9 2.9s-2.9-1.3-2.9-2.9 1.3-2.9 2.9-2.9c.3 0 .58.05.85.13V9.4a6.1 6.1 0 0 0-.85-.06c-3.4 0-6.1 2.76-6.1 6.16S6.35 21.66 9.8 21.66s6.1-2.76 6.1-6.16V8.9c1.27.9 2.83 1.43 4.5 1.43V7.1c-1.4 0-2.68-.5-3.8-1.28Z" />
         </svg>
       ),
@@ -55,7 +55,7 @@ export default function SocialRow({ onSelect }) {
           type="button"
           onClick={() => onSelect(item.key, item.supported)}
           aria-label={item.label}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] transition hover:bg-white/[0.12]"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white transition hover:border-slate-300 hover:bg-slate-50"
         >
           {item.icon}
         </button>
