@@ -64,7 +64,6 @@ export default function Wallet() {
   useEffect(() => {
     const fetchTransactions = async () => {
       if (!session?.user?.id) {
-        setLoading(false);
         return;
       }
 
@@ -124,6 +123,7 @@ export default function Wallet() {
         ].filter(Boolean);
 
         if (queryErrors.length > 0) {
+          console.error("Query errors:", queryErrors);
           throw new Error("Không thể tải dữ liệu. Vui lòng kiểm tra kết nối mạng.");
         }
 
@@ -263,7 +263,6 @@ export default function Wallet() {
 
         {!loading && !error && (
           <>
-            {/* Card số dư */}
             <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6">
               <p className="text-center text-sm font-medium text-[#667085]">Số dư khả dụng</p>
 
@@ -282,7 +281,6 @@ export default function Wallet() {
                 Còn {(nextMilestone - coins).toLocaleString("vi-VN")} Coin nữa tới mốc {nextMilestone.toLocaleString("vi-VN")}
               </p>
 
-              {/* Hiển thị Sao */}
               <div className="mt-3 flex items-center justify-center gap-6">
                 <div className="flex items-center gap-1.5">
                   <Star size={16} className="fill-amber-400 text-amber-400" />
@@ -313,7 +311,6 @@ export default function Wallet() {
               </div>
             </div>
 
-            {/* Lịch sử hoạt động */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-bold text-[#111827]">Hoạt động</h2>
@@ -371,7 +368,6 @@ export default function Wallet() {
               </div>
             </div>
 
-            {/* Thống kê trả nợ */}
             {refundTransactions.length > 0 && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -403,4 +399,4 @@ export default function Wallet() {
       <BottomNav />
     </div>
   );
-            }
+                        }
