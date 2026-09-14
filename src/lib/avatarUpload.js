@@ -1,70 +1,130 @@
-import { supabase } from "./supabaseClient.js";
+import React, { useRef, useState } from "react";
+import { Camera, Loader2, X, Check, AlertTriangle } from "lucide-react";
+import { supabase } from "../lib/supabaseClient.js";
+import { validateAvatarFile, uploadAvatar } from "../lib/avatarUpload.js";
 
-const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+export default function AvatarUploader({ userId, currentUrl, initial, onUploaded }) {
+  const fileRef = useRef(null);
+  const [preview, setPreview] = useState(currentUrl || null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
-/**
- * Kiểm tra file hợp lệ (loại, kích thước, độ phân giải tối thiểu)
- */
-export async function validateAvatarFile(file) {
-  if (!file) {
-    throw new Error("Vui lòng chọn ảnh.");
-  }
+  const handlePick = () => {
+    setError("");
+    setSuccess(false);
+    fileRef.current?.click();
+  };
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    throw new Error("Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP.");
-  }
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
 
-  if (file.size > MAX_SIZE) {
-    throw new Error("Ảnh không được vượt quá 2MB.");
-  }
+    setError("");
+    setSuccess(false);
 
-  // Check độ phân giải tối thiểu (>= 200x200)
-  const dims = await getImageDimensions(file);
-  if (dims.width < 200 || dims.height < 200) {
-    throw new Error("Ảnh phải có kích thước tối thiểu 200x200.");
-  }
+    try {
+      await validateAvatarFile(file);
 
-  return true;
-}
+      const previewUrl = URL.createObjectURL(file);
+      setPreview(previewUrl);
 
-/**
- * Lấy width/height của ảnh
- */
-function getImageDimensions(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.width, height: img.height });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Không thể đọc ảnh."));
-    };
-    img.src = url;
-  });
-}
+      setUploading(true);
 
-/**
- * Upload avatar lên Supabase Storage
- * @returns URL công khai của ảnh
- */
-export async function uploadAvatar(userId, file) {
-  const ext = file.name.split(".").pop().toLowerCase();
-  const fileName = `${userId}/avatar.${ext}`; 
+      const publicUrl = await uploadAvatar(userId, file);
 
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(fileName, file, {
-      cacheControl: "3600",
-      upsert: true,
-      contentType: file.type,
-    });
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", userId);
 
-  if (uploadError) throw uploadError;
+      if (dbError) throw dbError;
 
-  const { data } = supabase.storage.from("avatars").getPublicUrl(fileName);
-  return data.publicUrl;
-}
+      // Cache-busting để ảnh mới hiện ngay lập tức
+      const bustUrl = `${publicUrl}?t=${Date.now()}`;
+      setPreview(bustUrl);
+      setSuccess(true);
+      onUploaded?.(bustUrl);
+
+      setTimeout(() => setSuccess(false), 2500);
+    } catch (err) {
+      console.error("Upload avatar error:", err);
+      setError(err.message || "Upload thất bại. Vui lòng thử lại.");
+      setPreview(currentUrl || null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Avatar + nút camera */}
+      <div className="relative">
+        <div className="relative h-24 w-24">
+          {preview ? (
+            <img
+              src={preview}
+              alt="Avatar"
+              className="h-24 w-24 rounded-full border-4 border-accent-400/30 object-cover shadow-md"
+            />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-accent-400/30 bg-gradient-to-br from-accent-400 to-accent-600 text-4xl font-bold text-white shadow-md">
+              {initial}
+            </div>
+          )}
+
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+              <Loader2 size={24} className="animate-spin text-white" />
+            </div>
+          )}
+
+          {success && (
+            <div className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-emerald-500 shadow">
+              <Check size={14} className="text-white" />
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handlePick}
+          disabled={uploading}
+          className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-accent-500 text-white shadow transition hover:opacity-90 disabled:opacity-60 dark:border-slate-900"
+        >
+          <Camera size={14} />
+        </button>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          onChange={handleFile}
+          className="hidden"
+        />
+      </div>
+
+      {/* Hint text — NẰM DƯỚI avatar, KHÔNG absolute */}
+      <p className="mt-3 text-center text-[10px] text-slate-400 dark:text-slate-500">
+        JPG, PNG, WEBP · tối đa 2MB · tối thiểu 200×200
+      </p>
+
+      {/* Error toast — hiện inline dưới hint */}
+      {error && (
+        <div className="mt-2 flex w-full max-w-xs items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 dark:border-rose-500/30 dark:bg-rose-500/10">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0 text-rose-500" />
+          <p className="flex-1 text-xs font-semibold text-rose-600 dark:text-rose-400">
+            {error}
+          </p>
+          <button
+            onClick={() => setError("")}
+            className="shrink-0 text-rose-400 hover:text-rose-600"
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+            }
