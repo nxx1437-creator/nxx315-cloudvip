@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Coins, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function AuthShell({ title, subtitle, children, promo }) {
   return (
@@ -17,12 +17,9 @@ export default function AuthShell({ title, subtitle, children, promo }) {
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-10">
-        {/* Logo on top */}
-        <div className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-lg shadow-sky-500/30">
-            <Coins size={20} className="text-white" />
-          </span>
-          <span className="text-lg font-bold tracking-tight text-slate-900">
+        {/* Logo on top — chỉ chữ */}
+        <div className="mb-6 flex items-center justify-center">
+          <span className="text-xl font-bold tracking-tight text-slate-900">
             Nxx315 <span className="text-sky-600">Studio</span> Rewards
           </span>
         </div>
