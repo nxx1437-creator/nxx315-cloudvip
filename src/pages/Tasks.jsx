@@ -752,5 +752,5 @@ export default function Tasks() {
 
             <BottomNav />
     </div>
-  );
+    );
   }
