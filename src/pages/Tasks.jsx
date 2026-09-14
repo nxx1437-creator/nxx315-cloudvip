@@ -198,7 +198,6 @@ export default function Tasks() {
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [pendingTaskId, setPendingTaskId] = useState(null);
 
-  // History state
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -212,9 +211,7 @@ export default function Tasks() {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // ============ PHÁT HIỆN USER QUAY LẠI ============
-  // Khi user mở link task (tab khác) rồi quay lại tab web,
-  // nếu có token đang chờ trong localStorage → navigate sang callback
+  // Phát hiện user quay lại từ link provider
   useEffect(() => {
     const checkPendingToken = () => {
       const pendingToken = localStorage.getItem("pending_task_token");
@@ -223,19 +220,12 @@ export default function Tasks() {
       const pendingTime = parseInt(localStorage.getItem("pending_task_time") || "0", 10);
       const elapsed = Date.now() - pendingTime;
 
-      // Chỉ điều hướng nếu token < 15 phút
-      if (elapsed < 15 * 60 * 1000) {
-        // Xóa để không lặp lại
-        localStorage.removeItem("pending_task_token");
-        localStorage.removeItem("pending_task_time");
-        localStorage.removeItem("pending_task_id");
+      localStorage.removeItem("pending_task_token");
+      localStorage.removeItem("pending_task_time");
+      localStorage.removeItem("pending_task_id");
 
+      if (elapsed < 15 * 60 * 1000) {
         navigate(`/task/callback?token=${pendingToken}`);
-      } else {
-        // Token quá cũ → xóa
-        localStorage.removeItem("pending_task_token");
-        localStorage.removeItem("pending_task_time");
-        localStorage.removeItem("pending_task_id");
       }
     };
 
@@ -247,7 +237,6 @@ export default function Tasks() {
       }
     };
 
-    // Check ngay khi component mount (phòng trường hợp user quay lại bằng cách khác)
     checkPendingToken();
 
     document.addEventListener("visibilitychange", handleVisibility);
@@ -287,61 +276,58 @@ export default function Tasks() {
     window.__taskToast = window.setTimeout(() => setToast(null), 3500);
   };
 
-  // Fetch history
+  // Fetch history — query 2 bước
   useEffect(() => {
     if (activeTab !== "history" || historyLoaded || !user?.id) return;
 
     const fetchHistory = async () => {
-  setHistoryLoading(true);
-  try {
-    // 1. Lấy tokens
-    const { data: tokens, error: tokensErr } = await supabase
-      .from("task_tokens")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
+      setHistoryLoading(true);
+      try {
+        const { data: tokens, error: tokensErr } = await supabase
+          .from("task_tokens")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
 
-    if (tokensErr) throw tokensErr;
+        if (tokensErr) throw tokensErr;
 
-    if (!tokens || tokens.length === 0) {
-      setHistory([]);
-      setHistoryLoaded(true);
-      return;
-    }
+        if (!tokens || tokens.length === 0) {
+          setHistory([]);
+          setHistoryLoaded(true);
+          return;
+        }
 
-    // 2. Lấy danh sách task_id unique
-    const taskIds = [...new Set(tokens.map((t) => t.task_id).filter(Boolean))];
+        const taskIds = [...new Set(tokens.map((t) => t.task_id).filter(Boolean))];
 
-    // 3. Query tasks
-    const { data: tasksList } = await supabase
-      .from("tasks")
-      .select("id, provider, reward_coins")
-      .in("id", taskIds);
+        const { data: tasksList } = await supabase
+          .from("tasks")
+          .select("id, provider, reward_coins")
+          .in("id", taskIds);
 
-    // 4. Map task_id → { provider, reward_coins }
-    const taskMap = {};
-    (tasksList || []).forEach((t) => {
-      taskMap[t.id] = t;
-    });
+        const taskMap = {};
+        (tasksList || []).forEach((t) => {
+          taskMap[t.id] = t;
+        });
 
-    // 5. Gộp vào token
-    const enriched = tokens.map((t) => ({
-      ...t,
-      provider: taskMap[t.task_id]?.provider || "—",
-      reward_coins: taskMap[t.task_id]?.reward_coins || 0,
-    }));
+        const enriched = tokens.map((t) => ({
+          ...t,
+          provider: taskMap[t.task_id]?.provider || "—",
+          reward_coins: t.reward_coins || taskMap[t.task_id]?.reward_coins || 0,
+        }));
 
-    setHistory(enriched);
-    setHistoryLoaded(true);
-  } catch (err) {
-    console.error("Fetch history error:", err);
-  } finally {
-    setHistoryLoading(false);
-  }
-};
+        setHistory(enriched);
+        setHistoryLoaded(true);
+      } catch (err) {
+        console.error("Fetch history error:", err);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
 
-  // ============ HANDLE START — Bỏ polling, chỉ mở link ============
+    fetchHistory();
+  }, [activeTab, user?.id, historyLoaded]);
+
   const handleStart = async (task) => {
     if (isLoading) return;
 
@@ -382,20 +368,15 @@ export default function Tasks() {
       }
 
       if (data?.shortUrl && data?.token) {
-        // Lưu token vào localStorage để khi user quay lại tab web sẽ tự chuyển sang callback
         localStorage.setItem("pending_task_token", data.token);
         localStorage.setItem("pending_task_time", Date.now().toString());
         localStorage.setItem("pending_task_id", task.id);
 
-        // Mở link provider
         window.open(data.shortUrl, "_blank");
 
         showToast(`Đã mở link ${task.provider}! Làm xong quay lại tab này để nhận thưởng.`);
-
-        // Lưu task id đang chờ để hiển thị banner
         setPendingTaskId(task.id);
 
-        // Reload tasks sau 2s để update "đang chờ"
         setTimeout(() => {
           reload();
           setHistoryLoaded(false);
@@ -410,7 +391,7 @@ export default function Tasks() {
       setIsLoading(false);
     }
   };
-    return (
+       return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
@@ -447,7 +428,7 @@ export default function Tasks() {
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
-        {/* Hero card */}
+        {/* Hero */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5 shadow-lg shadow-sky-100">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
             <Sparkles size={12} /> TRUNG TÂM NHIỆM VỤ
@@ -498,7 +479,7 @@ export default function Tasks() {
           </div>
         </div>
 
-        {/* Banner nhắc nhở khi có task đang chờ */}
+        {/* Banner pending */}
         {pendingTaskId && (
           <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
             <div className="flex items-start gap-3">
@@ -506,11 +487,9 @@ export default function Tasks() {
                 <Clock size={16} />
               </span>
               <div className="flex-1">
-                <p className="text-sm font-bold text-sky-800">
-                  Đang chờ xác nhận nhiệm vụ
-                </p>
+                <p className="text-sm font-bold text-sky-800">Đang chờ xác nhận nhiệm vụ</p>
                 <p className="mt-0.5 text-xs text-sky-700">
-                  Làm xong nhiệm vụ bên nhà cung cấp, quay lại tab này và bấm vào thông báo để nhận thưởng.
+                  Làm xong nhiệm vụ bên nhà cung cấp, quay lại tab này để nhận thưởng.
                 </p>
               </div>
               <button
@@ -587,7 +566,7 @@ export default function Tasks() {
           </div>
         </div>
 
-        {/* ============ TAB: HOT / ALL ============ */}
+        {/* TAB HOT / ALL */}
         {(activeTab === "hot" || activeTab === "all") && (
           <>
             {showSkeleton && loading && (
@@ -673,8 +652,9 @@ export default function Tasks() {
             )}
           </>
         )}
-
-        {/* ============ TAB: HISTORY ============ */}
+      </main>
+        
+       {/* TAB HISTORY */}
         {activeTab === "history" && (
           <>
             {historyLoading ? (
@@ -748,9 +728,10 @@ export default function Tasks() {
             )}
           </>
         )}
-            </main>
+      </main>
 
       <BottomNav />
     </div>
   );
-  }
+        }
+      
