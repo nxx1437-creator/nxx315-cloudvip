@@ -45,7 +45,7 @@ export default function SocialRow({ onSelect }) {
     setLoadingKey(item.key);
 
     // Đợi 400ms để React render trạng thái loading
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 700));
 
     try {
       await onSelect(item.key, item.supported);
