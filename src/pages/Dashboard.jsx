@@ -147,16 +147,20 @@ export default function Dashboard() {
   const user = session?.user;
   const [profile, setProfile] = useState({ coins: 0, level: 0, exp: 0, exp_target: 100, tasks_completed_today: 0, coins_earned_today: 0, referrals_count: 0, streak_days: 0, streak_record: 0, username: "", milestone_1_claimed: false, milestone_5_claimed: false, milestone_10_claimed: false });
   const [loading, setLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(false);
   const [claimingMilestone, setClaimingMilestone] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
   useEffect(() => {
+    if (!user?.id) return;
+
+    // ⏱️ Chỉ hiện skeleton sau 300ms (mạng nhanh sẽ không thấy)
+    const skeletonTimer = setTimeout(() => {
+      setShowSkeleton(true);
+    }, 300);
+
     const fetchProfile = async () => {
-      if (!user?.id) return;
-
-      const startTime = Date.now();
-
       try {
         const { data } = await supabase
           .from("profiles")
@@ -169,13 +173,14 @@ export default function Dashboard() {
       } catch (err) {
         console.error("fetchProfile error:", err);
       } finally {
-        // ⏱️ Đảm bảo skeleton hiện ít nhất 1200ms
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, 1200 - elapsed);
-        setTimeout(() => setLoading(false), remaining);
+        clearTimeout(skeletonTimer);
+        setLoading(false);
+        setShowSkeleton(false);
       }
     };
     fetchProfile();
+
+    return () => clearTimeout(skeletonTimer);
   }, [user]);
 
   useEffect(() => {
@@ -285,7 +290,7 @@ export default function Dashboard() {
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
-        {loading && <DashboardSkeleton />}
+        {showSkeleton && loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
@@ -428,7 +433,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-               {/* Mini Game */}
+                {/* Mini Game */}
             <button
               onClick={() => navigate("/minigames")}
               className="w-full overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white text-left transition hover:border-sky-200"
@@ -525,4 +530,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-}
+              }
