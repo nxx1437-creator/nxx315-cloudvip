@@ -56,7 +56,6 @@ export default function ProfilePage() {
   const [pushState, setPushState] = useState("default");
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState("");
-  const [profileLoading, setProfileLoading] = useState(false);
   const [usernameCooldown, setUsernameCooldown] = useState({ canChange: true, remainingText: "" });
 
   const displayName = profile.username || "Thành viên";
@@ -83,38 +82,29 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-  if (!session?.user?.id) return;
+    const loadProfile = async () => {
+      if (!session?.user?.id) return;
 
-  const skeletonTimer = setTimeout(() => {
-    setProfileLoading(true);
-  }, 300);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*, last_username_change")
+          .eq("id", session.user.id)
+          .single();
 
-  const loadProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*, last_username_change")
-        .eq("id", session.user.id)
-        .single();
+        if (error) throw error;
 
-      if (error) throw error;
-
-      if (data) {
-        setProfile(data);
-        setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
+        if (data) {
+          setProfile(data);
+          setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
+        }
+      } catch (err) {
+        console.error("Load profile error:", err);
       }
-    } catch (err) {
-      console.error("Load profile error:", err);
-    } finally {
-      clearTimeout(skeletonTimer);
-      setProfileLoading(false);
-    }
-  };
+    };
 
-  loadProfile();
-
-  return () => clearTimeout(skeletonTimer);
-}, [session?.user?.id]);
+    loadProfile();
+  }, [session?.user?.id]);
 
   const handleTogglePush = async () => {
     setPushError("");
@@ -259,15 +249,22 @@ export default function ProfilePage() {
         .dark .skeleton-shimmer {
           background-image: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
         }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+          animation: fadeIn 0.5s ease-out;
+        }
       `}</style>
 
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-3xl space-y-5 px-4 py-6">
-        {profileLoading || profileHookLoading || !profile?.username ? (
-  <ProfileSkeleton />
-) : (
-          <>
+        {profileHookLoading && !profile?.username ? (
+          <ProfileSkeleton />
+        ) : (
+          <div className="fade-in space-y-5">
             <div>
               <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Cài đặt
@@ -563,7 +560,7 @@ export default function ProfilePage() {
               <SettingsRow icon={LogOut} label="Đăng xuất" sub="Thoát khỏi tài khoản hiện tại" onClick={() => setShowLogout(true)} danger />
               <SettingsRow icon={Trash2} label="Xóa tài khoản" sub="Xóa vĩnh viễn, không thể hoàn tác" onClick={() => setShowDeleteAccount(true)} danger last />
             </SettingsGroup>
-          </>
+          </div>
         )}
       </main>
 
@@ -591,14 +588,14 @@ export default function ProfilePage() {
         />
       )}
 
-      {showDeleteAccount && (
+         {showDeleteAccount && (
         <DeleteAccountModal
           onClose={() => setShowDeleteAccount(false)}
           isMFAEnabled={isMFAEnabled}
         />
       )}
 
-          {showMFA && (
+      {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
             <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">Thêm thiết bị</h3>
@@ -1152,4 +1149,4 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
       </div>
     </div>
   );
-         }
+        }
