@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Camera, Loader2, X, Check, AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { validateAvatarFile, uploadAvatar } from "../lib/avatarUpload.js";
+import { validateAvatarFile, uploadAvatar, checkAvatarUploadLimit } from "../lib/avatarUpload.js";
 
 export default function AvatarUploader({ userId, currentUrl, initial, onUploaded }) {
   const fileRef = useRef(null);
@@ -9,15 +9,24 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [limit, setLimit] = useState({ remaining: 2, limit: 2 });
 
-  // Sync preview khi currentUrl thay đổi từ bên ngoài
   useEffect(() => {
-    if (currentUrl && !preview) {
-      setPreview(currentUrl);
-    }
+    if (currentUrl && !preview) setPreview(currentUrl);
   }, [currentUrl]);
 
+  useEffect(() => {
+    if (!userId) return;
+    checkAvatarUploadLimit(userId).then((res) => {
+      setLimit({ remaining: res.remaining, limit: res.limit });
+    });
+  }, [userId, success]);
+
   const handlePick = () => {
+    if (limit.remaining <= 0) {
+      setError(`Bạn đã dùng hết ${limit.limit} lượt đổi avatar hôm nay. Quay lại vào ngày mai nhé!`);
+      return;
+    }
     setError("");
     setSuccess(false);
     fileRef.current?.click();
@@ -71,10 +80,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
               src={preview}
               alt="Avatar"
               className="h-24 w-24 rounded-full border-4 border-accent-400/30 object-cover shadow-md"
-              onError={() => {
-                console.warn("Avatar load error:", preview);
-                setPreview(null);
-              }}
+              onError={() => setPreview(null)}
             />
           ) : (
             <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-accent-400/30 bg-gradient-to-br from-accent-400 to-accent-600 text-4xl font-bold text-white shadow-md">
@@ -98,8 +104,8 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
         <button
           type="button"
           onClick={handlePick}
-          disabled={uploading}
-          className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-accent-500 text-white shadow transition hover:opacity-90 disabled:opacity-60 dark:border-slate-900"
+          disabled={uploading || limit.remaining <= 0}
+          className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-accent-500 text-white shadow transition hover:opacity-90 disabled:opacity-50 dark:border-slate-900"
         >
           <Camera size={14} />
         </button>
@@ -115,6 +121,10 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
       <p className="mt-3 text-center text-[10px] text-slate-400 dark:text-slate-500">
         JPG, PNG, WEBP · tối đa 2MB · tối thiểu 200×200
+      </p>
+
+      <p className="mt-1 text-center text-[10px] font-semibold text-slate-500">
+        Còn <span className="text-accent-600">{limit.remaining}</span>/{limit.limit} lượt đổi hôm nay
       </p>
 
       {error && (
@@ -133,4 +143,4 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       )}
     </div>
   );
-}
+        }
