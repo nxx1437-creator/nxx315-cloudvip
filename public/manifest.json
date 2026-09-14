@@ -1,17 +1,24 @@
 {
   "name": "NXX315 Studio Rewards",
   "short_name": "NXX315",
-  "description": "Kiếm Coin, đổi thưởng, nhận Sao mỗi ngày",
+  "description": "Nền tảng nhiệm vụ & phần thưởng",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#F5F7FB",
+  "background_color": "#FAFBFC",
   "theme_color": "#3478F6",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon-outline.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
