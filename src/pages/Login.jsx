@@ -81,12 +81,12 @@ export default function Login() {
         <div className="relative">
           <Mail size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sky-300/50" />
           <input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            placeholder="Email"
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3.5 pl-11 pr-4 text-sm text-white placeholder:text-sky-200/30 outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20"
-          />
+  type="email"
+  value={form.email}
+  onChange={(e) => setForm({ ...form, email: e.target.value })}
+  placeholder="Email"
+  className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-10 pr-4 text-sm !text-slate-900 outline-none transition placeholder:!text-slate-500 focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
+/>
         </div>
 
         <div className="flex items-center gap-2.5">
