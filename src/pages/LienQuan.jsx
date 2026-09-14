@@ -275,7 +275,7 @@ export default function LienQuan() {
 
           {!player && (
             <p className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
-              ⚠️ Vui lòng nhập ID người chơi trước khi chọn mệnh giá.
+              Vui lòng nhập ID người chơi trước khi chọn mệnh giá.
             </p>
           )}
 
