@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
+import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -53,6 +54,19 @@ export default function Login() {
     setShowMfa(false);
   };
 
+  const handleSocial = async (provider, supported) => {
+    setError("");
+    if (!supported) {
+      setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
+      return;
+    }
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (authError) setError(authError.message);
+  };
+
   return (
     <AuthShell
       title="Chào mừng trở lại"
@@ -64,6 +78,21 @@ export default function Login() {
         ctaHref: "/register",
       }}
     >
+      {/* Social login */}
+      <SocialRow onSelect={handleSocial} />
+
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-white px-3 text-xs font-medium text-slate-400">
+            hoặc đăng nhập bằng email
+          </span>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email */}
         <div>
