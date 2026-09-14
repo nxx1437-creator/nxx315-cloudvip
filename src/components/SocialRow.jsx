@@ -43,8 +43,14 @@ export default function SocialRow({ onSelect }) {
   const handleClick = async (item) => {
     if (loadingKey) return;
     setLoadingKey(item.key);
+
+    // Đợi 400ms để React render trạng thái loading
+    await new Promise((r) => setTimeout(r, 400));
+
     try {
       await onSelect(item.key, item.supported);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingKey(null);
     }
@@ -54,18 +60,22 @@ export default function SocialRow({ onSelect }) {
     <div className="space-y-2.5">
       {items.map((item) => {
         const isLoading = loadingKey === item.key;
-        const isDisabled = loadingKey !== null;
+        const isAnyLoading = loadingKey !== null;
 
         return (
           <button
             key={item.key}
             type="button"
             onClick={() => handleClick(item)}
-            disabled={isDisabled}
-            className="flex h-13 w-full items-center justify-center gap-3 rounded-full border border-slate-300 bg-white py-3.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-[0.99] disabled:cursor-wait disabled:hover:bg-white"
+            disabled={isAnyLoading}
+            className={`flex h-14 w-full items-center justify-center gap-3 rounded-full border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 transition ${
+              isAnyLoading
+                ? "cursor-not-allowed opacity-60"
+                : "hover:bg-slate-50 active:scale-[0.99]"
+            }`}
           >
             {isLoading ? (
-              <Loader2 size={20} className="animate-spin text-slate-400" />
+              <Loader2 size={22} className="animate-spin text-slate-400" />
             ) : (
               <>
                 {item.icon}
@@ -77,4 +87,4 @@ export default function SocialRow({ onSelect }) {
       })}
     </div>
   );
-                     }
+}
