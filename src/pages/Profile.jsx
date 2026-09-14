@@ -15,7 +15,9 @@ import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import AvatarUploader from "../components/AvatarUploader.jsx";
+import ProfileSkeleton from "../components/ProfileSkeleton.jsx";
 import { isPushSupported, getPushPermissionState, subscribeToPush, unsubscribeFromPush } from "../lib/pushNotifications.js";
+import { checkUsernameChangeAllowed } from "../lib/usernameUtils.js";
 
 const ACCENT_OPTIONS = [
   { key: "blue", label: "Xanh dương", dot: "bg-sky-500" },
@@ -54,6 +56,8 @@ export default function ProfilePage() {
   const [pushState, setPushState] = useState("default");
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState("");
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [usernameCooldown, setUsernameCooldown] = useState({ canChange: true, remainingText: "" });
 
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
@@ -77,6 +81,38 @@ export default function ProfilePage() {
     getPushPermissionState().then(setPushState);
     checkMFAStatus();
   }, []);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!session?.user?.id) {
+        setProfileLoading(false);
+        return;
+      }
+
+      setProfileLoading(true);
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*, last_username_change")
+          .eq("id", session.user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setProfile(data);
+          setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
+        }
+      } catch (err) {
+        console.error("Load profile error:", err);
+      } finally {
+        setTimeout(() => setProfileLoading(false), 300);
+      }
+    };
+
+    loadProfile();
+  }, [session?.user?.id]);
 
   const handleTogglePush = async () => {
     setPushError("");
@@ -209,320 +245,338 @@ export default function ProfilePage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
         .font-display { font-family: 'Baloo 2', sans-serif; }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .skeleton-shimmer {
+          background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+        }
+        .dark .skeleton-shimmer {
+          background-image: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+        }
       `}</style>
 
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-3xl space-y-5 px-4 py-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Cài đặt
-          </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Quản lý tài khoản và tùy chỉnh trải nghiệm của bạn
-          </p>
-        </div>
-
-        {/* Profile card */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-col items-center p-6">
-            <AvatarUploader
-              userId={session?.user?.id}
-              currentUrl={profile?.avatar_url}
-              initial={initial}
-              onUploaded={(url) => {
-                setProfile((prev) => ({ ...prev, avatar_url: url }));
-              }}
-            />
-
-            <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
-              {displayName}
-            </h2>
-            <p className="text-xs text-slate-500">Thành viên từ {memberSince}</p>
-
-            <div className="mt-3 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                <Star size={11} className="text-amber-500" />
-                Lv.{profile.level || 1}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/10">
-                <Flame size={11} />
-                {profile.streak_days || 0} ngày
-              </span>
-            </div>
-
-            <div className="mt-4 w-full max-w-xs">
-              <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
-                <span>{profile.exp || 0} EXP</span>
-                <span>{profile.exp_target || 100} EXP</span>
-              </div>
-              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-accent-500 transition-all duration-500"
-                  style={{ width: `${expPercent}%` }}
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowEditProfile(true)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <Pencil size={12} />
-              Chỉnh sửa hồ sơ
-            </button>
-          </div>
-        </div>
-
-        {/* Warning banner */}
-        {profile?.multi_account_flag && !profile?.is_banned && (
-          <button
-            type="button"
-            onClick={() => navigate("/account-review")}
-            className="w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10"
-          >
-            <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/20">
-                <ShieldAlert size={16} />
-              </span>
-              <div>
-                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                  Tài khoản đang được xem xét
-                </p>
-                <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300/80">
-                  Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
-                </p>
-              </div>
-            </div>
-          </button>
-        )}
-
-        {/* Account group */}
-        <SettingsGroup title="Tài khoản">
-          <SettingsRow icon={User} label="Hồ sơ cá nhân" sub="Tên, avatar, thông tin" onClick={() => setShowEditProfile(true)} />
-          <SettingsRow icon={Lock} label="Bảo mật" sub="Mật khẩu, 2FA, thiết bị" onClick={() => toggleSection("security")} active={activeSection === "security"} />
-          <SettingsRow icon={Mail} label="Email" sub={session?.user?.email} onClick={() => toggleSection("security")} last />
-        </SettingsGroup>
-
-        {activeSection === "security" && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-            <div className="border-b border-slate-100 p-4 dark:border-slate-800">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Thông tin tài khoản
+        {profileLoading ? (
+          <ProfileSkeleton />
+        ) : (
+          <>
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Cài đặt
+              </h1>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Quản lý tài khoản và tùy chỉnh trải nghiệm của bạn
               </p>
             </div>
 
-            <div className="p-4">
-              <div className="mb-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                <button
-                  onClick={() => setShowEditProfile(true)}
-                  className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                >
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Tên hiển thị</span>
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
-                    {profile.username || "Chưa đặt"}
-                    <ChevronRight size={14} className="text-slate-400" />
-                  </span>
-                </button>
+            <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex flex-col items-center p-6">
+                <AvatarUploader
+                  userId={session?.user?.id}
+                  currentUrl={profile?.avatar_url}
+                  initial={initial}
+                  onUploaded={(url) => {
+                    setProfile((prev) => ({ ...prev, avatar_url: url }));
+                  }}
+                />
 
-                <div className="flex w-full items-center justify-between px-4 py-3">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Email</span>
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                    {session?.user?.email}
+                <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+                  {displayName}
+                </h2>
+                <p className="text-xs text-slate-500">Thành viên từ {memberSince}</p>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <Star size={11} className="text-amber-500" />
+                    Lv.{profile.level || 1}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/10">
+                    <Flame size={11} />
+                    {profile.streak_days || 0} ngày
                   </span>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <button
-                  onClick={() => setShowChangePassword(true)}
-                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      <KeyRound size={16} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Đổi mật khẩu</p>
-                      <p className="text-xs text-slate-500">Cập nhật mật khẩu đăng nhập</p>
-                    </div>
+                <div className="mt-4 w-full max-w-xs">
+                  <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
+                    <span>{profile.exp || 0} EXP</span>
+                    <span>{profile.exp_target || 100} EXP</span>
                   </div>
-                  <ChevronRight size={16} className="text-slate-400" />
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-accent-500 transition-all duration-500"
+                      style={{ width: `${expPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  <Pencil size={12} />
+                  Chỉnh sửa hồ sơ
                 </button>
+              </div>
+            </div>
 
-                <button
-                  onClick={handleStartMFA}
-                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      <ShieldAlert size={16} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Xác thực 2 bước</p>
-                      <p className="text-xs text-slate-500">Google Authenticator</p>
-                    </div>
-                  </div>
-                  <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${isMFAEnabled ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
-                    {isMFAEnabled ? "Đã bật" : "Chưa bật"}
+            {profile?.multi_account_flag && !profile?.is_banned && (
+              <button
+                type="button"
+                onClick={() => navigate("/account-review")}
+                className="w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/20">
+                    <ShieldAlert size={16} />
                   </span>
-                </button>
+                  <div>
+                    <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                      Tài khoản đang được xem xét
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300/80">
+                      Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
+                    </p>
+                  </div>
+                </div>
+              </button>
+            )}
 
-                <button
-                  onClick={handleTogglePush}
-                  disabled={pushLoading || pushState === "unsupported"}
-                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      <Bell size={16} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Thông báo đẩy</p>
-                      <p className="text-xs text-slate-500">
-                        {pushState === "unsupported" ? "Thiết bị không hỗ trợ" : "Nhận thông báo khi đóng app"}
-                      </p>
+            <SettingsGroup title="Tài khoản">
+              <SettingsRow icon={User} label="Hồ sơ cá nhân" sub="Tên, avatar, thông tin" onClick={() => setShowEditProfile(true)} />
+              <SettingsRow icon={Lock} label="Bảo mật" sub="Mật khẩu, 2FA, thiết bị" onClick={() => toggleSection("security")} active={activeSection === "security"} />
+              <SettingsRow icon={Mail} label="Email" sub={session?.user?.email} onClick={() => toggleSection("security")} last />
+            </SettingsGroup>
+
+            {activeSection === "security" && (
+              <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+                <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Thông tin tài khoản
+                  </p>
+                </div>
+
+                <div className="p-4">
+                  <div className="mb-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                    <button
+                      onClick={() => setShowEditProfile(true)}
+                      className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Tên hiển thị</span>
+                      <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
+                        {profile.username || "Chưa đặt"}
+                        <ChevronRight size={14} className="text-slate-400" />
+                      </span>
+                    </button>
+
+                    <div className="flex w-full items-center justify-between px-4 py-3">
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Email</span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {session?.user?.email}
+                      </span>
                     </div>
                   </div>
-                  {pushLoading ? (
-                    <Loader2 size={16} className="animate-spin text-slate-400" />
-                  ) : (
-                    <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${pushState === "granted" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
-                      {pushState === "granted" ? "Đã bật" : "Chưa bật"}
-                    </span>
-                  )}
-                </button>
 
-                {pushError && <p className="text-xs font-semibold text-rose-500">{pushError}</p>}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setShowChangePassword(true)}
+                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <KeyRound size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Đổi mật khẩu</p>
+                          <p className="text-xs text-slate-500">Cập nhật mật khẩu đăng nhập</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-400" />
+                    </button>
 
-                <button
-                  onClick={generateRecoveryCodes}
-                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      <KeyRound size={16} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Mã dự phòng</p>
-                      <p className="text-xs text-slate-500">Số mã: {recoveryCodes.length}/10</p>
-                    </div>
+                    <button
+                      onClick={handleStartMFA}
+                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <ShieldAlert size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Xác thực 2 bước</p>
+                          <p className="text-xs text-slate-500">Google Authenticator</p>
+                        </div>
+                      </div>
+                      <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${isMFAEnabled ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+                        {isMFAEnabled ? "Đã bật" : "Chưa bật"}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={handleTogglePush}
+                      disabled={pushLoading || pushState === "unsupported"}
+                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <Bell size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Thông báo đẩy</p>
+                          <p className="text-xs text-slate-500">
+                            {pushState === "unsupported" ? "Thiết bị không hỗ trợ" : "Nhận thông báo khi đóng app"}
+                          </p>
+                        </div>
+                      </div>
+                      {pushLoading ? (
+                        <Loader2 size={16} className="animate-spin text-slate-400" />
+                      ) : (
+                        <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${pushState === "granted" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+                          {pushState === "granted" ? "Đã bật" : "Chưa bật"}
+                        </span>
+                      )}
+                    </button>
+
+                    {pushError && <p className="text-xs font-semibold text-rose-500">{pushError}</p>}
+
+                    <button
+                      onClick={generateRecoveryCodes}
+                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <KeyRound size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Mã dự phòng</p>
+                          <p className="text-xs text-slate-500">Số mã: {recoveryCodes.length}/10</p>
+                        </div>
+                      </div>
+                      <Plus size={16} className="text-slate-400" />
+                    </button>
+
+                    <button
+                      onClick={handleLogoutAllDevices}
+                      className="flex w-full items-center justify-between rounded-lg border border-rose-200 bg-rose-50/50 p-3.5 text-left transition hover:bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-500 dark:bg-rose-500/20">
+                          <LogOut size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">Đăng xuất mọi thiết bị</p>
+                          <p className="text-xs text-rose-500/80">Kết thúc tất cả phiên đăng nhập</p>
+                        </div>
+                      </div>
+                    </button>
                   </div>
-                  <Plus size={16} className="text-slate-400" />
-                </button>
-
-                <button
-                  onClick={handleLogoutAllDevices}
-                  className="flex w-full items-center justify-between rounded-lg border border-rose-200 bg-rose-50/50 p-3.5 text-left transition hover:bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-500 dark:bg-rose-500/20">
-                      <LogOut size={16} />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">Đăng xuất mọi thiết bị</p>
-                      <p className="text-xs text-rose-500/80">Kết thúc tất cả phiên đăng nhập</p>
-                    </div>
-                  </div>
-                </button>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+
+            <SettingsGroup title="Trải nghiệm">
+              <SettingsRow icon={Bell} label="Thông báo" sub="Tùy chỉnh loại thông báo nhận" onClick={() => toggleSection("notif")} active={activeSection === "notif"} />
+              <SettingsRow icon={Palette} label="Giao diện" sub="Chế độ sáng/tối, màu chủ đạo" onClick={() => toggleSection("theme")} active={activeSection === "theme"} last />
+            </SettingsGroup>
+
+            {activeSection === "notif" && (
+              <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+                <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Loại thông báo
+                  </p>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <NotifToggle label="Thông báo đơn hàng" sub="Trạng thái đơn nạp game" checked={profile.notif_orders} onChange={(v) => updateNotifPref("notif_orders", v)} />
+                  <NotifToggle label="Thông báo khuyến mãi" sub="Ưu đãi, sự kiện mới" checked={profile.notif_promo} onChange={(v) => updateNotifPref("notif_promo", v)} />
+                  <NotifToggle label="Thông báo phần thưởng" sub="Khi nhận Coin, quà tặng" checked={profile.notif_rewards} onChange={(v) => updateNotifPref("notif_rewards", v)} />
+                  <NotifToggle label="Thông báo hệ thống" sub="Cập nhật, bảo trì" checked={profile.notif_system} onChange={(v) => updateNotifPref("notif_system", v)} last />
+                </div>
+              </div>
+            )}
+
+            {activeSection === "theme" && (
+              <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+                <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Chế độ hiển thị
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 p-4">
+                  {THEME_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.key}
+                        onClick={() => setThemeMode(opt.key)}
+                        className={`flex flex-col items-center gap-2 rounded-lg border p-3 text-xs font-semibold transition ${
+                          themeMode === opt.key
+                            ? "border-accent-500 bg-accent-500/5 text-accent-600 dark:bg-accent-500/10"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50"
+                        }`}
+                      >
+                        <Icon size={18} />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="border-b border-t border-slate-100 p-4 dark:border-slate-800">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Màu giao diện
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 p-4">
+                  {ACCENT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setAccentColor(opt.key)}
+                      className={`flex flex-col items-center gap-2 rounded-lg border p-3 text-xs font-semibold transition ${
+                        accentColor === opt.key
+                          ? "border-accent-500 bg-accent-500/5 text-accent-600 dark:bg-accent-500/10"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50"
+                      }`}
+                    >
+                      <span className={`h-4 w-4 rounded-full ${opt.dot}`} />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <SettingsGroup title="Hỗ trợ & pháp lý">
+              <SettingsRow icon={HelpCircle} label="Trung tâm trợ giúp" sub="Câu hỏi thường gặp, liên hệ" onClick={() => navigate("/help")} />
+              <SettingsRow icon={FileText} label="Điều khoản sử dụng" sub="Quy định khi dùng dịch vụ" onClick={() => navigate("/terms")} />
+              <SettingsRow icon={Lock} label="Chính sách quyền riêng tư" sub="Cách chúng tôi bảo vệ dữ liệu" onClick={() => navigate("/privacy")} last />
+            </SettingsGroup>
+
+            <SettingsGroup title="Nguy hiểm" danger>
+              <SettingsRow icon={LogOut} label="Đăng xuất" sub="Thoát khỏi tài khoản hiện tại" onClick={() => setShowLogout(true)} danger />
+              <SettingsRow icon={Trash2} label="Xóa tài khoản" sub="Xóa vĩnh viễn, không thể hoàn tác" onClick={() => setShowDeleteAccount(true)} danger last />
+            </SettingsGroup>
+          </>
         )}
-
-        {/* Experience group */}
-        <SettingsGroup title="Trải nghiệm">
-          <SettingsRow icon={Bell} label="Thông báo" sub="Tùy chỉnh loại thông báo nhận" onClick={() => toggleSection("notif")} active={activeSection === "notif"} />
-          <SettingsRow icon={Palette} label="Giao diện" sub="Chế độ sáng/tối, màu chủ đạo" onClick={() => toggleSection("theme")} active={activeSection === "theme"} last />
-        </SettingsGroup>
-
-        {activeSection === "notif" && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-            <div className="border-b border-slate-100 p-4 dark:border-slate-800">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Loại thông báo
-              </p>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              <NotifToggle label="Thông báo đơn hàng" sub="Trạng thái đơn nạp game" checked={profile.notif_orders} onChange={(v) => updateNotifPref("notif_orders", v)} />
-              <NotifToggle label="Thông báo khuyến mãi" sub="Ưu đãi, sự kiện mới" checked={profile.notif_promo} onChange={(v) => updateNotifPref("notif_promo", v)} />
-              <NotifToggle label="Thông báo phần thưởng" sub="Khi nhận Coin, quà tặng" checked={profile.notif_rewards} onChange={(v) => updateNotifPref("notif_rewards", v)} />
-              <NotifToggle label="Thông báo hệ thống" sub="Cập nhật, bảo trì" checked={profile.notif_system} onChange={(v) => updateNotifPref("notif_system", v)} last />
-            </div>
-          </div>
-        )}
-
-        {activeSection === "theme" && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-            <div className="border-b border-slate-100 p-4 dark:border-slate-800">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Chế độ hiển thị
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 p-4">
-              {THEME_OPTIONS.map((opt) => {
-                const Icon = opt.icon;
-                return (
-                  <button
-                    key={opt.key}
-                    onClick={() => setThemeMode(opt.key)}
-                    className={`flex flex-col items-center gap-2 rounded-lg border p-3 text-xs font-semibold transition ${
-                      themeMode === opt.key
-                        ? "border-accent-500 bg-accent-500/5 text-accent-600 dark:bg-accent-500/10"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50"
-                    }`}
-                  >
-                    <Icon size={18} />
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="border-b border-t border-slate-100 p-4 dark:border-slate-800">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Màu giao diện
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 p-4">
-              {ACCENT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => setAccentColor(opt.key)}
-                  className={`flex flex-col items-center gap-2 rounded-lg border p-3 text-xs font-semibold transition ${
-                    accentColor === opt.key
-                      ? "border-accent-500 bg-accent-500/5 text-accent-600 dark:bg-accent-500/10"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50"
-                  }`}
-                >
-                  <span className={`h-4 w-4 rounded-full ${opt.dot}`} />
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Support & Legal */}
-        <SettingsGroup title="Hỗ trợ & pháp lý">
-          <SettingsRow icon={HelpCircle} label="Trung tâm trợ giúp" sub="Câu hỏi thường gặp, liên hệ" onClick={() => navigate("/help")} />
-          <SettingsRow icon={FileText} label="Điều khoản sử dụng" sub="Quy định khi dùng dịch vụ" onClick={() => navigate("/terms")} />
-          <SettingsRow icon={Lock} label="Chính sách quyền riêng tư" sub="Cách chúng tôi bảo vệ dữ liệu" onClick={() => navigate("/privacy")} last />
-        </SettingsGroup>
-
-        {/* Danger zone */}
-        <SettingsGroup title="Nguy hiểm" danger>
-          <SettingsRow icon={LogOut} label="Đăng xuất" sub="Thoát khỏi tài khoản hiện tại" onClick={() => setShowLogout(true)} danger />
-          <SettingsRow icon={Trash2} label="Xóa tài khoản" sub="Xóa vĩnh viễn, không thể hoàn tác" onClick={() => setShowDeleteAccount(true)} danger last />
-        </SettingsGroup>
       </main>
 
       {showEditProfile && (
         <EditProfileModal
           profile={profile}
+          cooldown={usernameCooldown}
           onClose={() => setShowEditProfile(false)}
           onSaved={(newUsername) => {
-            setProfile((prev) => ({ ...prev, username: newUsername }));
+            setProfile((prev) => ({
+              ...prev,
+              username: newUsername,
+              last_username_change: new Date().toISOString(),
+            }));
+            setUsernameCooldown(checkUsernameChangeAllowed(new Date().toISOString()));
             setShowEditProfile(false);
           }}
         />
@@ -542,7 +596,7 @@ export default function ProfilePage() {
         />
       )}
 
-        {showMFA && (
+          {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
             <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">Thêm thiết bị</h3>
@@ -699,7 +753,7 @@ function SettingsRow({ icon: Icon, label, sub, onClick, active, danger, last }) 
 
 function NotifToggle({ label, sub, checked, onChange, last }) {
   return (
-    <div className={`flex items-center justify-between gap-3 px-4 py-3.5 ${!last ? "" : ""}`}>
+    <div className="flex items-center justify-between gap-3 px-4 py-3.5">
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
           {label}
@@ -727,14 +781,36 @@ function NotifToggle({ label, sub, checked, onChange, last }) {
     </div>
   );
 }
-function EditProfileModal({ profile, onClose, onSaved }) {
+function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
   const [username, setUsername] = useState(profile.username || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const nameChanged = username.trim() !== (profile.username || "");
+
   const handleSave = async () => {
     if (!username.trim()) {
       setError("Tên hiển thị không được để trống.");
+      return;
+    }
+
+    if (username.trim().length < 3) {
+      setError("Tên hiển thị phải có ít nhất 3 ký tự.");
+      return;
+    }
+
+    if (username.trim().length > 20) {
+      setError("Tên hiển thị không được quá 20 ký tự.");
+      return;
+    }
+
+    if (!nameChanged) {
+      onClose();
+      return;
+    }
+
+    if (!cooldown.canChange) {
+      setError(`Bạn chỉ có thể đổi tên sau ${cooldown.remainingText} nữa.`);
       return;
     }
 
@@ -743,7 +819,10 @@ function EditProfileModal({ profile, onClose, onSaved }) {
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ username: username.trim() })
+      .update({
+        username: username.trim(),
+        last_username_change: new Date().toISOString(),
+      })
       .eq("id", profile.id);
 
     setSaving(false);
@@ -771,6 +850,23 @@ function EditProfileModal({ profile, onClose, onSaved }) {
           </button>
         </div>
 
+        {!cooldown.canChange && (
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-500" />
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              Bạn có thể đổi tên sau <span className="font-bold">{cooldown.remainingText}</span> nữa.
+            </p>
+          </div>
+        )}
+
+        {cooldown.canChange && (
+          <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-500/30 dark:bg-sky-500/10">
+            <p className="text-xs text-sky-700 dark:text-sky-300">
+              💡 Bạn có thể đổi tên <span className="font-bold">1 lần mỗi 7 ngày</span>.
+            </p>
+          </div>
+        )}
+
         <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">
           Tên hiển thị
         </p>
@@ -778,8 +874,13 @@ function EditProfileModal({ profile, onClose, onSaved }) {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-accent-400 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:bg-slate-800"
+          disabled={!cooldown.canChange}
+          maxLength={20}
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-accent-400 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         />
+        <p className="mt-1 text-[10px] text-slate-400">
+          {username.length}/20 ký tự · tối thiểu 3 ký tự
+        </p>
 
         {error && (
           <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>
@@ -794,8 +895,8 @@ function EditProfileModal({ profile, onClose, onSaved }) {
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-600 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+            disabled={saving || !cooldown.canChange || !nameChanged}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-600 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
           >
             {saving ? <Loader2 size={15} className="animate-spin" /> : "Lưu thay đổi"}
           </button>
@@ -1049,4 +1150,4 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
       </div>
     </div>
   );
-}
+         }
