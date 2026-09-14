@@ -10,6 +10,7 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import PageSkeleton from "./components/PageSkeleton.jsx";
+import PWAUpdatePrompt from "./components/PWAUpdatePrompt.jsx";
 import VersionChecker from "./VersionChecker";
 
 // =====================================================
@@ -105,6 +106,7 @@ export default function App() {
       </Suspense>
 
       <VersionChecker />
+        <PWAUpdatePrompt />  
     </BrowserRouter>
   );
 }
