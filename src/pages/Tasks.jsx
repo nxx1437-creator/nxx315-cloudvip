@@ -748,9 +748,9 @@ export default function Tasks() {
             )}
           </>
         )}
-      </main>
+            </main>
 
-            <BottomNav />
+      <BottomNav />
     </div>
-    );
+  );
   }
