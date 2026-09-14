@@ -56,19 +56,21 @@ export default function Wallet() {
   const { session } = useSession();
   const { profile } = useProfile();
   const [loading, setLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(false);
   const [error, setError] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [refundTransactions, setRefundTransactions] = useState([]);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    if (!session?.user?.id) return;
+
+    // ⏱️ Chỉ hiện skeleton sau 300ms — mạng nhanh không thấy
+    const skeletonTimer = setTimeout(() => {
+      setShowSkeleton(true);
+    }, 300);
+
     const fetchTransactions = async () => {
-      if (!session?.user?.id) {
-        return;
-      }
-
-      const startTime = Date.now();
-
       try {
         const userId = session.user.id;
 
@@ -207,13 +209,15 @@ export default function Wallet() {
         console.error("fetchTransactions error:", err);
         setError(err.message || "Không thể tải dữ liệu");
       } finally {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, 800 - elapsed);
-        setTimeout(() => setLoading(false), remaining);
+        clearTimeout(skeletonTimer);
+        setLoading(false);
+        setShowSkeleton(false);
       }
     };
 
     fetchTransactions();
+
+    return () => clearTimeout(skeletonTimer);
   }, [session]);
 
   const coins = profile?.coins || 0;
@@ -222,8 +226,7 @@ export default function Wallet() {
   const ringPct = Math.round((coins % 1000) / 1000 * 100);
 
   const displayTransactions = showAll ? transactions : transactions.slice(0, 5);
-
-  return (
+    return (
     <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
       <style>{`
         @keyframes shimmer {
@@ -240,12 +243,19 @@ export default function Wallet() {
           background-size: 200% 100%;
           animation: shimmer 1.5s infinite linear;
         }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+          animation: fadeIn 0.5s ease-out;
+        }
       `}</style>
 
       <TopHeader />
 
       <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
-        {loading && <WalletSkeleton />}
+        {showSkeleton && loading && <WalletSkeleton />}
 
         {!loading && error && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center">
@@ -262,7 +272,8 @@ export default function Wallet() {
         )}
 
         {!loading && !error && (
-          <>
+          <div className="fade-in space-y-4">
+            {/* Card số dư */}
             <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6">
               <p className="text-center text-sm font-medium text-[#667085]">Số dư khả dụng</p>
 
@@ -311,6 +322,7 @@ export default function Wallet() {
               </div>
             </div>
 
+            {/* Lịch sử hoạt động */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-bold text-[#111827]">Hoạt động</h2>
@@ -368,6 +380,7 @@ export default function Wallet() {
               </div>
             </div>
 
+            {/* Thống kê trả nợ */}
             {refundTransactions.length > 0 && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -392,11 +405,12 @@ export default function Wallet() {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
 
       <BottomNav />
     </div>
   );
-                        }
+                          }
+                      
