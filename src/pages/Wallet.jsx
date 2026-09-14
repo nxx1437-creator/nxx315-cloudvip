@@ -56,6 +56,7 @@ export default function Wallet() {
   const { session } = useSession();
   const { profile } = useProfile();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [refundTransactions, setRefundTransactions] = useState([]);
   const [showAll, setShowAll] = useState(false);
@@ -66,6 +67,8 @@ export default function Wallet() {
         setLoading(false);
         return;
       }
+
+      const startTime = Date.now();
 
       try {
         const userId = session.user.id;
@@ -186,10 +189,15 @@ export default function Wallet() {
 
         setTransactions(merged);
         setRefundTransactions(refundTx);
+        setError(null);
       } catch (err) {
         console.error("fetchTransactions error:", err);
+        setError(err.message || "Không thể tải dữ liệu");
       } finally {
-        setLoading(false);
+        // ⏱️ Đảm bảo skeleton hiện ít nhất 800ms (mạng nhanh cũng thấy)
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 800 - elapsed);
+        setTimeout(() => setLoading(false), remaining);
       }
     };
 
@@ -227,8 +235,23 @@ export default function Wallet() {
       <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
         {loading && <WalletSkeleton />}
 
-        {!loading && (
+        {!loading && error && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center">
+            <AlertTriangle size={24} className="mx-auto text-rose-500 mb-2" />
+            <p className="text-sm font-bold text-rose-700">Không thể tải dữ liệu</p>
+            <p className="mt-1 text-xs text-rose-600">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 rounded-xl bg-rose-500 px-4 py-2 text-xs font-semibold text-white"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && (
           <>
+            {/* Card số dư */}
             <div className="rounded-3xl border border-[#E5E7EB] bg-white p-6">
               <p className="text-center text-sm font-medium text-[#667085]">Số dư khả dụng</p>
 
@@ -247,6 +270,7 @@ export default function Wallet() {
                 Còn {(nextMilestone - coins).toLocaleString("vi-VN")} Coin nữa tới mốc {nextMilestone.toLocaleString("vi-VN")}
               </p>
 
+              {/* Hiển thị Sao */}
               <div className="mt-3 flex items-center justify-center gap-6">
                 <div className="flex items-center gap-1.5">
                   <Star size={16} className="fill-amber-400 text-amber-400" />
@@ -277,6 +301,7 @@ export default function Wallet() {
               </div>
             </div>
 
+            {/* Lịch sử hoạt động */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-bold text-[#111827]">Hoạt động</h2>
@@ -334,6 +359,7 @@ export default function Wallet() {
               </div>
             </div>
 
+            {/* Thống kê trả nợ */}
             {refundTransactions.length > 0 && (
               <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -365,4 +391,4 @@ export default function Wallet() {
       <BottomNav />
     </div>
   );
-              }
+            }
