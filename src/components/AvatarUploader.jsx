@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Camera, Loader2, X, Check, AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { validateAvatarFile, uploadAvatar } from "../lib/avatarUpload.js";
@@ -9,6 +9,13 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Sync preview khi currentUrl thay đổi từ bên ngoài
+  useEffect(() => {
+    if (currentUrl && !preview) {
+      setPreview(currentUrl);
+    }
+  }, [currentUrl]);
 
   const handlePick = () => {
     setError("");
@@ -41,11 +48,9 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
       if (dbError) throw dbError;
 
-      // Cache-busting để ảnh mới hiện ngay lập tức
-      const bustUrl = `${publicUrl}?t=${Date.now()}`;
-      setPreview(bustUrl);
+      setPreview(publicUrl);
       setSuccess(true);
-      onUploaded?.(bustUrl);
+      onUploaded?.(publicUrl);
 
       setTimeout(() => setSuccess(false), 2500);
     } catch (err) {
@@ -59,7 +64,6 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
   return (
     <div className="flex flex-col items-center">
-      {/* Avatar + nút camera */}
       <div className="relative">
         <div className="relative h-24 w-24">
           {preview ? (
@@ -67,6 +71,10 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
               src={preview}
               alt="Avatar"
               className="h-24 w-24 rounded-full border-4 border-accent-400/30 object-cover shadow-md"
+              onError={() => {
+                console.warn("Avatar load error:", preview);
+                setPreview(null);
+              }}
             />
           ) : (
             <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-accent-400/30 bg-gradient-to-br from-accent-400 to-accent-600 text-4xl font-bold text-white shadow-md">
@@ -105,12 +113,10 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
         />
       </div>
 
-      {/* Hint text — NẰM DƯỚI avatar, KHÔNG absolute */}
       <p className="mt-3 text-center text-[10px] text-slate-400 dark:text-slate-500">
         JPG, PNG, WEBP · tối đa 2MB · tối thiểu 200×200
       </p>
 
-      {/* Error toast — hiện inline dưới hint */}
       {error && (
         <div className="mt-2 flex w-full max-w-xs items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 dark:border-rose-500/30 dark:bg-rose-500/10">
           <AlertTriangle size={14} className="mt-0.5 shrink-0 text-rose-500" />
