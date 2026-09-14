@@ -73,23 +73,46 @@ export default function Wallet() {
       try {
         const userId = session.user.id;
 
-        const [tasksRes, milestonesRes, ordersRes, gamesRes, refundRes] = await Promise.all([
-      supabase
-       .from("task_completions")
-        ...
-      supabase
-      .from("milestone_claims")
-       ...
-      supabase
-      .from("redemption_orders")
-      ...
-     supabase
-      .from("game_plays")
-      ...
-      supabase
-     .from("affiliate_transactions")
-      ...
-   ]);
+        const [tasksRes, milestonesRes, ordersRes, gamesRes, historyRes, refundRes] = await Promise.all([
+          supabase
+            .from("task_completions")
+            .select("id, completed_at, coins_earned")
+            .eq("user_id", userId)
+            .order("completed_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("milestone_claims")
+            .select("id, milestone, reward, claimed_at")
+            .eq("user_id", userId)
+            .order("claimed_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("redemption_orders")
+            .select("id, package_name, coins_charged, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("game_plays")
+            .select("id, game_type, reward, played_at")
+            .eq("user_id", userId)
+            .order("played_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("transaction_history")
+            .select("*")
+            .eq("user_id", userId)
+            .in("type", ["convert_star_to_coin", "pay_refund"])
+            .order("created_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("affiliate_transactions")
+            .select("id, product_name, amount, star_points_awarded, refund_paid, refund_paid_at, refund_paid_amount, refund_paid_method, note, status")
+            .eq("user_id", userId)
+            .eq("refund_paid", true)
+            .order("refund_paid_at", { ascending: false })
+            .limit(30),
+        ]);
 
         const queryErrors = [
           tasksRes.error,
@@ -380,4 +403,4 @@ export default function Wallet() {
       <BottomNav />
     </div>
   );
-                   }
+            }
