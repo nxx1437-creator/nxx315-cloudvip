@@ -388,7 +388,7 @@ export default function Wallet() {
         )}
       </main>
 
-      <BottomNav />
+            <BottomNav />
     </div>
   );
-            }
+}}
