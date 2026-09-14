@@ -71,147 +71,134 @@ export default function Wallet() {
       const startTime = Date.now();
 
       try {
-  const userId = session.user.id;
+        const userId = session.user.id;
 
-  const [tasksRes, milestonesRes, ordersRes, gamesRes, historyRes, refundRes] = await Promise.all([
-    supabase
-      .from("task_completions")
-      .select("id, completed_at, coins_earned")
-      .eq("user_id", userId)
-      .order("completed_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("milestone_claims")
-      .select("id, milestone, reward, claimed_at")
-      .eq("user_id", userId)
-      .order("claimed_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("redemption_orders")
-      .select("id, package_name, coins_charged, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("game_plays")
-      .select("id, game_type, reward, played_at")
-      .eq("user_id", userId)
-      .order("played_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("transaction_history")
-      .select("*")
-      .eq("user_id", userId)
-      .in("type", ["convert_star_to_coin", "pay_refund"])
-      .order("created_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("affiliate_transactions")
-      .select("id, product_name, amount, star_points_awarded, refund_paid, refund_paid_at, refund_paid_amount, refund_paid_method, note, status")
-      .eq("user_id", userId)
-      .eq("refund_paid", true)
-      .order("refund_paid_at", { ascending: false })
-      .limit(30),
-  ]);
+        const [tasksRes, milestonesRes, ordersRes, gamesRes, historyRes, refundRes] = await Promise.all([
+          supabase
+            .from("task_completions")
+            .select("id, completed_at, coins_earned")
+            .eq("user_id", userId)
+            .order("completed_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("milestone_claims")
+            .select("id, milestone, reward, claimed_at")
+            .eq("user_id", userId)
+            .order("claimed_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("redemption_orders")
+            .select("id, package_name, coins_charged, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("game_plays")
+            .select("id, game_type, reward, played_at")
+            .eq("user_id", userId)
+            .order("played_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("transaction_history")
+            .select("*")
+            .eq("user_id", userId)
+            .in("type", ["convert_star_to_coin", "pay_refund"])
+            .order("created_at", { ascending: false })
+            .limit(30),
+          supabase
+            .from("affiliate_transactions")
+            .select("id, product_name, amount, star_points_awarded, refund_paid, refund_paid_at, refund_paid_amount, refund_paid_method, note, status")
+            .eq("user_id", userId)
+            .eq("refund_paid", true)
+            .order("refund_paid_at", { ascending: false })
+            .limit(30),
+        ]);
 
-  // ⚠️ Check lỗi từng query — Supabase không throw mà trả về { error }
-  const queryErrors = [
-    tasksRes.error,
-    milestonesRes.error,
-    ordersRes.error,
-    gamesRes.error,
-    historyRes.error,
-    refundRes.error,
-  ].filter(Boolean);
+        const queryErrors = [
+          tasksRes.error,
+          milestonesRes.error,
+          ordersRes.error,
+          gamesRes.error,
+          historyRes.error,
+          refundRes.error,
+        ].filter(Boolean);
 
-  if (queryErrors.length > 0) {
-    throw new Error("Không thể tải dữ liệu. Vui lòng kiểm tra kết nối mạng.");
-  }
+        if (queryErrors.length > 0) {
+          throw new Error("Không thể tải dữ liệu. Vui lòng kiểm tra kết nối mạng.");
+        }
 
-  const taskTx = (tasksRes.data || []).map((t) => ({
-    id: "task-" + t.id,
-    type: "task",
-    title: "Hoàn thành nhiệm vụ",
-    amount: t.coins_earned || 0,
-    date: t.completed_at,
-    icon: CheckSquare,
-    iconCls: "bg-[#EAF2FE] text-[#3478F6]",
-  }));
+        const taskTx = (tasksRes.data || []).map((t) => ({
+          id: "task-" + t.id,
+          type: "task",
+          title: "Hoàn thành nhiệm vụ",
+          amount: t.coins_earned || 0,
+          date: t.completed_at,
+          icon: CheckSquare,
+          iconCls: "bg-[#EAF2FE] text-[#3478F6]",
+        }));
 
-  const milestoneTx = (milestonesRes.data || []).map((m) => ({
-    id: "milestone-" + m.id,
-    type: "milestone",
-    title: `Thưởng mốc ${m.milestone} nhiệm vụ`,
-    amount: m.reward,
-    date: m.claimed_at,
-    icon: Sparkles,
-    iconCls: "bg-[#FFF4DB] text-[#B87700]",
-  }));
+        const milestoneTx = (milestonesRes.data || []).map((m) => ({
+          id: "milestone-" + m.id,
+          type: "milestone",
+          title: `Thưởng mốc ${m.milestone} nhiệm vụ`,
+          amount: m.reward,
+          date: m.claimed_at,
+          icon: Sparkles,
+          iconCls: "bg-[#FFF4DB] text-[#B87700]",
+        }));
 
-  const orderTx = (ordersRes.data || []).map((o) => ({
-    id: "order-" + o.id,
-    type: "spend",
-    title: o.package_name || "Đổi phần thưởng",
-    amount: -(o.coins_charged || 0),
-    date: o.created_at,
-    icon: Gift,
-    iconCls: "bg-rose-50 text-rose-500",
-  }));
+        const orderTx = (ordersRes.data || []).map((o) => ({
+          id: "order-" + o.id,
+          type: "spend",
+          title: o.package_name || "Đổi phần thưởng",
+          amount: -(o.coins_charged || 0),
+          date: o.created_at,
+          icon: Gift,
+          iconCls: "bg-rose-50 text-rose-500",
+        }));
 
-  const gameLabel = (t) => (t === "wheel" ? "Vòng quay may mắn" : t === "scratch" ? "Cào thẻ trúng thưởng" : "Xúc xắc may mắn");
+        const gameLabel = (t) => (t === "wheel" ? "Vòng quay may mắn" : t === "scratch" ? "Cào thẻ trúng thưởng" : "Xúc xắc may mắn");
 
-  const gameTx = (gamesRes.data || []).map((g) => ({
-    id: "game-" + g.id,
-    type: "game",
-    title: gameLabel(g.game_type),
-    amount: g.reward || 0,
-    date: g.played_at,
-    icon: Gift,
-    iconCls: "bg-emerald-50 text-emerald-600",
-  }));
+        const gameTx = (gamesRes.data || []).map((g) => ({
+          id: "game-" + g.id,
+          type: "game",
+          title: gameLabel(g.game_type),
+          amount: g.reward || 0,
+          date: g.played_at,
+          icon: Gift,
+          iconCls: "bg-emerald-50 text-emerald-600",
+        }));
 
-  const historyTx = (historyRes.data || []).map((h) => ({
-    id: "history-" + h.id,
-    type: h.type === "convert_star_to_coin" ? "convert_star" : "pay_refund",
-    title: h.type === "convert_star_to_coin"
-      ? `Đổi ${h.star_points_used || 0} sao → ${h.coins_received || 0} Xu`
-      : `Trả nợ ${formatVND(h.amount)}`,
-    amount: h.type === "convert_star_to_coin"
-      ? (h.coins_received || 0)
-      : -(h.coins_used || 0),
-    date: h.created_at,
-    icon: h.type === "convert_star_to_coin" ? ArrowLeftRight : CheckCircle2,
-    iconCls: h.type === "convert_star_to_coin"
-      ? "bg-blue-50 text-blue-500"
-      : "bg-emerald-50 text-emerald-500",
-    isRefund: h.type === "pay_refund",
-  }));
+        const historyTx = (historyRes.data || []).map((h) => ({
+          id: "history-" + h.id,
+          type: h.type === "convert_star_to_coin" ? "convert_star" : "pay_refund",
+          title: h.type === "convert_star_to_coin"
+            ? `Đổi ${h.star_points_used || 0} sao → ${h.coins_received || 0} Xu`
+            : `Trả nợ ${formatVND(h.amount)}`,
+          amount: h.type === "convert_star_to_coin"
+            ? (h.coins_received || 0)
+            : -(h.coins_used || 0),
+          date: h.created_at,
+          icon: h.type === "convert_star_to_coin" ? ArrowLeftRight : CheckCircle2,
+          iconCls: h.type === "convert_star_to_coin"
+            ? "bg-blue-50 text-blue-500"
+            : "bg-emerald-50 text-emerald-500",
+          isRefund: h.type === "pay_refund",
+        }));
 
-  const refundTx = (refundRes.data || []).map((r) => ({
-    id: "refund-" + r.id,
-    type: "refund",
-    title: `Trả nợ đơn "${r.product_name || "Sản phẩm"}"`,
-    amount: -(r.refund_paid_amount || r.star_points_awarded || 0),
-    date: r.refund_paid_at,
-    icon: CheckCircle2,
-    iconCls: "bg-emerald-50 text-emerald-500",
-    isRefund: true,
-  }));
+        const refundTx = (refundRes.data || []).map((r) => ({
+          id: "refund-" + r.id,
+          type: "refund",
+          title: `Trả nợ đơn "${r.product_name || "Sản phẩm"}"`,
+          amount: -(r.refund_paid_amount || r.star_points_awarded || 0),
+          date: r.refund_paid_at,
+          icon: CheckCircle2,
+          iconCls: "bg-emerald-50 text-emerald-500",
+          isRefund: true,
+        }));
 
-  const merged = [...taskTx, ...milestoneTx, ...orderTx, ...gameTx, ...historyTx, ...refundTx]
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  setTransactions(merged);
-  setRefundTransactions(refundTx);
-  setError(null);
-} catch (err) {
-  console.error("fetchTransactions error:", err);
-  setError(err.message || "Không thể tải dữ liệu");
-} finally {
-  const elapsed = Date.now() - startTime;
-  const remaining = Math.max(0, 800 - elapsed);
-  setTimeout(() => setLoading(false), remaining);
-      }
+        const merged = [...taskTx, ...milestoneTx, ...orderTx, ...gameTx, ...historyTx, ...refundTx]
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         setTransactions(merged);
         setRefundTransactions(refundTx);
@@ -220,7 +207,6 @@ export default function Wallet() {
         console.error("fetchTransactions error:", err);
         setError(err.message || "Không thể tải dữ liệu");
       } finally {
-        // ⏱️ Đảm bảo skeleton hiện ít nhất 800ms (mạng nhanh cũng thấy)
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, 800 - elapsed);
         setTimeout(() => setLoading(false), remaining);
@@ -414,7 +400,7 @@ export default function Wallet() {
         )}
       </main>
 
-            <BottomNav />
+      <BottomNav />
     </div>
   );
-}
+                   }
