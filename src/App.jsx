@@ -9,8 +9,12 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
-import LoadingScreen from "./components/LoadingScreen.jsx";
+import PageSkeleton from "./components/PageSkeleton.jsx";
 import VersionChecker from "./VersionChecker";
+
+// =====================================================
+// LAZY LOAD — Tải khi user vào route
+// =====================================================
 
 const Invite = lazy(() => import("./pages/Invite.jsx"));
 const RedirectPage = lazy(() => import("./pages/RedirectPage.jsx"));
@@ -48,7 +52,7 @@ const HistoryDetail = lazy(() => import("./pages/HistoryDetail.jsx"));
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingScreen />}>
+      <Suspense fallback={<PageSkeleton />}>
         <Routes>
           <Route path="/" element={<CloudVIPLanding />} />
 
@@ -251,4 +255,4 @@ export default function App() {
       <VersionChecker />
     </BrowserRouter>
   );
-          }
+            }
