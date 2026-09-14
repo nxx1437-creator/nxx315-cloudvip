@@ -2,7 +2,7 @@ import { supabase } from "./supabaseClient.js";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const DAILY_LIMIT = 2;  // 2 lần/ngày
+const DAILY_LIMIT = 2; 
 
 export async function validateAvatarFile(file) {
   if (!file) throw new Error("Vui lòng chọn ảnh.");
