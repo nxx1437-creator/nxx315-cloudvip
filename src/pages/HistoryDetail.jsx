@@ -24,6 +24,17 @@ const STORAGE_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
 
 const PACKAGE_IMAGES = {
+  // Free Fire
+  "ff-25": `${STORAGE_URL}/free-fire.png`,
+  "ff-51": `${STORAGE_URL}/free-fire.png`,
+  "ff-113": `${STORAGE_URL}/free-fire.png`,
+  "ff-283": `${STORAGE_URL}/free-fire.png`,
+  "ff-566": `${STORAGE_URL}/free-fire.png`,
+  "ff-1132": `${STORAGE_URL}/free-fire.png`,
+  "ff-2830": `${STORAGE_URL}/free-fire.png`,
+  "ff-5750": `${STORAGE_URL}/free-fire.png`,
+  "ff-11500": `${STORAGE_URL}/free-fire.png`,
+};
   // Roblox
   "card-400": `${STORAGE_URL}/roblox-400.png`,
   "vng-40": `${STORAGE_URL}/roblox-40.png`,
@@ -51,6 +62,7 @@ const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together.png`,
+  freefire: `${STORAGE_URL}/freefire.png`,   // 👈 THÊM DÒNG NÀY
 };
 function detectGame(packageId) {
   const pid = String(packageId || "").toLowerCase();
@@ -72,6 +84,9 @@ function detectGame(packageId) {
   if (pid.startsWith("pt-") || pid.includes("playtogether") || pid.includes("play-together")) {
     return "playtogether";
   }
+  if (pid.startsWith("ff-") || pid.includes("freefire") || pid.includes("free-fire")) {
+    return "freefire";
+  }
 
   return null;
 }
@@ -81,9 +96,9 @@ function getGameName(packageId) {
   if (game === "roblox") return "Roblox";
   if (game === "lienquan") return "Liên Quân Mobile";
   if (game === "playtogether") return "Play Together";
+  if (game === "freefire") return "Free Fire";   // 👈 THÊM DÒNG NÀY
   return null;
 }
-
 const fmtDate = (value) => {
   if (!value) return "—";
 
@@ -549,6 +564,16 @@ export default function HistoryDetail() {
                         {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
                       </p>
                     )}
+                    {order.ff_diamond != null && (
+  <InfoRow
+    label="Kim Cương"
+    value={`${Number(order.ff_diamond).toLocaleString("vi-VN")} KC`}
+  />
+)}
+
+{order.ff_uid && (
+  <InfoRow label="UID Free Fire" value={order.ff_uid} copyable />
+)}
 
                     {order.package_id && (
                       <p className="mt-1 text-xs text-slate-400">
