@@ -20,19 +20,59 @@ import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
+const STORAGE_URL =
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
+
 const PACKAGE_IMAGES = {
-  "card-400":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-400.png",
+  // Roblox
+  "card-400": `${STORAGE_URL}/roblox-400.png`,
+  "vng-40": `${STORAGE_URL}/roblox-40.png`,
+  "vng-80": `${STORAGE_URL}/roblox-80.png`,
+  "vng-500": `${STORAGE_URL}/roblox-500.png`,
 
-  "vng-40":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-40.png",
-
-  "vng-80":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-80.png",
-
-  "vng-500":
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
+  // Liên Quân
+  "lq-5": `${STORAGE_URL}/lienquan-5.png`,
+  "lq-10": `${STORAGE_URL}/lienquan-10.png`,
+  "lq-20": `${STORAGE_URL}/lienquan-20.png`,
+  "lq-50": `${STORAGE_URL}/lienquan-50.png`,
+  "lq-100": `${STORAGE_URL}/lienquan-100.png`,
+  "lq-200": `${STORAGE_URL}/lienquan-200.png`,
+  "lq-500": `${STORAGE_URL}/lienquan-500.png`,
+  "lq-1000": `${STORAGE_URL}/lienquan-1000.png`,
+  "lq-2000": `${STORAGE_URL}/lienquan-2000.png`,
 };
+
+const GAME_FALLBACK = {
+  roblox: `${STORAGE_URL}/roblox.png`,
+  lienquan: `${STORAGE_URL}/lienquan.png`,
+};
+
+function detectGame(packageId) {
+  const pid = String(packageId || "").toLowerCase();
+
+  if (
+    pid.startsWith("vng-") ||
+    pid.startsWith("card-") ||
+    pid.startsWith("rbx-") ||
+    pid.includes("roblox") ||
+    pid.includes("robux")
+  ) {
+    return "roblox";
+  }
+
+  if (pid.startsWith("lq-") || pid.includes("lienquan")) {
+    return "lienquan";
+  }
+
+  return null;
+}
+
+function getGameName(packageId) {
+  const game = detectGame(packageId);
+  if (game === "roblox") return "Roblox";
+  if (game === "lienquan") return "Liên Quân Mobile";
+  return null;
+}
 
 const fmtDate = (value) => {
   if (!value) return "—";
@@ -59,19 +99,15 @@ function getStatus(status) {
     return {
       text: "Đã giao",
       Icon: CheckCircle2,
-      className:
-        "bg-emerald-50 border-emerald-100 text-emerald-600",
+      className: "bg-emerald-50 border-emerald-100 text-emerald-600",
     };
   }
 
-  if (
-    ["success", "completed", "done"].includes(key)
-  ) {
+  if (["success", "completed", "done"].includes(key)) {
     return {
       text: "Hoàn thành",
       Icon: CheckCircle2,
-      className:
-        "bg-emerald-50 border-emerald-100 text-emerald-600",
+      className: "bg-emerald-50 border-emerald-100 text-emerald-600",
     };
   }
 
@@ -79,19 +115,15 @@ function getStatus(status) {
     return {
       text: "Đã từ chối",
       Icon: XCircle,
-      className:
-        "bg-rose-50 border-rose-100 text-rose-500",
+      className: "bg-rose-50 border-rose-100 text-rose-500",
     };
   }
 
-  if (
-    ["cancelled", "canceled"].includes(key)
-  ) {
+  if (["cancelled", "canceled"].includes(key)) {
     return {
       text: "Đã hủy",
       Icon: XCircle,
-      className:
-        "bg-rose-50 border-rose-100 text-rose-500",
+      className: "bg-rose-50 border-rose-100 text-rose-500",
     };
   }
 
@@ -99,19 +131,15 @@ function getStatus(status) {
     return {
       text: "Thất bại",
       Icon: XCircle,
-      className:
-        "bg-rose-50 border-rose-100 text-rose-500",
+      className: "bg-rose-50 border-rose-100 text-rose-500",
     };
   }
 
-  if (
-    ["paid", "processing"].includes(key)
-  ) {
+  if (["paid", "processing"].includes(key)) {
     return {
       text: "Đang kiểm tra",
       Icon: Clock3,
-      className:
-        "bg-blue-50 border-blue-100 text-blue-600",
+      className: "bg-blue-50 border-blue-100 text-blue-600",
     };
   }
 
@@ -119,36 +147,25 @@ function getStatus(status) {
     return {
       text: "Chờ thanh toán",
       Icon: Clock3,
-      className:
-        "bg-amber-50 border-amber-100 text-amber-600",
+      className: "bg-amber-50 border-amber-100 text-amber-600",
     };
   }
 
   return {
     text: "Đang xử lý",
     Icon: Clock3,
-    className:
-      "bg-amber-50 border-amber-100 text-amber-600",
+    className: "bg-amber-50 border-amber-100 text-amber-600",
   };
 }
 
-function InfoRow({
-  label,
-  value,
-  copyable = false,
-}) {
+function InfoRow({ label, value, copyable = false }) {
   const handleCopy = async () => {
-    if (
-      value === null ||
-      value === undefined
-    ) {
+    if (value === null || value === undefined) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(
-        String(value)
-      );
+      await navigator.clipboard.writeText(String(value));
     } catch (error) {
       console.error("Copy error:", error);
     }
@@ -156,27 +173,23 @@ function InfoRow({
 
   return (
     <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-3 last:border-0">
-      <span className="shrink-0 text-xs text-slate-400">
-        {label}
-      </span>
+      <span className="shrink-0 text-xs text-slate-400">{label}</span>
 
       <div className="flex min-w-0 items-center gap-2 text-right">
         <span className="break-all text-xs font-bold text-slate-800">
           {value ?? "—"}
         </span>
 
-        {copyable &&
-          value !== null &&
-          value !== undefined && (
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="shrink-0 text-blue-500"
-              aria-label={`Sao chép ${label}`}
-            >
-              <Copy size={14} />
-            </button>
-          )}
+        {copyable && value !== null && value !== undefined && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="shrink-0 text-blue-500"
+            aria-label={`Sao chép ${label}`}
+          >
+            <Copy size={14} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -184,9 +197,7 @@ function InfoRow({
 
 function Skeleton({ className = "" }) {
   return (
-    <div
-      className={`animate-pulse rounded-lg bg-slate-100 ${className}`}
-    />
+    <div className={`animate-pulse rounded-lg bg-slate-100 ${className}`} />
   );
 }
 
@@ -233,26 +244,19 @@ function HistoryDetailSkeleton() {
           <Skeleton className="h-4 w-32" />
         </div>
 
-        {Array.from({ length: 9 }).map(
-          (_, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between gap-4 border-b border-slate-100 py-3 last:border-0"
-            >
-              <Skeleton className="h-3 w-16" />
-
-              <Skeleton
-                className={`h-3 ${
-                  index % 3 === 0
-                    ? "w-28"
-                    : index % 3 === 1
-                    ? "w-36"
-                    : "w-20"
-                }`}
-              />
-            </div>
-          )
-        )}
+        {Array.from({ length: 9 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between gap-4 border-b border-slate-100 py-3 last:border-0"
+          >
+            <Skeleton className="h-3 w-16" />
+            <Skeleton
+              className={`h-3 ${
+                index % 3 === 0 ? "w-28" : index % 3 === 1 ? "w-36" : "w-20"
+              }`}
+            />
+          </div>
+        ))}
       </section>
 
       <section className="rounded-3xl border border-blue-50 bg-blue-50 p-5">
@@ -268,8 +272,7 @@ function HistoryDetailSkeleton() {
       </section>
     </div>
   );
-}
-
+    }
 export default function HistoryDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -302,40 +305,21 @@ export default function HistoryDetail() {
         return;
       }
 
-      console.log("HISTORY DETAIL");
-      console.log("URL ID:", id);
-      console.log("USER ID:", user.id);
-      console.log("SOURCE:", source);
-
-      const tables = source
-        ? [source]
-        : ["orders", "redemption_orders"];
+      const tables = source ? [source] : ["orders", "redemption_orders"];
 
       let foundOrder = null;
       let foundTable = null;
 
       for (const table of tables) {
-        const {
-          data,
-          error: queryError,
-        } = await supabase
+        const { data, error: queryError } = await supabase
           .from(table)
           .select("*")
           .eq("id", id)
           .eq("user_id", user.id)
           .maybeSingle();
 
-        console.log(`RESULT ${table}:`, {
-          data,
-          error: queryError,
-        });
-
         if (queryError) {
-          console.error(
-            `Lỗi query ${table}:`,
-            queryError
-          );
-
+          console.error(`Lỗi query ${table}:`, queryError);
           continue;
         }
 
@@ -347,20 +331,11 @@ export default function HistoryDetail() {
       }
 
       if (!foundOrder) {
-        setError(
-          `Không tìm thấy đơn hàng #${id} của tài khoản hiện tại.`
-        );
-
+        setError(`Không tìm thấy đơn hàng #${id} của tài khoản hiện tại.`);
         return;
       }
 
-      console.log("FOUND ORDER:", foundOrder);
-      console.log("FOUND TABLE:", foundTable);
-
-      setOrder({
-        ...foundOrder,
-        __source: foundTable,
-      });
+      setOrder({ ...foundOrder, __source: foundTable });
 
       if (
         foundOrder.package_id &&
@@ -368,20 +343,14 @@ export default function HistoryDetail() {
           String(foundOrder.package_id)
         )
       ) {
-        const {
-          data: packageData,
-          error: packageError,
-        } = await supabase
+        const { data: packageData, error: packageError } = await supabase
           .from("redemption_packages")
           .select("*")
           .eq("id", foundOrder.package_id)
           .maybeSingle();
 
         if (packageError) {
-          console.warn(
-            "Không lấy được package:",
-            packageError
-          );
+          console.warn("Không lấy được package:", packageError);
         }
 
         setPkg(packageData || null);
@@ -389,15 +358,8 @@ export default function HistoryDetail() {
         setPkg(null);
       }
     } catch (err) {
-      console.error(
-        "HistoryDetail error:",
-        err
-      );
-
-      setError(
-        err?.message ||
-          "Không thể tải thông tin giao dịch."
-      );
+      console.error("HistoryDetail error:", err);
+      setError(err?.message || "Không thể tải thông tin giao dịch.");
     } finally {
       setLoading(false);
     }
@@ -410,9 +372,11 @@ export default function HistoryDetail() {
   const status = getStatus(order?.status);
   const StatusIcon = status.Icon;
 
-  const statusKey = String(
-    order?.status || ""
-  ).toLowerCase();
+  const statusKey = String(order?.status || "").toLowerCase();
+
+  // Detect game từ package_id
+  const gameKey = detectGame(order?.package_id);
+  const gameName = getGameName(order?.package_id);
 
   const name =
     order?.package_name ||
@@ -420,17 +384,11 @@ export default function HistoryDetail() {
     order?.name ||
     pkg?.name ||
     order?.game_name ||
-    (order?.package_id === "card-400"
-      ? "Card Robux"
-      : order?.package_id === "vng-40"
-      ? "Nạp trực tiếp"
-      : order?.package_id === "vng-80"
-      ? "Nạp trực tiếp"
-      : order?.package_id === "vng-500"
-      ? "Nạp trực tiếp"
-      : order?.robux
-      ? `${order.robux} Robux`
-      : "Giao dịch");
+    (gameKey === "lienquan" && order?.quanhuy
+      ? `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`
+      : gameKey === "roblox" && order?.robux
+      ? `${Number(order.robux).toLocaleString("vi-VN")} Robux`
+      : gameName || "Giao dịch");
 
   const image =
     order?.image_url ||
@@ -438,6 +396,7 @@ export default function HistoryDetail() {
     order?.product_image ||
     order?.logo_url ||
     PACKAGE_IMAGES[order?.package_id] ||
+    (gameKey ? GAME_FALLBACK[gameKey] : null) ||
     pkg?.image_url ||
     null;
 
@@ -460,37 +419,30 @@ export default function HistoryDetail() {
   const paymentMethod =
     order?.payment_method === "bank"
       ? "Chuyển khoản ngân hàng"
-      : order?.payment_method === "coins"
+      : order?.payment_method === "coin" || order?.payment_method === "coins"
       ? "Thanh toán bằng xu"
       : order?.payment_method || null;
-    return (
+        return (
     <div className="min-h-screen bg-[#f7faff] pb-28 text-slate-900">
       <TopHeader />
 
       <main className="px-4 pt-5">
         <div className="mx-auto max-w-2xl">
-          {/* QUAY LẠI */}
           <button
             type="button"
             onClick={() => navigate("/history")}
             className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-500"
           >
             <ArrowLeft size={17} />
-
             Quay lại lịch sử
           </button>
 
-          {/* SKELETON */}
           {loading && <HistoryDetailSkeleton />}
 
-          {/* ERROR */}
           {!loading && error && (
             <div className="rounded-3xl border border-rose-100 bg-white p-8 text-center shadow-sm">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50">
-                <XCircle
-                  size={28}
-                  className="text-rose-500"
-                />
+                <XCircle size={28} className="text-rose-500" />
               </div>
 
               <h2 className="mt-4 text-base font-black text-slate-800">
@@ -507,19 +459,15 @@ export default function HistoryDetail() {
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-xs font-bold text-white"
               >
                 <RefreshCw size={14} />
-
                 Thử lại
               </button>
             </div>
           )}
 
-          {/* DATA */}
           {!loading && !error && order && (
             <>
-              {/* PROCESS */}
               <section className="rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-center gap-5">
-                  {/* ĐẶT HÀNG */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
                       <CheckCircle2 size={23} />
@@ -532,7 +480,6 @@ export default function HistoryDetail() {
 
                   <div className="h-px w-14 bg-blue-100" />
 
-                  {/* TRẠNG THÁI */}
                   <div className="flex flex-col items-center gap-2">
                     <div
                       className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${status.className}`}
@@ -547,7 +494,6 @@ export default function HistoryDetail() {
                 </div>
               </section>
 
-              {/* PRODUCT */}
               <section className="mt-3 overflow-hidden rounded-3xl border border-blue-50 bg-white shadow-sm">
                 <div className="flex items-center gap-4 p-5">
                   <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-blue-50 bg-blue-50">
@@ -557,16 +503,12 @@ export default function HistoryDetail() {
                         alt={name}
                         className="h-full w-full object-cover"
                         onError={(event) => {
-                          event.currentTarget.style.display =
-                            "none";
+                          event.currentTarget.style.display = "none";
                         }}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <Package
-                          size={32}
-                          className="text-blue-400"
-                        />
+                        <Package size={32} className="text-blue-400" />
                       </div>
                     )}
                   </div>
@@ -576,16 +518,23 @@ export default function HistoryDetail() {
                       Đơn hàng
                     </p>
 
-                    <h1 className="mt-1 text-lg font-black">
-                      {name}
-                    </h1>
+                    <h1 className="mt-1 text-lg font-black">{name}</h1>
+
+                    {gameName && (
+                      <p className="mt-1 text-xs font-bold text-blue-500">
+                        {gameName}
+                      </p>
+                    )}
 
                     {order.robux != null && (
                       <p className="mt-1 text-xs font-bold text-blue-500">
-                        {Number(
-                          order.robux
-                        ).toLocaleString("vi-VN")}{" "}
-                        Robux
+                        {Number(order.robux).toLocaleString("vi-VN")} Robux
+                      </p>
+                    )}
+
+                    {order.quanhuy != null && (
+                      <p className="mt-1 text-xs font-bold text-blue-500">
+                        {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
                       </p>
                     )}
 
@@ -597,17 +546,14 @@ export default function HistoryDetail() {
 
                     {order.delivery_method && (
                       <p className="mt-1 text-xs text-slate-400">
-                        Giao:{" "}
-                        {order.delivery_method}
+                        Giao: {order.delivery_method}
                       </p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-4">
-                  <span className="text-xs text-slate-400">
-                    Trạng thái
-                  </span>
+                  <span className="text-xs text-slate-400">Trạng thái</span>
 
                   <span
                     className={`rounded-full border px-3 py-1 text-[10px] font-bold ${status.className}`}
@@ -617,88 +563,55 @@ export default function HistoryDetail() {
                 </div>
               </section>
 
-              {/* ORDER INFO */}
               <section className="mt-3 rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
                 <div className="mb-1 flex items-center gap-2">
-                  <FileText
-                    size={17}
-                    className="text-blue-500"
-                  />
+                  <FileText size={17} className="text-blue-500" />
 
-                  <h2 className="text-sm font-black">
-                    Thông tin đơn hàng
-                  </h2>
+                  <h2 className="text-sm font-black">Thông tin đơn hàng</h2>
                 </div>
 
-                <InfoRow
-                  label="Mã ID"
-                  value={order.id}
-                  copyable
-                />
+                <InfoRow label="Mã ID" value={order.id} copyable />
 
                 {order.order_code && (
-                  <InfoRow
-                    label="Mã đơn"
-                    value={order.order_code}
-                    copyable
-                  />
+                  <InfoRow label="Mã đơn" value={order.order_code} copyable />
                 )}
 
-                <InfoRow
-                  label="Tên"
-                  value={name}
-                />
+                <InfoRow label="Tên" value={name} />
 
-                <InfoRow
-                  label="Thời gian"
-                  value={fmtDate(
-                    order.created_at
-                  )}
-                />
+                <InfoRow label="Thời gian" value={fmtDate(order.created_at)} />
 
-                <InfoRow
-                  label="Trạng thái"
-                  value={status.text}
-                />
+                <InfoRow label="Trạng thái" value={status.text} />
 
                 {order.robux != null && (
                   <InfoRow
                     label="Robux"
-                    value={`${Number(
-                      order.robux
-                    ).toLocaleString(
-                      "vi-VN"
-                    )} Robux`}
+                    value={`${Number(order.robux).toLocaleString("vi-VN")} Robux`}
+                  />
+                )}
+
+                {order.quanhuy != null && (
+                  <InfoRow
+                    label="Quân Huy"
+                    value={`${Number(order.quanhuy).toLocaleString("vi-VN")} QH`}
                   />
                 )}
 
                 {coin != null && (
                   <InfoRow
                     label="Số xu"
-                    value={`${Number(
-                      coin
-                    ).toLocaleString(
-                      "vi-VN"
-                    )} xu`}
+                    value={`${Number(coin).toLocaleString("vi-VN")} xu`}
                   />
                 )}
 
                 {money != null && (
                   <InfoRow
                     label="Số tiền"
-                    value={`${Number(
-                      money
-                    ).toLocaleString(
-                      "vi-VN"
-                    )}đ`}
+                    value={`${Number(money).toLocaleString("vi-VN")}đ`}
                   />
                 )}
 
                 {paymentMethod && (
-                  <InfoRow
-                    label="Thanh toán"
-                    value={paymentMethod}
-                  />
+                  <InfoRow label="Thanh toán" value={paymentMethod} />
                 )}
 
                 {order.roblox_username && (
@@ -719,43 +632,27 @@ export default function HistoryDetail() {
                 {order.roblox_display_name && (
                   <InfoRow
                     label="Display Name"
-                    value={
-                      order.roblox_display_name
-                    }
+                    value={order.roblox_display_name}
                   />
                 )}
 
                 {order.uid && (
-                  <InfoRow
-                    label="UID"
-                    value={order.uid}
-                    copyable
-                  />
+                  <InfoRow label="UID" value={order.uid} copyable />
                 )}
 
                 {order.delivery_target && (
                   <InfoRow
                     label="Thông tin nhận"
-                    value={
-                      order.delivery_target
-                    }
+                    value={order.delivery_target}
                   />
                 )}
 
-                {/* GHI CHÚ THƯỜNG */}
-                {order.note &&
-                  statusKey !== "rejected" && (
-                    <InfoRow
-                      label="Ghi chú"
-                      value={order.note}
-                    />
-                  )}
+                {order.note && statusKey !== "rejected" && (
+                  <InfoRow label="Ghi chú" value={order.note} />
+                )}
               </section>
 
-              {/* ĐANG KIỂM TRA */}
-              {["paid", "processing"].includes(
-                statusKey
-              ) && (
+              {["paid", "processing"].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-500">
@@ -768,17 +665,14 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-blue-600">
-                        Hệ thống đang chờ kiểm tra
-                        giao dịch. Khi thanh toán
-                        được xác nhận, trạng thái
-                        đơn sẽ được cập nhật.
+                        Hệ thống đang chờ kiểm tra giao dịch. Khi thanh toán
+                        được xác nhận, trạng thái đơn sẽ được cập nhật.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* CHỜ THANH TOÁN */}
               {statusKey === "pending" && (
                 <section className="mt-3 rounded-3xl border border-amber-100 bg-amber-50 p-5">
                   <div className="flex items-start gap-3">
@@ -792,17 +686,14 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-amber-600">
-                        Đơn hàng đang chờ thanh
-                        toán. Hãy hoàn tất thanh
-                        toán theo hướng dẫn của
-                        đơn hàng.
+                        Đơn hàng đang chờ thanh toán. Hãy hoàn tất thanh toán
+                        theo hướng dẫn của đơn hàng.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* TỪ CHỐI */}
               {statusKey === "rejected" && (
                 <section className="mt-3 rounded-3xl border border-rose-100 bg-rose-50 p-5">
                   <div className="flex items-start gap-3">
@@ -816,8 +707,7 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-rose-600">
-                        Quản trị viên đã từ chối
-                        giao dịch này.
+                        Quản trị viên đã từ chối giao dịch này.
                       </p>
 
                       {order.note && (
@@ -836,12 +726,7 @@ export default function HistoryDetail() {
                 </section>
               )}
 
-              {/* FAILED / CANCELLED */}
-              {[
-                "failed",
-                "cancelled",
-                "canceled",
-              ].includes(statusKey) && (
+              {["failed", "cancelled", "canceled"].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-rose-100 bg-rose-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-500">
@@ -854,17 +739,14 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-rose-600">
-                        Giao dịch này hiện không
-                        thể tiếp tục. Nếu mày cho
-                        rằng đây là lỗi, hãy liên
-                        hệ quản trị viên.
+                        Giao dịch này hiện không thể tiếp tục. Nếu bạn cho rằng
+                        đây là lỗi, hãy liên hệ quản trị viên.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* ĐÃ GIAO */}
               {statusKey === "delivered" && (
                 <section className="mt-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
                   <div className="flex items-start gap-3">
@@ -878,21 +760,14 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-emerald-600">
-                        Đơn hàng đã được quản trị
-                        viên xác nhận giao thành
-                        công.
+                        Đơn hàng đã được quản trị viên xác nhận giao thành công.
                       </p>
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* HOÀN THÀNH */}
-              {[
-                "success",
-                "completed",
-                "done",
-              ].includes(statusKey) && (
+              {["success", "completed", "done"].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-500">
@@ -905,8 +780,7 @@ export default function HistoryDetail() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-emerald-600">
-                        Giao dịch đã được xác nhận
-                        thành công.
+                        Giao dịch đã được xác nhận thành công.
                       </p>
                     </div>
                   </div>
@@ -920,4 +794,4 @@ export default function HistoryDetail() {
       <BottomNav />
     </div>
   );
-          }
+                    }
