@@ -595,12 +595,12 @@ function PackageRow({ pkg, active, onSelect }) {
     {
       step: 1,
       url: `${SUPABASE_STORAGE}/playtogether-guide-1.png`,
-      title: "Bước 1: Mở game Play Together",
+      title: "Bước 1: Mở game Play Together và bấm vô điện thoại",
     },
     {
       step: 2,
       url: `${SUPABASE_STORAGE}/playtogether-guide-2.png`,
-      title: "Bước 2: Vào Hồ sơ cá nhân",
+      title: "Bước 2: bấm vào cài đặt ",
     },
     {
       step: 3,
