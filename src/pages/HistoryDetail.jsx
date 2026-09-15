@@ -34,7 +34,7 @@ const PACKAGE_IMAGES = {
   "ff-2830": `${STORAGE_URL}/free-fire.png`,
   "ff-5750": `${STORAGE_URL}/free-fire.png`,
   "ff-11500": `${STORAGE_URL}/free-fire.png`,
-};
+
   // Roblox
   "card-400": `${STORAGE_URL}/roblox-400.png`,
   "vng-40": `${STORAGE_URL}/roblox-40.png`,
