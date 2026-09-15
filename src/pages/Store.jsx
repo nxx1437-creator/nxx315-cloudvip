@@ -933,10 +933,12 @@ function detectGame(packageId) {
     return 'roblox';
   }
 
-  if (pid.startsWith('lq-') || pid.includes('lienquan')) {
-    return 'lienquan';
+  if (pid.startsWith('lq-') || pid.includes('lien-quan-mobile.png')) {
+    return 'lien-quan-mobile.png';
   }
-
+if (packageId.startsWith('pt-') || packageId.includes('playtogether') || packageId.includes('play-together')) {
+  return getImageUrl('play-together.png');
+    }
   return null;
 }
 
