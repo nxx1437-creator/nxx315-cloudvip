@@ -1032,7 +1032,7 @@ function getHistoryImage(order) {
     packageId.includes('playtogether') ||
     packageId.includes('play-together')
   ) {
-    return getImageUrl('play-together.png');
+    return getImageUrl('play-together-vng.png');
   }
 
   // Fallback theo text
@@ -1044,7 +1044,7 @@ function getHistoryImage(order) {
   `.toLowerCase();
 
   if (text.includes('play together')) {
-    return getImageUrl('play-together.png');
+    return getImageUrl('play-together-vng.png');
   }
 
   if (
