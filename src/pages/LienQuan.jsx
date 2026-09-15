@@ -28,7 +28,7 @@ const PACKAGES = [
     quanhuy: 10,
     originalPrice: 6000,
     discount: 17,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-5.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-10",
@@ -36,7 +36,7 @@ const PACKAGES = [
     quanhuy: 20,
     originalPrice: 12000,
     discount: 17,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-10.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-20",
@@ -44,7 +44,7 @@ const PACKAGES = [
     quanhuy: 40,
     originalPrice: 24000,
     discount: 17,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-20.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-50",
@@ -52,7 +52,7 @@ const PACKAGES = [
     quanhuy: 102,
     originalPrice: 60000,
     discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-50.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-100",
@@ -60,7 +60,7 @@ const PACKAGES = [
     quanhuy: 204,
     originalPrice: 120000,
     discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-100.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-200",
@@ -68,7 +68,7 @@ const PACKAGES = [
     quanhuy: 408,
     originalPrice: 240000,
     discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-200.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-500",
@@ -76,7 +76,7 @@ const PACKAGES = [
     quanhuy: 1020,
     originalPrice: 600000,
     discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-500.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-1000",
@@ -84,7 +84,7 @@ const PACKAGES = [
     quanhuy: 2090,
     originalPrice: 1200000,
     discount: 13,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-1000.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
   {
     id: "lq-2000",
@@ -92,7 +92,7 @@ const PACKAGES = [
     quanhuy: 4180,
     originalPrice: 2400000,
     discount: 13,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-2000.png",
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
   },
 ];
 
