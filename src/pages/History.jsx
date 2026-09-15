@@ -40,14 +40,24 @@ const PACKAGE_IMAGES = {
   "pt-9": `${STORAGE_URL}/play-together-9.png`,
   "pt-18": `${STORAGE_URL}/play-together-18.png`,
   "pt-45": `${STORAGE_URL}/play-together-45.png`,
+  // Free Fire
+"ff-25": `${STORAGE_URL}/free-fire.png`,
+"ff-51": `${STORAGE_URL}/free-fire.png`,
+"ff-113": `${STORAGE_URL}/free-fire.png`,
+"ff-283": `${STORAGE_URL}/free-fire.png`,
+"ff-566": `${STORAGE_URL}/free-fire.png`,
+"ff-1132": `${STORAGE_URL}/free-fire.png`,
+"ff-2830": `${STORAGE_URL}/free-fire.png`,
+"ff-5750": `${STORAGE_URL}/free-fire.png`,
+"ff-11500": `${STORAGE_URL}/free-fire.png`,
 };
 
 const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together-vng.png`,
+  freefire: `${STORAGE_URL}/free-fire.png`,
 };
-
 function detectGame(packageId) {
   const pid = String(packageId || "").toLowerCase();
 
@@ -72,6 +82,13 @@ function detectGame(packageId) {
   ) {
     return "playtogether";
   }
+   if (
+    pid.startsWith("ff-") ||
+    pid.includes("freefire") ||
+    pid.includes("free-fire")
+  ) {
+    return "freefire";
+   }
 
   return null;
 }
@@ -81,6 +98,7 @@ function getGameName(packageId) {
   if (game === "roblox") return "Roblox";
   if (game === "lienquan") return "Liên Quân Mobile";
   if (game === "playtogether") return "Play Together";
+  if (game === "freefire") return "Free Fire";   // 👈 THÊM DÒNG NÀY
   return null;
 }
 
