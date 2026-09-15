@@ -1,12 +1,47 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  HelpCircle,
+  Loader2,
+  ShieldCheck,
+  X,
+  XCircle,
+} from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-import { PackageStep, UidStep, PaymentStep } from "./PlayTogetherSteps.jsx";
-import GuideModal from "./PlayTogetherGuide.jsx";
+
+const SUPABASE_STORAGE =
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
+
+const PACKAGES = [
+  {
+    id: "pt-9",
+    name: "Một ít thỏi vàng",
+    gold: 9,
+    price: 25500,
+    image: `${SUPABASE_STORAGE}/playtogether-9.png`,
+  },
+  {
+    id: "pt-18",
+    name: "Thỏi vàng",
+    gold: 18,
+    price: 50000,
+    image: `${SUPABASE_STORAGE}/playtogether-18.png`,
+  },
+  {
+    id: "pt-45",
+    name: "Vài thỏi vàng",
+    gold: 45,
+    price: 130000,
+    image: `${SUPABASE_STORAGE}/playtogether-45.png`,
+  },
+];
 
 const CARD_TYPES = {
   Viettel: [
@@ -58,6 +93,9 @@ const CARD_TYPES = {
   ],
 };
 
+const formatPrice = (value) =>
+  new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + "đ";
+
 export default function PlayTogether() {
   const navigate = useNavigate();
 
@@ -68,8 +106,15 @@ export default function PlayTogether() {
   const [showGuide, setShowGuide] = useState(false);
 
   const [cards, setCards] = useState([
-    { id: Date.now(), type: "Viettel", amount: "", serial: "", code: "" },
+    {
+      id: Date.now(),
+      type: "Viettel",
+      amount: "",
+      serial: "",
+      code: "",
+    },
   ]);
+
   const [cardResult, setCardResult] = useState(null);
   const [cardChecking, setCardChecking] = useState(false);
   const resultRef = useRef(null);
@@ -77,51 +122,94 @@ export default function PlayTogether() {
   useEffect(() => {
     if (cardResult) {
       requestAnimationFrame(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        resultRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       });
     }
   }, [cardResult]);
 
-  const addCard = () =>
+  const addCard = () => {
     setCards((prev) => [
       ...prev,
-      { id: Date.now() + Math.random(), type: "Viettel", amount: "", serial: "", code: "" },
+      {
+        id: Date.now() + Math.random(),
+        type: "Viettel",
+        amount: "",
+        serial: "",
+        code: "",
+      },
     ]);
+  };
 
-  const removeCard = (id) =>
-    setCards((prev) => (prev.length === 1 ? prev : prev.filter((c) => c.id !== id)));
+  const removeCard = (id) => {
+    setCards((prev) => {
+      if (prev.length === 1) return prev;
+      return prev.filter((card) => card.id !== id);
+    });
+  };
 
-  const updateCard = (id, field, value) =>
-    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
+  const updateCard = (id, field, value) => {
+    setCards((prev) =>
+      prev.map((card) =>
+        card.id === id ? { ...card, [field]: value } : card
+      )
+    );
+  };
 
   const checkCardTransactions = async (requestIds) => {
     const ids = requestIds.filter(Boolean);
-    if (!ids.length) throw new Error("API không trả về mã giao dịch.");
+
+    if (!ids.length) {
+      throw new Error("API không trả về mã giao dịch.");
+    }
 
     setCardChecking(true);
+
     try {
       for (let attempt = 0; attempt < 40; attempt++) {
         const results = [];
+
         for (const requestId of ids) {
-          const { data, error } = await supabase.functions.invoke("apidoithe-webhook", {
-            body: { transaction_id: requestId },
-          });
-          if (error) throw new Error(error.message || "Không thể kiểm tra trạng thái thẻ.");
+          const { data, error } = await supabase.functions.invoke(
+            "apidoithe-webhook",
+            {
+              body: { transaction_id: requestId },
+            }
+          );
+
+          if (error) {
+            throw new Error(
+              error.message || "Không thể kiểm tra trạng thái thẻ."
+            );
+          }
 
           results.push({
             requestId,
             status: String(data?.status || "").toLowerCase(),
             netAmount: Number(data?.net_amount || 0),
-            reason: data?.reason || data?.message || "Giao dịch không thành công.",
+            reason:
+              data?.reason ||
+              data?.message ||
+              "Giao dịch không thành công.",
           });
         }
 
-        if (results.some((i) => i.status === "failed")) return { status: "failed", results };
-        if (results.length && results.every((i) => i.status === "success"))
-          return { status: "success", results };
+        if (results.some((item) => item.status === "failed")) {
+          return { status: "failed", results };
+        }
 
-        await new Promise((r) => setTimeout(r, 2500));
+        if (
+          results.length &&
+          results.every((item) => item.status === "success")
+        ) {
+          return { status: "success", results };
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2500));
       }
+
       return { status: "processing", results: [] };
     } finally {
       setCardChecking(false);
@@ -139,30 +227,50 @@ export default function PlayTogether() {
     const ok = window.confirm(
       "Bạn đã kiểm tra kỹ loại thẻ và mệnh giá chưa?\n\nĐiền sai mệnh giá có thể khiến thẻ bị mất."
     );
+
     if (!ok) return;
 
     setCardResult(null);
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
         throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      }
 
       const requestIds = [];
-      for (const card of cards) {
-        const { data, error } = await supabase.functions.invoke("submit-card", {
-          body: {
-            telco: card.type,
-            denomination: Number(card.amount),
-            serial: card.serial.trim(),
-            code: card.code.trim(),
-            game: "playtogether",
-            uid: uid.trim(),
-          },
-        });
 
-        if (error) throw new Error(error.message || "Không thể gửi thẻ lên hệ thống.");
-        if (!data?.success || !data?.request_id)
-          throw new Error(data?.message || data?.error || "API không trả về mã giao dịch.");
+      for (const card of cards) {
+        const { data, error } = await supabase.functions.invoke(
+          "submit-card",
+          {
+            body: {
+              telco: card.type,
+              denomination: Number(card.amount),
+              serial: card.serial.trim(),
+              code: card.code.trim(),
+              game: "playtogether",
+              uid: uid.trim(),
+            },
+          }
+        );
+
+        if (error) {
+          throw new Error(
+            error.message || "Không thể gửi thẻ lên hệ thống."
+          );
+        }
+
+        if (!data?.success || !data?.request_id) {
+          throw new Error(
+            data?.message ||
+              data?.error ||
+              "API không trả về mã giao dịch."
+          );
+        }
 
         requestIds.push(String(data.request_id));
       }
@@ -170,33 +278,62 @@ export default function PlayTogether() {
       const result = await checkCardTransactions(requestIds);
 
       if (result.status === "success") {
-        const totalNetAmount = result.results.reduce((s, i) => s + Number(i.netAmount || 0), 0);
-        setCardResult({ status: "success", totalNetAmount, results: result.results });
-        setCards([{ id: Date.now(), type: "Viettel", amount: "", serial: "", code: "" }]);
+        const totalNetAmount = result.results.reduce(
+          (sum, item) => sum + Number(item.netAmount || 0),
+          0
+        );
+
+        setCardResult({
+          status: "success",
+          totalNetAmount,
+          results: result.results,
+        });
+
+        setCards([
+          {
+            id: Date.now(),
+            type: "Viettel",
+            amount: "",
+            serial: "",
+            code: "",
+          },
+        ]);
+
         return;
       }
 
       if (result.status === "failed") {
-        const failed = result.results.find((i) => i.status === "failed");
+        const failed = result.results.find(
+          (item) => item.status === "failed"
+        );
+
         setCardResult({
           status: "failed",
-          reason: failed?.reason || "Thẻ không hợp lệ hoặc giao dịch bị từ chối.",
+          reason:
+            failed?.reason ||
+            "Thẻ không hợp lệ hoặc giao dịch bị từ chối.",
           results: result.results,
         });
+
         return;
       }
 
-      setCardResult({ status: "processing", results: result.results });
+      setCardResult({
+        status: "processing",
+        results: result.results,
+      });
     } catch (error) {
       console.error("Play Together card payment error:", error);
+
       setCardResult({
         status: "error",
-        message: error?.message || "Không thể xử lý thẻ. Vui lòng thử lại sau.",
+        message:
+          error?.message ||
+          "Không thể xử lý thẻ. Vui lòng thử lại sau.",
       });
     }
   };
-
-  return (
+    return (
     <div className="min-h-screen bg-[#F5F7FB] pb-24">
       <TopHeader />
 
@@ -209,6 +346,7 @@ export default function PlayTogether() {
           Quay lại cửa hàng
         </button>
 
+        {/* Header */}
         <div className="mb-7 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 p-6 text-white shadow-lg shadow-blue-500/20 sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -259,7 +397,6 @@ export default function PlayTogether() {
             selectedPackage={selectedPackage}
             uid={uid}
             cards={cards}
-            cardTypes={CARD_TYPES}
             updateCard={updateCard}
             addCard={addCard}
             removeCard={removeCard}
@@ -274,58 +411,25 @@ export default function PlayTogether() {
 
       <BottomNav />
 
-      {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      {showGuide && (
+        <GuideModal onClose={() => setShowGuide(false)} />
+      )}
     </div>
   );
-        }
-import React from "react";
-import {
-  CheckCircle2,
-  ChevronRight,
-  CreditCard,
-  HelpCircle,
-  Loader2,
-  XCircle,
-} from "lucide-react";
+}
 
-const SUPABASE_STORAGE =
-  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
-
-const PACKAGES = [
-  {
-    id: "pt-9",
-    name: "Một ít thỏi vàng",
-    gold: 9,
-    price: 25500,
-    image: `${SUPABASE_STORAGE}/playtogether-9.png`,
-  },
-  {
-    id: "pt-18",
-    name: "Thỏi vàng",
-    gold: 18,
-    price: 50000,
-    image: `${SUPABASE_STORAGE}/playtogether-18.png`,
-  },
-  {
-    id: "pt-45",
-    name: "Vài thỏi vàng",
-    gold: 45,
-    price: 130000,
-    image: `${SUPABASE_STORAGE}/playtogether-45.png`,
-  },
-];
-
-const formatPrice = (v) =>
-  new Intl.NumberFormat("vi-VN").format(Number(v || 0)) + "đ";
-
-/* ============ STEP 1: CHỌN GÓI ============ */
-export function PackageStep({ selectedPackage, setSelectedPackage, onContinue }) {
+/* ---------------- STEP 1: CHỌN GÓI ---------------- */
+function PackageStep({ selectedPackage, setSelectedPackage, onContinue }) {
   return (
     <div className="space-y-6">
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-black text-slate-900">Chọn gói thỏi vàng</h2>
-          <span className="text-xs font-semibold text-slate-400">Bước 1/3</span>
+          <h2 className="text-xl font-black text-slate-900">
+            Chọn gói thỏi vàng
+          </h2>
+          <span className="text-xs font-semibold text-slate-400">
+            Bước 1/3
+          </span>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -352,8 +456,11 @@ export function PackageStep({ selectedPackage, setSelectedPackage, onContinue })
                     src={pkg.image}
                     alt={pkg.name}
                     className="h-24 w-24 rounded-2xl bg-slate-50 object-contain p-1"
-                    onError={(e) => (e.currentTarget.style.opacity = "0.25")}
+                    onError={(e) => {
+                      e.currentTarget.style.opacity = "0.25";
+                    }}
                   />
+
                   <div>
                     <p className="text-lg font-black text-slate-900">
                       {pkg.gold} thỏi vàng
@@ -377,14 +484,15 @@ export function PackageStep({ selectedPackage, setSelectedPackage, onContinue })
         disabled={!selectedPackage}
         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-4 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Tiếp tục <ChevronRight size={19} />
+        Tiếp tục
+        <ChevronRight size={19} />
       </button>
     </div>
   );
 }
 
-/* ============ STEP 2: NHẬP UID ============ */
-export function UidStep({
+/* ---------------- STEP 2: NHẬP UID ---------------- */
+function UidStep({
   uid,
   setUid,
   confirmedUid,
@@ -397,8 +505,12 @@ export function UidStep({
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-black text-slate-900">Nhập ID Play Together</h2>
-        <span className="text-xs font-semibold text-slate-400">Bước 2/3</span>
+        <h2 className="text-xl font-black text-slate-900">
+          Nhập ID Play Together
+        </h2>
+        <span className="text-xs font-semibold text-slate-400">
+          Bước 2/3
+        </span>
       </div>
 
       <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-7">
@@ -450,7 +562,8 @@ export function UidStep({
             className="mt-0.5 h-5 w-5 shrink-0 accent-blue-600"
           />
           <span className="text-xs leading-5 text-amber-800">
-            Tôi đã kiểm tra kỹ ID trên. Nạp sai ID sẽ <b>không được hoàn tiền</b>.
+            Tôi đã kiểm tra kỹ ID trên. Nạp sai ID sẽ{" "}
+            <b>không được hoàn tiền</b>.
           </span>
         </label>
 
@@ -461,25 +574,25 @@ export function UidStep({
           >
             Quay lại
           </button>
+
           <button
             onClick={onContinue}
             disabled={!uid.trim() || !confirmedUid}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3.5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Thanh toán <ChevronRight size={18} />
+            Thanh toán
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
     </div>
   );
-}
-
-/* ============ STEP 3: THANH TOÁN ============ */
-export function PaymentStep({
+            }
+          /* ---------------- STEP 3: THANH TOÁN ---------------- */
+function PaymentStep({
   selectedPackage,
   uid,
   cards,
-  cardTypes,
   updateCard,
   addCard,
   removeCard,
@@ -495,10 +608,12 @@ export function PaymentStep({
         <h2 className="text-xl font-black text-slate-900">
           Thanh toán bằng thẻ cào
         </h2>
-        <span className="text-xs font-semibold text-slate-400">Bước 3/3</span>
+        <span className="text-xs font-semibold text-slate-400">
+          Bước 3/3
+        </span>
       </div>
 
-      {/* Tóm tắt đơn */}
+      {/* Tóm tắt đơn hàng */}
       <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-7">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
@@ -510,6 +625,7 @@ export function PaymentStep({
               ID: <b>{uid}</b>
             </p>
           </div>
+
           <img
             src={selectedPackage.image}
             alt={selectedPackage.name}
@@ -522,14 +638,18 @@ export function PaymentStep({
       <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-7">
         <div className="space-y-4">
           {cards.map((card, index) => {
-            const options = cardTypes[card.type] || [];
+            const options = CARD_TYPES[card.type] || [];
+
             return (
               <div
                 key={card.id}
                 className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
               >
                 <div className="mb-4 flex items-center justify-between">
-                  <p className="font-black text-slate-900">Thẻ #{index + 1}</p>
+                  <p className="font-black text-slate-900">
+                    Thẻ #{index + 1}
+                  </p>
+
                   {cards.length > 1 && (
                     <button
                       onClick={() => removeCard(card.id)}
@@ -543,36 +663,46 @@ export function PaymentStep({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <select
                     value={card.type}
-                    onChange={(e) => updateCard(card.id, "type", e.target.value)}
+                    onChange={(e) =>
+                      updateCard(card.id, "type", e.target.value)
+                    }
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-500"
                   >
-                    {Object.keys(cardTypes).map((t) => (
-                      <option key={t}>{t}</option>
+                    {Object.keys(CARD_TYPES).map((type) => (
+                      <option key={type}>{type}</option>
                     ))}
                   </select>
 
                   <select
                     value={card.amount}
-                    onChange={(e) => updateCard(card.id, "amount", e.target.value)}
+                    onChange={(e) =>
+                      updateCard(card.id, "amount", e.target.value)
+                    }
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-500"
                   >
                     <option value="">Chọn mệnh giá</option>
                     {options.map((item) => (
                       <option key={item.value} value={item.value}>
-                        {formatPrice(item.value)} → {formatPrice(item.received)}
+                        {formatPrice(item.value)} →{" "}
+                        {formatPrice(item.received)}
                       </option>
                     ))}
                   </select>
 
                   <input
                     value={card.serial}
-                    onChange={(e) => updateCard(card.id, "serial", e.target.value)}
+                    onChange={(e) =>
+                      updateCard(card.id, "serial", e.target.value)
+                    }
                     placeholder="Serial"
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:border-blue-500"
                   />
+
                   <input
                     value={card.code}
-                    onChange={(e) => updateCard(card.id, "code", e.target.value)}
+                    onChange={(e) =>
+                      updateCard(card.id, "code", e.target.value)
+                    }
                     placeholder="Mã thẻ"
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:border-blue-500"
                   />
@@ -596,46 +726,95 @@ export function PaymentStep({
         >
           {cardChecking ? (
             <>
-              <Loader2 size={19} className="animate-spin" /> Đang kiểm tra thẻ...
+              <Loader2 size={19} className="animate-spin" />
+              Đang kiểm tra thẻ...
             </>
           ) : (
             <>
-              <CreditCard size={19} /> Nạp tiền
+              <CreditCard size={19} />
+              Nạp tiền
             </>
           )}
         </button>
 
         <div ref={resultRef} className="mt-5">
           {cardResult?.status === "success" && (
-            <ResultBox color="emerald" icon={<CheckCircle2 size={30} className="text-emerald-600" />}>
-              <h3 className="text-lg font-black text-emerald-900">Nạp thẻ thành công!</h3>
-              <p className="mt-1 text-sm text-emerald-700">
-                Đã cộng <b>{formatPrice(cardResult.totalNetAmount)}</b> Coin vào tài khoản CloudVIP.
-              </p>
-            </ResultBox>
+            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+              <div className="flex items-start gap-3">
+                <CheckCircle2
+                  size={30}
+                  className="mt-0.5 shrink-0 text-emerald-600"
+                />
+                <div>
+                  <h3 className="text-lg font-black text-emerald-900">
+                    Nạp thẻ thành công!
+                  </h3>
+                  <p className="mt-1 text-sm text-emerald-700">
+                    Đã cộng{" "}
+                    <b>{formatPrice(cardResult.totalNetAmount)}</b> Coin vào
+                    tài khoản CloudVIP.
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           {cardResult?.status === "failed" && (
-            <ResultBox color="red" icon={<XCircle size={30} className="text-red-600" />}>
-              <h3 className="text-lg font-black text-red-900">Thanh toán không thành công</h3>
-              <p className="mt-1 text-sm text-red-700">{cardResult.reason}</p>
-            </ResultBox>
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-5">
+              <div className="flex items-start gap-3">
+                <XCircle
+                  size={30}
+                  className="mt-0.5 shrink-0 text-red-600"
+                />
+                <div>
+                  <h3 className="text-lg font-black text-red-900">
+                    Thanh toán không thành công
+                  </h3>
+                  <p className="mt-1 text-sm text-red-700">
+                    {cardResult.reason}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           {cardResult?.status === "processing" && (
-            <ResultBox color="amber" icon={<Loader2 size={30} className="animate-spin text-amber-600" />}>
-              <h3 className="text-lg font-black text-amber-900">Giao dịch đang xử lý</h3>
-              <p className="mt-1 text-sm text-amber-700">
-                API chưa xác nhận thành công. Coin chưa được cộng cho đến khi giao dịch thành công.
-              </p>
-            </ResultBox>
+            <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5">
+              <div className="flex items-start gap-3">
+                <Loader2
+                  size={30}
+                  className="mt-0.5 shrink-0 animate-spin text-amber-600"
+                />
+                <div>
+                  <h3 className="text-lg font-black text-amber-900">
+                    Giao dịch đang xử lý
+                  </h3>
+                  <p className="mt-1 text-sm text-amber-700">
+                    API chưa xác nhận thành công. Coin chưa được cộng cho
+                    đến khi giao dịch thành công.
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           {cardResult?.status === "error" && (
-            <ResultBox color="red" icon={<XCircle size={30} className="text-red-600" />}>
-              <h3 className="text-lg font-black text-red-900">Không thể xử lý</h3>
-              <p className="mt-1 text-sm text-red-700">{cardResult.message}</p>
-            </ResultBox>
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-5">
+              <div className="flex items-start gap-3">
+                <XCircle
+                  size={30}
+                  className="mt-0.5 shrink-0 text-red-600"
+                />
+                <div>
+                  <h3 className="text-lg font-black text-red-900">
+                    Không thể xử lý
+                  </h3>
+                  <p className="mt-1 text-sm text-red-700">
+                    {cardResult.message}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -650,50 +829,29 @@ export function PaymentStep({
   );
 }
 
-/* Component phụ cho hộp kết quả */
-function ResultBox({ color, icon, children }) {
-  const colorMap = {
-    emerald: "border-emerald-200 bg-emerald-50",
-    red: "border-red-200 bg-red-50",
-    amber: "border-amber-200 bg-amber-50",
-  };
-  return (
-    <div className={`rounded-3xl border p-5 ${colorMap[color]}`}>
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 shrink-0">{icon}</span>
-        <div>{children}</div>
-      </div>
-    </div>
-  );
-      }
-      import React from "react";
-import { ShieldCheck, X } from "lucide-react";
+/* ---------------- MODAL HƯỚNG DẪN ---------------- */
+function GuideModal({ onClose }) {
+  const guideImages = [
+    `${SUPABASE_STORAGE}/playtogether-guide-1.png`,
+    `${SUPABASE_STORAGE}/playtogether-guide-2.png`,
+    `${SUPABASE_STORAGE}/playtogether-guide-3.png`,
+  ];
 
-const SUPABASE_STORAGE =
-  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
+  const guideSteps = [
+    {
+      title: "Mở game và vào phần Cài đặt",
+      desc: "Mở ứng dụng Play Together VNG trên điện thoại, bấm vào biểu tượng Cài đặt (hình bánh răng) ở góc màn hình.",
+    },
+    {
+      title: "Chọn mục Tài khoản",
+      desc: "Trong menu Cài đặt, chọn mục Tài khoản để xem thông tin cá nhân của bạn.",
+    },
+    {
+      title: "Copy ID tài khoản của bạn",
+      desc: "Dãy số hiển thị bên cạnh chữ ID chính là ID tài khoản. Bấm vào để copy và dán vào ô nhập ID ở trang nạp.",
+    },
+  ];
 
-const GUIDE_IMAGES = [
-  `${SUPABASE_STORAGE}/playtogether-guide-1.png`,
-  `${SUPABASE_STORAGE}/playtogether-guide-2.png`,
-  `${SUPABASE_STORAGE}/playtogether-guide-3.png`,
-];
-
-const STEPS = [
-  {
-    title: "Mở game và vào phần Cài đặt",
-    desc: "Mở ứng dụng Play Together VNG trên điện thoại, bấm vào biểu tượng Cài đặt (hình bánh răng) ở góc màn hình.",
-  },
-  {
-    title: "Chọn mục Tài khoản",
-    desc: "Trong menu Cài đặt, chọn mục Tài khoản để xem thông tin cá nhân của bạn.",
-  },
-  {
-    title: "Copy ID tài khoản của bạn",
-    desc: "Dãy số hiển thị bên cạnh chữ ID chính là ID tài khoản. Bấm vào để copy và dán vào ô nhập ID ở trang nạp.",
-  },
-];
-
-export default function GuideModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
@@ -704,10 +862,15 @@ export default function GuideModal({ onClose }) {
               <ShieldCheck size={20} className="text-blue-600" />
             </span>
             <div>
-              <h3 className="font-black text-slate-900">Cách lấy ID Play Together</h3>
-              <p className="text-xs text-slate-500">Làm theo 3 bước đơn giản</p>
+              <h3 className="font-black text-slate-900">
+                Cách lấy ID Play Together
+              </h3>
+              <p className="text-xs text-slate-500">
+                Làm theo 3 bước đơn giản
+              </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100"
@@ -718,7 +881,7 @@ export default function GuideModal({ onClose }) {
 
         {/* Body */}
         <div className="space-y-6 p-5">
-          {STEPS.map((step, index) => (
+          {guideSteps.map((step, index) => (
             <div key={index} className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
@@ -728,20 +891,25 @@ export default function GuideModal({ onClose }) {
               </div>
 
               <img
-                src={GUIDE_IMAGES[index]}
+                src={guideImages[index]}
                 alt={`Hướng dẫn bước ${index + 1}`}
                 className="w-full rounded-2xl border border-slate-200 object-contain"
-                onError={(e) => (e.currentTarget.style.display = "none")}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
 
-              <p className="text-sm leading-6 text-slate-600">{step.desc}</p>
+              <p className="text-sm leading-6 text-slate-600">
+                {step.desc}
+              </p>
             </div>
           ))}
 
           <div className="rounded-2xl bg-amber-50 p-4">
             <p className="text-xs leading-5 text-amber-800">
-              <b>Lưu ý:</b> ID Play Together là dãy số (thường từ 8-12 chữ số).
-              Nạp sai ID sẽ không được hoàn tiền, hãy kiểm tra thật kỹ trước khi thanh toán.
+              <b>Lưu ý:</b> ID Play Together là dãy số (thường từ 8-12 chữ
+              số). Nạp sai ID sẽ không được hoàn tiền, hãy kiểm tra thật
+              kỹ trước khi thanh toán.
             </p>
           </div>
         </div>
@@ -758,4 +926,4 @@ export default function GuideModal({ onClose }) {
       </div>
     </div>
   );
-}                                          
+}
