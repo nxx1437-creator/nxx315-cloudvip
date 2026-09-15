@@ -25,8 +25,9 @@ import {
   Coins,
   Loader2,
   Image as ImageIcon,
-  Bell,
+    Bell,
   Trophy,
+  Gamepad2,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient";
@@ -34,6 +35,7 @@ import emailjs from "@emailjs/browser";
 import BanUserModal from "../components/BanUserModal";
 import RobloxOrdersTab from "../pages/RobloxOrdersTab";
 import LienQuanOrdersTab from "../pages/LienQuanOrdersTab";
+import PlayTogetherOrdersTab from "../pages/PlayTogetherOrdersTab";
 import BroadcastForm from "../components/admin/BroadcastForm";
 
 const ADMIN_CHAT_ID = "6152450878";
@@ -57,6 +59,7 @@ const tabs = [
   { id: "orders", label: "Đơn hàng", icon: Package },
   { id: "roblox-orders", label: "Roblox", icon: Gift },
   { id: "lienquan-orders", label: "Liên Quân", icon: Trophy },
+  { id: "playtogether-orders", label: "Play Together", icon: Gamepad2 },
   { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
   { id: "packages", label: "Gói nạp", icon: Coins },
   { id: "users", label: "Người dùng", icon: Users },
@@ -115,6 +118,7 @@ export default function Admin() {
         {activeTab === "orders" && <OrdersTab />}
         {activeTab === "roblox-orders" && <RobloxOrdersTab />}
         {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
+        {activeTab === "playtogether-orders" && <PlayTogetherOrdersTab />}
         {activeTab === "tasks" && <TasksTab />}
         {activeTab === "packages" && <PackagesTab />}
         {activeTab === "users" && <UsersTab />}
