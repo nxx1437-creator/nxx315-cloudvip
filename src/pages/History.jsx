@@ -35,11 +35,17 @@ const PACKAGE_IMAGES = {
   "lq-500": `${STORAGE_URL}/lien-quan-mobile.png`,
   "lq-1000": `${STORAGE_URL}/lien-quan-mobile.png`,
   "lq-2000": `${STORAGE_URL}/lien-quan-mobile.png`,
+
+  // Play Together
+  "pt-9": `${STORAGE_URL}/play-together-9.png`,
+  "pt-18": `${STORAGE_URL}/play-together-18.png`,
+  "pt-45": `${STORAGE_URL}/play-together-45.png`,
 };
 
 const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
-  lienquan: `${STORAGE_URL}/lienquan.png`,
+  lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
+  playtogether: `${STORAGE_URL}/play-together-vng.png`,
 };
 
 function detectGame(packageId) {
@@ -59,6 +65,14 @@ function detectGame(packageId) {
     return "lienquan";
   }
 
+  if (
+    pid.startsWith("pt-") ||
+    pid.includes("playtogether") ||
+    pid.includes("play-together")
+  ) {
+    return "playtogether";
+  }
+
   return null;
 }
 
@@ -66,22 +80,51 @@ function getGameName(packageId) {
   const game = detectGame(packageId);
   if (game === "roblox") return "Roblox";
   if (game === "lienquan") return "Liên Quân Mobile";
+  if (game === "playtogether") return "Play Together";
   return null;
 }
 
-function getOrderImage(order) {
+const getOrderTitle = (order) => {
   const gameKey = detectGame(order?.package_id);
 
-  return (
-    order?.image_url ||
-    order?.package_image ||
-    order?.product_image ||
-    order?.logo_url ||
-    PACKAGE_IMAGES[order?.package_id] ||
-    (gameKey ? GAME_FALLBACK[gameKey] : null) ||
-    null
-  );
-}
+  if (order?.package_name) {
+    return order.package_name;
+  }
+
+  if (gameKey === "playtogether" && order?.pt_gold != null) {
+    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
+  }
+
+  if (gameKey === "lienquan" && order?.quanhuy != null) {
+    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
+  }
+
+  if (gameKey === "roblox" && order?.robux != null) {
+    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
+  }
+
+  if (order?.robux != null) {
+    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
+  }
+
+  if (order?.quanhuy != null) {
+    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
+  }
+
+  if (order?.pt_gold != null) {
+    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
+  }
+
+  if (order?.title) {
+    return order.title;
+  }
+
+  if (order?.type === "redemption") {
+    return "Đổi thưởng";
+  }
+
+  return "Đơn hàng";
+};
 
 const statusInfo = (status) => {
   switch (String(status || "").toLowerCase()) {
@@ -605,14 +648,26 @@ const mergeOrder = (oldOrder, newOrder) => {
               )}
 
               {order.uid && (
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">UID Liên Quân</p>
+  <div className="rounded-2xl bg-slate-50 p-4">
+    <p className="text-xs text-slate-400">
+      {detectGame(order.package_id) === "playtogether"
+        ? "UID Play Together"
+        : "UID Liên Quân"}
+    </p>
+    <p className="mt-1 font-semibold text-slate-900">
+      {order.uid}
+    </p>
+  </div>
+)}
 
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.uid}
-                  </p>
-                </div>
-              )}
+{order.pt_uid && !order.uid && (
+  <div className="rounded-2xl bg-slate-50 p-4">
+    <p className="text-xs text-slate-400">UID Play Together</p>
+    <p className="mt-1 font-semibold text-slate-900">
+      {order.pt_uid}
+    </p>
+  </div>
+)}
 
               {order.package_id && (
                 <div className="rounded-2xl bg-slate-50 p-4">
@@ -629,12 +684,16 @@ const mergeOrder = (oldOrder, newOrder) => {
                   )}
 
                   {order.quanhuy != null && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
-                    </p>
-                  )}
-                </div>
-              )}
+  <p className="mt-1 text-xs text-slate-500">
+    {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
+  </p>
+)}
+
+{order.pt_gold != null && (
+  <p className="mt-1 text-xs text-slate-500">
+    {Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng
+  </p>
+)}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
