@@ -937,7 +937,7 @@ function detectGame(packageId) {
     return 'lien-quan-mobile.png';
   }
 if (packageId.startsWith('pt-') || packageId.includes('playtogether') || packageId.includes('play-together')) {
-  return getImageUrl('play-together.png');
+  return getImageUrl('play-together-vng.png');
     }
   return null;
 }
