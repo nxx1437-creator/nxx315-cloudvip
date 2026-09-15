@@ -84,47 +84,19 @@ function getGameName(packageId) {
   return null;
 }
 
-const getOrderTitle = (order) => {
+function getOrderImage(order) {
   const gameKey = detectGame(order?.package_id);
 
-  if (order?.package_name) {
-    return order.package_name;
-  }
-
-  if (gameKey === "playtogether" && order?.pt_gold != null) {
-    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
-  }
-
-  if (gameKey === "lienquan" && order?.quanhuy != null) {
-    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
-  }
-
-  if (gameKey === "roblox" && order?.robux != null) {
-    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
-  }
-
-  if (order?.robux != null) {
-    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
-  }
-
-  if (order?.quanhuy != null) {
-    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
-  }
-
-  if (order?.pt_gold != null) {
-    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
-  }
-
-  if (order?.title) {
-    return order.title;
-  }
-
-  if (order?.type === "redemption") {
-    return "Đổi thưởng";
-  }
-
-  return "Đơn hàng";
-};
+  return (
+    order?.image_url ||
+    order?.package_image ||
+    order?.product_image ||
+    order?.logo_url ||
+    PACKAGE_IMAGES[order?.package_id] ||
+    (gameKey ? GAME_FALLBACK[gameKey] : null) ||
+    null
+  );
+}
 
 const statusInfo = (status) => {
   switch (String(status || "").toLowerCase()) {
@@ -223,6 +195,10 @@ const getOrderTitle = (order) => {
     return order.package_name;
   }
 
+  if (gameKey === "playtogether" && order?.pt_gold != null) {
+    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
+  }
+
   if (gameKey === "lienquan" && order?.quanhuy != null) {
     return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
   }
@@ -237,6 +213,10 @@ const getOrderTitle = (order) => {
 
   if (order?.quanhuy != null) {
     return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
+  }
+
+  if (order?.pt_gold != null) {
+    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
   }
 
   if (order?.title) {
@@ -257,7 +237,7 @@ const mergeOrder = (oldOrder, newOrder) => {
     _source: oldOrder?._source || newOrder?._source,
   };
 };
-    export default function History() {
+export default function History() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -276,7 +256,6 @@ const mergeOrder = (oldOrder, newOrder) => {
     if (selected?._source) {
       return selected._source;
     }
-
     return sourceFromUrl || null;
   }, [selected, sourceFromUrl]);
 
@@ -296,15 +275,8 @@ const mergeOrder = (oldOrder, newOrder) => {
 
     const found = items.find((item) => {
       const sameId = String(item.id) === String(id);
-
-      if (!sameId) {
-        return false;
-      }
-
-      if (selectedSource) {
-        return item._source === selectedSource;
-      }
-
+      if (!sameId) return false;
+      if (selectedSource) return item._source === selectedSource;
       return true;
     });
 
@@ -315,10 +287,7 @@ const mergeOrder = (oldOrder, newOrder) => {
 
   const loadHistory = async (showLoading = false) => {
     const currentRequestId = ++requestIdRef.current;
-
-    if (showLoading) {
-      setLoading(true);
-    }
+    if (showLoading) setLoading(true);
 
     try {
       const {
@@ -326,13 +295,10 @@ const mergeOrder = (oldOrder, newOrder) => {
         error: authError,
       } = await supabase.auth.getUser();
 
-      if (authError) {
-        throw authError;
-      }
+      if (authError) throw authError;
 
       if (!user) {
         if (!mountedRef.current) return;
-
         setHistory([]);
         setSelected(null);
         setLoading(false);
@@ -354,13 +320,8 @@ const mergeOrder = (oldOrder, newOrder) => {
           .order("created_at", { ascending: false }),
       ]);
 
-      if (ordersResult.error) {
-        throw ordersResult.error;
-      }
-
-      if (redemptionResult.error) {
-        throw redemptionResult.error;
-      }
+      if (ordersResult.error) throw ordersResult.error;
+      if (redemptionResult.error) throw redemptionResult.error;
 
       if (!mountedRef.current || currentRequestId !== requestIdRef.current) {
         return;
@@ -391,18 +352,13 @@ const mergeOrder = (oldOrder, newOrder) => {
   };
 
   const applyRealtimeChange = (source, payload) => {
-    if (!mountedRef.current) {
-      return;
-    }
+    if (!mountedRef.current) return;
 
     const eventType = payload.eventType;
 
     if (eventType === "DELETE") {
       const deletedId = payload.old?.id;
-
-      if (deletedId == null) {
-        return;
-      }
+      if (deletedId == null) return;
 
       setHistory((current) => {
         const updated = current.filter(
@@ -412,19 +368,14 @@ const mergeOrder = (oldOrder, newOrder) => {
               String(item.id) === String(deletedId)
             )
         );
-
         updateSelectedFromHistory(updated);
         return updated;
       });
-
       return;
     }
 
     const newRow = payload.new;
-
-    if (!newRow?.id) {
-      return;
-    }
+    if (!newRow?.id) return;
 
     setHistory((current) => {
       const index = current.findIndex(
@@ -436,10 +387,7 @@ const mergeOrder = (oldOrder, newOrder) => {
       let updated;
 
       if (index === -1) {
-        updated = [
-          { ...newRow, _source: source },
-          ...current,
-        ];
+        updated = [{ ...newRow, _source: source }, ...current];
       } else {
         updated = [...current];
         updated[index] = mergeOrder(updated[index], {
@@ -468,7 +416,6 @@ const mergeOrder = (oldOrder, newOrder) => {
 
   useEffect(() => {
     mountedRef.current = true;
-
     loadHistory(true);
 
     const ordersChannel = supabase
@@ -505,343 +452,19 @@ const mergeOrder = (oldOrder, newOrder) => {
     setRefreshing(true);
     await loadHistory(false);
   };
-        if (id) {
-    const order = selected;
+    if (id) {
+  const order = selected;
 
-    if (loading && !order) {
-      return (
-        <div className="min-h-screen bg-slate-50">
-          <TopHeader />
-
-          <main className="mx-auto max-w-2xl px-4 py-8">
-            <div className="animate-pulse rounded-3xl bg-white p-6 shadow-sm">
-              <div className="mb-5 h-8 w-32 rounded bg-slate-200" />
-              <div className="mb-3 h-5 w-48 rounded bg-slate-200" />
-              <div className="h-4 w-72 rounded bg-slate-200" />
-            </div>
-          </main>
-
-          <BottomNav />
-        </div>
-      );
-    }
-
-    if (!order) {
-      return (
-        <div className="min-h-screen bg-slate-50">
-          <TopHeader />
-
-          <main className="mx-auto max-w-2xl px-4 py-8">
-            <button
-              onClick={() => navigate("/history")}
-              className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-700"
-            >
-              <ArrowLeft size={18} />
-              Quay lại lịch sử
-            </button>
-
-            <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
-              <PackageCheck className="mx-auto mb-3 text-slate-400" size={42} />
-
-              <h1 className="text-lg font-bold text-slate-900">
-                Không tìm thấy đơn hàng
-              </h1>
-
-              <p className="mt-2 text-sm text-slate-500">
-                Đơn hàng có thể không tồn tại hoặc không thuộc tài khoản này.
-              </p>
-            </div>
-          </main>
-
-          <BottomNav />
-        </div>
-      );
-    }
-
-    const status = statusInfo(order.status);
-    const StatusIcon = status.icon;
-    const orderImage = getOrderImage(order);
-    const gameName = getGameName(order.package_id);
-
+  if (loading && !order) {
     return (
-      <div className="min-h-screen bg-slate-50 pb-24">
+      <div className="min-h-screen bg-slate-50">
         <TopHeader />
 
-        <main className="mx-auto max-w-2xl px-4 py-5">
-          <button
-            onClick={() => navigate("/history")}
-            className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700"
-          >
-            <ArrowLeft size={18} />
-            Quay lại lịch sử
-          </button>
-
-          <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-            {/* Product header */}
-            <div className="border-b border-slate-100 p-5">
-              <div className="flex items-start gap-4">
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-                  {orderImage ? (
-                    <img
-                      src={orderImage}
-                      alt={getOrderTitle(order)}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <PackageCheck size={28} className="text-slate-300" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-slate-400">
-                    Chi tiết đơn hàng
-                  </p>
-
-                  <h1 className="mt-1 text-xl font-bold text-slate-900">
-                    {getOrderTitle(order)}
-                  </h1>
-
-                  {gameName && (
-                    <p className="mt-1 text-xs font-semibold text-blue-600">
-                      {gameName}
-                    </p>
-                  )}
-
-                  <p className="mt-1 text-xs text-slate-400">
-                    Mã đơn: {order.order_code || order.id}
-                  </p>
-                </div>
-
-                <div
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
-                >
-                  <StatusIcon size={15} />
-                  {status.label}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 p-5">
-              {order.roblox_username && (
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">Tài khoản Roblox</p>
-
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.roblox_username}
-                  </p>
-
-                  {order.roblox_user_id && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      User ID: {order.roblox_user_id}
-                    </p>
-                  )}
-
-                  {order.roblox_display_name &&
-                    order.roblox_display_name !== order.roblox_username && (
-                      <p className="mt-1 text-xs text-slate-500">
-                        Display Name: {order.roblox_display_name}
-                      </p>
-                    )}
-                </div>
-              )}
-
-              {order.uid && (
-  <div className="rounded-2xl bg-slate-50 p-4">
-    <p className="text-xs text-slate-400">
-      {detectGame(order.package_id) === "playtogether"
-        ? "UID Play Together"
-        : "UID Liên Quân"}
-    </p>
-    <p className="mt-1 font-semibold text-slate-900">
-      {order.uid}
-    </p>
-  </div>
-)}
-
-{order.pt_uid && !order.uid && (
-  <div className="rounded-2xl bg-slate-50 p-4">
-    <p className="text-xs text-slate-400">UID Play Together</p>
-    <p className="mt-1 font-semibold text-slate-900">
-      {order.pt_uid}
-    </p>
-  </div>
-)}
-
-              {order.package_id && (
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">Gói đã chọn</p>
-
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.package_id}
-                  </p>
-
-                  {order.robux != null && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.robux).toLocaleString("vi-VN")} Robux
-                    </p>
-                  )}
-
-                  {order.quanhuy != null && (
-  <p className="mt-1 text-xs text-slate-500">
-    {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
-  </p>
-)}
-
-{order.pt_gold != null && (
-  <p className="mt-1 text-xs text-slate-500">
-    {Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng
-  </p>
-)}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">Giá trị</p>
-
-                  <p className="mt-1 font-bold text-slate-900">
-                    {formatMoney(getOrderAmount(order))}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">Phương thức</p>
-
-                  <p className="mt-1 font-bold capitalize text-slate-900">
-                    {order.payment_method || "—"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-100 p-4">
-                <p className="text-xs text-slate-400">Thời gian tạo đơn</p>
-
-                <p className="mt-1 text-sm font-semibold text-slate-800">
-                  {formatDate(order.created_at)}
-                </p>
-              </div>
-
-              {order.updated_at && (
-                <div className="rounded-2xl border border-slate-100 p-4">
-                  <p className="text-xs text-slate-400">Cập nhật gần nhất</p>
-
-                  <p className="mt-1 text-sm font-semibold text-slate-800">
-                    {formatDate(order.updated_at)}
-                  </p>
-                </div>
-              )}
-
-              {order.status === "pending" && (
-                <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
-                  <div className="flex items-start gap-3">
-                    <Clock3 className="mt-0.5 shrink-0" size={19} />
-
-                    <div>
-                      <p className="font-bold">Đơn hàng đang chờ thanh toán</p>
-                      <p className="mt-1 text-xs leading-5">
-                        Vui lòng hoàn tất thanh toán theo hướng dẫn để đơn hàng
-                        được kiểm tra.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {order.status === "paid" && (
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
-                  <div className="flex items-start gap-3">
-                    <CreditCard className="mt-0.5 shrink-0" size={19} />
-
-                    <div>
-                      <p className="font-bold">Đã ghi nhận chuyển khoản</p>
-                      <p className="mt-1 text-xs leading-5">
-                        Hệ thống đã ghi nhận thanh toán. Đơn hàng đang được kiểm tra.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {order.status === "processing" && (
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
-                  <div className="flex items-start gap-3">
-                    <RefreshCw className="mt-0.5 shrink-0" size={19} />
-
-                    <div>
-                      <p className="font-bold">Đang xử lý đơn hàng</p>
-                      <p className="mt-1 text-xs leading-5">
-                        Đơn đã được duyệt và đang được xử lý để giao.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {order.status === "delivered" && (
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 shrink-0" size={19} />
-
-                    <div>
-                      <p className="font-bold">Đơn hàng đã giao</p>
-                      <p className="mt-1 text-xs leading-5">
-                        Đơn hàng đã được giao thành công. Cảm ơn bạn đã sử dụng dịch vụ.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {order.status === "rejected" && (
-                <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
-                  <div className="flex items-start gap-3">
-                    <XCircle className="mt-0.5 shrink-0" size={19} />
-
-                    <div>
-                      <p className="font-bold">Đơn hàng bị từ chối</p>
-
-                      {order.note && (
-                        <p className="mt-1 text-xs leading-5">
-                          Lý do: {order.note}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {order.status === "failed" && (
-                <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
-                  <div className="flex items-start gap-3">
-                    <XCircle className="mt-0.5 shrink-0" size={19} />
-
-                    <div>
-                      <p className="font-bold">Đơn hàng thất bại</p>
-
-                      {order.note && (
-                        <p className="mt-1 text-xs leading-5">{order.note}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {order.coin_cost != null && (
-                <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4">
-                  <div className="flex items-center gap-2">
-                    <Coins className="text-amber-600" size={19} />
-
-                    <span className="text-sm font-semibold text-slate-700">
-                      Coin đã sử dụng
-                    </span>
-                  </div>
-
-                  <span className="font-bold text-amber-700">
-                    {Number(order.coin_cost).toLocaleString("vi-VN")}
-                  </span>
-                </div>
-              )}
-            </div>
+        <main className="mx-auto max-w-2xl px-4 py-8">
+          <div className="animate-pulse rounded-3xl bg-white p-6 shadow-sm">
+            <div className="mb-5 h-8 w-32 rounded bg-slate-200" />
+            <div className="mb-3 h-5 w-48 rounded bg-slate-200" />
+            <div className="h-4 w-72 rounded bg-slate-200" />
           </div>
         </main>
 
@@ -850,7 +473,314 @@ const mergeOrder = (oldOrder, newOrder) => {
     );
   }
 
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <TopHeader />
+
+        <main className="mx-auto max-w-2xl px-4 py-8">
+          <button
+            onClick={() => navigate("/history")}
+            className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-700"
+          >
+            <ArrowLeft size={18} />
+            Quay lại lịch sử
+          </button>
+
+          <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
+            <PackageCheck className="mx-auto mb-3 text-slate-400" size={42} />
+
+            <h1 className="text-lg font-bold text-slate-900">
+              Không tìm thấy đơn hàng
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Đơn hàng có thể không tồn tại hoặc không thuộc tài khoản này.
+            </p>
+          </div>
+        </main>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
+  const status = statusInfo(order.status);
+  const StatusIcon = status.icon;
+  const orderImage = getOrderImage(order);
+  const gameName = getGameName(order.package_id);
+
   return (
+    <div className="min-h-screen bg-slate-50 pb-24">
+      <TopHeader />
+
+      <main className="mx-auto max-w-2xl px-4 py-5">
+        <button
+          onClick={() => navigate("/history")}
+          className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700"
+        >
+          <ArrowLeft size={18} />
+          Quay lại lịch sử
+        </button>
+
+        <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          {/* Product header */}
+          <div className="border-b border-slate-100 p-5">
+            <div className="flex items-start gap-4">
+              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
+                {orderImage ? (
+                  <img
+                    src={orderImage}
+                    alt={getOrderTitle(order)}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <PackageCheck size={28} className="text-slate-300" />
+                  </div>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-slate-400">
+                  Chi tiết đơn hàng
+                </p>
+
+                <h1 className="mt-1 text-xl font-bold text-slate-900">
+                  {getOrderTitle(order)}
+                </h1>
+
+                {gameName && (
+                  <p className="mt-1 text-xs font-semibold text-blue-600">
+                    {gameName}
+                  </p>
+                )}
+
+                <p className="mt-1 text-xs text-slate-400">
+                  Mã đơn: {order.order_code || order.id}
+                </p>
+              </div>
+
+              <div
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
+              >
+                <StatusIcon size={15} />
+                {status.label}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 p-5">
+            {order.roblox_username && (
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">Tài khoản Roblox</p>
+
+                <p className="mt-1 font-semibold text-slate-900">
+                  {order.roblox_username}
+                </p>
+
+                {order.roblox_user_id && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    User ID: {order.roblox_user_id}
+                  </p>
+                )}
+
+                {order.roblox_display_name &&
+                  order.roblox_display_name !== order.roblox_username && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Display Name: {order.roblox_display_name}
+                    </p>
+                  )}
+              </div>
+            )}
+
+            {order.pt_uid && (
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">UID Play Together</p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {order.pt_uid}
+                </p>
+              </div>
+            )}
+
+            {order.uid && !order.pt_uid && (
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">UID Liên Quân</p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {order.uid}
+                </p>
+              </div>
+            )}
+
+            {order.package_id && (
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">Gói đã chọn</p>
+
+                <p className="mt-1 font-semibold text-slate-900">
+                  {order.package_id}
+                </p>
+
+                {order.robux != null && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {Number(order.robux).toLocaleString("vi-VN")} Robux
+                  </p>
+                )}
+
+                {order.quanhuy != null && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
+                  </p>
+                )}
+
+                {order.pt_gold != null && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">Giá trị</p>
+                <p className="mt-1 font-bold text-slate-900">
+                  {formatMoney(getOrderAmount(order))}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">Phương thức</p>
+                <p className="mt-1 font-bold capitalize text-slate-900">
+                  {order.payment_method || "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 p-4">
+              <p className="text-xs text-slate-400">Thời gian tạo đơn</p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">
+                {formatDate(order.created_at)}
+              </p>
+            </div>
+
+            {order.updated_at && (
+              <div className="rounded-2xl border border-slate-100 p-4">
+                <p className="text-xs text-slate-400">Cập nhật gần nhất</p>
+                <p className="mt-1 text-sm font-semibold text-slate-800">
+                  {formatDate(order.updated_at)}
+                </p>
+              </div>
+            )}
+
+            {order.status === "pending" && (
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
+                <div className="flex items-start gap-3">
+                  <Clock3 className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="font-bold">Đơn hàng đang chờ thanh toán</p>
+                    <p className="mt-1 text-xs leading-5">
+                      Vui lòng hoàn tất thanh toán theo hướng dẫn để đơn hàng
+                      được kiểm tra.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.status === "paid" && (
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                <div className="flex items-start gap-3">
+                  <CreditCard className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="font-bold">Đã ghi nhận chuyển khoản</p>
+                    <p className="mt-1 text-xs leading-5">
+                      Hệ thống đã ghi nhận thanh toán. Đơn hàng đang được kiểm tra.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.status === "processing" && (
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
+                <div className="flex items-start gap-3">
+                  <RefreshCw className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="font-bold">Đang xử lý đơn hàng</p>
+                    <p className="mt-1 text-xs leading-5">
+                      Đơn đã được duyệt và đang được xử lý để giao.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.status === "delivered" && (
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="font-bold">Đơn hàng đã giao</p>
+                    <p className="mt-1 text-xs leading-5">
+                      Đơn hàng đã được giao thành công. Cảm ơn bạn đã sử dụng dịch vụ.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.status === "rejected" && (
+              <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
+                <div className="flex items-start gap-3">
+                  <XCircle className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="font-bold">Đơn hàng bị từ chối</p>
+                    {order.note && (
+                      <p className="mt-1 text-xs leading-5">
+                        Lý do: {order.note}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.status === "failed" && (
+              <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
+                <div className="flex items-start gap-3">
+                  <XCircle className="mt-0.5 shrink-0" size={19} />
+                  <div>
+                    <p className="font-bold">Đơn hàng thất bại</p>
+                    {order.note && (
+                      <p className="mt-1 text-xs leading-5">{order.note}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {order.coin_cost != null && (
+              <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4">
+                <div className="flex items-center gap-2">
+                  <Coins className="text-amber-600" size={19} />
+                  <span className="text-sm font-semibold text-slate-700">
+                    Coin đã sử dụng
+                  </span>
+                </div>
+                <span className="font-bold text-amber-700">
+                  {Number(order.coin_cost).toLocaleString("vi-VN")}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+    }
+          return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <TopHeader />
 
@@ -989,9 +919,23 @@ const mergeOrder = (oldOrder, newOrder) => {
                         </div>
                       )}
 
-                      {order.uid && !order.roblox_username && (
+                      {order.pt_uid && (
                         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                          <span className="text-xs text-slate-400">UID</span>
+                          <span className="text-xs text-slate-400">
+                            UID Play Together
+                          </span>
+
+                          <span className="max-w-[60%] truncate text-xs font-semibold text-slate-700">
+                            {order.pt_uid}
+                          </span>
+                        </div>
+                      )}
+
+                      {order.uid && !order.pt_uid && (
+                        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                          <span className="text-xs text-slate-400">
+                            UID Liên Quân
+                          </span>
 
                           <span className="max-w-[60%] truncate text-xs font-semibold text-slate-700">
                             {order.uid}
@@ -1010,4 +954,4 @@ const mergeOrder = (oldOrder, newOrder) => {
       <BottomNav />
     </div>
   );
-                  }
+                          }        
