@@ -920,16 +920,61 @@ function getHistoryAmount(order) {
   return '—';
 }
 
+function detectGame(packageId) {
+  const pid = String(packageId || '').toLowerCase();
+
+  if (
+    pid.startsWith('vng-') ||
+    pid.startsWith('card-') ||
+    pid.startsWith('rbx-') ||
+    pid.includes('roblox') ||
+    pid.includes('robux')
+  ) {
+    return 'roblox';
+  }
+
+  if (pid.startsWith('lq-') || pid.includes('lienquan')) {
+    return 'lienquan';
+  }
+
+  return null;
+}
+
+function getGameName(packageId) {
+  const game = detectGame(packageId);
+  if (game === 'roblox') return 'Roblox';
+  if (game === 'lienquan') return 'Liên Quân Mobile';
+  return null;
+}
+
 function getHistoryName(order) {
-  return (
-    order?.package_name ||
-    order?.product_name ||
-    order?.game_name ||
-    order?.game ||
-    (order?.historySource === 'orders'
-      ? 'Đơn nạp game'
-      : 'Đơn đổi thưởng')
-  );
+  if (order?.package_name) return order.package_name;
+  if (order?.product_name) return order.product_name;
+
+  const gameKey = detectGame(order?.package_id);
+
+  if (gameKey === 'lienquan' && order?.quanhuy != null) {
+    return `${Number(order.quanhuy).toLocaleString('vi-VN')} Quân Huy`;
+  }
+
+  if (gameKey === 'roblox' && order?.robux != null) {
+    return `${Number(order.robux).toLocaleString('vi-VN')} Robux`;
+  }
+
+  if (order?.robux != null) {
+    return `${Number(order.robux).toLocaleString('vi-VN')} Robux`;
+  }
+
+  if (order?.quanhuy != null) {
+    return `${Number(order.quanhuy).toLocaleString('vi-VN')} Quân Huy`;
+  }
+
+  if (order?.game_name) return order.game_name;
+  if (order?.game) return order.game;
+
+  return order?.historySource === 'orders'
+    ? 'Đơn nạp game'
+    : 'Đơn đổi thưởng';
 }
 
 function getHistoryImage(order) {
@@ -949,15 +994,20 @@ function getHistoryImage(order) {
   ).toLowerCase();
 
   if (
-    packageId.startsWith('vng-') ||
-    packageId.startsWith('rbx-') ||
-    packageId.startsWith('roblox-') ||
-    packageId.includes('robux') ||
-    packageId.includes('roblox') ||
-    order?.roblox_user_id != null
-  ) {
-    return getImageUrl('roblox.png');
-  }
+  packageId.startsWith('vng-') ||
+  packageId.startsWith('rbx-') ||
+  packageId.startsWith('roblox-') ||
+  packageId.startsWith('card-') ||
+  packageId.includes('robux') ||
+  packageId.includes('roblox') ||
+  order?.roblox_user_id != null
+) {
+  return getImageUrl('roblox.png');
+}
+
+if (packageId.startsWith('lq-') || packageId.includes('lienquan')) {
+  return getImageUrl('lienquan.png');
+}
 
   const text = `
     ${order?.game_name || ''}
@@ -1350,18 +1400,19 @@ function StoreHistoryPreview() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p
-                        className="
-                          truncate
-                          text-sm
-                          font-black
-                          text-gray-900
-                        "
-                      >
-                        {getHistoryName(
-                          order
-                        )}
-                      </p>
+  <p className="truncate text-sm font-black text-gray-900">
+    {getHistoryName(order)}
+  </p>
+
+  {getGameName(order.package_id) && (
+    <p className="mt-0.5 text-[10px] font-semibold text-blue-600">
+      {getGameName(order.package_id)}
+    </p>
+  )}
+
+  <p className="mt-1 text-[10px] text-gray-400">
+    {formatHistoryDate(order.created_at)}
+  </p>
 
                       <p
                         className="
