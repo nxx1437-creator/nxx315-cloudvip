@@ -13,6 +13,8 @@ import {
   Wallet,
   XCircle,
   AlertTriangle,
+  Info,
+  X,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient.js";
@@ -353,7 +355,6 @@ function PackageRow({ pkg, active, onSelect }) {
           : "border-slate-200 hover:border-sky-200 hover:bg-slate-50"
       }`}
     >
-      {/* Ảnh */}
       <div className="relative shrink-0">
         <img
           src={pkg.image}
@@ -367,7 +368,6 @@ function PackageRow({ pkg, active, onSelect }) {
         )}
       </div>
 
-      {/* Info */}
       <div className="min-w-0 flex-1">
         <p className="text-base font-black text-slate-900">
           {pkg.robux.toLocaleString("vi-VN")} Robux{" "}
@@ -386,7 +386,6 @@ function PackageRow({ pkg, active, onSelect }) {
         </div>
       </div>
 
-      {/* Discount badge */}
       <div className="shrink-0 flex flex-col items-end gap-1.5">
         <span className="rounded-md bg-sky-500 px-2 py-1 text-[10px] font-black text-white">
           -{pkg.discount}%
@@ -409,6 +408,8 @@ function UsernameSection({
   creatingOrder,
   selectedPackage,
 }) {
+  const [showGuide, setShowGuide] = useState(false);
+
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {/* Order info */}
@@ -486,6 +487,15 @@ function UsernameSection({
           </button>
         </div>
 
+        {/* Nút hướng dẫn */}
+        <button
+          onClick={() => setShowGuide(true)}
+          className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 transition hover:text-sky-700 hover:underline"
+        >
+          <Info size={13} />
+          Hướng dẫn lấy Tên tài khoản Roblox
+        </button>
+
         {/* Result */}
         {robloxUser && (
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
@@ -556,10 +566,50 @@ function UsernameSection({
           </button>
         </div>
       </div>
+
+      {/* Modal hướng dẫn */}
+      {showGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <h3 className="text-base font-black text-slate-900">
+                Hướng dẫn lấy Tên tài khoản Roblox
+              </h3>
+              <button
+                onClick={() => setShowGuide(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Vui lòng cung cấp{" "}
+              <strong className="text-slate-900">Tên tài khoản (@username)</strong>{" "}
+              chính xác để shop giao hàng nhanh và đúng tài khoản.
+            </p>
+
+            <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+              <img
+                src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-guide.png"
+                alt="Hướng dẫn lấy username Roblox"
+                className="w-full object-contain"
+              />
+            </div>
+
+            <button
+              onClick={() => setShowGuide(false)}
+              className="mt-5 w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/30"
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
-        }
-       function PaymentSection({ order, onBack, onPaid }) {
+      }
+          function PaymentSection({ order, onBack, onPaid }) {
   const navigate = useNavigate();
   const [method, setMethod] = useState("coin");
   const [profile, setProfile] = useState(null);
@@ -1007,7 +1057,6 @@ function UsernameSection({
                 <p className="mt-1 text-xs text-slate-500">Chọn loại thẻ và nhập thông tin thẻ</p>
               </div>
 
-              {/* Discounts */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                 {cardTypes.map((type) => (
                   <div key={type} className="rounded-lg bg-slate-50 p-2.5 text-center">
@@ -1017,7 +1066,6 @@ function UsernameSection({
                 ))}
               </div>
 
-              {/* Warning */}
               <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5">
                 <div className="flex items-start gap-2">
                   <AlertTriangle size={16} className="mt-0.5 shrink-0 text-rose-600" />
@@ -1027,8 +1075,7 @@ function UsernameSection({
                 </div>
               </div>
 
-                  {/* Cards */}
-              {cards.map((card, index) => (
+                  {cards.map((card, index) => (
                 <div key={card.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-black text-slate-900">Thẻ #{index + 1}</p>
@@ -1131,7 +1178,6 @@ function UsernameSection({
                 {processing ? "Đang xử lý..." : "Nạp tiền"}
               </button>
 
-              {/* Results */}
               {cardResult && (
                 <div ref={cardResultRef} className="scroll-mt-24 space-y-3">
                   {cardResult.status === "success" && (
@@ -1186,7 +1232,7 @@ function UsernameSection({
                     </div>
                   )}
 
-                  {cardResult.status === "error" && (
+                {cardResult.status === "error" && (
                     <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
                       <div className="flex items-start gap-3">
                         <XCircle className="mt-0.5 shrink-0 text-rose-600" size={20} />
@@ -1243,4 +1289,4 @@ function BankRow({ label, value, copy = false, copyValue }) {
       </div>
     </div>
   );
-                        }
+}
