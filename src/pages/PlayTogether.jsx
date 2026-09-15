@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   Info,
   X,
+  Coins,
+  Copy,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient.js";
@@ -59,6 +61,16 @@ const PACKAGES = [
     image: `${SUPABASE_STORAGE}/play-together-45.png`,
   },
 ];
+
+// =====================================================
+// BANK INFO
+// =====================================================
+
+const BANK = {
+  name: "MB Bank",
+  account: "0939339622",
+  holder: "NGUYEN VAN CO",
+};
 
 // =====================================================
 // CARD TYPES
@@ -117,6 +129,10 @@ const CARD_TYPES = {
 const formatPrice = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + "đ";
 
+function copyText(text) {
+  navigator.clipboard?.writeText(text);
+}
+
 // =====================================================
 // MAIN COMPONENT
 // =====================================================
@@ -128,7 +144,13 @@ export default function PlayTogether() {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [uid, setUid] = useState("");
 
-  const [method, setMethod] = useState("direct");
+  const [order, setOrder] = useState(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
+
+  const [method, setMethod] = useState("coin");
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
   const [cards, setCards] = useState([
     {
       id: Date.now(),
@@ -144,6 +166,10 @@ export default function PlayTogether() {
   const resultRef = useRef(null);
 
   useEffect(() => {
+    loadProfile();
+  }, []);
+
+  useEffect(() => {
     if (cardResult) {
       requestAnimationFrame(() => {
         resultRef.current?.scrollIntoView({
@@ -154,7 +180,30 @@ export default function PlayTogether() {
     }
   }, [cardResult]);
 
-  const continueToPayment = () => {
+  const loadProfile = async () => {
+    setLoadingProfile(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("coins")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error("Load coins error:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  const continueToPayment = async () => {
     if (!selectedPackage) {
       alert("Vui lòng chọn gói thỏi vàng.");
       return;
@@ -163,7 +212,121 @@ export default function PlayTogether() {
       alert("Vui lòng nhập UID Play Together.");
       return;
     }
-    setStep("payment");
+
+    setCreatingOrder(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        alert("Bạn chưa đăng nhập.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke(
+        "create-playtogether-order",
+        {
+          body: {
+            uid: uid.trim(),
+            package_id: selectedPackage.id,
+            payment_method: method,
+          },
+        }
+      );
+
+      if (error) {
+        throw new Error(error.message || "Không thể tạo đơn hàng.");
+      }
+
+      if (!data?.order) {
+        throw new Error("Không nhận được đơn hàng.");
+      }
+
+      setOrder(data.order);
+      setStep("payment");
+    } catch (error) {
+      console.error("Create Play Together order:", error);
+      alert(error?.message || "Không thể tạo đơn. Hãy thử lại sau.");
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
+  const handleCoinPayment = async () => {
+    if (!order?.id) return alert("Không tìm thấy đơn hàng.");
+    if (order.status !== "pending")
+      return alert("Đơn hàng này không còn ở trạng thái chờ thanh toán.");
+
+    const requiredCoins = Number(order.amount || 0);
+    const coinBalance = Number(profile?.coins || 0);
+
+    if (coinBalance < requiredCoins) {
+      return alert(
+        `Không đủ Coin.\n\nCần: ${requiredCoins.toLocaleString(
+          "vi-VN"
+        )} Coin\nBạn có: ${coinBalance.toLocaleString("vi-VN")} Coin`
+      );
+    }
+
+    try {
+      const { data: paymentResult, error: paymentError } = await supabase.rpc(
+        "pay_playtogether_order_with_coins",
+        { p_order_id: order.id }
+      );
+
+      if (paymentError) {
+        throw new Error(paymentError.message);
+      }
+
+      if (!paymentResult?.success) {
+        const err = paymentResult?.error || "";
+        if (err === "INSUFFICIENT_COINS")
+          throw new Error("Không đủ Coin để thanh toán.");
+        if (err === "ORDER_NOT_FOUND") throw new Error("Không tìm thấy đơn hàng.");
+        if (err === "NOT_YOUR_ORDER")
+          throw new Error("Bạn không có quyền thanh toán đơn này.");
+        if (err === "ORDER_NOT_PENDING")
+          throw new Error("Đơn hàng đã được thanh toán.");
+        throw new Error("Thanh toán thất bại: " + err);
+      }
+
+      alert(
+        `🎉 Thanh toán thành công!\n\n` +
+          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
+          `Coin còn lại: ${Number(paymentResult.remaining_coins).toLocaleString(
+            "vi-VN"
+          )} Coin`
+      );
+
+      navigate(`/history/order/${order.id}`);
+    } catch (error) {
+      alert(error?.message || "Không thể thanh toán bằng Coin.");
+    }
+  };
+
+  const handleConfirmTransfer = async () => {
+    if (!order?.id || order.status !== "pending") return;
+
+    const ok = window.confirm(
+      "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
+    );
+    if (!ok) return;
+
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "paid", payment_method: "bank" })
+        .eq("id", order.id)
+        .eq("status", "pending");
+
+      if (error) throw error;
+
+      alert("✅ Đã ghi nhận. Admin sẽ kiểm tra và duyệt đơn.");
+      navigate(`/history/order/${order.id}`);
+    } catch (error) {
+      alert("Không thể xác nhận đơn hàng.\n\n" + (error?.message || ""));
+    }
   };
 
   const addCard = () => {
@@ -368,18 +531,11 @@ export default function PlayTogether() {
     }
   };
 
-  const handleDirectPayment = () => {
-    alert(
-      "Phần nạp trực tiếp đã có giao diện. Cần API/backend Play Together để xử lý UID và giao vàng."
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#F5F7FB] pb-24 text-slate-900">
       <TopHeader />
 
       <main className="mx-auto w-full max-w-4xl px-4 py-6">
-        {/* Header */}
         <div className="mb-6 flex items-center gap-3">
           <button
             onClick={() => navigate("/store")}
@@ -391,18 +547,23 @@ export default function PlayTogether() {
             <h1 className="text-xl font-black tracking-tight text-slate-900">
               Nạp Play Together
             </h1>
-            <p className="text-xs text-slate-500">
-              Chọn gói thỏi vàng để nạp
-            </p>
+            <p className="text-xs text-slate-500">Chọn gói thỏi vàng để nạp</p>
           </div>
         </div>
 
-        {/* Step indicator */}
         <div className="mb-6 flex items-center gap-2">
           <StepDot active={step === "package"} number={1} label="Chọn gói" />
-          <div className={`h-px flex-1 ${step !== "package" ? "bg-sky-500" : "bg-slate-200"}`} />
+          <div
+            className={`h-px flex-1 ${
+              step !== "package" ? "bg-sky-500" : "bg-slate-200"
+            }`}
+          />
           <StepDot active={step === "uid"} number={2} label="Nhập UID" />
-          <div className={`h-px flex-1 ${step === "payment" ? "bg-sky-500" : "bg-slate-200"}`} />
+          <div
+            className={`h-px flex-1 ${
+              step === "payment" ? "bg-sky-500" : "bg-slate-200"
+            }`}
+          />
           <StepDot active={step === "payment"} number={3} label="Thanh toán" />
         </div>
 
@@ -419,6 +580,7 @@ export default function PlayTogether() {
             uid={uid}
             setUid={setUid}
             selectedPackage={selectedPackage}
+            creatingOrder={creatingOrder}
             onBack={() => setStep("package")}
             onContinue={continueToPayment}
           />
@@ -430,12 +592,16 @@ export default function PlayTogether() {
             setMethod={setMethod}
             selectedPackage={selectedPackage}
             uid={uid}
+            order={order}
+            profile={profile}
+            loadingProfile={loadingProfile}
             cards={cards}
             updateCard={updateCard}
             addCard={addCard}
             removeCard={removeCard}
             onBack={() => setStep("uid")}
-            onDirectPayment={handleDirectPayment}
+            onCoinPayment={handleCoinPayment}
+            onConfirmTransfer={handleConfirmTransfer}
             onCardPayment={handleCardPayment}
             cardResult={cardResult}
             cardChecking={cardChecking}
@@ -470,11 +636,10 @@ function StepDot({ active, number, label }) {
       </span>
     </div>
   );
-          }
-    function PackageStep({ selectedPackage, setSelectedPackage, onContinue }) {
+    }
+function PackageStep({ selectedPackage, setSelectedPackage, onContinue }) {
   return (
     <div className="space-y-6">
-      {/* Banner */}
       <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
         <AlertTriangle size={20} className="mt-0.5 shrink-0 text-amber-600" />
         <div>
@@ -482,19 +647,20 @@ function StepDot({ active, number, label }) {
             Thông báo quan trọng
           </p>
           <p className="mt-1 text-xs leading-5 text-amber-800">
-            Bạn vui lòng kiểm tra kỹ UID Play Together trước khi nạp.
-            NXX315 Studio Rewards chưa hỗ trợ hoàn tiền với trường hợp nhập sai UID.
+            Bạn vui lòng kiểm tra kỹ UID Play Together trước khi nạp. NXX315
+            Studio Rewards chưa hỗ trợ hoàn tiền với trường hợp nhập sai UID.
           </p>
         </div>
       </div>
 
-      {/* Packages */}
       <section>
         <div className="mb-3 flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
             <Wallet size={16} />
           </span>
-          <h2 className="text-base font-black text-slate-900">Gói thỏi vàng</h2>
+          <h2 className="text-base font-black text-slate-900">
+            Gói thỏi vàng
+          </h2>
         </div>
 
         <div className="space-y-3">
@@ -509,7 +675,6 @@ function StepDot({ active, number, label }) {
         </div>
       </section>
 
-      {/* Continue */}
       <button
         onClick={onContinue}
         disabled={!selectedPackage}
@@ -581,11 +746,12 @@ function PackageRow({ pkg, active, onSelect }) {
       )}
     </button>
   );
-    }
-      function UidStep({
+      }
+    function UidStep({
   uid,
   setUid,
   selectedPackage,
+  creatingOrder,
   onBack,
   onContinue,
 }) {
@@ -595,12 +761,12 @@ function PackageRow({ pkg, active, onSelect }) {
     {
       step: 1,
       url: `${SUPABASE_STORAGE}/playtogether-guide-1.png`,
-      title: "Bước 1: Mở game Play Together và bấm vô điện thoại",
+      title: "Bước 1: Mở game Play Together",
     },
     {
       step: 2,
       url: `${SUPABASE_STORAGE}/playtogether-guide-2.png`,
-      title: "Bước 2: bấm vào cài đặt ",
+      title: "Bước 2: Vào Hồ sơ cá nhân",
     },
     {
       step: 3,
@@ -611,7 +777,6 @@ function PackageRow({ pkg, active, onSelect }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      {/* Order info */}
       {selectedPackage && (
         <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4">
           <div className="flex items-center justify-between">
@@ -625,7 +790,9 @@ function PackageRow({ pkg, active, onSelect }) {
                 }}
               />
               <div>
-                <p className="text-xs font-medium text-slate-500">Gói đã chọn</p>
+                <p className="text-xs font-medium text-slate-500">
+                  Gói đã chọn
+                </p>
                 <p className="text-sm font-black text-slate-900">
                   {selectedPackage.gold} thỏi vàng
                 </p>
@@ -638,9 +805,7 @@ function PackageRow({ pkg, active, onSelect }) {
         </div>
       )}
 
-      {/* Main card */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        {/* Header */}
         <div className="mb-5 flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
             <User size={20} />
@@ -655,7 +820,6 @@ function PackageRow({ pkg, active, onSelect }) {
           </div>
         </div>
 
-        {/* Input */}
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
           UID Play Together
         </label>
@@ -677,7 +841,6 @@ function PackageRow({ pkg, active, onSelect }) {
           />
         </div>
 
-        {/* Nút hướng dẫn */}
         <button
           onClick={() => setShowGuide(true)}
           className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 transition hover:text-sky-700 hover:underline"
@@ -686,7 +849,6 @@ function PackageRow({ pkg, active, onSelect }) {
           Hướng dẫn lấy UID Play Together
         </button>
 
-        {/* Info box */}
         <div className="mt-5 flex gap-3 rounded-xl border border-sky-100 bg-sky-50/50 p-3.5">
           <ShieldCheck size={18} className="mt-0.5 shrink-0 text-sky-600" />
           <div>
@@ -694,12 +856,12 @@ function PackageRow({ pkg, active, onSelect }) {
               Kiểm tra chính xác trước khi thanh toán
             </p>
             <p className="mt-1 text-[11px] leading-5 text-sky-700">
-              Hãy kiểm tra kỹ UID Play Together. Thỏi vàng sẽ được nạp theo UID đã xác nhận — sai UID không hoàn tiền.
+              Hãy kiểm tra kỹ UID Play Together. Thỏi vàng sẽ được nạp theo
+              UID đã xác nhận — sai UID không hoàn tiền.
             </p>
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="mt-6 flex gap-3">
           <button
             onClick={onBack}
@@ -710,20 +872,27 @@ function PackageRow({ pkg, active, onSelect }) {
 
           <button
             onClick={onContinue}
-            disabled={!uid.trim()}
+            disabled={!uid.trim() || creatingOrder}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Thanh toán
-            <ChevronRight size={16} />
+            {creatingOrder ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Đang tạo đơn...
+              </>
+            ) : (
+              <>
+                Thanh toán
+                <ChevronRight size={16} />
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Modal hướng dẫn — 3 ảnh dọc */}
       {showGuide && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4">
           <div className="relative flex max-h-[90vh] w-full max-w-md flex-col rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl">
-            {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 p-5">
               <div>
                 <h3 className="text-base font-black text-slate-900">
@@ -741,7 +910,6 @@ function PackageRow({ pkg, active, onSelect }) {
               </button>
             </div>
 
-            {/* Body — scroll ảnh dọc */}
             <div className="flex-1 space-y-4 overflow-y-auto p-5">
               {GUIDE_IMAGES.map((item) => (
                 <div key={item.step}>
@@ -764,7 +932,6 @@ function PackageRow({ pkg, active, onSelect }) {
               ))}
             </div>
 
-            {/* Footer */}
             <div className="border-t border-slate-100 p-5">
               <button
                 onClick={() => setShowGuide(false)}
@@ -778,24 +945,48 @@ function PackageRow({ pkg, active, onSelect }) {
       )}
     </div>
   );
-          }
+      }
 function PaymentStep({
   method,
   setMethod,
   selectedPackage,
   uid,
+  order,
+  profile,
+  loadingProfile,
   cards,
   updateCard,
   addCard,
   removeCard,
   onBack,
-  onDirectPayment,
+  onCoinPayment,
+  onConfirmTransfer,
   onCardPayment,
   cardResult,
   cardChecking,
   resultRef,
 }) {
-  const expectedCoins = Math.floor(selectedPackage.price);
+  if (!order) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <XCircle className="mx-auto mb-3 text-rose-500" size={42} />
+        <h2 className="text-base font-black text-slate-900">
+          Không tìm thấy đơn hàng
+        </h2>
+        <button
+          onClick={onBack}
+          className="mt-5 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-5 py-3 text-sm font-bold text-white"
+        >
+          Quay lại
+        </button>
+      </div>
+    );
+  }
+
+  const transferContent = `NAP PLAYTOGETHER ${order.order_code} ${order.pt_uid} ${order.pt_gold}GOLD`;
+  const coinBalance = Number(profile?.coins || 0);
+  const requiredCoins = Number(order.amount || 0);
+  const enoughCoins = coinBalance >= requiredCoins;
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -815,48 +1006,36 @@ function PaymentStep({
         <div className="bg-gradient-to-br from-sky-400 to-blue-600 p-5 text-white">
           <p className="text-xs font-medium text-sky-100">Tổng thanh toán</p>
           <p className="mt-1 text-2xl font-black">
-            {formatPrice(selectedPackage.price)}
+            {formatPrice(order.amount)}
           </p>
           <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold backdrop-blur-sm">
-            UID: {uid}
+            Mã đơn: {order.order_code}
           </div>
         </div>
 
         <div className="space-y-4 p-5">
-          {/* Package info */}
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
-            <div className="flex items-center gap-3">
-              <img
-                src={selectedPackage.image}
-                alt={selectedPackage.name}
-                className="h-12 w-12 rounded-lg object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.opacity = "0.25";
-                }}
-              />
-              <div>
-                <p className="text-xs text-slate-400">Gói đã chọn</p>
-                <p className="text-sm font-black text-slate-900">
-                  {selectedPackage.gold} thỏi vàng
-                </p>
-                <p className="text-xs text-slate-500">{selectedPackage.name}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Method tabs */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
-              onClick={() => setMethod("direct")}
+              onClick={() => setMethod("coin")}
               className={`rounded-xl border px-3 py-3 text-xs font-black transition ${
-                method === "direct"
+                method === "coin"
                   ? "border-sky-500 bg-sky-50 text-sky-700"
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              🎮 Nạp trực tiếp
+              🪙 Coin
             </button>
-
+            <button
+              onClick={() => setMethod("bank")}
+              className={`rounded-xl border px-3 py-3 text-xs font-black transition ${
+                method === "bank"
+                  ? "border-sky-500 bg-sky-50 text-sky-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              🏦 Chuyển khoản
+            </button>
             <button
               onClick={() => setMethod("card")}
               className={`rounded-xl border px-3 py-3 text-xs font-black transition ${
@@ -869,59 +1048,139 @@ function PaymentStep({
             </button>
           </div>
 
-          {/* ==================== DIRECT ==================== */}
-          {method === "direct" && (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle
-                    size={18}
-                    className="mt-0.5 shrink-0 text-amber-600"
-                  />
-                  <div>
-                    <p className="text-sm font-black text-amber-900">
-                      Nạp trực tiếp vào UID
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-amber-700">
-                      Admin sẽ nạp thỏi vàng trực tiếp vào UID{" "}
-                      <strong>{uid}</strong> trong vòng 24 giờ. Vui lòng kiểm
-                      tra kỹ UID trước khi xác nhận.
-                    </p>
-                  </div>
+          {/* ============ COIN ============ */}
+          {method === "coin" && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-sky-800">
+                    Số dư Coin
+                  </span>
+                  <span className="text-lg font-black text-sky-700">
+                    {loadingProfile
+                      ? "..."
+                      : `${coinBalance.toLocaleString("vi-VN")} Coin`}
+                  </span>
                 </div>
               </div>
 
               <div className="rounded-xl bg-slate-50 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500">UID nhận vàng</span>
-                  <span className="font-mono text-sm font-black text-slate-900">
-                    {uid}
+                  <span className="text-xs text-slate-500">
+                    Cần thanh toán
                   </span>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">Gói nạp</span>
                   <span className="text-sm font-black text-slate-900">
-                    {selectedPackage.gold} thỏi vàng
+                    {requiredCoins.toLocaleString("vi-VN")} Coin
                   </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">Số tiền</span>
-                  <span className="text-sm font-black text-sky-600">
-                    {formatPrice(selectedPackage.price)}
+                  <span className="text-xs text-slate-500">
+                    Sau thanh toán
+                  </span>
+                  <span
+                    className={`text-sm font-black ${
+                      enoughCoins ? "text-emerald-600" : "text-rose-500"
+                    }`}
+                  >
+                    {Math.max(coinBalance - requiredCoins, 0).toLocaleString(
+                      "vi-VN"
+                    )}{" "}
+                    Coin
                   </span>
                 </div>
               </div>
 
               <button
-                onClick={onDirectPayment}
-                className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-4 text-sm font-black text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
+                onClick={onCoinPayment}
+                disabled={loadingProfile || !enoughCoins}
+                className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-4 text-sm font-black text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Xác nhận nạp trực tiếp
+                {enoughCoins
+                  ? `Thanh toán ${requiredCoins.toLocaleString(
+                      "vi-VN"
+                    )} Coin`
+                  : "Không đủ Coin"}
               </button>
             </div>
           )}
 
-          {/* ==================== CARD ==================== */}
+          {/* ============ BANK ============ */}
+          {method === "bank" && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-black text-slate-900">
+                    Thông tin ngân hàng
+                  </h3>
+                  <span className="rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold text-sky-700">
+                    MB Bank
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <BankRow label="Ngân hàng" value={BANK.name} />
+                  <BankRow
+                    label="Số tài khoản"
+                    value={BANK.account}
+                    copy
+                  />
+                  <BankRow label="Chủ tài khoản" value={BANK.holder} />
+                  <BankRow
+                    label="Số tiền"
+                    value={formatPrice(order.amount)}
+                    copyValue={String(order.amount)}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-xs font-black text-amber-900">
+                  Nội dung chuyển khoản
+                </p>
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-white p-2.5">
+                  <code className="min-w-0 flex-1 break-all text-xs font-bold text-slate-800">
+                    {transferContent}
+                  </code>
+                  <button
+                    onClick={() => copyText(transferContent)}
+                    className="shrink-0 rounded-lg bg-amber-100 p-2 text-amber-700"
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-amber-800">
+                  Vui lòng ghi chính xác nội dung chuyển khoản.
+                </p>
+              </div>
+
+              {order.status === "paid" ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2
+                      size={22}
+                      className="text-emerald-600"
+                    />
+                    <div>
+                      <p className="text-sm font-black text-emerald-900">
+                        Đã gửi xác nhận
+                      </p>
+                      <p className="mt-0.5 text-xs text-emerald-700">
+                        Đơn đang chờ admin kiểm tra.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={onConfirmTransfer}
+                  className="w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-4 text-sm font-black text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
+                >
+                  ✓ Tôi đã chuyển khoản
+                </button>
+              )}
+            </div>
+          )}
+            {/* ============ CARD ============ */}
           {method === "card" && (
             <div className="space-y-4">
               <div>
@@ -933,7 +1192,6 @@ function PaymentStep({
                 </p>
               </div>
 
-              {/* Card list */}
               {cards.map((card, index) => {
                 const options = CARD_TYPES[card.type] || [];
 
@@ -1069,15 +1327,6 @@ function PaymentStep({
                 </div>
               </div>
 
-              <div className="rounded-xl bg-blue-50 p-4">
-                <p className="text-sm font-black text-blue-900">
-                  Coin dự kiến cần: {formatPrice(expectedCoins)}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-blue-700">
-                  Số Coin thực tế được cộng sẽ theo net_amount từ APIĐổiThẻ.
-                </p>
-              </div>
-
               <button
                 onClick={onCardPayment}
                 disabled={cardChecking}
@@ -1110,8 +1359,8 @@ function PaymentStep({
                         </p>
                         <p className="mt-0.5 text-xs text-emerald-700">
                           Đã cộng{" "}
-                          <b>{formatPrice(cardResult.totalNetAmount)}</b> Coin
-                          vào ví CloudVIP.
+                          <b>{formatPrice(cardResult.totalNetAmount)}</b>{" "}
+                          Coin vào ví CloudVIP.
                         </p>
                       </div>
                     </div>
@@ -1190,3 +1439,35 @@ function PaymentStep({
     </div>
   );
 }
+
+function BankRow({ label, value, copy = false, copyValue }) {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard?.writeText(copyValue || value);
+      alert("Đã sao chép!");
+    } catch (error) {
+      console.error("Copy error:", error);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+      <span className="text-xs text-slate-500">{label}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="break-all text-right text-sm font-black text-slate-900">
+          {value}
+        </span>
+        {(copy || copyValue) && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-200 hover:text-sky-600"
+            title="Sao chép"
+          >
+            <Copy size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+                        }
