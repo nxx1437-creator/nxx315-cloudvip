@@ -940,18 +940,25 @@ function detectGame(packageId) {
   ) {
     return 'playtogether';
   }
+  
+  if (
+    pid.startsWith('ff-') ||
+    pid.includes('freefire') ||
+    pid.includes('free-fire')
+  ) {
+    return 'freefire';
+  }
 
   return null;
 }
-
 function getGameName(packageId) {
   const game = detectGame(packageId);
   if (game === 'roblox') return 'Roblox';
   if (game === 'lienquan') return 'Liên Quân Mobile';
   if (game === 'playtogether') return 'Play Together';
+  if (game === 'freefire') return 'Free Fire';   // 👈 THÊM DÒNG NÀY
   return null;
 }
-
 function getHistoryName(order) {
   if (order?.package_name) return order.package_name;
   if (order?.product_name) return order.product_name;
@@ -970,6 +977,10 @@ function getHistoryName(order) {
     return `${Number(order.robux).toLocaleString('vi-VN')} Robux`;
   }
 
+if (gameKey === 'freefire' && order?.ff_diamond != null) {
+  return `${Number(order.ff_diamond).toLocaleString('vi-VN')} Kim Cương`;
+}
+
   if (order?.robux != null) {
     return `${Number(order.robux).toLocaleString('vi-VN')} Robux`;
   }
@@ -981,6 +992,10 @@ function getHistoryName(order) {
   if (order?.pt_gold != null) {
     return `${Number(order.pt_gold).toLocaleString('vi-VN')} Thỏi Vàng`;
   }
+  
+if (order?.ff_diamond != null) {
+  return `${Number(order.ff_diamond).toLocaleString('vi-VN')} Kim Cương`;
+}
 
   if (order?.game_name) return order.game_name;
   if (order?.game) return order.game;
@@ -1034,6 +1049,14 @@ function getHistoryImage(order) {
   ) {
     return getImageUrl('play-together-vng.png');
   }
+  
+if (
+  packageId.startsWith('ff-') ||
+  packageId.includes('freefire') ||
+  packageId.includes('free-fire')
+) {
+  return getImageUrl('free-fire.png');
+}
 
   // Fallback theo text
   const text = `
