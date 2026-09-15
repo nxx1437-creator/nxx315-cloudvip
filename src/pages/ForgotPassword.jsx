@@ -1,21 +1,23 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import OtpInput from "../components/OtpInput.jsx";
+import MfaChallenge from "../components/MfaChallenge.jsx"; // <-- Import Modal MFA
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  // Thêm step "mfa" cho giai đoạn xác thực 2 lớp
-  const [step, setStep] = useState("email"); 
+  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [mfaCode, setMfaCode] = useState(""); // State mới cho mã MFA
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // State mới để bật/tắt Modal MFA
+  const [showMfaModal, setShowMfaModal] = useState(false);
 
   const handleSendOtp = async (e) => {
     e?.preventDefault();
@@ -45,7 +47,6 @@ export default function ForgotPassword() {
     setStep("otp");
   };
 
-  // Hàm xử lý khi bấm nút "Xác nhận đổi mật khẩu" ở bước OTP
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     if (otp.length !== 6) {
@@ -60,7 +61,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      const { error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: otp,
         type: "email",
@@ -73,24 +74,19 @@ export default function ForgotPassword() {
         return;
       }
 
-      console.log("Verify success, session:", verifyData?.session);
-
-      // --- BẮT ĐẦU PHẦN SỬA ---
-      // Kiểm tra xem tài khoản có bật MFA không
+      // --- KIỂM TRA MFA ---
       const { data: factorsData } = await supabase.auth.mfa.listFactors();
-      const hasMfa = factorsData?.totp && factorsData.totp.length > 0;
+      const hasMfa = factorsData?.totp?.some((f) => f.status === "verified");
 
       if (hasMfa) {
-        // Nếu có MFA, chuyển sang bước nhập mã MFA
+        // Nếu có MFA, mở Modal xác thực 2 lớp
         setLoading(false);
-        setStep("mfa");
+        setShowMfaModal(true);
         return;
       }
 
-      // Nếu không có MFA, tiến hành đổi mật khẩu luôn
+      // Nếu không có MFA, đổi mật khẩu luôn
       await updatePassword();
-      // --- KẾT THÚC PHẦN SỬA ---
-
     } catch (err) {
       console.error("Unexpected error:", err);
       setLoading(false);
@@ -98,51 +94,14 @@ export default function ForgotPassword() {
     }
   };
 
-  // Hàm xử lý xác thực mã MFA (chỉ chạy khi user có bật MFA)
-  const handleVerifyMfa = async (e) => {
-    e?.preventDefault();
-    if (mfaCode.length !== 6) {
-      setError("Vui lòng nhập đủ 6 số từ ứng dụng xác thực.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-
-    try {
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const totpFactor = factors.totp[0];
-
-      // Tạo challenge
-      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
-        factorId: totpFactor.id,
-      });
-      if (challengeError) throw challengeError;
-
-      // Verify challenge bằng mã user nhập
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: totpFactor.id,
-        challengeId: challenge.id,
-        code: mfaCode,
-      });
-      if (verifyError) throw verifyError;
-
-      // Xác thực MFA thành công, giờ mới tiến hành đổi mật khẩu
-      await updatePassword();
-
-    } catch (err) {
-      console.error("MFA Verify error:", err);
-      setLoading(false);
-      setError(err.message || "Mã xác thực 2 lớp không đúng.");
-    }
-  };
-
-  // Hàm dùng chung để đổi mật khẩu
+  // Hàm dùng chung để đổi mật khẩu (gọi sau khi đã có session hợp lệ)
   const updatePassword = async () => {
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
     setLoading(false);
+    setShowMfaModal(false);
 
     if (updateError) {
       console.error("Update password error:", updateError);
@@ -156,160 +115,134 @@ export default function ForgotPassword() {
     });
   };
 
+  // Hàm callback khi Modal MFA xác thực thành công
+  const handleMfaVerified = () => {
+    // Session đã lên AAL2, giờ mới đổi mật khẩu
+    setLoading(true);
+    updatePassword();
+  };
+
   const handleBackToEmail = () => {
     setStep("email");
     setOtp("");
     setNewPassword("");
-    setMfaCode("");
     setError("");
+    setShowMfaModal(false);
   };
 
   return (
-    <AuthShell
-      title="Khôi phục mật khẩu"
-      subtitle={
-        step === "email"
-          ? "Nhập email để nhận mã xác minh."
-          : step === "mfa"
-          ? "Nhập mã từ ứng dụng xác thực 2 lớp của bạn."
-          : `Nhập mã OTP đã gửi đến ${email}`
-      }
-    >
-      {step === "email" && (
-        <form onSubmit={handleSendOtp} className="space-y-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email của bạn"
-            autoFocus
-            className="h-14 w-full rounded-full border border-slate-300 bg-white px-5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
-          />
+    <>
+      <AuthShell
+        title="Khôi phục mật khẩu"
+        subtitle={
+          step === "email"
+            ? "Nhập email để nhận mã xác minh."
+            : `Nhập mã OTP đã gửi đến ${email}`
+        }
+      >
+        {step === "email" && (
+          <form onSubmit={handleSendOtp} className="space-y-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email của bạn"
+              autoFocus
+              className="h-14 w-full rounded-full border border-slate-300 bg-white px-5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+            />
 
-          {error && (
-            <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-              {error}
-            </p>
-          )}
+            {error && (
+              <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+                {error}
+              </p>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
-          >
-            {loading ? <Loader2 size={20} className="animate-spin" /> : "Gửi mã xác minh"}
-          </button>
-        </form>
-      )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
+            >
+              {loading ? <Loader2 size={20} className="animate-spin" /> : "Gửi mã xác minh"}
+            </button>
+          </form>
+        )}
 
-      {step === "otp" && (
-        <form onSubmit={handleVerifyOtp} className="space-y-4">
-          <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Mã OTP
-            </label>
-            <OtpInput value={otp} onChange={setOtp} length={6} disabled={loading} />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Mật khẩu mới
-            </label>
-            <div className="relative">
-              <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type={showPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Ít nhất 6 ký tự"
-                className="h-14 w-full rounded-full border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+        {step === "otp" && (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Mã OTP
+              </label>
+              <OtpInput value={otp} onChange={setOtp} length={6} disabled={loading} />
             </div>
-          </div>
 
-          {error && (
-            <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
-          >
-            {loading ? <Loader2 size={20} className="animate-spin" /> : "Xác nhận đổi mật khẩu"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleBackToEmail}
-            className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-500 transition hover:text-slate-700"
-          >
-            <ArrowLeft size={12} />
-            Đổi email khác
-          </button>
-        </form>
-      )}
-
-      {/* --- BƯỚC MỚI: NHẬP MÃ MFA --- */}
-      {step === "mfa" && (
-        <form onSubmit={handleVerifyMfa} className="space-y-4">
-          <div className="flex flex-col items-center justify-center py-2 text-center">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-              <ShieldCheck size={24} />
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Mật khẩu mới
+              </label>
+              <div className="relative">
+                <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Ít nhất 6 ký tự"
+                  className="h-14 w-full rounded-full border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
-            <p className="text-sm text-slate-600">
-              Tài khoản của bạn đang bật xác thực 2 lớp. Vui lòng mở ứng dụng
-              <strong> Google Authenticator / Authy</strong> và nhập mã 6 số.
-            </p>
-          </div>
 
-          <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Mã xác thực 2 lớp
-            </label>
-            <OtpInput value={mfaCode} onChange={setMfaCode} length={6} disabled={loading} />
-          </div>
+            {error && (
+              <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+                {error}
+              </p>
+            )}
 
-          {error && (
-            <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-              {error}
-            </p>
-          )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
+            >
+              {loading ? <Loader2 size={20} className="animate-spin" /> : "Xác nhận đổi mật khẩu"}
+            </button>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
-          >
-            {loading ? <Loader2 size={20} className="animate-spin" /> : "Xác thực và đổi mật khẩu"}
-          </button>
+            <button
+              type="button"
+              onClick={handleBackToEmail}
+              className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-500 transition hover:text-slate-700"
+            >
+              <ArrowLeft size={12} />
+              Đổi email khác
+            </button>
+          </form>
+        )}
 
-          <button
-            type="button"
-            onClick={handleBackToEmail}
-            className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-500 transition hover:text-slate-700"
-          >
-            <ArrowLeft size={12} />
-            Quay lại từ đầu
-          </button>
-        </form>
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Nhớ mật khẩu rồi?{" "}
+          <Link to="/login" className="font-semibold text-slate-900 hover:underline">
+            Đăng nhập
+          </Link>
+        </p>
+      </AuthShell>
+
+      {/* Modal MFA - chỉ hiện khi user có bật 2FA */}
+      {showMfaModal && (
+        <MfaChallenge
+          onVerified={handleMfaVerified}
+          onCancel={() => {
+            // Nếu user huỷ, reset về bước email cho an toàn
+            setShowMfaModal(false);
+            setError("Bạn đã huỷ xác thực 2 lớp. Vui lòng thử lại.");
+          }}
+        />
       )}
-
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Nhớ mật khẩu rồi?{" "}
-        <Link to="/login" className="font-semibold text-slate-900 hover:underline">
-          Đăng nhập
-        </Link>
-      </p>
-    </AuthShell>
+    </>
   );
-}
+    }
