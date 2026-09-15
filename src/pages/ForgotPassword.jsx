@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import OtpInput from "../components/OtpInput.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  const [step, setStep] = useState("email");
+  // Thêm step "mfa" cho giai đoạn xác thực 2 lớp
+  const [step, setStep] = useState("email"); 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState(""); // State mới cho mã MFA
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,6 +45,7 @@ export default function ForgotPassword() {
     setStep("otp");
   };
 
+  // Hàm xử lý khi bấm nút "Xác nhận đổi mật khẩu" ở bước OTP
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     if (otp.length !== 6) {
@@ -70,30 +73,24 @@ export default function ForgotPassword() {
         return;
       }
 
-      // Log để debug
       console.log("Verify success, session:", verifyData?.session);
 
-      // Đợi 500ms để session được lưu
-      await new Promise((r) => setTimeout(r, 500));
+      // --- BẮT ĐẦU PHẦN SỬA ---
+      // Kiểm tra xem tài khoản có bật MFA không
+      const { data: factorsData } = await supabase.auth.mfa.listFactors();
+      const hasMfa = factorsData?.totp && factorsData.totp.length > 0;
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      setLoading(false);
-
-      if (updateError) {
-        console.error("Update password error:", updateError);
-        setError(updateError.message || "Không thể đổi mật khẩu. Vui lòng thử lại.");
+      if (hasMfa) {
+        // Nếu có MFA, chuyển sang bước nhập mã MFA
+        setLoading(false);
+        setStep("mfa");
         return;
       }
 
-      // Đăng xuất để user login lại với mật khẩu mới
-      await supabase.auth.signOut();
+      // Nếu không có MFA, tiến hành đổi mật khẩu luôn
+      await updatePassword();
+      // --- KẾT THÚC PHẦN SỬA ---
 
-      navigate("/login", {
-        state: { message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." },
-      });
     } catch (err) {
       console.error("Unexpected error:", err);
       setLoading(false);
@@ -101,10 +98,69 @@ export default function ForgotPassword() {
     }
   };
 
+  // Hàm xử lý xác thực mã MFA (chỉ chạy khi user có bật MFA)
+  const handleVerifyMfa = async (e) => {
+    e?.preventDefault();
+    if (mfaCode.length !== 6) {
+      setError("Vui lòng nhập đủ 6 số từ ứng dụng xác thực.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const totpFactor = factors.totp[0];
+
+      // Tạo challenge
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: totpFactor.id,
+      });
+      if (challengeError) throw challengeError;
+
+      // Verify challenge bằng mã user nhập
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: totpFactor.id,
+        challengeId: challenge.id,
+        code: mfaCode,
+      });
+      if (verifyError) throw verifyError;
+
+      // Xác thực MFA thành công, giờ mới tiến hành đổi mật khẩu
+      await updatePassword();
+
+    } catch (err) {
+      console.error("MFA Verify error:", err);
+      setLoading(false);
+      setError(err.message || "Mã xác thực 2 lớp không đúng.");
+    }
+  };
+
+  // Hàm dùng chung để đổi mật khẩu
+  const updatePassword = async () => {
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    setLoading(false);
+
+    if (updateError) {
+      console.error("Update password error:", updateError);
+      setError(updateError.message || "Không thể đổi mật khẩu. Vui lòng thử lại.");
+      return;
+    }
+
+    await supabase.auth.signOut();
+    navigate("/login", {
+      state: { message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." },
+    });
+  };
+
   const handleBackToEmail = () => {
     setStep("email");
     setOtp("");
     setNewPassword("");
+    setMfaCode("");
     setError("");
   };
 
@@ -114,6 +170,8 @@ export default function ForgotPassword() {
       subtitle={
         step === "email"
           ? "Nhập email để nhận mã xác minh."
+          : step === "mfa"
+          ? "Nhập mã từ ứng dụng xác thực 2 lớp của bạn."
           : `Nhập mã OTP đã gửi đến ${email}`
       }
     >
@@ -139,11 +197,7 @@ export default function ForgotPassword() {
             disabled={loading}
             className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
           >
-            {loading ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              "Gửi mã xác minh"
-            )}
+            {loading ? <Loader2 size={20} className="animate-spin" /> : "Gửi mã xác minh"}
           </button>
         </form>
       )}
@@ -162,10 +216,7 @@ export default function ForgotPassword() {
               Mật khẩu mới
             </label>
             <div className="relative">
-              <Lock
-                size={16}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
+              <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={newPassword}
@@ -194,11 +245,7 @@ export default function ForgotPassword() {
             disabled={loading}
             className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
           >
-            {loading ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              "Xác nhận đổi mật khẩu"
-            )}
+            {loading ? <Loader2 size={20} className="animate-spin" /> : "Xác nhận đổi mật khẩu"}
           </button>
 
           <button
@@ -212,6 +259,51 @@ export default function ForgotPassword() {
         </form>
       )}
 
+      {/* --- BƯỚC MỚI: NHẬP MÃ MFA --- */}
+      {step === "mfa" && (
+        <form onSubmit={handleVerifyMfa} className="space-y-4">
+          <div className="flex flex-col items-center justify-center py-2 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+              <ShieldCheck size={24} />
+            </div>
+            <p className="text-sm text-slate-600">
+              Tài khoản của bạn đang bật xác thực 2 lớp. Vui lòng mở ứng dụng
+              <strong> Google Authenticator / Authy</strong> và nhập mã 6 số.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Mã xác thực 2 lớp
+            </label>
+            <OtpInput value={mfaCode} onChange={setMfaCode} length={6} disabled={loading} />
+          </div>
+
+          {error && (
+            <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
+          >
+            {loading ? <Loader2 size={20} className="animate-spin" /> : "Xác thực và đổi mật khẩu"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleBackToEmail}
+            className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-500 transition hover:text-slate-700"
+          >
+            <ArrowLeft size={12} />
+            Quay lại từ đầu
+          </button>
+        </form>
+      )}
+
       <p className="mt-6 text-center text-sm text-slate-500">
         Nhớ mật khẩu rồi?{" "}
         <Link to="/login" className="font-semibold text-slate-900 hover:underline">
@@ -220,4 +312,4 @@ export default function ForgotPassword() {
       </p>
     </AuthShell>
   );
-      }
+}
