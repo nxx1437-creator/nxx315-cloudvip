@@ -933,12 +933,18 @@ function detectGame(packageId) {
     return 'roblox';
   }
 
-  if (pid.startsWith('lq-') || pid.includes('lien-quan-mobile.png')) {
-    return 'lien-quan-mobile.png';
+  if (pid.startsWith('lq-') || pid.includes('lienquan')) {
+    return 'lienquan';
   }
-if (packageId.startsWith('pt-') || packageId.includes('playtogether') || packageId.includes('play-together')) {
-  return getImageUrl('play-together-vng.png');
-    }
+
+  if (
+    pid.startsWith('pt-') ||
+    pid.includes('playtogether') ||
+    pid.includes('play-together')
+  ) {
+    return 'playtogether';
+  }
+
   return null;
 }
 
@@ -946,6 +952,7 @@ function getGameName(packageId) {
   const game = detectGame(packageId);
   if (game === 'roblox') return 'Roblox';
   if (game === 'lienquan') return 'Liên Quân Mobile';
+  if (game === 'playtogether') return 'Play Together';
   return null;
 }
 
@@ -954,6 +961,10 @@ function getHistoryName(order) {
   if (order?.product_name) return order.product_name;
 
   const gameKey = detectGame(order?.package_id);
+
+  if (gameKey === 'playtogether' && order?.pt_gold != null) {
+    return `${Number(order.pt_gold).toLocaleString('vi-VN')} Thỏi Vàng`;
+  }
 
   if (gameKey === 'lienquan' && order?.quanhuy != null) {
     return `${Number(order.quanhuy).toLocaleString('vi-VN')} Quân Huy`;
@@ -971,6 +982,10 @@ function getHistoryName(order) {
     return `${Number(order.quanhuy).toLocaleString('vi-VN')} Quân Huy`;
   }
 
+  if (order?.pt_gold != null) {
+    return `${Number(order.pt_gold).toLocaleString('vi-VN')} Thỏi Vàng`;
+  }
+
   if (order?.game_name) return order.game_name;
   if (order?.game) return order.game;
 
@@ -978,7 +993,6 @@ function getHistoryName(order) {
     ? 'Đơn nạp game'
     : 'Đơn đổi thưởng';
 }
-
 function getHistoryImage(order) {
   const directImage =
     order?.image_url ||
