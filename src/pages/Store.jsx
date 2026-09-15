@@ -1006,7 +1006,7 @@ function getHistoryImage(order) {
 }
 
 if (packageId.startsWith('lq-') || packageId.includes('lienquan')) {
-  return getImageUrl('lienquan.png');
+  return getImageUrl('lien-quan-mobile.png');
 }
 
   const text = `
