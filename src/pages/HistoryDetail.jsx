@@ -31,15 +31,15 @@ const PACKAGE_IMAGES = {
   "vng-500": `${STORAGE_URL}/roblox-500.png`,
 
   // Liên Quân
-  "lq-5": `${STORAGE_URL}/quanhuy.png`,
-  "lq-10": `${STORAGE_URL}/quanhuy.png`,
-  "lq-20": `${STORAGE_URL}/quanhuy.png`,
-  "lq-50": `${STORAGE_URL}/quanhuy.png`,
-  "lq-100": `${STORAGE_URL}/quanhuy.png`,
-  "lq-200": `${STORAGE_URL}/quanhuy.png`,
-  "lq-500": `${STORAGE_URL}/quanhuy.png`,
-  "lq-1000": `${STORAGE_URL}/quanhuy.png`,
-  "lq-2000": `${STORAGE_URL}/quanhuy.png`,
+  "lq-5": `${STORAGE_URL}/lienquan.png`,
+  "lq-10": `${STORAGE_URL}/lienquan.png`,
+  "lq-20": `${STORAGE_URL}/lienquan.png`,
+  "lq-50": `${STORAGE_URL}/lienquan.png`,
+  "lq-100": `${STORAGE_URL}/lienquan.png`,
+  "lq-200": `${STORAGE_URL}/lienquan.png`,
+  "lq-500": `${STORAGE_URL}/lienquan.png`,
+  "lq-1000": `${STORAGE_URL}/lienquan.png`,
+  "lq-2000": `${STORAGE_URL}/lienquan.png`,
 };
 
 const GAME_FALLBACK = {
