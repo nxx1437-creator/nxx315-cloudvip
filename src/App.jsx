@@ -36,6 +36,7 @@ import Feed from "./pages/Feed.jsx";
 import Roblox from "./pages/Roblox.jsx";
 import PlayTogether from "./pages/PlayTogether.jsx";
 import LienQuan from "./pages/LienQuan.jsx";
+import FreeFire from "./pages/FreeFire.jsx";
 import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
 
@@ -156,6 +157,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/store/free-fire"
+  element={
+    <ProtectedRoute>
+      <FreeFire />
+    </ProtectedRoute>
+  }
+/>
 
         <Route path="/link-history" element={<LinkHistory />} />
         <Route path="/refund-history" element={<RefundHistoryPage />} />
