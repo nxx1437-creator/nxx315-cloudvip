@@ -15,6 +15,74 @@ import { supabase } from "../lib/supabaseClient";
 import TopHeader from "../components/TopHeader";
 import BottomNav from "../components/BottomNav";
 
+const STORAGE_URL =
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
+
+const PACKAGE_IMAGES = {
+  // Roblox
+  "card-400": `${STORAGE_URL}/roblox-400.png`,
+  "vng-40": `${STORAGE_URL}/roblox-40.png`,
+  "vng-80": `${STORAGE_URL}/roblox-80.png`,
+  "vng-500": `${STORAGE_URL}/roblox-500.png`,
+
+  // Liên Quân
+  "lq-5": `${STORAGE_URL}/lienquan-5.png`,
+  "lq-10": `${STORAGE_URL}/lienquan-10.png`,
+  "lq-20": `${STORAGE_URL}/lienquan-20.png`,
+  "lq-50": `${STORAGE_URL}/lienquan-50.png`,
+  "lq-100": `${STORAGE_URL}/lienquan-100.png`,
+  "lq-200": `${STORAGE_URL}/lienquan-200.png`,
+  "lq-500": `${STORAGE_URL}/lienquan-500.png`,
+  "lq-1000": `${STORAGE_URL}/lienquan-1000.png`,
+  "lq-2000": `${STORAGE_URL}/lienquan-2000.png`,
+};
+
+const GAME_FALLBACK = {
+  roblox: `${STORAGE_URL}/roblox.png`,
+  lienquan: `${STORAGE_URL}/lienquan.png`,
+};
+
+function detectGame(packageId) {
+  const pid = String(packageId || "").toLowerCase();
+
+  if (
+    pid.startsWith("vng-") ||
+    pid.startsWith("card-") ||
+    pid.startsWith("rbx-") ||
+    pid.includes("roblox") ||
+    pid.includes("robux")
+  ) {
+    return "roblox";
+  }
+
+  if (pid.startsWith("lq-") || pid.includes("lienquan")) {
+    return "lienquan";
+  }
+
+  return null;
+}
+
+function getGameName(packageId) {
+  const game = detectGame(packageId);
+  if (game === "roblox") return "Roblox";
+  if (game === "lienquan") return "Liên Quân Mobile";
+  return null;
+}
+
+function getOrderImage(order) {
+  const gameKey = detectGame(order?.package_id);
+
+  return (
+    order?.image_url ||
+    order?.package_image ||
+    order?.product_image ||
+    order?.logo_url ||
+    PACKAGE_IMAGES[order?.package_id] ||
+    (gameKey ? GAME_FALLBACK[gameKey] : null) ||
+    null
+  );
+}
+
 const statusInfo = (status) => {
   switch (String(status || "").toLowerCase()) {
     case "pending":
@@ -106,12 +174,26 @@ const getOrderAmount = (order) => {
 };
 
 const getOrderTitle = (order) => {
+  const gameKey = detectGame(order?.package_id);
+
+  if (order?.package_name) {
+    return order.package_name;
+  }
+
+  if (gameKey === "lienquan" && order?.quanhuy != null) {
+    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
+  }
+
+  if (gameKey === "roblox" && order?.robux != null) {
+    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
+  }
+
   if (order?.robux != null) {
     return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
   }
 
-  if (order?.package_name) {
-    return order.package_name;
+  if (order?.quanhuy != null) {
+    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
   }
 
   if (order?.title) {
@@ -132,8 +214,7 @@ const mergeOrder = (oldOrder, newOrder) => {
     _source: oldOrder?._source || newOrder?._source,
   };
 };
-
-export default function History() {
+    export default function History() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -221,17 +302,13 @@ export default function History() {
           .from("orders")
           .select("*")
           .eq("user_id", user.id)
-          .order("created_at", {
-            ascending: false,
-          }),
+          .order("created_at", { ascending: false }),
 
         supabase
           .from("redemption_orders")
           .select("*")
           .eq("user_id", user.id)
-          .order("created_at", {
-            ascending: false,
-          }),
+          .order("created_at", { ascending: false }),
       ]);
 
       if (ordersResult.error) {
@@ -242,31 +319,21 @@ export default function History() {
         throw redemptionResult.error;
       }
 
-      if (
-        !mountedRef.current ||
-        currentRequestId !== requestIdRef.current
-      ) {
+      if (!mountedRef.current || currentRequestId !== requestIdRef.current) {
         return;
       }
 
-      const normalOrders = (ordersResult.data || []).map(
-        (order) => ({
-          ...order,
-          _source: "orders",
-        })
-      );
+      const normalOrders = (ordersResult.data || []).map((order) => ({
+        ...order,
+        _source: "orders",
+      }));
 
-      const redemptionOrders = (
-        redemptionResult.data || []
-      ).map((order) => ({
+      const redemptionOrders = (redemptionResult.data || []).map((order) => ({
         ...order,
         _source: "redemption_orders",
       }));
 
-      const merged = sortHistory([
-        ...normalOrders,
-        ...redemptionOrders,
-      ]);
+      const merged = sortHistory([...normalOrders, ...redemptionOrders]);
 
       setHistory(merged);
       updateSelectedFromHistory(merged);
@@ -279,18 +346,13 @@ export default function History() {
       }
     }
   };
-    const applyRealtimeChange = (source, payload) => {
+
+  const applyRealtimeChange = (source, payload) => {
     if (!mountedRef.current) {
       return;
     }
 
     const eventType = payload.eventType;
-
-    console.log(
-      `[History Realtime] ${source}`,
-      eventType,
-      payload
-    );
 
     if (eventType === "DELETE") {
       const deletedId = payload.old?.id;
@@ -309,7 +371,6 @@ export default function History() {
         );
 
         updateSelectedFromHistory(updated);
-
         return updated;
       });
 
@@ -333,60 +394,27 @@ export default function History() {
 
       if (index === -1) {
         updated = [
-          {
-            ...newRow,
-            _source: source,
-          },
+          { ...newRow, _source: source },
           ...current,
         ];
       } else {
         updated = [...current];
-
-        updated[index] = mergeOrder(
-          updated[index],
-          {
-            ...newRow,
-            _source: source,
-          }
-        );
+        updated[index] = mergeOrder(updated[index], {
+          ...newRow,
+          _source: source,
+        });
       }
 
       updated = sortHistory(updated);
-
       updateSelectedFromHistory(updated);
-
       return updated;
     });
 
     setSelected((current) => {
-      if (!current) {
-        return current;
-      }
+      if (!current) return current;
+      if (current._source !== source) return current;
+      if (String(current.id) !== String(newRow.id)) return current;
 
-      if (current._source !== source) {
-        return current;
-      }
-
-      if (
-        String(current.id) !== String(newRow.id)
-      ) {
-        return current;
-      }
-
-      /*
-       * QUAN TRỌNG:
-       *
-       * Nếu Admin đổi:
-       *
-       * paid -> processing
-       *
-       * hoặc:
-       *
-       * processing -> delivered
-       *
-       * thì payload.new.status sẽ được lấy trực tiếp
-       * và ghi đè vào selected.
-       */
       return {
         ...current,
         ...newRow,
@@ -404,70 +432,29 @@ export default function History() {
       .channel("history-orders-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-        },
-        (payload) => {
-          applyRealtimeChange(
-            "orders",
-            payload
-          );
-        }
+        { event: "*", schema: "public", table: "orders" },
+        (payload) => applyRealtimeChange("orders", payload)
       )
-      .subscribe((status) => {
-        console.log(
-          "[History] orders realtime:",
-          status
-        );
-      });
+      .subscribe();
 
     const redemptionChannel = supabase
       .channel("history-redemption-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "redemption_orders",
-        },
-        (payload) => {
-          applyRealtimeChange(
-            "redemption_orders",
-            payload
-          );
-        }
+        { event: "*", schema: "public", table: "redemption_orders" },
+        (payload) => applyRealtimeChange("redemption_orders", payload)
       )
-      .subscribe((status) => {
-        console.log(
-          "[History] redemption realtime:",
-          status
-        );
-      });
+      .subscribe();
 
-    /*
-     * Fallback:
-     *
-     * Nếu Realtime không hoạt động vì chưa bật
-     * publication thì vẫn kiểm tra DB định kỳ.
-     */
     const interval = setInterval(() => {
       loadHistory(false);
     }, 5000);
 
     return () => {
       mountedRef.current = false;
-
       clearInterval(interval);
-
-      supabase.removeChannel(
-        ordersChannel
-      );
-
-      supabase.removeChannel(
-        redemptionChannel
-      );
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(redemptionChannel);
     };
   }, [id, sourceFromUrl]);
 
@@ -475,8 +462,7 @@ export default function History() {
     setRefreshing(true);
     await loadHistory(false);
   };
-
-  if (id) {
+        if (id) {
     const order = selected;
 
     if (loading && !order) {
@@ -487,9 +473,7 @@ export default function History() {
           <main className="mx-auto max-w-2xl px-4 py-8">
             <div className="animate-pulse rounded-3xl bg-white p-6 shadow-sm">
               <div className="mb-5 h-8 w-32 rounded bg-slate-200" />
-
               <div className="mb-3 h-5 w-48 rounded bg-slate-200" />
-
               <div className="h-4 w-72 rounded bg-slate-200" />
             </div>
           </main>
@@ -514,18 +498,14 @@ export default function History() {
             </button>
 
             <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
-              <PackageCheck
-                className="mx-auto mb-3 text-slate-400"
-                size={42}
-              />
+              <PackageCheck className="mx-auto mb-3 text-slate-400" size={42} />
 
               <h1 className="text-lg font-bold text-slate-900">
                 Không tìm thấy đơn hàng
               </h1>
 
               <p className="mt-2 text-sm text-slate-500">
-                Đơn hàng có thể không tồn tại hoặc
-                không thuộc tài khoản này.
+                Đơn hàng có thể không tồn tại hoặc không thuộc tài khoản này.
               </p>
             </div>
           </main>
@@ -537,6 +517,8 @@ export default function History() {
 
     const status = statusInfo(order.status);
     const StatusIcon = status.icon;
+    const orderImage = getOrderImage(order);
+    const gameName = getGameName(order.package_id);
 
     return (
       <div className="min-h-screen bg-slate-50 pb-24">
@@ -552,9 +534,24 @@ export default function History() {
           </button>
 
           <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+            {/* Product header */}
             <div className="border-b border-slate-100 p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+              <div className="flex items-start gap-4">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
+                  {orderImage ? (
+                    <img
+                      src={orderImage}
+                      alt={getOrderTitle(order)}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <PackageCheck size={28} className="text-slate-300" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-slate-400">
                     Chi tiết đơn hàng
                   </p>
@@ -562,6 +559,12 @@ export default function History() {
                   <h1 className="mt-1 text-xl font-bold text-slate-900">
                     {getOrderTitle(order)}
                   </h1>
+
+                  {gameName && (
+                    <p className="mt-1 text-xs font-semibold text-blue-600">
+                      {gameName}
+                    </p>
+                  )}
 
                   <p className="mt-1 text-xs text-slate-400">
                     Mã đơn: {order.order_code || order.id}
@@ -572,17 +575,15 @@ export default function History() {
                   className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
                 >
                   <StatusIcon size={15} />
-
                   {status.label}
                 </div>
               </div>
             </div>
-                             <div className="space-y-4 p-5">
+
+            <div className="space-y-4 p-5">
               {order.roblox_username && (
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">
-                    Tài khoản Roblox
-                  </p>
+                  <p className="text-xs text-slate-400">Tài khoản Roblox</p>
 
                   <p className="mt-1 font-semibold text-slate-900">
                     {order.roblox_username}
@@ -595,21 +596,27 @@ export default function History() {
                   )}
 
                   {order.roblox_display_name &&
-                    order.roblox_display_name !==
-                      order.roblox_username && (
+                    order.roblox_display_name !== order.roblox_username && (
                       <p className="mt-1 text-xs text-slate-500">
-                        Display Name:{" "}
-                        {order.roblox_display_name}
+                        Display Name: {order.roblox_display_name}
                       </p>
                     )}
                 </div>
               )}
 
+              {order.uid && (
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs text-slate-400">UID Liên Quân</p>
+
+                  <p className="mt-1 font-semibold text-slate-900">
+                    {order.uid}
+                  </p>
+                </div>
+              )}
+
               {order.package_id && (
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">
-                    Gói đã chọn
-                  </p>
+                  <p className="text-xs text-slate-400">Gói đã chọn</p>
 
                   <p className="mt-1 font-semibold text-slate-900">
                     {order.package_id}
@@ -617,10 +624,13 @@ export default function History() {
 
                   {order.robux != null && (
                     <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.robux).toLocaleString(
-                        "vi-VN"
-                      )}{" "}
-                      Robux
+                      {Number(order.robux).toLocaleString("vi-VN")} Robux
+                    </p>
+                  )}
+
+                  {order.quanhuy != null && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
                     </p>
                   )}
                 </div>
@@ -628,21 +638,15 @@ export default function History() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">
-                    Giá trị
-                  </p>
+                  <p className="text-xs text-slate-400">Giá trị</p>
 
                   <p className="mt-1 font-bold text-slate-900">
-                    {formatMoney(
-                      getOrderAmount(order)
-                    )}
+                    {formatMoney(getOrderAmount(order))}
                   </p>
                 </div>
 
                 <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">
-                    Phương thức
-                  </p>
+                  <p className="text-xs text-slate-400">Phương thức</p>
 
                   <p className="mt-1 font-bold capitalize text-slate-900">
                     {order.payment_method || "—"}
@@ -651,9 +655,7 @@ export default function History() {
               </div>
 
               <div className="rounded-2xl border border-slate-100 p-4">
-                <p className="text-xs text-slate-400">
-                  Thời gian tạo đơn
-                </p>
+                <p className="text-xs text-slate-400">Thời gian tạo đơn</p>
 
                 <p className="mt-1 text-sm font-semibold text-slate-800">
                   {formatDate(order.created_at)}
@@ -662,9 +664,7 @@ export default function History() {
 
               {order.updated_at && (
                 <div className="rounded-2xl border border-slate-100 p-4">
-                  <p className="text-xs text-slate-400">
-                    Cập nhật gần nhất
-                  </p>
+                  <p className="text-xs text-slate-400">Cập nhật gần nhất</p>
 
                   <p className="mt-1 text-sm font-semibold text-slate-800">
                     {formatDate(order.updated_at)}
@@ -675,19 +675,12 @@ export default function History() {
               {order.status === "pending" && (
                 <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
                   <div className="flex items-start gap-3">
-                    <Clock3
-                      className="mt-0.5 shrink-0"
-                      size={19}
-                    />
+                    <Clock3 className="mt-0.5 shrink-0" size={19} />
 
                     <div>
-                      <p className="font-bold">
-                        Đơn hàng đang chờ thanh toán
-                      </p>
-
+                      <p className="font-bold">Đơn hàng đang chờ thanh toán</p>
                       <p className="mt-1 text-xs leading-5">
-                        Vui lòng hoàn tất thanh toán
-                        theo hướng dẫn để đơn hàng
+                        Vui lòng hoàn tất thanh toán theo hướng dẫn để đơn hàng
                         được kiểm tra.
                       </p>
                     </div>
@@ -698,19 +691,12 @@ export default function History() {
               {order.status === "paid" && (
                 <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                   <div className="flex items-start gap-3">
-                    <CreditCard
-                      className="mt-0.5 shrink-0"
-                      size={19}
-                    />
+                    <CreditCard className="mt-0.5 shrink-0" size={19} />
 
                     <div>
-                      <p className="font-bold">
-                        Đã ghi nhận chuyển khoản
-                      </p>
-
+                      <p className="font-bold">Đã ghi nhận chuyển khoản</p>
                       <p className="mt-1 text-xs leading-5">
-                        Hệ thống đã ghi nhận thanh toán.
-                        Đơn hàng đang được kiểm tra.
+                        Hệ thống đã ghi nhận thanh toán. Đơn hàng đang được kiểm tra.
                       </p>
                     </div>
                   </div>
@@ -720,19 +706,12 @@ export default function History() {
               {order.status === "processing" && (
                 <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
                   <div className="flex items-start gap-3">
-                    <RefreshCw
-                      className="mt-0.5 shrink-0"
-                      size={19}
-                    />
+                    <RefreshCw className="mt-0.5 shrink-0" size={19} />
 
                     <div>
-                      <p className="font-bold">
-                        Đang xử lý đơn hàng
-                      </p>
-
+                      <p className="font-bold">Đang xử lý đơn hàng</p>
                       <p className="mt-1 text-xs leading-5">
-                        Đơn đã được duyệt và đang được
-                        xử lý để giao Robux.
+                        Đơn đã được duyệt và đang được xử lý để giao.
                       </p>
                     </div>
                   </div>
@@ -742,19 +721,12 @@ export default function History() {
               {order.status === "delivered" && (
                 <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">
                   <div className="flex items-start gap-3">
-                    <CheckCircle2
-                      className="mt-0.5 shrink-0"
-                      size={19}
-                    />
+                    <CheckCircle2 className="mt-0.5 shrink-0" size={19} />
 
                     <div>
-                      <p className="font-bold">
-                        Đơn hàng đã giao
-                      </p>
-
+                      <p className="font-bold">Đơn hàng đã giao</p>
                       <p className="mt-1 text-xs leading-5">
-                        Robux đã được giao thành công.
-                        Cảm ơn bạn đã sử dụng dịch vụ.
+                        Đơn hàng đã được giao thành công. Cảm ơn bạn đã sử dụng dịch vụ.
                       </p>
                     </div>
                   </div>
@@ -764,15 +736,10 @@ export default function History() {
               {order.status === "rejected" && (
                 <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
                   <div className="flex items-start gap-3">
-                    <XCircle
-                      className="mt-0.5 shrink-0"
-                      size={19}
-                    />
+                    <XCircle className="mt-0.5 shrink-0" size={19} />
 
                     <div>
-                      <p className="font-bold">
-                        Đơn hàng bị từ chối
-                      </p>
+                      <p className="font-bold">Đơn hàng bị từ chối</p>
 
                       {order.note && (
                         <p className="mt-1 text-xs leading-5">
@@ -787,20 +754,13 @@ export default function History() {
               {order.status === "failed" && (
                 <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-800">
                   <div className="flex items-start gap-3">
-                    <XCircle
-                      className="mt-0.5 shrink-0"
-                      size={19}
-                    />
+                    <XCircle className="mt-0.5 shrink-0" size={19} />
 
                     <div>
-                      <p className="font-bold">
-                        Đơn hàng thất bại
-                      </p>
+                      <p className="font-bold">Đơn hàng thất bại</p>
 
                       {order.note && (
-                        <p className="mt-1 text-xs leading-5">
-                          {order.note}
-                        </p>
+                        <p className="mt-1 text-xs leading-5">{order.note}</p>
                       )}
                     </div>
                   </div>
@@ -810,10 +770,7 @@ export default function History() {
               {order.coin_cost != null && (
                 <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4">
                   <div className="flex items-center gap-2">
-                    <Coins
-                      className="text-amber-600"
-                      size={19}
-                    />
+                    <Coins className="text-amber-600" size={19} />
 
                     <span className="text-sm font-semibold text-slate-700">
                       Coin đã sử dụng
@@ -821,9 +778,7 @@ export default function History() {
                   </div>
 
                   <span className="font-bold text-amber-700">
-                    {Number(
-                      order.coin_cost
-                    ).toLocaleString("vi-VN")}
+                    {Number(order.coin_cost).toLocaleString("vi-VN")}
                   </span>
                 </div>
               )}
@@ -858,12 +813,7 @@ export default function History() {
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm transition hover:bg-slate-100 disabled:opacity-50"
             title="Làm mới"
           >
-            <RefreshCw
-              size={18}
-              className={
-                refreshing ? "animate-spin" : ""
-              }
-            />
+            <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
           </button>
         </div>
 
@@ -875,23 +825,16 @@ export default function History() {
                 className="animate-pulse rounded-3xl bg-white p-5 shadow-sm"
               >
                 <div className="mb-3 h-5 w-40 rounded bg-slate-200" />
-
                 <div className="mb-2 h-4 w-28 rounded bg-slate-200" />
-
                 <div className="h-4 w-52 rounded bg-slate-200" />
               </div>
             ))}
           </div>
         ) : history.length === 0 ? (
           <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-            <PackageCheck
-              className="mx-auto mb-4 text-slate-300"
-              size={50}
-            />
+            <PackageCheck className="mx-auto mb-4 text-slate-300" size={50} />
 
-            <h2 className="text-lg font-bold text-slate-800">
-              Chưa có đơn hàng
-            </h2>
+            <h2 className="text-lg font-bold text-slate-800">Chưa có đơn hàng</h2>
 
             <p className="mt-2 text-sm text-slate-500">
               Các đơn hàng của bạn sẽ xuất hiện ở đây.
@@ -900,11 +843,10 @@ export default function History() {
         ) : (
           <div className="space-y-3">
             {history.map((order) => {
-              const status = statusInfo(
-                order.status
-              );
-
+              const status = statusInfo(order.status);
               const StatusIcon = status.icon;
+              const orderImage = getOrderImage(order);
+              const gameName = getGameName(order.package_id);
 
               return (
                 <button
@@ -916,64 +858,89 @@ export default function History() {
                   }
                   className="w-full rounded-3xl bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="truncate font-bold text-slate-900">
-                        {getOrderTitle(order)}
-                      </h2>
-
-                      <p className="mt-1 text-xs text-slate-400">
-                        {order.order_code
-                          ? `#${order.order_code}`
-                          : `#${order.id}`}
-                      </p>
+                  <div className="flex items-start gap-4">
+                    {/* Ảnh game */}
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
+                      {orderImage ? (
+                        <img
+                          src={orderImage}
+                          alt={getOrderTitle(order)}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <PackageCheck size={22} className="text-slate-300" />
+                        </div>
+                      )}
                     </div>
 
-                    <div
-                      className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
-                    >
-                      <StatusIcon size={14} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h2 className="truncate font-bold text-slate-900">
+                            {getOrderTitle(order)}
+                          </h2>
 
-                      {status.label}
+                          {gameName && (
+                            <p className="mt-0.5 text-xs font-semibold text-blue-600">
+                              {gameName}
+                            </p>
+                          )}
+
+                          <p className="mt-1 text-xs text-slate-400">
+                            {order.order_code
+                              ? `#${order.order_code}`
+                              : `#${order.id}`}
+                          </p>
+                        </div>
+
+                        <div
+                          className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
+                        >
+                          <StatusIcon size={14} />
+                          {status.label}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-400">Giá trị</p>
+
+                          <p className="mt-1 font-bold text-slate-900">
+                            {formatMoney(getOrderAmount(order))}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400">Ngày tạo</p>
+
+                          <p className="mt-1 text-xs font-medium text-slate-600">
+                            {formatDate(order.created_at)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {order.roblox_username && (
+                        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                          <span className="text-xs text-slate-400">Roblox</span>
+
+                          <span className="max-w-[60%] truncate text-xs font-semibold text-slate-700">
+                            {order.roblox_username}
+                          </span>
+                        </div>
+                      )}
+
+                      {order.uid && !order.roblox_username && (
+                        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                          <span className="text-xs text-slate-400">UID</span>
+
+                          <span className="max-w-[60%] truncate text-xs font-semibold text-slate-700">
+                            {order.uid}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                                    <div className="mt-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400">
-                        Giá trị
-                      </p>
-
-                      <p className="mt-1 font-bold text-slate-900">
-                        {formatMoney(
-                          getOrderAmount(order)
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-xs text-slate-400">
-                        Ngày tạo
-                      </p>
-
-                      <p className="mt-1 text-xs font-medium text-slate-600">
-                        {formatDate(
-                          order.created_at
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {order.roblox_username && (
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                      <span className="text-xs text-slate-400">
-                        Roblox
-                      </span>
-
-                      <span className="max-w-[60%] truncate text-xs font-semibold text-slate-700">
-                        {order.roblox_username}
-                      </span>
-                    </div>
-                  )}
                 </button>
               );
             })}
@@ -984,4 +951,4 @@ export default function History() {
       <BottomNav />
     </div>
   );
-}
+                  }
