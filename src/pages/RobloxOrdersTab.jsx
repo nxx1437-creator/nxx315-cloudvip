@@ -69,9 +69,10 @@ export default function RobloxOrdersTab() {
 
     try {
       const { data, error: fetchError } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
+  .from("orders")
+  .select("*")
+  .not("roblox_user_id", "is", null)
+  .order("created_at", { ascending: false });
 
       if (fetchError) {
         console.error("FETCH ORDERS ERROR:", fetchError);
@@ -103,32 +104,38 @@ export default function RobloxOrdersTab() {
     const channel = supabase
       .channel("admin-roblox-orders")
       .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-        },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            setOrders((current) => [payload.new, ...current]);
-          }
+  "postgres_changes",
+  {
+    event: "*",
+    schema: "public",
+    table: "orders",
+  },
+  (payload) => {
+    const row = payload.new || payload.old;
 
-          if (payload.eventType === "UPDATE") {
-            setOrders((current) =>
-              current.map((order) =>
-                order.id === payload.new.id ? payload.new : order
-              )
-            );
-          }
+    // Chỉ xử lý đơn Roblox (có roblox_user_id)
+    const isRoblox = row?.roblox_user_id != null;
+    if (!isRoblox) return;
 
-          if (payload.eventType === "DELETE") {
-            setOrders((current) =>
-              current.filter((order) => order.id !== payload.old.id)
-            );
-          }
-        }
-      )
+    if (payload.eventType === "INSERT") {
+      setOrders((current) => [payload.new, ...current]);
+    }
+
+    if (payload.eventType === "UPDATE") {
+      setOrders((current) =>
+        current.map((order) =>
+          order.id === payload.new.id ? payload.new : order
+        )
+      );
+    }
+
+    if (payload.eventType === "DELETE") {
+      setOrders((current) =>
+        current.filter((order) => order.id !== payload.old.id)
+      );
+    }
+  }
+)
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR") {
           console.error("Realtime orders channel error");
