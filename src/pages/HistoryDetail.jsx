@@ -31,22 +31,27 @@ const PACKAGE_IMAGES = {
   "vng-500": `${STORAGE_URL}/roblox-500.png`,
 
   // Liên Quân
-  "lq-5": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-10": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-20": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-50": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-100": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-200": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-500": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-1000": `${STORAGE_URL}/lien-quan-mobile.png`,
-  "lq-2000": `${STORAGE_URL}/lien-quan-mobile.png`,
+  "lq-5": `${STORAGE_URL}/lienquan-5.png`,
+  "lq-10": `${STORAGE_URL}/lienquan-10.png`,
+  "lq-20": `${STORAGE_URL}/lienquan-20.png`,
+  "lq-50": `${STORAGE_URL}/lienquan-50.png`,
+  "lq-100": `${STORAGE_URL}/lienquan-100.png`,
+  "lq-200": `${STORAGE_URL}/lienquan-200.png`,
+  "lq-500": `${STORAGE_URL}/lienquan-500.png`,
+  "lq-1000": `${STORAGE_URL}/lienquan-1000.png`,
+  "lq-2000": `${STORAGE_URL}/lienquan-2000.png`,
+
+  // Play Together
+  "pt-9": `${STORAGE_URL}/play-together-9.png`,
+  "pt-18": `${STORAGE_URL}/play-together-18.png`,
+  "pt-45": `${STORAGE_URL}/play-together-45.png`,
 };
 
 const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
-  lienquan: `${STORAGE_URL}/lienquan.png`,
+  lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
+  playtogether: `${STORAGE_URL}/play-together.png`,
 };
-
 function detectGame(packageId) {
   const pid = String(packageId || "").toLowerCase();
 
@@ -64,6 +69,10 @@ function detectGame(packageId) {
     return "lienquan";
   }
 
+  if (pid.startsWith("pt-") || pid.includes("playtogether") || pid.includes("play-together")) {
+    return "playtogether";
+  }
+
   return null;
 }
 
@@ -71,6 +80,7 @@ function getGameName(packageId) {
   const game = detectGame(packageId);
   if (game === "roblox") return "Roblox";
   if (game === "lienquan") return "Liên Quân Mobile";
+  if (game === "playtogether") return "Play Together";
   return null;
 }
 
@@ -379,17 +389,19 @@ export default function HistoryDetail() {
   const gameName = getGameName(order?.package_id);
 
   const name =
-    order?.package_name ||
-    order?.product_name ||
-    order?.name ||
-    pkg?.name ||
-    order?.game_name ||
-    (gameKey === "lienquan" && order?.quanhuy
-      ? `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`
-      : gameKey === "roblox" && order?.robux
-      ? `${Number(order.robux).toLocaleString("vi-VN")} Robux`
-      : gameName || "Giao dịch");
-
+  order?.package_name ||
+  order?.product_name ||
+  order?.name ||
+  pkg?.name ||
+  order?.game_name ||
+  (gameKey === "lienquan" && order?.quanhuy
+    ? `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`
+    : gameKey === "playtogether" && order?.pt_gold
+    ? `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`
+    : gameKey === "roblox" && order?.robux
+    ? `${Number(order.robux).toLocaleString("vi-VN")} Robux`
+    : gameName || "Giao dịch");
+  
   const image =
     order?.image_url ||
     order?.package_image ||
