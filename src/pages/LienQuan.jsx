@@ -22,78 +22,15 @@ import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 
 const PACKAGES = [
-  {
-    id: "lq-5",
-    amount: 5000,
-    quanhuy: 10,
-    originalPrice: 6000,
-    discount: 17,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-10",
-    amount: 10000,
-    quanhuy: 20,
-    originalPrice: 12000,
-    discount: 17,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-20",
-    amount: 20000,
-    quanhuy: 40,
-    originalPrice: 24000,
-    discount: 17,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-50",
-    amount: 50000,
-    quanhuy: 102,
-    originalPrice: 60000,
-    discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-100",
-    amount: 100000,
-    quanhuy: 204,
-    originalPrice: 120000,
-    discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-200",
-    amount: 200000,
-    quanhuy: 408,
-    originalPrice: 240000,
-    discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-500",
-    amount: 500000,
-    quanhuy: 1020,
-    originalPrice: 600000,
-    discount: 15,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-1000",
-    amount: 1000000,
-    quanhuy: 2090,
-    originalPrice: 1200000,
-    discount: 13,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
-  {
-    id: "lq-2000",
-    amount: 2000000,
-    quanhuy: 4180,
-    originalPrice: 2400000,
-    discount: 13,
-    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/point.png",
-  },
+  { id: "lq-5", amount: 5000, quanhuy: 10, originalPrice: 6000, discount: 17, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-5.png" },
+  { id: "lq-10", amount: 10000, quanhuy: 20, originalPrice: 12000, discount: 17, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-10.png" },
+  { id: "lq-20", amount: 20000, quanhuy: 40, originalPrice: 24000, discount: 17, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-20.png" },
+  { id: "lq-50", amount: 50000, quanhuy: 102, originalPrice: 60000, discount: 15, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-50.png" },
+  { id: "lq-100", amount: 100000, quanhuy: 204, originalPrice: 120000, discount: 15, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-100.png" },
+  { id: "lq-200", amount: 200000, quanhuy: 408, originalPrice: 240000, discount: 15, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-200.png" },
+  { id: "lq-500", amount: 500000, quanhuy: 1020, originalPrice: 600000, discount: 15, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-500.png" },
+  { id: "lq-1000", amount: 1000000, quanhuy: 2090, originalPrice: 1200000, discount: 13, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-1000.png" },
+  { id: "lq-2000", amount: 2000000, quanhuy: 4180, originalPrice: 2400000, discount: 13, image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-2000.png" },
 ];
 
 const BANK = {
@@ -141,16 +78,17 @@ export default function LienQuan() {
     }
 
     setPlayer({ userId: cleanUid });
-    setSelectedPackage(null);
+    // ✅ ĐÃ XÓA setSelectedPackage(null)
   };
 
   const createOrder = async () => {
     if (!selectedPackage) {
-      alert("Vui lòng chọn mệnh giá nạp.");
+      setPlayerError("Vui lòng chọn mệnh giá nạp.");
+      setStep("package");
       return;
     }
     if (!player) {
-      alert("Vui lòng nhập ID người chơi trước.");
+      setPlayerError("Vui lòng xác nhận ID người chơi trước.");
       return;
     }
 
@@ -195,7 +133,6 @@ export default function LienQuan() {
       <TopHeader />
 
       <main className="mx-auto w-full max-w-4xl px-4 py-6">
-        {/* Header */}
         <div className="mb-6 flex items-center gap-3">
           <button
             onClick={() => navigate("/store")}
@@ -211,7 +148,6 @@ export default function LienQuan() {
           </div>
         </div>
 
-        {/* Step indicator */}
         <div className="mb-6 flex items-center gap-2">
           <StepDot active={step === "package"} number={1} label="Chọn gói" />
           <div className={`h-px flex-1 ${step !== "package" ? "bg-sky-500" : "bg-slate-200"}`} />
@@ -234,6 +170,7 @@ export default function LienQuan() {
             setUid={setUid}
             player={player}
             playerError={playerError}
+            setPlayerError={setPlayerError}
             onCheck={checkPlayer}
             onBack={() => setStep("package")}
             onContinue={createOrder}
@@ -268,26 +205,19 @@ function StepDot({ active, number, label }) {
       >
         {number}
       </div>
-      <span
-        className={`hidden text-xs font-semibold sm:block ${
-          active ? "text-slate-900" : "text-slate-400"
-        }`}
-      >
+      <span className={`hidden text-xs font-semibold sm:block ${active ? "text-slate-900" : "text-slate-400"}`}>
         {label}
       </span>
     </div>
   );
-            }
+  }
 function PackageSection({ selectedPackage, onSelect, onContinue }) {
   return (
     <div className="space-y-6">
-      {/* Banner */}
       <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
         <AlertTriangle size={20} className="mt-0.5 shrink-0 text-amber-600" />
         <div>
-          <p className="text-sm font-black text-amber-900">
-            Thông báo quan trọng
-          </p>
+          <p className="text-sm font-black text-amber-900">Thông báo quan trọng</p>
           <p className="mt-1 text-xs leading-5 text-amber-800">
             Bạn vui lòng kiểm tra kỹ ID người chơi Liên Quân trước khi mua hàng.
             NXX315 Studio Rewards chưa hỗ trợ hoàn tiền với trường hợp nhập sai ID.
@@ -295,15 +225,12 @@ function PackageSection({ selectedPackage, onSelect, onContinue }) {
         </div>
       </div>
 
-      {/* Packages */}
       <section>
         <div className="mb-3 flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
             <Wallet size={16} />
           </span>
-          <h2 className="text-base font-black text-slate-900">
-            Mệnh giá nạp
-          </h2>
+          <h2 className="text-base font-black text-slate-900">Mệnh giá nạp</h2>
         </div>
 
         <div className="space-y-3">
@@ -318,7 +245,6 @@ function PackageSection({ selectedPackage, onSelect, onContinue }) {
         </div>
       </section>
 
-      {/* Continue */}
       <button
         onClick={onContinue}
         disabled={!selectedPackage}
@@ -376,18 +302,17 @@ function PackageRow({ pkg, active, onSelect }) {
         <span className="rounded-md bg-sky-500 px-2 py-1 text-[10px] font-black text-white">
           -{pkg.discount}%
         </span>
-        <span className="text-[10px] font-medium text-slate-400">
-          Còn hàng
-        </span>
+        <span className="text-[10px] font-medium text-slate-400">Còn hàng</span>
       </div>
     </button>
   );
-            }
-      function UsernameSection({
+          }
+function UsernameSection({
   uid,
   setUid,
   player,
   playerError,
+  setPlayerError,
   onCheck,
   onBack,
   onContinue,
@@ -430,9 +355,7 @@ function PackageRow({ pkg, active, onSelect }) {
                 }}
               />
               <div>
-                <p className="text-xs font-medium text-slate-500">
-                  Gói đã chọn
-                </p>
+                <p className="text-xs font-medium text-slate-500">Gói đã chọn</p>
                 <p className="text-sm font-black text-slate-900">
                   {selectedPackage.quanhuy.toLocaleString("vi-VN")} Quân Huy
                 </p>
@@ -447,22 +370,16 @@ function PackageRow({ pkg, active, onSelect }) {
 
       {/* Main card */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        {/* Header */}
         <div className="mb-5 flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
             <User size={20} />
           </span>
           <div>
-            <h2 className="text-base font-black text-slate-900">
-              Tài khoản Liên Quân
-            </h2>
-            <p className="text-xs text-slate-500">
-              Nhập ID người chơi để nhận Quân Huy
-            </p>
+            <h2 className="text-base font-black text-slate-900">Tài khoản Liên Quân</h2>
+            <p className="text-xs text-slate-500">Nhập ID người chơi để nhận Quân Huy</p>
           </div>
         </div>
 
-        {/* Input */}
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
           ID người chơi
         </label>
@@ -491,7 +408,6 @@ function PackageRow({ pkg, active, onSelect }) {
           </button>
         </div>
 
-        {/* Nút hướng dẫn */}
         <button
           onClick={() => setShowGuide(true)}
           className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 transition hover:text-sky-700 hover:underline"
@@ -500,14 +416,12 @@ function PackageRow({ pkg, active, onSelect }) {
           Hướng dẫn lấy ID Liên Quân
         </button>
 
-        {/* Error */}
         {playerError && !player && (
           <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3.5">
             <p className="text-xs font-semibold text-rose-600">{playerError}</p>
           </div>
         )}
 
-        {/* Success */}
         {player && (
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
@@ -515,30 +429,22 @@ function PackageRow({ pkg, active, onSelect }) {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-black text-emerald-900">
-                Đã xác nhận ID
-              </p>
-              <p className="mt-0.5 text-xs text-emerald-700">
-                ID: {player.userId}
-              </p>
+              <p className="text-sm font-black text-emerald-900">Đã xác nhận ID</p>
+              <p className="mt-0.5 text-xs text-emerald-700">ID: {player.userId}</p>
             </div>
           </div>
         )}
 
-        {/* Info box */}
         <div className="mt-5 flex gap-3 rounded-xl border border-sky-100 bg-sky-50/50 p-3.5">
           <ShieldCheck size={18} className="mt-0.5 shrink-0 text-sky-600" />
           <div>
-            <p className="text-xs font-bold text-sky-900">
-              Kiểm tra chính xác trước khi thanh toán
-            </p>
+            <p className="text-xs font-bold text-sky-900">Kiểm tra chính xác trước khi thanh toán</p>
             <p className="mt-1 text-[11px] leading-5 text-sky-700">
               Hãy kiểm tra kỹ ID Liên Quân. Quân Huy sẽ được nạp theo ID đã xác nhận — sai ID không hoàn tiền.
             </p>
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="mt-6 flex gap-3">
           <button
             onClick={onBack}
@@ -549,7 +455,7 @@ function PackageRow({ pkg, active, onSelect }) {
 
           <button
             onClick={onContinue}
-            disabled={!player || creatingOrder}
+            disabled={creatingOrder}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {creatingOrder ? (
@@ -571,15 +477,12 @@ function PackageRow({ pkg, active, onSelect }) {
       {showGuide && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4">
           <div className="relative flex max-h-[90vh] w-full max-w-md flex-col rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl">
-            {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 p-5">
               <div>
                 <h3 className="text-base font-black text-slate-900">
                   Hướng dẫn lấy ID Liên Quân
                 </h3>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Làm theo 3 bước dưới đây
-                </p>
+                <p className="mt-0.5 text-xs text-slate-500">Làm theo 3 bước dưới đây</p>
               </div>
               <button
                 onClick={() => setShowGuide(false)}
@@ -589,7 +492,6 @@ function PackageRow({ pkg, active, onSelect }) {
               </button>
             </div>
 
-            {/* Body — scroll ảnh dọc */}
             <div className="flex-1 space-y-4 overflow-y-auto p-5">
               {GUIDE_IMAGES.map((item) => (
                 <div key={item.step}>
@@ -610,7 +512,6 @@ function PackageRow({ pkg, active, onSelect }) {
               ))}
             </div>
 
-            {/* Footer */}
             <div className="border-t border-slate-100 p-5">
               <button
                 onClick={() => setShowGuide(false)}
@@ -624,7 +525,7 @@ function PackageRow({ pkg, active, onSelect }) {
       )}
     </div>
   );
-            }
+                }
 function PaymentSection({ order, onBack, onPaid }) {
   const navigate = useNavigate();
   const [method, setMethod] = useState("coin");
@@ -1064,8 +965,7 @@ function PaymentSection({ order, onBack, onPaid }) {
               )}
             </div>
           )}
-
-          {/* Card */}
+                 {/* Card */}
           {method === "card" && (
             <div className="space-y-4">
               <div>
@@ -1091,7 +991,7 @@ function PaymentSection({ order, onBack, onPaid }) {
                 </div>
               </div>
 
-                {cards.map((card, index) => (
+              {cards.map((card, index) => (
                 <div key={card.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-black text-slate-900">Thẻ #{index + 1}</p>
@@ -1305,4 +1205,4 @@ function BankRow({ label, value, copy = false, copyValue }) {
       </div>
     </div>
   );
-  }
+                    }
