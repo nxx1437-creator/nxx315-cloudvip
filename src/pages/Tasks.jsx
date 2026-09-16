@@ -196,7 +196,6 @@ export default function Tasks() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [showSkeleton, setShowSkeleton] = useState(false);
-  const [pendingTaskId, setPendingTaskId] = useState(null);
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -357,7 +356,6 @@ export default function Tasks() {
         window.open(data.shortUrl, "_blank");
 
         showToast(`Đã mở link ${task.provider}! Làm xong quay lại tab này để nhận thưởng.`);
-        setPendingTaskId(task.id);
 
         setTimeout(() => {
           reload();
@@ -460,35 +458,6 @@ export default function Tasks() {
             <MiniStat value={hoursUntilMidnight()} label="CÒN LẠI" icon={Clock} bg="bg-sky-100/70" valueColor="text-sky-700" iconColor="text-sky-500" />
           </div>
         </div>
-
-        {/* Banner pending */}
-        {pendingTaskId && (
-          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
-            <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                <Clock size={16} />
-              </span>
-                <button
-                  onClick={() => {
-                    const pendingToken = localStorage.getItem("pending_task_token");
-                    if (pendingToken) {
-                      localStorage.removeItem("pending_task_token");
-                      localStorage.removeItem("pending_task_time");
-                      localStorage.removeItem("pending_task_id");
-                      navigate(`/task/callback?token=${pendingToken}`);
-                    }
-                  }}
-                </button>
-              </div>
-          <button
-                onClick={() => setPendingTaskId(null)}
-                className="shrink-0 text-sky-400 hover:text-sky-600"
-              >
-                <XCircle size={16} />
-              </button>
-            </div>
-          </div>
-        )}
 
         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
