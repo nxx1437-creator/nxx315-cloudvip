@@ -111,7 +111,8 @@ function getGameName(packageId) {
   if (game === "roblox") return "Roblox";
   if (game === "lienquan") return "Liên Quân Mobile";
   if (game === "playtogether") return "Play Together";
-  if (game === "freefire") return "Free Fire";   // 👈 THÊM DÒNG NÀY
+  if (game === "freefire") return "Free Fire"; 
+  if (game === "topup") return "Nạp thẻ cào"; 
   return null;
 }
 const fmtDate = (value) => {
