@@ -62,7 +62,8 @@ const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together.png`,
-  freefire: `${STORAGE_URL}/freefire.png`, 
+  freefire: `${STORAGE_URL}/free-fire.png`,
+  topup: `${STORAGE_URL}/card-default.png`,  // 👈 THÊM DÒNG NÀY
 };
 function detectGame(order) {
   const pid = String(order?.package_id || "").toLowerCase();
