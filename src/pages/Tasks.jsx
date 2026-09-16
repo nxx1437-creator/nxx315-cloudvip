@@ -211,42 +211,27 @@ export default function Tasks() {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // Phát hiện user quay lại từ link provider
-  useEffect(() => {
-    const checkPendingToken = () => {
-      const pendingToken = localStorage.getItem("pending_task_token");
-      if (!pendingToken) return;
+  /useEffect(() => {
+  // Chỉ reload UI khi user quay lại tab, KHÔNG tự động navigate
+  const handleVisibility = () => {
+    if (document.visibilityState === "visible") {
+      reload();
+      setHistoryLoaded(false);
+    }
+  };
 
-      const pendingTime = parseInt(localStorage.getItem("pending_task_time") || "0", 10);
-      const elapsed = Date.now() - pendingTime;
+  document.addEventListener("visibilitychange", handleVisibility);
 
-      localStorage.removeItem("pending_task_token");
-      localStorage.removeItem("pending_task_time");
-      localStorage.removeItem("pending_task_id");
+  // 👇 Load pendingTaskId từ localStorage nếu có
+  const savedTaskId = localStorage.getItem("pending_task_id");
+  if (savedTaskId) {
+    setPendingTaskId(savedTaskId);
+  }
 
-      if (elapsed < 15 * 60 * 1000) {
-        navigate(`/task/callback?token=${pendingToken}`);
-      }
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        checkPendingToken();
-        reload();
-        setHistoryLoaded(false);
-      }
-    };
-
-    checkPendingToken();
-
-    document.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("focus", handleVisibility);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("focus", handleVisibility);
-    };
-  }, [navigate, reload]);
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibility);
+  };
+}, [reload]);
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
