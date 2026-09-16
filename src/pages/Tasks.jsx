@@ -468,11 +468,6 @@ export default function Tasks() {
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
                 <Clock size={16} />
               </span>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-sky-800">Đang chờ xác nhận nhiệm vụ</p>
-                <p className="mt-0.5 text-xs text-sky-700">
-                  Làm xong nhiệm vụ bên nhà cung cấp, bấm nút bên dưới để nhận thưởng.
-                </p>
                 <button
                   onClick={() => {
                     const pendingToken = localStorage.getItem("pending_task_token");
