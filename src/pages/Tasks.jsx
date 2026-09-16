@@ -728,7 +728,6 @@ export default function Tasks() {
             )}
           </>
         )}
-      </main>
 
       <BottomNav />
     </div>
