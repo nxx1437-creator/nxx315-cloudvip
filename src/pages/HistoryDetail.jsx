@@ -62,10 +62,16 @@ const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together.png`,
-  freefire: `${STORAGE_URL}/freefire.png`,   // 👈 THÊM DÒNG NÀY
+  freefire: `${STORAGE_URL}/freefire.png`, 
 };
-function detectGame(packageId) {
-  const pid = String(packageId || "").toLowerCase();
+function detectGame(order) {
+  const pid = String(order?.package_id || "").toLowerCase();
+  const method = String(order?.payment_method || "").toLowerCase();
+
+  // Nếu là đơn thẻ cào → trả về "topup"
+  if (method === "card" && pid.startsWith("card-")) {
+    return "topup";
+  }
 
   if (
     pid.startsWith("vng-") ||
@@ -81,16 +87,24 @@ function detectGame(packageId) {
     return "lienquan";
   }
 
-  if (pid.startsWith("pt-") || pid.includes("playtogether") || pid.includes("play-together")) {
+  if (
+    pid.startsWith("pt-") ||
+    pid.includes("playtogether") ||
+    pid.includes("play-together")
+  ) {
     return "playtogether";
   }
-  if (pid.startsWith("ff-") || pid.includes("freefire") || pid.includes("free-fire")) {
+
+  if (
+    pid.startsWith("ff-") ||
+    pid.includes("freefire") ||
+    pid.includes("free-fire")
+  ) {
     return "freefire";
   }
 
   return null;
 }
-
 function getGameName(packageId) {
   const game = detectGame(packageId);
   if (game === "roblox") return "Roblox";
