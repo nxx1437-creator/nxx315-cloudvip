@@ -478,9 +478,6 @@ export default function Tasks() {
                       navigate(`/task/callback?token=${pendingToken}`);
                     }
                   }}
-                  className="mt-2 rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-600"
-                >
-                  Tôi đã hoàn thành
                 </button>
               </div>
           <button
