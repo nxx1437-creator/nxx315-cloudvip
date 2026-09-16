@@ -63,13 +63,14 @@ const GAME_FALLBACK = {
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together.png`,
   freefire: `${STORAGE_URL}/free-fire.png`,
-  topup: `${STORAGE_URL}/card-default.png`,  // 👈 THÊM DÒNG NÀY
+  topup: `${STORAGE_URL}/card-default.png`,
 };
+
 function detectGame(order) {
   const pid = String(order?.package_id || "").toLowerCase();
   const method = String(order?.payment_method || "").toLowerCase();
 
-  // 👇 ƯU TIÊN CAO NHẤT: đơn thẻ cào
+  // ƯU TIÊN CAO NHẤT: đơn thẻ cào
   if (method === "card" && pid.startsWith("card-")) {
     return "topup";
   }
@@ -106,13 +107,49 @@ function detectGame(order) {
 
   return null;
 }
-const GAME_FALLBACK = {
-  roblox: `${STORAGE_URL}/roblox.png`,
-  lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
-  playtogether: `${STORAGE_URL}/play-together.png`,
-  freefire: `${STORAGE_URL}/free-fire.png`,
-  topup: `${STORAGE_URL}/card-default.png`, 
-};
+
+function getGameName(order) {
+  const game = detectGame(order);
+  if (game === "roblox") return "Roblox";
+  if (game === "lienquan") return "Liên Quân Mobile";
+  if (game === "playtogether") return "Play Together";
+  if (game === "freefire") return "Free Fire";
+  if (game === "topup") return "Nạp thẻ cào";
+  return null;
+}
+
+function getOrderTitle(order) {
+  if (order?.package_name) return order.package_name;
+  if (order?.product_name) return order.product_name;
+  if (order?.name) return order.name;
+  if (order?.game_name) return order.game_name;
+
+  const gameKey = detectGame(order);
+
+  if (gameKey === "topup" && order?.note) {
+    // Lấy phần "Nạp thẻ Viettel 10000đ" từ note
+    return order.note.split(" - ")[0];
+  }
+
+  if (gameKey === "lienquan" && order?.quanhuy) {
+    return `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`;
+  }
+
+  if (gameKey === "playtogether" && order?.pt_gold) {
+    return `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`;
+  }
+
+  if (gameKey === "roblox" && order?.robux) {
+    return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
+  }
+
+  if (gameKey === "freefire" && order?.ff_diamond) {
+    return `${Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương`;
+  }
+
+  return "Giao dịch";
+}
+
 const fmtDate = (value) => {
   if (!value) return "—";
 
@@ -199,10 +236,7 @@ function getStatus(status) {
 
 function InfoRow({ label, value, copyable = false }) {
   const handleCopy = async () => {
-    if (value === null || value === undefined) {
-      return;
-    }
-
+    if (value === null || value === undefined) return;
     try {
       await navigator.clipboard.writeText(String(value));
     } catch (error) {
@@ -311,8 +345,8 @@ function HistoryDetailSkeleton() {
       </section>
     </div>
   );
-    }
-export default function HistoryDetail() {
+  }
+  export default function HistoryDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -413,25 +447,13 @@ export default function HistoryDetail() {
 
   const statusKey = String(order?.status || "").toLowerCase();
 
-  // Detect game từ package_id
-  const gameKey = detectGame(order?.package_id);
-  const gameName = getGameName(order?.package_id);
+  // Detect game từ order (KHÔNG phải package_id)
+  const gameKey = detectGame(order);
+  const gameName = getGameName(order);
+  const name = getOrderTitle(order);
 
-  const name =
-  order?.package_name ||
-  order?.product_name ||
-  order?.name ||
-  pkg?.name ||
-  order?.game_name ||
-  (gameKey === "lienquan" && order?.quanhuy
-    ? `${Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy`
-    : gameKey === "playtogether" && order?.pt_gold
-    ? `${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng`
-    : gameKey === "roblox" && order?.robux
-    ? `${Number(order.robux).toLocaleString("vi-VN")} Robux`
-    : gameName || "Giao dịch");
-  
   const image =
+    order?.image ||
     order?.image_url ||
     order?.package_image ||
     order?.product_image ||
@@ -462,8 +484,11 @@ export default function HistoryDetail() {
       ? "Chuyển khoản ngân hàng"
       : order?.payment_method === "coin" || order?.payment_method === "coins"
       ? "Thanh toán bằng xu"
+      : order?.payment_method === "card"
+      ? "Thẻ cào"
       : order?.payment_method || null;
-        return (
+
+  return (
     <div className="min-h-screen bg-[#f7faff] pb-28 text-slate-900">
       <TopHeader />
 
@@ -578,16 +603,18 @@ export default function HistoryDetail() {
                         {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
                       </p>
                     )}
-                    {order.ff_diamond != null && (
-  <InfoRow
-    label="Kim Cương"
-    value={`${Number(order.ff_diamond).toLocaleString("vi-VN")} KC`}
-  />
-)}
 
-{order.ff_uid && (
-  <InfoRow label="UID Free Fire" value={order.ff_uid} copyable />
-)}
+                    {order.ff_diamond != null && (
+                      <p className="mt-1 text-xs font-bold text-blue-500">
+                        {Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương
+                      </p>
+                    )}
+
+                    {order.pt_gold != null && (
+                      <p className="mt-1 text-xs font-bold text-blue-500">
+                        {Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng
+                      </p>
+                    )}
 
                     {order.package_id && (
                       <p className="mt-1 text-xs text-slate-400">
@@ -647,6 +674,20 @@ export default function HistoryDetail() {
                   />
                 )}
 
+                {order.ff_diamond != null && (
+                  <InfoRow
+                    label="Kim Cương"
+                    value={`${Number(order.ff_diamond).toLocaleString("vi-VN")} KC`}
+                  />
+                )}
+
+                {order.pt_gold != null && (
+                  <InfoRow
+                    label="Thỏi Vàng"
+                    value={`${Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi`}
+                  />
+                )}
+
                 {coin != null && (
                   <InfoRow
                     label="Số xu"
@@ -691,6 +732,22 @@ export default function HistoryDetail() {
                   <InfoRow label="UID" value={order.uid} copyable />
                 )}
 
+                {order.pt_uid && (
+                  <InfoRow
+                    label="UID Play Together"
+                    value={order.pt_uid}
+                    copyable
+                  />
+                )}
+
+                {order.ff_uid && (
+                  <InfoRow
+                    label="UID Free Fire"
+                    value={order.ff_uid}
+                    copyable
+                  />
+                )}
+
                 {order.delivery_target && (
                   <InfoRow
                     label="Thông tin nhận"
@@ -702,8 +759,7 @@ export default function HistoryDetail() {
                   <InfoRow label="Ghi chú" value={order.note} />
                 )}
               </section>
-
-              {["paid", "processing"].includes(statusKey) && (
+                          {["paid", "processing"].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-500">
@@ -845,4 +901,4 @@ export default function HistoryDetail() {
       <BottomNav />
     </div>
   );
-                    }
+                  }
