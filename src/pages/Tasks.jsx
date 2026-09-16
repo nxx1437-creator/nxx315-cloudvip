@@ -1,0 +1,735 @@
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Search,
+  Sparkles,
+  Zap,
+  Trophy,
+  Coins,
+  Clock,
+  Flame,
+  ExternalLink,
+  CheckCircle2,
+  XCircle,
+  History,
+  ListChecks,
+} from "lucide-react";
+import useSession from "../hooks/useSession.js";
+import useProfile from "../hooks/useProfile.js";
+import useTasks from "../hooks/useTasks.js";
+import BottomNav from "../components/BottomNav.jsx";
+import TopHeader from "../components/TopHeader.jsx";
+import { supabase } from "../lib/supabaseClient.js";
+
+// =====================================================
+// PROVIDER LOGO
+// =====================================================
+
+const SUPABASE_URL = 'https://rwglwovohbyqmbbzdvdj.supabase.co';
+const STORAGE_BUCKET = 'game_logos';
+
+const getImageUrl = (fileName) =>
+  `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+
+const PROVIDER_LOGOS = {
+  layma: 'layma.png',
+  link4m: 'link4m.png',
+  site2s: 'site2s.png',
+  traffic68: 'traffic68.png',
+};
+
+const getProviderLogo = (task) => {
+  if (task?.logo_url) return task.logo_url;
+  const key = String(task?.provider || '').toLowerCase().trim();
+  const file = PROVIDER_LOGOS[key];
+  return file ? getImageUrl(file) : null;
+};
+
+function ProviderLogo({ task }) {
+  const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const src = getProviderLogo(task);
+  const initials = String(task?.provider || '?').slice(0, 2).toUpperCase();
+
+  if (error || !src) {
+    return (
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white shrink-0">
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-white border border-slate-100">
+      {!loaded && (
+        <div className="absolute inset-0 bg-slate-100 animate-pulse" />
+      )}
+      <img
+        src={src}
+        alt={task.provider}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+        className={`h-full w-full object-contain p-1 transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </div>
+  );
+}
+
+// =====================================================
+// HELPERS
+// =====================================================
+
+function hoursUntilMidnight() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  return Math.max(1, Math.round((midnight - now) / 1000 / 60 / 60));
+}
+
+function MiniStat({ value, label, icon: Icon, bg, valueColor, iconColor }) {
+  return (
+    <div className={`rounded-xl p-3.5 ${bg}`}>
+      <div className="flex items-start justify-between">
+        <span className={`text-2xl font-bold ${valueColor}`}>{value}</span>
+        <Icon size={17} className={iconColor} />
+      </div>
+      <p className="mt-1 text-xs text-slate-600/80">{label}</p>
+    </div>
+  );
+}
+
+function getHistoryStatus(status) {
+  const s = String(status || "").toLowerCase();
+  switch (s) {
+    case "pending":
+      return { label: "Đang chờ", cls: "bg-blue-50 text-blue-600 border-blue-100" };
+    case "completed":
+    case "success":
+    case "done":
+    case "verified":
+      return { label: "Hoàn thành", cls: "bg-emerald-50 text-emerald-600 border-emerald-100" };
+    case "expired":
+      return { label: "Hết hạn", cls: "bg-slate-100 text-slate-500 border-slate-200" };
+    case "cancelled":
+      return { label: "Đã hủy", cls: "bg-amber-50 text-amber-600 border-amber-100" };
+    case "failed":
+      return { label: "Thất bại", cls: "bg-rose-50 text-rose-600 border-rose-100" };
+    default:
+      return { label: s || "—", cls: "bg-slate-100 text-slate-500 border-slate-200" };
+  }
+}
+
+function formatDateTime(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function TaskCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
+      <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-slate-100 animate-pulse shrink-0" />
+            <div className="h-4 w-24 rounded bg-slate-100 animate-pulse" />
+          </div>
+          <div className="h-6 w-14 rounded-full bg-slate-100 animate-pulse" />
+        </div>
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
+          <div>
+            <div className="h-2.5 w-20 rounded bg-slate-200 animate-pulse" />
+            <div className="mt-2 h-4 w-24 rounded bg-slate-200 animate-pulse" />
+          </div>
+          <div className="h-5 w-14 rounded-full bg-slate-200 animate-pulse" />
+        </div>
+        <div className="mt-3">
+          <div className="flex items-center justify-between">
+            <div className="h-2.5 w-14 rounded bg-slate-100 animate-pulse" />
+            <div className="h-2.5 w-10 rounded bg-slate-100 animate-pulse" />
+          </div>
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 animate-pulse" />
+        </div>
+        <div className="mt-4 h-11 w-full rounded-full bg-slate-100 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+function HistorySkeleton() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+      <div className="space-y-2">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 last:border-0 dark:border-slate-800">
+            <div className="h-3.5 w-20 rounded skeleton-shimmer" />
+            <div className="h-5 w-20 rounded-full skeleton-shimmer" />
+            <div className="h-3.5 w-16 rounded skeleton-shimmer" />
+            <div className="h-3.5 w-28 rounded skeleton-shimmer" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+  }
+// =====================================================
+// MAIN
+// =====================================================
+
+export default function Tasks() {
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const user = session?.user;
+  const { profile } = useProfile(user?.id);
+  const { tasks, loading, reload } = useTasks(user?.id);
+  const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("hot");
+  const [startingTaskId, setStartingTaskId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  const [pendingTaskId, setPendingTaskId] = useState(null);
+
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setShowSkeleton(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSkeleton(true), 300);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  // 👇 SỬA: Chỉ reload UI khi user quay lại, KHÔNG tự động navigate
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        reload();
+        setHistoryLoaded(false);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [reload]);
+
+  const isAdmin = profile.is_admin;
+  const isBlocked = profile.is_flagged && !isAdmin;
+
+  const filteredTasks = useMemo(() => {
+    let list = tasks;
+
+    if (activeTab === "hot") {
+      list = list.filter((t) => t.is_hot);
+    }
+
+    const kw = query.trim().toLowerCase();
+    if (kw) {
+      list = list.filter((t) => t.provider.toLowerCase().includes(kw));
+    }
+
+    return list;
+  }, [tasks, query, activeTab]);
+
+  const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
+  const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
+  const hotCount = tasks.filter((t) => t.is_hot).length;
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    window.clearTimeout(window.__taskToast);
+    window.__taskToast = window.setTimeout(() => setToast(null), 3500);
+  };
+
+  // Fetch history — query 2 bước
+  useEffect(() => {
+    if (activeTab !== "history" || historyLoaded || !user?.id) return;
+
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const { data: tokens, error: tokensErr } = await supabase
+          .from("task_tokens")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (tokensErr) throw tokensErr;
+
+        if (!tokens || tokens.length === 0) {
+          setHistory([]);
+          setHistoryLoaded(true);
+          return;
+        }
+
+        const taskIds = [...new Set(tokens.map((t) => t.task_id).filter(Boolean))];
+
+        const { data: tasksList } = await supabase
+          .from("tasks")
+          .select("id, provider, reward_coins")
+          .in("id", taskIds);
+
+        const taskMap = {};
+        (tasksList || []).forEach((t) => {
+          taskMap[t.id] = t;
+        });
+
+        const enriched = tokens.map((t) => ({
+          ...t,
+          provider: taskMap[t.task_id]?.provider || "—",
+          reward_coins: t.reward_coins || taskMap[t.task_id]?.reward_coins || 0,
+        }));
+
+        setHistory(enriched);
+        setHistoryLoaded(true);
+      } catch (err) {
+        console.error("Fetch history error:", err);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [activeTab, user?.id, historyLoaded]);
+
+  const handleStart = async (task) => {
+    if (isLoading) return;
+
+    if (!user?.id) {
+      showToast("Vui lòng đăng nhập!", "error");
+      return;
+    }
+
+    if (isBlocked) {
+      showToast("Tài khoản của bạn đang bị hạn chế!", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    setStartingTaskId(task.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("start-task", {
+        body: { task_id: task.id },
+      });
+
+      setStartingTaskId(null);
+
+      if (error) {
+        if (error.message?.includes("Quá nhiều request") || error.status === 429) {
+          showToast("Bạn đang thao tác quá nhanh! Vui lòng đợi 1 phút.", "error");
+        } else {
+          showToast("Lỗi: " + error.message, "error");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.error) {
+        showToast(data.error, "error");
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.shortUrl && data?.token) {
+        localStorage.setItem("pending_task_token", data.token);
+        localStorage.setItem("pending_task_time", Date.now().toString());
+        localStorage.setItem("pending_task_id", task.id);
+
+        window.open(data.shortUrl, "_blank");
+
+        showToast(`Đã mở link ${task.provider}! Làm xong quay lại tab này để nhận thưởng.`);
+        setPendingTaskId(task.id);
+
+        setTimeout(() => {
+          reload();
+          setHistoryLoaded(false);
+        }, 2000);
+      } else {
+        showToast("Không lấy được link nhiệm vụ!", "error");
+      }
+    } catch (err) {
+      setStartingTaskId(null);
+      showToast("Lỗi: " + err.message, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 👇 MỚI: Hàm xử lý khi user bấm "Kiểm tra nhiệm vụ"
+  const handleCheckTask = () => {
+    const pendingToken = localStorage.getItem("pending_task_token");
+    const pendingTime = parseInt(localStorage.getItem("pending_task_time") || "0", 10);
+
+    if (!pendingToken) {
+      showToast("Không tìm thấy token. Vui lòng làm lại nhiệm vụ.", "error");
+      return;
+    }
+
+    const elapsed = Math.round((Date.now() - pendingTime) / 1000);
+
+    // Chuyển sang trang callback kèm thời gian đã ở tab
+    navigate(`/task/callback?token=${pendingToken}&time=${elapsed}`);
+  };
+  return (
+  <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+      .font-display { font-family: 'Baloo 2', sans-serif; }
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      .skeleton-shimmer {
+        background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite linear;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .fade-in { animation: fadeIn 0.5s ease-out; }
+    `}</style>
+
+    {toast && (
+      <div
+        className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-xl ${
+          toast.type === "error"
+            ? "border-rose-200 bg-white/95 text-rose-700"
+            : "border-emerald-200 bg-white/95 text-emerald-700"
+        }`}
+      >
+        {toast.type === "error" ? <XCircle size={19} /> : <CheckCircle2 size={19} />}
+        <p className="text-sm font-semibold">{toast.message}</p>
+      </div>
+    )}
+
+    <TopHeader />
+
+    <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
+      {/* Hero */}
+      <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5 shadow-lg shadow-sky-100">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
+          <Sparkles size={12} /> TRUNG TÂM NHIỆM VỤ
+        </span>
+
+        <div className="mt-3 flex items-start gap-3">
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 shadow-md shadow-sky-500/30">
+            <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
+              <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <rect x="4" y="4" width="16" height="16" rx="4" stroke="white" strokeWidth="2.2" />
+            </svg>
+            <span className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-400" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold leading-tight text-slate-900">
+              Kiếm <span className="text-sky-600">Coin</span> mỗi ngày
+            </h1>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {tasks.length} nhiệm vụ đang chạy ·{" "}
+              <span className="font-medium text-emerald-600">{totalRemaining} lượt còn</span>
+            </p>
+          </div>
+        </div>
+
+        {(isAdmin || profile.risk_score > 0) && (
+          <div
+            className={`mt-3 rounded-xl px-3 py-2 text-xs font-semibold ${
+              isAdmin
+                ? "bg-purple-100 text-purple-700"
+                : isBlocked
+                ? "bg-rose-100 text-rose-700"
+                : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {isAdmin
+              ? " Admin — Miễn kiểm tra"
+              : isBlocked
+              ? `Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế`
+              : `Rủi ro: ${profile.risk_score}/100`}
+          </div>
+        )}
+
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          <MiniStat value={availableCount} label="KHẢ DỤNG" icon={Zap} bg="bg-sky-100/70" valueColor="text-sky-700" iconColor="text-sky-500" />
+          <MiniStat value={profile.tasks_completed_today || 0} label="HOÀN THÀNH" icon={Trophy} bg="bg-emerald-100/60" valueColor="text-emerald-700" iconColor="text-emerald-500" />
+          <MiniStat value={profile.coins_earned_today || 0} label="COIN HÔM NAY" icon={Coins} bg="bg-amber-100/60" valueColor="text-amber-700" iconColor="text-amber-500" />
+          <MiniStat value={hoursUntilMidnight()} label="CÒN LẠI" icon={Clock} bg="bg-sky-100/70" valueColor="text-sky-700" iconColor="text-sky-500" />
+        </div>
+      </div>
+
+      {/* 👇 SỬA: Banner pending có NÚT "Kiểm tra nhiệm vụ" */}
+      {pendingTaskId && (
+        <div className="rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+              <Clock size={16} />
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-sky-800">Đang chờ xác nhận nhiệm vụ</p>
+              <p className="mt-0.5 text-xs text-sky-700">
+                Làm xong nhiệm vụ bên nhà cung cấp, bấm "Kiểm tra nhiệm vụ" để nhận thưởng.
+              </p>
+              <button
+                onClick={handleCheckTask}
+                className="mt-3 w-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-2.5 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
+              >
+                Kiểm tra nhiệm vụ
+              </button>
+            </div>
+            <button
+              onClick={() => setPendingTaskId(null)}
+              className="shrink-0 text-sky-400 hover:text-sky-600"
+            >
+              <XCircle size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isBlocked && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
+          <p className="text-sm font-semibold text-rose-700">🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ</p>
+          <p className="mt-1 text-xs text-rose-600">Vui lòng liên hệ hỗ trợ để được giải quyết</p>
+        </div>
+      )}
+
+      {/* Search + Tabs */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm md:order-2 md:w-80">
+          <Search size={16} className="shrink-0 text-slate-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm nhiệm vụ, nhà cung cấp..."
+            className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 md:order-1">
+          <button
+            onClick={() => setActiveTab("hot")}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
+              activeTab === "hot"
+                ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-sky-500/30"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <Flame size={13} />
+            Hot
+            <span className={`rounded-full px-1.5 text-[10px] ${activeTab === "hot" ? "bg-white/20" : "bg-slate-100"}`}>
+              {hotCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
+              activeTab === "all"
+                ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-sky-500/30"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <ListChecks size={13} />
+            Tất cả
+            <span className={`rounded-full px-1.5 text-[10px] ${activeTab === "all" ? "bg-white/20" : "bg-slate-100"}`}>
+              {tasks.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
+              activeTab === "history"
+                ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-sky-500/30"
+                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <History size={13} />
+            Lịch sử
+          </button>
+        </div>
+      </div>
+
+      {/* TAB HOT / ALL */}
+      {(activeTab === "hot" || activeTab === "all") && (
+        <>
+          {showSkeleton && loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <TaskCardSkeleton key={i} />
+              ))}
+            </div>
+          )}
+
+          {!loading && filteredTasks.length === 0 && (
+            <div className="fade-in rounded-2xl border border-slate-200 bg-white py-12 text-center">
+              <Search size={30} className="mx-auto text-slate-300 mb-2" />
+              <p className="text-sm font-bold text-slate-600">Không tìm thấy nhiệm vụ</p>
+              <p className="mt-1 text-xs text-slate-400">Thử đổi tab hoặc từ khóa khác</p>
+            </div>
+          )}
+
+          {!loading && filteredTasks.length > 0 && (
+            <div className="fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTasks.map((task) => {
+                const progressPct = Math.min(100, Math.round((task.completedToday / task.daily_limit) * 100));
+                const isDone = task.remainingToday <= 0;
+                const isThisStarting = startingTaskId === task.id;
+
+                return (
+                  <div key={task.id} className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm shadow-slate-200/70">
+                    <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600" />
+                    <div className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <ProviderLogo task={task} />
+                          <span className="text-base font-bold text-slate-900">{task.provider}</span>
+                        </div>
+                        {task.is_hot && (
+                          <span className="flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-500">
+                            <Flame size={12} /> HOT
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wide text-slate-400">Phần thưởng</p>
+                          <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
+                            <Coins size={15} /> {task.reward_coins} <span className="text-xs font-normal text-slate-400">/lượt</span>
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+                          {task.remainingToday} còn
+                        </span>
+                      </div>
+
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Hôm nay</span>
+                          <span>{task.completedToday}/{task.daily_limit}</span>
+                        </div>
+                        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600" style={{ width: `${progressPct}%` }} />
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleStart(task)}
+                        disabled={isDone || isThisStarting || isBlocked || isLoading}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <ExternalLink size={15} />
+                        {isThisStarting
+                          ? "Đang mở..."
+                          : isBlocked
+                          ? "Tài khoản bị khóa"
+                          : isDone
+                          ? "Đã hết lượt hôm nay"
+                          : "Làm nhiệm vụ"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+              {/* TAB HISTORY */}
+        {activeTab === "history" && (
+          <>
+            {historyLoading ? (
+              <HistorySkeleton />
+            ) : history.length === 0 ? (
+              <div className="fade-in rounded-2xl border border-slate-200 bg-white py-12 text-center">
+                <History size={30} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-sm font-bold text-slate-600">Chưa có lịch sử nhiệm vụ</p>
+                <p className="mt-1 text-xs text-slate-400">Làm nhiệm vụ để xem lịch sử tại đây</p>
+              </div>
+            ) : (
+              <div className="fade-in overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="hidden md:grid grid-cols-12 gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <div className="col-span-3">Nhiệm vụ</div>
+                  <div className="col-span-3">Trạng thái</div>
+                  <div className="col-span-3">Thưởng</div>
+                  <div className="col-span-3 text-right">Thời gian</div>
+                </div>
+
+                <div className="divide-y divide-slate-100">
+                  {history.map((log) => {
+                    const status = getHistoryStatus(log.status);
+                    const isCompleted = ["completed", "success", "done", "verified"].includes(String(log.status || "").toLowerCase());
+
+                    return (
+                      <div key={log.id} className="px-4 py-3 md:grid md:grid-cols-12 md:gap-3 md:items-center">
+                        <div className="flex items-start justify-between gap-3 md:hidden">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-slate-800 truncate">
+                              {log.provider || "—"}
+                            </p>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.cls}`}>
+                                {status.label}
+                              </span>
+                              <span className={`text-xs font-bold ${isCompleted ? "text-emerald-600" : "text-slate-400"}`}>
+                                {isCompleted && log.reward_coins ? `+${log.reward_coins}đ` : "—"}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[10px] text-slate-400">
+                              {formatDateTime(log.created_at)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="hidden md:block md:col-span-3">
+                          <p className="text-sm font-semibold text-slate-800 truncate">
+                            {log.provider || "—"}
+                          </p>
+                        </div>
+                        <div className="hidden md:block md:col-span-3">
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${status.cls}`}>
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="hidden md:block md:col-span-3">
+                          <span className={`text-sm font-bold ${isCompleted && log.reward_coins ? "text-emerald-600" : "text-slate-400"}`}>
+                            {isCompleted && log.reward_coins ? `+${log.reward_coins}đ` : "—"}
+                          </span>
+                        </div>
+                        <div className="hidden md:block md:col-span-3 md:text-right">
+                          <span className="text-xs text-slate-500">
+                            {formatDateTime(log.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+}
