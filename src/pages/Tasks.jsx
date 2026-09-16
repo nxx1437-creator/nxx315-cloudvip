@@ -211,27 +211,24 @@ export default function Tasks() {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  /useEffect(() => {
-  // Chỉ reload UI khi user quay lại tab, KHÔNG tự động navigate
-  const handleVisibility = () => {
-    if (document.visibilityState === "visible") {
-      reload();
-      setHistoryLoaded(false);
-    }
-  };
+  // Reload dữ liệu khi quay lại tab (KHÔNG tự động nhảy vào trang xác nhận nữa —
+  // việc đó giờ chỉ xảy ra khi user bấm nút "Tôi đã hoàn thành" ở banner bên dưới)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        reload();
+        setHistoryLoaded(false);
+      }
+    };
 
-  document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
 
-  // 👇 Load pendingTaskId từ localStorage nếu có
-  const savedTaskId = localStorage.getItem("pending_task_id");
-  if (savedTaskId) {
-    setPendingTaskId(savedTaskId);
-  }
-
-  return () => {
-    document.removeEventListener("visibilitychange", handleVisibility);
-  };
-}, [reload]);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
+  }, [navigate, reload]);
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
@@ -246,7 +243,7 @@ export default function Tasks() {
     const kw = query.trim().toLowerCase();
     if (kw) {
       list = list.filter((t) => t.provider.toLowerCase().includes(kw));
-    }
+      }
 
     return list;
   }, [tasks, query, activeTab]);
@@ -474,10 +471,24 @@ export default function Tasks() {
               <div className="flex-1">
                 <p className="text-sm font-bold text-sky-800">Đang chờ xác nhận nhiệm vụ</p>
                 <p className="mt-0.5 text-xs text-sky-700">
-                  Làm xong nhiệm vụ bên nhà cung cấp, quay lại tab này để nhận thưởng.
+                  Làm xong nhiệm vụ bên nhà cung cấp, bấm nút bên dưới để nhận thưởng.
                 </p>
+                <button
+                  onClick={() => {
+                    const pendingToken = localStorage.getItem("pending_task_token");
+                    if (pendingToken) {
+                      localStorage.removeItem("pending_task_token");
+                      localStorage.removeItem("pending_task_time");
+                      localStorage.removeItem("pending_task_id");
+                      navigate(`/task/callback?token=${pendingToken}`);
+                    }
+                  }}
+                  className="mt-2 rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-600"
+                >
+                  Tôi đã hoàn thành
+                </button>
               </div>
-              <button
+          <button
                 onClick={() => setPendingTaskId(null)}
                 className="shrink-0 text-sky-400 hover:text-sky-600"
               >
@@ -713,9 +724,8 @@ export default function Tasks() {
             )}
           </>
         )}
-
-      <BottomNav />
+    
+     <BottomNav />
     </div>
   );
-        }
-      
+            }
