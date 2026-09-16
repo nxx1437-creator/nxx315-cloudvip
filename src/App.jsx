@@ -37,6 +37,7 @@ import Roblox from "./pages/Roblox.jsx";
 import PlayTogether from "./pages/PlayTogether.jsx";
 import LienQuan from "./pages/LienQuan.jsx";
 import FreeFire from "./pages/FreeFire.jsx";
+import NapThanhCong from "./pages/NapThanhCong.jsx";
 import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
 
@@ -162,6 +163,14 @@ export default function App() {
   element={
     <ProtectedRoute>
       <FreeFire />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/nap-thanh-cong/:orderId"
+  element={
+    <ProtectedRoute>
+      <NapThanhCong />
     </ProtectedRoute>
   }
 />
