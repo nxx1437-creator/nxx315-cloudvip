@@ -865,7 +865,7 @@ function UidStep({
             onKeyDown={(e) => {
               if (e.key === "Enter") onContinue();
             }}
-            placeholder="Ví dụ: 3J9Y-F29L-LMGC"
+            placeholder="Ví dụ: XXXX-XXXX-XXXX"
             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-10 pr-4 text-sm font-medium tracking-wider text-slate-900 outline-none transition placeholder:text-slate-400 placeholder:tracking-normal focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-100"
           />
         </div>
