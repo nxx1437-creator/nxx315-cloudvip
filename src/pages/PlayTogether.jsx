@@ -223,7 +223,7 @@ export default function PlayTogether() {
       alert(
         "UID Play Together không hợp lệ.\n\n" +
         "Định dạng đúng: XXXX-XXXX-XXXX\n" +
-        "Ví dụ: 3J9Y-F29L-LMGC"
+        "Ví dụ: XXXX-XXXX-XXXX"
       );
       return;
     }
