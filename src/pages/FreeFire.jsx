@@ -429,21 +429,33 @@ export default function FreeFire() {
       const result = await checkCardTransactions(requestIds);
 
       if (result.status === "success") {
-        const totalNetAmount = result.results.reduce(
-          (sum, item) => sum + Number(item.netAmount || 0),
-          0
-        );
+  const totalNetAmount = result.results.reduce(
+    (sum, item) => sum + Number(item.netAmount || 0),
+    0
+  );
 
-        setCardResult({
-          status: "success",
-          totalNetAmount,
-          results: result.results,
-        });
+  // Lấy order_id từ kết quả đầu tiên (nếu có)
+  const firstOrderId = result.results[0]?.order_id;
 
-        setCards([
-          { id: Date.now(), type: "Viettel", amount: "", serial: "", code: "" },
-        ]);
-        return;
+  setCardResult({
+    status: "success",
+    totalNetAmount,
+    results: result.results,
+  });
+
+  setCards([...]);
+
+  // Chuyển sang trang nạp thành công sau 1.5 giây
+  if (firstOrderId) {
+    setTimeout(() => {
+      navigate(`/nap-thanh-cong/${firstOrderId}`, {
+        state: {
+          coinsAdded: totalNetAmount,
+        },
+      });
+    }, 1500);
+  }
+  return;
       }
 
       if (result.status === "failed") {
