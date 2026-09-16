@@ -230,13 +230,11 @@ export default function Tasks() {
     };
 
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        checkPendingToken();
-        reload();
-        setHistoryLoaded(false);
-      }
-    };
-
+  if (document.visibilityState === "visible") {
+    reload();
+    setHistoryLoaded(false);
+  }
+};
     checkPendingToken();
 
     document.addEventListener("visibilitychange", handleVisibility);
