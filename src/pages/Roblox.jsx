@@ -391,6 +391,10 @@ function UsernameAndPackageSection({
 }) {
   const [showGuide, setShowGuide] = useState(false);
 
+  // Chia gói theo phương thức
+  const cardPackages = PACKAGES.filter((p) => p.method === "Card Robux");
+  const vngPackages = PACKAGES.filter((p) => p.method === "VNG");
+
   return (
     <div className="space-y-4">
       {/* Nhập ID */}
@@ -468,17 +472,25 @@ function UsernameAndPackageSection({
         )}
       </section>
 
-      {/* Chọn gói */}
+      {/* ═══════════ NHÓM 1: CARD ROBUX ═══════════ */}
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <div className="mb-4">
-          <h2 className="text-base font-semibold">Chọn gói Robux</h2>
-          <p className="mt-0.5 text-sm text-gray-500">
-            {PACKAGES.length} gói khả dụng
-          </p>
+        <div className="mb-4 flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <CreditCard size={20} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold">Card Robux</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Thanh toán bằng thẻ cào Robux quốc tế
+            </p>
+          </div>
+          <span className="shrink-0 rounded-md bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
+            {cardPackages.length} gói
+          </span>
         </div>
 
         <div className="space-y-2">
-          {PACKAGES.map((pkg) => (
+          {cardPackages.map((pkg) => (
             <PackageRow
               key={pkg.id}
               pkg={pkg}
@@ -487,15 +499,58 @@ function UsernameAndPackageSection({
             />
           ))}
         </div>
+      </section>
 
+      {/* ═══════════ NHÓM 2: NẠP ROBUX VIỆT NAM ═══════════ */}
+      <section className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="mb-4 flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <Wallet size={20} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold">Nạp Robux Việt Nam</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Nạp trực tiếp qua kênh VNG — nhanh chóng
+            </p>
+          </div>
+          <span className="shrink-0 rounded-md bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
+            {vngPackages.length} gói
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          {vngPackages.map((pkg) => (
+            <PackageRow
+              key={pkg.id}
+              pkg={pkg}
+              active={selectedPackage?.id === pkg.id}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════ Nút Tiếp tục ═══════════ */}
+      <section className="rounded-xl border border-gray-200 bg-white p-5">
         <button
           onClick={onContinue}
           disabled={!selectedPackage || !robloxUser}
-          className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Tiếp tục
           <ChevronRight size={16} />
         </button>
+
+        {!robloxUser && (
+          <p className="mt-2 text-center text-xs text-gray-500">
+            Vui lòng xác nhận username Roblox trước
+          </p>
+        )}
+        {robloxUser && !selectedPackage && (
+          <p className="mt-2 text-center text-xs text-gray-500">
+            Vui lòng chọn một gói Robux
+          </p>
+        )}
       </section>
 
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
@@ -553,6 +608,7 @@ function PackageRow({ pkg, active, onSelect }) {
     </button>
   );
 }
+
 function UsernameSection({
   username,
   setUsername,
@@ -893,7 +949,7 @@ function PaymentSection({ order, onBack, onPaid }) {
       onPaid?.(updatedOrder);
 
       alert(
-        `🎉 Thanh toán thành công!\n\n` +
+        ` Thanh toán thành công!\n\n` +
           `Mã đơn: ${order.order_code}\n` +
           `Robux: ${Number(order.robux).toLocaleString("vi-VN")} RB\n` +
           `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
