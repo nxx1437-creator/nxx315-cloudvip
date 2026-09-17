@@ -29,7 +29,7 @@ const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
 
 const PUBG_BANNER = `${SUPABASE_STORAGE}/pubg-banner.png`;
-const PUBG_LOGO = `${SUPABASE_STORAGE}/pubg.png`;
+const PUBG_LOGO = `${SUPABASE_STORAGE}/pubg-mobile-vn.png`;
 
 // Gói UC — giá VNĐ, số UC
 const PACKAGES = [
