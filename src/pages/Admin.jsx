@@ -28,6 +28,8 @@ import {
     Bell,
   Trophy,
   Gamepad2,
+  Crosshair,   
+  Flame,       
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient";
@@ -36,6 +38,8 @@ import BanUserModal from "../components/BanUserModal";
 import RobloxOrdersTab from "../pages/RobloxOrdersTab";
 import LienQuanOrdersTab from "../pages/LienQuanOrdersTab";
 import PlayTogetherOrdersTab from "../pages/PlayTogetherOrdersTab";
+import PubgOrdersTab from "../pages/PubgOrdersTab";        
+import FreeFireOrdersTab from "../pages/FreeFireOrdersTab";
 import BroadcastForm from "../components/admin/BroadcastForm";
 
 const ADMIN_CHAT_ID = "6152450878";
@@ -60,6 +64,8 @@ const tabs = [
   { id: "roblox-orders", label: "Roblox", icon: Gift },
   { id: "lienquan-orders", label: "Liên Quân", icon: Trophy },
   { id: "playtogether-orders", label: "Play Together", icon: Gamepad2 },
+  { id: "pubg-orders", label: "PUBG Mobile", icon: Crosshair },     // 👈 THÊM
+  { id: "freefire-orders", label: "Free Fire", icon: Flame },        // 👈 THÊM
   { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
   { id: "packages", label: "Gói nạp", icon: Coins },
   { id: "users", label: "Người dùng", icon: Users },
@@ -119,6 +125,8 @@ export default function Admin() {
         {activeTab === "roblox-orders" && <RobloxOrdersTab />}
         {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
         {activeTab === "playtogether-orders" && <PlayTogetherOrdersTab />}
+        {activeTab === "pubg-orders" && <PubgOrdersTab />}            {/* 👈 THÊM */}
+        {activeTab === "freefire-orders" && <FreeFireOrdersTab />}    {/* 👈 THÊM */}
         {activeTab === "tasks" && <TasksTab />}
         {activeTab === "packages" && <PackagesTab />}
         {activeTab === "users" && <UsersTab />}
