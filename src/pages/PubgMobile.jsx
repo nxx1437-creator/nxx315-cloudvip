@@ -1515,7 +1515,7 @@ function PaymentStep({
             </div>
           )}
 
-          {/* Back */}
+                   {/* Back */}
           <button
             onClick={onBack}
             disabled={cardChecking}
@@ -1530,6 +1530,7 @@ function PaymentStep({
 }
 
 function BankRow({ label, value, copy = false, copyValue }) {
+}
   const handleCopy = async () => {
     try {
       await navigator.clipboard?.writeText(copyValue || value);
