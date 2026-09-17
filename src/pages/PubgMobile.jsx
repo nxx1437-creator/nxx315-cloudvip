@@ -29,7 +29,7 @@ const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
 
 const PUBG_BANNER = `${SUPABASE_STORAGE}/pubg-banner.png`;
-const PUBG_LOGO = `${SUPABASE_STORAGE}/pubg.png`;
+const PUBG_LOGO = `${SUPABASE_STORAGE}/pubg-mobile-vn.png`;
 
 const PACKAGES = [
   { id: "pubg-30", amount: 11000, uc: 30, bonus: 5, bonusPercent: 17, image: `${SUPABASE_STORAGE}/uc.png` },
