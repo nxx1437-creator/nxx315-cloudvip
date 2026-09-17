@@ -22,11 +22,11 @@ import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 
 const ROBLOX_BANNER_URL =
-  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-banner-2.png";
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/.png";
 
 const GAME_INFO = {
   name: "Roblox",
-  server: "Global Server",
+  server: "server 1",
   icon: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox.png",
 };
 
