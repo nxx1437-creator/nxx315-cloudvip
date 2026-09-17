@@ -144,10 +144,8 @@ export default function LienQuan() {
         {/* Banner Hero */}
         <HeroBanner onBack={() => navigate("/store")} />
 
-        {/* Stepper */}
-        <div className="mt-5 mb-5 rounded-2xl border border-gray-200 bg-white px-4 py-5 shadow-sm">
-          <Stepper step={step} />
-        </div>
+        {/* Spacer */}
+        <div className="mt-5" />
 
         {step === "package" && (
           <PackageSection
@@ -189,7 +187,7 @@ function HeroBanner({ onBack }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
       {/* Banner image */}
-      <div className="relative h-40 overflow-hidden sm:h-56">
+      <div className="relative h-48 overflow-hidden sm:h-64">
         <img
           src={LIENQUAN_BANNER_URL}
           alt="Liên Quân Mobile"
