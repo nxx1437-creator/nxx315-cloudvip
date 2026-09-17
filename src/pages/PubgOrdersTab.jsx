@@ -6,8 +6,11 @@ import {
   X,
   Eye,
   Package,
-  Copy,
+  Clock,
   CheckCircle2,
+  XCircle,
+  User,
+  Gamepad2,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient.js";
@@ -19,10 +22,9 @@ export default function PubgOrdersTab() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [detailOrder, setDetailOrder] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
   const [rejectOrder, setRejectOrder] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [processing, setProcessing] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -80,8 +82,10 @@ export default function PubgOrdersTab() {
   };
 
   const handleDelivered = async (order) => {
-    if (processing) return;
-    setProcessing(true);
+    if (processingId) return;
+    if (!window.confirm(`Xác nhận ĐÃ GIAO đơn ${order.order_code || order.id}?`)) return;
+
+    setProcessingId(order.id);
 
     const { error } = await supabase
       .from("orders")
@@ -93,18 +97,19 @@ export default function PubgOrdersTab() {
 
     if (!error) {
       await notifyTelegram(
-        `✅ Đơn PUBG #${order.order_code || order.id} đã giao.\nUID: ${order.pubg_uid}`
+        `✅ Đơn PUBG #${order.order_code || order.id} đã giao.\nUID: ${order.pubg_uid}\nUC: ${order.pubg_uc}${order.pubg_bonus > 0 ? ` + ${order.pubg_bonus} Bonus` : ""}`
       );
       await fetchOrders();
-      setDetailOrder(null);
+    } else {
+      alert("Không thể cập nhật: " + error.message);
     }
 
-    setProcessing(false);
+    setProcessingId(null);
   };
 
   const handleProcessing = async (order) => {
-    if (processing) return;
-    setProcessing(true);
+    if (processingId) return;
+    setProcessingId(order.id);
 
     const { error } = await supabase
       .from("orders")
@@ -116,15 +121,15 @@ export default function PubgOrdersTab() {
 
     if (!error) {
       await fetchOrders();
-      setDetailOrder(null);
     }
 
-    setProcessing(false);
+    setProcessingId(null);
   };
 
   const handleReject = async () => {
-    if (!rejectOrder || processing) return;
-    setProcessing(true);
+    if (!rejectOrder || processingId) return;
+
+    setProcessingId(rejectOrder.id);
 
     const { error } = await supabase
       .from("orders")
@@ -142,25 +147,23 @@ export default function PubgOrdersTab() {
       await fetchOrders();
       setRejectOrder(null);
       setRejectReason("");
-      setDetailOrder(null);
+    } else {
+      alert("Không thể từ chối: " + error.message);
     }
 
-    setProcessing(false);
-  };
-
-  const copyText = (text) => {
-    navigator.clipboard?.writeText(String(text));
+    setProcessingId(null);
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">
             Đơn PUBG Mobile
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Quản lý đơn nạp UC PUBG Mobile VN
+            {orders.length} đơn · Duyệt nhanh trên mobile
           </p>
         </div>
         <button
@@ -211,10 +214,19 @@ export default function PubgOrdersTab() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* List */}
       {loading ? (
-        <div className="rounded-2xl border bg-white p-8 text-center">
-          <RefreshCw className="mx-auto animate-spin text-slate-400" size={32} />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse rounded-2xl border bg-white p-5"
+            >
+              <div className="h-5 w-32 rounded bg-slate-200" />
+              <div className="mt-3 h-4 w-48 rounded bg-slate-200" />
+              <div className="mt-2 h-4 w-40 rounded bg-slate-200" />
+            </div>
+          ))}
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="rounded-2xl border bg-white px-6 py-14 text-center">
@@ -226,160 +238,21 @@ export default function PubgOrdersTab() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-sm">
-              <thead className="border-b bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left">Đơn</th>
-                  <th className="px-4 py-3 text-left">Character ID</th>
-                  <th className="px-4 py-3 text-left">Gói UC</th>
-                  <th className="px-4 py-3 text-left">Số tiền</th>
-                  <th className="px-4 py-3 text-left">Trạng thái</th>
-                  <th className="px-4 py-3 text-left">Thời gian</th>
-                  <th className="px-4 py-3 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-4 font-semibold">
-                      #{order.order_code || order.id}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs">
-                          {order.pubg_uid || "-"}
-                        </span>
-                        {order.pubg_uid && (
-                          <button
-                            onClick={() => copyText(order.pubg_uid)}
-                            className="text-slate-400 hover:text-yellow-600"
-                          >
-                            <Copy size={12} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-semibold">
-                        {Number(order.pubg_uc || 0).toLocaleString("vi-VN")} UC
-                      </div>
-                      {Number(order.pubg_bonus || 0) > 0 && (
-                        <div className="text-xs font-bold text-emerald-600">
-                          + {Number(order.pubg_bonus).toLocaleString("vi-VN")} Bonus
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 font-semibold">
-                      {Number(order.amount || 0).toLocaleString("vi-VN")}đ
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-4 py-4 text-slate-500 text-xs">
-                      {order.created_at
-                        ? new Date(order.created_at).toLocaleString("vi-VN")
-                        : "-"}
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => setDetailOrder(order)}
-                        className="rounded-lg p-2 text-yellow-600 hover:bg-yellow-50"
-                      >
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-3">
+          {filteredOrders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              processing={processingId === order.id}
+              onDelivered={() => handleDelivered(order)}
+              onProcessing={() => handleProcessing(order)}
+              onReject={() => setRejectOrder(order)}
+            />
+          ))}
         </div>
       )}
 
-      {/* Detail Modal */}
-      {detailOrder && (
-        <Modal
-          title={`Đơn PUBG #${detailOrder.order_code || detailOrder.id}`}
-          onClose={() => setDetailOrder(null)}
-        >
-          <div className="space-y-3">
-            <InfoBox
-              label="Character ID"
-              value={detailOrder.pubg_uid || "-"}
-            />
-            <InfoBox
-              label="UC gốc"
-              value={`${Number(detailOrder.pubg_uc || 0).toLocaleString("vi-VN")} UC`}
-            />
-            {Number(detailOrder.pubg_bonus || 0) > 0 && (
-              <InfoBox
-                label="Bonus lần đầu"
-                value={`+ ${Number(detailOrder.pubg_bonus).toLocaleString("vi-VN")} UC`}
-              />
-            )}
-            <InfoBox
-              label="Tổng nhận"
-              value={`${(
-                Number(detailOrder.pubg_uc || 0) +
-                Number(detailOrder.pubg_bonus || 0)
-              ).toLocaleString("vi-VN")} UC`}
-            />
-            <InfoBox
-              label="Số tiền"
-              value={`${Number(detailOrder.amount || 0).toLocaleString("vi-VN")}đ`}
-            />
-            <InfoBox
-              label="Thanh toán"
-              value={detailOrder.payment_method || "-"}
-            />
-            <InfoBox
-              label="Trạng thái"
-              value={<StatusBadge status={detailOrder.status} />}
-            />
-            {detailOrder.note && (
-              <InfoBox label="Ghi chú" value={detailOrder.note} />
-            )}
-
-            <div className="flex flex-wrap gap-2 pt-3">
-              {!["delivered", "rejected"].includes(detailOrder.status) && (
-                <button
-                  disabled={processing}
-                  onClick={() => handleProcessing(detailOrder)}
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  <RefreshCw size={17} className="mr-2 inline" />
-                  Đang xử lý
-                </button>
-              )}
-
-              {detailOrder.status !== "delivered" && (
-                <button
-                  disabled={processing}
-                  onClick={() => handleDelivered(detailOrder)}
-                  className="flex-1 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  <Check size={17} className="mr-2 inline" />
-                  Đã giao
-                </button>
-              )}
-
-              {detailOrder.status !== "rejected" && (
-                <button
-                  disabled={processing}
-                  onClick={() => setRejectOrder(detailOrder)}
-                  className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                >
-                  <X size={17} className="mr-2 inline" />
-                  Từ chối
-                </button>
-              )}
-            </div>
-          </div>
-        </Modal>
-      )}
-
+      {/* Reject Modal */}
       {rejectOrder && (
         <Modal
           title="Từ chối đơn PUBG"
@@ -396,11 +269,13 @@ export default function PubgOrdersTab() {
             className="w-full rounded-xl border p-3 outline-none focus:border-red-500"
           />
           <button
-            disabled={processing}
+            disabled={processingId === rejectOrder.id}
             onClick={handleReject}
             className="mt-3 w-full rounded-xl bg-red-600 py-3 font-semibold text-white disabled:opacity-50"
           >
-            {processing ? "Đang xử lý..." : "Xác nhận từ chối"}
+            {processingId === rejectOrder.id
+              ? "Đang xử lý..."
+              : "Xác nhận từ chối"}
           </button>
         </Modal>
       )}
@@ -408,43 +283,203 @@ export default function PubgOrdersTab() {
   );
 }
 
-// ============= HELPERS =============
+// ============= ORDER CARD =============
 
-function StatusBadge({ status }) {
-  const config = {
-    pending: { text: "Chờ thanh toán", className: "bg-amber-100 text-amber-700" },
-    paid: { text: "Đã TT", className: "bg-blue-100 text-blue-700" },
-    processing: { text: "Đang xử lý", className: "bg-indigo-100 text-indigo-700" },
-    delivered: { text: "Đã giao", className: "bg-green-100 text-green-700" },
-    completed: { text: "Hoàn thành", className: "bg-green-100 text-green-700" },
-    rejected: { text: "Từ chối", className: "bg-red-100 text-red-700" },
-    cancelled: { text: "Đã hủy", className: "bg-slate-100 text-slate-600" },
-    failed: { text: "Thất bại", className: "bg-red-100 text-red-700" },
-  };
+function OrderCard({ order, processing, onDelivered, onProcessing, onReject }) {
+  const status = getStatusInfo(order.status);
+  const StatusIcon = status.icon;
 
-  const item = config[status] || {
-    text: status || "Không rõ",
-    className: "bg-slate-100 text-slate-600",
-  };
+  const totalUc =
+    Number(order.pubg_uc || 0) + Number(order.pubg_bonus || 0);
 
   return (
-    <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${item.className}`}
-    >
-      {item.text}
-    </span>
+    <div className="overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${status.bgColor}`}
+          >
+            <StatusIcon size={20} className={status.iconColor} />
+          </div>
+          <div className="min-w-0">
+            <p className="font-black text-slate-900 truncate">
+              {order.order_code || `#${order.id}`}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {formatDate(order.created_at)}
+            </p>
+          </div>
+        </div>
+
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${status.className}`}
+        >
+          {status.label}
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="space-y-2 p-4">
+        <InfoRow
+          icon={Gamepad2}
+          label="Character ID"
+          value={order.pubg_uid || "-"}
+          mono
+        />
+        <InfoRow
+          icon={Package}
+          label="Gói UC"
+          value={`${Number(order.pubg_uc || 0).toLocaleString("vi-VN")} UC${
+            Number(order.pubg_bonus || 0) > 0
+              ? ` + ${Number(order.pubg_bonus).toLocaleString("vi-VN")} Bonus`
+              : ""
+          }`}
+        />
+        <InfoRow
+          icon={CheckCircle2}
+          label="Tổng nhận"
+          value={`${totalUc.toLocaleString("vi-VN")} UC`}
+          highlight
+        />
+        <InfoRow
+          icon={User}
+          label="Số tiền"
+          value={`${Number(order.amount || 0).toLocaleString("vi-VN")}đ`}
+          highlight
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2 border-t border-slate-100 bg-slate-50 p-3">
+        {!["delivered", "rejected"].includes(order.status) && (
+          <button
+            onClick={onProcessing}
+            disabled={processing}
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          >
+            <RefreshCw size={14} />
+            Đang xử lý
+          </button>
+        )}
+
+        {order.status !== "delivered" && (
+          <button
+            onClick={onDelivered}
+            disabled={processing}
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-green-700 disabled:opacity-50"
+          >
+            <Check size={14} />
+            Đã giao
+          </button>
+        )}
+
+        {order.status !== "rejected" && (
+          <button
+            onClick={onReject}
+            disabled={processing}
+            className="flex flex-1 min-w-[120px] items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-red-700 disabled:opacity-50"
+          >
+            <X size={14} />
+            Từ chối
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
-function InfoBox({ label, value }) {
+function InfoRow({ icon: Icon, label, value, mono, highlight }) {
   return (
-    <div className="rounded-xl border bg-slate-50 p-3">
-      <div className="mb-1 text-xs font-semibold uppercase text-slate-400">
-        {label}
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 min-w-0">
+        <Icon size={14} className="shrink-0 text-slate-400" />
+        <span className="text-xs text-slate-500 shrink-0">{label}</span>
       </div>
-      <div className="text-sm font-medium text-slate-800">{value}</div>
+      <span
+        className={`text-right truncate ${
+          mono ? "font-mono" : "font-bold"
+        } ${highlight ? "text-sm text-slate-900" : "text-sm text-slate-700"}`}
+      >
+        {value}
+      </span>
     </div>
   );
+}
+
+// ============= HELPERS =============
+
+function formatDate(value) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getStatusInfo(status) {
+  switch (String(status || "").toLowerCase()) {
+    case "pending":
+      return {
+        label: "Chờ thanh toán",
+        icon: Clock,
+        className: "bg-amber-50 text-amber-700 border-amber-200",
+        bgColor: "bg-amber-100",
+        iconColor: "text-amber-600",
+      };
+    case "paid":
+      return {
+        label: "Đã thanh toán",
+        icon: CheckCircle2,
+        className: "bg-blue-50 text-blue-700 border-blue-200",
+        bgColor: "bg-blue-100",
+        iconColor: "text-blue-600",
+      };
+    case "processing":
+      return {
+        label: "Đang xử lý",
+        icon: RefreshCw,
+        className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+        bgColor: "bg-indigo-100",
+        iconColor: "text-indigo-600",
+      };
+    case "delivered":
+      return {
+        label: "Đã giao",
+        icon: CheckCircle2,
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        bgColor: "bg-emerald-100",
+        iconColor: "text-emerald-600",
+      };
+    case "rejected":
+      return {
+        label: "Từ chối",
+        icon: XCircle,
+        className: "bg-red-50 text-red-700 border-red-200",
+        bgColor: "bg-red-100",
+        iconColor: "text-red-600",
+      };
+    case "cancelled":
+    case "canceled":
+      return {
+        label: "Đã hủy",
+        icon: XCircle,
+        className: "bg-slate-50 text-slate-600 border-slate-200",
+        bgColor: "bg-slate-100",
+        iconColor: "text-slate-500",
+      };
+    default:
+      return {
+        label: status || "Không rõ",
+        icon: Clock,
+        className: "bg-slate-50 text-slate-600 border-slate-200",
+        bgColor: "bg-slate-100",
+        iconColor: "text-slate-500",
+      };
+  }
 }
 
 function Modal({ title, children, onClose }) {
@@ -464,4 +499,4 @@ function Modal({ title, children, onClose }) {
       </div>
     </div>
   );
-  }
+      }
