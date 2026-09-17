@@ -76,7 +76,7 @@ const GAME_FALLBACK = {
   playtogether: `${STORAGE_URL}/play-together.png`,
   freefire: `${STORAGE_URL}/free-fire.png`,
   topup: `${STORAGE_URL}/card-default.png`,
-  pubg: `${STORAGE_URL}/pubg.png`,
+  pubg: `${STORAGE_URL}/pubg-mobile-vn.png`,
 };
 
 function detectGame(order) {
@@ -141,15 +141,12 @@ function getGameName(order) {
 }
 
 function getOrderTitle(order) {
-  if (order?.package_name) return order.package_name;
-  if (order?.product_name) return order.product_name;
-  if (order?.name) return order.name;
-  if (order?.game_name) return order.game_name;
-
   const gameKey = detectGame(order);
 
-  if (gameKey === "topup" && order?.note) {
-    return order.note.split(" - ")[0];
+  if (gameKey === "pubg" && order?.pubg_uc != null) {
+    const uc = Number(order.pubg_uc).toLocaleString("vi-VN");
+    const bonus = Number(order.pubg_bonus || 0);
+    return bonus > 0 ? `${uc} UC + ${bonus.toLocaleString("vi-VN")} Bonus` : `${uc} UC`;
   }
 
   if (gameKey === "lienquan" && order?.quanhuy) {
@@ -168,18 +165,12 @@ function getOrderTitle(order) {
     return `${Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương`;
   }
 
-  if (gameKey === "pubg" && order?.pubg_uc != null) {
-    const uc = Number(order.pubg_uc).toLocaleString("vi-VN");
-    const bonus = Number(order.pubg_bonus || 0);
-    if (bonus > 0) {
-      return `${uc} UC + ${bonus.toLocaleString("vi-VN")} Bonus`;
-    }
-    return `${uc} UC`;
+  if (gameKey === "topup" && order?.note) {
+    return order.note.split(" - ")[0];
   }
 
   return "Giao dịch";
 }
-
 const fmtDate = (value) => {
   if (!value) return "—";
 
