@@ -29,7 +29,7 @@ const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
 
 const FREEFIRE_BANNER = `${SUPABASE_STORAGE}/freefire-banner.png`;
-const FREEFIRE_LOGO = `${SUPABASE_STORAGE}/freefire.png`;
+const FREEFIRE_LOGO = `${SUPABASE_STORAGE}/free-fire.png`;
 
 const PACKAGES = [
   { id: "ff-25", amount: 5000, diamond: 25, image: `${SUPABASE_STORAGE}/kimcuong.png` },
