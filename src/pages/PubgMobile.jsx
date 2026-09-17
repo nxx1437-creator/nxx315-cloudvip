@@ -730,7 +730,7 @@ function UidStep({
     {
       step: 1,
       url: `${SUPABASE_STORAGE}/pubg-guide-1.png`,
-      title: "Mở game PUBG Mobile VN",
+      title: "Vào giao diện game",
     },
     {
       step: 2,
