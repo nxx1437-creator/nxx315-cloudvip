@@ -27,7 +27,7 @@ import BottomNav from "../components/BottomNav.jsx";
 const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
 
-const PLAYTOGETHER_BANNER = `${SUPABASE_STORAGE}/playtogether-banner.png`;
+const PLAYTOGETHER_BANNER = `${SUPABASE_STORAGE}/playtogether-banner1.png`;
 const PLAYTOGETHER_LOGO = `${SUPABASE_STORAGE}/play-together-vng.png`;
 
 const PACKAGES = [
