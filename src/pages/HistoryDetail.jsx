@@ -56,21 +56,31 @@ const PACKAGE_IMAGES = {
   "pt-9": `${STORAGE_URL}/play-together-9.png`,
   "pt-18": `${STORAGE_URL}/play-together-18.png`,
   "pt-45": `${STORAGE_URL}/play-together-45.png`,
-};
 
+  // PUBG Mobile
+  "pubg-30": `${STORAGE_URL}/uc.png`,
+  "pubg-60": `${STORAGE_URL}/uc.png`,
+  "pubg-140": `${STORAGE_URL}/uc.png`,
+  "pubg-300": `${STORAGE_URL}/uc.png`,
+  "pubg-600": `${STORAGE_URL}/uc.png`,
+  "pubg-1500": `${STORAGE_URL}/uc.png`,
+  "pubg-3000": `${STORAGE_URL}/uc.png`,
+  "pubg-6000": `${STORAGE_URL}/uc.png`,
+  "pubg-12000": `${STORAGE_URL}/uc.png`,
+  "pubg-18000": `${STORAGE_URL}/uc.png`,
+};
 const GAME_FALLBACK = {
   roblox: `${STORAGE_URL}/roblox.png`,
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together.png`,
   freefire: `${STORAGE_URL}/free-fire.png`,
   topup: `${STORAGE_URL}/card-default.png`,
+  pubg: `${STORAGE_URL}/pubg-mobile-vn.png`, 
 };
-
-function detectGame(order) {
+ function detectGame(order) {
   const pid = String(order?.package_id || "").toLowerCase();
   const method = String(order?.payment_method || "").toLowerCase();
 
-  // ƯU TIÊN CAO NHẤT: đơn thẻ cào
   if (method === "card" && pid.startsWith("card-")) {
     return "topup";
   }
@@ -105,18 +115,17 @@ function detectGame(order) {
     return "freefire";
   }
 
-  return null;
-}
+  if (
+    pid.startsWith("pubg-") ||
+    pid.includes("pubg") ||
+    order?.pubg_uid != null ||
+    order?.game === "pubg"
+  ) {
+    return "pubg";
+  }
 
-function getGameName(order) {
-  const game = detectGame(order);
-  if (game === "roblox") return "Roblox";
-  if (game === "lienquan") return "Liên Quân Mobile";
-  if (game === "playtogether") return "Play Together";
-  if (game === "freefire") return "Free Fire";
-  if (game === "topup") return "Nạp thẻ cào";
   return null;
-}
+ }
 
 function getOrderTitle(order) {
   if (order?.package_name) return order.package_name;
