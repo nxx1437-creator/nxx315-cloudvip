@@ -33,12 +33,86 @@ const PUBG_LOGO = `${SUPABASE_STORAGE}/pubg-mobile-vn.png`;
 
 // Gói UC — giá VNĐ, số UC
 const PACKAGES = [
-  { id: "pubg-60", amount: 20000, uc: 60, image: `${SUPABASE_STORAGE}/uc.png` },
-  { id: "pubg-325", amount: 100000, uc: 325, image: `${SUPABASE_STORAGE}/uc.png` },
-  { id: "pubg-660", amount: 200000, uc: 660, image: `${SUPABASE_STORAGE}/uc.png` },
-  { id: "pubg-1800", amount: 500000, uc: 1800, image: `${SUPABASE_STORAGE}/uc.png` },
-  { id: "pubg-3850", amount: 1000000, uc: 3850, image: `${SUPABASE_STORAGE}/uc.png` },
-  { id: "pubg-8100", amount: 2000000, uc: 8100, image: `${SUPABASE_STORAGE}/uc.png` },
+  {
+    id: "pubg-30",
+    amount: 11000,
+    uc: 30,
+    bonus: 5,
+    bonusPercent: 17,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-60",
+    amount: 22000,
+    uc: 60,
+    bonus: 28,
+    bonusPercent: 47,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-140",
+    amount: 55000,
+    uc: 140,
+    bonus: 68,
+    bonusPercent: 49,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-300",
+    amount: 109000,
+    uc: 300,
+    bonus: 129,
+    bonusPercent: 43,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-600",
+    amount: 219000,
+    uc: 600,
+    bonus: 284,
+    bonusPercent: 47,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-1500",
+    amount: 549000,
+    uc: 1500,
+    bonus: 759,
+    bonusPercent: 51,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-3000",
+    amount: 1099000,
+    uc: 3000,
+    bonus: 1969,
+    bonusPercent: 66,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-6000",
+    amount: 2199000,
+    uc: 6000,
+    bonus: 4347,
+    bonusPercent: 72,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-12000",
+    amount: 4399000,
+    uc: 12000,
+    bonus: 6392,
+    bonusPercent: 53,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
+  {
+    id: "pubg-18000",
+    amount: 6599000,
+    uc: 18000,
+    bonus: 9048,
+    bonusPercent: 50,
+    image: `${SUPABASE_STORAGE}/uc.png`,
+  },
 ];
 
 const BANK = {
@@ -623,7 +697,7 @@ function StatPill({ icon: Icon, label, color }) {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {PACKAGES.map((pkg) => (
           <PackageCard
             key={pkg.id}
@@ -658,6 +732,7 @@ function StatPill({ icon: Icon, label, color }) {
 }
 
 function PackageCard({ pkg, active, onSelect }) {
+function PackageCard({ pkg, active, onSelect }) {
   return (
     <button
       onClick={() => onSelect(pkg)}
@@ -674,8 +749,15 @@ function PackageCard({ pkg, active, onSelect }) {
         </div>
       )}
 
+      {/* Bonus badge — chỉ hiện khi có bonus */}
+      {pkg.bonus > 0 && (
+        <div className="absolute left-0 top-0 z-10 rounded-br-xl rounded-tl-2xl bg-gradient-to-r from-rose-500 to-red-600 px-2 py-1 text-[9px] font-black text-white shadow-md">
+          Thưởng nạp lần đầu
+        </div>
+      )}
+
       {/* Image */}
-      <div className="relative mx-auto mb-3 aspect-square w-full max-w-[90px] overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-br from-yellow-50 to-amber-50">
+      <div className="relative mx-auto mb-3 mt-5 aspect-square w-full max-w-[80px] overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-br from-yellow-50 to-amber-50">
         <img
           src={pkg.image}
           alt={`${pkg.uc} UC`}
@@ -686,16 +768,42 @@ function PackageCard({ pkg, active, onSelect }) {
         />
       </div>
 
-      {/* Info */}
+      {/* UC chính + bonus */}
       <div className="relative text-center">
-        <p className="text-lg font-black text-slate-900">
-          {pkg.uc.toLocaleString("vi-VN")}
-        </p>
-        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-yellow-600">
-          UC
-        </p>
+        <div className="flex items-center justify-center gap-1.5">
+          {/* UC chính */}
+          <div className="flex flex-col items-center">
+            <p className="text-lg font-black leading-none text-slate-900">
+              {pkg.uc.toLocaleString("vi-VN")}
+            </p>
+            <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              UC
+            </p>
+          </div>
 
-        <div className="mt-2 border-t border-slate-100 pt-2">
+          {/* Dấu + */}
+          <span className="text-base font-black text-yellow-500">+</span>
+
+          {/* Bonus */}
+          <div className="flex flex-col items-center">
+            <p className="text-lg font-black leading-none text-emerald-500">
+              {pkg.bonus.toLocaleString("vi-VN")}
+            </p>
+            <p className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500">
+              Bonus
+            </p>
+          </div>
+        </div>
+
+        {/* % bonus */}
+        {pkg.bonusPercent > 0 && (
+          <p className="mt-1.5 text-[10px] font-bold text-emerald-500">
+            Lên đến {pkg.bonusPercent}%
+          </p>
+        )}
+
+        {/* Giá */}
+        <div className="mt-2.5 border-t border-slate-100 pt-2.5">
           <p className="text-sm font-black text-yellow-600">
             {formatPrice(pkg.amount)}
           </p>
@@ -703,7 +811,7 @@ function PackageCard({ pkg, active, onSelect }) {
       </div>
     </button>
   );
-            }
+}
 function UidStep({
   uid,
   setUid,
