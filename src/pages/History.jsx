@@ -51,6 +51,18 @@ const PACKAGE_IMAGES = {
   "ff-2830": `${STORAGE_URL}/free-fire.png`,
   "ff-5750": `${STORAGE_URL}/free-fire.png`,
   "ff-11500": `${STORAGE_URL}/free-fire.png`,
+
+  // PUBG Mobile
+  "pubg-30": `${STORAGE_URL}/uc.png`,
+  "pubg-60": `${STORAGE_URL}/uc.png`,
+  "pubg-140": `${STORAGE_URL}/uc.png`,
+  "pubg-300": `${STORAGE_URL}/uc.png`,
+  "pubg-600": `${STORAGE_URL}/uc.png`,
+  "pubg-1500": `${STORAGE_URL}/uc.png`,
+  "pubg-3000": `${STORAGE_URL}/uc.png`,
+  "pubg-6000": `${STORAGE_URL}/uc.png`,
+  "pubg-12000": `${STORAGE_URL}/uc.png`,
+  "pubg-18000": `${STORAGE_URL}/uc.png`,
 };
 
 const GAME_FALLBACK = {
@@ -58,14 +70,14 @@ const GAME_FALLBACK = {
   lienquan: `${STORAGE_URL}/lien-quan-mobile.png`,
   playtogether: `${STORAGE_URL}/play-together-vng.png`,
   freefire: `${STORAGE_URL}/free-fire.png`,
-  topup: `${STORAGE_URL}/card-default.png`,   // 👈 THÊM DÒNG NÀY
+  topup: `${STORAGE_URL}/card-default.png`,
+  pubg: `${STORAGE_URL}/pubg-mobile-vn.png`, 
 };
 
 function detectGame(order) {
   const pid = String(order?.package_id || "").toLowerCase();
   const method = String(order?.payment_method || "").toLowerCase();
 
-  // 👇 ƯU TIÊN CAO NHẤT: đơn thẻ cào
   if (method === "card" && pid.startsWith("card-")) {
     return "topup";
   }
@@ -99,6 +111,15 @@ function detectGame(order) {
   ) {
     return "freefire";
   }
+ 
+  if (
+    pid.startsWith("pubg-") ||
+    pid.includes("pubg") ||
+    order?.pubg_uid != null ||
+    order?.game === "pubg"
+  ) {
+    return "pubg";
+  }
 
   return null;
 }
@@ -109,7 +130,8 @@ function getGameName(order) {
   if (game === "lienquan") return "Liên Quân Mobile";
   if (game === "playtogether") return "Play Together";
   if (game === "freefire") return "Free Fire";
-  if (game === "topup") return "Nạp thẻ cào";   // 👈 THÊM DÒNG NÀY
+  if (game === "topup") return "Nạp thẻ cào";
+  if (game === "pubg") return "PUBG Mobile VN";   // 👈 THÊM DÒNG NÀY
   return null;
 }
 
@@ -136,7 +158,6 @@ function getOrderTitle(order) {
   if (order?.name) return order.name;
   if (order?.title) return order.title;
 
-  // 👇 Đơn thẻ cào — lấy từ note
   if (gameKey === "topup" && order?.note) {
     return order.note.split(" - ")[0];
   }
@@ -157,6 +178,15 @@ function getOrderTitle(order) {
     return `${Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương`;
   }
 
+  if (gameKey === "pubg" && order?.pubg_uc != null) {
+    const uc = Number(order.pubg_uc).toLocaleString("vi-VN");
+    const bonus = Number(order.pubg_bonus || 0);
+    if (bonus > 0) {
+      return `${uc} UC + ${bonus.toLocaleString("vi-VN")} Bonus`;
+    }
+    return `${uc} UC`;
+  }
+
   if (order?.robux != null) {
     return `${Number(order.robux).toLocaleString("vi-VN")} Robux`;
   }
@@ -173,13 +203,18 @@ function getOrderTitle(order) {
     return `${Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương`;
   }
 
+  if (order?.pubg_uc != null) {
+    const uc = Number(order.pubg_uc).toLocaleString("vi-VN");
+    const bonus = Number(order.pubg_bonus || 0);
+    return bonus > 0 ? `${uc} UC + ${bonus.toLocaleString("vi-VN")} Bonus` : `${uc} UC`;
+  }
+
   if (order?.type === "redemption") {
     return "Đổi thưởng";
   }
 
   return "Đơn hàng";
 }
-
 const statusInfo = (status) => {
   switch (String(status || "").toLowerCase()) {
     case "pending":
@@ -652,6 +687,14 @@ export default function History() {
                   </p>
                 </div>
               )}
+              {order.pubg_uid && (
+  <div className="rounded-2xl bg-slate-50 p-4">
+    <p className="text-xs text-slate-400">Character ID PUBG Mobile</p>
+    <p className="mt-1 font-semibold text-slate-900">
+      {order.pubg_uid}
+    </p>
+  </div>
+)}
 
               {order.uid && !order.pt_uid && (
                 <div className="rounded-2xl bg-slate-50 p-4">
@@ -663,38 +706,48 @@ export default function History() {
               )}
 
               {order.package_id && (
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-400">Gói đã chọn</p>
+  <div className="rounded-2xl bg-slate-50 p-4">
+    <p className="text-xs text-slate-400">Gói đã chọn</p>
+    <p className="mt-1 font-semibold text-slate-900">
+      {order.package_id}
+    </p>
 
-                  <p className="mt-1 font-semibold text-slate-900">
-                    {order.package_id}
-                  </p>
+    {order.robux != null && (
+      <p className="mt-1 text-xs text-slate-500">
+        {Number(order.robux).toLocaleString("vi-VN")} Robux
+      </p>
+    )}
 
-                  {order.robux != null && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.robux).toLocaleString("vi-VN")} Robux
-                    </p>
-                  )}
+    {order.quanhuy != null && (
+      <p className="mt-1 text-xs text-slate-500">
+        {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
+      </p>
+    )}
 
-                  {order.quanhuy != null && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.quanhuy).toLocaleString("vi-VN")} Quân Huy
-                    </p>
-                  )}
+    {order.pt_gold != null && (
+      <p className="mt-1 text-xs text-slate-500">
+        {Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng
+      </p>
+    )}
 
-                  {order.pt_gold != null && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.pt_gold).toLocaleString("vi-VN")} Thỏi Vàng
-                    </p>
-                  )}
+    {order.ff_diamond != null && (
+      <p className="mt-1 text-xs text-slate-500">
+        {Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương
+      </p>
+    )}
 
-                  {order.ff_diamond != null && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      {Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương
-                    </p>
-                  )}
-                </div>
-              )}
+    {order.pubg_uc != null && (
+      <p className="mt-1 text-xs text-slate-500">
+        {Number(order.pubg_uc).toLocaleString("vi-VN")} UC
+        {Number(order.pubg_bonus || 0) > 0 && (
+          <span className="text-emerald-600">
+            {" "}+ {Number(order.pubg_bonus).toLocaleString("vi-VN")} Bonus
+          </span>
+        )}
+      </p>
+    )}
+  </div>
+)}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-slate-50 p-4">
