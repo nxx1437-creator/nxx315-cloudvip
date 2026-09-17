@@ -28,7 +28,7 @@ import BottomNav from "../components/BottomNav.jsx";
 const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
 
-const FREEFIRE_BANNER = `${SUPABASE_STORAGE}/freefire-banner.png`;
+const FREEFIRE_BANNER = `${SUPABASE_STORAGE}/freefire-banner1.png`;
 const FREEFIRE_LOGO = `${SUPABASE_STORAGE}/free-fire.png`;
 
 const PACKAGES = [
