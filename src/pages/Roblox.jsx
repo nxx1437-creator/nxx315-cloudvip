@@ -22,7 +22,7 @@ import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 
 const ROBLOX_BANNER_URL =
-  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/.png";
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Roblox-banner.png";
 
 const GAME_INFO = {
   name: "Roblox",
