@@ -675,25 +675,3 @@ function StoreHistoryPreview() {
     </section>
   );
   }
-        {/* Tab filter */}
-<div className="flex gap-2 overflow-x-auto px-4 pt-4">
-  <div className="mx-auto flex max-w-5xl gap-2">
-    {[
-      { id: 'all', label: 'Tất cả' },
-      { id: 'mobile', label: 'Mobile' },
-      { id: 'pc', label: 'PC' },
-    ].map((tab) => (
-      <button
-        key={tab.id}
-        onClick={() => setActiveTab(tab.id)}
-        className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold transition ${
-          activeTab === tab.id
-            ? 'bg-red-500 text-white shadow-sm'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-        }`}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
-</div>             
