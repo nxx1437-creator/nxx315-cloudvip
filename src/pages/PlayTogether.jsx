@@ -279,7 +279,7 @@ export default function PlayTogether() {
       }
 
       alert(
-        `🎉 Thanh toán thành công!\n\n` +
+        ` Thanh toán thành công!\n\n` +
           `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
           `Coin còn lại: ${Number(paymentResult.remaining_coins).toLocaleString(
             "vi-VN"
@@ -309,7 +309,7 @@ export default function PlayTogether() {
 
       if (error) throw error;
 
-      alert("✅ Đã ghi nhận. Admin sẽ kiểm tra và duyệt đơn.");
+      alert(" Đã ghi nhận. Admin sẽ kiểm tra và duyệt đơn.");
       navigate(`/history/order/${order.id}`);
     } catch (error) {
       alert("Không thể xác nhận đơn hàng.\n\n" + (error?.message || ""));
@@ -493,10 +493,8 @@ export default function PlayTogether() {
         {/* Hero Banner */}
         <HeroBanner onBack={() => navigate("/store")} />
 
-        {/* Stepper */}
-        <div className="mt-5 mb-5 rounded-2xl border border-slate-200 bg-white px-4 py-5 shadow-sm">
-          <Stepper step={step} />
-        </div>
+        {/* Spacer */}
+       <div className="mt-5" />
 
         {step === "package" && (
           <PackageStep
@@ -549,7 +547,7 @@ function HeroBanner({ onBack }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {/* Banner image */}
-      <div className="relative h-32 overflow-hidden sm:h-44">
+      <div className="relative h-44 overflow-hidden sm:h-60">
         <img
           src={PLAYTOGETHER_BANNER}
           alt="Play Together"
