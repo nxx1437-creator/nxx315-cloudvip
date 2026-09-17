@@ -167,11 +167,12 @@ export default function App() {
     </ProtectedRoute>
   }
 />
-        <Route
-  path="/store/free-fire"
+
+<Route
+  path="/store/pubg-mobile"
   element={
     <ProtectedRoute>
-      <FreeFire />
+      <PubgMobile />
     </ProtectedRoute>
   }
 />
