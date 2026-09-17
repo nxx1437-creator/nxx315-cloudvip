@@ -303,13 +303,6 @@ function GameCard({ game, onClick }) {
           </div>
         )}
 
-        {/* Flag VN — góc trên trái */}
-        <div className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md">
-          <div className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-red-600">
-            <span className="text-[7px] leading-none text-yellow-400">★</span>
-          </div>
-        </div>
-
         {/* HOT badge — góc trên phải */}
         {game.hot && (
           <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-2 py-1 shadow-md">
@@ -338,7 +331,6 @@ function GameCard({ game, onClick }) {
     </button>
   );
 }
-
 function GameImage({ src, alt }) {
   const [error, setError] = useState(false);
 
