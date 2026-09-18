@@ -6,56 +6,91 @@ import {
   Gift,
   Trophy,
   Store,
-  ShoppingBag,
-  Wallet,
   CreditCard,
   FileText,
   History,
   Coins,
-  Mail,
-  Download,
-  FileWarning,
   LifeBuoy,
   X,
   LogOut,
   Search,
-  ChevronRight,
-  Crown,
-  MessageSquare,
+  FileWarning,
+  Bell,
   Home,
-  Gamepad2,
-  Compass,
+  Heart,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Menu phẳng — không chia group
+import { supabase } from "../lib/supabaseClient.js";
+
+// Menu items — chỉ giữ mục có thật trong app
 const MENU_ITEMS = [
   { path: "/dashboard", label: "Trang chính", icon: Home },
   { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
   { path: "/store", label: "Cửa hàng", icon: Store, badge: "HOT" },
+  { path: "/minigames", label: "Mini Games", icon: Sparkles, badge: "NEW" },
   { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200" },
-  { path: "/profile", label: "Hồ sơ", icon: User },
   { path: "/wallet", label: "Ví & Nạp thẻ", icon: CreditCard },
-  { label: "Đơn hàng", icon: FileText, badge: 3 },
-  { label: "Lịch sử", icon: History },
-  { label: "Lịch sử Coin", icon: Coins },
-  { label: "Bảng xếp hạng", icon: Trophy },
-  { label: "Đọc Mail", icon: Mail },
-  { label: "Tải xuống", icon: Download },
-  { label: "Quy định", icon: FileWarning },
+  { path: "/history", label: "Lịch sử đơn hàng", icon: History },
+  { path: "/feed", label: "Cộng đồng", icon: Heart },
+  { path: "/profile", label: "Hồ sơ", icon: User },
   { path: "/support", label: "Hỗ trợ", icon: LifeBuoy },
+  { path: "/terms", label: "Điều khoản", icon: FileWarning },
 ];
-export default function Sidebar({
-  open,
-  onClose,
-  displayName,
-  initial,
-  coins,
-  level,
-}) {
+
+// Mục dưới divider — phụ
+const EXTRA_ITEMS = [
+  { path: "/help", label: "Trung tâm trợ giúp", icon: LifeBuoy },
+  { path: "/contact", label: "Liên hệ", icon: Bell },
+];
+export default function Sidebar({ open, onClose, coins }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  // Load profile khi mở sidebar
+  useEffect(() => {
+    if (!open) return;
+
+    let alive = true;
+
+    const loadProfile = async () => {
+      setLoadingProfile(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          if (alive) setLoadingProfile(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url, coins")
+          .eq("id", user.id)
+          .single();
+
+        if (error) throw error;
+        if (alive) setProfile(data);
+      } catch (error) {
+        console.error("Load profile error:", error);
+      } finally {
+        if (alive) setLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      alive = false;
+    };
+  }, [open]);
+
+  // Lock scroll khi mở
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "auto";
@@ -66,49 +101,80 @@ export default function Sidebar({
 
   const handleNavigate = (path) => {
     if (path) navigate(path);
-    else navigate("/nonexistent-page-404");
     onClose();
   };
 
   const handleLogout = async () => {
-    const { supabase } = await import("../lib/supabaseClient.js");
     await supabase.auth.signOut();
-    navigate("/Landing");
+    navigate("/login");
     onClose();
   };
+
+  // Thông tin user hiển thị
+  const displayName =
+    profile?.display_name ||
+    profile?.username ||
+    "Người dùng";
+
+  const username = profile?.username
+    ? `@${profile.username}`
+    : "@user";
+
+  const avatarUrl = profile?.avatar_url;
+
+  const initial = (displayName || "U").charAt(0).toUpperCase();
+
+  const finalCoins = Number(profile?.coins ?? coins ?? 0);
 
   return (
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
       />
 
-      {/* Sidebar — dạng tối giống Roblox */}
+      {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[85%] max-w-[320px] flex-col bg-[#17191f] transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-[#0f172a] transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Header — Avatar + Info */}
-        <div className="flex items-center justify-between border-b border-white/5 px-5 py-4">
+        {/* Header — Avatar + tên */}
+        <div className="flex items-center justify-between border-b border-white/5 px-4 py-4">
           <div className="flex min-w-0 items-center gap-3">
             {/* Avatar */}
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-black text-white shadow-lg shadow-blue-500/30">
-              {initial}
+            <div className="relative shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="h-12 w-12 rounded-full border-2 border-white/20 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.nextElementSibling.style.display = "flex";
+                  }}
+                />
+              ) : null}
+
+              <div
+                className={`h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-black text-white shadow-lg shadow-blue-500/30 ${
+                  avatarUrl ? "hidden" : "flex"
+                }`}
+              >
+                {initial}
+              </div>
             </div>
 
+            {/* Info */}
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-white">
-                {displayName || "Người dùng"}
+                {loadingProfile ? "Đang tải..." : displayName}
               </p>
               <p className="truncate text-xs text-slate-400">
-                <p className="truncate text-xs text-slate-400">
-  @{displayName?.toLowerCase().replace(/\s+/g, "") || "user0001"}
-</p>
+                {loadingProfile ? "@..." : username}
               </p>
             </div>
           </div>
@@ -121,10 +187,9 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Balance Card — nổi bật */}
+        {/* Balance Card */}
         <div className="px-4 pt-4">
           <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur">
-            {/* Số dư */}
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
                 <Coins size={18} className="text-amber-400" />
@@ -135,7 +200,7 @@ export default function Sidebar({
                   Số dư
                 </p>
                 <p className="mt-0.5 text-lg font-black text-white">
-                  {Number(coins || 0).toLocaleString("vi-VN")}
+                  {finalCoins.toLocaleString("vi-VN")}
                   <span className="ml-1 text-xs font-bold text-amber-400">
                     Coin
                   </span>
@@ -143,69 +208,107 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* Nút CTA */}
             <button
               onClick={() => {
                 navigate("/wallet");
                 onClose();
               }}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-white py-2.5 text-xs font-black text-slate-900 transition hover:bg-slate-100"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-xs font-black text-white transition hover:brightness-110"
             >
               Nạp Coin
             </button>
           </div>
         </div>
 
-        {/* Menu — Flat list */}
-        <div className="flex-1 overflow-y-auto px-2 pt-3 pb-4">
-          {MENU_ITEMS.map((item, index) => {
+        {/* Menu — main list */}
+        <div className="flex-1 overflow-y-auto px-2 pt-4 pb-4">
+          {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = item.path && location.pathname === item.path;
-            const isLastSection = index === MENU_ITEMS.length - 5;
+            const isActive =
+              item.path &&
+              (location.pathname === item.path ||
+                location.pathname.startsWith(item.path + "/"));
 
             return (
-              <React.Fragment key={item.label}>
-                <button
-                  onClick={() => handleNavigate(item.path)}
-                  className={`group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left transition ${
+              <button
+                key={item.label}
+                onClick={() => handleNavigate(item.path)}
+                className={`group flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
+                  isActive
+                    ? "bg-sky-500/10 text-sky-400"
+                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <Icon
+                  size={19}
+                  className={`shrink-0 ${
                     isActive
-                      ? "bg-white/10 text-white"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                      ? "text-sky-400"
+                      : "text-slate-400 group-hover:text-white"
+                  }`}
+                />
+
+                <span
+                  className={`min-w-0 flex-1 truncate text-sm ${
+                    isActive ? "font-bold" : "font-medium"
                   }`}
                 >
-                  <Icon
-                    size={20}
-                    className={`shrink-0 ${
-                      isActive ? "text-white" : "text-slate-400 group-hover:text-white"
-                    }`}
-                  />
+                  {item.label}
+                </span>
 
+                {item.badge && (
                   <span
-                    className={`min-w-0 flex-1 truncate text-[15px] ${
-                      isActive ? "font-bold text-white" : "font-medium"
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black ${
+                      item.badge === "HOT"
+                        ? "bg-rose-500/20 text-rose-400"
+                        : "bg-amber-500/20 text-amber-400"
                     }`}
                   >
-                    {item.label}
+                    {item.badge}
                   </span>
-
-                  {item.badge && (
-                    <span
-                      className={`shrink-0 ${
-                        typeof item.badge === "number"
-                          ? "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-black text-white"
-                          : "rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-400"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-
-                {/* Divider giữa các nhóm */}
-                {isLastSection && (
-                  <div className="my-2 border-t border-white/5" />
                 )}
-              </React.Fragment>
+              </button>
+            );
+          })}
+
+          {/* Divider */}
+          <div className="my-3 border-t border-white/5" />
+
+          {/* Extra items */}
+          {EXTRA_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              item.path &&
+              (location.pathname === item.path ||
+                location.pathname.startsWith(item.path + "/"));
+
+            return (
+              <button
+                key={item.label}
+                onClick={() => handleNavigate(item.path)}
+                className={`group flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
+                  isActive
+                    ? "bg-sky-500/10 text-sky-400"
+                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <Icon
+                  size={19}
+                  className={`shrink-0 ${
+                    isActive
+                      ? "text-sky-400"
+                      : "text-slate-400 group-hover:text-white"
+                  }`}
+                />
+
+                <span
+                  className={`min-w-0 flex-1 truncate text-sm ${
+                    isActive ? "font-bold" : "font-medium"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </button>
             );
           })}
         </div>
@@ -223,4 +326,4 @@ export default function Sidebar({
       </aside>
     </>
   );
-   }
+            }
