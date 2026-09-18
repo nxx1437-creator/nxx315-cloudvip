@@ -1,3 +1,4 @@
+import TermsCheckbox from "../components/TermsCheckbox.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -67,6 +68,9 @@ export default function LienQuan() {
 
   const [order, setOrder] = useState(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
+
+  const [agreedTerms, setAgreedTerms] = useState(false);
+
 
   const checkPlayer = () => {
     const cleanUid = String(uid || "").trim();
