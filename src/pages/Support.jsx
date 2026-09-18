@@ -1,270 +1,650 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Plus,
+  MessageSquare,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Send,
+  Loader2,
+  Inbox,
+  User as UserIcon,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, Plus, X, Send } from "lucide-react";
-import useSession from "../hooks/useSession.js";
-import { supabase } from "../lib/supabaseClient.js";
-import BottomNav from "../components/BottomNav.jsx";
 
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
+import { supabase } from "../lib/supabaseClient.js";
+
+// Helpers
+function formatTime(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getStatusInfo(status) {
+  const key = String(status || "").toLowerCase();
+  if (key === "open" || key === "pending") {
+    return {
+      label: "Đang mở",
+      className: "bg-emerald-50 text-emerald-600 border-emerald-200",
+      icon: Clock,
+    };
+  }
+  if (key === "answered") {
+    return {
+      label: "Đã trả lời",
+      className: "bg-blue-50 text-blue-600 border-blue-200",
+      icon: MessageSquare,
+    };
+  }
+  if (key === "closed" || key === "resolved") {
+    return {
+      label: "Đã đóng",
+      className: "bg-slate-50 text-slate-500 border-slate-200",
+      icon: CheckCircle2,
+    };
+  }
+  return {
+    label: status || "Không rõ",
+    className: "bg-slate-50 text-slate-500 border-slate-200",
+    icon: Clock,
+  };
+}
 export default function Support() {
   const navigate = useNavigate();
-  const { session } = useSession();
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showNewTicket, setShowNewTicket] = useState(false);
+  const [view, setView] = useState("list"); // "list" | "chat"
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [messageText, setMessageText] = useState("");
-  const [sending, setSending] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetchTickets();
-    }
-  }, [session]);
-
-  const fetchTickets = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from('support_tickets')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false });
-    setTickets(data || []);
-    setLoading(false);
-  };
-
-  const fetchMessages = async (ticketId) => {
-    const { data } = await supabase
-      .from('support_messages')
-      .select('*')
-      .eq('ticket_id', ticketId)
-      .order('created_at', { ascending: true });
-    setMessages(data || []);
-  };
-
-  const createTicket = async () => {
-    if (!newTitle.trim() || !newDescription.trim()) {
-      alert("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .insert({
-        user_id: session.user.id,
-        title: newTitle,
-        description: newDescription,
-        status: 'open',
-      })
-      .select();
-    if (!error && data) {
-      setShowNewTicket(false);
-      setNewTitle("");
-      setNewDescription("");
-      fetchTickets();
-      setSelectedTicket(data[0]);
-      await fetchMessages(data[0].id);
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!messageText.trim()) return;
-    if (!selectedTicket) return;
-    setSending(true);
-    const { error } = await supabase
-      .from('support_messages')
-      .insert({
-        ticket_id: selectedTicket.id,
-        user_id: session.user.id,
-        message: messageText,
-      });
-    if (!error) {
-      setMessageText("");
-      await fetchMessages(selectedTicket.id);
-    }
-    setSending(false);
-  };
-
-  const openTicket = async (ticket) => {
-    setSelectedTicket(ticket);
-    await fetchMessages(ticket.id);
-  };
-
-  const closeTicket = () => {
-    setSelectedTicket(null);
-    setMessages([]);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent mx-auto" />
-          <p className="mt-3 text-sm text-gray-400">Đang tải...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center gap-3 max-w-md mx-auto">
-          <button onClick={() => navigate(-1)} className="p-1">
-            <ArrowLeft size={20} className="text-gray-700" />
-          </button>
-          <h1 className="text-lg font-semibold text-gray-900 flex-1">
-            {selectedTicket ? selectedTicket.title : "Hỗ trợ"}
-          </h1>
-          {selectedTicket && (
-            <button onClick={closeTicket} className="text-sm text-blue-500 font-medium">
-              Đóng
-            </button>
-          )}
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#f8fafc] pb-28 text-slate-900">
+      <TopHeader />
 
-      <main className="max-w-md mx-auto px-4 pt-4">
-        {selectedTicket ? (
-          // === CHAT VIEW ===
-          <div>
-            <div className="bg-white rounded-xl p-3 mb-4 border border-gray-200">
-              <p className="text-sm text-gray-600">{selectedTicket.description}</p>
-              <span className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
-                selectedTicket.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-              }`}>
-                {selectedTicket.status === 'open' ? 'Đang mở' : 'Đã đóng'}
-              </span>
-            </div>
+      <main className="mx-auto w-full max-w-2xl px-4 py-5">
+        {view === "list" && (
+          <TicketList
+            onSelectTicket={(ticket) => {
+              setSelectedTicket(ticket);
+              setView("chat");
+            }}
+          />
+        )}
 
-            <div className="space-y-2 max-h-[50vh] overflow-y-auto mb-4">
-              {messages.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">Chưa có tin nhắn</p>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.user_id === session?.user?.id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                      msg.user_id === session?.user?.id ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200'
-                    }`}>
-                      <p className="text-sm">{msg.message}</p>
-                      <p className="text-[10px] opacity-70 mt-1">
-                        {new Date(msg.created_at).toLocaleTimeString('vi-VN')}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-sm outline-none focus:border-blue-500"
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={sending || !messageText.trim()}
-                className="px-4 py-2 rounded-xl bg-blue-500 text-white font-medium disabled:opacity-50"
-              >
-                {sending ? <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" /> : <Send size={18} />}
-              </button>
-            </div>
-          </div>
-        ) : (
-          // === LIST TICKETS ===
-          <div>
-            <div className="bg-white rounded-xl p-4 border border-gray-200 mb-4">
-              <p className="text-sm text-gray-500">Ticket hỗ trợ</p>
-              <div className="flex gap-4 mt-2">
-                <div>
-                  <p className="text-xl font-bold text-gray-900">{tickets.length}</p>
-                  <p className="text-xs text-gray-400">Tất cả</p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-green-600">{tickets.filter(t => t.status === 'open').length}</p>
-                  <p className="text-xs text-gray-400">Đang mở</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowNewTicket(true)}
-                className="mt-3 w-full py-2 rounded-lg bg-blue-500 text-white font-semibold"
-              >
-                + Tạo ticket
-              </button>
-            </div>
-
-            {tickets.length === 0 ? (
-              <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
-                <MessageCircle size={40} className="mx-auto text-gray-300" />
-                <p className="mt-2 text-gray-400">Chưa có ticket nào</p>
-              </div>
-            ) : (
-              tickets.map((ticket) => (
-                <button
-                  key={ticket.id}
-                  onClick={() => openTicket(ticket)}
-                  className="w-full bg-white rounded-xl p-4 border border-gray-200 mb-2 text-left hover:bg-gray-50"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-gray-900">{ticket.title}</p>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{ticket.description}</p>
-                      <p className="text-xs text-gray-400 mt-1">{new Date(ticket.created_at).toLocaleString('vi-VN')}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      ticket.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {ticket.status === 'open' ? 'Đang mở' : 'Đã đóng'}
-                    </span>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
+        {view === "chat" && selectedTicket && (
+          <TicketChat
+            ticket={selectedTicket}
+            onBack={() => {
+              setView("list");
+              setSelectedTicket(null);
+            }}
+          />
         )}
       </main>
 
-      {/* New Ticket Modal */}
-      {showNewTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm bg-white rounded-2xl p-5">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Ticket mới</h2>
-              <button onClick={() => setShowNewTicket(false)}><X size={20} /></button>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Tiêu đề *"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none"
-              />
-              <textarea
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Mô tả vấn đề *"
-                rows={4}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none resize-none"
-              />
-              <button
-                onClick={createTicket}
-                className="w-full py-2 rounded-lg bg-blue-500 text-white font-semibold"
-              >
-                Gửi
-              </button>
-            </div>
+      <BottomNav />
+    </div>
+  );
+}
+function TicketList({ onSelectTicket }) {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+
+  const fetchTickets = async () => {
+    setLoading(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTickets(data || []);
+    } catch (error) {
+      console.error("Load tickets error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  const totalCount = tickets.length;
+  const openCount = tickets.filter((t) => {
+    const key = String(t.status || "").toLowerCase();
+    return key === "open" || key === "pending" || key === "answered";
+  }).length;
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => window.history.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 className="text-lg font-black text-slate-900">Hỗ trợ</h1>
+          <p className="text-xs text-slate-500">
+            Gửi yêu cầu và theo dõi phản hồi
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Card */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50">
+            <Inbox size={20} className="text-sky-600" />
           </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-900">
+              Ticket hỗ trợ
+            </p>
+            <p className="text-xs text-slate-500">
+              Theo dõi & phản hồi nhanh chóng
+            </p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-slate-50 p-3">
+            <p className="text-xs text-slate-500">Tất cả</p>
+            <p className="mt-0.5 text-2xl font-black text-slate-900">
+              {totalCount}
+            </p>
+          </div>
+          <div className="rounded-xl bg-emerald-50 p-3">
+            <p className="text-xs text-emerald-600">Đang mở</p>
+            <p className="mt-0.5 text-2xl font-black text-emerald-600">
+              {openCount}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowCreate(true)}
+          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-sm font-black text-white shadow-md shadow-sky-200 transition hover:brightness-110 active:scale-[0.99]"
+        >
+          <Plus size={18} />
+          Tạo ticket mới
+        </button>
+      </div>
+
+      {/* List */}
+      <div>
+        <h2 className="mb-3 px-1 text-sm font-black uppercase tracking-wide text-slate-500">
+          Lịch sử ticket
+        </h2>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-2xl border border-slate-200 bg-white p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-100" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-32 rounded bg-slate-100" />
+                    <div className="h-3 w-48 rounded bg-slate-100" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50">
+              <Inbox size={26} className="text-slate-300" />
+            </div>
+            <p className="mt-3 text-sm font-bold text-slate-700">
+              Chưa có ticket nào
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Tạo ticket nếu bạn cần hỗ trợ
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {tickets.map((ticket) => (
+              <TicketCard
+                key={ticket.id}
+                ticket={ticket}
+                onClick={() => onSelectTicket(ticket)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showCreate && (
+        <CreateTicketModal
+          onClose={() => setShowCreate(false)}
+          onSuccess={async () => {
+            setShowCreate(false);
+            await fetchTickets();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TicketCard({ ticket, onClick }) {
+  const status = getStatusInfo(ticket.status);
+  const StatusIcon = status.icon;
+
+  return (
+    <button
+      onClick={onClick}
+      className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-sky-300 hover:shadow-md active:scale-[0.995]"
+    >
+      <div className="flex items-start gap-3">
+        {/* Icon */}
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
+          <MessageSquare size={18} />
+        </div>
+
+        {/* Body */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="truncate text-sm font-black text-slate-900">
+              {ticket.subject || ticket.title || "Ticket hỗ trợ"}
+            </p>
+            <span
+              className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.className}`}
+            >
+              {status.label}
+            </span>
+          </div>
+
+          <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+            {ticket.message || ticket.content || "Không có nội dung"}
+          </p>
+
+          <div className="mt-2 flex items-center gap-3 text-[10px] text-slate-400">
+            <span className="flex items-center gap-1">
+              <Clock size={10} />
+              {formatDate(ticket.created_at)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+function TicketChat({ ticket, onBack }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef(null);
+
+  const status = getStatusInfo(ticket.status);
+
+  const scrollToBottom = () => {
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    });
+  };
+
+  const loadMessages = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("ticket_messages")
+        .select("*")
+        .eq("ticket_id", ticket.id)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      // Nếu bảng ticket_messages không có → fallback dùng admin_reply
+      if (!data || data.length === 0) {
+        const fallback = [];
+        if (ticket.message) {
+          fallback.push({
+            id: "user-initial",
+            content: ticket.message,
+            is_admin: false,
+            created_at: ticket.created_at,
+          });
+        }
+        if (ticket.admin_reply) {
+          fallback.push({
+            id: "admin-reply",
+            content: ticket.admin_reply,
+            is_admin: true,
+            created_at: ticket.updated_at || ticket.created_at,
+          });
+        }
+        setMessages(fallback);
+      } else {
+        setMessages(data);
+      }
+    } catch (error) {
+      console.error("Load messages error:", error);
+    } finally {
+      setLoading(false);
+      scrollToBottom();
+    }
+  };
+
+  useEffect(() => {
+    loadMessages();
+  }, [ticket.id]);
+
+  const sendMessage = async () => {
+    const content = input.trim();
+    if (!content || sending) return;
+
+    setSending(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("ticket_messages")
+        .insert({
+          ticket_id: ticket.id,
+          user_id: user.id,
+          content,
+          is_admin: false,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setMessages((prev) => [...prev, data]);
+      setInput("");
+      scrollToBottom();
+    } catch (error) {
+      console.error("Send message error:", error);
+      alert("Không thể gửi tin nhắn. Vui lòng thử lại.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-140px)] flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+        <button
+          onClick={onBack}
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-black text-slate-900">
+            {ticket.subject || ticket.title || "Ticket hỗ trợ"}
+          </h1>
+          <p className="text-xs text-slate-500">
+            {formatDate(ticket.created_at)}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold ${status.className}`}
+        >
+          {status.label}
+        </span>
+      </div>
+
+      {/* Messages */}
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-3 overflow-y-auto py-4"
+      >
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 size={24} className="animate-spin text-slate-400" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <MessageSquare size={32} className="text-slate-300" />
+            <p className="mt-2 text-xs text-slate-400">
+              Chưa có tin nhắn nào
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Mô tả ticket */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs text-slate-500">Mô tả ticket</p>
+              <p className="mt-1 text-sm text-slate-800">
+                {ticket.message || ticket.content}
+              </p>
+            </div>
+
+            {messages
+              .filter((m) => m.id !== "user-initial")
+              .map((msg) => (
+                <ChatBubble key={msg.id} message={msg} />
+              ))}
+          </>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-slate-200 bg-white pt-3">
+        <div className="flex items-end gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Nhập tin nhắn..."
+            rows={1}
+            className="max-h-24 min-h-[44px] flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+            style={{ height: "44px" }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || sending}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-200 transition hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:shadow-none"
+          >
+            {sending ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatBubble({ message }) {
+  const isAdmin = message.is_admin;
+
+  return (
+    <div
+      className={`flex items-end gap-2 ${
+        isAdmin ? "justify-start" : "justify-end"
+      }`}
+    >
+      {/* Avatar admin (trái) */}
+      {isAdmin && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm">
+          <ShieldCheck size={14} />
         </div>
       )}
 
-      <BottomNav />
+      {/* Bong bóng */}
+      <div className={`max-w-[75%] ${isAdmin ? "" : "items-end"}`}>
+        <div
+          className={`rounded-2xl px-3.5 py-2.5 ${
+            isAdmin
+              ? "rounded-bl-md bg-white text-slate-800 shadow-sm border border-slate-100"
+              : "rounded-br-md bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-200"
+          }`}
+        >
+          <p className="whitespace-pre-wrap break-words text-sm leading-6">
+            {message.content}
+          </p>
+        </div>
+        <p
+          className={`mt-1 px-1 text-[10px] text-slate-400 ${
+            isAdmin ? "text-left" : "text-right"
+          }`}
+        >
+          {formatTime(message.created_at)}
+        </p>
+      </div>
+
+      {/* Avatar user (phải) */}
+      {!isAdmin && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
+          <UserIcon size={14} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreateTicketModal({ onClose, onSuccess }) {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!subject.trim() || !message.trim()) {
+      alert("Vui lòng nhập tiêu đề và nội dung.");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("support_tickets").insert({
+        user_id: user.id,
+        subject: subject.trim(),
+        message: message.trim(),
+        status: "open",
+      });
+
+      if (error) throw error;
+      await onSuccess();
+    } catch (error) {
+      console.error("Create ticket error:", error);
+      alert("Không thể tạo ticket. Vui lòng thử lại.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl">
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h3 className="text-base font-black text-slate-900">
+              Tạo ticket hỗ trợ
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Mô tả vấn đề bạn đang gặp
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-slate-500">
+              Tiêu đề
+            </label>
+            <input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="VD: Không nhận được Coin sau khi nạp"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-slate-500">
+              Nội dung
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Mô tả chi tiết vấn đề của bạn..."
+              rows={5}
+              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={creating || !subject.trim() || !message.trim()}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-sm font-black text-white shadow-md shadow-sky-200 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {creating ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Đang tạo...
+              </>
+            ) : (
+              <>
+                <Plus size={16} />
+                Tạo ticket
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
