@@ -21,10 +21,10 @@ const getImageUrl = (fileName) =>
 
 // ============= BANNER SLIDES =============
 const BANNERS = [
-  'store-banner-1.jpg',
-  'store-banner-2.jpg',
-  'store-banner-3.jpg',
-  'store-banner-4.jpg',
+  'store-banner-1.png',
+  'store-banner-2.png',
+  'store-banner-3.png',
+  'store-banner-4.png',
 ];
 
 const BANNER_INTERVAL = 4000; // 4 giây đổi ảnh 1 lần
