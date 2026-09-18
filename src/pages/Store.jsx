@@ -57,7 +57,7 @@ const GAMES = [
   { id: 7, name: 'OMG 3Q', category: 'mobile', logo: 'omg-3q.png', path: '/store/omg-3q' },
   { id: 8, name: 'Delta Force', category: 'mobile', logo: 'Delta.png', path: '/store/Delta-Force', hot: true },
   { id: 9, name: 'ZingSpeed Mobile', category: 'mobile', logo: 'zing-speed-mobile.png', path: '/store/zing-speed' },
-  { id: 10, name: 'FC Online', category: 'pc', logo: 'fc-online.png', path: '/store/fc-online' },
+  { id: 10, name: 'FC Mobile VN', category: 'mobile', logo: 'fc-mobile.png', path: '/store/fc-mobile' },
 ];
 
 // ============= TRACKING =============
@@ -582,6 +582,8 @@ function detectGame(packageId) {
   if (pid.startsWith('pt-') || pid.includes('playtogether')) return 'playtogether';
   if (pid.startsWith('ff-') || pid.includes('freefire')) return 'freefire';
   if (pid.startsWith('pubg-') || pid.includes('pubg')) return 'pubg';
+  if (pid.startsWith('fco-') || pid.includes('fco') || pid.includes('fcmobile') || pid.includes('fc-mobile')) return 'fco';
+  
   return null;
 }
 
@@ -592,6 +594,7 @@ function getGameName(packageId) {
   if (game === 'playtogether') return 'Play Together';
   if (game === 'freefire') return 'Free Fire';
   if (game === 'pubg') return 'PUBG Mobile VN';
+  if (game === 'fco') return 'FC Mobile VN';   // 👈 THÊM DÒNG NÀY
   return null;
 }
 
@@ -611,6 +614,10 @@ function getHistoryName(order) {
     const bonus = Number(order.pubg_bonus || 0);
     return bonus > 0 ? `${uc} UC + ${bonus} Bonus` : `${uc} UC`;
   }
+  
+  if (gameKey === 'fco' && order?.fco_fc != null) {
+    return `${Number(order.fco_fc).toLocaleString('vi-VN')} FC`;
+  }
 
   return 'Đơn nạp game';
 }
@@ -622,6 +629,8 @@ function getHistoryImage(order) {
   if (packageId.startsWith('lq-') || packageId.includes('lienquan')) return getImageUrl('lien-quan-mobile.png');
   if (packageId.startsWith('pt-') || packageId.includes('playtogether')) return getImageUrl('play-together-vng.png');
   if (packageId.startsWith('vng-') || packageId.includes('roblox')) return getImageUrl('roblox.png');
+  if (packageId.startsWith('fco-') || packageId.includes('fco') || packageId.includes('fcmobile')) return getImageUrl('fc-mobile.png');
+  
   return getImageUrl('store-banner-1.jpg');
 }
 
