@@ -683,7 +683,7 @@ function getHistoryImage(order) {
 
   return getImageUrl('store-banner-1.png');
 }
-// ============= STORE HISTORY PREVIEW =============
+   // ============= STORE HISTORY PREVIEW (ZaloPay Style) =============
 
 function StoreHistoryPreview() {
   const navigate = useNavigate();
@@ -710,13 +710,13 @@ function StoreHistoryPreview() {
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
-            .limit(5),
+            .limit(3),
           supabase
             .from('redemption_orders')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
-            .limit(5),
+            .limit(3),
         ]);
 
         if (ordersResult.error) throw ordersResult.error;
@@ -736,7 +736,7 @@ function StoreHistoryPreview() {
             (a, b) =>
               new Date(b.created_at || 0) - new Date(a.created_at || 0)
           )
-          .slice(0, 5);
+          .slice(0, 3);
 
         if (alive) setHistory(merged);
       } catch (error) {
@@ -756,126 +756,162 @@ function StoreHistoryPreview() {
   return (
     <section className="px-4 pb-6 pt-8">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-500">
-              Giao dịch
+        {/* Card lớn bọc toàn bộ */}
+        <div className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-b from-sky-50 to-white shadow-sm">
+          {/* Header */}
+          <div className="relative px-5 pb-4 pt-5">
+            <p className="text-xs font-medium text-slate-500">
+              Giao dịch gần đây
             </p>
-            <h2 className="mt-1 text-xl font-black uppercase text-gray-900">
-              Lịch sử
-            </h2>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => navigate('/history')}
-            className="flex items-center gap-1 text-xs font-bold text-orange-500"
-          >
-            Xem tất cả
-            <ChevronRight size={14} />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => navigate('/history')}
+              className="mt-1 flex items-center gap-2 text-left"
+            >
+              <h2 className="text-xl font-black text-slate-900">
+                Lịch sử đơn hàng
+              </h2>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
+                <ChevronRight size={14} className="text-slate-700" />
+              </span>
+            </button>
 
-        {loading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="w-full animate-pulse rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 shrink-0 rounded-xl bg-gray-100" />
-                  <div className="min-w-0 flex-1">
-                    <div className="h-3.5 w-32 rounded bg-gray-100" />
-                    <div className="mt-2 h-2.5 w-24 rounded bg-gray-100" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : history.length === 0 ? (
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm">
-            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-orange-50">
-              <HistoryIcon size={20} className="text-orange-400" />
+            {/* Hình tròn decoration góc phải */}
+            <div className="pointer-events-none absolute right-4 top-4 h-20 w-20">
+              <div className="absolute inset-0 rounded-full border-[10px] border-sky-200/60" />
+              <div className="absolute inset-0 rounded-full border-[10px] border-transparent border-r-sky-500 border-t-sky-400" />
             </div>
-            <p className="mt-3 text-sm font-bold text-gray-700">
-              Chưa có giao dịch
-            </p>
-            <p className="mt-1 text-xs text-gray-400">
-              Đơn hàng của bạn sẽ xuất hiện ở đây
-            </p>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {history.map((order) => {
-              const status = getHistoryStatus(order.status);
-              const gameName = getGameNameByPackage(order.package_id);
 
-              return (
-                <button
-                  key={`${order.historySource}-${order.id}`}
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/history/order/${order.id}?source=${order.historySource}`
-                    )
-                  }
-                  className="w-full rounded-2xl border border-gray-100 bg-white p-3.5 text-left shadow-sm transition hover:border-orange-100 hover:shadow-md active:scale-[0.995]"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
-                      <img
-                        src={getHistoryImage(order)}
-                        alt=""
-                        className="h-full w-full object-contain p-1.5"
-                        onError={(e) => {
-                          if (e.currentTarget.dataset.fallback === '1') return;
-                          e.currentTarget.dataset.fallback = '1';
-                          e.currentTarget.src = getImageUrl(
-                            'store-banner-1.png'
-                          );
-                        }}
-                      />
+          {/* Body */}
+          <div className="px-3 pb-3">
+            {loading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="animate-pulse rounded-2xl border border-slate-100 bg-white p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 shrink-0 rounded-xl bg-slate-100" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3.5 w-32 rounded bg-slate-100" />
+                        <div className="h-3 w-24 rounded bg-slate-100" />
+                      </div>
+                      <div className="h-7 w-16 rounded-full bg-slate-100" />
                     </div>
+                  </div>
+                ))}
+              </div>
+            ) : history.length === 0 ? (
+              <div className="rounded-2xl border border-slate-100 bg-white p-8 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-50">
+                  <HistoryIcon size={22} className="text-sky-500" />
+                </div>
+                <p className="mt-3 text-sm font-bold text-slate-700">
+                  Chưa có giao dịch
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Đơn hàng của bạn sẽ xuất hiện ở đây
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {history.map((order) => {
+                  const status = getHistoryStatus(order.status);
+                  const gameName = getGameNameByPackage(order.package_id);
+                  const iconColor = getIconColorByStatus(order.status);
+                  const iconBg = getIconBgByStatus(order.status);
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-gray-900">
-                        {getHistoryName(order)}
-                      </p>
+                  return (
+                    <button
+                      key={`${order.historySource}-${order.id}`}
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          `/history/order/${order.id}?source=${order.historySource}`
+                        )
+                      }
+                      className="group flex w-full items-center gap-3.5 rounded-2xl border border-slate-100 bg-white p-3.5 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md active:scale-[0.99]"
+                    >
+                      {/* Icon tròn */}
+                      <div
+                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconBg}`}
+                      >
+                        <img
+                          src={getHistoryImage(order)}
+                          alt=""
+                          className="h-full w-full object-contain p-1"
+                          onError={(e) => {
+                            if (e.currentTarget.dataset.fallback === '1')
+                              return;
+                            e.currentTarget.dataset.fallback = '1';
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement.innerHTML =
+                              '<div class="text-xl">🎮</div>';
+                          }}
+                        />
+                      </div>
 
-                      {gameName && (
-                        <p className="mt-0.5 text-[10px] font-semibold text-orange-600">
-                          {gameName}
+                      {/* Text */}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-black text-slate-900">
+                          {getHistoryName(order)}
                         </p>
-                      )}
 
-                      <p className="mt-1 text-[10px] text-gray-400">
-                        {formatHistoryDate(order.created_at)}
-                      </p>
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                          {gameName ? `${gameName} · ` : ''}
+                          {formatHistoryDate(order.created_at)}
+                        </p>
 
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <span
-                          className={`rounded-full border px-2 py-1 text-[9px] font-bold ${status.className}`}
+                        {/* Trạng thái dạng text nhỏ */}
+                        <p
+                          className={`mt-1 inline-block text-[10px] font-bold ${iconColor}`}
                         >
-                          {status.label}
-                        </span>
-                        <span className="text-[10px] font-bold text-orange-600">
+                          ● {status.label}
+                        </p>
+                      </div>
+
+                      {/* Nút pill */}
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <span className="text-[10px] font-bold text-sky-600">
                           {getHistoryAmount(order)}
                         </span>
+                        <span className="rounded-full bg-sky-50 px-3 py-1.5 text-[10px] font-bold text-sky-600 transition group-hover:bg-sky-100">
+                          Chi tiết
+                        </span>
                       </div>
-                    </div>
-
-                    <ChevronRight
-                      size={17}
-                      className="shrink-0 text-orange-300"
-                    />
-                  </div>
-                </button>
-              );
-            })}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
-                }
+}
+
+// ============= HELPER MÀU =============
+
+function getIconBgByStatus(status) {
+  const key = String(status || '').toLowerCase();
+  if (key === 'delivered') return 'bg-emerald-50';
+  if (key === 'paid' || key === 'processing') return 'bg-sky-50';
+  if (key === 'pending') return 'bg-amber-50';
+  if (key === 'rejected' || key === 'failed' || key === 'cancelled')
+    return 'bg-rose-50';
+  return 'bg-slate-50';
+}
+
+function getIconColorByStatus(status) {
+  const key = String(status || '').toLowerCase();
+  if (key === 'delivered') return 'text-emerald-600';
+  if (key === 'paid' || key === 'processing') return 'text-sky-600';
+  if (key === 'pending') return 'text-amber-600';
+  if (key === 'rejected' || key === 'failed' || key === 'cancelled')
+    return 'text-rose-600';
+  return 'text-slate-500';
+      }   
