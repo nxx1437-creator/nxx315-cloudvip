@@ -536,11 +536,11 @@ function UsernameAndPackageSection({
 
       {/* ═══════════ Nút Tiếp tục ═══════════ */}
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <TermsCheckbox                                            {/* 👈 THÊM */}
-  checked={agreedTerms}                                    {/* 👈 THÊM */}
-  onChange={setAgreedTerms}                                {/* 👈 THÊM */}
-  accentColor="blue"                                       {/* 👈 THÊM */}
-/>                                                         {/* 👈 THÊM */}
+  <TermsCheckbox
+    checked={agreedTerms}
+    onChange={setAgreedTerms}
+    accentColor="blue"
+  />                                                         {/* 👈 THÊM */}
 
 <button
   onClick={onContinue}
