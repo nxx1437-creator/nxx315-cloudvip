@@ -74,14 +74,15 @@ const PACKAGE_IMAGES = {
   "fco-5000": `${STORAGE_URL}/fc.png`,
   "fco-10000": `${STORAGE_URL}/fc.png`,
 
-  "vp-125": `${STORAGE_URL}/vp.png`,
-"vp-420": `${STORAGE_URL}/vp.png`,
-"vp-700": `${STORAGE_URL}/vp.png`,
-"vp-1375": `${STORAGE_URL}/vp.png`,
-"vp-2400": `${STORAGE_URL}/vp.png`,
-"vp-4000": `${STORAGE_URL}/vp.png`,
-"vp-8150": `${STORAGE_URL}/vp.png`,
-"vp-16500": `${STORAGE_URL}/vp.png`,
+  // VALORANT
+"vp-52": `${STORAGE_URL}/vp-52.png`,
+"vp-110": `${STORAGE_URL}/vp-110.png`,
+"vp-275": `${STORAGE_URL}/vp-275.png`,
+"vp-610": `${STORAGE_URL}/vp-610.png`,
+"vp-1220": `${STORAGE_URL}/vp-1220.png`,
+"vp-3040": `${STORAGE_URL}/vp-3040.png`,
+"vp-6550": `${STORAGE_URL}/vp-6550.png`,
+"vp-13250": `${STORAGE_URL}/vp-13250.png`,
 };
 
 const GAME_FALLBACK = {
