@@ -34,15 +34,71 @@ const VALORANT_BANNER = `${SUPABASE_STORAGE}/valorant-banner.png`;
 const VALORANT_LOGO = `${SUPABASE_STORAGE}/valorant.png`;
 
 // Gói VP — giá VNĐ, số VP
-const PACKAGES = [
-  { id: "vp-125", amount: 25000, vp: 125, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-420", amount: 75000, vp: 420, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-700", amount: 125000, vp: 700, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-1375", amount: 250000, vp: 1375, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-2400", amount: 425000, vp: 2400, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-4000", amount: 700000, vp: 4000, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-8150", amount: 1400000, vp: 8150, image: `${SUPABASE_STORAGE}/vp.png` },
-  { id: "vp-16500", amount: 2800000, vp: 16500, image: `${SUPABASE_STORAGE}/vp.png` },
+ const PACKAGES = [
+  {
+    id: "vp-52",
+    amount: 10500,
+    originalPrice: 12000,
+    vp: 52,
+    discount: 13,
+    image: `${SUPABASE_STORAGE}/vp-52.png`,
+  },
+  {
+    id: "vp-110",
+    amount: 21500,
+    originalPrice: 24000,
+    vp: 110,
+    discount: 10,
+    image: `${SUPABASE_STORAGE}/vp-110.png`,
+  },
+  {
+    id: "vp-275",
+    amount: 52000,
+    originalPrice: 58000,
+    vp: 275,
+    discount: 10,
+    image: `${SUPABASE_STORAGE}/vp-275.png`,
+  },
+  {
+    id: "vp-610",
+    amount: 102500,
+    originalPrice: 115000,
+    vp: 610,
+    discount: 11,
+    image: `${SUPABASE_STORAGE}/vp-610.png`,
+  },
+  {
+    id: "vp-1220",
+    amount: 205000,
+    originalPrice: 230000,
+    vp: 1220,
+    discount: 11,
+    image: `${SUPABASE_STORAGE}/vp-1220.png`,
+  },
+  {
+    id: "vp-3040",
+    amount: 510000,
+    originalPrice: 570000,
+    vp: 3040,
+    discount: 11,
+    image: `${SUPABASE_STORAGE}/vp-3040.png`,
+  },
+  {
+    id: "vp-6550",
+    amount: 1020000,
+    originalPrice: 1140000,
+    vp: 6550,
+    discount: 11,
+    image: `${SUPABASE_STORAGE}/vp-6550.png`,
+  },
+  {
+    id: "vp-13250",
+    amount: 2040000,
+    originalPrice: 2280000,
+    vp: 13250,
+    discount: 11,
+    image: `${SUPABASE_STORAGE}/vp-13250.png`,
+  },
 ];
 
 const BANK = {
@@ -712,6 +768,7 @@ function PackageStep({
   );
 }
 
+
 function PackageCard({ pkg, active, onSelect }) {
   return (
     <button
@@ -722,12 +779,21 @@ function PackageCard({ pkg, active, onSelect }) {
           : "border-slate-200 hover:-translate-y-1 hover:border-red-300 hover:shadow-lg"
       }`}
     >
+      {/* Active check */}
       {active && (
         <div className="absolute right-2.5 top-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-md">
           <CheckCircle2 size={12} strokeWidth={3} />
         </div>
       )}
 
+      {/* Discount badge */}
+      {pkg.discount > 0 && (
+        <div className="absolute left-0 top-0 z-10 rounded-br-xl rounded-tl-2xl bg-gradient-to-r from-rose-500 to-red-600 px-2 py-1 text-[10px] font-black text-white shadow-md">
+          -{pkg.discount}%
+        </div>
+      )}
+
+      {/* Image */}
       <div className="relative mx-auto mb-3 aspect-square w-full max-w-[80px] overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-br from-red-50 to-rose-50">
         <img
           src={pkg.image}
@@ -739,6 +805,7 @@ function PackageCard({ pkg, active, onSelect }) {
         />
       </div>
 
+      {/* Info */}
       <div className="relative text-center">
         <p className="text-lg font-black leading-none text-slate-900">
           {pkg.vp.toLocaleString("vi-VN")}
@@ -748,14 +815,22 @@ function PackageCard({ pkg, active, onSelect }) {
         </p>
 
         <div className="mt-2.5 border-t border-slate-100 pt-2.5">
-          <p className="text-sm font-black text-red-500">
+          {/* Giá bán */}
+          <p className="text-base font-black text-red-500">
             {formatPrice(pkg.amount)}
           </p>
+
+          {/* Giá gốc gạch ngang */}
+          {pkg.originalPrice && pkg.originalPrice > pkg.amount && (
+            <p className="mt-0.5 text-[11px] font-medium text-slate-400 line-through">
+              {formatPrice(pkg.originalPrice)}
+            </p>
+          )}
         </div>
       </div>
     </button>
   );
-      }
+}
 function PaymentStep({
   method,
   setMethod,
