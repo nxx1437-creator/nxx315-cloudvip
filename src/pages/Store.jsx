@@ -634,7 +634,6 @@ function getGameNameByPackage(packageId) {
 }
 
 function getHistoryName(order) {
-function getHistoryName(order) {
   const gameKey = detectHistoryGame(order?.package_id);
 
   if (gameKey === 'playtogether' && order?.pt_gold != null) {
