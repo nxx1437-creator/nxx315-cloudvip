@@ -13,7 +13,6 @@ import {
   X,
   LogOut,
   Coins,
-  ChevronRight,
   FileWarning,
   HelpCircle,
 } from "lucide-react";
@@ -24,9 +23,27 @@ import { supabase } from "../lib/supabaseClient.js";
 const MENU_ITEMS = [
   { path: "/dashboard", label: "Trang chính", icon: Home },
   { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-  { path: "/store", label: "Cửa hàng", icon: Store, badge: "HOT", badgeType: "hot" },
-  { path: "/minigames", label: "Mini Games", icon: Sparkles, badge: "NEW", badgeType: "new" },
-  { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeType: "coin" },
+  {
+    path: "/store",
+    label: "Cửa hàng",
+    icon: Store,
+    badge: "HOT",
+    badgeType: "hot",
+  },
+  {
+    path: "/minigames",
+    label: "Mini Games",
+    icon: Sparkles,
+    badge: "NEW",
+    badgeType: "new",
+  },
+  {
+    path: "/invite",
+    label: "Mời bạn",
+    icon: Gift,
+    badge: "+200",
+    badgeType: "coin",
+  },
   { path: "/wallet", label: "Ví & Nạp thẻ", icon: CreditCard },
   { path: "/history", label: "Lịch sử đơn hàng", icon: History },
   { path: "/feed", label: "Cộng đồng", icon: Heart },
@@ -62,14 +79,44 @@ export default function Sidebar({ open, onClose, coins }) {
           return;
         }
 
+        // Fallback từ auth.users
+        const fallbackUsername = user.email?.split("@")[0] || "user";
+
+        const fallbackDisplayName =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          fallbackUsername;
+
+        const fallbackAvatar =
+          user.user_metadata?.avatar_url ||
+          user.user_metadata?.picture ||
+          null;
+
+        // Query profile
         const { data, error } = await supabase
           .from("profiles")
           .select("id, username, display_name, avatar_url, coins")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
-        if (alive) setProfile(data);
+        if (error) {
+          console.warn("Load profile error:", error);
+        }
+
+        // Merge: ưu tiên profile → fallback auth
+        if (alive) {
+          setProfile({
+            id: user.id,
+            username: data?.username || fallbackUsername,
+            display_name:
+              data?.display_name ||
+              data?.username ||
+              fallbackDisplayName ||
+              fallbackUsername,
+            avatar_url: data?.avatar_url || fallbackAvatar,
+            coins: data?.coins ?? 0,
+          });
+        }
       } catch (error) {
         console.error("Load profile error:", error);
       } finally {
@@ -136,37 +183,53 @@ export default function Sidebar({ open, onClose, coins }) {
           <div className="flex min-w-0 items-center gap-3">
             {/* Avatar */}
             <div className="relative shrink-0">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  className="h-12 w-12 rounded-full border border-slate-200 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    if (e.currentTarget.nextElementSibling) {
-                      e.currentTarget.nextElementSibling.style.display = "flex";
-                    }
-                  }}
-                />
-              ) : null}
+              {loadingProfile ? (
+                <div className="h-12 w-12 animate-pulse rounded-full bg-slate-200" />
+              ) : (
+                <>
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={displayName}
+                      className="h-12 w-12 rounded-full border border-slate-200 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        if (e.currentTarget.nextElementSibling) {
+                          e.currentTarget.nextElementSibling.style.display =
+                            "flex";
+                        }
+                      }}
+                    />
+                  ) : null}
 
-              <div
-                className={`h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-black text-white ${
-                  avatarUrl ? "hidden" : "flex"
-                }`}
-              >
-                {initial}
-              </div>
+                  <div
+                    className={`h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-black text-white ${
+                      avatarUrl ? "hidden" : "flex"
+                    }`}
+                  >
+                    {initial}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Info */}
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold text-slate-900">
-                {loadingProfile ? "Đang tải..." : displayName}
-              </p>
-              <p className="truncate text-xs text-slate-400">
-                {loadingProfile ? "@..." : username}
-              </p>
+            <div className="min-w-0 flex-1">
+              {loadingProfile ? (
+                <>
+                  <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                  <div className="mt-2 h-3 w-20 animate-pulse rounded bg-slate-200" />
+                </>
+              ) : (
+                <>
+                  <p className="truncate text-[15px] font-bold text-slate-900">
+                    {displayName}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {username}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -178,7 +241,7 @@ export default function Sidebar({ open, onClose, coins }) {
           </button>
         </div>
 
-        {/* Balance Card — sáng, gọn */}
+        {/* Balance Card */}
         <div className="px-4 pt-4">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center gap-3">
@@ -190,12 +253,17 @@ export default function Sidebar({ open, onClose, coins }) {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   Số dư
                 </p>
-                <p className="mt-0.5 text-lg font-black text-slate-900">
-                  {finalCoins.toLocaleString("vi-VN")}
-                  <span className="ml-1 text-xs font-bold text-amber-600">
-                    Coin
-                  </span>
-                </p>
+
+                {loadingProfile ? (
+                  <div className="mt-1.5 h-5 w-32 animate-pulse rounded bg-slate-200" />
+                ) : (
+                  <p className="mt-0.5 text-lg font-black text-slate-900">
+                    {finalCoins.toLocaleString("vi-VN")}
+                    <span className="ml-1 text-xs font-bold text-amber-600">
+                      Coin
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -320,4 +388,4 @@ export default function Sidebar({ open, onClose, coins }) {
       </aside>
     </>
   );
-        }
+            }
