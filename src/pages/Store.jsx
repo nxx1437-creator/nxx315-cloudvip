@@ -25,6 +25,7 @@ const BANNERS = [
   'store-banner-2.png',
   'store-banner-3.png',
   'store-banner-4.png',
+  'store-banner-5.png',
 ];
 
 const BANNER_INTERVAL = 4000; // 4 giây đổi ảnh 1 lần
