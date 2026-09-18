@@ -24,6 +24,7 @@ import {
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import TermsCheckbox from "../components/TermsCheckbox.jsx";
 
 const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
@@ -130,7 +131,8 @@ export default function FcMobile() {
   const resultRef = useRef(null);
 
   const [showGuide, setShowGuide] = useState(false);
-
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  
   useEffect(() => {
     loadProfile();
   }, []);
@@ -464,16 +466,18 @@ export default function FcMobile() {
         <div className="mt-5" />
 
         {step === "package" && (
-          <PackageStep
-            selectedPackage={selectedPackage}
-            setSelectedPackage={setSelectedPackage}
-            characterId={characterId}
-            setCharacterId={setCharacterId}
-            onContinue={continueToPayment}
-            creatingOrder={creatingOrder}
-            onShowGuide={() => setShowGuide(true)}
-          />
-        )}
+  <PackageStep
+    selectedPackage={selectedPackage}
+    setSelectedPackage={setSelectedPackage}
+    characterId={characterId}
+    setCharacterId={setCharacterId}
+    onContinue={continueToPayment}
+    creatingOrder={creatingOrder}
+    onShowGuide={() => setShowGuide(true)}
+    agreedTerms={agreedTerms}
+    setAgreedTerms={setAgreedTerms}
+  />
+)}
 
         {step === "payment" && (
           <PaymentStep
@@ -604,6 +608,8 @@ function PackageStep({
   onContinue,
   creatingOrder,
   onShowGuide,
+  agreedTerms,
+  setAgreedTerms,
 }) {
   return (
     <div className="space-y-4">
@@ -696,25 +702,31 @@ function PackageStep({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <button
-          onClick={onContinue}
-          disabled={!selectedPackage || !characterId.trim() || creatingOrder}
-          className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-sm font-black text-white shadow-lg shadow-green-300/50 transition hover:shadow-green-400/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-        >
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-          {creatingOrder ? (
-            <>
-              <Loader2 size={18} className="relative animate-spin" />
-              <span className="relative">Đang tạo đơn...</span>
-            </>
-          ) : (
-            <>
-              <span className="relative">Tiếp tục</span>
-              <ChevronRight size={18} className="relative" />
-            </>
-          )}
-        </button>
+  <TermsCheckbox
+    checked={agreedTerms}
+    onChange={setAgreedTerms}
+    accentColor="green"
+  />
 
+  <button
+    onClick={onContinue}
+    disabled={!selectedPackage || !characterId.trim() || creatingOrder || !agreedTerms}
+    className="mt-3 group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-sm font-black text-white shadow-lg shadow-green-300/50 transition hover:shadow-green-400/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+  >
+    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+    {creatingOrder ? (
+      <>
+        <Loader2 size={18} className="relative animate-spin" />
+        <span className="relative">Đang tạo đơn...</span>
+      </>
+    ) : (
+      <>
+        <span className="relative">Tiếp tục</span>
+        <ChevronRight size={18} className="relative" />
+      </>
+    )}
+  </button>
+    
         {!selectedPackage && (
           <p className="mt-2 text-center text-xs text-slate-400">
             Chọn một gói để tiếp tục
