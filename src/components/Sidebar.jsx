@@ -1,36 +1,32 @@
 import React, { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
-  User,
+  Home,
   ListChecks,
-  Gift,
-  Trophy,
   Store,
+  Sparkles,
+  Gift,
   CreditCard,
-  FileText,
   History,
-  Coins,
+  Heart,
+  User,
   LifeBuoy,
   X,
   LogOut,
-  Search,
+  Coins,
+  ChevronRight,
   FileWarning,
-  Bell,
-  Home,
-  Heart,
-  Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { supabase } from "../lib/supabaseClient.js";
 
-// Menu items — chỉ giữ mục có thật trong app
 const MENU_ITEMS = [
   { path: "/dashboard", label: "Trang chính", icon: Home },
   { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-  { path: "/store", label: "Cửa hàng", icon: Store, badge: "HOT" },
-  { path: "/minigames", label: "Mini Games", icon: Sparkles, badge: "NEW" },
-  { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200" },
+  { path: "/store", label: "Cửa hàng", icon: Store, badge: "HOT", badgeType: "hot" },
+  { path: "/minigames", label: "Mini Games", icon: Sparkles, badge: "NEW", badgeType: "new" },
+  { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeType: "coin" },
   { path: "/wallet", label: "Ví & Nạp thẻ", icon: CreditCard },
   { path: "/history", label: "Lịch sử đơn hàng", icon: History },
   { path: "/feed", label: "Cộng đồng", icon: Heart },
@@ -39,10 +35,8 @@ const MENU_ITEMS = [
   { path: "/terms", label: "Điều khoản", icon: FileWarning },
 ];
 
-// Mục dưới divider — phụ
 const EXTRA_ITEMS = [
-  { path: "/help", label: "Trung tâm trợ giúp", icon: LifeBuoy },
-  { path: "/contact", label: "Liên hệ", icon: Bell },
+  { path: "/help", label: "Trung tâm trợ giúp", icon: HelpCircle },
 ];
 export default function Sidebar({ open, onClose, coins }) {
   const navigate = useNavigate();
@@ -51,7 +45,6 @@ export default function Sidebar({ open, onClose, coins }) {
   const [profile, setProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Load profile khi mở sidebar
   useEffect(() => {
     if (!open) return;
 
@@ -85,12 +78,12 @@ export default function Sidebar({ open, onClose, coins }) {
     };
 
     loadProfile();
+
     return () => {
       alive = false;
     };
   }, [open]);
 
-  // Lock scroll khi mở
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "auto";
@@ -110,15 +103,10 @@ export default function Sidebar({ open, onClose, coins }) {
     onClose();
   };
 
-  // Thông tin user hiển thị
   const displayName =
-    profile?.display_name ||
-    profile?.username ||
-    "Người dùng";
+    profile?.display_name || profile?.username || "Người dùng";
 
-  const username = profile?.username
-    ? `@${profile.username}`
-    : "@user";
+  const username = profile?.username ? `@${profile.username}` : "@user";
 
   const avatarUrl = profile?.avatar_url;
 
@@ -130,7 +118,7 @@ export default function Sidebar({ open, onClose, coins }) {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -138,12 +126,13 @@ export default function Sidebar({ open, onClose, coins }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-[#0f172a] transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-white transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{ boxShadow: "4px 0 24px rgba(0,0,0,0.08)" }}
       >
-        {/* Header — Avatar + tên */}
-        <div className="flex items-center justify-between border-b border-white/5 px-4 py-4">
+        {/* Header — Avatar + Tên + Nút đóng */}
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
           <div className="flex min-w-0 items-center gap-3">
             {/* Avatar */}
             <div className="relative shrink-0">
@@ -151,16 +140,18 @@ export default function Sidebar({ open, onClose, coins }) {
                 <img
                   src={avatarUrl}
                   alt={displayName}
-                  className="h-12 w-12 rounded-full border-2 border-white/20 object-cover"
+                  className="h-12 w-12 rounded-full border border-slate-200 object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
-                    e.currentTarget.nextElementSibling.style.display = "flex";
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = "flex";
+                    }
                   }}
                 />
               ) : null}
 
               <div
-                className={`h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-black text-white shadow-lg shadow-blue-500/30 ${
+                className={`h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-black text-white ${
                   avatarUrl ? "hidden" : "flex"
                 }`}
               >
@@ -170,7 +161,7 @@ export default function Sidebar({ open, onClose, coins }) {
 
             {/* Info */}
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-white">
+              <p className="truncate text-[15px] font-bold text-slate-900">
                 {loadingProfile ? "Đang tải..." : displayName}
               </p>
               <p className="truncate text-xs text-slate-400">
@@ -181,27 +172,27 @@ export default function Sidebar({ open, onClose, coins }) {
 
           <button
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Balance Card */}
+        {/* Balance Card — sáng, gọn */}
         <div className="px-4 pt-4">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
-                <Coins size={18} className="text-amber-400" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <Coins size={18} className="text-amber-600" />
               </div>
 
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                   Số dư
                 </p>
-                <p className="mt-0.5 text-lg font-black text-white">
+                <p className="mt-0.5 text-lg font-black text-slate-900">
                   {finalCoins.toLocaleString("vi-VN")}
-                  <span className="ml-1 text-xs font-bold text-amber-400">
+                  <span className="ml-1 text-xs font-bold text-amber-600">
                     Coin
                   </span>
                 </p>
@@ -213,15 +204,15 @@ export default function Sidebar({ open, onClose, coins }) {
                 navigate("/wallet");
                 onClose();
               }}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-xs font-black text-white transition hover:brightness-110"
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-xs font-black text-white transition hover:brightness-110"
             >
               Nạp Coin
             </button>
           </div>
         </div>
 
-        {/* Menu — main list */}
-        <div className="flex-1 overflow-y-auto px-2 pt-4 pb-4">
+        {/* Menu */}
+        <div className="flex-1 overflow-y-auto px-2 pt-3 pb-4">
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -233,23 +224,24 @@ export default function Sidebar({ open, onClose, coins }) {
               <button
                 key={item.label}
                 onClick={() => handleNavigate(item.path)}
-                className={`group flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
+                className={`group flex w-full items-center gap-3.5 rounded-lg px-3 py-2.5 text-left transition ${
                   isActive
-                    ? "bg-sky-500/10 text-sky-400"
-                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                    ? "bg-sky-50 text-sky-600"
+                    : "text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 <Icon
-                  size={19}
+                  size={20}
                   className={`shrink-0 ${
                     isActive
-                      ? "text-sky-400"
-                      : "text-slate-400 group-hover:text-white"
+                      ? "text-sky-600"
+                      : "text-slate-500 group-hover:text-slate-700"
                   }`}
+                  strokeWidth={isActive ? 2.4 : 2}
                 />
 
                 <span
-                  className={`min-w-0 flex-1 truncate text-sm ${
+                  className={`min-w-0 flex-1 truncate text-[15px] ${
                     isActive ? "font-bold" : "font-medium"
                   }`}
                 >
@@ -258,10 +250,12 @@ export default function Sidebar({ open, onClose, coins }) {
 
                 {item.badge && (
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black ${
-                      item.badge === "HOT"
-                        ? "bg-rose-500/20 text-rose-400"
-                        : "bg-amber-500/20 text-amber-400"
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                      item.badgeType === "hot"
+                        ? "bg-rose-100 text-rose-600"
+                        : item.badgeType === "new"
+                        ? "bg-emerald-100 text-emerald-600"
+                        : "bg-amber-100 text-amber-600"
                     }`}
                   >
                     {item.badge}
@@ -272,9 +266,8 @@ export default function Sidebar({ open, onClose, coins }) {
           })}
 
           {/* Divider */}
-          <div className="my-3 border-t border-white/5" />
+          <div className="my-3 border-t border-slate-100" />
 
-          {/* Extra items */}
           {EXTRA_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -286,23 +279,24 @@ export default function Sidebar({ open, onClose, coins }) {
               <button
                 key={item.label}
                 onClick={() => handleNavigate(item.path)}
-                className={`group flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
+                className={`group flex w-full items-center gap-3.5 rounded-lg px-3 py-2.5 text-left transition ${
                   isActive
-                    ? "bg-sky-500/10 text-sky-400"
-                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                    ? "bg-sky-50 text-sky-600"
+                    : "text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 <Icon
-                  size={19}
+                  size={20}
                   className={`shrink-0 ${
                     isActive
-                      ? "text-sky-400"
-                      : "text-slate-400 group-hover:text-white"
+                      ? "text-sky-600"
+                      : "text-slate-500 group-hover:text-slate-700"
                   }`}
+                  strokeWidth={isActive ? 2.4 : 2}
                 />
 
                 <span
-                  className={`min-w-0 flex-1 truncate text-sm ${
+                  className={`min-w-0 flex-1 truncate text-[15px] ${
                     isActive ? "font-bold" : "font-medium"
                   }`}
                 >
@@ -314,10 +308,10 @@ export default function Sidebar({ open, onClose, coins }) {
         </div>
 
         {/* Footer — Logout */}
-        <div className="border-t border-white/5 p-4">
+        <div className="border-t border-slate-100 p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-500/10 py-3 text-sm font-bold text-rose-400 transition hover:bg-rose-500/20"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-100"
           >
             <LogOut size={16} />
             Đăng xuất
@@ -326,4 +320,4 @@ export default function Sidebar({ open, onClose, coins }) {
       </aside>
     </>
   );
-            }
+        }
