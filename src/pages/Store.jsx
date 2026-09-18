@@ -759,23 +759,24 @@ function StoreHistoryPreview() {
         {/* Card lớn bọc toàn bộ */}
         <div className="overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-b from-sky-50 to-white shadow-sm">
           {/* Header */}
-          <div className="relative px-5 pb-4 pt-5">
-            <p className="text-xs font-medium text-slate-500">
-              Giao dịch gần đây
-            </p>
+<div className="relative px-5 pb-4 pt-5">
+  <p className="text-xs font-medium text-slate-500">
+    Giao dịch gần đây
+  </p>
 
-            <button
-              type="button"
-              onClick={() => navigate('/history')}
-              className="mt-1 flex items-center gap-2 text-left"
-            >
-              <h2 className="text-xl font-black text-slate-900">
-                Lịch sử đơn hàng
-              </h2>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
-                <ChevronRight size={14} className="text-slate-700" />
-              </span>
-            </button>
+  <button
+    type="button"
+    onClick={() => navigate('/history')}
+    className="mt-1 flex items-center gap-2 text-left"
+  >
+    <h2 className="text-xl font-black text-slate-900">
+      Lịch sử đơn hàng
+    </h2>
+    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm">
+      <ChevronRight size={14} className="text-slate-700" />
+    </span>
+  </button>
+</div>
 
 
           {/* Body */}
