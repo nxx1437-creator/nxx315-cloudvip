@@ -477,44 +477,21 @@ export default function FcOnline() {
       <div className="relative h-48 overflow-hidden sm:h-64">
         <img
           src={FCO_BANNER}
-          alt="FC Online"
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
+          alt="FC Mobile VN"    
+          ...
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent" />
-
-        <button
-          onClick={onBack}
-          className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl border border-white/60 bg-white/90 text-slate-700 shadow-md backdrop-blur-md transition hover:bg-white"
-        >
-          <ArrowLeft size={18} />
-        </button>
-
-        <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-md">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          <span className="text-[11px] font-bold text-emerald-600">ONLINE</span>
-        </div>
+        ...
       </div>
 
       <div className="relative -mt-10 px-5 pb-5">
         <div className="flex items-end gap-3.5">
           <div className="relative shrink-0">
-            <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 opacity-60 blur-md" />
+            ...
             <div className="relative h-20 w-20 overflow-hidden rounded-2xl border-4 border-white bg-green-50 shadow-lg sm:h-24 sm:w-24">
               <img
                 src={FCO_LOGO}
-                alt="FC Online"
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.parentElement.innerHTML =
-                    '<div class="flex h-full w-full items-center justify-center text-3xl">⚽</div>';
-                }}
+                alt="FC Mobile VN"    
+                ...
               />
             </div>
           </div>
@@ -527,23 +504,18 @@ export default function FcOnline() {
               </span>
             </div>
             <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
-              FC Online
+              FC Mobile VN              {/* ← Đổi từ "FC Online" */}
             </h1>
             <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
               Nạp FC chính hãng · Tự động 24/7
             </p>
           </div>
         </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <StatPill icon={Zap} label="Tức thì" color="green" />
-          <StatPill icon={ShieldCheck} label="Bảo mật" color="emerald" />
-          <StatPill icon={Trophy} label="Chính hãng" color="amber" />
-        </div>
+        ...
       </div>
     </div>
   );
-}
+          }
 
 function StatPill({ icon: Icon, label, color }) {
   const colorMap = {
@@ -576,10 +548,10 @@ function PackageStep({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-amber-900">
-            Kiểm tra kỹ Character Name trước khi nạp
+            Kiểm tra kỹ id trước khi nạp
           </p>
           <p className="mt-1 text-xs leading-5 text-amber-800">
-            FC sẽ nạp vào Character Name đã xác nhận. Sai tên không hoàn tiền.
+            FV sẽ nạp vào id đã xác nhận. Sai tên không hoàn tiền.
           </p>
         </div>
       </div>
@@ -592,16 +564,16 @@ function PackageStep({
           </div>
           <div>
             <h2 className="text-base font-black text-slate-900">
-              Tài khoản FC Online
-            </h2>
+              Tài khoản FC Mobile VN        
+             </h2>
             <p className="text-xs text-slate-500">
-              Nhập Character Name để nhận FC
+              Nhập id để nhận FV
             </p>
           </div>
         </div>
 
         <label className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-green-600">
-          Character Name
+          id người dùng 
         </label>
 
         <div className="relative">
@@ -627,7 +599,7 @@ function PackageStep({
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900">
-                Chọn gói FC
+                Chọn gói FV
               </h2>
               <p className="text-[11px] text-slate-500">
                 {PACKAGES.length} gói khả dụng
