@@ -78,6 +78,15 @@ const PACKAGE_IMAGES = {
   "fco-2500": `${STORAGE_URL}/fc.png`,
   "fco-5000": `${STORAGE_URL}/fc.png`,
   "fco-10000": `${STORAGE_URL}/fc.png`,
+
+"vp-125": `${STORAGE_URL}/vp.png`,
+"vp-420": `${STORAGE_URL}/vp.png`,
+"vp-700": `${STORAGE_URL}/vp.png`,
+"vp-1375": `${STORAGE_URL}/vp.png`,
+"vp-2400": `${STORAGE_URL}/vp.png`,
+"vp-4000": `${STORAGE_URL}/vp.png`,
+"vp-8150": `${STORAGE_URL}/vp.png`,
+"vp-16500": `${STORAGE_URL}/vp.png`,
 };
 
 const GAME_FALLBACK = {
@@ -88,6 +97,7 @@ const GAME_FALLBACK = {
   topup: `${STORAGE_URL}/card-default.png`,
   pubg: `${STORAGE_URL}/pubg.png`,
   fco: `${STORAGE_URL}/fc-mobile.png`,
+  valorant: `${STORAGE_URL}/valorant.png`,
 };
 
 function detectGame(order) {
@@ -148,6 +158,14 @@ function detectGame(order) {
   ) {
     return "fco";
   }
+  if (
+  pid.startsWith('vp-') ||
+  pid.includes('valorant') ||
+  order?.riot_id != null ||
+  order?.game === 'valorant'
+) {
+  return 'valorant';
+  }
 
   return null;
 }
@@ -161,6 +179,7 @@ function getGameName(order) {
   if (game === "topup") return "Nạp thẻ cào";
   if (game === "pubg") return "PUBG Mobile VN";
   if (game === "fco") return "FC Mobile VN";
+  if (game === 'valorant') return 'VALORANT';
   return null;
 }
 
@@ -203,6 +222,9 @@ function getOrderTitle(order) {
 
   if (gameKey === "fco" && order?.fco_fc != null) {
     return `${Number(order.fco_fc).toLocaleString("vi-VN")} FC`;
+  }
+  if (gameKey === 'valorant' && order?.vp != null) {
+  return `${Number(order.vp).toLocaleString('vi-VN')} VP`;
   }
 
   return "Giao dịch";
