@@ -24,6 +24,7 @@ const BANNERS = [
   'store-banner-1.jpg',
   'store-banner-2.jpg',
   'store-banner-3.jpg',
+  'store-banner-4.jpg',
 ];
 
 const BANNER_INTERVAL = 4000; // 4 giây đổi ảnh 1 lần
@@ -140,25 +141,29 @@ export default function Store() {
       <BannerSlideshow />
 
       {/* ĐỀ XUẤT CHO BẠN */}
-      {recommended.length > 0 && (
-        <section className="px-4 pt-6">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="mb-4 text-xl font-black uppercase text-gray-900">
-              DÀNH CHO BẠN
-            </h2>
+{recommended.length > 0 && (
+  <section className="pt-6">
+    <div className="mx-auto max-w-5xl">
+      <h2 className="mb-4 px-4 text-xl font-black uppercase text-gray-900">
+        DÀNH CHO BẠN
+      </h2>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {recommended.map((game) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  onClick={handleGameClick}
-                />
-              ))}
-            </div>
+      <div className="flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {recommended.map((game) => (
+          <div
+            key={game.id}
+            className="w-[150px] shrink-0 sm:w-[170px]"
+          >
+            <GameCard
+              game={game}
+              onClick={handleGameClick}
+            />
           </div>
-        </section>
-      )}
+        ))}
+      </div>
+    </div>
+  </section>
+)}
 
       {/* DANH SÁCH GAME */}
       <section className="px-4 pt-7 pb-28">
