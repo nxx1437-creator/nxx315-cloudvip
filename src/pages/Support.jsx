@@ -1,32 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Plus,
   MessageSquare,
   Clock,
   CheckCircle2,
-  XCircle,
   Send,
   Loader2,
   Inbox,
-  User as UserIcon,
-  ShieldCheck,
   X,
+  AlertCircle,
+  Zap,
+  ShieldCheck,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-
-// Helpers
-function formatTime(value) {
-  if (!value) return "";
-  return new Date(value).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function formatDate(value) {
   if (!value) return "";
@@ -39,38 +29,56 @@ function formatDate(value) {
   });
 }
 
+function formatTime(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function getStatusInfo(status) {
   const key = String(status || "").toLowerCase();
   if (key === "open" || key === "pending") {
     return {
       label: "Đang mở",
       className: "bg-emerald-50 text-emerald-600 border-emerald-200",
-      icon: Clock,
     };
   }
-  if (key === "answered") {
+  if (key === "answered" || key === "in_progress") {
     return {
-      label: "Đã trả lời",
+      label: "Đang xử lý",
       className: "bg-blue-50 text-blue-600 border-blue-200",
-      icon: MessageSquare,
     };
   }
   if (key === "closed" || key === "resolved") {
     return {
       label: "Đã đóng",
       className: "bg-slate-50 text-slate-500 border-slate-200",
-      icon: CheckCircle2,
     };
   }
   return {
     label: status || "Không rõ",
     className: "bg-slate-50 text-slate-500 border-slate-200",
-    icon: Clock,
   };
 }
+
+const CATEGORIES = [
+  { value: "payment", label: "Thanh toán", icon: "💳" },
+  { value: "order", label: "Đơn hàng", icon: "📦" },
+  { value: "account", label: "Tài khoản", icon: "👤" },
+  { value: "bug", label: "Lỗi hệ thống", icon: "🐛" },
+  { value: "other", label: "Khác", icon: "💬" },
+];
+
+const PRIORITIES = [
+  { value: "low", label: "Thấp", color: "slate" },
+  { value: "normal", label: "Bình thường", color: "blue" },
+  { value: "high", label: "Cao", color: "orange" },
+  { value: "urgent", label: "Khẩn cấp", color: "rose" },
+];
 export default function Support() {
-  const navigate = useNavigate();
-  const [view, setView] = useState("list"); // "list" | "chat"
+  const [view, setView] = useState("list");
   const [selectedTicket, setSelectedTicket] = useState(null);
 
   return (
@@ -102,6 +110,7 @@ export default function Support() {
     </div>
   );
 }
+
 function TicketList({ onSelectTicket }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,7 +162,7 @@ function TicketList({ onSelectTicket }) {
         <div>
           <h1 className="text-lg font-black text-slate-900">Hỗ trợ</h1>
           <p className="text-xs text-slate-500">
-            Gửi yêu cầu và theo dõi phản hồi
+            Gửi yêu cầu & theo dõi phản hồi
           </p>
         </div>
       </div>
@@ -165,16 +174,13 @@ function TicketList({ onSelectTicket }) {
             <Inbox size={20} className="text-sky-600" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-900">
-              Ticket hỗ trợ
-            </p>
+            <p className="text-sm font-bold text-slate-900">Ticket hỗ trợ</p>
             <p className="text-xs text-slate-500">
-              Theo dõi & phản hồi nhanh chóng
+              Phản hồi trong vòng 24h
             </p>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-slate-50 p-3">
             <p className="text-xs text-slate-500">Tất cả</p>
@@ -201,7 +207,7 @@ function TicketList({ onSelectTicket }) {
 
       {/* List */}
       <div>
-        <h2 className="mb-3 px-1 text-sm font-black uppercase tracking-wide text-slate-500">
+        <h2 className="mb-3 px-1 text-xs font-black uppercase tracking-wider text-slate-500">
           Lịch sử ticket
         </h2>
 
@@ -262,7 +268,8 @@ function TicketList({ onSelectTicket }) {
 
 function TicketCard({ ticket, onClick }) {
   const status = getStatusInfo(ticket.status);
-  const StatusIcon = status.icon;
+  const category = CATEGORIES.find((c) => c.value === ticket.category);
+  const priority = PRIORITIES.find((p) => p.value === ticket.priority);
 
   return (
     <button
@@ -270,16 +277,14 @@ function TicketCard({ ticket, onClick }) {
       className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-sky-300 hover:shadow-md active:scale-[0.995]"
     >
       <div className="flex items-start gap-3">
-        {/* Icon */}
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
           <MessageSquare size={18} />
         </div>
 
-        {/* Body */}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <p className="truncate text-sm font-black text-slate-900">
-              {ticket.subject || ticket.title || "Ticket hỗ trợ"}
+              {ticket.title || "Ticket hỗ trợ"}
             </p>
             <span
               className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${status.className}`}
@@ -289,10 +294,15 @@ function TicketCard({ ticket, onClick }) {
           </div>
 
           <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-            {ticket.message || ticket.content || "Không có nội dung"}
+            {ticket.last_message || ticket.description || "Không có nội dung"}
           </p>
 
           <div className="mt-2 flex items-center gap-3 text-[10px] text-slate-400">
+            {category && (
+              <span>
+                {category.icon} {category.label}
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Clock size={10} />
               {formatDate(ticket.created_at)}
@@ -308,7 +318,7 @@ function TicketChat({ ticket, onBack }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const scrollRef = useRef(null);
+  const scrollRef = React.useRef(null);
 
   const status = getStatusInfo(ticket.status);
 
@@ -323,36 +333,36 @@ function TicketChat({ ticket, onBack }) {
   const loadMessages = async () => {
     setLoading(true);
     try {
+      // ⚠️ QUAN TRỌNG: Đây là bảng giả định
+      // Bạn cần xác nhận tên bảng đúng
       const { data, error } = await supabase
         .from("ticket_messages")
         .select("*")
         .eq("ticket_id", ticket.id)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
-
-      // Nếu bảng ticket_messages không có → fallback dùng admin_reply
-      if (!data || data.length === 0) {
+      if (error) {
+        // Fallback: chỉ hiện description + last_message
         const fallback = [];
-        if (ticket.message) {
+        if (ticket.description) {
           fallback.push({
-            id: "user-initial",
-            content: ticket.message,
+            id: "init",
+            content: ticket.description,
             is_admin: false,
             created_at: ticket.created_at,
           });
         }
-        if (ticket.admin_reply) {
+        if (ticket.last_message && ticket.last_message !== ticket.description) {
           fallback.push({
-            id: "admin-reply",
-            content: ticket.admin_reply,
+            id: "reply",
+            content: ticket.last_message,
             is_admin: true,
             created_at: ticket.updated_at || ticket.created_at,
           });
         }
         setMessages(fallback);
       } else {
-        setMessages(data);
+        setMessages(data || []);
       }
     } catch (error) {
       console.error("Load messages error:", error);
@@ -377,6 +387,7 @@ function TicketChat({ ticket, onBack }) {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // ⚠️ Cần xác nhận bảng đúng
       const { data, error } = await supabase
         .from("ticket_messages")
         .insert({
@@ -395,7 +406,7 @@ function TicketChat({ ticket, onBack }) {
       scrollToBottom();
     } catch (error) {
       console.error("Send message error:", error);
-      alert("Không thể gửi tin nhắn. Vui lòng thử lại.");
+      alert("Không thể gửi tin nhắn.");
     } finally {
       setSending(false);
     }
@@ -420,10 +431,10 @@ function TicketChat({ ticket, onBack }) {
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-black text-slate-900">
-            {ticket.subject || ticket.title || "Ticket hỗ trợ"}
+            {ticket.title || "Ticket hỗ trợ"}
           </h1>
-          <p className="text-xs text-slate-500">
-            {formatDate(ticket.created_at)}
+          <p className="text-[11px] text-slate-500">
+            #{ticket.id.slice(0, 8).toUpperCase()}
           </p>
         </div>
         <span
@@ -442,25 +453,24 @@ function TicketChat({ ticket, onBack }) {
           <div className="flex items-center justify-center py-10">
             <Loader2 size={24} className="animate-spin text-slate-400" />
           </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <MessageSquare size={32} className="text-slate-300" />
-            <p className="mt-2 text-xs text-slate-400">
-              Chưa có tin nhắn nào
-            </p>
-          </div>
         ) : (
           <>
             {/* Mô tả ticket */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs text-slate-500">Mô tả ticket</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Nội dung ban đầu
+              </p>
               <p className="mt-1 text-sm text-slate-800">
-                {ticket.message || ticket.content}
+                {ticket.description || "—"}
               </p>
             </div>
 
             {messages
-              .filter((m) => m.id !== "user-initial")
+              .filter(
+                (m) =>
+                  m.content !== ticket.description &&
+                  m.id !== "init"
+              )
               .map((msg) => (
                 <ChatBubble key={msg.id} message={msg} />
               ))}
@@ -498,7 +508,7 @@ function TicketChat({ ticket, onBack }) {
 }
 
 function ChatBubble({ message }) {
-  const isAdmin = message.is_admin;
+  const isAdmin = message.is_admin || message.sender === "admin";
 
   return (
     <div
@@ -506,19 +516,17 @@ function ChatBubble({ message }) {
         isAdmin ? "justify-start" : "justify-end"
       }`}
     >
-      {/* Avatar admin (trái) */}
       {isAdmin && (
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm">
           <ShieldCheck size={14} />
         </div>
       )}
 
-      {/* Bong bóng */}
       <div className={`max-w-[75%] ${isAdmin ? "" : "items-end"}`}>
         <div
           className={`rounded-2xl px-3.5 py-2.5 ${
             isAdmin
-              ? "rounded-bl-md bg-white text-slate-800 shadow-sm border border-slate-100"
+              ? "rounded-bl-md border border-slate-100 bg-white text-slate-800 shadow-sm"
               : "rounded-br-md bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-200"
           }`}
         >
@@ -535,10 +543,9 @@ function ChatBubble({ message }) {
         </p>
       </div>
 
-      {/* Avatar user (phải) */}
       {!isAdmin && (
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
-          <UserIcon size={14} />
+          <span className="text-xs font-black">U</span>
         </div>
       )}
     </div>
@@ -546,13 +553,15 @@ function ChatBubble({ message }) {
 }
 
 function CreateTicketModal({ onClose, onSuccess }) {
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("payment");
+  const [priority, setPriority] = useState("normal");
+  const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
   const handleSubmit = async () => {
-    if (!subject.trim() || !message.trim()) {
-      alert("Vui lòng nhập tiêu đề và nội dung.");
+    if (!title.trim() || !description.trim()) {
+      alert("Vui lòng nhập tiêu đề và mô tả.");
       return;
     }
 
@@ -565,16 +574,19 @@ function CreateTicketModal({ onClose, onSuccess }) {
 
       const { error } = await supabase.from("support_tickets").insert({
         user_id: user.id,
-        subject: subject.trim(),
-        message: message.trim(),
+        title: title.trim(),
+        category,
+        priority,
+        description: description.trim(),
         status: "open",
+        last_message: description.trim(),
       });
 
       if (error) throw error;
       await onSuccess();
     } catch (error) {
       console.error("Create ticket error:", error);
-      alert("Không thể tạo ticket. Vui lòng thử lại.");
+      alert("Không thể tạo ticket.");
     } finally {
       setCreating(false);
     }
@@ -582,7 +594,7 @@ function CreateTicketModal({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl">
         <div className="mb-4 flex items-start justify-between">
           <div>
             <h3 className="text-base font-black text-slate-900">
@@ -600,26 +612,72 @@ function CreateTicketModal({ onClose, onSuccess }) {
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Title */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-slate-500">
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
               Tiêu đề
             </label>
             <input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="VD: Không nhận được Coin sau khi nạp"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="VD: Không nhận được Coin"
               className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
             />
           </div>
 
+          {/* Category */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-slate-500">
-              Nội dung
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              Danh mục
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setCategory(c.value)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                    category === c.value
+                      ? "border-sky-500 bg-sky-50 text-sky-600"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {c.icon} {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              Độ ưu tiên
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {PRIORITIES.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPriority(p.value)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                    priority === p.value
+                      ? "border-sky-500 bg-sky-50 text-sky-600"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              Mô tả chi tiết
             </label>
             <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Mô tả chi tiết vấn đề của bạn..."
               rows={5}
               className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
@@ -628,7 +686,7 @@ function CreateTicketModal({ onClose, onSuccess }) {
 
           <button
             onClick={handleSubmit}
-            disabled={creating || !subject.trim() || !message.trim()}
+            disabled={creating || !title.trim() || !description.trim()}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-sm font-black text-white shadow-md shadow-sky-200 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {creating ? (
