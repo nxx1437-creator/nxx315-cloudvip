@@ -1,4 +1,3 @@
-import TermsCheckbox from "../components/TermsCheckbox.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,6 +20,7 @@ import {
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import TermsCheckbox from "../components/TermsCheckbox.jsx";   
 
 const ROBLOX_BANNER_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Roblox-banner.png";
@@ -102,6 +102,7 @@ export default function Roblox() {
 
   const [order, setOrder] = useState(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);  
 
   const [agreedTerms, setAgreedTerms] = useState(false);
 
@@ -255,17 +256,19 @@ export default function Roblox() {
         </div>
 
         {step === "package" && (
-          <UsernameAndPackageSection
-            username={username}
-            setUsername={setUsername}
-            robloxUser={robloxUser}
-            checkingUser={checkingUser}
-            onCheck={checkRobloxUser}
-            onContinue={() => setStep("username")}
-            selectedPackage={selectedPackage}
-            onSelect={setSelectedPackage}
-          />
-        )}
+  <UsernameAndPackageSection
+    username={username}
+    setUsername={setUsername}
+    robloxUser={robloxUser}
+    checkingUser={checkingUser}
+    onCheck={checkRobloxUser}
+    onContinue={() => setStep("username")}
+    selectedPackage={selectedPackage}
+    onSelect={setSelectedPackage}
+    agreedTerms={agreedTerms}              {/* 👈 THÊM */}
+    setAgreedTerms={setAgreedTerms}        {/* 👈 THÊM */}
+  />
+)}
 
         {step === "username" && (
           <UsernameSection
@@ -391,6 +394,8 @@ function UsernameAndPackageSection({
   onContinue,
   selectedPackage,
   onSelect,
+  agreedTerms,       
+  setAgreedTerms,     
 }) {
   const [showGuide, setShowGuide] = useState(false);
 
@@ -535,15 +540,20 @@ function UsernameAndPackageSection({
 
       {/* ═══════════ Nút Tiếp tục ═══════════ */}
       <section className="rounded-xl border border-gray-200 bg-white p-5">
-        <button
-          onClick={onContinue}
-          disabled={!selectedPackage || !robloxUser}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Tiếp tục
-          <ChevronRight size={16} />
-        </button>
+        <TermsCheckbox                                            {/* 👈 THÊM */}
+  checked={agreedTerms}                                    {/* 👈 THÊM */}
+  onChange={setAgreedTerms}                                {/* 👈 THÊM */}
+  accentColor="blue"                                       {/* 👈 THÊM */}
+/>                                                         {/* 👈 THÊM */}
 
+<button
+  onClick={onContinue}
+  disabled={!selectedPackage || !robloxUser || !agreedTerms}   {/* 👈 SỬA: thêm `|| !agreedTerms` */}
+  className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+>
+  Tiếp tục
+  <ChevronRight size={18} />
+</button>
         {!robloxUser && (
           <p className="mt-2 text-center text-xs text-gray-500">
             Vui lòng xác nhận username Roblox trước
