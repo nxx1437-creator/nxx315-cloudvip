@@ -777,12 +777,6 @@ function StoreHistoryPreview() {
               </span>
             </button>
 
-            {/* Hình tròn decoration góc phải */}
-            <div className="pointer-events-none absolute right-4 top-4 h-20 w-20">
-              <div className="absolute inset-0 rounded-full border-[10px] border-sky-200/60" />
-              <div className="absolute inset-0 rounded-full border-[10px] border-transparent border-r-sky-500 border-t-sky-400" />
-            </div>
-          </div>
 
           {/* Body */}
           <div className="px-3 pb-3">
