@@ -253,20 +253,18 @@ export default function Roblox() {
           <Stepper step={step} />
         </div>
 
-        {step === "package" && (
-  <UsernameAndPackageSection
-    username={username}
-    setUsername={setUsername}
-    robloxUser={robloxUser}
-    checkingUser={checkingUser}
-    onCheck={checkRobloxUser}
-    onContinue={() => setStep("username")}
-    selectedPackage={selectedPackage}
-    onSelect={setSelectedPackage}
-    agreedTerms={agreedTerms}              {/* 👈 THÊM */}
-    setAgreedTerms={setAgreedTerms}        {/* 👈 THÊM */}
-  />
-)}
+        <UsernameAndPackageSection
+  username={username}
+  setUsername={setUsername}
+  robloxUser={robloxUser}
+  checkingUser={checkingUser}
+  onCheck={checkRobloxUser}
+  onContinue={() => setStep("username")}
+  selectedPackage={selectedPackage}
+  onSelect={setSelectedPackage}
+  agreedTerms={agreedTerms}
+  setAgreedTerms={setAgreedTerms}
+/>
 
         {step === "username" && (
           <UsernameSection
