@@ -139,7 +139,7 @@ export default function Store() {
       />
 
       {/* Banner slideshow */}
-      <BannerSlideshow />
+      <BannerSlideshow navigate={navigate} />
 
       {/* ĐỀ XUẤT CHO BẠN */}
 {recommended.length > 0 && (
@@ -320,17 +320,15 @@ function StoreHeader({ search, setSearch, navigate }) {
                   }
 // ============= BANNER SLIDESHOW =============
 
-function BannerSlideshow() {
+function BannerSlideshow({ navigate }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState({});
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef(null);
 
-  // Lọc bỏ các ảnh bị lỗi
   const validBanners = BANNERS.filter((_, idx) => !imageErrors[idx]);
   const hasBanners = validBanners.length > 0;
 
-  // Auto slide
   useEffect(() => {
     if (!hasBanners || isPaused) return;
 
@@ -343,20 +341,29 @@ function BannerSlideshow() {
     };
   }, [hasBanners, isPaused]);
 
-  const goToSlide = (index) => {
+  const goToSlide = (index, e) => {
+    if (e) e.stopPropagation();
     setCurrentIndex(index);
-    // Reset timer khi user click
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const goPrev = () => {
+  const goPrev = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prev) => (prev - 1 + BANNERS.length) % BANNERS.length);
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const goNext = () => {
+  const goNext = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prev) => (prev + 1) % BANNERS.length);
     if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  const handleBannerClick = () => {
+    const currentBanner = BANNERS[currentIndex];
+    if (currentBanner?.path) {
+      navigate(currentBanner.path);
+    }
   };
 
   if (!hasBanners) return null;
@@ -365,7 +372,8 @@ function BannerSlideshow() {
     <section className="px-4 pt-3">
       <div className="mx-auto max-w-5xl">
         <div
-          className="relative aspect-[2/1] w-full overflow-hidden rounded-2xl bg-gray-100"
+          onClick={handleBannerClick}
+          className="relative aspect-[2/1] w-full cursor-pointer overflow-hidden rounded-2xl bg-gray-100"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
@@ -377,10 +385,10 @@ function BannerSlideshow() {
 
             return (
               <img
-                key={banner}
-                src={getImageUrl(banner)}
+                key={banner.image}
+                src={getImageUrl(banner.image)}
                 alt={`Banner ${index + 1}`}
-                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+                className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
                   index === currentIndex ? 'opacity-100' : 'opacity-0'
                 }`}
                 onError={() => {
@@ -421,7 +429,7 @@ function BannerSlideshow() {
                 <button
                   key={index}
                   type="button"
-                  onClick={() => goToSlide(index)}
+                  onClick={(e) => goToSlide(index, e)}
                   className={`h-1.5 rounded-full transition-all ${
                     index === currentIndex
                       ? 'w-6 bg-orange-500'
@@ -436,7 +444,7 @@ function BannerSlideshow() {
       </div>
     </section>
   );
-              }
+}
 // ============= GAME CARD =============
 
 function GameCard({ game, onClick }) {
