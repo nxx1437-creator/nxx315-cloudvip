@@ -1,3 +1,4 @@
+import TermsCheckbox from "../components/TermsCheckbox.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -101,6 +102,8 @@ export default function Roblox() {
 
   const [order, setOrder] = useState(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
+
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   const checkRobloxUser = async () => {
     const value = username.trim();
