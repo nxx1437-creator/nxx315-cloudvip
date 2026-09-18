@@ -68,6 +68,16 @@ const PACKAGE_IMAGES = {
   "pubg-6000": `${STORAGE_URL}/uc.png`,
   "pubg-12000": `${STORAGE_URL}/uc.png`,
   "pubg-18000": `${STORAGE_URL}/uc.png`,
+
+  // FC Mobile VN
+  "fco-50": `${STORAGE_URL}/fc.png`,
+  "fco-100": `${STORAGE_URL}/fc.png`,
+  "fco-250": `${STORAGE_URL}/fc.png`,
+  "fco-500": `${STORAGE_URL}/fc.png`,
+  "fco-1200": `${STORAGE_URL}/fc.png`,
+  "fco-2500": `${STORAGE_URL}/fc.png`,
+  "fco-5000": `${STORAGE_URL}/fc.png`,
+  "fco-10000": `${STORAGE_URL}/fc.png`,
 };
 
 const GAME_FALLBACK = {
@@ -76,7 +86,8 @@ const GAME_FALLBACK = {
   playtogether: `${STORAGE_URL}/play-together.png`,
   freefire: `${STORAGE_URL}/free-fire.png`,
   topup: `${STORAGE_URL}/card-default.png`,
-  pubg: `${STORAGE_URL}/pubg-mobile-vn.png`,
+  pubg: `${STORAGE_URL}/pubg.png`,
+  fco: `${STORAGE_URL}/fc-mobile.png`,   // 👈 THÊM DÒNG NÀY
 };
 
 function detectGame(order) {
@@ -126,6 +137,18 @@ function detectGame(order) {
     return "pubg";
   }
 
+  if (
+    pid.startsWith("fco-") ||
+    pid.includes("fco") ||
+    pid.includes("fcmobile") ||
+    pid.includes("fc-mobile") ||
+    order?.fco_character_id != null ||
+    order?.fco_fc != null ||
+    order?.game === "fco"
+  ) {
+    return "fco";
+  }
+
   return null;
 }
 
@@ -137,16 +160,20 @@ function getGameName(order) {
   if (game === "freefire") return "Free Fire";
   if (game === "topup") return "Nạp thẻ cào";
   if (game === "pubg") return "PUBG Mobile VN";
+  if (game === "fco") return "FC Mobile VN";   // 👈 THÊM DÒNG NÀY
   return null;
 }
 
 function getOrderTitle(order) {
+  if (order?.package_name) return order.package_name;
+  if (order?.product_name) return order.product_name;
+  if (order?.name) return order.name;
+  if (order?.game_name) return order.game_name;
+
   const gameKey = detectGame(order);
 
-  if (gameKey === "pubg" && order?.pubg_uc != null) {
-    const uc = Number(order.pubg_uc).toLocaleString("vi-VN");
-    const bonus = Number(order.pubg_bonus || 0);
-    return bonus > 0 ? `${uc} UC + ${bonus.toLocaleString("vi-VN")} Bonus` : `${uc} UC`;
+  if (gameKey === "topup" && order?.note) {
+    return order.note.split(" - ")[0];
   }
 
   if (gameKey === "lienquan" && order?.quanhuy) {
@@ -165,29 +192,21 @@ function getOrderTitle(order) {
     return `${Number(order.ff_diamond).toLocaleString("vi-VN")} Kim Cương`;
   }
 
-  if (gameKey === "topup" && order?.note) {
-    return order.note.split(" - ")[0];
+  if (gameKey === "pubg" && order?.pubg_uc != null) {
+    const uc = Number(order.pubg_uc).toLocaleString("vi-VN");
+    const bonus = Number(order.pubg_bonus || 0);
+    if (bonus > 0) {
+      return `${uc} UC + ${bonus.toLocaleString("vi-VN")} Bonus`;
+    }
+    return `${uc} UC`;
+  }
+
+  if (gameKey === "fco" && order?.fco_fc != null) {
+    return `${Number(order.fco_fc).toLocaleString("vi-VN")} FC`;
   }
 
   return "Giao dịch";
 }
-const fmtDate = (value) => {
-  if (!value) return "—";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 function getStatus(status) {
   const key = String(status || "").toLowerCase();
@@ -648,6 +667,11 @@ export default function HistoryDetail() {
                         )}
                       </p>
                     )}
+                    {order.fco_fc != null && (
+  <p className="mt-1 text-xs font-bold text-blue-500">
+    {Number(order.fco_fc).toLocaleString("vi-VN")} FC
+  </p>
+)}
 
                     {order.package_id && (
                       <p className="mt-1 text-xs text-slate-400">
@@ -732,6 +756,20 @@ export default function HistoryDetail() {
                     }`}
                   />
                 )}
+                {order.fco_character_id && (
+  <InfoRow
+    label="Character Name"
+    value={order.fco_character_id}
+    copyable
+  />
+)}
+
+{order.fco_fc != null && (
+  <InfoRow
+    label="FC nhận được"
+    value={`${Number(order.fco_fc).toLocaleString("vi-VN")} FC`}
+  />
+)}
 
                 {coin != null && (
                   <InfoRow
