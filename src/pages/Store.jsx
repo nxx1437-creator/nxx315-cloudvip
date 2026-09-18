@@ -634,6 +634,7 @@ function getGameNameByPackage(packageId) {
 }
 
 function getHistoryName(order) {
+function getHistoryName(order) {
   const gameKey = detectHistoryGame(order?.package_id);
 
   if (gameKey === 'playtogether' && order?.pt_gold != null) {
@@ -658,15 +659,13 @@ function getHistoryName(order) {
   if (gameKey === 'fco' && order?.fco_fc != null) {
     return `${Number(order.fco_fc).toLocaleString('vi-VN')} FC`;
   }
-
   if (gameKey === 'valorant' && order?.vp != null) {
     return `${Number(order.vp).toLocaleString('vi-VN')} VP`;
   }
 
   return 'Đơn nạp game';
 }
-
-function getHistoryImage(order) {
+  
 function getHistoryImage(order) {
   const packageId = String(order?.package_id || '').toLowerCase();
 
@@ -685,15 +684,14 @@ function getHistoryImage(order) {
   if (packageId.startsWith('vng-') || packageId.includes('roblox')) {
     return getImageUrl('roblox.png');
   }
-  if (packageId.startsWith('fco-') || packageId.includes('fco')) {
+  if (packageId.startsWith('fco-') || packageId.includes('fcmobile')) {
     return getImageUrl('fc-mobile.png');
   }
-
   if (packageId.startsWith('vp-') || packageId.includes('valorant')) {
     return getImageUrl('valorant.png');
   }
 
-  return getImageUrl('store-banner-1.png');
+  return getImageUrl('store-cute.png');
 }
    // ============= STORE HISTORY PREVIEW (ZaloPay Style) =============
 
