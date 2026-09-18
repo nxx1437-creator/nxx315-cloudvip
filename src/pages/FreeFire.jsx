@@ -24,6 +24,7 @@ import {
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import TermsCheckbox from "../components/TermsCheckbox.jsx";
 
 const SUPABASE_STORAGE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
@@ -128,6 +129,7 @@ function copyText(text) {
   const [cardResult, setCardResult] = useState(null);
   const [cardChecking, setCardChecking] = useState(false);
   const resultRef = useRef(null);
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -447,12 +449,14 @@ function copyText(text) {
         <div className="mt-5" />
 
         {step === "package" && (
-          <PackageStep
-            selectedPackage={selectedPackage}
-            setSelectedPackage={setSelectedPackage}
-            onContinue={() => setStep("uid")}
-          />
-        )}
+  <PackageStep
+    selectedPackage={selectedPackage}
+    setSelectedPackage={setSelectedPackage}
+    onContinue={() => setStep("uid")}
+    agreedTerms={agreedTerms}
+    setAgreedTerms={setAgreedTerms}
+  />
+)}
 
         {step === "uid" && (
           <UidStep
@@ -589,7 +593,7 @@ function StatPill({ icon: Icon, label, color }) {
     </div>
   );
 }
-function PackageStep({ selectedPackage, setSelectedPackage, onContinue }) {
+function PackageStep({ selectedPackage, setSelectedPackage, onContinue, agreedTerms, setAgreedTerms }) {
   return (
     <div className="space-y-4">
       {/* Alert */}
@@ -642,17 +646,20 @@ function PackageStep({ selectedPackage, setSelectedPackage, onContinue }) {
 
       {/* Continue */}
       <div className="pt-2">
-        <button
-          onClick={onContinue}
-          disabled={!selectedPackage}
-          className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 text-sm font-black text-white shadow-lg shadow-orange-300/50 transition hover:shadow-orange-400/60 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-        >
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-          <span className="relative flex items-center gap-2">
-            Tiếp tục
-            <ChevronRight size={18} />
-          </span>
-        </button>
+        <TermsCheckbox
+  checked={agreedTerms}
+  onChange={setAgreedTerms}
+  accentColor="orange"
+/>
+
+<button
+  onClick={onContinue}
+  disabled={!selectedPackage || !agreedTerms}
+  className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-40"
+>
+  Tiếp tục
+  <ChevronRight size={18} />
+</button>
         {!selectedPackage && (
           <p className="mt-2 text-center text-xs text-slate-400">
             Chọn một gói để tiếp tục
