@@ -540,11 +540,11 @@ function UsernameAndPackageSection({
     checked={agreedTerms}
     onChange={setAgreedTerms}
     accentColor="blue"
-  />                                                         {/* 👈 THÊM */}
+  />                                                         
 
 <button
   onClick={onContinue}
-  disabled={!selectedPackage || !robloxUser || !agreedTerms}   {/* 👈 SỬA: thêm `|| !agreedTerms` */}
+  disabled={!selectedPackage || !robloxUser || !agreedTerms}
   className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
 >
   Tiếp tục
