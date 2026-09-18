@@ -37,11 +37,11 @@ import Roblox from "./pages/Roblox.jsx";
 import PlayTogether from "./pages/PlayTogether.jsx";
 import LienQuan from "./pages/LienQuan.jsx";
 import FreeFire from "./pages/FreeFire.jsx";
-import PubgMobile from "./pages/PubgMobile.jsx";
+import PubgMobile from "./pages/PubgMobile.jsx"
+import FcOnline from "./pages/FcOnline.jsx";
 import NapThanhCong from "./pages/NapThanhCong.jsx";
 import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
-
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import VersionChecker from "./VersionChecker";
@@ -173,6 +173,14 @@ export default function App() {
   element={
     <ProtectedRoute>
       <PubgMobile />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/store/fc-online"
+  element={
+    <ProtectedRoute>
+      <FcOnline />
     </ProtectedRoute>
   }
 />
