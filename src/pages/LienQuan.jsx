@@ -70,8 +70,6 @@ export default function LienQuan() {
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
 
-  const [agreedTerms, setAgreedTerms] = useState(false);
-
 
   const checkPlayer = () => {
     const cleanUid = String(uid || "").trim();
@@ -285,6 +283,7 @@ function StatPill({ icon: Icon, label }) {
 }
 
 function Stepper({ step }) {
+function Stepper({ step }) {
   const steps = [
     { key: "package", label: "Chọn gói" },
     { key: "username", label: "Nhập ID" },
@@ -387,23 +386,37 @@ function PackageSection({ selectedPackage, onSelect, onContinue, agreedTerms, se
         ))}
       </div>
 
-      {/* Continue button */}
-      <div className="pt-2">
-        <button
-          onClick={onContinue}
-          disabled={!selectedPackage}
-          className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-sm font-black text-white shadow-lg shadow-amber-500/30 transition hover:shadow-amber-500/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-        >
-          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-          <span className="relative">Tiếp tục</span>
-          <ChevronRight size={18} className="relative" />
-        </button>
-        {!selectedPackage && (
-          <p className="mt-2 text-center text-xs text-gray-500">
-            Chọn một gói để tiếp tục
-          </p>
-        )}
-      </div>
+      {/* Terms checkbox */}
+<TermsCheckbox
+  checked={agreedTerms}
+  onChange={setAgreedTerms}
+  accentColor="orange"
+/>
+
+{/* Continue button */}
+<div className="pt-2">
+  <button
+    onClick={onContinue}
+    disabled={!selectedPackage || !agreedTerms}
+    className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-sm font-black text-white shadow-lg shadow-amber-500/30 transition hover:shadow-amber-500/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+  >
+    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+    <span className="relative">Tiếp tục</span>
+    <ChevronRight size={18} className="relative" />
+  </button>
+
+  {!selectedPackage && (
+    <p className="mt-2 text-center text-xs text-gray-500">
+      Chọn một gói để tiếp tục
+    </p>
+  )}
+
+  {selectedPackage && !agreedTerms && (
+    <p className="mt-2 text-center text-xs text-gray-500">
+      Vui lòng đồng ý điều khoản để tiếp tục
+    </p>
+  )}
+</div>
     </div>
   );
 }
