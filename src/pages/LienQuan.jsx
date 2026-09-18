@@ -282,60 +282,6 @@ function StatPill({ icon: Icon, label }) {
   );
 }
 
-function Stepper({ step }) {
-function Stepper({ step }) {
-  const steps = [
-    { key: "package", label: "Chọn gói" },
-    { key: "username", label: "Nhập ID" },
-    { key: "payment", label: "Thanh toán" },
-  ];
-  const order = ["package", "username", "payment"];
-  const currentIdx = order.indexOf(step);
-
-  return (
-    <div className="flex items-center">
-      {steps.map((s, i) => {
-        const done = i < currentIdx;
-        const active = i === currentIdx;
-        return (
-          <React.Fragment key={s.key}>
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition ${
-                  done || active
-                    ? "bg-gradient-to-br from-amber-400 to-orange-600 text-white shadow-md shadow-amber-500/30"
-                    : "border border-gray-200 bg-white text-gray-400"
-                }`}
-              >
-                {done ? <CheckCircle2 size={15} strokeWidth={2.5} /> : i + 1}
-              </div>
-              <span
-                className={`hidden text-sm font-bold sm:inline ${
-                  active
-                    ? "text-gray-900"
-                    : done
-                    ? "text-amber-600"
-                    : "text-gray-400"
-                }`}
-              >
-                {s.label}
-              </span>
-            </div>
-            {i < steps.length - 1 && (
-              <div
-                className={`mx-3 h-0.5 flex-1 rounded-full transition ${
-                  i < currentIdx
-                    ? "bg-gradient-to-r from-amber-400 to-orange-500"
-                    : "bg-gray-200"
-                }`}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
-}
 function PackageSection({ selectedPackage, onSelect, onContinue, agreedTerms, setAgreedTerms }) {
   return (
     <div className="space-y-4">
