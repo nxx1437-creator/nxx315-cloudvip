@@ -35,7 +35,6 @@ const VALORANT_LOGO = `${SUPABASE_STORAGE}/valorant.png`;
 
 // Gói VP — giá VNĐ, số VP
  const PACKAGES = [
- const PACKAGES = [
   {
     id: "vp-52",
     amount: 11000,
