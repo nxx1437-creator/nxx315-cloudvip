@@ -104,8 +104,6 @@ export default function Roblox() {
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);  
 
-  const [agreedTerms, setAgreedTerms] = useState(false);
-
   const checkRobloxUser = async () => {
     const value = username.trim();
     if (!value) {
