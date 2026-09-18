@@ -1,4 +1,3 @@
-import TermsCheckbox from "../components/TermsCheckbox.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,6 +24,7 @@ import {
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import TermsCheckbox from "../components/TermsCheckbox.jsx";  
 
 const LIENQUAN_BANNER_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/lienquan-banner.png";
