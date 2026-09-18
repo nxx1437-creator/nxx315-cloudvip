@@ -21,14 +21,29 @@ const getImageUrl = (fileName) =>
 
 // ============= BANNER SLIDES =============
 const BANNERS = [
-  'store-banner-1.png',
-  'store-banner-2.png',
-  'store-banner-3.png',
-  'store-banner-4.png',
-  'store-banner-5.png',
+  { 
+    image: 'store-banner-1.png',  
+    path: '/store/free-fire'     
+  },
+  { 
+    image: 'store-banner-2.png',  
+    path: '/store/play-together'       
+  },
+  { 
+    image: 'store-banner-3.png', 
+    path: '/store/lien-quan'       
+  },
+    { 
+    image: 'store-banner-4.png', 
+    path: '/store/roblox'       
+  },
+  { 
+    image: 'store-banner-5.png', 
+    path: '/store/pubg-mobile'       
+  },
 ];
 
-const BANNER_INTERVAL = 4000; // 4 giây đổi ảnh 1 lần
+const BANNER_INTERVAL = 4000; 
 
 // ============= GAMES =============
 
