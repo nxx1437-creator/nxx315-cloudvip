@@ -39,6 +39,7 @@ import LienQuan from "./pages/LienQuan.jsx";
 import FreeFire from "./pages/FreeFire.jsx";
 import PubgMobile from "./pages/PubgMobile.jsx"
 import FcMobile from "./pages/FcMobile.jsx";
+import Valorant from "./pages/Valorant.jsx";
 import NapThanhCong from "./pages/NapThanhCong.jsx";
 import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
@@ -182,6 +183,14 @@ export default function App() {
   element={
     <ProtectedRoute>
       <FcMobile />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/store/valorant"
+  element={
+    <ProtectedRoute>
+      <Valorant />
     </ProtectedRoute>
   }
 />
