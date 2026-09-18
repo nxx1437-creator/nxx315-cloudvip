@@ -1,10 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 
 const CHECK_INTERVAL = 60000; // 60 giây
-const AUTO_RELOAD_DELAY = 3000; // chờ 3s rồi tự reload
 
 export default function VersionChecker() {
-  const [updating, setUpdating] = useState(false);
+  const [outdated, setOutdated] = useState(false);
   const currentVersion = useRef(null);
 
   useEffect(() => {
@@ -18,10 +17,7 @@ export default function VersionChecker() {
         if (currentVersion.current === null) {
           currentVersion.current = data.version;
         } else if (data.version !== currentVersion.current) {
-          setUpdating(true);
-          setTimeout(() => {
-            window.location.reload();
-          }, AUTO_RELOAD_DELAY);
+          setOutdated(true);
         }
       } catch (err) {
         // bỏ qua lỗi mạng tạm thời
@@ -31,7 +27,6 @@ export default function VersionChecker() {
     checkVersion();
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
-    // Check khi user quay lại tab
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         checkVersion();
@@ -45,24 +40,34 @@ export default function VersionChecker() {
     };
   }, []);
 
-  if (!updating) return null;
+  if (!outdated) return null;
 
   return (
-    <div style={toastStyle}>
-      <span style={dotStyle} />
-      Đang cập nhật phiên bản mới...
+    <div style={overlayStyle}>
+      <div style={cardStyle}>
+        <h1 style={titleStyle}>Có phiên bản mới!</h1>
+        <p style={textStyle}>
+          Vui lòng tải lại trang để cập nhật phiên bản mới nhất trước khi tiếp tục sử dụng.
+        </p>
+        <button style={buttonStyle} onClick={() => window.location.reload()}>
+          Tải lại trang
+        </button>
+      </div>
     </div>
   );
 }
 
-const toastStyle = {
-  position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-  background: '#111', color: '#fff', padding: '12px 20px', borderRadius: 12,
-  fontSize: 14, display: 'flex', alignItems: 'center', gap: 8,
-  zIndex: 9999, fontFamily: 'system-ui, sans-serif', boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+const overlayStyle = {
+  position: 'fixed', inset: 0, zIndex: 99999,
+  background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  flexDirection: 'column', textAlign: 'center', padding: 24,
+  fontFamily: 'system-ui, sans-serif',
 };
-
-const dotStyle = {
-  width: 8, height: 8, borderRadius: '50%', background: '#4ade80',
-  animation: 'pulse 1s infinite',
+const cardStyle = { maxWidth: 320 };
+const titleStyle = { fontSize: 18, fontWeight: 700, color: '#0f172a', margin: 0 };
+const textStyle = { fontSize: 14, color: '#64748b', marginTop: 8 };
+const buttonStyle = {
+  marginTop: 24, background: 'linear-gradient(to right, #38bdf8, #2563eb)',
+  color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px',
+  fontSize: 14, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
 };
