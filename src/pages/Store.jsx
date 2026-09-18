@@ -921,4 +921,4 @@ function getIconColorByStatus(status) {
   if (key === 'rejected' || key === 'failed' || key === 'cancelled')
     return 'text-rose-600';
   return 'text-slate-500';
-      }   
+}
