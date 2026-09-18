@@ -39,9 +39,7 @@ const GAMES = [
   { id: 4, name: 'Free Fire', category: 'mobile', logo: 'free-fire.png', path: '/store/free-fire', hot: true },
   { id: 5, name: 'PUBG Mobile VN', category: 'mobile', logo: 'pubg-mobile-vn.png', path: '/store/pubg-mobile', hot: true },
   { id: 6, name: 'VALORANT', category: 'pc', logo: 'valorant.png', path: '/store/valorant' },
-  { id: 7, name: 'OMG 3Q', category: 'mobile', logo: 'omg-3q.png', path: '/store/omg-3q' },
   { id: 8, name: 'Delta Force', category: 'mobile', logo: 'Delta.png', path: '/store/Delta-Force', hot: true },
-  { id: 9, name: 'ZingSpeed Mobile', category: 'mobile', logo: 'zing-speed-mobile.png', path: '/store/zing-speed' },
   { id: 10, name: 'FC Mobile VN', category: 'mobile', logo: 'fc-mobile.png', path: '/store/fc-mobile' },
 ];
 
