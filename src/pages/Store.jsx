@@ -614,6 +614,10 @@ function detectHistoryGame(packageId) {
     return 'fco';
   }
 
+  if (pid.startsWith('vp-') || pid.includes('valorant') || pid.includes('vp')) {
+    return 'valorant';
+  }
+
   return null;
 }
 
@@ -625,6 +629,7 @@ function getGameNameByPackage(packageId) {
   if (game === 'freefire') return 'Free Fire';
   if (game === 'pubg') return 'PUBG Mobile VN';
   if (game === 'fco') return 'FC Mobile VN';
+  if (game === 'valorant') return 'VALORANT';   // 👈 THÊM DÒNG NÀY
   return null;
 }
 
@@ -654,9 +659,14 @@ function getHistoryName(order) {
     return `${Number(order.fco_fc).toLocaleString('vi-VN')} FC`;
   }
 
+  if (gameKey === 'valorant' && order?.vp != null) {
+    return `${Number(order.vp).toLocaleString('vi-VN')} VP`;
+  }
+
   return 'Đơn nạp game';
 }
 
+function getHistoryImage(order) {
 function getHistoryImage(order) {
   const packageId = String(order?.package_id || '').toLowerCase();
 
@@ -677,6 +687,10 @@ function getHistoryImage(order) {
   }
   if (packageId.startsWith('fco-') || packageId.includes('fco')) {
     return getImageUrl('fc-mobile.png');
+  }
+
+  if (packageId.startsWith('vp-') || packageId.includes('valorant')) {
+    return getImageUrl('valorant.png');
   }
 
   return getImageUrl('store-banner-1.png');
