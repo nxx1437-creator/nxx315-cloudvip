@@ -68,6 +68,7 @@ export default function LienQuan() {
 
   const [order, setOrder] = useState(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   const [agreedTerms, setAgreedTerms] = useState(false);
 
@@ -151,13 +152,15 @@ export default function LienQuan() {
         {/* Spacer */}
         <div className="mt-5" />
 
-        {step === "package" && (
-          <PackageSection
-            selectedPackage={selectedPackage}
-            onSelect={setSelectedPackage}
-            onContinue={() => setStep("username")}
-          />
-        )}
+    {step === "package" && (
+  <PackageSection
+    selectedPackage={selectedPackage}
+    onSelect={setSelectedPackage}
+    onContinue={() => setStep("username")}
+    agreedTerms={agreedTerms}
+    setAgreedTerms={setAgreedTerms}
+  />
+)}
 
         {step === "username" && (
           <UsernameSection
@@ -334,7 +337,7 @@ function Stepper({ step }) {
     </div>
   );
 }
-function PackageSection({ selectedPackage, onSelect, onContinue }) {
+function PackageSection({ selectedPackage, onSelect, onContinue, agreedTerms, setAgreedTerms }) {
   return (
     <div className="space-y-4">
       {/* Alert */}
