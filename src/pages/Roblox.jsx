@@ -20,7 +20,8 @@ import {
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-import TermsCheckbox from "../components/TermsCheckbox.jsx";   
+import TermsCheckbox from "../components/TermsCheckbox.jsx";
+import BankTransfer from "../components/BankTransfer.jsx";   
 
 const ROBLOX_BANNER_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Roblox-banner.png";
@@ -79,8 +80,8 @@ const PACKAGES = [
 ];
 
 const BANK = {
-  name: "MB Bank",
-  account: "0939339622",
+  name: "MoMo",
+  account: "PSP2620310200000174",
   holder: "NGUYEN VAN CO",
 };
 
@@ -1260,45 +1261,12 @@ function PaymentSection({ order, onBack, onPaid }) {
 
           {/* BANK */}
           {method === "bank" && (
-            <div className="space-y-3">
-              <div className="rounded-lg border border-gray-200 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Thông tin ngân hàng</h3>
-                  <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
-                    {BANK.name}
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  <BankRow
-                    label="Số tài khoản"
-                    value={BANK.account}
-                    copy
-                  />
-                  <BankRow label="Chủ tài khoản" value={BANK.holder} />
-                  <BankRow
-                    label="Số tiền"
-                    value={formatPrice(order.amount)}
-                    copyValue={String(order.amount)}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3.5">
-                <p className="text-xs font-semibold text-amber-900">
-                  Nội dung chuyển khoản
-                </p>
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-amber-200 bg-white p-2.5">
-                  <code className="min-w-0 flex-1 break-all text-xs font-semibold text-gray-800">
-                    {transferContent}
-                  </code>
-                  <button
-                    onClick={() => copyText(transferContent)}
-                    className="shrink-0 rounded-md bg-amber-100 p-1.5 text-amber-700 transition hover:bg-amber-200"
-                  >
-                    <Copy size={14} />
-                  </button>
-                </div>
-              </div>
+  <div className="space-y-3">
+    <BankTransfer
+      amount={order.amount}
+      transferContent={transferContent}
+      accentColor="orange"
+    />
 
               {order.status === "paid" ? (
                 <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3.5">
