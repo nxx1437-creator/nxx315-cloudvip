@@ -74,7 +74,6 @@ function getGreeting(category) {
   return `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nMình có thể giúp gì cho bạn hôm nay?`;
 }
 
-// Helper detect login-related reply để hiện nút Đăng nhập
 function shouldShowLoginButton(text) {
   if (!text) return false;
   const lower = text.toLowerCase();
@@ -87,7 +86,7 @@ function shouldShowLoginButton(text) {
     lower.includes("password") ||
     lower.includes("login")
   );
-    }
+                                            }
 export default function Support() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -207,7 +206,7 @@ export default function Support() {
       <BottomNav />
     </div>
   );
-}
+            }
 function HomeView({ onStartChat }) {
   return (
     <div className="bg-white">
@@ -497,6 +496,16 @@ function ChatView({ conversation, user, category, onBack }) {
     }
   };
 
+  // ✅ Ẩn TẤT CẢ suggestions hiện có
+  const hideAllSuggestions = () => {
+    setHiddenSuggestionIds((prev) => {
+      const allIds = messages
+        .filter((m) => m.suggestions?.length > 0)
+        .map((m) => m.id);
+      return [...new Set([...prev, ...allIds])];
+    });
+  };
+
   return (
     <div className="relative flex h-screen flex-col bg-white">
       {/* HEADER */}
@@ -534,7 +543,7 @@ function ChatView({ conversation, user, category, onBack }) {
                 Đề xuất đã ẩn
               </p>
               <p className="mt-0.5 text-[10px] text-slate-400">
-                {hiddenSuggestionIds.length} cuộc trò chuyện có suggestions đã ẩn
+                {hiddenSuggestionIds.length} tin nhắn có suggestions đã ẩn
               </p>
             </div>
 
@@ -624,11 +633,7 @@ function ChatView({ conversation, user, category, onBack }) {
                   sending={sending}
                   onShowLogin={() => navigate("/login")}
                   hiddenSuggestionIds={hiddenSuggestionIds}
-                  onHideSuggestions={(msgId) => {
-                    setHiddenSuggestionIds((prev) =>
-                      prev.includes(msgId) ? prev : [...prev, msgId]
-                    );
-                  }}
+                  onHideSuggestions={hideAllSuggestions}
                 />
               );
             })}
@@ -726,8 +731,8 @@ function ChatView({ conversation, user, category, onBack }) {
       </div>
     </div>
   );
-          }
-      function MessageBubble({
+            }
+        function MessageBubble({
   message,
   streamingText,
   isLastAIMessage,
@@ -784,8 +789,9 @@ function ChatView({ conversation, user, category, onBack }) {
     shouldShowLoginButton(message.message);
 
   const handleSuggestionClick = (reply) => {
+    // ✅ Ẩn TẤT CẢ suggestions hiện có
     if (onHideSuggestions) {
-      onHideSuggestions(message.id);
+      onHideSuggestions();
     }
     onSuggestionClick(reply);
   };
@@ -850,7 +856,7 @@ function ChatView({ conversation, user, category, onBack }) {
           </div>
         )}
 
-        {/* Suggestions — ngay dưới bubble, tự ẩn khi user chọn */}
+        {/* Suggestions */}
         {hasSuggestions && (
           <div className="mt-3 space-y-2 animate-[fadeIn_0.4s_ease-out]">
             {message.suggestions.map((reply, idx) => (
@@ -888,4 +894,4 @@ function ChatView({ conversation, user, category, onBack }) {
       </div>
     </div>
   );
-      }
+        }
