@@ -585,53 +585,6 @@ function ChatView({ conversation, user, category, onBack }) {
         )}
       </div>
 
-      {/* QUICK REPLIES */}
-      {!loading && !aiTyping && !streamingMsgId && quickReplies.length > 0 && (
-        <div className="border-t border-slate-100 bg-white px-4 py-3">
-          <div className="space-y-2">
-            {quickReplies.map((reply, idx) => (
-              <button
-                key={idx}
-                onClick={() => sendMessage(reply)}
-                disabled={sending}
-                className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:opacity-50 animate-[fadeIn_0.3s_ease-out]"
-                style={{ animationDelay: `${idx * 60}ms` }}
-              >
-                <span className="text-sm font-medium text-slate-700">
-                  {reply}
-                </span>
-                <ArrowRight
-                  size={16}
-                  className="shrink-0 text-rose-400"
-                  strokeWidth={2.4}
-                />
-              </button>
-            ))}
-          </div>
-
-          {/* Nút Đăng nhập khi liên quan mật khẩu/đăng nhập */}
-          {showLoginButton && (
-            <button
-              onClick={() => navigate("/login")}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#FE2C55] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.99] animate-[fadeIn_0.3s_ease-out]"
-            >
-              <LogIn size={16} strokeWidth={2.4} />
-              Đăng nhập
-            </button>
-          )}
-
-          {conv.status === "ai" && (
-            <button
-              onClick={requestAgent}
-              disabled={sending}
-              className="mt-3 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-            >
-              <Headphones size={12} />
-              Gặp nhân viên
-            </button>
-          )}
-        </div>
-      )}
 
       {/* INPUT */}
       <div className="relative border-t border-slate-100 bg-white px-4 py-3">
@@ -691,14 +644,22 @@ function ChatView({ conversation, user, category, onBack }) {
     </div>
   );
             }
-    function MessageBubble({ message, streamingText }) {
-  const [feedback, setFeedback] = useState(null); // null | "like" | "dislike"
+    function MessageBubble({
+  message,
+  streamingText,
+  isLastAIMessage,
+  onSuggestionClick,
+  sending,
+  onShowLogin,
+}) {
+  const [feedback, setFeedback] = useState(null);
 
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
   const isAgent = message.sender_type === "agent";
   const isSystem = message.sender_type === "system";
 
+  // System message
   if (isSystem) {
     return (
       <div className="flex justify-center animate-[fadeIn_0.3s_ease-out]">
@@ -709,6 +670,7 @@ function ChatView({ conversation, user, category, onBack }) {
     );
   }
 
+  // User message
   if (isUser) {
     return (
       <div className="flex justify-end animate-[slideInRight_0.3s_ease-out]">
@@ -723,6 +685,12 @@ function ChatView({ conversation, user, category, onBack }) {
 
   const displayText = streamingText !== null ? streamingText : message.message;
   const isStreaming = streamingText !== null;
+  const hasSuggestions =
+    isLastAIMessage && message.suggestions?.length > 0 && !isStreaming;
+
+  // Show login button if message mentions password/login
+  const showLoginButton =
+    isLastAIMessage && !isStreaming && shouldShowLoginButton(message.message);
 
   return (
     <div className="flex items-start gap-2 animate-[slideInLeft_0.3s_ease-out]">
@@ -733,7 +701,9 @@ function ChatView({ conversation, user, category, onBack }) {
       >
         <Headphones size={13} className="text-white" strokeWidth={2.4} />
       </div>
-      <div className="max-w-[85%] flex-1">
+
+      <div className="min-w-0 flex-1">
+        {/* Bubble */}
         <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-900">
             {displayText}
@@ -743,6 +713,7 @@ function ChatView({ conversation, user, category, onBack }) {
           </p>
         </div>
 
+        {/* Meta row: "Do AI tạo" + thumbs */}
         {!isStreaming && (
           <div className="mt-1.5 flex items-center justify-between px-1 animate-[fadeIn_0.5s_ease-out]">
             <span className="text-[10px] text-slate-400">
@@ -780,7 +751,44 @@ function ChatView({ conversation, user, category, onBack }) {
             )}
           </div>
         )}
+
+        {/* ─── SUGGESTIONS NGAY DƯỚI BONG BÓNG ─── */}
+        {hasSuggestions && (
+          <div className="mt-3 space-y-2 animate-[fadeIn_0.4s_ease-out]">
+            {message.suggestions.map((reply, idx) => (
+              <button
+                key={idx}
+                onClick={() => onSuggestionClick(reply)}
+                disabled={sending}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:opacity-50"
+                style={{
+                  animation: `fadeIn 0.3s ease-out ${idx * 60}ms backwards`,
+                }}
+              >
+                <span className="text-sm font-medium text-slate-700">
+                  {reply}
+                </span>
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 text-rose-400"
+                  strokeWidth={2.4}
+                />
+              </button>
+            ))}
+
+            {/* Nút Đăng nhập khi mention password/login */}
+            {showLoginButton && (
+              <button
+                onClick={onShowLogin}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FE2C55] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.99]"
+              >
+                <LogIn size={16} strokeWidth={2.4} />
+                Đăng nhập
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
-    }
+                }
