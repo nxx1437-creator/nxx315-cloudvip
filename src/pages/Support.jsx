@@ -295,6 +295,8 @@ function ChatView({ conversation, user, category, onBack }) {
   const [conv, setConv] = useState(conversation);
   const scrollRef = useRef(null);
   const sentIds = useRef(new Set());
+  const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
+  const [showSuggestionHistory, setShowSuggestionHistory] = useState(false);
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
@@ -644,13 +646,16 @@ function ChatView({ conversation, user, category, onBack }) {
     </div>
   );
             }
-    function MessageBubble({
+    
+function MessageBubble({
   message,
   streamingText,
   isLastAIMessage,
   onSuggestionClick,
   sending,
   onShowLogin,
+  hiddenSuggestionIds,
+  onHideSuggestions,
 }) {
   const [feedback, setFeedback] = useState(null);
 
@@ -659,7 +664,9 @@ function ChatView({ conversation, user, category, onBack }) {
   const isAgent = message.sender_type === "agent";
   const isSystem = message.sender_type === "system";
 
-  // System message
+  // Check xem suggestions của message này có bị ẩn không
+  const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
+
   if (isSystem) {
     return (
       <div className="flex justify-center animate-[fadeIn_0.3s_ease-out]">
@@ -670,7 +677,6 @@ function ChatView({ conversation, user, category, onBack }) {
     );
   }
 
-  // User message
   if (isUser) {
     return (
       <div className="flex justify-end animate-[slideInRight_0.3s_ease-out]">
@@ -685,12 +691,23 @@ function ChatView({ conversation, user, category, onBack }) {
 
   const displayText = streamingText !== null ? streamingText : message.message;
   const isStreaming = streamingText !== null;
-  const hasSuggestions =
-    isLastAIMessage && message.suggestions?.length > 0 && !isStreaming;
 
-  // Show login button if message mentions password/login
+  const hasSuggestions =
+    isLastAIMessage &&
+    message.suggestions?.length > 0 &&
+    !isStreaming &&
+    !isSuggestionHidden;
+
   const showLoginButton =
     isLastAIMessage && !isStreaming && shouldShowLoginButton(message.message);
+
+  // Handler khi user click 1 suggestion
+  const handleSuggestionClick = (reply) => {
+    // Ẩn suggestions của message này
+    onHideSuggestions(message.id);
+    // Gửi tin nhắn
+    onSuggestionClick(reply);
+  };
 
   return (
     <div className="flex items-start gap-2 animate-[slideInLeft_0.3s_ease-out]">
@@ -713,7 +730,7 @@ function ChatView({ conversation, user, category, onBack }) {
           </p>
         </div>
 
-        {/* Meta row: "Do AI tạo" + thumbs */}
+        {/* Meta row */}
         {!isStreaming && (
           <div className="mt-1.5 flex items-center justify-between px-1 animate-[fadeIn_0.5s_ease-out]">
             <span className="text-[10px] text-slate-400">
@@ -752,13 +769,13 @@ function ChatView({ conversation, user, category, onBack }) {
           </div>
         )}
 
-        {/* ─── SUGGESTIONS NGAY DƯỚI BONG BÓNG ─── */}
+        {/* Suggestions ngay dưới bubble */}
         {hasSuggestions && (
           <div className="mt-3 space-y-2 animate-[fadeIn_0.4s_ease-out]">
             {message.suggestions.map((reply, idx) => (
               <button
                 key={idx}
-                onClick={() => onSuggestionClick(reply)}
+                onClick={() => handleSuggestionClick(reply)}
                 disabled={sending}
                 className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:opacity-50"
                 style={{
@@ -776,7 +793,6 @@ function ChatView({ conversation, user, category, onBack }) {
               </button>
             ))}
 
-            {/* Nút Đăng nhập khi mention password/login */}
             {showLoginButton && (
               <button
                 onClick={onShowLogin}
@@ -791,4 +807,4 @@ function ChatView({ conversation, user, category, onBack }) {
       </div>
     </div>
   );
-                }
+}
