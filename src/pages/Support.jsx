@@ -98,15 +98,74 @@ export default function Support() {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    loadUser();
-  }, []);
+  const channel = supabase
+    .channel(`conv-${conversation.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "support_messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      },
+      (payload) => {
+        const msg = payload.new;
+        if (sentIds.current.has(msg.id)) return;
 
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+
+          // ✅ Khi có tin AI hoặc system mới → tự động xóa hết status cũ
+          if (msg.sender_type === "ai" || msg.sender_type === "system") {
+            const withoutStatus = prev.filter(
+              (m) => m.sender_type !== "status"
+            );
+            return [...withoutStatus, msg];
+          }
+
+          return [...prev, msg];
+        });
+
+        if (msg.sender_type === "ai" && msg.message) {
+          runTypewriter(msg);
+        } else {
+          scrollToBottom();
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "support_messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      },
+      (payload) => {
+        const msg = payload.new;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
+        );
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "DELETE",
+        schema: "public",
+        table: "support_messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      },
+      (payload) => {
+        const removedId = payload.old.id;
+        setMessages((prev) => prev.filter((m) => m.id !== removedId));
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+}, [conversation.id]);
+  
   const startAIChat = async (category) => {
     if (!user?.id) return;
 
@@ -418,37 +477,114 @@ function ChatView({ conversation, user, category, onBack }) {
   }, [conversation.id]);
 
   const sendMessage = async (customText) => {
-    const content = (customText || input).trim();
-    if (!content || sending || !user?.id) return;
+  const content = (customText || input).trim();
+  if (!content || sending || !user?.id) return;
 
-    setSending(true);
-    try {
-      const { data: userMsg, error } = await supabase
-        .from("support_messages")
-        .insert({
-          conversation_id: conv.id,
-          user_id: user.id,
-          message: content,
-          sender_type: "user",
-        })
-        .select()
-        .single();
+  setSending(true);
+  try {
+    const { data: userMsg, error } = await supabase
+      .from("support_messages")
+      .insert({
+        conversation_id: conv.id,
+        user_id: user.id,
+        message: content,
+        sender_type: "user",
+      })
+      .select()
+      .single();
 
-      if (error) throw error;
-      sentIds.current.add(userMsg.id);
-      setMessages((prev) => [...prev, userMsg]);
-      setInput("");
-      setShowEmoji(false);
-      scrollToBottom();
+    if (error) throw error;
+    sentIds.current.add(userMsg.id);
 
-      if (conv.status === "ai") {
-        setAiTyping(true);
-        try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (!session?.access_token) throw new Error("Chưa đăng nhập");
+    // ✅ Xóa hết status cũ khi user gửi tin mới
+    setMessages((prev) => [
+      ...prev.filter((m) => m.sender_type !== "status"),
+      userMsg,
+    ]);
 
+    setInput("");
+    setShowEmoji(false);
+    scrollToBottom();
+
+    if (conv.status === "ai") {
+      setAiTyping(true);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error("Chưa đăng nhập");
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+        const response = await fetch(AI_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            conversation_id: conv.id,
+            user_message: content,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          let errData = {};
+          try {
+            errData = await response.json();
+          } catch (_) {
+            // ignore
+          }
+          throw new Error(
+            errData?.error || `AI trả về lỗi ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+        console.log(
+          `[Support AI] Provider: ${data.provider} (${data.model})`
+        );
+      } catch (err) {
+        console.error("AI error:", err);
+
+        // ✅ Xóa status khi có lỗi
+        setMessages((prev) =>
+          prev.filter((m) => m.sender_type !== "status")
+        );
+
+        const { data: errMsg } = await supabase
+          .from("support_messages")
+          .insert({
+            conversation_id: conv.id,
+            user_id: user.id,
+            message:
+              "Xin lỗi, mình đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau hoặc nhấn nút 'Gặp nhân viên' để được hỗ trợ trực tiếp.",
+            sender_type: "ai",
+            suggestions: ["Tôi cần gặp nhân viên", "Thử lại sau"],
+          })
+          .select()
+          .single();
+        if (errMsg) {
+          sentIds.current.add(errMsg.id);
+          setMessages((prev) => [...prev, errMsg]);
+          runTypewriter(errMsg);
+        }
+      } finally {
+        setAiTyping(false);
+      }
+    }
+  } catch (error) {
+    console.error("Send error:", error);
+    alert("Không thể gửi tin nhắn.");
+  } finally {
+    setSending(false);
+  }
+};
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 60000);
 
