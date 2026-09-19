@@ -10,7 +10,11 @@ export default function AdminRoute({ children }) {
     return null;
   }
 
-  if (!profile?.is_admin) {
+  // ✅ Check role thay vì is_admin
+  const role = profile?.role;
+  const isAdmin = role === "admin" || role === "support";
+
+  if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
