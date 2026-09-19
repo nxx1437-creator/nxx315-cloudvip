@@ -353,9 +353,7 @@ function ChatView({ conversation, user, category, onBack }) {
         .eq("conversation_id", conversation.id)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      setMessages(
-        (data || []).filter((m) => m.sender_type !== "status")
-      );
+      setMessages(data || []);
     } catch (error) {
       console.error("Load error:", error);
     } finally {
@@ -380,22 +378,30 @@ function ChatView({ conversation, user, category, onBack }) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          const msg = payload.new;
-          if (msg.sender_type === "status") return;
-          if (sentIds.current.has(msg.id)) return;
+  const msg = payload.new;
+  if (sentIds.current.has(msg.id)) return;
 
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === msg.id)) return prev;
+  setMessages((prev) => {
+    if (prev.some((m) => m.id === msg.id)) return prev;
 
-            if (msg.sender_type === "ai" || msg.sender_type === "system") {
-              const withoutStatus = prev.filter(
-                (m) => m.sender_type !== "status"
-              );
-              return [...withoutStatus, msg];
-            }
+    // Nếu là AI/system → xóa hết status cũ, thêm tin mới
+    if (msg.sender_type === "ai" || msg.sender_type === "system") {
+      const withoutStatus = prev.filter(
+        (m) => m.sender_type !== "status"
+      );
+      return [...withoutStatus, msg];
+    }
 
-            return [...prev, msg];
-          });
+    // Status hoặc user → thêm vào cuối
+    return [...prev, msg];
+  });
+
+  if (msg.sender_type === "ai" && msg.message) {
+    runTypewriter(msg);
+  } else {
+    scrollToBottom();
+  }
+        }
 
           if (msg.sender_type === "ai" && msg.message) {
             runTypewriter(msg);
@@ -413,11 +419,10 @@ function ChatView({ conversation, user, category, onBack }) {
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          const msg = payload.new;
-          if (msg.sender_type === "status") return;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
-          );
+  const msg = payload.new;
+  setMessages((prev) =>
+    prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
+  );
         }
       )
       .on(
