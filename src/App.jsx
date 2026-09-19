@@ -45,6 +45,7 @@ import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
+import BanGate from "./components/BanGate";
 import VersionChecker from "./VersionChecker";
 
 export default function App() {
@@ -250,6 +251,9 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <BanGate>
+         <BrowserRouter>...</BrowserRouter>
+        </BanGate>
 
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
