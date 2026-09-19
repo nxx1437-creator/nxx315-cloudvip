@@ -19,6 +19,8 @@ import {
   Plus,
   FileText,
   Menu,
+  RefreshCw,
+  ArrowRight,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
@@ -33,7 +35,6 @@ const SUPPORT = {
   hours: "8:00 - 24:00 (T2 - CN)",
 };
 
-// ✅ TikTok style — Icon đơn sắc, không màu gradient
 const CATEGORIES = [
   { id: "account", label: "Tài khoản", icon: User, color: "#FE2C55" },
   { id: "payment", label: "Thanh toán", icon: CreditCard, color: "#FF6B00" },
@@ -64,10 +65,49 @@ function formatDate(value) {
 function getGreeting(category) {
   const cat = CATEGORIES.find((c) => c.id === category);
   if (cat) {
-    return `Chào bạn! Mình nhận thấy bạn cần hỗ trợ về **${cat.label}**.\n\nBạn có thể mô tả chi tiết vấn đề để mình hỗ trợ chính xác hơn nhé! 👇`;
+    return `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nMình thấy bạn cần hỗ trợ về mục "${cat.label}". Bạn có thể mô tả chi tiết vấn đề để mình hỗ trợ chính xác hơn.`;
   }
-  return `Xin chào! 👋 Mình là trợ lý AI của NXX315 Studio.\n\nMình có thể giúp gì cho bạn hôm nay?`;
-    }
+  return `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nMình có thể giúp gì cho bạn hôm nay?`;
+}
+
+function getQuickReplies(category, status) {
+  if (status !== "ai") return [];
+
+  const replies = {
+    account: [
+      "Tôi quên mật khẩu của mình",
+      "Tôi không nhận được mã xác minh qua điện thoại hoặc email",
+      "Tôi muốn cập nhật ngày sinh của mình",
+      "Tôi không thể đăng nhập bằng Facebook hoặc Google",
+    ],
+    payment: [
+      "Tôi đã chuyển khoản nhưng chưa nhận Coin",
+      "Tôi muốn đổi phương thức thanh toán",
+      "Tôi nạp sai số tiền",
+      "Tôi muốn hoàn tiền",
+    ],
+    order: [
+      "Đơn hàng của tôi đang ở trạng thái nào",
+      "Tôi nạp sai ID game",
+      "Tôi chưa nhận được hàng",
+      "Tôi muốn hủy đơn",
+    ],
+    bug: [
+      "Trang web bị lỗi khi tôi nạp game",
+      "Tôi không thanh toán được",
+      "Nút xác nhận không hoạt động",
+      "Ứng dụng bị đơ sau khi đăng nhập",
+    ],
+    other: [
+      "Tôi cần gặp nhân viên",
+      "Tôi muốn hợp tác với NXX315",
+      "Tôi muốn báo cáo tài khoản khác",
+      "Tôi cần hỗ trợ khác",
+    ],
+  };
+
+  return replies[category] || replies.other;
+}
 export default function Support() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -76,7 +116,9 @@ export default function Support() {
 
   useEffect(() => {
     const loadUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     loadUser();
@@ -152,15 +194,10 @@ export default function Support() {
     </div>
   );
 }
-
-// ═══════════════════════════════════════════════════════════
-// HOME VIEW — Chuẩn TikTok
-// ═══════════════════════════════════════════════════════════
-
 function HomeView({ onStartChat }) {
   return (
     <div className="bg-white">
-      {/* ─── HEADER ─── */}
+      {/* HEADER */}
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
         <button
           onClick={() => window.history.back()}
@@ -176,7 +213,7 @@ function HomeView({ onStartChat }) {
         </button>
       </div>
 
-      {/* ─── TITLE ─── */}
+      {/* TITLE */}
       <div className="px-4 pb-5 pt-6">
         <h2 className="text-center text-2xl font-bold leading-tight text-slate-900">
           Chúng tôi sẵn sàng hỗ trợ!
@@ -185,7 +222,7 @@ function HomeView({ onStartChat }) {
         </h2>
       </div>
 
-      {/* ─── GRID CATEGORIES ─── */}
+      {/* GRID */}
       <div className="grid grid-cols-2 gap-3 px-4">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
@@ -195,11 +232,7 @@ function HomeView({ onStartChat }) {
               onClick={() => onStartChat(cat.id)}
               className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 text-left transition active:scale-[0.97]"
             >
-              <Icon
-                size={24}
-                style={{ color: cat.color }}
-                strokeWidth={2.2}
-              />
+              <Icon size={24} style={{ color: cat.color }} strokeWidth={2.2} />
               <span className="text-[15px] font-semibold text-slate-900">
                 {cat.label}
               </span>
@@ -208,10 +241,10 @@ function HomeView({ onStartChat }) {
         })}
       </div>
 
-      {/* ─── DIVIDER ─── */}
+      {/* DIVIDER */}
       <div className="mx-4 my-5 border-t border-slate-100" />
 
-      {/* ─── TICKET CTA ─── */}
+      {/* TICKET CTA */}
       <div className="px-4 pb-4">
         <button
           onClick={() => onStartChat("other")}
@@ -232,7 +265,7 @@ function HomeView({ onStartChat }) {
         </button>
       </div>
 
-      {/* ─── DISCLAIMER ─── */}
+      {/* DISCLAIMER */}
       <div className="px-4 pb-6 pt-2">
         <p className="text-center text-xs leading-5 text-slate-500">
           Có thể câu trả lời là do AI tạo, do đó có thể sẽ có sai sót.{" "}
@@ -248,6 +281,8 @@ function ChatView({ conversation, user, category, onBack }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [aiTyping, setAiTyping] = useState(false);
+  const [streamingMsgId, setStreamingMsgId] = useState(null);
+  const [streamingText, setStreamingText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [conv, setConv] = useState(conversation);
   const scrollRef = useRef(null);
@@ -259,6 +294,27 @@ function ChatView({ conversation, user, category, onBack }) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     });
+  };
+
+  const runTypewriter = (msg) => {
+    setStreamingMsgId(msg.id);
+    setStreamingText("");
+    let idx = 0;
+    const full = msg.message;
+    const interval = setInterval(() => {
+      idx += 2;
+      if (idx >= full.length) {
+        setStreamingText(full);
+        clearInterval(interval);
+        setTimeout(() => {
+          setStreamingMsgId(null);
+          setStreamingText("");
+        }, 100);
+      } else {
+        setStreamingText(full.slice(0, idx));
+      }
+      scrollToBottom();
+    }, 15);
   };
 
   const loadMessages = async () => {
@@ -297,19 +353,25 @@ function ChatView({ conversation, user, category, onBack }) {
         (payload) => {
           const msg = payload.new;
           if (sentIds.current.has(msg.id)) return;
+
           setMessages((prev) => {
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
-          scrollToBottom();
+
+          if (msg.sender_type === "ai" && msg.message) {
+            runTypewriter(msg);
+          } else {
+            scrollToBottom();
+          }
         }
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [conversation.id]);
 
-  const sendMessage = async () => {
-    const content = input.trim();
+  const sendMessage = async (customText) => {
+    const content = (customText || input).trim();
     if (!content || sending || !user?.id) return;
 
     setSending(true);
@@ -335,7 +397,9 @@ function ChatView({ conversation, user, category, onBack }) {
       if (conv.status === "ai") {
         setAiTyping(true);
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (!session?.access_token) throw new Error("Chưa đăng nhập");
 
           const response = await fetch(
@@ -366,7 +430,7 @@ function ChatView({ conversation, user, category, onBack }) {
               conversation_id: conv.id,
               user_id: user.id,
               message:
-                "Xin lỗi, mình gặp sự cố kỹ thuật. Bạn thử lại sau nhé! 🙏",
+                "Xin lỗi, mình đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau hoặc nhấn nút 'Gặp nhân viên' để được hỗ trợ trực tiếp.",
               sender_type: "ai",
             })
             .select()
@@ -374,7 +438,7 @@ function ChatView({ conversation, user, category, onBack }) {
           if (errMsg) {
             sentIds.current.add(errMsg.id);
             setMessages((prev) => [...prev, errMsg]);
-            scrollToBottom();
+            runTypewriter(errMsg);
           }
         } finally {
           setAiTyping(false);
@@ -404,7 +468,8 @@ function ChatView({ conversation, user, category, onBack }) {
         .insert({
           conversation_id: conv.id,
           user_id: user.id,
-          message: "Để tôi kiểm tra",
+          message:
+            "Đã ghi nhận yêu cầu kết nối nhân viên. Bạn vui lòng chờ trong giây lát, nhân viên sẽ tham gia cuộc trò chuyện ngay.",
           sender_type: "ai",
         })
         .select()
@@ -413,17 +478,19 @@ function ChatView({ conversation, user, category, onBack }) {
       if (data) {
         sentIds.current.add(data.id);
         setMessages((prev) => [...prev, data]);
+        runTypewriter(data);
       }
       setConv({ ...conv, status: "pending_agent" });
-      scrollToBottom();
     } catch (error) {
       console.error("Request agent error:", error);
     }
   };
 
+  const quickReplies = getQuickReplies(conv.category, conv.status);
+
   return (
     <div className="flex h-screen flex-col bg-white">
-      {/* ─── HEADER ─── */}
+      {/* HEADER */}
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
         <button
           onClick={onBack}
@@ -432,14 +499,14 @@ function ChatView({ conversation, user, category, onBack }) {
           <ArrowLeft size={22} strokeWidth={2.2} />
         </button>
         <h1 className="flex-1 truncate text-base font-bold text-slate-900">
-          Bộ phận Hỗ trợ
+          Bộ phận Hỗ trợ của NXX315
         </h1>
         <button className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-900">
           <Menu size={20} strokeWidth={2.2} />
         </button>
       </div>
 
-      {/* ─── MESSAGES ─── */}
+      {/* MESSAGES */}
       <div
         ref={scrollRef}
         className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
@@ -450,70 +517,89 @@ function ChatView({ conversation, user, category, onBack }) {
           </div>
         ) : (
           <>
-            {/* Label "Bộ phận Hỗ trợ của TikTok" style */}
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A84FF]">
-                <Headphones size={13} className="text-white" strokeWidth={2.4} />
-              </div>
-              <span className="text-xs text-slate-500">
-                Bộ phận Hỗ trợ của NXX315
-              </span>
-            </div>
-
             {messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} />
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                streamingText={streamingMsgId === msg.id ? streamingText : null}
+              />
             ))}
 
-            {aiTyping && (
-              <div className="flex items-center gap-2">
+            {aiTyping && !streamingMsgId && (
+              <div className="flex items-start gap-2 animate-[fadeIn_0.3s_ease-out]">
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0A84FF]">
-                  <Headphones size={13} className="text-white" strokeWidth={2.4} />
+                  <Headphones
+                    size={13}
+                    className="text-white"
+                    strokeWidth={2.4}
+                  />
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <div className="flex gap-1">
-                    <span
-                      className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <span
-                      className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <span
-                      className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
-                      style={{ animationDelay: "300ms" }}
-                    />
+                <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate-400">
+                      Đang kiểm tra một vài chi tiết
+                    </span>
+                    <div className="flex gap-1">
+                      <span
+                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
+                        style={{ animationDelay: "0ms" }}
+                      />
+                      <span
+                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
+                        style={{ animationDelay: "150ms" }}
+                      />
+                      <span
+                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
+                        style={{ animationDelay: "300ms" }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             )}
-
-            {/* Nút gợi ý như TikTok */}
-            {conv.status === "ai" &&
-              !aiTyping &&
-              messages.length >= 2 && (
-                <div className="flex flex-col items-end gap-2 pt-2">
-                  <button
-                    onClick={requestAgent}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50 active:scale-[0.97]"
-                  >
-                    Cho tôi gặp nhân viên
-                  </button>
-                </div>
-              )}
           </>
         )}
       </div>
 
-      {/* ─── RATING BUTTON ─── */}
-      <div className="flex justify-start px-4 pb-3">
-        <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50">
-          Đánh giá trải nghiệm
-        </button>
-      </div>
+      {/* QUICK REPLIES */}
+      {!loading && !aiTyping && quickReplies.length > 0 && (
+        <div className="border-t border-slate-100 bg-white px-4 py-3">
+          <div className="space-y-2">
+            {quickReplies.map((reply, idx) => (
+              <button
+                key={idx}
+                onClick={() => sendMessage(reply)}
+                disabled={sending}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:opacity-50 animate-[fadeIn_0.3s_ease-out]"
+                style={{ animationDelay: `${idx * 60}ms` }}
+              >
+                <span className="text-sm font-medium text-slate-700">
+                  {reply}
+                </span>
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 text-rose-400"
+                  strokeWidth={2.4}
+                />
+              </button>
+            ))}
+          </div>
 
-      {/* ─── INPUT (TikTok style) ─── */}
-      <div className="border-t border-slate-100 bg-white px-4 py-3">
+          {conv.status === "ai" && (
+            <button
+              onClick={requestAgent}
+              disabled={sending}
+              className="mt-3 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+            >
+              <RefreshCw size={12} />
+              Tạo lại
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* INPUT */}
+      <div className="relative border-t border-slate-100 bg-white px-4 py-3">
         <div className="flex items-center gap-2">
           <input
             value={input}
@@ -530,7 +616,7 @@ function ChatView({ conversation, user, category, onBack }) {
 
           {input.trim() ? (
             <button
-              onClick={sendMessage}
+              onClick={() => sendMessage()}
               disabled={sending}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0A84FF] text-white transition active:scale-95 disabled:opacity-40"
             >
@@ -569,13 +655,8 @@ function ChatView({ conversation, user, category, onBack }) {
       </div>
     </div>
   );
-}
-
-// ═══════════════════════════════════════════════════════════
-// MESSAGE BUBBLE — Style TikTok (không có avatar tròn, có label trên)
-// ═══════════════════════════════════════════════════════════
-
-function MessageBubble({ message }) {
+          }
+function MessageBubble({ message, streamingText }) {
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
   const isAgent = message.sender_type === "agent";
@@ -583,7 +664,7 @@ function MessageBubble({ message }) {
 
   if (isSystem) {
     return (
-      <div className="flex justify-center">
+      <div className="flex justify-center animate-[fadeIn_0.3s_ease-out]">
         <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
           {message.message}
         </div>
@@ -591,11 +672,10 @@ function MessageBubble({ message }) {
     );
   }
 
-  // User — bong bóng xanh nằm bên phải
   if (isUser) {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl bg-[#0A84FF] px-4 py-2.5 text-white">
+      <div className="flex justify-end animate-[slideInRight_0.3s_ease-out]">
+        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[#0A84FF] px-4 py-2.5 text-white shadow-sm">
           <p className="whitespace-pre-wrap break-words text-sm leading-6">
             {message.message}
           </p>
@@ -604,50 +684,46 @@ function MessageBubble({ message }) {
     );
   }
 
-  // AI/Admin — bong bóng trắng + label trên
+  const displayText = streamingText !== null ? streamingText : message.message;
+  const isStreaming = streamingText !== null;
+
   return (
-    <div className="flex items-start gap-2">
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0A84FF]">
+    <div className="flex items-start gap-2 animate-[slideInLeft_0.3s_ease-out]">
+      <div
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+          isAI ? "bg-[#0A84FF]" : "bg-emerald-500"
+        }`}
+      >
         <Headphones size={13} className="text-white" strokeWidth={2.4} />
       </div>
       <div className="max-w-[85%] flex-1">
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-          <div className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-900">
-            {renderMessageWithBold(message.message)}
-          </div>
+        <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-900">
+            {displayText}
+            {isStreaming && (
+              <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+            )}
+          </p>
         </div>
-        {isAI && (
-          <div className="mt-1.5 flex items-center justify-between px-1">
+
+        {!isStreaming && (
+          <div className="mt-1.5 flex items-center justify-between px-1 animate-[fadeIn_0.5s_ease-out]">
             <span className="text-[10px] text-slate-400">
-              ✨ Do AI tạo
+              {isAI ? "Do AI tạo" : isAgent ? "Nhân viên" : ""}
             </span>
-            <div className="flex items-center gap-2">
-              <button className="text-slate-400 transition hover:text-slate-600">
-                👍
-              </button>
-              <button className="text-slate-400 transition hover:text-slate-600">
-                👎
-              </button>
-            </div>
+            {isAI && (
+              <div className="flex items-center gap-2">
+                <button className="text-[11px] text-slate-400 transition hover:text-slate-600">
+                  👍
+                </button>
+                <button className="text-[11px] text-slate-400 transition hover:text-slate-600">
+                  👎
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
   );
 }
-
-// Render **bold** markdown
-function renderMessageWithBold(text) {
-  if (!text) return null;
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-bold">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return <span key={i}>{part}</span>;
-  });
-              }
