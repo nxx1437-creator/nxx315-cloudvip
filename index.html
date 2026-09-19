@@ -31,5 +31,23 @@
         });
       }
     </script>
+        <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch((err) => {
+            console.error("SW registration failed:", err);
+          });
+        });
+      }
+    </script>
+
+    <!-- Debug console cho mobile (tự động tắt trên localhost) -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      if (location.hostname !== "localhost") {
+        eruda.init();
+        console.log("[Eruda] Console đã bật - bấm icon bánh răng để xem log");
+      }
+    </script>
   </body>
 </html>
