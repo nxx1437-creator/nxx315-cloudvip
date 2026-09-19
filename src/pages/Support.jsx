@@ -25,6 +25,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   LogIn,
+  Lightbulb,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
@@ -39,8 +40,6 @@ const SUPPORT = {
   hours: "8:00 - 24:00 (T2 - CN)",
 };
 
-// Fallback giờ nằm ở server (Edge Function ai-support-reply)
-// Client chỉ cần gọi 1 endpoint duy nhất
 const AI_ENDPOINT =
   import.meta.env.VITE_AI_SUPPORT_URL ||
   "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/ai-support-reply";
@@ -91,7 +90,7 @@ function shouldShowLoginButton(text) {
     lower.includes("password") ||
     lower.includes("login")
   );
-  }
+}
 export default function Support() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -211,7 +210,7 @@ export default function Support() {
       <BottomNav />
     </div>
   );
-                                          }
+}
 function HomeView({ onStartChat }) {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f8f8f8]">
@@ -385,7 +384,36 @@ function ChatView({ conversation, user, category, onBack }) {
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "support_messages",
+          filter: `conversation_id=eq.${conversation.id}`,
+        },
+        (payload) => {
+          const msg = payload.new;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "support_messages",
+          filter: `conversation_id=eq.${conversation.id}`,
+        },
+        (payload) => {
+          const removedId = payload.old.id;
+          setMessages((prev) => prev.filter((m) => m.id !== removedId));
+        }
+      )
       .subscribe();
+
     return () => supabase.removeChannel(channel);
   }, [conversation.id]);
 
@@ -444,7 +472,7 @@ function ChatView({ conversation, user, category, onBack }) {
             let errData = {};
             try {
               errData = await response.json();
-            } catch {}
+            } catch (_) {}
             throw new Error(
               errData?.error || `AI trả về lỗi ${response.status}`
             );
@@ -528,7 +556,7 @@ function ChatView({ conversation, user, category, onBack }) {
       return [...new Set([...prev, ...allIds])];
     });
   };
-    return (
+     return (
     <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#f8f8f8]">
       {/* HEADER */}
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
@@ -638,7 +666,7 @@ function ChatView({ conversation, user, category, onBack }) {
       {/* MESSAGES */}
       <div
         ref={scrollRef}
-        className="flex-1 space-y-4 overflow-y-auto px-3.5 py-4 sm:px-4"
+        className="flex-1 space-y-3 overflow-y-auto px-3.5 py-4 sm:px-4"
       >
         {loading ? (
           <div className="flex h-full items-center justify-center">
@@ -647,6 +675,10 @@ function ChatView({ conversation, user, category, onBack }) {
         ) : (
           <>
             {messages.map((msg, idx) => {
+              if (msg.sender_type === "status") {
+                return <StatusBubble key={msg.id} message={msg} />;
+              }
+
               const isLastAIMessage =
                 idx === messages.length - 1 &&
                 msg.sender_type === "ai" &&
@@ -670,7 +702,7 @@ function ChatView({ conversation, user, category, onBack }) {
               );
             })}
 
-            {aiTyping && !streamingMsgId && (
+            {aiTyping && !streamingMsgId && !messages.some((m) => m.sender_type === "status") && (
               <div className="flex items-start gap-2 animate-[fadeIn_0.3s_ease-out]">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
                   <Bot size={14} className="text-white" strokeWidth={2.3} />
@@ -757,6 +789,43 @@ function ChatView({ conversation, user, category, onBack }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatusBubble({ message }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="px-1 py-0.5">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2.5 rounded-[14px] border border-black/[0.06] bg-white px-3.5 py-2.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:bg-slate-50 active:scale-[0.99]"
+      >
+        <Lightbulb
+          size={16}
+          className="shrink-0 text-slate-500"
+          strokeWidth={2.2}
+        />
+
+        <span className="flex-1 truncate text-[13px] font-medium text-slate-700">
+          {message.message}
+        </span>
+
+        <ChevronRight
+          size={16}
+          className={`shrink-0 text-slate-400 transition-transform ${
+            expanded ? "rotate-90" : ""
+          }`}
+          strokeWidth={2.2}
+        />
+      </button>
+
+      {expanded && (
+        <div className="mt-1.5 rounded-[12px] border border-black/[0.05] bg-slate-50 px-3.5 py-2.5 text-[12px] leading-5 text-slate-600">
+          AI đang xử lý yêu cầu của bạn. Quá trình này có thể mất vài giây.
+        </div>
+      )}
     </div>
   );
 }
@@ -921,4 +990,4 @@ function MessageBubble({
       </div>
     </div>
   );
-                }
+                                            }     
