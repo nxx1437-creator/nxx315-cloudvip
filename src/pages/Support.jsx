@@ -48,53 +48,6 @@ const CATEGORIES = [
   { id: "other", label: "Khác", icon: MoreHorizontal, color: "from-slate-400 to-slate-600" },
 ];
 
-const AI_RESPONSES = {
-  greeting: [
-    "Xin chào bạn! 👋 Mình là trợ lý AI của NXX315 Studio. Mình có thể giúp gì cho bạn?",
-    "Chào bạn! Rất vui được hỗ trợ bạn. Bạn cần giúp gì ạ?",
-  ],
-  payment: [
-    "Về vấn đề thanh toán, bạn vui lòng cho mình biết:\n1. Bạn đã chuyển khoản chưa?\n2. Mã đơn hàng là gì?\n3. Số tiền đã chuyển?",
-  ],
-  order: [
-    "Về đơn hàng, bạn vui lòng cung cấp:\n1. Mã đơn (VD: RBX-000123)\n2. Tên game\n3. Vấn đề cụ thể bạn gặp",
-  ],
-  account: [
-    "Về tài khoản, bạn có thể cho mình biết:\n1. Bạn không đăng nhập được?\n2. Quên mật khẩu?\n3. Tài khoản bị khoá?",
-  ],
-  bug: [
-    "Cảm ơn bạn đã báo lỗi! Để mình hỗ trợ tốt hơn:\n1. Mô tả lỗi bạn gặp\n2. Ảnh chụp màn hình (nếu có)\n3. Thiết bị/trình duyệt đang dùng",
-  ],
-  agent: [
-    "Được rồi! Mình sẽ kết nối bạn với nhân viên hỗ trợ trong giây lát. Vui lòng chờ ạ ⏳",
-  ],
-  fallback: [
-    "Mình đã ghi nhận. Bạn có thể mô tả chi tiết hơn để mình hỗ trợ chính xác hơn không?",
-    "Cảm ơn bạn đã cung cấp thông tin. Bạn cần hỗ trợ thêm về vấn đề gì không?",
-  ],
-};
-
-function getAIReply(message) {
-  const lower = message.toLowerCase();
-  
-  if (lower.includes("nhân viên") || lower.includes("người thật") || lower.includes("gặp người")) {
-    return AI_RESPONSES.agent[0];
-  }
-  if (lower.includes("thanh toán") || lower.includes("chuyển khoản") || lower.includes("nạp")) {
-    return AI_RESPONSES.payment[0];
-  }
-  if (lower.includes("đơn") || lower.includes("order")) {
-    return AI_RESPONSES.order[0];
-  }
-  if (lower.includes("tài khoản") || lower.includes("đăng nhập") || lower.includes("mật khẩu")) {
-    return AI_RESPONSES.account[0];
-  }
-  if (lower.includes("lỗi") || lower.includes("bug") || lower.includes("không")) {
-    return AI_RESPONSES.bug[0];
-  }
-  return AI_RESPONSES.fallback[0];
-}
-
 function formatTime(value) {
   if (!value) return "";
   return new Date(value).toLocaleTimeString("vi-VN", {
@@ -170,18 +123,53 @@ export default function Support() {
           sender_type: "ai",
         });
 
-        // Nếu user chọn category → AI trả lời theo category
-        if (category) {
-          await new Promise(r => setTimeout(r, 800));
-          await supabase.from("support_messages").insert({
-            conversation_id: conv.id,
-            user_id: user.id,
-            message: AI_RESPONSES[category]?.[0] || AI_RESPONSES.fallback[0],
-            sender_type: "ai",
-          });
-        }
-      }
+        // Nếu đang ở chế độ AI → gọi Gemini API
+if (conv.status === "ai") {
+  setAiTyping(true);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Bạn chưa đăng nhập");
+    }
 
+    const response = await fetch(
+      "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/ai-support-reply",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          conversation_id: conv.id,
+          user_message: content,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error || "AI không trả lời được");
+    }
+
+    // Tin nhắn AI đã được Edge Function insert → realtime sẽ tự push
+    // Không cần insert lại ở frontend
+  } catch (error) {
+    console.error("AI error:", error);
+    // Fallback: insert tin nhắn lỗi
+    await supabase.from("support_messages").insert({
+      conversation_id: conv.id,
+      user_id: user.id,
+      message:
+        "Xin lỗi, mình đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau hoặc nhấn 'Cho tôi gặp nhân viên' nhé! 🙏",
+      sender_type: "ai",
+    });
+  } finally {
+    setAiTyping(false);
+  }
+}
       setConversation(conv);
       setSelectedCategory(category);
       setView("chat");
