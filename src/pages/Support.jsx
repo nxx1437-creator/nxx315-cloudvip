@@ -499,14 +499,17 @@ function ChatView({ conversation, user, category, onBack }) {
     }
   };
 
-  // Lấy suggestions từ tin nhắn AI CUỐI CÙNG
-  const lastAIMsg = [...messages]
-    .reverse()
-    .find((m) => m.sender_type === "ai" && m.suggestions?.length > 0);
+  // Lấy tin nhắn CUỐI CÙNG trong chat
+const lastMsg = messages[messages.length - 1];
 
-  const quickReplies = lastAIMsg?.suggestions || [];
-  const showLoginButton = lastAIMsg && shouldShowLoginButton(lastAIMsg.message);
+// Chỉ hiện suggestions nếu tin CUỐI CÙNG là tin của AI và có suggestions
+const lastAIMsg =
+  lastMsg?.sender_type === "ai" && lastMsg?.suggestions?.length > 0
+    ? lastMsg
+    : null;
 
+const quickReplies = lastAIMsg?.suggestions || [];
+const showLoginButton = lastAIMsg && shouldShowLoginButton(lastAIMsg.message);
   return (
     <div className="flex h-screen flex-col bg-white">
       {/* HEADER */}
