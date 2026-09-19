@@ -37,12 +37,14 @@ import Roblox from "./pages/Roblox.jsx";
 import PlayTogether from "./pages/PlayTogether.jsx";
 import LienQuan from "./pages/LienQuan.jsx";
 import FreeFire from "./pages/FreeFire.jsx";
-import PubgMobile from "./pages/PubgMobile.jsx"
+import PubgMobile from "./pages/PubgMobile.jsx";
 import FcMobile from "./pages/FcMobile.jsx";
 import Valorant from "./pages/Valorant.jsx";
 import NapThanhCong from "./pages/NapThanhCong.jsx";
 import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
+import AdminNotifications from "./pages/AdminNotifications.jsx";
+import AdminChat from "./pages/AdminChat.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -253,6 +255,24 @@ export default function App() {
             }
           />
 
+          <Route
+            path="/admin/notifications"
+            element={
+              <AdminRoute>
+                <AdminNotifications />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/chat/:conversationId"
+            element={
+              <AdminRoute>
+                <AdminChat />
+              </AdminRoute>
+            }
+          />
+
           <Route path="/contact" element={<Contact />} />
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/support" element={<Support />} />
@@ -296,4 +316,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-                }
+}
