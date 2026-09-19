@@ -13,6 +13,7 @@ const DEFAULT_PROFILE = {
   tasks_completed_today: 0,
   coins_earned_today: 0,
   referrals_count: 0,
+  role: "user",
   is_admin: false,
 };
 
@@ -22,47 +23,72 @@ export default function useProfile() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setProfile(DEFAULT_PROFILE);
         setLoading(false);
         return;
       }
 
-      const { data } = await supabase
+      // ✅ Đọc từ user_profiles (bảng có cột role)
+      const { data: profileData } = await supabase
+        .from("user_profiles")
+        .select("id, email, full_name, avatar_url, role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      // Đọc thêm thông tin gamification từ bảng profiles (nếu có)
+      const { data: gameData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (data) {
-        setProfile(data);
+      const merged = {
+        ...DEFAULT_PROFILE,
+        ...(gameData || {}),
+        // Override is_admin từ user_profiles.role
+        role: profileData?.role || "user",
+        is_admin:
+          profileData?.role === "admin" ||
+          profileData?.role === "support",
+        email: profileData?.email || gameData?.email || "",
+        full_name:
+          profileData?.full_name || gameData?.full_name || "",
+      };
 
-        const sessionKey = `fp_recorded_${user.id}`;
-        if (!sessionStorage.getItem(sessionKey)) {
-          getDeviceFingerprint().then((fingerprint) => {
-            if (!fingerprint) return;
+      setProfile(merged);
 
-            getPublicIp().then((ip) => {
-              supabase
-                .rpc("record_device_fingerprint", {
-                  p_user_id: user.id,
-                  p_fingerprint: fingerprint,
-                  p_ip: ip,
-                })
-                .then(() => {
-                  sessionStorage.setItem(sessionKey, "1");
-                });
-            });
+      const sessionKey = `fp_recorded_${user.id}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        getDeviceFingerprint().then((fingerprint) => {
+          if (!fingerprint) return;
+
+          getPublicIp().then((ip) => {
+            supabase
+              .rpc("record_device_fingerprint", {
+                p_user_id: user.id,
+                p_fingerprint: fingerprint,
+                p_ip: ip,
+              })
+              .then(() => {
+                sessionStorage.setItem(sessionKey, "1");
+              });
           });
-        }
+        });
       }
       setLoading(false);
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, _session) => {
-      fetchProfile();
-    });
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, _session) => {
+        fetchProfile();
+      }
+    );
+
+    fetchProfile();
 
     return () => {
       authListener?.subscription?.unsubscribe();
