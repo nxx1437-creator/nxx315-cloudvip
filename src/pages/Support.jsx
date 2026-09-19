@@ -499,17 +499,6 @@ function ChatView({ conversation, user, category, onBack }) {
     }
   };
 
-  // Lấy tin nhắn CUỐI CÙNG trong chat
-const lastMsg = messages[messages.length - 1];
-
-// Chỉ hiện suggestions nếu tin CUỐI CÙNG là tin của AI và có suggestions
-const lastAIMsg =
-  lastMsg?.sender_type === "ai" && lastMsg?.suggestions?.length > 0
-    ? lastMsg
-    : null;
-
-const quickReplies = lastAIMsg?.suggestions || [];
-const showLoginButton = lastAIMsg && shouldShowLoginButton(lastAIMsg.message);
   return (
     <div className="flex h-screen flex-col bg-white">
       {/* HEADER */}
@@ -539,13 +528,26 @@ const showLoginButton = lastAIMsg && shouldShowLoginButton(lastAIMsg.message);
           </div>
         ) : (
           <>
-            {messages.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                streamingText={streamingMsgId === msg.id ? streamingText : null}
-              />
-            ))}
+            {messages.map((msg, idx) => {
+  // Chỉ tin AI CUỐI CÙNG mới hiện suggestions
+  const isLastAIMessage =
+    idx === messages.length - 1 &&
+    msg.sender_type === "ai" &&
+    !streamingMsgId &&
+    !aiTyping;
+
+  return (
+    <MessageBubble
+      key={msg.id}
+      message={msg}
+      streamingText={streamingMsgId === msg.id ? streamingText : null}
+      isLastAIMessage={isLastAIMessage}
+      onSuggestionClick={sendMessage}
+      sending={sending}
+      onShowLogin={() => navigate("/login")}
+    />
+  );
+})}
 
             {aiTyping && !streamingMsgId && (
               <div className="flex items-start gap-2 animate-[fadeIn_0.3s_ease-out]">
