@@ -67,51 +67,34 @@ export default function AdminChat() {
     load();
   }, []);
 
-  // Load conversation + user + messages
-  useEffect(() => {
-    const loadAll = async () => {
-      setLoading(true);
-      try {
-        // Conversation
-        const { data: conv } = await supabase
-          .from("support_conversations")
-          .select("*")
-          .eq("id", conversationId)
-          .maybeSingle();
+  // Thêm vào useEffect khi admin vào chat lần đầu
+useEffect(() => {
+  const notifyUser = async () => {
+    if (!conversation || !adminUser) return;
+    
+    // Check xem đã có system message "Nhân viên đã tham gia" chưa
+    const { data: existing } = await supabase
+      .from("support_messages")
+      .select("id")
+      .eq("conversation_id", conversationId)
+      .eq("sender_type", "system")
+      .ilike("message", "%Nhân viên đã tham gia%")
+      .maybeSingle();
 
-        if (!conv) {
-          navigate("/admin/notifications");
-          return;
-        }
+    if (existing) return; // Đã có rồi, không insert nữa
 
-        setConversation(conv);
-
-        // User profile
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("id, email, full_name, avatar_url")
-          .eq("id", conv.user_id)
-          .maybeSingle();
-
-        setUserProfile(profile);
-
-        // Messages
-        const { data: msgs } = await supabase
-          .from("support_messages")
-          .select("*")
-          .eq("conversation_id", conversationId)
-          .order("created_at", { ascending: true });
-
-        setMessages((msgs || []).filter((m) => m.sender_type !== "status"));
-      } catch (err) {
-        console.error("[AdminChat] load error:", err);
-      } finally {
-        setLoading(false);
-        setTimeout(scrollToBottom, 100);
-      }
-    };
-    loadAll();
-  }, [conversationId, navigate]);
+    // Insert system message
+    await supabase.from("support_messages").insert({
+      conversation_id: conversationId,
+      user_id: adminUser.id,
+      message: "Nhân viên đã tham gia cuộc trò chuyện.",
+      sender_type: "system",
+      suggestions: [],
+    });
+  };
+  
+  notifyUser();
+}, [conversation?.id, adminUser?.id]);
 
   // Realtime messages
   useEffect(() => {
