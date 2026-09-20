@@ -46,6 +46,7 @@ import HistoryPage from "./pages/History.jsx";
 import HistoryDetail from "./pages/HistoryDetail.jsx";
 import AdminNotifications from "./pages/AdminNotifications.jsx";
 import AdminChat from "./pages/AdminChat.jsx";
+import Withdraw from "./pages/Withdraw.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -278,13 +279,13 @@ export default function App() {
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/support" element={<Support />} />
           <Route
-  path="/community"
-  element={
-    <ProtectedRoute>
-      <Community />
-    </ProtectedRoute>
-  }
-/>
+            path="/community"
+            element={
+              <ProtectedRoute>
+                <Community />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/fraud" element={<Fraud />} />
@@ -296,6 +297,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Wallet />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/withdraw"
+            element={
+              <ProtectedRoute>
+                <Withdraw />
               </ProtectedRoute>
             }
           />
