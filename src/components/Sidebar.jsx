@@ -46,7 +46,7 @@ const MENU_ITEMS = [
   },
   { path: "/wallet", label: "Ví & Nạp thẻ", icon: CreditCard },
   { path: "/history", label: "Lịch sử đơn hàng", icon: History },
-  { path: "/feed", label: "Cộng đồng", icon: Heart },
+  { path: "/community", label: "Cộng đồng", icon: Heart },
   { path: "/profile", label: "Hồ sơ", icon: User },
   { path: "/support", label: "Hỗ trợ", icon: LifeBuoy },
   { path: "/terms", label: "Điều khoản", icon: FileWarning },
