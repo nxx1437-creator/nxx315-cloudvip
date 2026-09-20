@@ -812,38 +812,30 @@ function ChatView({ conversation, user, category, onBack }) {
             })}
 
             {aiTyping &&
-              !streamingMsgId &&
-              !messages.some((m) => m.sender_type === "status") && (
-                <div className="flex items-start gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
-                    <Bot size={14} className="text-white" strokeWidth={2.3} />
-                  </div>
-                  <div className="rounded-[18px] rounded-tl-[5px] border border-black/[0.05] bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-slate-400">
-                        Đang kiểm tra một vài chi tiết
-                      </span>
-                      <div className="flex gap-1">
-                        <span
-                          className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
-                          style={{ animationDelay: "0ms" }}
-                        />
-                        <span
-                          className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
-                          style={{ animationDelay: "150ms" }}
-                        />
-                        <span
-                          className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
-                          style={{ animationDelay: "300ms" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-          </>
-        )}
+  !streamingMsgId &&
+  !messages.some((m) => m.sender_type === "status") && (
+    <div className="flex items-start gap-2">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
+        <Bot size={14} className="text-white" strokeWidth={2.3} />
       </div>
+      <div className="rounded-[18px] rounded-tl-[5px] border border-black/[0.05] bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+        <div className="flex gap-1">
+          <span
+            className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+            style={{ animationDelay: "0ms" }}
+          />
+          <span
+            className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+            style={{ animationDelay: "150ms" }}
+          />
+          <span
+            className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+            style={{ animationDelay: "300ms" }}
+          />
+        </div>
+      </div>
+    </div>
+  )}
 
       {/* Nút Zalo */}
       <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
