@@ -366,83 +366,76 @@ function ChatView({ conversation, user, category, onBack }) {
     loadMessages();
   }, [conversation.id]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel(`conv-${conversation.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "support_messages",
-          filter: `conversation_id=eq.${conversation.id}`,
-        },
-        (payload) => {
-  const msg = payload.new;
-  if (sentIds.current.has(msg.id)) return;
+  
 
-  setMessages((prev) => {
-    if (prev.some((m) => m.id === msg.id)) return prev;
+    useEffect(() => {
+  const channel = supabase
+    .channel(`conv-${conversation.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "support_messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      },
+      (payload) => {
+        const msg = payload.new;
+        if (sentIds.current.has(msg.id)) return;
 
-    // Nếu là AI/system → xóa hết status cũ, thêm tin mới
-    if (msg.sender_type === "ai" || msg.sender_type === "system") {
-      const withoutStatus = prev.filter(
-        (m) => m.sender_type !== "status"
-      );
-      return [...withoutStatus, msg];
-    }
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
 
-    // Status hoặc user → thêm vào cuối
-    return [...prev, msg];
-  });
-
-  if (msg.sender_type === "ai" && msg.message) {
-    runTypewriter(msg);
-  } else {
-    scrollToBottom();
-  }
-        }
-
-          if (msg.sender_type === "ai" && msg.message) {
-            runTypewriter(msg);
-          } else {
-            scrollToBottom();
+          if (msg.sender_type === "ai" || msg.sender_type === "system") {
+            const withoutStatus = prev.filter(
+              (m) => m.sender_type !== "status"
+            );
+            return [...withoutStatus, msg];
           }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "support_messages",
-          filter: `conversation_id=eq.${conversation.id}`,
-        },
-        (payload) => {
-  const msg = payload.new;
-  setMessages((prev) =>
-    prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
-  );
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "support_messages",
-          filter: `conversation_id=eq.${conversation.id}`,
-        },
-        (payload) => {
-          const removedId = payload.old.id;
-          setMessages((prev) => prev.filter((m) => m.id !== removedId));
-        }
-      )
-      .subscribe();
 
-    return () => supabase.removeChannel(channel);
-  }, [conversation.id]);
+          return [...prev, msg];
+        });
 
+        if (msg.sender_type === "ai" && msg.message) {
+          runTypewriter(msg);
+        } else {
+          scrollToBottom();
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "support_messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      },
+      (payload) => {
+        const msg = payload.new;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
+        );
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "DELETE",
+        schema: "public",
+        table: "support_messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      },
+      (payload) => {
+        const removedId = payload.old.id;
+        setMessages((prev) => prev.filter((m) => m.id !== removedId));
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+}, [conversation.id]);
+  
   const callAI = async (imageUrl) => {
     const {
       data: { session },
