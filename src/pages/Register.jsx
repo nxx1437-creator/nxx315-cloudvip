@@ -53,10 +53,10 @@ export default function Register() {
 
       setLoading(false);
 
+      // ✅ Bắt lỗi từ Supabase
       if (authError) {
         const msg = authError.message?.toLowerCase() || "";
 
-        // ✅ Bắt lỗi email đã tồn tại
         if (
           msg.includes("already registered") ||
           msg.includes("already been registered") ||
@@ -87,8 +87,29 @@ export default function Register() {
         return;
       }
 
+      // ✅ Bắt email đã tồn tại (Supabase silent mode)
       if (data.user) {
+        const isExistingUser =
+          !data.user.identities || data.user.identities.length === 0;
+
+        if (isExistingUser) {
+          setError(
+            `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
+            `Vui lòng:\n` +
+            `• Đăng nhập nếu đây là tài khoản của bạn\n` +
+            `• Hoặc dùng email khác để đăng ký`
+          );
+          setErrorType("email_exists");
+          return;
+        }
+
         navigate("/verify-email", { state: { email: form.email } });
+      } else {
+        // data.user null bất thường
+        setError(
+          "Không thể tạo tài khoản. Vui lòng thử lại hoặc dùng email khác."
+        );
+        setErrorType("error");
       }
     } catch (err) {
       console.error("[register] error:", err);
@@ -155,15 +176,19 @@ export default function Register() {
                 Email đã được đăng ký
               </div>
             )}
-            {errorType === "email_exists" && (
-              <Link
-                to="/login"
-                className="mt-2 inline-block font-bold text-amber-800 underline"
-              >
-                → Đăng nhập ngay
-              </Link>
+            {errorType === "email_exists" ? (
+              <>
+                <p className="whitespace-pre-line">{error}</p>
+                <Link
+                  to="/login"
+                  className="mt-2 inline-block font-bold text-amber-800 underline"
+                >
+                  → Đăng nhập ngay
+                </Link>
+              </>
+            ) : (
+              error
             )}
-            {errorType !== "email_exists" && error}
           </div>
         )}
 
@@ -204,4 +229,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-        }
+    }
