@@ -315,34 +315,44 @@ function ChatView({ conversation, user, category, onBack }) {
   const sentIds = useRef(new Set());
   const fileInputRef = useRef(null);
 
-  const scrollToBottom = () => {
-    requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    });
-  };
-
+  const scrollToBottom = (smooth = false) => {
+  requestAnimationFrame(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
+      });
+    }
+  });
+};
+// ✅ Auto scroll mỗi khi messages thay đổi (có tin mới)
+useEffect(() => {
+  if (!loading && messages.length > 0) {
+    scrollToBottom(true);
+  }
+}, [messages.length]);
+  
   const runTypewriter = (msg) => {
-    setStreamingMsgId(msg.id);
-    setStreamingText("");
-    let idx = 0;
-    const full = msg.message;
-    const interval = setInterval(() => {
-      idx += 2;
-      if (idx >= full.length) {
-        setStreamingText(full);
-        clearInterval(interval);
-        setTimeout(() => {
-          setStreamingMsgId(null);
-          setStreamingText("");
-        }, 100);
-      } else {
-        setStreamingText(full.slice(0, idx));
-      }
-      scrollToBottom();
-    }, 15);
-  };
+  setStreamingMsgId(msg.id);
+  setStreamingText("");
+  let idx = 0;
+  const full = msg.message;
+  const interval = setInterval(() => {
+    idx += 2;
+    if (idx >= full.length) {
+      setStreamingText(full);
+      clearInterval(interval);
+      setTimeout(() => {
+        setStreamingMsgId(null);
+        setStreamingText("");
+        scrollToBottom(true);
+      }, 100);
+    } else {
+      setStreamingText(full.slice(0, idx));
+    }
+    scrollToBottom();  // auto scroll khi đang gõ chữ
+  }, 15);
+};
 
   const loadMessages = async () => {
     setLoading(true);
