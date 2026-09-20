@@ -20,6 +20,8 @@ import {
   Lightbulb,
   Package,
   CreditCard,
+  Home,
+  Search,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -136,7 +138,7 @@ const faqData = [
 ];
 
 // =====================================================
-// TOPIC CATEGORIES (mới — phù hợp web nạp game)
+// TOPIC CATEGORIES
 // =====================================================
 const TOPIC_CATEGORIES = [
   {
@@ -235,14 +237,12 @@ function getHistoryLogo(order) {
   if (packageId.includes("roblox")) return getImageUrl("roblox.png");
   if (packageId.includes("pubg")) return getImageUrl("pubg-mobile-vn.png");
   if (packageId.includes("freefire")) return getImageUrl("free-fire.png");
-  if (packageId.includes("lienquan"))
-    return getImageUrl("lien-quan-mobile.png");
-  if (packageId.includes("playtogether"))
-    return getImageUrl("play-together-vng.png");
+  if (packageId.includes("lienquan")) return getImageUrl("lien-quan-mobile.png");
+  if (packageId.includes("playtogether")) return getImageUrl("play-together-vng.png");
   if (packageId.includes("fcmobile")) return getImageUrl("fc-mobile.png");
   if (packageId.includes("valorant")) return getImageUrl("valorant.png");
   return getImageUrl("store-cute.png");
-}
+    }
   export default function HelpCenter() {
   const navigate = useNavigate();
   const [openId, setOpenId] = useState(null);
@@ -299,87 +299,162 @@ function getHistoryLogo(order) {
   return (
     <div className="min-h-screen bg-[#fafafa] pb-24 text-slate-900">
       <TopHeader />
-      {/* ============================================== */}
-{/* HERO */}
-{/* ============================================== */}
-<div className="relative overflow-hidden">
-  <div
-    className="absolute inset-0 z-0 bg-gradient-to-br from-pink-50 via-rose-50 to-white"
-    style={{
-      backgroundImage: `url(${getImageUrl(HELP_BANNER)})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      opacity: 0.85,
-    }}
-  >
-    <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/90" />
-  </div>
 
-  <div className="relative z-10 mx-auto flex max-w-3xl items-center gap-4 px-4 py-5">
-    <div className="min-w-0 flex-1">
-      <h2 className="flex items-center gap-2 text-[22px] font-black leading-tight tracking-[-0.03em] text-[#161823]">
-        Chào bạn
-        <span className="inline-block animate-wave text-xl">👋</span>
-      </h2>
-      <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">
-        NXX315 có thể giúp gì cho bạn?
-      </p>
-    </div>
+      {/* HEADER */}
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
+        >
+          <ChevronRight
+            size={22}
+            className="rotate-180"
+            strokeWidth={2.2}
+          />
+        </button>
+        <h1 className="flex-1 text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
+          Trung tâm Trợ giúp
+        </h1>
+        <button
+          onClick={() => navigate("/")}
+          className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
+        >
+          <Home size={20} strokeWidth={2} />
+        </button>
+      </div>
 
-    <div className="relative h-16 w-16 shrink-0">
-      {!avatarError ? (
-        <img
-          src={getImageUrl(HELP_AVATAR)}
-          alt="NXX315"
-          className="h-full w-full rounded-full object-cover shadow-lg ring-2 ring-white"
-          onError={() => setAvatarError(true)}
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-lg">
-          <Bot size={26} className="text-white" strokeWidth={2.2} />
+      {/* HERO */}
+      <div className="relative overflow-hidden">
+        <div
+          className="absolute inset-0 z-0 bg-gradient-to-br from-pink-50 via-rose-50 to-white"
+          style={{
+            backgroundImage: `url(${getImageUrl(HELP_BANNER)})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.85,
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/90" />
         </div>
-      )}
-      <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] shadow-md">
-        ✨
-      </span>
-    </div>
-  </div>
-</div>
 
-{/* ============================================== */}
-{/* CHAT CARD (mới — sạch, border đỏ) */}
-{/* ============================================== */}
+        <div className="relative z-10 mx-auto flex max-w-3xl items-center gap-4 px-4 py-5">
+          <div className="min-w-0 flex-1">
+            <h2 className="flex items-center gap-2 text-[22px] font-black leading-tight tracking-[-0.03em] text-[#161823]">
+              Chào bạn
+              <span className="inline-block animate-wave text-xl">👋</span>
+            </h2>
+            <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">
+              NXX315 có thể giúp gì cho bạn?
+            </p>
+          </div>
+
+          <div className="relative h-16 w-16 shrink-0">
+            {!avatarError ? (
+              <img
+                src={getImageUrl(HELP_AVATAR)}
+                alt="NXX315"
+                className="h-full w-full rounded-full object-cover shadow-lg ring-2 ring-white"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-lg">
+                <Bot size={26} className="text-white" strokeWidth={2.2} />
+              </div>
+            )}
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] shadow-md">
+              ✨
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* SEARCH BOX + HISTORY */}
+      <div className="px-4 pt-4">
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center gap-2">
+            <Link
+              to="/help/search"
+              className="flex h-11 flex-1 items-center gap-2.5 rounded-full border border-black/[0.08] bg-white px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition active:scale-[0.98]"
+            >
+              <Search
+                size={18}
+                className="shrink-0 text-slate-400"
+                strokeWidth={2.2}
+              />
+              <span className="text-[13.5px] text-slate-400">
+                Tìm kiếm vấn đề của bạn tại đây
+              </span>
+            </Link>
+
+            <Link
+              to="/history"
+              className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition active:scale-[0.98]"
+            >
+              <HistoryIcon
+                size={16}
+                className="text-[#FE2C55]"
+                strokeWidth={2.2}
+              />
+              <span className="text-[13px] font-bold text-[#FE2C55]">
+                Lịch sử
+              </span>
+            </Link>
+          </div>
+        </div>
+      </div>
+      {/* CHAT CARD */}
 <div className="px-4 pt-4">
   <div className="mx-auto max-w-3xl">
-    <Link
-      to="/support"
-      className="flex items-center gap-3 rounded-[14px] border-2 border-[#FE2C55] bg-white p-4 transition hover:bg-[#FE2C55]/[0.04] active:scale-[0.98]"
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FE2C55]">
-        <MessageCircle size={20} className="text-white" strokeWidth={2.4} />
+    <div className="relative overflow-hidden rounded-[18px] border-2 border-[#FE2C55]/30 bg-gradient-to-br from-[#FFF5F8] via-white to-[#FFF0F5] p-4 shadow-[0_2px_12px_rgba(254,44,85,0.08)]">
+      {/* Pattern mờ background */}
+      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[#FE2C55]/[0.06]" />
+      <div className="pointer-events-none absolute -bottom-8 -left-4 h-20 w-20 rounded-full bg-[#FE2C55]/[0.04]" />
+
+      <div className="relative flex items-start gap-3.5">
+        <div className="relative h-14 w-14 shrink-0">
+          {!avatarError ? (
+            <img
+              src={getImageUrl(HELP_AVATAR)}
+              alt=""
+              className="h-full w-full rounded-full object-cover shadow-md ring-2 ring-white"
+              onError={() => setAvatarError(true)}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-md">
+              <Bot size={24} className="text-white" strokeWidth={2.2} />
+            </div>
+          )}
+          <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-emerald-500" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-black leading-tight text-[#161823]">
+            Hỗ trợ trực tuyến
+          </p>
+          <p className="mt-0.5 text-[12.5px] leading-4 text-slate-600">
+            Trả lời mọi câu hỏi của bạn 24/7
+          </p>
+
+          <Link
+            to="/support"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#FE2C55] px-4 py-2 text-[13px] font-bold text-white shadow-[0_3px_10px_rgba(254,44,85,0.25)] transition active:scale-[0.97]"
+          >
+            <MessageCircle size={15} strokeWidth={2.4} />
+            Chat với NXX315
+          </Link>
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-bold text-slate-900">
-          Chat với NXX315 Studio
-        </p>
-        <p className="text-[11px] text-slate-500">
-          Hỗ trợ trực tuyến 24/7
-        </p>
-      </div>
-      <ArrowRight size={18} className="text-[#FE2C55]" strokeWidth={2.6} />
-    </Link>
+    </div>
   </div>
 </div>
 
-{/* ============================================== */}
-{/* GIAO DỊCH */}
-{/* ============================================== */}
+{/* GIAO DỊCH GẦN ĐÂY */}
 {recentOrders.length > 0 && (
   <section className="pt-6">
     <div className="mx-auto max-w-3xl px-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-[16px] font-black text-[#161823]">
-          Thắc mắc về đơn hàng?
+          Thắc mắc về lịch sử?
         </h3>
         <Link
           to="/history"
@@ -441,9 +516,7 @@ function getHistoryLogo(order) {
   </section>
 )}
 
-{/* ============================================== */}
-{/* CHỦ ĐỀ (mới — 2 cột, border trái, có subtitle) */}
-{/* ============================================== */}
+{/* CHỦ ĐỀ */}
 <section className="pt-6">
   <div className="mx-auto max-w-3xl px-4">
     <div className="mb-3 flex items-center justify-between">
@@ -499,13 +572,11 @@ function getHistoryLogo(order) {
     </div>
   </div>
 </section>
-          {/* ============================================== */}
-      {/* FAQ */}
-      {/* ============================================== */}
+          {/* FAQ */}
       <section id="faq-list" className="pt-6">
         <div className="mx-auto max-w-3xl px-4">
           <h3 className="mb-3 text-[16px] font-black text-[#161823]">
-            Vấn đề thường gặp
+            Các vấn đề thường gặp
           </h3>
 
           <div className="overflow-hidden rounded-[16px] border border-black/[0.05] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
@@ -573,9 +644,7 @@ function getHistoryLogo(order) {
         </div>
       </section>
 
-      {/* ============================================== */}
       {/* CTA GÓP Ý */}
-      {/* ============================================== */}
       <section className="px-4 pt-6 pb-28">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-start gap-3.5 rounded-[16px] border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-4 shadow-[0_2px_8px_rgba(14,165,233,0.06)]">
@@ -585,7 +654,7 @@ function getHistoryLogo(order) {
 
             <div className="min-w-0 flex-1">
               <p className="text-[13.5px] font-black text-slate-900">
-                NXX315 cần bạn góp ý
+                NXX315 Studio cần bạn góp ý
               </p>
               <p className="mt-0.5 text-[11.5px] leading-4 text-slate-600">
                 Mỗi đề xuất của bạn giúp NXX315 cải thiện từng ngày.
