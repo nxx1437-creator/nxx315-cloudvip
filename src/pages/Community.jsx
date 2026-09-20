@@ -1,32 +1,52 @@
 import { useState, useEffect, useCallback } from "react";
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 import PostForm from "../components/community/PostForm";
 import PostCard from "../components/community/PostCard";
 import CommentDrawer from "../components/community/CommentDrawer";
-import { fetchPosts, getMyReactions, toggleLike, toggleSave, recordShare } from "../lib/community";
+import {
+  fetchPosts,
+  getMyReactions,
+  toggleLike,
+} from "../lib/community";
 import useProfile from "../hooks/useProfile";
+import { Loader2, Users } from "lucide-react";
 
 export default function Community() {
   const { profile } = useProfile();
   const [posts, setPosts] = useState([]);
   const [liked, setLiked] = useState(new Set());
-  const [saved, setSaved] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [activePost, setActivePost] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    window.clearTimeout(window.__communityToast);
+    window.__communityToast = window.setTimeout(() => setToast(null), 3000);
+  };
 
   const loadInitial = useCallback(async () => {
     setLoading(true);
-    const data = await fetchPosts();
-    setPosts(data);
-    setHasMore(data.length > 0);
+    try {
+      const data = await fetchPosts();
+      setPosts(data);
+      setHasMore(data.length >= 10);
 
-    if (profile?.id && data.length) {
-      const { liked: l, saved: s } = await getMyReactions(data.map((p) => p.id), profile.id);
-      setLiked(l);
-      setSaved(s);
+      if (profile?.id && data.length) {
+        const { liked: l } = await getMyReactions(
+          data.map((p) => p.id),
+          profile.id
+        );
+        setLiked(l);
+      }
+    } catch (err) {
+      console.error("loadInitial error:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [profile?.id]);
 
   useEffect(() => {
@@ -36,102 +56,191 @@ export default function Community() {
   const loadMore = async () => {
     if (loadingMore || !posts.length) return;
     setLoadingMore(true);
-    const cursor = posts[posts.length - 1].created_at;
-    const more = await fetchPosts(cursor);
-    setPosts((prev) => [...prev, ...more]);
-    setHasMore(more.length > 0);
+    try {
+      const cursor = posts[posts.length - 1].created_at;
+      const more = await fetchPosts(cursor);
+      setPosts((prev) => [...prev, ...more]);
+      setHasMore(more.length >= 10);
 
-    if (profile?.id && more.length) {
-      const { liked: l, saved: s } = await getMyReactions(more.map((p) => p.id), profile.id);
-      setLiked((prev) => new Set([...prev, ...l]));
-      setSaved((prev) => new Set([...prev, ...s]));
+      if (profile?.id && more.length) {
+        const { liked: l } = await getMyReactions(
+          more.map((p) => p.id),
+          profile.id
+        );
+        setLiked((prev) => new Set([...prev, ...l]));
+      }
+    } catch (err) {
+      console.error("loadMore error:", err);
+    } finally {
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   };
 
   const handleToggleLike = async (postId, isLiked) => {
     if (!profile?.id) return;
+
+    // Optimistic UI
     setLiked((prev) => {
       const next = new Set(prev);
-      isLiked ? next.delete(postId) : next.add(postId);
+      if (isLiked) next.delete(postId);
+      else next.add(postId);
       return next;
     });
+
     setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, like_count: p.like_count + (isLiked ? -1 : 1) } : p))
+      prev.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              likes_count: Math.max(
+                (p.likes_count || 0) + (isLiked ? -1 : 1),
+                0
+              ),
+            }
+          : p
+      )
     );
-    await toggleLike(postId, profile.id, isLiked);
-  };
 
-  const handleToggleSave = async (postId, isSaved) => {
-    if (!profile?.id) return;
-    setSaved((prev) => {
-      const next = new Set(prev);
-      isSaved ? next.delete(postId) : next.add(postId);
-      return next;
-    });
-    setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, save_count: p.save_count + (isSaved ? -1 : 1) } : p))
-    );
-    await toggleSave(postId, profile.id, isSaved);
-  };
-
-  const handleShare = async (postId) => {
-    const post = posts.find((p) => p.id === postId);
-    const url = `${window.location.origin}/community/${postId}`;
-
-    if (navigator.share) {
-      await navigator.share({ title: "Chia sẻ bài đăng", text: post?.content?.slice(0, 80), url });
-    } else {
-      await navigator.clipboard.writeText(url);
+    const success = await toggleLike(postId, profile.id, isLiked);
+    if (!success) {
+      // Rollback
+      setLiked((prev) => {
+        const next = new Set(prev);
+        if (isLiked) next.add(postId);
+        else next.delete(postId);
+        return next;
+      });
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                likes_count: Math.max(
+                  (p.likes_count || 0) + (isLiked ? 1 : -1),
+                  0
+                ),
+              }
+            : p
+        )
+      );
     }
-
-    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, share_count: p.share_count + 1 } : p)));
-    await recordShare(postId, profile?.id);
   };
 
   const handlePostCreated = (post) => {
-    setPosts((prev) => [{ ...post, author: { username: profile.username, avatar_url: profile.avatar_url, is_official: profile.is_official } }, ...prev]);
+    setPosts((prev) => [
+      {
+        ...post,
+        likes_count: 0,
+        comments_count: 0,
+        author: {
+          id: profile.id,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+        },
+      },
+      ...prev,
+    ]);
+    showToast("Đã đăng bài! Chờ duyệt trong vài phút.", "success");
   };
 
   const handleCommentAdded = (postId) => {
-    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p)));
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, comments_count: (p.comments_count || 0) + 1 }
+          : p
+      )
+    );
   };
-
-  return (
-    <div className="max-w-lg mx-auto px-3 py-4">
-      <PostForm onPostCreated={handlePostCreated} />
-
-      {loading ? (
-        <p className="text-center text-white/50 text-sm py-8">Đang tải bảng tin...</p>
-      ) : posts.length === 0 ? (
-        <p className="text-center text-white/50 text-sm py-8">Chưa có bài đăng nào. Là người đầu tiên đi!</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              isLiked={liked.has(post.id)}
-              isSaved={saved.has(post.id)}
-              onToggleLike={handleToggleLike}
-              onToggleSave={handleToggleSave}
-              onShare={handleShare}
-              onOpenComments={setActivePost}
-            />
-          ))}
+    return (
+    <div className="min-h-screen bg-[#f5f5f5] pb-24">
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed left-1/2 top-4 z-50 w-[calc(100%-32px)] max-w-md -translate-x-1/2 rounded-2xl border px-4 py-3 shadow-lg ${
+            toast.type === "error"
+              ? "border-rose-200 bg-white text-rose-700"
+              : "border-emerald-200 bg-white text-emerald-700"
+          }`}
+        >
+          <p className="text-sm font-semibold">{toast.message}</p>
         </div>
       )}
 
-      {hasMore && posts.length > 0 && (
-        <button
-          onClick={loadMore}
-          disabled={loadingMore}
-          className="w-full mt-4 text-sm text-cyan-400 py-2"
-        >
-          {loadingMore ? "Đang tải..." : "Xem thêm"}
-        </button>
-      )}
+      <TopHeader />
 
+      <main className="mx-auto max-w-lg px-3 py-4">
+        {/* Header */}
+        <div className="mb-4 flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
+            <Users size={20} className="text-white" strokeWidth={2.4} />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">Cộng đồng</h1>
+            <p className="text-xs text-slate-500">
+              Chia sẻ, học hỏi, kết nối
+            </p>
+          </div>
+        </div>
+
+        {/* Post Form */}
+        {profile?.id && <PostForm onPostCreated={handlePostCreated} />}
+
+        {/* Feed */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 size={24} className="animate-spin text-slate-300" />
+            <p className="mt-3 text-sm text-slate-400">
+              Đang tải bảng tin...
+            </p>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center">
+            <Users size={36} className="mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-bold text-slate-600">
+              Chưa có bài đăng nào
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Hãy là người đầu tiên chia sẻ!
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                isLiked={liked.has(post.id)}
+                currentUserId={profile?.id}
+                onToggleLike={handleToggleLike}
+                onOpenComments={setActivePost}
+                onToast={showToast}
+              />
+            ))}
+
+            {hasMore && (
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white py-3 text-sm font-bold text-sky-600 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Đang tải...
+                  </>
+                ) : (
+                  "Xem thêm"
+                )}
+              </button>
+            )}
+          </div>
+        )}
+      </main>
+
+      <BottomNav />
+
+      {/* Comment Drawer */}
       {activePost && (
         <CommentDrawer
           post={activePost}
@@ -142,4 +251,4 @@ export default function Community() {
       )}
     </div>
   );
-               }
+}
