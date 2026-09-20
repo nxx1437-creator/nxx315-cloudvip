@@ -87,9 +87,11 @@ export default function VerifyEmail() {
       inputRefs.current[0]?.focus();
 
       if (nextAttempts >= 5) {
-        setError("Bạn đã nhập sai quá 5 lần. Vui lòng đợi ít phút hoặc liên hệ hỗ trợ.");
+        setError(
+          "Bạn đã nhập sai quá 5 lần. Vui lòng đợi ít phút hoặc liên hệ hỗ trợ."
+        );
       } else if (verifyError.message?.toLowerCase().includes("expired")) {
-        setError("Mã đã hết hạn. Bấm \"Gửi lại mã\" để nhận mã mới.");
+        setError('Mã đã hết hạn. Bấm "Gửi lại mã" để nhận mã mới.');
       } else {
         setError(`Mã không đúng. Còn ${5 - nextAttempts} lần thử.`);
       }
@@ -126,26 +128,26 @@ export default function VerifyEmail() {
   if (!email) return null;
 
   return (
-    <AuthShell
-      title="Xác minh email"
-      subtitle="Chỉ còn 1 bước nữa thôi"
-    >
+    <AuthShell title="Xác minh email" subtitle="Chỉ còn 1 bước nữa thôi">
       {success ? (
-        <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-8 text-center">
-          <CheckCircle2 size={36} className="text-emerald-400" />
-          <p className="text-sm font-semibold text-emerald-300">
+        <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-8 text-center">
+          <CheckCircle2 size={36} className="text-emerald-500" />
+          <p className="text-sm font-semibold text-emerald-700">
             Xác minh thành công! Đang chuyển vào trang chủ...
           </p>
         </div>
       ) : (
         <>
-          <div className="mt-2 flex items-start gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-            <Mail size={16} className="mt-0.5 shrink-0 text-sky-300/70" />
-            <p className="text-xs leading-5 text-sky-100/70">
+          <div className="mt-2 flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+            <Mail size={16} className="mt-0.5 shrink-0 text-sky-600" />
+            <p className="text-xs leading-5 text-slate-700">
               Để đảm bảo đúng là bạn tạo tài khoản, mình đã gửi mã 6 số đến{" "}
-              <span className="font-semibold text-white">{email}</span>.{" "}
+              <span className="font-semibold text-slate-900">{email}</span>.{" "}
               Sai email?{" "}
-              <Link to="/register" className="text-sky-400 hover:underline">
+              <Link
+                to="/register"
+                className="font-semibold text-sky-600 hover:underline"
+              >
                 Quay lại đăng ký
               </Link>
             </p>
@@ -165,26 +167,30 @@ export default function VerifyEmail() {
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={handlePaste}
                   maxLength={1}
-                  className="h-14 w-12 rounded-2xl border border-white/10 bg-white/[0.04] text-center text-xl font-bold text-white outline-none transition focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 disabled:opacity-40"
+                  className="h-14 w-12 rounded-2xl border border-slate-300 bg-slate-50 text-center text-xl font-bold text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-200 disabled:opacity-40"
                 />
               ))}
             </div>
 
-            {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
+            {error && <p className="mt-3 text-sm text-rose-500">{error}</p>}
 
             <button
               type="submit"
               disabled={verifying || locked}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110 disabled:opacity-60"
             >
-              {verifying ? <Loader2 size={16} className="animate-spin" /> : "Xác minh"}
+              {verifying ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                "Xác minh"
+              )}
             </button>
 
             <button
               type="button"
               onClick={handleResend}
               disabled={resendCooldown > 0 || resending}
-              className="mt-3 w-full text-center text-xs font-semibold text-sky-400 hover:underline disabled:cursor-not-allowed disabled:text-sky-400/40 disabled:no-underline"
+              className="mt-3 w-full text-center text-xs font-semibold text-sky-600 hover:underline disabled:cursor-not-allowed disabled:text-slate-300 disabled:no-underline"
             >
               {resending
                 ? "Đang gửi..."
@@ -197,4 +203,4 @@ export default function VerifyEmail() {
       )}
     </AuthShell>
   );
-    }
+  }
