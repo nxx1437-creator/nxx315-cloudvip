@@ -68,28 +68,21 @@ export default function Register() {
         return;
       }
 
-      // ✅ BƯỚC 4: Ghi IP đăng ký vào DB
-      if (data.user && ip) {
-        await supabase.from("registration_ips").insert({
-          ip,
-          user_id: data.user.id,
-        });
-
-        // ✅ BƯỚC 5: Nếu có duplicate warning → log fraud event
-        if (duplicateIpWarning) {
-          await logFraudEvent(
-            data.user.id,
-            "multiple_accounts_same_ip",
-            "high",
-            {
-              ip,
-              existing_count: checkResult?.count || 0,
-              email: form.email,
-            }
-          );
-        }
-      }
-
+      // ✅ BƯỚC 4: Ghi IP qua Edge Function
+if (data.user && ip) {
+  try {
+    await supabase.functions.invoke("log-registration-ip", {
+      body: {
+        ip,
+        user_id: data.user.id,
+        email: form.email,
+      },
+    });
+  } catch (ipErr) {
+    console.error("[register] failed to log IP:", ipErr);
+    // Không throw — vẫn cho user đăng ký
+  }
+}
       if (data.user) {
         navigate("/verify-email", { state: { email: form.email } });
       }
