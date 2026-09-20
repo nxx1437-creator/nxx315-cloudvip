@@ -28,7 +28,7 @@ export async function getClientIp() {
 
   try {
     // ✅ Dùng Edge Function — chính xác 100%
-    const { data, error } = await supabase.functions.invoke("get-my-ip");
+    const { data, error } = await supabase.functions.invoke("get-my-ip-");
 
     if (error) {
       console.error("[getClientIp] Edge Function error:", error);
