@@ -4,7 +4,6 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // Helps catch a missing .env file early instead of a confusing runtime error later.
   console.error(
     "Thiếu VITE_SUPABASE_URL hoặc VITE_SUPABASE_ANON_KEY. " +
       "Kiểm tra file .env ở thư mục gốc (xem .env.example)."
@@ -12,6 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 // =====================================================
 // ANTI-SPAM HELPERS
 // =====================================================
@@ -27,12 +27,19 @@ export async function getClientIp() {
   }
 
   try {
-    const res = await fetch("https://api.ipify.org?format=json");
-    const data = await res.json();
-    cachedIp = data.ip;
+    // ✅ Dùng Edge Function — chính xác 100%
+    const { data, error } = await supabase.functions.invoke("get-my-ip");
+
+    if (error) {
+      console.error("[getClientIp] Edge Function error:", error);
+      return null;
+    }
+
+    cachedIp = data?.ip || null;
     ipCacheTime = now;
     return cachedIp;
-  } catch {
+  } catch (err) {
+    console.error("[getClientIp] exception:", err);
     return null;
   }
 }
@@ -44,7 +51,7 @@ export async function checkRateLimit(
 ) {
   try {
     const ip = await getClientIp();
-    if (!ip) return true; // Cho qua nếu không lấy được IP
+    if (!ip) return true;
 
     const { data: allowed, error } = await supabase.rpc("check_rate_limit", {
       p_ip: ip,
@@ -55,7 +62,7 @@ export async function checkRateLimit(
 
     if (error) {
       console.error("[rate limit] error:", error);
-      return true; // Cho qua nếu lỗi
+      return true;
     }
 
     return allowed;
