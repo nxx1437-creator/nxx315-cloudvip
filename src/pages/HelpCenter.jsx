@@ -3,13 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ChevronDown,
-  ChevronUp,
   ChevronRight,
   History as HistoryIcon,
   MessageCircle,
   Bot,
-  Headphones,
-  HelpCircle,
   User,
   Coins,
   Gift,
@@ -20,11 +17,12 @@ import {
   Landmark,
   DollarSign,
   Gamepad2,
-  Package,
   ArrowRight,
   Lightbulb,
   X,
 } from "lucide-react";
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 // =====================================================
@@ -36,9 +34,9 @@ const STORAGE_BUCKET = "game_logos";
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
-// Ảnh cần upload lên bucket game_logos:
-const HELP_AVATAR = "help-avatar.png"; // 400x400
-const HELP_BANNER = "help-banner.png"; // 1200x400
+// Ảnh cần upload:
+const HELP_AVATAR = "help-avatar.png";   // 400x400
+const HELP_BANNER = "help-banner1.png";  // 1200x400 (đã đổi tên)
 
 // =====================================================
 // FAQ DATA
@@ -139,7 +137,7 @@ const faqData = [
 ];
 
 // =====================================================
-// TOPIC CATEGORIES
+// TOPIC CATEGORIES (6 mới)
 // =====================================================
 const TOPIC_CATEGORIES = [
   {
@@ -187,7 +185,7 @@ const TOPIC_CATEGORIES = [
 ];
 
 // =====================================================
-// HISTORY HELPERS
+// HELPERS
 // =====================================================
 function formatHistoryDate(value) {
   if (!value) return "—";
@@ -234,10 +232,9 @@ function getHistoryLogo(order) {
   if (packageId.includes("fcmobile")) return getImageUrl("fc-mobile.png");
   if (packageId.includes("valorant")) return getImageUrl("valorant.png");
   return getImageUrl("store-cute.png");
-  }
+        }
 export default function HelpCenter() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState(null);
   const [showAllFaq, setShowAllFaq] = useState(false);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -248,7 +245,7 @@ export default function HelpCenter() {
     setOpenId(openId === id ? null : id);
   };
 
-  // Load giao dịch gần đây
+  // Load 3 giao dịch gần nhất
   useEffect(() => {
     let alive = true;
 
@@ -287,300 +284,197 @@ export default function HelpCenter() {
     };
   }, []);
 
-  // Filter FAQ
-  const filteredFaq = faqData
-    .map((section) => ({
-      ...section,
-      questions: section.questions.filter(
-        (q) =>
-          q.q.toLowerCase().includes(search.toLowerCase()) ||
-          q.a.toLowerCase().includes(search.toLowerCase())
-      ),
-    }))
-    .filter((section) => section.questions.length > 0);
-
-  // Hiện 3 section đầu, còn lại ẩn
-  const visibleFaq = showAllFaq ? filteredFaq : filteredFaq.slice(0, 3);
-  const hasMoreFaq = filteredFaq.length > 3;
+  // FAQ visible
+  const visibleFaq = showAllFaq ? faqData : faqData.slice(0, 3);
+  const hasMoreFaq = faqData.length > 3;
 
   return (
     <div className="min-h-screen bg-[#fafafa] pb-24 text-slate-900">
+      {/* TopHeader chung */}
+      <TopHeader />
       {/* ============================================== */}
-      {/* HEADER */}
-      {/* ============================================== */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-900 transition active:scale-95"
-        >
-          <ChevronDown size={20} className="rotate-90" strokeWidth={2.4} />
-        </button>
-        <h1 className="flex-1 text-center text-[15px] font-extrabold tracking-[-0.02em] text-[#161823]">
-          Trung tâm Trợ giúp
-        </h1>
-        <Link
-          to="/"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition active:scale-95"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        </Link>
-      </div>
-      {/* ============================================== */}
-{/* HERO */}
+{/* HERO — gọn, cao ~100px */}
 {/* ============================================== */}
 <div className="relative overflow-hidden">
-  {/* Banner background */}
+  {/* Background gradient nhẹ + banner mờ */}
   <div
-    className="absolute inset-0 z-0 bg-gradient-to-br from-pink-100 via-rose-50 to-pink-50"
+    className="absolute inset-0 z-0 bg-gradient-to-br from-pink-50 via-rose-50 to-white"
     style={{
       backgroundImage: `url(${getImageUrl(HELP_BANNER)})`,
       backgroundSize: "cover",
       backgroundPosition: "center",
+      opacity: 0.85,
     }}
   >
-    {/* Overlay nhẹ để chữ nổi */}
-    <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/70" />
+    <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/90" />
   </div>
 
-  <div className="relative z-10 mx-auto max-w-3xl px-4 pb-6 pt-5">
-    <div className="flex items-start justify-between gap-3">
-      {/* Text */}
-      <div className="flex-1 pt-2">
-        <h2 className="flex items-center gap-2 text-[26px] font-black leading-tight tracking-[-0.04em] text-[#161823]">
-          Chào bạn
-          <span className="inline-block animate-wave text-2xl">👋</span>
-        </h2>
-        <p className="mt-1 max-w-[200px] text-[14px] font-semibold leading-5 text-slate-700">
-          NXX315 có thể giúp gì cho bạn?
-        </p>
-      </div>
-
-      {/* Avatar mascot */}
-      <div className="relative h-24 w-24 shrink-0">
-        {!avatarError ? (
-          <img
-            src={getImageUrl(HELP_AVATAR)}
-            alt="NXX315 Mascot"
-            className="h-full w-full rounded-full object-cover drop-shadow-xl"
-            onError={() => setAvatarError(true)}
-          />
-        ) : (
-          // Fallback nếu chưa upload avatar
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-[0_10px_30px_rgba(254,44,85,0.3)]">
-            <Bot size={40} className="text-white" strokeWidth={2.2} />
-          </div>
-        )}
-        <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm shadow-md">
-          ✨
-        </span>
-      </div>
+  <div className="relative z-10 mx-auto flex max-w-3xl items-center gap-4 px-4 py-5">
+    <div className="min-w-0 flex-1">
+      <h2 className="flex items-center gap-2 text-[22px] font-black leading-tight tracking-[-0.03em] text-[#161823]">
+        Chào bạn
+        <span className="inline-block animate-wave text-xl">👋</span>
+      </h2>
+      <p className="mt-0.5 text-[13px] font-semibold leading-5 text-slate-600">
+        NXX315 có thể giúp gì cho bạn?
+      </p>
     </div>
-  </div>
-</div>
 
-{/* ============================================== */}
-{/* SEARCH */}
-{/* ============================================== */}
-<div className="px-4">
-  <div className="mx-auto max-w-3xl">
-    <div className="flex items-center gap-2">
-      <div className="flex flex-1 items-center gap-2 rounded-full border border-black/[0.06] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <Search size={18} className="shrink-0 text-slate-400" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm kiếm vấn đề của bạn..."
-          className="min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-slate-400"
+    {/* Avatar */}
+    <div className="relative h-16 w-16 shrink-0">
+      {!avatarError ? (
+        <img
+          src={getImageUrl(HELP_AVATAR)}
+          alt="NXX315"
+          className="h-full w-full rounded-full object-cover shadow-lg ring-2 ring-white"
+          onError={() => setAvatarError(true)}
         />
-        {search && (
-          <button
-            onClick={() => setSearch("")}
-            className="shrink-0 text-slate-400 transition hover:text-slate-700"
-          >
-            <X size={16} strokeWidth={2.4} />
-          </button>
-        )}
-      </div>
-      <Link
-        to="/history"
-        className="flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-2xl bg-white px-3.5 py-2 text-[10px] font-bold text-[#FE2C55] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition active:scale-95"
-      >
-        <HistoryIcon size={18} strokeWidth={2.4} />
-        <span>Lịch sử</span>
-      </Link>
+      ) : (
+        <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-lg">
+          <Bot size={26} className="text-white" strokeWidth={2.2} />
+        </div>
+      )}
+      <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] shadow-md">
+        ✨
+      </span>
     </div>
   </div>
 </div>
 
 {/* ============================================== */}
-{/* CARD HỖ TRỢ TRỰC TUYẾN */}
+{/* CARD CHAT — gọn, không full width */}
 {/* ============================================== */}
 <div className="px-4 pt-4">
   <div className="mx-auto max-w-3xl">
-    <div className="relative overflow-hidden rounded-[22px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
-      {/* Decorative pattern */}
-      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gradient-to-br from-pink-100 to-rose-50 opacity-60" />
-      <div className="absolute -bottom-10 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-pink-50 to-transparent opacity-80" />
-
-      <div className="relative flex items-center gap-4">
-        {/* Avatar mini */}
-        <div className="relative h-16 w-16 shrink-0">
-          {!avatarError ? (
-            <img
-              src={getImageUrl(HELP_AVATAR)}
-              alt=""
-              className="h-full w-full rounded-full object-cover shadow-md"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
-              <Bot size={26} className="text-white" strokeWidth={2.2} />
-            </div>
-          )}
-        </div>
-
-        {/* Text */}
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-black text-[#161823]">
-            Hỗ trợ trực tuyến
-          </p>
-          <p className="mt-0.5 text-[12px] leading-4 text-slate-500">
-            Trả lời mọi câu hỏi của bạn 24/7
-          </p>
-        </div>
+    <Link
+      to="/support"
+      className="flex items-center gap-3 rounded-[18px] border border-[#FE2C55]/15 bg-gradient-to-r from-[#FE2C55] to-[#ff4d79] p-4 shadow-[0_6px_20px_rgba(254,44,85,0.25)] transition active:scale-[0.98]"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+        <MessageCircle size={22} className="text-white" strokeWidth={2.4} />
       </div>
-
-      {/* Button */}
-      <Link
-        to="/support"
-        className="relative mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FE2C55] to-[#ff4d79] px-4 py-3.5 text-[14px] font-extrabold text-white shadow-[0_6px_20px_rgba(254,44,85,0.3)] transition active:scale-[0.98]"
-      >
-        <MessageCircle size={18} strokeWidth={2.6} />
-        Chat với NXX315
-      </Link>
-    </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-black text-white">
+          Chat với NXX315 Studio
+        </p>
+        <p className="text-[11px] text-white/90">
+          Trợ lý AI hỗ trợ 24/7
+        </p>
+      </div>
+      <ArrowRight size={18} className="text-white" strokeWidth={2.6} />
+    </Link>
   </div>
 </div>
-        {/* ============================================== */}
-      {/* SECTION: THẮC MẮC VỀ GIAO DỊCH */}
-      {/* ============================================== */}
-      {recentOrders.length > 0 && (
-        <section className="pt-7">
-          <div className="mx-auto max-w-3xl px-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[17px] font-black text-[#161823]">
-                Thắc mắc về giao dịch?
-              </h3>
-              <Link
-                to="/history"
-                className="text-[13px] font-bold text-[#FE2C55]"
-              >
-                Xem tất cả
-              </Link>
-            </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {recentOrders.map((order) => {
-                const status = getHistoryStatus(order.status);
-                return (
-                  <Link
-                    key={order.id}
-                    to={`/history/order/${order.id}?source=orders`}
-                    className="flex w-[280px] shrink-0 flex-col gap-2.5 rounded-[18px] border border-black/[0.05] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition active:scale-[0.99]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5">
-                        <img
-                          src={getHistoryLogo(order)}
-                          alt=""
-                          className="h-full w-full object-contain"
-                          onError={(e) => {
-                            e.currentTarget.src = getImageUrl("store-cute.png");
-                          }}
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-bold leading-tight text-slate-800">
-                          Chuyển đến NXX315 Studio
-                        </p>
-                        <p className="mt-1 truncate text-[11px] text-slate-500">
-                          {formatHistoryDate(order.created_at)}
-                        </p>
-                        <p className="mt-0.5 truncate text-[11px] font-semibold text-sky-600">
-                          Mã GD: {order.order_code || `#${order.id}`}
-                        </p>
-                      </div>
-                    </div>
+{/* ============================================== */}
+{/* SECTION: GIAO DỊCH */}
+{/* ============================================== */}
+{recentOrders.length > 0 && (
+  <section className="pt-6">
+    <div className="mx-auto max-w-3xl px-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-[16px] font-black text-[#161823]">
+          Thắc mắc về đơn hàng?
+        </h3>
+        <Link
+          to="/history"
+          className="text-[12px] font-bold text-[#FE2C55]"
+        >
+          Xem tất cả
+        </Link>
+      </div>
 
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-                      <span
-                        className={`inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold ${status.className}`}
-                      >
-                        {status.label}
-                      </span>
-                      <span className="text-[15px] font-black text-slate-900">
-                        -{getHistoryAmount(order)}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {recentOrders.map((order) => {
+          const status = getHistoryStatus(order.status);
+          return (
+            <Link
+              key={order.id}
+              to={`/history/order/${order.id}?source=orders`}
+              className="flex w-[260px] shrink-0 flex-col gap-2.5 rounded-[16px] border border-black/[0.05] bg-white p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition active:scale-[0.99]"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5">
+                  <img
+                    src={getHistoryLogo(order)}
+                    alt=""
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = getImageUrl("store-cute.png");
+                    }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12px] font-bold leading-tight text-slate-800">
+                    NXX315 Studio
+                  </p>
+                  <p className="mt-0.5 truncate text-[10px] text-slate-500">
+                    {formatHistoryDate(order.created_at)}
+                  </p>
+                  <p className="mt-0.5 truncate text-[10px] font-semibold text-sky-600">
+                    Mã: {order.order_code || `#${order.id}`}
+                  </p>
+                </div>
+              </div>
 
+              <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                <span
+                  className={`inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold ${status.className}`}
+                >
+                  {status.label}
+                </span>
+                <span className="text-[13px] font-black text-slate-900">
+                  -{getHistoryAmount(order)}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+)}
+         {/* ============================================== */}
+      {/* SECTION: CHỦ ĐỀ */}
       {/* ============================================== */}
-      {/* SECTION: TRỢ GIÚP THEO CHỦ ĐỀ */}
-      {/* ============================================== */}
-      <section className="pt-7">
+      <section className="pt-6">
         <div className="mx-auto max-w-3xl px-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[17px] font-black text-[#161823]">
+            <h3 className="text-[16px] font-black text-[#161823]">
               Trợ giúp theo chủ đề
             </h3>
             <button
               onClick={() => {
                 const el = document.getElementById("faq-list");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                if (el)
+                  el.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
-              className="text-[13px] font-bold text-[#FE2C55]"
+              className="text-[12px] font-bold text-[#FE2C55]"
             >
               Xem tất cả
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             {TOPIC_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               return (
                 <Link
                   key={cat.id}
                   to={cat.link}
-                  className="flex flex-col items-center gap-2.5 rounded-[18px] border border-black/[0.05] bg-white p-3.5 text-center shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] active:scale-[0.97]"
+                  className="flex flex-col items-center gap-2 rounded-[16px] border border-black/[0.05] bg-white p-3 text-center shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:scale-[0.97]"
                 >
                   <div
-                    className="flex h-12 w-12 items-center justify-center rounded-full"
+                    className="flex h-11 w-11 items-center justify-center rounded-full"
                     style={{ backgroundColor: `${cat.color}15` }}
                   >
                     <Icon
-                      size={24}
+                      size={20}
                       style={{ color: cat.color }}
-                      strokeWidth={2}
+                      strokeWidth={2.2}
                     />
                   </div>
-                  <p className="text-[11px] font-bold leading-tight text-slate-800">
+                  <p className="text-[10.5px] font-bold leading-tight text-slate-800">
                     {cat.title}
                   </p>
                 </Link>
@@ -593,135 +487,108 @@ export default function HelpCenter() {
       {/* ============================================== */}
       {/* SECTION: FAQ */}
       {/* ============================================== */}
-      <section id="faq-list" className="pt-7">
+      <section id="faq-list" className="pt-6">
         <div className="mx-auto max-w-3xl px-4">
-          <h3 className="mb-3 text-[17px] font-black text-[#161823]">
-            Các vấn đề thường gặp
+          <h3 className="mb-3 text-[16px] font-black text-[#161823]">
+            Vấn đề thường gặp
           </h3>
 
-          {filteredFaq.length === 0 ? (
-            <div className="rounded-[18px] border border-black/[0.05] bg-white py-14 text-center">
-              <Search size={36} className="mx-auto mb-3 text-slate-300" />
-              <p className="text-[14px] font-bold text-slate-700">
-                Không tìm thấy câu hỏi phù hợp
-              </p>
-              <p className="mt-1 text-[12px] text-slate-500">
-                Thử từ khóa khác hoặc chat với AI
-              </p>
-              <Link
-                to="/support"
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#FE2C55] px-5 py-2.5 text-[13px] font-bold text-white shadow-md transition active:scale-95"
-              >
-                <MessageCircle size={14} strokeWidth={2.4} />
-                Chat với AI
-              </Link>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-hidden rounded-[18px] border border-black/[0.05] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                {visibleFaq.map((section, sectionIdx) => {
-                  const isOpen = openId === section.id;
+          <div className="overflow-hidden rounded-[16px] border border-black/[0.05] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+            {visibleFaq.map((section, idx) => {
+              const isOpen = openId === section.id;
 
-                  return (
-                    <div
-                      key={section.id}
-                      className={`${
-                        sectionIdx > 0 ? "border-t border-slate-100" : ""
-                      }`}
-                    >
-                      <button
-                        onClick={() => toggle(section.id)}
-                        className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition active:bg-slate-50"
-                      >
-                        <span className="flex-1 text-[14px] font-bold leading-5 text-slate-900">
-                          {section.title}
-                        </span>
-                        <ChevronRight
-                          size={18}
-                          className={`shrink-0 text-slate-400 transition-transform ${
-                            isOpen ? "rotate-90" : ""
-                          }`}
-                          strokeWidth={2.4}
-                        />
-                      </button>
-
-                      {isOpen && (
-                        <div className="border-t border-slate-50 bg-slate-50/50">
-                          {section.questions.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="border-b border-slate-100 px-4 py-3.5 last:border-0"
-                            >
-                              <p className="text-[13px] font-bold leading-5 text-slate-900">
-                                {item.q}
-                              </p>
-                              <p className="mt-2 text-[13px] leading-5 text-slate-600">
-                                {item.a}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {hasMoreFaq && (
-                <button
-                  onClick={() => setShowAllFaq((v) => !v)}
-                  className="mx-auto mt-4 flex items-center gap-2 rounded-full border border-[#FE2C55]/30 bg-white px-5 py-2.5 text-[13px] font-bold text-[#FE2C55] shadow-sm transition active:scale-95"
+              return (
+                <div
+                  key={section.id}
+                  className={idx > 0 ? "border-t border-slate-100" : ""}
                 >
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform ${
-                      showAllFaq ? "rotate-180" : ""
-                    }`}
-                    strokeWidth={2.6}
-                  />
-                  {showAllFaq ? "Thu gọn" : "Xem thêm"}
-                </button>
-              )}
-            </>
+                  <button
+                    onClick={() => toggle(section.id)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition active:bg-slate-50"
+                  >
+                    <span className="flex-1 text-[13.5px] font-bold leading-5 text-slate-900">
+                      {section.title}
+                    </span>
+                    <ChevronRight
+                      size={16}
+                      className={`shrink-0 text-slate-400 transition-transform ${
+                        isOpen ? "rotate-90" : ""
+                      }`}
+                      strokeWidth={2.4}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-slate-50 bg-slate-50/50">
+                      {section.questions.map((item, qIdx) => (
+                        <div
+                          key={qIdx}
+                          className="border-b border-slate-100 px-4 py-3 last:border-0"
+                        >
+                          <p className="text-[12.5px] font-bold leading-5 text-slate-900">
+                            {item.q}
+                          </p>
+                          <p className="mt-1.5 text-[12.5px] leading-5 text-slate-600">
+                            {item.a}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {hasMoreFaq && (
+            <button
+              onClick={() => setShowAllFaq((v) => !v)}
+              className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-[#FE2C55]/25 bg-white px-4 py-2 text-[12px] font-bold text-[#FE2C55] shadow-sm transition active:scale-95"
+            >
+              <ChevronDown
+                size={14}
+                className={`transition-transform ${
+                  showAllFaq ? "rotate-180" : ""
+                }`}
+                strokeWidth={2.6}
+              />
+              {showAllFaq ? "Thu gọn" : "Xem thêm"}
+            </button>
           )}
         </div>
       </section>
 
       {/* ============================================== */}
-      {/* CTA: GÓP Ý / LIÊN HỆ */}
+      {/* CTA: GÓP Ý */}
       {/* ============================================== */}
-      <section className="px-4 pt-7 pb-4">
+      <section className="px-4 pt-6 pb-4">
         <div className="mx-auto max-w-3xl">
-          <div className="relative overflow-hidden rounded-[20px] border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-5 shadow-[0_4px_16px_rgba(14,165,233,0.08)]">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-md">
-                <Lightbulb size={26} className="text-white" strokeWidth={2.2} />
-              </div>
+          <div className="flex items-start gap-3.5 rounded-[16px] border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-4 shadow-[0_2px_8px_rgba(14,165,233,0.06)]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-md">
+              <Lightbulb size={22} className="text-white" strokeWidth={2.2} />
+            </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-black text-slate-900">
-                  NXX315 cần bạn góp ý
-                </p>
-                <p className="mt-1 text-[12px] leading-4 text-slate-600">
-                  Mỗi đề xuất của bạn là động lực để NXX315 cải thiện từng chút
-                  một.
-                </p>
-                <Link
-                  to="/contact"
-                  className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-sky-600"
-                >
-                  Khám phá ngay
-                  <ArrowRight size={14} strokeWidth={2.6} />
-                </Link>
-              </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-black text-slate-900">
+                NXX315 cần bạn góp ý
+              </p>
+              <p className="mt-0.5 text-[11.5px] leading-4 text-slate-600">
+                Mỗi đề xuất của bạn giúp NXX315 cải thiện từng ngày.
+              </p>
+              <Link
+                to="/contact"
+                className="mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-sky-600"
+              >
+                Khám phá ngay
+                <ArrowRight size={13} strokeWidth={2.6} />
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ============================================== */}
-      {/* ANIMATION */}
-      {/* ============================================== */}
+      <BottomNav />
+
       <style>{`
         @keyframes wave {
           0%, 100% { transform: rotate(0deg); }
@@ -736,4 +603,4 @@ export default function HelpCenter() {
       `}</style>
     </div>
   );
-}
+  }
