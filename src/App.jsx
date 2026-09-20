@@ -22,6 +22,7 @@ import Admin from "./pages/Admin.jsx";
 import Contact from "./pages/Contact.jsx";
 import HelpCenter from "./pages/HelpCenter.jsx";
 import Support from "./pages/Support.jsx";
+import Community from "./pages/Community.jsx";
 import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Fraud from "./pages/Fraud.jsx";
@@ -276,6 +277,14 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/support" element={<Support />} />
+          <Route
+  path="/community"
+  element={
+    <ProtectedRoute>
+      <Community />
+    </ProtectedRoute>
+  }
+/>
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/fraud" element={<Fraud />} />
