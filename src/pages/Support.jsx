@@ -210,8 +210,8 @@ export default function Support() {
       <BottomNav />
     </div>
   );
-}
-function HomeView({ onStartChat }) {
+  }
+    function HomeView({ onStartChat }) {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f8f8f8]">
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
@@ -295,7 +295,7 @@ function HomeView({ onStartChat }) {
       </div>
     </div>
   );
-}
+    }
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -366,77 +366,76 @@ function ChatView({ conversation, user, category, onBack }) {
     loadMessages();
   }, [conversation.id]);
 
-  
+  useEffect(() => {
+    const channel = supabase
+      .channel(`conv-${conversation.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "support_messages",
+          filter: `conversation_id=eq.${conversation.id}`,
+        },
+        (payload) => {
+          const msg = payload.new;
+          if (sentIds.current.has(msg.id)) return;
 
-    useEffect(() => {
-  const channel = supabase
-    .channel(`conv-${conversation.id}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "support_messages",
-        filter: `conversation_id=eq.${conversation.id}`,
-      },
-      (payload) => {
-        const msg = payload.new;
-        if (sentIds.current.has(msg.id)) return;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
 
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
+            if (msg.sender_type === "ai" || msg.sender_type === "system") {
+              const withoutStatus = prev.filter(
+                (m) => m.sender_type !== "status"
+              );
+              return [...withoutStatus, msg];
+            }
 
-          if (msg.sender_type === "ai" || msg.sender_type === "system") {
-            const withoutStatus = prev.filter(
-              (m) => m.sender_type !== "status"
-            );
-            return [...withoutStatus, msg];
+            return [...prev, msg];
+          });
+
+          if (msg.sender_type === "ai" && msg.message) {
+            runTypewriter(msg);
+          } else {
+            scrollToBottom();
           }
-
-          return [...prev, msg];
-        });
-
-        if (msg.sender_type === "ai" && msg.message) {
-          runTypewriter(msg);
-        } else {
-          scrollToBottom();
         }
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "support_messages",
-        filter: `conversation_id=eq.${conversation.id}`,
-      },
-      (payload) => {
-        const msg = payload.new;
-        setMessages((prev) =>
-          prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
-        );
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "DELETE",
-        schema: "public",
-        table: "support_messages",
-        filter: `conversation_id=eq.${conversation.id}`,
-      },
-      (payload) => {
-        const removedId = payload.old.id;
-        setMessages((prev) => prev.filter((m) => m.id !== removedId));
-      }
-    )
-    .subscribe();
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "support_messages",
+          filter: `conversation_id=eq.${conversation.id}`,
+        },
+        (payload) => {
+          const msg = payload.new;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "support_messages",
+          filter: `conversation_id=eq.${conversation.id}`,
+        },
+        (payload) => {
+          const removedId = payload.old.id;
+          setMessages((prev) => prev.filter((m) => m.id !== removedId));
+        }
+      )
+      .subscribe();
 
-  return () => supabase.removeChannel(channel);
-}, [conversation.id]);
-  
-  const callAI = async (imageUrl) => {
+    return () => supabase.removeChannel(channel);
+  }, [conversation.id]);
+
+  // ✅ ĐÃ FIX: Nhận messageText thay vì đọc input
+  const callAI = async (imageUrl, messageText) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -447,7 +446,9 @@ function ChatView({ conversation, user, category, onBack }) {
 
     const bodyPayload = {
       conversation_id: conv.id,
-      user_message: imageUrl ? "Phân tích ảnh này giúp mình" : input,
+      user_message: imageUrl
+        ? "Phân tích ảnh này giúp mình"
+        : messageText,
     };
     if (imageUrl) bodyPayload.image_url = imageUrl;
 
@@ -510,7 +511,8 @@ function ChatView({ conversation, user, category, onBack }) {
       if (conv.status === "ai") {
         setAiTyping(true);
         try {
-          const data = await callAI(null);
+          // ✅ ĐÃ FIX: Truyền content vào callAI
+          const data = await callAI(null, content);
           console.log(
             `[Support AI] Provider: ${data.provider} (${data.model})`
           );
@@ -606,7 +608,8 @@ function ChatView({ conversation, user, category, onBack }) {
       if (conv.status === "ai") {
         setAiTyping(true);
         try {
-          const data = await callAI(publicUrl);
+          // ✅ ĐÃ FIX: Truyền null cho messageText (vì có ảnh)
+          const data = await callAI(publicUrl, null);
           console.log(
             `[Support AI - image] Provider: ${data.provider} (${data.model})`
           );
@@ -653,7 +656,7 @@ function ChatView({ conversation, user, category, onBack }) {
       return [...new Set([...prev, ...allIds])];
     });
   };
-  return (
+       return (
     <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#f8f8f8]">
       {/* HEADER */}
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
@@ -884,7 +887,8 @@ function ChatView({ conversation, user, category, onBack }) {
               )}
             </button>
           ) : (
-            <button              onClick={() => setShowFileMenu((v) => !v)}
+            <button
+              onClick={() => setShowFileMenu((v) => !v)}
               disabled={uploading}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
             >
@@ -909,7 +913,7 @@ function ChatView({ conversation, user, category, onBack }) {
           }}
         />
 
-        {/* FILE MENU 3 lựa chọn */}
+        {/* FILE MENU */}
         {showFileMenu && (
           <>
             <div
@@ -1219,3 +1223,4 @@ function MessageBubble({
     </div>
   );
 }
+                                               
