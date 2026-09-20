@@ -44,25 +44,7 @@ export async function fetchPosts(cursor = null, limit = 10) {
 // =====================================================
 // GET MY REACTIONS (liked posts)
 // =====================================================
-export async function getMyReactions(postIds, userId) {
-  if (!postIds.length || !userId) {
-    return { liked: new Set() };
-  }
 
-  const { data, error } = await supabase
-    .from("post_likes")
-    .select("post_id")
-    .eq("user_id", userId)
-    .in("post_id", postIds);
-
-  if (error) {
-    console.error("getMyReactions error:", error);
-    return { liked: new Set() };
-  }
-
-  const liked = new Set((data || []).map((r) => r.post_id));
-  return { liked };
-}
 // =====================================================
 // CREATE POST
 // =====================================================
@@ -77,7 +59,36 @@ export async function createPost({ userId, content, imageUrl, category }) {
       status: "pending",
     })
     .select(
-      `
+      `export async function getMyReactions(postIds, userId) {
+  if (!postIds.length || !userId) {
+    return { liked: new Set(), saved: new Set() };
+  }
+
+  const [likesRes, savesRes] = await Promise.all([
+    supabase
+      .from("post_likes")
+      .select("post_id")
+      .eq("user_id", userId)
+      .in("post_id", postIds),
+    supabase
+      .from("post_saves")
+      .select("post_id")
+      .eq("user_id", userId)
+      .in("post_id", postIds),
+  ]);
+
+  if (likesRes.error) {
+    console.error("getMyReactions likes error:", likesRes.error);
+  }
+  if (savesRes.error) {
+    console.error("getMyReactions saves error:", savesRes.error);
+  }
+
+  const liked = new Set((likesRes.data || []).map((r) => r.post_id));
+  const saved = new Set((savesRes.data || []).map((r) => r.post_id));
+
+  return { liked, saved };
+}
       id,
       author_id,
       content,
