@@ -383,21 +383,23 @@ function BannerSlideshow({ navigate }) {
         >
           {BANNERS.map((banner, index) => {
   if (imageErrors[index]) return null;
-  if (index !== currentIndex) return null;  
 
   return (
     <img
       key={banner.image}
       src={getImageUrl(banner.image)}
       alt={`Banner ${index + 1}`}
-      className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                onError={() => {
-                  setImageErrors((prev) => ({ ...prev, [index]: true }));
-                }}
-              />
-            );
-          })}
-
+      loading={index === 0 ? "eager" : "lazy"}
+      className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out ${
+        index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+      }`}
+      onError={() => {
+        setImageErrors((prev) => ({ ...prev, [index]: true }));
+      }}
+    />
+  );
+})}
+                
           {BANNERS.length > 1 && (
             <button
               type="button"
