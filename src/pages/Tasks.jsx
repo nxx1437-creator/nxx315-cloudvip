@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -97,20 +97,38 @@ function getHistoryStatus(status) {
   const s = String(status || "").toLowerCase();
   switch (s) {
     case "pending":
-      return { label: "Đang chờ", cls: "bg-blue-50 text-blue-600 border-blue-100" };
+      return {
+        label: "Đang chờ",
+        cls: "bg-blue-50 text-blue-600 border-blue-100",
+      };
     case "completed":
     case "success":
     case "done":
     case "verified":
-      return { label: "Hoàn thành", cls: "bg-emerald-50 text-emerald-600 border-emerald-100" };
+      return {
+        label: "Hoàn thành",
+        cls: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      };
     case "expired":
-      return { label: "Hết hạn", cls: "bg-slate-100 text-slate-500 border-slate-200" };
+      return {
+        label: "Hết hạn",
+        cls: "bg-slate-100 text-slate-500 border-slate-200",
+      };
     case "cancelled":
-      return { label: "Đã hủy", cls: "bg-amber-50 text-amber-600 border-amber-100" };
+      return {
+        label: "Đã hủy",
+        cls: "bg-amber-50 text-amber-600 border-amber-100",
+      };
     case "failed":
-      return { label: "Thất bại", cls: "bg-rose-50 text-rose-600 border-rose-100" };
+      return {
+        label: "Thất bại",
+        cls: "bg-rose-50 text-rose-600 border-rose-100",
+      };
     default:
-      return { label: s || "—", cls: "bg-slate-100 text-slate-500 border-slate-200" };
+      return {
+        label: s || "—",
+        cls: "bg-slate-100 text-slate-500 border-slate-200",
+      };
   }
 }
 
@@ -172,78 +190,6 @@ function HistorySkeleton() {
     </div>
   );
 }
-function WarningModal({ open, onClose, onConfirm, taskName }) {
-  if (!open) return null;
-
-  const rules = [
-    "Làm đúng và đầy đủ các bước được yêu cầu trong nhiệm vụ.",
-    "Không đóng trang hoặc tải lại trang trong lúc đang thực hiện nhiệm vụ.",
-    "Không sử dụng VPN, Proxy hoặc các công cụ thay đổi IP.",
-    "Không mở nhiều tab để làm cùng một nhiệm vụ.",
-    "Sau khi hoàn thành, hãy chờ hệ thống xác nhận trước khi nhận Key.",
-    "Nếu chưa nhận được Key, không làm lại liên tục. Hãy chờ vài phút rồi thử lại.",
-    "Mỗi nhiệm vụ chỉ được tính khi hệ thống xác nhận hoàn thành thành công.",
-    "Nếu gặp lỗi, hãy chụp màn hình và liên hệ hỗ trợ để được kiểm tra.",
-  ];
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl">
-        {/* Header */}
-        <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-slate-900">
-              LƯU Ý KHI LÀM NHIỆM VỤ GET KEY
-            </h3>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Nhiệm vụ:{" "}
-              <span className="font-bold text-sky-600">{taskName}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Rules */}
-        <div className="mt-4 space-y-2.5 rounded-2xl bg-amber-50 p-4">
-          {rules.map((rule, idx) => (
-            <div key={idx} className="flex items-start gap-2">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
-                {idx + 1}
-              </span>
-              <p className="text-[13px] leading-5 text-amber-900">{rule}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Bonus */}
-        <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
-          <span className="text-lg">🎁</span>
-          <p className="text-sm font-bold text-emerald-700">
-            Hoàn thành nhận thêm +10 Xu thưởng!
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-full border-2 border-slate-200 bg-white py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 active:scale-[0.98]"
-          >
-            Để sau
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 active:scale-[0.98]"
-          >
-            Đã hiểu, bắt đầu
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 export default function Tasks() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -259,10 +205,6 @@ export default function Tasks() {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
-
-  // ✅ State cho modal cảnh báo link4m
-  const [showWarning, setShowWarning] = useState(false);
-  const [pendingTask, setPendingTask] = useState(null);
 
   // Reload khi quay lại tab
   useEffect(() => {
@@ -378,30 +320,11 @@ export default function Tasks() {
       return;
     }
 
-    // ✅ Nếu là link4m → hiện modal cảnh báo trước
-    const isLink4M = String(task.provider || "")
-      .toLowerCase()
-      .includes("link4m");
-    if (isLink4M) {
-      setPendingTask(task);
-      setShowWarning(true);
-      return;
-    }
-
-    // Task bình thường → chạy thẳng
+    // Gọi API trực tiếp, không qua modal
     await startTaskApi(task);
   };
 
-  const confirmStartTask = async () => {
-    setShowWarning(false);
-    if (!pendingTask) return;
-
-    const task = pendingTask;
-    setPendingTask(null);
-    await startTaskApi(task, true);
-  };
-
-  const startTaskApi = async (task, isLink4M = false) => {
+  const startTaskApi = async (task) => {
     setIsLoading(true);
     setStartingTaskId(task.id);
 
@@ -439,15 +362,9 @@ export default function Tasks() {
 
         window.open(data.shortUrl, "_blank");
 
-        if (isLink4M) {
-          showToast(
-            `Đã mở link ${task.provider}! Hoàn thành nhận thêm +10 Xu 🎁`
-          );
-        } else {
-          showToast(
-            `Đã mở link ${task.provider}! Làm xong quay lại để nhận thưởng.`
-          );
-        }
+        showToast(
+          `Đã mở link ${task.provider}! Làm xong quay lại để nhận thưởng.`
+        );
 
         setTimeout(() => {
           reload();
@@ -463,7 +380,7 @@ export default function Tasks() {
       setIsLoading(false);
     }
   };
-  return (
+    return (
   <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
     {toast && (
       <div
@@ -687,9 +604,6 @@ export default function Tasks() {
                   );
                   const isDone = task.remainingToday <= 0;
                   const isThisStarting = startingTaskId === task.id;
-                  const isLink4M = String(task.provider || "")
-                    .toLowerCase()
-                    .includes("link4m");
 
                   return (
                     <div
@@ -701,16 +615,9 @@ export default function Tasks() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <ProviderLogo task={task} />
-                            <div>
-                              <span className="block text-base font-bold text-slate-900">
-                                {task.provider}
-                              </span>
-                              {isLink4M && (
-                                <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
-                                  🎁 Bonus +10 xu
-                                </span>
-                              )}
-                            </div>
+                            <span className="block text-base font-bold text-slate-900">
+                              {task.provider}
+                            </span>
                           </div>
                           {task.is_hot && (
                             <span className="flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-500">
@@ -885,17 +792,6 @@ export default function Tasks() {
       </main>
 
       <BottomNav />
-
-      {/* ✅ Modal cảnh báo cho link4m */}
-      <WarningModal
-        open={showWarning}
-        taskName={pendingTask?.provider || ""}
-        onClose={() => {
-          setShowWarning(false);
-          setPendingTask(null);
-        }}
-        onConfirm={confirmStartTask}
-      />
     </div>
   );
-                }
+                        }
