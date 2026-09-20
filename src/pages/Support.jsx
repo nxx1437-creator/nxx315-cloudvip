@@ -336,65 +336,75 @@ export default function Support() {
     setSelectedCategory(category);
     setView("help");
   };
+const startAIChat = async (category, subCardTitle = null) => {
+  if (!user?.id) {
+    alert("Vui lòng đăng nhập để chat với AI.");
+    return;
+  }
 
-  const startAIChat = async (category, subCardTitle = null) => {
-    if (!user?.id) {
-      alert("Vui lòng đăng nhập để chat với AI.");
-      return;
-    }
+  try {
+    // 1. XÓA TẤT CẢ conversation cũ của user này
+    const { data: oldConvs } = await supabase
+      .from("support_conversations")
+      .select("id")
+      .eq("user_id", user.id);
 
-    try {
-      const { data: existing } = await supabase
+    if (oldConvs && oldConvs.length > 0) {
+      const oldIds = oldConvs.map((c) => c.id);
+
+      // Xóa messages cũ
+      await supabase
+        .from("support_messages")
+        .delete()
+        .in("conversation_id", oldIds);
+
+      // Xóa conversations cũ
+      await supabase
         .from("support_conversations")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "ai")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      let conv = existing;
-
-      if (!conv) {
-        const { data, error } = await supabase
-          .from("support_conversations")
-          .insert({
-            user_id: user.id,
-            title: subCardTitle
-              ? subCardTitle
-              : category
-              ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === category)?.label}`
-              : "Cuộc trò chuyện mới",
-            category,
-            status: "ai",
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        conv = data;
-
-        const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
-        const greeting = subPrompt?.greeting || getGreeting(category);
-        const suggestions = subPrompt?.suggestions || getSuggestions(category);
-
-        await supabase.from("support_messages").insert({
-          conversation_id: conv.id,
-          user_id: user.id,
-          message: greeting,
-          sender_type: "ai",
-          suggestions: suggestions,
-        });
-      }
-
-      setConversation(conv);
-      setView("chat");
-    } catch (error) {
-      console.error("Start chat error:", error);
-      alert("Không thể bắt đầu cuộc trò chuyện.");
+        .delete()
+        .in("id", oldIds);
     }
-  };
 
+    // 2. TẠO conversation MỚI
+    const { data: conv, error: convError } = await supabase
+      .from("support_conversations")
+      .insert({
+        user_id: user.id,
+        title: subCardTitle
+          ? subCardTitle
+          : category
+          ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === category)?.label}`
+          : "Cuộc trò chuyện mới",
+        category,
+        status: "ai",
+      })
+      .select()
+      .single();
+
+    if (convError) throw convError;
+
+    // 3. Lấy greeting + suggestions (sub-card ưu tiên)
+    const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
+    const greeting = subPrompt?.greeting || getGreeting(category);
+    const suggestions = subPrompt?.suggestions || getSuggestions(category);
+
+    // 4. Insert tin nhắn chào của AI
+    await supabase.from("support_messages").insert({
+      conversation_id: conv.id,
+      user_id: user.id,
+      message: greeting,
+      sender_type: "ai",
+      suggestions: suggestions,
+    });
+
+    // 5. Set state
+    setConversation(conv);
+    setView("chat");
+  } catch (error) {
+    console.error("Start chat error:", error);
+    alert("Không thể bắt đầu cuộc trò chuyện: " + error.message);
+  }
+};
   return (
     <div className="min-h-screen bg-white pb-24 text-slate-900">
       <TopHeader />
