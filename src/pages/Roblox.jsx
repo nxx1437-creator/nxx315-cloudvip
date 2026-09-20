@@ -1784,3 +1784,34 @@ function PaymentSection({ order, onBack, onPaid }) {
     </div>
   );
                         }
+function BankRow({ label, value, copy = false, copyValue }) {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard?.writeText(copyValue || value);
+      alert("Đã sao chép!");
+    } catch (error) {
+      console.error("Copy error:", error);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-gray-200 pb-2.5 last:border-0 last:pb-0">
+      <span className="text-xs text-gray-500">{label}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="break-all text-right text-sm font-semibold text-gray-900">
+          {value}
+        </span>
+        {(copy || copyValue) && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="shrink-0 rounded-md p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-blue-600"
+            title="Sao chép"
+          >
+            <Copy size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
