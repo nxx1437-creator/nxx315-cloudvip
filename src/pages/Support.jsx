@@ -210,8 +210,8 @@ export default function Support() {
       <BottomNav />
     </div>
   );
-  }
-    function HomeView({ onStartChat }) {
+}
+function HomeView({ onStartChat }) {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f8f8f8]">
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
@@ -295,7 +295,7 @@ export default function Support() {
       </div>
     </div>
   );
-    }
+}
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -434,7 +434,6 @@ function ChatView({ conversation, user, category, onBack }) {
     return () => supabase.removeChannel(channel);
   }, [conversation.id]);
 
-  // ✅ ĐÃ FIX: Nhận messageText thay vì đọc input
   const callAI = async (imageUrl, messageText) => {
     const {
       data: { session },
@@ -446,9 +445,7 @@ function ChatView({ conversation, user, category, onBack }) {
 
     const bodyPayload = {
       conversation_id: conv.id,
-      user_message: imageUrl
-        ? "Phân tích ảnh này giúp mình"
-        : messageText,
+      user_message: imageUrl ? "Phân tích ảnh này giúp mình" : messageText,
     };
     if (imageUrl) bodyPayload.image_url = imageUrl;
 
@@ -509,9 +506,10 @@ function ChatView({ conversation, user, category, onBack }) {
       scrollToBottom();
 
       if (conv.status === "ai") {
-        setAiTyping(true);
+        // ⏱ Delay 1.5s trước khi hiện typing indicator
+        const typingTimer = setTimeout(() => setAiTyping(true), 1500);
+
         try {
-          // ✅ ĐÃ FIX: Truyền content vào callAI
           const data = await callAI(null, content);
           console.log(
             `[Support AI] Provider: ${data.provider} (${data.model})`
@@ -540,6 +538,7 @@ function ChatView({ conversation, user, category, onBack }) {
             runTypewriter(errMsg);
           }
         } finally {
+          clearTimeout(typingTimer);
           setAiTyping(false);
         }
       }
@@ -606,9 +605,9 @@ function ChatView({ conversation, user, category, onBack }) {
       scrollToBottom();
 
       if (conv.status === "ai") {
-        setAiTyping(true);
+        const typingTimer = setTimeout(() => setAiTyping(true), 1500);
+
         try {
-          // ✅ ĐÃ FIX: Truyền null cho messageText (vì có ảnh)
           const data = await callAI(publicUrl, null);
           console.log(
             `[Support AI - image] Provider: ${data.provider} (${data.model})`
@@ -637,6 +636,7 @@ function ChatView({ conversation, user, category, onBack }) {
             runTypewriter(errMsg);
           }
         } finally {
+          clearTimeout(typingTimer);
           setAiTyping(false);
         }
       }
@@ -656,7 +656,7 @@ function ChatView({ conversation, user, category, onBack }) {
       return [...new Set([...prev, ...allIds])];
     });
   };
-       return (
+      return (
     <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#f8f8f8]">
       {/* HEADER */}
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
@@ -811,31 +811,35 @@ function ChatView({ conversation, user, category, onBack }) {
               );
             })}
 
+            {/* Typing indicator — chỉ 3 dấu chấm */}
             {aiTyping &&
-  !streamingMsgId &&
-  !messages.some((m) => m.sender_type === "status") && (
-    <div className="flex items-start gap-2">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
-        <Bot size={14} className="text-white" strokeWidth={2.3} />
+              !streamingMsgId &&
+              !messages.some((m) => m.sender_type === "status") && (
+                <div className="flex items-start gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
+                    <Bot size={14} className="text-white" strokeWidth={2.3} />
+                  </div>
+                  <div className="rounded-[18px] rounded-tl-[5px] border border-black/[0.05] bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+                    <div className="flex gap-1">
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                        style={{ animationDelay: "0ms" }}
+                      />
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                        style={{ animationDelay: "150ms" }}
+                      />
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                        style={{ animationDelay: "300ms" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+          </>
+        )}
       </div>
-      <div className="rounded-[18px] rounded-tl-[5px] border border-black/[0.05] bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-        <div className="flex gap-1">
-          <span
-            className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-            style={{ animationDelay: "0ms" }}
-          />
-          <span
-            className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-            style={{ animationDelay: "150ms" }}
-          />
-          <span
-            className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-            style={{ animationDelay: "300ms" }}
-          />
-        </div>
-      </div>
-    </div>
-  )}
 
       {/* Nút Zalo */}
       <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
@@ -1180,7 +1184,7 @@ function MessageBubble({
           </div>
         )}
 
-        {hasSuggestions && (
+            {hasSuggestions && (
           <div className="mt-3 space-y-2">
             {message.suggestions.map((reply, idx) => (
               <button
@@ -1215,4 +1219,3 @@ function MessageBubble({
     </div>
   );
 }
-                                               
