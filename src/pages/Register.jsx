@@ -3,17 +3,19 @@ import { useNavigate, Link } from "react-router-dom";
 import { Loader2, AlertTriangle } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
-import { supabase, getClientIp, logFraudEvent } from "../lib/supabaseClient.js";
+import { supabase, getClientIp } from "../lib/supabaseClient.js";
 
 export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [duplicateIpWarning, setDuplicateIpWarning] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(false);
+  const [existingCount, setExistingCount] = useState(0);
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
       return;
@@ -22,6 +24,7 @@ export default function Register() {
       setError("Mật khẩu phải có ít nhất 6 ký tự.");
       return;
     }
+
     setError("");
     setLoading(true);
 
@@ -30,26 +33,22 @@ export default function Register() {
       const ip = await getClientIp();
 
       // ✅ BƯỚC 2: Check IP đã đăng ký chưa
-      if (ip) {
+      if (ip && !duplicateWarning) {
         const { data: checkResult } = await supabase.rpc(
           "check_registration_ip",
           { p_ip: ip }
         );
 
         if (checkResult?.already_registered) {
-          // Cảnh báo lần 1 — user cần bấm "Đăng ký" lần 2 để xác nhận
-          if (!duplicateIpWarning) {
-            setDuplicateIpWarning(true);
-            setError(
-              `⚠️ IP của bạn đã được dùng để đăng ký ${checkResult.count} tài khoản khác.\n\n` +
+          setDuplicateWarning(true);
+          setExistingCount(checkResult.count || 0);
+          setError(
+            `IP của bạn đã được dùng để đăng ký ${checkResult.count} tài khoản khác.\n\n` +
               `Mỗi người chỉ được phép có 1 tài khoản duy nhất. ` +
-              `Nếu bạn tiếp tục, tài khoản có thể bị đánh dấu và xem xét.\n\n` +
-              `Bấm "Đăng ký" lần nữa nếu bạn chắc chắn muốn tiếp tục.`
-            );
-            setLoading(false);
-            return;
-          }
-          // Đã cảnh báo 1 lần → cho phép tiếp tục
+              `Nếu bạn tiếp tục, tài khoản có thể bị đánh dấu và xem xét.`
+          );
+          setLoading(false);
+          return;
         }
       }
 
@@ -68,21 +67,22 @@ export default function Register() {
         return;
       }
 
-      // ✅ BƯỚC 4: Ghi IP qua Edge Function
-if (data.user && ip) {
-  try {
-    await supabase.functions.invoke("log-registration-ip", {
-      body: {
-        ip,
-        user_id: data.user.id,
-        email: form.email,
-      },
-    });
-  } catch (ipErr) {
-    console.error("[register] failed to log IP:", ipErr);
-    // Không throw — vẫn cho user đăng ký
-  }
-}
+      // ✅ BƯỚC 4: Ghi IP qua Edge Function (bypass RLS)
+      if (data.user && ip) {
+        try {
+          await supabase.functions.invoke("log-registration-ip", {
+            body: {
+              ip,
+              user_id: data.user.id,
+              email: form.email,
+            },
+          });
+        } catch (ipErr) {
+          console.error("[register] failed to log IP:", ipErr);
+          // Không throw — vẫn cho user đăng ký
+        }
+      }
+
       if (data.user) {
         navigate("/verify-email", { state: { email: form.email } });
       }
@@ -140,13 +140,13 @@ if (data.user && ip) {
         {error && (
           <div
             className={`rounded-2xl px-4 py-3 text-xs font-medium whitespace-pre-line ${
-              duplicateIpWarning
+              duplicateWarning
                 ? "bg-amber-50 text-amber-700 border border-amber-200"
                 : "bg-rose-50 text-rose-600"
             }`}
           >
-            {duplicateIpWarning && (
-              <div className="mb-1 flex items-center gap-1.5 font-bold">
+            {duplicateWarning && (
+              <div className="mb-1.5 flex items-center gap-1.5 font-bold">
                 <AlertTriangle size={14} />
                 Cảnh báo đa tài khoản
               </div>
@@ -158,14 +158,18 @@ if (data.user && ip) {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
+          className={`flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold text-white transition active:scale-[0.99] disabled:opacity-60 ${
+            duplicateWarning
+              ? "bg-amber-600 hover:bg-amber-700"
+              : "bg-slate-900 hover:bg-slate-800"
+          }`}
         >
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Đang tạo tài khoản...
             </>
-          ) : duplicateIpWarning ? (
+          ) : duplicateWarning ? (
             "Xác nhận đăng ký"
           ) : (
             "Đăng ký"
@@ -195,4 +199,4 @@ if (data.user && ip) {
       </p>
     </AuthShell>
   );
-                }
+}
