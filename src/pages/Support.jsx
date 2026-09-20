@@ -52,6 +52,7 @@ const CATEGORIES = [
   { id: "bug", label: "Báo lỗi", icon: Bug, color: "#8B5CF6" },
   { id: "other", label: "Khác", icon: MoreHorizontal, color: "#6B7280" },
 ];
+
 function formatTime(value) {
   if (!value) return "";
   return new Date(value).toLocaleTimeString("vi-VN", {
@@ -315,7 +316,6 @@ function ChatView({ conversation, user, category, onBack }) {
   const sentIds = useRef(new Set());
   const fileInputRef = useRef(null);
 
-  // ✅ Smooth scroll với animation
   const scrollToBottom = (smooth = false) => {
     requestAnimationFrame(() => {
       if (scrollRef.current) {
@@ -327,7 +327,6 @@ function ChatView({ conversation, user, category, onBack }) {
     });
   };
 
-  // ✅ Auto scroll mỗi khi messages thay đổi (có tin mới)
   useEffect(() => {
     if (!loading && messages.length > 0) {
       scrollToBottom(true);
@@ -477,9 +476,7 @@ function ChatView({ conversation, user, category, onBack }) {
       let errData = {};
       try {
         errData = await response.json();
-      } catch (_) {
-        // ignore
-      }
+      } catch (_) {}
       throw new Error(errData?.error || `AI trả về lỗi ${response.status}`);
     }
 
@@ -666,264 +663,263 @@ function ChatView({ conversation, user, category, onBack }) {
       return [...new Set([...prev, ...allIds])];
     });
   };
-    return (
-    <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#f8f8f8]">
-      {/* HEADER */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
-        <button
-          onClick={onBack}
-          className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-900"
-        >
-          <ArrowLeft size={22} strokeWidth={2.2} />
-        </button>
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
-            <Bot size={16} className="text-white" strokeWidth={2.3} />
-          </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-[15px] font-extrabold tracking-[-0.02em] text-[#161823]">
-              Hỗ trợ NXX315
-            </h1>
-            <p className="text-[10px] font-medium text-[#8a8d93]">
-              Trợ lý AI • Luôn sẵn sàng
+  return (
+  <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#f8f8f8]">
+    {/* HEADER */}
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
+      <button
+        onClick={onBack}
+        className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-900"
+      >
+        <ArrowLeft size={22} strokeWidth={2.2} />
+      </button>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
+          <Bot size={16} className="text-white" strokeWidth={2.3} />
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-[15px] font-extrabold tracking-[-0.02em] text-[#161823]">
+            Hỗ trợ NXX315
+          </h1>
+          <p className="text-[10px] font-medium text-[#8a8d93]">
+            Trợ lý AI • Luôn sẵn sàng
+          </p>
+        </div>
+      </div>
+      <a
+        href={SUPPORT.zaloUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
+        title="Gặp nhân viên qua Zalo"
+      >
+        <Headphones size={20} strokeWidth={2.2} />
+      </a>
+      <button
+        onClick={() => setShowHistoryMenu((v) => !v)}
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-900 transition hover:bg-slate-50"
+      >
+        <MoreHorizontal size={20} strokeWidth={2.2} />
+        {hiddenSuggestionIds.length > 0 && (
+          <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500" />
+        )}
+      </button>
+    </div>
+
+    {/* HISTORY MENU */}
+    {showHistoryMenu && (
+      <>
+        <div
+          className="fixed inset-0 z-30"
+          onClick={() => setShowHistoryMenu(false)}
+        />
+        <div className="absolute right-3 top-14 z-40 w-72 overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.12)]">
+          <div className="border-b border-slate-100 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+              Đề xuất đã ẩn
+            </p>
+            <p className="mt-0.5 text-[10px] text-slate-400">
+              {hiddenSuggestionIds.length} tin nhắn có suggestions đã ẩn
             </p>
           </div>
-        </div>
-        <a
-          href={SUPPORT.zaloUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
-          title="Gặp nhân viên qua Zalo"
-        >
-          <Headphones size={20} strokeWidth={2.2} />
-        </a>
-        <button
-          onClick={() => setShowHistoryMenu((v) => !v)}
-          className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-900 transition hover:bg-slate-50"
-        >
-          <MoreHorizontal size={20} strokeWidth={2.2} />
-          {hiddenSuggestionIds.length > 0 && (
-            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500" />
-          )}
-        </button>
-      </div>
 
-      {/* HISTORY MENU */}
-      {showHistoryMenu && (
-        <>
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() => setShowHistoryMenu(false)}
-          />
-          <div className="absolute right-3 top-14 z-40 w-72 overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.12)]">
-            <div className="border-b border-slate-100 px-4 py-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                Đề xuất đã ẩn
-              </p>
-              <p className="mt-0.5 text-[10px] text-slate-400">
-                {hiddenSuggestionIds.length} tin nhắn có suggestions đã ẩn
-              </p>
-            </div>
-
-            <div className="max-h-80 overflow-y-auto">
-              {hiddenSuggestionIds.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-slate-400">
-                  Chưa có suggestions nào bị ẩn
-                </div>
-              ) : (
-                hiddenSuggestionIds.map((msgId) => {
-                  const msg = messages.find((m) => m.id === msgId);
-                  if (!msg) return null;
-                  return (
-                    <button
-                      key={msgId}
-                      onClick={() => {
-                        setHiddenSuggestionIds((prev) =>
-                          prev.filter((id) => id !== msgId)
-                        );
-                        setShowHistoryMenu(false);
-                        scrollToBottom(true);
-                      }}
-                      className="flex w-full items-center justify-between gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 hover:bg-slate-50"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-slate-700">
-                          {msg.message.slice(0, 50)}
-                          {msg.message.length > 50 ? "..." : ""}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-slate-400">
-                          {msg.suggestions?.length || 0} đề xuất
-                        </p>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400" />
-                    </button>
-                  );
-                })
-              )}
-            </div>
-
-            {hiddenSuggestionIds.length > 0 && (
-              <div className="border-t border-slate-100 p-2">
-                <button
-                  onClick={() => {
-                    setHiddenSuggestionIds([]);
-                    setShowHistoryMenu(false);
-                    scrollToBottom(true);
-                  }}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
-                >
-                  <RefreshCw size={12} />
-                  Hiện lại tất cả
-                </button>
+          <div className="max-h-80 overflow-y-auto">
+            {hiddenSuggestionIds.length === 0 ? (
+              <div className="px-4 py-6 text-center text-xs text-slate-400">
+                Chưa có suggestions nào bị ẩn
               </div>
+            ) : (
+              hiddenSuggestionIds.map((msgId) => {
+                const msg = messages.find((m) => m.id === msgId);
+                if (!msg) return null;
+                return (
+                  <button
+                    key={msgId}
+                    onClick={() => {
+                      setHiddenSuggestionIds((prev) =>
+                        prev.filter((id) => id !== msgId)
+                      );
+                      setShowHistoryMenu(false);
+                      scrollToBottom(true);
+                    }}
+                    className="flex w-full items-center justify-between gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 hover:bg-slate-50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium text-slate-700">
+                        {msg.message.slice(0, 50)}
+                        {msg.message.length > 50 ? "..." : ""}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-slate-400">
+                        {msg.suggestions?.length || 0} đề xuất
+                      </p>
+                    </div>
+                    <ArrowRight size={14} className="text-slate-400" />
+                  </button>
+                );
+              })
             )}
           </div>
-        </>
-      )}
 
-      {/* MESSAGES */}
-      <div
-        ref={scrollRef}
-        className="flex-1 space-y-3 overflow-y-auto px-3.5 py-4 sm:px-4"
-        style={{
-          scrollBehavior: "smooth",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 size={20} className="animate-spin text-slate-300" />
-          </div>
-        ) : (
-          <>
-            {messages.map((msg, idx) => {
-              if (msg.sender_type === "status") {
-                return <StatusBubble key={msg.id} message={msg} />;
-              }
+          {hiddenSuggestionIds.length > 0 && (
+            <div className="border-t border-slate-100 p-2">
+              <button
+                onClick={() => {
+                  setHiddenSuggestionIds([]);
+                  setShowHistoryMenu(false);
+                  scrollToBottom(true);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
+              >
+                <RefreshCw size={12} />
+                Hiện lại tất cả
+              </button>
+            </div>
+          )}
+        </div>
+      </>
+    )}
 
-              const isLastAIMessage =
-                idx === messages.length - 1 &&
-                msg.sender_type === "ai" &&
-                !streamingMsgId &&
-                !aiTyping;
+    {/* MESSAGES */}
+    <div
+      ref={scrollRef}
+      className="flex-1 space-y-3 overflow-y-auto px-3.5 py-4 sm:px-4"
+      style={{
+        scrollBehavior: "smooth",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {loading ? (
+        <div className="flex h-full items-center justify-center">
+          <Loader2 size={20} className="animate-spin text-slate-300" />
+        </div>
+      ) : (
+        <>
+          {messages.map((msg, idx) => {
+            if (msg.sender_type === "status") {
+              return <StatusBubble key={msg.id} message={msg} />;
+            }
 
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  streamingText={
-                    streamingMsgId === msg.id ? streamingText : null
-                  }
-                  isLastAIMessage={isLastAIMessage}
-                  onSuggestionClick={sendMessage}
-                  sending={sending}
-                  onShowLogin={() => navigate("/login")}
-                  hiddenSuggestionIds={hiddenSuggestionIds}
-                  onHideSuggestions={hideAllSuggestions}
-                />
-              );
-            })}
-
-            {/* Typing indicator — 3 dấu chấm */}
-            {aiTyping &&
+            const isLastAIMessage =
+              idx === messages.length - 1 &&
+              msg.sender_type === "ai" &&
               !streamingMsgId &&
-              !messages.some((m) => m.sender_type === "status") && (
-                <div className="flex items-start gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
-                    <Bot size={14} className="text-white" strokeWidth={2.3} />
-                  </div>
-                  <div className="rounded-[18px] rounded-tl-[5px] border border-black/[0.05] bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-                    <div className="flex gap-1">
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                        style={{ animationDelay: "0ms" }}
-                      />
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                        style={{ animationDelay: "150ms" }}
-                      />
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                        style={{ animationDelay: "300ms" }}
-                      />
-                    </div>
+              !aiTyping;
+
+            return (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                streamingText={
+                  streamingMsgId === msg.id ? streamingText : null
+                }
+                isLastAIMessage={isLastAIMessage}
+                onSuggestionClick={sendMessage}
+                sending={sending}
+                onShowLogin={() => navigate("/login")}
+                hiddenSuggestionIds={hiddenSuggestionIds}
+                onHideSuggestions={hideAllSuggestions}
+              />
+            );
+          })}
+
+          {aiTyping &&
+            !streamingMsgId &&
+            !messages.some((m) => m.sender_type === "status") && (
+              <div className="flex items-start gap-2">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE] shadow-sm">
+                  <Bot size={14} className="text-white" strokeWidth={2.3} />
+                </div>
+                <div className="rounded-[18px] rounded-tl-[5px] border border-black/[0.05] bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+                  <div className="flex gap-1">
+                    <span
+                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <span
+                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span
+                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </div>
-              )}
-          </>
+              </div>
+            )}
+        </>
+      )}
+    </div>
+
+    {/* Nút Zalo */}
+    <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
+      <a
+        href={SUPPORT.zaloUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-[#0068FF]/30 bg-[#0068FF]/[0.05] px-4 py-2.5 text-[13px] font-semibold text-[#0068FF] transition hover:bg-[#0068FF]/[0.10] active:scale-[0.99]"
+      >
+        <Headphones size={16} strokeWidth={2.4} />
+        Cần gặp nhân viên? Chat qua Zalo
+      </a>
+    </div>
+
+    {/* INPUT */}
+    <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
+      <div className="flex items-center gap-2">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
+          placeholder="Gửi tin nhắn..."
+          className="h-11 flex-1 rounded-[18px] border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
+        />
+
+        {input.trim() ? (
+          <button
+            onClick={() => sendMessage()}
+            disabled={sending}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FE2C55] text-white shadow-[0_4px_12px_rgba(254,44,85,0.2)] transition active:scale-95 disabled:opacity-40"
+          >
+            {sending ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Send size={18} strokeWidth={2.4} />
+            )}
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowFileMenu((v) => !v)}
+            disabled={uploading}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
+          >
+            {uploading ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Plus size={20} strokeWidth={2.4} />
+            )}
+          </button>
         )}
       </div>
 
-      {/* Nút Zalo */}
-      <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
-        <a
-          href={SUPPORT.zaloUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-[#0068FF]/30 bg-[#0068FF]/[0.05] px-4 py-2.5 text-[13px] font-semibold text-[#0068FF] transition hover:bg-[#0068FF]/[0.10] active:scale-[0.99]"
-        >
-          <Headphones size={16} strokeWidth={2.4} />
-          Cần gặp nhân viên? Chat qua Zalo
-        </a>
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileSelect(file);
+          e.target.value = "";
+        }}
+      />
 
-      {/* INPUT */}
-      <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
-        <div className="flex items-center gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder="Gửi tin nhắn..."
-            className="h-11 flex-1 rounded-[18px] border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
-          />
-
-          {input.trim() ? (
-            <button
-              onClick={() => sendMessage()}
-              disabled={sending}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FE2C55] text-white shadow-[0_4px_12px_rgba(254,44,85,0.2)] transition active:scale-95 disabled:opacity-40"
-            >
-              {sending ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Send size={18} strokeWidth={2.4} />
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowFileMenu((v) => !v)}
-              disabled={uploading}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
-            >
-              {uploading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Plus size={20} strokeWidth={2.4} />
-              )}
-            </button>
-          )}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFileSelect(file);
-            e.target.value = "";
-          }}
-        />
-
-        {/* FILE MENU */}
+     {/* FILE MENU */}
         {showFileMenu && (
           <>
             <div
@@ -1019,7 +1015,6 @@ function ChatView({ conversation, user, category, onBack }) {
     </div>
   );
 }
-
 function StatusBubble({ message }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -1067,6 +1062,7 @@ function MessageBubble({
   hiddenSuggestionIds = [],
   onHideSuggestions,
 }) {
+  const navigate = useNavigate();
   const [feedback, setFeedback] = useState(null);
 
   const isUser = message.sender_type === "user";
@@ -1117,6 +1113,11 @@ function MessageBubble({
     !isStreaming &&
     !isSuggestionHidden;
 
+  const hasActions =
+    message.actions &&
+    Array.isArray(message.actions) &&
+    message.actions.length > 0;
+
   const showLoginButton =
     isLastAIMessage &&
     !isStreaming &&
@@ -1128,6 +1129,17 @@ function MessageBubble({
       onHideSuggestions();
     }
     onSuggestionClick(reply);
+  };
+
+  const handleActionClick = (action) => {
+    if (!action?.path) return;
+
+    if (action.path.startsWith("http")) {
+      window.open(action.path, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    navigate(action.path);
   };
 
   return (
@@ -1191,13 +1203,36 @@ function MessageBubble({
                   }`}
                   title="Không hữu ích"
                 >
-                    <ThumbsDown size={13} strokeWidth={2.2} />
+                  <ThumbsDown size={13} strokeWidth={2.2} />
                 </button>
               </div>
             )}
           </div>
         )}
 
+        {/* ACTIONS — Nút hành động từ AI */}
+        {hasActions && !isStreaming && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {message.actions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleActionClick(action)}
+                className="group flex items-center justify-between gap-2 rounded-[14px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] hover:to-[#FE2C55]/[0.04] active:scale-[0.97]"
+              >
+                <span className="line-clamp-2 text-[12.5px] font-bold leading-tight text-[#161823]">
+                  {action.label}
+                </span>
+                <ArrowRight
+                  size={14}
+                  className="shrink-0 text-[#FE2C55] transition group-hover:translate-x-0.5"
+                  strokeWidth={2.6}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* SUGGESTIONS */}
         {hasSuggestions && (
           <div className="mt-3 space-y-2">
             {message.suggestions.map((reply, idx) => (
@@ -1233,3 +1268,4 @@ function MessageBubble({
     </div>
   );
 }
+          
