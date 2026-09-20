@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Search,
   ChevronDown,
   ChevronRight,
   History as HistoryIcon,
@@ -19,7 +18,8 @@ import {
   Gamepad2,
   ArrowRight,
   Lightbulb,
-  X,
+  Package,
+  CreditCard,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -34,9 +34,8 @@ const STORAGE_BUCKET = "game_logos";
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
-// Ảnh cần upload:
-const HELP_AVATAR = "help-avatar.png";   // 400x400
-const HELP_BANNER = "help-banner1.png";  // 1200x400 (đã đổi tên)
+const HELP_AVATAR = "help-avatar.png";
+const HELP_BANNER = "help-banner1.png";
 
 // =====================================================
 // FAQ DATA
@@ -137,49 +136,55 @@ const faqData = [
 ];
 
 // =====================================================
-// TOPIC CATEGORIES (6 mới)
+// TOPIC CATEGORIES (mới — phù hợp web nạp game)
 // =====================================================
 const TOPIC_CATEGORIES = [
   {
-    id: "start",
-    icon: PlayCircle,
-    title: "Mới bắt đầu",
+    id: "nap-game",
+    icon: Gamepad2,
+    title: "Nạp game",
+    subtitle: "Roblox, Liên Quân, PUBG...",
     color: "#FE2C55",
-    link: "/help",
+    link: "/store",
   },
   {
-    id: "promo",
-    icon: Percent,
-    title: "Ưu đãi và Quà của tôi",
-    color: "#8B5CF6",
-    link: "/tasks",
+    id: "don-hang",
+    icon: Package,
+    title: "Đơn hàng",
+    subtitle: "Tra cứu, theo dõi đơn",
+    color: "#0EA5E9",
+    link: "/history",
   },
   {
-    id: "bank",
-    icon: Landmark,
-    title: "Ngân hàng và Nguồn tiền",
+    id: "thanh-toan",
+    icon: CreditCard,
+    title: "Thanh toán",
+    subtitle: "Ví, nạp tiền, hoàn tiền",
     color: "#10B981",
     link: "/wallet",
   },
   {
-    id: "payment",
-    icon: DollarSign,
-    title: "Thanh toán dịch vụ",
-    color: "#FFB800",
-    link: "/history",
+    id: "nhiem-vu",
+    icon: Coins,
+    title: "Nhiệm vụ",
+    subtitle: "Kiếm xu, đổi thưởng",
+    color: "#F59E0B",
+    link: "/tasks",
   },
   {
-    id: "games",
-    icon: Gamepad2,
-    title: "Trò chơi",
-    color: "#F43F5E",
-    link: "/store",
+    id: "tai-khoan",
+    icon: User,
+    title: "Tài khoản",
+    subtitle: "Thông tin, bảo mật",
+    color: "#8B5CF6",
+    link: "/profile",
   },
   {
-    id: "security",
+    id: "ho-tro",
     icon: Shield,
-    title: "Tài khoản và bảo mật",
-    color: "#0EA5E9",
+    title: "Hỗ trợ",
+    subtitle: "Gặp nhân viên, báo lỗi",
+    color: "#EF4444",
     link: "/support",
   },
 ];
@@ -217,7 +222,10 @@ function getHistoryStatus(status) {
 
 function getHistoryAmount(order) {
   const money =
-    order?.price_vnd ?? order?.amount_vnd ?? order?.amount ?? order?.amount_money;
+    order?.price_vnd ??
+    order?.amount_vnd ??
+    order?.amount ??
+    order?.amount_money;
   if (money != null) return `${Number(money).toLocaleString("vi-VN")}đ`;
   return "—";
 }
@@ -227,13 +235,15 @@ function getHistoryLogo(order) {
   if (packageId.includes("roblox")) return getImageUrl("roblox.png");
   if (packageId.includes("pubg")) return getImageUrl("pubg-mobile-vn.png");
   if (packageId.includes("freefire")) return getImageUrl("free-fire.png");
-  if (packageId.includes("lienquan")) return getImageUrl("lien-quan-mobile.png");
-  if (packageId.includes("playtogether")) return getImageUrl("play-together-vng.png");
+  if (packageId.includes("lienquan"))
+    return getImageUrl("lien-quan-mobile.png");
+  if (packageId.includes("playtogether"))
+    return getImageUrl("play-together-vng.png");
   if (packageId.includes("fcmobile")) return getImageUrl("fc-mobile.png");
   if (packageId.includes("valorant")) return getImageUrl("valorant.png");
   return getImageUrl("store-cute.png");
-        }
-export default function HelpCenter() {
+}
+  export default function HelpCenter() {
   const navigate = useNavigate();
   const [openId, setOpenId] = useState(null);
   const [showAllFaq, setShowAllFaq] = useState(false);
@@ -245,7 +255,6 @@ export default function HelpCenter() {
     setOpenId(openId === id ? null : id);
   };
 
-  // Load 3 giao dịch gần nhất
   useEffect(() => {
     let alive = true;
 
@@ -284,19 +293,16 @@ export default function HelpCenter() {
     };
   }, []);
 
-  // FAQ visible
   const visibleFaq = showAllFaq ? faqData : faqData.slice(0, 3);
   const hasMoreFaq = faqData.length > 3;
 
   return (
     <div className="min-h-screen bg-[#fafafa] pb-24 text-slate-900">
-      {/* TopHeader chung */}
       <TopHeader />
       {/* ============================================== */}
-{/* HERO — gọn, cao ~100px */}
+{/* HERO */}
 {/* ============================================== */}
 <div className="relative overflow-hidden">
-  {/* Background gradient nhẹ + banner mờ */}
   <div
     className="absolute inset-0 z-0 bg-gradient-to-br from-pink-50 via-rose-50 to-white"
     style={{
@@ -320,7 +326,6 @@ export default function HelpCenter() {
       </p>
     </div>
 
-    {/* Avatar */}
     <div className="relative h-16 w-16 shrink-0">
       {!avatarError ? (
         <img
@@ -342,32 +347,32 @@ export default function HelpCenter() {
 </div>
 
 {/* ============================================== */}
-{/* CARD CHAT — gọn, không full width */}
+{/* CHAT CARD (mới — sạch, border đỏ) */}
 {/* ============================================== */}
 <div className="px-4 pt-4">
   <div className="mx-auto max-w-3xl">
     <Link
       to="/support"
-      className="flex items-center gap-3 rounded-[18px] border border-[#FE2C55]/15 bg-gradient-to-r from-[#FE2C55] to-[#ff4d79] p-4 shadow-[0_6px_20px_rgba(254,44,85,0.25)] transition active:scale-[0.98]"
+      className="flex items-center gap-3 rounded-[14px] border-2 border-[#FE2C55] bg-white p-4 transition hover:bg-[#FE2C55]/[0.04] active:scale-[0.98]"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-        <MessageCircle size={22} className="text-white" strokeWidth={2.4} />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FE2C55]">
+        <MessageCircle size={20} className="text-white" strokeWidth={2.4} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-black text-white">
+        <p className="text-[14px] font-bold text-slate-900">
           Chat với NXX315 Studio
         </p>
-        <p className="text-[11px] text-white/90">
-          Trợ lý AI hỗ trợ 24/7
+        <p className="text-[11px] text-slate-500">
+          Hỗ trợ trực tuyến 24/7
         </p>
       </div>
-      <ArrowRight size={18} className="text-white" strokeWidth={2.6} />
+      <ArrowRight size={18} className="text-[#FE2C55]" strokeWidth={2.6} />
     </Link>
   </div>
 </div>
 
 {/* ============================================== */}
-{/* SECTION: GIAO DỊCH */}
+{/* GIAO DỊCH */}
 {/* ============================================== */}
 {recentOrders.length > 0 && (
   <section className="pt-6">
@@ -400,7 +405,8 @@ export default function HelpCenter() {
                     alt=""
                     className="h-full w-full object-contain"
                     onError={(e) => {
-                      e.currentTarget.src = getImageUrl("store-cute.png");
+                      e.currentTarget.src =
+                        getImageUrl("store-cute.png");
                     }}
                   />
                 </div>
@@ -434,58 +440,67 @@ export default function HelpCenter() {
     </div>
   </section>
 )}
-         {/* ============================================== */}
-      {/* SECTION: CHỦ ĐỀ */}
-      {/* ============================================== */}
-      <section className="pt-6">
-        <div className="mx-auto max-w-3xl px-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[16px] font-black text-[#161823]">
-              Trợ giúp theo chủ đề
-            </h3>
-            <button
-              onClick={() => {
-                const el = document.getElementById("faq-list");
-                if (el)
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="text-[12px] font-bold text-[#FE2C55]"
+
+{/* ============================================== */}
+{/* CHỦ ĐỀ (mới — 2 cột, border trái, có subtitle) */}
+{/* ============================================== */}
+<section className="pt-6">
+  <div className="mx-auto max-w-3xl px-4">
+    <div className="mb-3 flex items-center justify-between">
+      <h3 className="text-[16px] font-black text-[#161823]">
+        Trợ giúp theo chủ đề
+      </h3>
+      <button
+        onClick={() => {
+          const el = document.getElementById("faq-list");
+          if (el)
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className="text-[12px] font-bold text-[#FE2C55]"
+      >
+        Xem tất cả
+      </button>
+    </div>
+
+    <div className="grid grid-cols-2 gap-3">
+      {TOPIC_CATEGORIES.map((cat) => {
+        const Icon = cat.icon;
+        return (
+          <Link
+            key={cat.id}
+            to={cat.link}
+            className="group flex items-center gap-3 rounded-[14px] border border-black/[0.06] bg-white p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:border-black/[0.10] hover:shadow-[0_4px_14px_rgba(0,0,0,0.06)] active:scale-[0.98]"
+            style={{
+              borderLeftWidth: "4px",
+              borderLeftColor: cat.color,
+            }}
+          >
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              style={{ backgroundColor: `${cat.color}10` }}
             >
-              Xem tất cả
-            </button>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            {TOPIC_CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Link
-                  key={cat.id}
-                  to={cat.link}
-                  className="flex flex-col items-center gap-2 rounded-[16px] border border-black/[0.05] bg-white p-3 text-center shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:scale-[0.97]"
-                >
-                  <div
-                    className="flex h-11 w-11 items-center justify-center rounded-full"
-                    style={{ backgroundColor: `${cat.color}15` }}
-                  >
-                    <Icon
-                      size={20}
-                      style={{ color: cat.color }}
-                      strokeWidth={2.2}
-                    />
-                  </div>
-                  <p className="text-[10.5px] font-bold leading-tight text-slate-800">
-                    {cat.title}
-                  </p>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================== */}
-      {/* SECTION: FAQ */}
+              <Icon
+                size={20}
+                style={{ color: cat.color }}
+                strokeWidth={2.2}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-bold leading-tight text-slate-900">
+                {cat.title}
+              </p>
+              <p className="mt-0.5 truncate text-[10.5px] leading-tight text-slate-500">
+                {cat.subtitle}
+              </p>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  </div>
+</section>
+          {/* ============================================== */}
+      {/* FAQ */}
       {/* ============================================== */}
       <section id="faq-list" className="pt-6">
         <div className="mx-auto max-w-3xl px-4">
@@ -559,9 +574,9 @@ export default function HelpCenter() {
       </section>
 
       {/* ============================================== */}
-      {/* CTA: GÓP Ý */}
+      {/* CTA GÓP Ý */}
       {/* ============================================== */}
-      <section className="px-4 pt-6 pb-4">
+      <section className="px-4 pt-6 pb-28">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-start gap-3.5 rounded-[16px] border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-4 shadow-[0_2px_8px_rgba(14,165,233,0.06)]">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-md">
@@ -603,4 +618,4 @@ export default function HelpCenter() {
       `}</style>
     </div>
   );
-  }
+  }  
