@@ -6,16 +6,12 @@ import {
   Loader2,
   Bot,
   Headphones,
-  Mail,
-  CheckCheck,
   Smile,
-  X,
   User,
   CreditCard,
   Package,
   Bug,
   MoreHorizontal,
-  Ticket,
   ChevronRight,
   Plus,
   FileText,
@@ -53,25 +49,6 @@ const CATEGORIES = [
   { id: "other", label: "Khác", icon: MoreHorizontal, color: "#6B7280" },
 ];
 
-function formatTime(value) {
-  if (!value) return "";
-  return new Date(value).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatDate(value) {
-  if (!value) return "";
-  return new Date(value).toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function getGreeting(category) {
   const cat = CATEGORIES.find((c) => c.id === category);
   if (cat) {
@@ -93,6 +70,7 @@ function shouldShowLoginButton(text) {
     lower.includes("login")
   );
 }
+
 export default function Support() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -212,6 +190,7 @@ export default function Support() {
     </div>
   );
 }
+
 function HomeView({ onStartChat }) {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-white">
@@ -273,11 +252,7 @@ function HomeView({ onStartChat }) {
           className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]"
         >
           <div className="flex items-center gap-3">
-            <Headphones
-              size={22}
-              className="text-[#0068FF]"
-              strokeWidth={2}
-            />
+            <Headphones size={22} className="text-[#0068FF]" strokeWidth={2} />
             <div className="text-left">
               <p className="text-[14.5px] font-semibold text-[#0068FF]">
                 Gặp nhân viên qua Zalo
@@ -292,7 +267,7 @@ function HomeView({ onStartChat }) {
       </div>
     </div>
   );
-}
+    }
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -311,6 +286,7 @@ function ChatView({ conversation, user, category, onBack }) {
   const scrollRef = useRef(null);
   const sentIds = useRef(new Set());
   const fileInputRef = useRef(null);
+
   const scrollToBottom = (smooth = false) => {
     requestAnimationFrame(() => {
       if (scrollRef.current) {
@@ -658,255 +634,256 @@ function ChatView({ conversation, user, category, onBack }) {
       return [...new Set([...prev, ...allIds])];
     });
   };
-  return (
-  <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#f8f8f8]">
-    {/* HEADER */}
-    <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
-      <button
-        onClick={onBack}
-        className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
-      >
-        <ArrowLeft size={22} strokeWidth={2.2} />
-      </button>
-      <div className="min-w-0 flex-1 text-center">
-        <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
-          Bộ phận Hỗ trợ của NXX315
-        </h1>
-        <p className="text-[10.5px] font-medium text-[#8a8d93]">
-          Trợ lý AI • Phản hồi trong vài giây
-        </p>
-      </div>
-      <a
-        href={SUPPORT.zaloUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
-        title="Gặp nhân viên qua Zalo"
-      >
-        <Headphones size={19} strokeWidth={2} />
-      </a>
-      <button
-        onClick={() => setShowHistoryMenu((v) => !v)}
-        className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
-      >
-        <FileText size={19} strokeWidth={2} />
-        {hiddenSuggestionIds.length > 0 && (
-          <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500" />
-        )}
-      </button>
-    </div>
-
-    {/* HISTORY MENU */}
-    {showHistoryMenu && (
-      <>
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => setShowHistoryMenu(false)}
-        />
-        <div className="absolute right-3 top-14 z-40 w-72 overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.12)]">
-          <div className="border-b border-slate-100 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-              Đề xuất đã ẩn
-            </p>
-            <p className="mt-0.5 text-[10px] text-slate-400">
-              {hiddenSuggestionIds.length} tin nhắn có suggestions đã ẩn
-            </p>
-          </div>
-
-          <div className="max-h-80 overflow-y-auto">
-            {hiddenSuggestionIds.length === 0 ? (
-              <div className="px-4 py-6 text-center text-xs text-slate-400">
-                Chưa có suggestions nào bị ẩn
-              </div>
-            ) : (
-              hiddenSuggestionIds.map((msgId) => {
-                const msg = messages.find((m) => m.id === msgId);
-                if (!msg) return null;
-                return (
-                  <button
-                    key={msgId}
-                    onClick={() => {
-                      setHiddenSuggestionIds((prev) =>
-                        prev.filter((id) => id !== msgId)
-                      );
-                      setShowHistoryMenu(false);
-                      scrollToBottom(true);
-                    }}
-                    className="flex w-full items-center justify-between gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 hover:bg-slate-50"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium text-slate-700">
-                        {msg.message.slice(0, 50)}
-                        {msg.message.length > 50 ? "..." : ""}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-slate-400">
-                        {msg.suggestions?.length || 0} đề xuất
-                      </p>
-                    </div>
-                    <ArrowRight size={14} className="text-slate-400" />
-                  </button>
-                );
-              })
-            )}
-          </div>
-
+    return (
+    <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#fafafa]">
+      {/* HEADER */}
+      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
+        <button
+          onClick={onBack}
+          className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
+        >
+          <ArrowLeft size={22} strokeWidth={2.2} />
+        </button>
+        <div className="min-w-0 flex-1 text-center">
+          <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
+            Bộ phận Hỗ trợ của NXX315
+          </h1>
+          <p className="text-[10.5px] font-medium text-[#8a8d93]">
+            Trợ lý AI • Phản hồi trong vài giây
+          </p>
+        </div>
+        <a
+          href={SUPPORT.zaloUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
+          title="Gặp nhân viên qua Zalo"
+        >
+          <Headphones size={19} strokeWidth={2} />
+        </a>
+        <button
+          onClick={() => setShowHistoryMenu((v) => !v)}
+          className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+        >
+          <FileText size={19} strokeWidth={2} />
           {hiddenSuggestionIds.length > 0 && (
-            <div className="border-t border-slate-100 p-2">
-              <button
-                onClick={() => {
-                  setHiddenSuggestionIds([]);
-                  setShowHistoryMenu(false);
-                  scrollToBottom(true);
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
-              >
-                <RefreshCw size={12} />
-                Hiện lại tất cả
-              </button>
-            </div>
+            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500" />
           )}
-        </div>
-      </>
-    )}
+        </button>
+      </div>
 
-    {/* MESSAGES */}
-    <div
-      ref={scrollRef}
-      className="flex-1 space-y-3 overflow-y-auto px-3.5 py-4 sm:px-4"
-      style={{
-        scrollBehavior: "smooth",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      {loading ? (
-        <div className="flex h-full items-center justify-center">
-          <Loader2 size={20} className="animate-spin text-slate-300" />
-        </div>
-      ) : (
+      {/* HISTORY MENU */}
+      {showHistoryMenu && (
         <>
-          {messages.map((msg, idx) => {
-            if (msg.sender_type === "status") {
-              return <StatusBubble key={msg.id} message={msg} />;
-            }
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() => setShowHistoryMenu(false)}
+          />
+          <div className="absolute right-3 top-14 z-40 w-72 overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.12)]">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                Đề xuất đã ẩn
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-400">
+                {hiddenSuggestionIds.length} tin nhắn có suggestions đã ẩn
+              </p>
+            </div>
 
-            const isLastAIMessage =
-              idx === messages.length - 1 &&
-              msg.sender_type === "ai" &&
-              !streamingMsgId &&
-              !aiTyping;
-
-            return (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                streamingText={
-                  streamingMsgId === msg.id ? streamingText : null
-                }
-                isLastAIMessage={isLastAIMessage}
-                onSuggestionClick={sendMessage}
-                sending={sending}
-                onShowLogin={() => navigate("/login")}
-                hiddenSuggestionIds={hiddenSuggestionIds}
-                onHideSuggestions={hideAllSuggestions}
-              />
-            );
-          })}
-
-          {aiTyping &&
-            !streamingMsgId &&
-            !messages.some((m) => m.sender_type === "status") && (
-              <div className="flex items-start">
-                <div className="rounded-[8px] border border-black/[0.05] bg-white px-4 py-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-                  <div className="flex gap-1">
-                    <span
-                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <span
-                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <span
-                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                      style={{ animationDelay: "300ms" }}
-                    />
-                  </div>
+            <div className="max-h-80 overflow-y-auto">
+              {hiddenSuggestionIds.length === 0 ? (
+                <div className="px-4 py-6 text-center text-xs text-slate-400">
+                  Chưa có suggestions nào bị ẩn
                 </div>
+              ) : (
+                hiddenSuggestionIds.map((msgId) => {
+                  const msg = messages.find((m) => m.id === msgId);
+                  if (!msg) return null;
+                  return (
+                    <button
+                      key={msgId}
+                      onClick={() => {
+                        setHiddenSuggestionIds((prev) =>
+                          prev.filter((id) => id !== msgId)
+                        );
+                        setShowHistoryMenu(false);
+                        scrollToBottom(true);
+                      }}
+                      className="flex w-full items-center justify-between gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 hover:bg-slate-50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-slate-700">
+                          {msg.message.slice(0, 50)}
+                          {msg.message.length > 50 ? "..." : ""}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-slate-400">
+                          {msg.suggestions?.length || 0} đề xuất
+                        </p>
+                      </div>
+                      <ArrowRight size={14} className="text-slate-400" />
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {hiddenSuggestionIds.length > 0 && (
+              <div className="border-t border-slate-100 p-2">
+                <button
+                  onClick={() => {
+                    setHiddenSuggestionIds([]);
+                    setShowHistoryMenu(false);
+                    scrollToBottom(true);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
+                >
+                  <RefreshCw size={12} />
+                  Hiện lại tất cả
+                </button>
               </div>
             )}
+          </div>
         </>
       )}
-    </div>
 
-    {/* Nút Zalo */}
-    <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
-      <a
-        href={SUPPORT.zaloUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-[#0068FF]/30 bg-[#0068FF]/[0.05] px-4 py-2.5 text-[13px] font-semibold text-[#0068FF] transition hover:bg-[#0068FF]/[0.10] active:scale-[0.99]"
+      {/* MESSAGES */}
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
+        style={{
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
-        <Headphones size={16} strokeWidth={2.4} />
-        Cần gặp nhân viên? Chat qua Zalo
-      </a>
-    </div>
-
-    {/* INPUT */}
-    <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
-      <div className="flex items-center gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder="Gửi tin nhắn..."
-          className="h-11 flex-1 rounded-[18px] border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
-        />
-
-        {input.trim() ? (
-          <button
-            onClick={() => sendMessage()}
-            disabled={sending}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FE2C55] text-white shadow-[0_4px_12px_rgba(254,44,85,0.2)] transition active:scale-95 disabled:opacity-40"
-          >
-            {sending ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <Send size={18} strokeWidth={2.4} />
-            )}
-          </button>
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2 size={20} className="animate-spin text-slate-300" />
+          </div>
         ) : (
-          <button
-            onClick={() => setShowFileMenu((v) => !v)}
-            disabled={uploading}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
-          >
-            {uploading ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <Plus size={20} strokeWidth={2.4} />
-            )}
-          </button>
+          <>
+            {messages.map((msg, idx) => {
+              if (msg.sender_type === "status") {
+                return <StatusBubble key={msg.id} message={msg} />;
+              }
+
+              const isLastAIMessage =
+                idx === messages.length - 1 &&
+                msg.sender_type === "ai" &&
+                !streamingMsgId &&
+                !aiTyping;
+
+              return (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  streamingText={
+                    streamingMsgId === msg.id ? streamingText : null
+                  }
+                  isLastAIMessage={isLastAIMessage}
+                  onSuggestionClick={sendMessage}
+                  sending={sending}
+                  onShowLogin={() => navigate("/login")}
+                  hiddenSuggestionIds={hiddenSuggestionIds}
+                  onHideSuggestions={hideAllSuggestions}
+                />
+              );
+            })}
+
+            {/* Typing indicator — không avatar, chỉ 3 chấm */}
+            {aiTyping &&
+              !streamingMsgId &&
+              !messages.some((m) => m.sender_type === "status") && (
+                <div className="flex justify-start">
+                  <div className="rounded-[20px] rounded-tl-[6px] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                    <div className="flex gap-1">
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
+                        style={{ animationDelay: "0ms" }}
+                      />
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
+                        style={{ animationDelay: "150ms" }}
+                      />
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
+                        style={{ animationDelay: "300ms" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+          </>
         )}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFileSelect(file);
-          e.target.value = "";
-        }}
-      />
+      {/* Nút Zalo */}
+      <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
+        <a
+          href={SUPPORT.zaloUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-[#0068FF]/30 bg-[#0068FF]/[0.05] px-4 py-2.5 text-[13px] font-semibold text-[#0068FF] transition hover:bg-[#0068FF]/[0.10] active:scale-[0.99]"
+        >
+          <Headphones size={16} strokeWidth={2.4} />
+          Cần gặp nhân viên? Chat qua Zalo
+        </a>
+      </div>
 
-     {/* FILE MENU */}
+      {/* INPUT */}
+      <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
+        <div className="flex items-center gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="Gửi tin nhắn..."
+            className="h-11 flex-1 rounded-full border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
+          />
+
+          {input.trim() ? (
+            <button
+              onClick={() => sendMessage()}
+              disabled={sending}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FE2C55] text-white shadow-[0_4px_12px_rgba(254,44,85,0.2)] transition active:scale-95 disabled:opacity-40"
+            >
+              {sending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Send size={18} strokeWidth={2.4} />
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowFileMenu((v) => !v)}
+              disabled={uploading}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
+            >
+              {uploading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Plus size={20} strokeWidth={2.4} />
+              )}
+            </button>
+          )}
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelect(file);
+            e.target.value = "";
+          }}
+        />
+
+        {/* FILE MENU */}
         {showFileMenu && (
           <>
             <div
@@ -955,9 +932,7 @@ function ChatView({ conversation, user, category, onBack }) {
                   <p className="text-[11px] text-slate-500">Emoji</p>
                 </div>
               </button>
-
-              <a
-                href={SUPPORT.zaloUrl}
+              <a                href={SUPPORT.zaloUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setShowFileMenu(false)}
@@ -1000,7 +975,7 @@ function ChatView({ conversation, user, category, onBack }) {
       </div>
     </div>
   );
-}
+        }
 function StatusBubble({ message }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -1008,7 +983,7 @@ function StatusBubble({ message }) {
     <div className="px-1 py-0.5">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2.5 rounded-[8px] border border-black/[0.06] bg-white px-3.5 py-2.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:bg-slate-50 active:scale-[0.99]"
+        className="flex w-full items-center gap-2.5 rounded-[14px] border border-black/[0.06] bg-white px-3.5 py-2.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:bg-slate-50 active:scale-[0.99]"
       >
         <Lightbulb
           size={16}
@@ -1058,6 +1033,7 @@ function MessageBubble({
 
   const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
 
+  /* ---------- SYSTEM ---------- */
   if (isSystem) {
     return (
       <div className="flex justify-center">
@@ -1068,28 +1044,35 @@ function MessageBubble({
     );
   }
 
+  /* ---------- USER ---------- */
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[82%] rounded-[8px] bg-[#FE2C55] p-1 text-white shadow-[0_3px_10px_rgba(254,44,85,0.12)]">
-          {message.image_url && (
-            <img
-              src={message.image_url}
-              alt="User upload"
-              className="mb-1 max-h-72 w-full rounded-[6px] object-cover"
-              loading="lazy"
-            />
-          )}
-          {message.message && (
-            <p className="whitespace-pre-wrap break-words px-3 py-2 text-sm leading-6">
-              {message.message}
-            </p>
-          )}
+        <div className="relative max-w-[78%]">
+          {/* Đuôi bubble user */}
+          <div className="absolute -right-[5px] top-0 h-3 w-3 bg-[#FFE5EC] [clip-path:polygon(0_0,100%_0,0_100%)]" />
+
+          <div className="rounded-[20px] rounded-tr-[6px] bg-[#FFE5EC] px-4 py-2.5 shadow-[0_2px_8px_rgba(254,44,85,0.08)]">
+            {message.image_url && (
+              <img
+                src={message.image_url}
+                alt="User upload"
+                className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
+                loading="lazy"
+              />
+            )}
+            {message.message && (
+              <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+                {message.message}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
+  /* ---------- AI / AGENT ---------- */
   const displayText = streamingText !== null ? streamingText : message.message;
   const isStreaming = streamingText !== null;
 
@@ -1111,9 +1094,7 @@ function MessageBubble({
     shouldShowLoginButton(message.message);
 
   const handleSuggestionClick = (reply) => {
-    if (onHideSuggestions) {
-      onHideSuggestions();
-    }
+    if (onHideSuggestions) onHideSuggestions();
     onSuggestionClick(reply);
   };
 
@@ -1129,78 +1110,79 @@ function MessageBubble({
   };
 
   return (
-    <div className="flex items-start">
-      {isAgent && (
-        <div className="mr-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 shadow-sm">
-          <Bot size={14} className="text-white" strokeWidth={2.3} />
-        </div>
-      )}
+    <div className="flex justify-start">
+      <div className="max-w-[82%]">
+        {/* Bong bóng AI */}
+        <div className="relative">
+          {/* Đuôi bubble AI */}
+          <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
 
-      <div className="min-w-0 flex-1">
-        <div className="rounded-[8px] border border-black/[0.05] bg-white px-4 py-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-          {message.image_url && (
-            <img
-              src={message.image_url}
-              alt="Message"
-              className="mb-2 max-h-72 w-full rounded-[6px] object-cover"
-              loading="lazy"
-            />
-          )}
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
-            {displayText}
-            {isStreaming && (
-              <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+          <div className="rounded-[20px] rounded-tl-[6px] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            {message.image_url && (
+              <img
+                src={message.image_url}
+                alt="Message"
+                className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
+                loading="lazy"
+              />
             )}
-          </p>
-
-          {!isStreaming && (
-            <div className="mt-2.5 flex items-center justify-between border-t border-black/[0.05] pt-2.5">
-              <span className="flex items-center gap-1 text-[11px] text-[#8a8d93]">
-                {isAI && <Sparkles size={11} strokeWidth={2.4} />}
-                {isAI ? "Do AI tạo" : isAgent ? "Nhân viên hỗ trợ" : ""}
-              </span>
-              {isAI && (
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() =>
-                      setFeedback(feedback === "like" ? null : "like")
-                    }
-                    className={`flex h-6 w-6 items-center justify-center rounded-md transition ${
-                      feedback === "like"
-                        ? "bg-sky-50 text-sky-600"
-                        : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
-                    }`}
-                    title="Hữu ích"
-                  >
-                    <ThumbsUp size={13} strokeWidth={2.2} />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setFeedback(feedback === "dislike" ? null : "dislike")
-                    }
-                    className={`flex h-6 w-6 items-center justify-center rounded-md transition ${
-                      feedback === "dislike"
-                        ? "bg-rose-50 text-rose-600"
-                        : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
-                    }`}
-                    title="Không hữu ích"
-                  >
-                    <ThumbsDown size={13} strokeWidth={2.2} />
-                  </button>
-                </div>
+            <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+              {displayText}
+              {isStreaming && (
+                <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
               )}
-            </div>
-          )}
+            </p>
+          </div>
         </div>
 
-        {/* ACTIONS — Nút hành động từ AI */}
+        {/* Meta: Do AI tạo + Feedback — NGOÀI bubble */}
+        {!isStreaming && (
+          <div className="mt-1.5 flex items-center gap-2 px-2">
+            <span className="flex items-center gap-1 text-[11px] text-[#8a8d93]">
+              {isAI && <Sparkles size={11} strokeWidth={2.4} />}
+              {isAI ? "Do AI tạo" : isAgent ? "Nhân viên hỗ trợ" : ""}
+            </span>
+            {isAI && (
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() =>
+                    setFeedback(feedback === "like" ? null : "like")
+                  }
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+                    feedback === "like"
+                      ? "bg-sky-50 text-sky-600"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                  title="Hữu ích"
+                >
+                  <ThumbsUp size={12} strokeWidth={2.2} />
+                </button>
+                <button
+                  onClick={() =>
+                    setFeedback(feedback === "dislike" ? null : "dislike")
+                  }
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+                    feedback === "dislike"
+                      ? "bg-rose-50 text-rose-600"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                  title="Không hữu ích"
+                >
+                  <ThumbsDown size={12} strokeWidth={2.2} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ACTIONS */}
         {hasActions && !isStreaming && (
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             {message.actions.map((action, idx) => (
               <button
                 key={idx}
                 onClick={() => handleActionClick(action)}
-                className="group flex items-center justify-between gap-2 rounded-[8px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] hover:to-[#FE2C55]/[0.04] active:scale-[0.97]"
+                className="group flex items-center justify-between gap-2 rounded-[14px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] hover:to-[#FE2C55]/[0.04] active:scale-[0.97]"
               >
                 <span className="line-clamp-2 text-[12.5px] font-bold leading-tight text-[#161823]">
                   {action.label}
@@ -1217,13 +1199,13 @@ function MessageBubble({
 
         {/* SUGGESTIONS */}
         {hasSuggestions && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-2.5 space-y-2">
             {message.suggestions.map((reply, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSuggestionClick(reply)}
                 disabled={sending}
-                className="flex w-full items-center justify-between gap-3 rounded-[8px] border border-black/[0.06] bg-white px-4 py-3 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
+                className="flex w-full items-center justify-between gap-3 rounded-[14px] border border-black/[0.06] bg-white px-4 py-3 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
               >
                 <span className="text-sm font-medium text-slate-700">
                   {reply}
@@ -1239,7 +1221,7 @@ function MessageBubble({
             {showLoginButton && (
               <button
                 onClick={onShowLogin}
-                className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-extrabold text-white shadow-[0_5px_15px_rgba(254,44,85,0.15)] transition hover:brightness-110 active:scale-[0.99]"
+                className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-[#FE2C55] px-4 py-3 text-sm font-extrabold text-white shadow-[0_5px_15px_rgba(254,44,85,0.15)] transition hover:brightness-110 active:scale-[0.99]"
               >
                 <LogIn size={16} strokeWidth={2.4} />
                 Đăng nhập
@@ -1250,4 +1232,4 @@ function MessageBubble({
       </div>
     </div>
   );
-                  }
+        }
