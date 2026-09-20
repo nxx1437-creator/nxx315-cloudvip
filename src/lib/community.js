@@ -69,9 +69,23 @@ export async function getMyReactions(postIds, userId) {
 }
 
 // =====================================================
-// CREATE POST
+// CREATE POST — Đăng bài luôn visible, không cần duyệt
 // =====================================================
 export async function createPost({ userId, content, imageUrl, category }) {
+  // Check rate limit trước
+  const { data: allowed, error: rateError } = await supabase.rpc(
+    "check_post_rate_limit",
+    { p_user_id: userId }
+  );
+
+  if (rateError) {
+    console.error("check_post_rate_limit error:", rateError);
+  } else if (!allowed) {
+    throw new Error(
+      "Bạn đã đăng quá 3 bài trong 1 giờ. Vui lòng đợi rồi thử lại."
+    );
+  }
+
   const { data, error } = await supabase
     .from("posts")
     .insert({
@@ -79,7 +93,7 @@ export async function createPost({ userId, content, imageUrl, category }) {
       content: content.trim(),
       image_url: imageUrl || null,
       category: category || "general",
-      status: "pending",
+      status: "visible", // ✅ Đăng xong hiện luôn
     })
     .select(
       `
@@ -106,7 +120,7 @@ export async function createPost({ userId, content, imageUrl, category }) {
 }
 
 // =====================================================
-// CHECK CAN POST
+// CHECK CAN POST — Kiểm tra số dư Coin
 // =====================================================
 export async function checkCanPost(userId) {
   const { data: profile, error } = await supabase
@@ -342,4 +356,4 @@ export async function getMySavedPosts(userId) {
   }
 
   return (data || []).map((r) => r.post).filter(Boolean);
-    }
+      }
