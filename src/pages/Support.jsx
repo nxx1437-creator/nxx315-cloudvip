@@ -13,6 +13,7 @@ import {
   Bug,
   MoreHorizontal,
   ChevronRight,
+  ChevronDown,
   Plus,
   FileText,
   RefreshCw,
@@ -23,6 +24,7 @@ import {
   Lightbulb,
   ImageIcon,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
@@ -49,55 +51,13 @@ const CATEGORIES = [
   { id: "other", label: "Khác", icon: MoreHorizontal, color: "#6B7280" },
 ];
 
+/* Greeting + suggestions khi user bấm "Chat với AI" */
 const GREETING_BY_CATEGORY = {
-  account: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Về tài khoản, mình có thể hỗ trợ bạn:
-• Quên mật khẩu / đổi mật khẩu
-• Không nhận được mã xác minh
-• Cập nhật thông tin cá nhân
-• Bảo mật tài khoản
-
-Bạn gặp vấn đề gì cụ thể?`,
-
-  payment: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Về thanh toán, mình có thể hỗ trợ:
-• Đã chuyển khoản nhưng chưa nhận Coin
-• Nạp sai số tiền
-• Đổi phương thức thanh toán
-• Yêu cầu hoàn tiền
-
-Bạn cần hỗ trợ gì?`,
-
-  order: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Về đơn hàng, mình có thể:
-• Tra cứu trạng thái đơn (cho mình mã đơn RBX-xxxxx)
-• Hướng dẫn khi nạp sai ID game
-• Xử lý đơn chưa nhận hàng
-• Hủy đơn đang chờ
-
-Bạn muốn kiểm tra đơn nào?`,
-
-  bug: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Về báo lỗi, mình có thể hỗ trợ:
-• Website / app bị lỗi
-• Không thanh toán được
-• Nút bấm không hoạt động
-• Lỗi khi nạp game
-
-Bạn gặp lỗi gì? Mô tả hoặc gửi ảnh màn hình giúp mình nhé.`,
-
-  other: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn cần hỗ trợ vấn đề gì? Mình có thể giúp:
-• Hợp tác / đại lý
-• Báo cáo tài khoản vi phạm
-• Các câu hỏi khác
-
-Bạn mô tả chi tiết giúp mình nhé.`,
+  account: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nVề tài khoản, bạn gặp vấn đề gì cụ thể?`,
+  payment: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nVề thanh toán, bạn cần hỗ trợ gì?`,
+  order: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nVề đơn hàng, bạn muốn kiểm tra đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
+  bug: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn gặp lỗi gì? Mô tả hoặc gửi ảnh màn hình giúp mình nhé.`,
+  other: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn cần hỗ trợ vấn đề gì?`,
 };
 
 const SUGGESTIONS_BY_CATEGORY = {
@@ -133,10 +93,10 @@ const SUGGESTIONS_BY_CATEGORY = {
 };
 
 function getGreeting(category) {
-  if (category && GREETING_BY_CATEGORY[category]) {
-    return GREETING_BY_CATEGORY[category];
-  }
-  return `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nMình có thể giúp gì cho bạn hôm nay?`;
+  return (
+    GREETING_BY_CATEGORY[category] ||
+    `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nMình có thể giúp gì cho bạn hôm nay?`
+  );
 }
 
 function getSuggestions(category) {
@@ -157,7 +117,7 @@ function shouldShowLoginButton(text) {
   );
 }
 export default function Support() {
-  const [view, setView] = useState("home");
+  const [view, setView] = useState("home"); // home | faq | chat
   const [user, setUser] = useState(null);
   const [conversation, setConversation] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -172,8 +132,16 @@ export default function Support() {
     loadUser();
   }, []);
 
+  const openFaq = (category) => {
+    setSelectedCategory(category);
+    setView("faq");
+  };
+
   const startAIChat = async (category) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      alert("Vui lòng đăng nhập để chat với AI.");
+      return;
+    }
 
     try {
       const { data: existing } = await supabase
@@ -223,18 +191,28 @@ export default function Support() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24 text-slate-900">
+    <div className="min-h-screen bg-[#fafafa] pb-24 text-slate-900">
       <TopHeader />
 
       <main className="mx-auto w-full max-w-2xl">
-        {view === "home" && <HomeView onStartChat={startAIChat} />}
+        {view === "home" && (
+          <HomeView onOpenFaq={openFaq} onStartChat={startAIChat} />
+        )}
+
+        {view === "faq" && (
+          <FaqView
+            category={selectedCategory}
+            onBack={() => setView("home")}
+            onStartChat={() => startAIChat(selectedCategory)}
+          />
+        )}
 
         {view === "chat" && conversation && (
           <ChatView
             conversation={conversation}
             user={user}
             category={selectedCategory}
-            onBack={() => setView("home")}
+            onBack={() => setView("faq")}
           />
         )}
       </main>
@@ -244,9 +222,14 @@ export default function Support() {
   );
 }
 
-function HomeView({ onStartChat }) {
+/* ============================================================
+   HOME VIEW
+   ============================================================ */
+
+function HomeView({ onOpenFaq, onStartChat }) {
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-white">
+    <div className="min-h-[calc(100vh-72px)] bg-[#fafafa]">
+      {/* Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
         <button
           onClick={() => window.history.back()}
@@ -255,49 +238,90 @@ function HomeView({ onStartChat }) {
           <ArrowLeft size={22} strokeWidth={2.2} />
         </button>
         <h1 className="text-[16px] font-bold tracking-[-0.01em] text-[#161823]">
-          Bộ phận Hỗ trợ của NXX315
+          Trung tâm Hỗ trợ
         </h1>
         <button className="flex h-8 w-8 items-center justify-center text-[#161823]">
           <FileText size={20} strokeWidth={2} />
         </button>
       </div>
 
-      <div className="px-5 pb-6 pt-8">
-        <h2 className="text-center text-[22px] font-extrabold leading-[1.3] tracking-[-0.02em] text-[#161823]">
-          Chúng tôi sẵn sàng hỗ trợ!
-          <br />
-          Chọn loại vấn đề.
+      {/* Tiêu đề */}
+      <div className="px-4 pb-4 pt-6">
+        <h2 className="text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#161823]">
+          Trợ giúp theo chủ đề
         </h2>
+        <p className="mt-1 text-[13px] text-[#8a8d93]">
+          Chọn chủ đề để xem hướng dẫn và câu hỏi thường gặp.
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 px-4">
+      {/* Grid danh mục */}
+      <div className="grid grid-cols-1 gap-3 px-4 sm:grid-cols-2">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           return (
             <button
               key={cat.id}
-              onClick={() => onStartChat(cat.id)}
-              className="flex items-center gap-3 rounded-[18px] border border-black/[0.06] bg-[#f8f8f8] px-4 py-5 text-left transition duration-150 hover:border-black/[0.12] hover:bg-[#f2f2f2] active:scale-[0.98]"
+              onClick={() => onOpenFaq(cat.id)}
+              className="group relative flex items-center gap-3 overflow-hidden rounded-[18px] border border-black/[0.06] bg-white px-4 py-4 text-left shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition active:scale-[0.98]"
             >
-              <Icon size={22} style={{ color: cat.color }} strokeWidth={2} />
-              <span className="text-[14.5px] font-semibold text-[#161823]">
-                {cat.label}
-              </span>
+              {/* Vạch màu bên trái */}
+              <div
+                className="absolute left-0 top-0 h-full w-1"
+                style={{ backgroundColor: cat.color }}
+              />
+
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]"
+                style={{ backgroundColor: `${cat.color}18` }}
+              >
+                <Icon size={22} style={{ color: cat.color }} strokeWidth={2.2} />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-bold text-[#161823]">
+                  {cat.label}
+                </p>
+                <p className="mt-0.5 truncate text-[12px] text-[#8a8d93]">
+                  Xem hướng dẫn và câu hỏi thường gặp
+                </p>
+              </div>
+
+              <ChevronRight
+                size={18}
+                className="shrink-0 text-[#c4c7cc] transition group-hover:translate-x-0.5 group-hover:text-[#8a8d93]"
+                strokeWidth={2.2}
+              />
             </button>
           );
         })}
       </div>
 
-      <div className="px-5 pt-5">
-        <p className="mx-auto max-w-[340px] text-center text-[12.5px] leading-5 text-[#8a8d93]">
-          Có thể câu trả lời là do AI tạo, do đó có thể sẽ có sai sót.{" "}
-          <button className="font-medium text-sky-600">Tìm hiểu thêm</button>
-        </p>
+      {/* Nút chat AI */}
+      <div className="px-4 pt-6">
+        <button
+          onClick={() => onStartChat(null)}
+          className="flex w-full items-center justify-between rounded-[18px] bg-gradient-to-r from-[#FE2C55] to-[#FF6B9D] px-4 py-4 text-left shadow-[0_6px_20px_rgba(254,44,85,0.18)] transition active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur">
+              <Sparkles size={22} className="text-white" strokeWidth={2.2} />
+            </div>
+            <div>
+              <p className="text-[15px] font-bold text-white">
+                Chat với trợ lý AI
+              </p>
+              <p className="mt-0.5 text-[12px] text-white/80">
+                Phản hồi trong vài giây, hỗ trợ 24/7
+              </p>
+            </div>
+          </div>
+          <ArrowRight size={20} className="shrink-0 text-white" strokeWidth={2.4} />
+        </button>
       </div>
 
-      <div className="mx-4 my-5 border-t border-slate-100" />
-
-      <div className="px-4 pb-7">
+      {/* Nút Zalo */}
+      <div className="px-4 pt-3 pb-7">
         <a
           href={SUPPORT.zaloUrl}
           target="_blank"
@@ -321,6 +345,190 @@ function HomeView({ onStartChat }) {
     </div>
   );
 }
+
+/* ============================================================
+   FAQ VIEW — trang hướng dẫn theo category
+   ============================================================ */
+
+function FaqView({ category, onBack, onStartChat }) {
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState(null);
+
+  const cat = CATEGORIES.find((c) => c.id === category);
+  const Icon = cat?.icon || HelpCircle;
+  const color = cat?.color || "#FE2C55";
+
+  useEffect(() => {
+    loadFaqs();
+  }, [category]);
+
+  const loadFaqs = async () => {
+    if (!category) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("support_faqs")
+        .select("*")
+        .eq("category", category)
+        .eq("is_active", true)
+        .order("order", { ascending: true });
+
+      if (error) throw error;
+      setFaqs(data || []);
+    } catch (err) {
+      console.error("Load FAQ error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleFaq = (id) => {
+    setOpenId((prev) => (prev === id ? null : id));
+  };
+
+  return (
+    <div className="min-h-[calc(100vh-72px)] bg-[#fafafa]">
+      {/* Header */}
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
+        <button
+          onClick={onBack}
+          className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
+        >
+          <ArrowLeft size={22} strokeWidth={2.2} />
+        </button>
+        <h1 className="flex-1 text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
+          {cat?.label || "Hỗ trợ"}
+        </h1>
+      </div>
+
+      {/* Header category */}
+      <div className="px-4 pb-4 pt-6">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px]"
+            style={{ backgroundColor: `${color}18` }}
+          >
+            <Icon size={26} style={{ color }} strokeWidth={2.2} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[20px] font-extrabold leading-tight tracking-[-0.02em] text-[#161823]">
+              {cat?.label || "Hỗ trợ"}
+            </h2>
+            <p className="mt-0.5 text-[12.5px] text-[#8a8d93]">
+              Câu hỏi thường gặp và hướng dẫn
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ list */}
+      <div className="px-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={22} className="animate-spin text-slate-300" />
+          </div>
+        ) : faqs.length === 0 ? (
+          <div className="rounded-[18px] border border-dashed border-black/[0.08] bg-white px-4 py-10 text-center">
+            <HelpCircle
+              size={32}
+              className="mx-auto mb-2 text-slate-300"
+              strokeWidth={2}
+            />
+            <p className="text-[14px] font-semibold text-[#161823]">
+              Chưa có hướng dẫn cho mục này
+            </p>
+            <p className="mt-1 text-[12.5px] text-[#8a8d93]">
+              Bạn có thể chat với AI để được hỗ trợ trực tiếp.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {faqs.map((faq) => {
+              const isOpen = openId === faq.id;
+              return (
+                <div
+                  key={faq.id}
+                  className="overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+                >
+                  <button
+                    onClick={() => toggleFaq(faq.id)}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-slate-50"
+                  >
+                    <span className="flex-1 text-[14px] font-semibold leading-5 text-[#161823]">
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      size={18}
+                      className={`shrink-0 text-[#8a8d93] transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                      strokeWidth={2.2}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-black/[0.05] bg-[#fafafa] px-4 py-3.5">
+                      <p className="whitespace-pre-wrap text-[13.5px] leading-6 text-[#4a4d54]">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* CTA — Chat với AI */}
+      <div className="px-4 pt-6 pb-4">
+        <button
+          onClick={onStartChat}
+          className="flex w-full items-center justify-between rounded-[18px] bg-gradient-to-r from-[#FE2C55] to-[#FF6B9D] px-4 py-4 text-left shadow-[0_6px_20px_rgba(254,44,85,0.18)] transition active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur">
+              <Sparkles size={22} className="text-white" strokeWidth={2.2} />
+            </div>
+            <div>
+              <p className="text-[15px] font-bold text-white">
+                Vẫn cần hỗ trợ?
+              </p>
+              <p className="mt-0.5 text-[12px] text-white/80">
+                Chat với trợ lý AI ngay
+              </p>
+            </div>
+          </div>
+          <ArrowRight size={20} className="shrink-0 text-white" strokeWidth={2.4} />
+        </button>
+      </div>
+
+      {/* Nút Zalo */}
+      <div className="px-4 pb-7">
+        <a
+          href={SUPPORT.zaloUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <Headphones size={22} className="text-[#0068FF]" strokeWidth={2} />
+            <div className="text-left">
+              <p className="text-[14.5px] font-semibold text-[#0068FF]">
+                Gặp nhân viên qua Zalo
+              </p>
+              <p className="mt-0.5 text-[11.5px] text-[#0068FF]/70">
+                Hỗ trợ {SUPPORT.hours}
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={18} className="text-[#0068FF]" />
+        </a>
+      </div>
+    </div>
+  );
+      }
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -700,10 +908,10 @@ function ChatView({ conversation, user, category, onBack }) {
         </button>
         <div className="min-w-0 flex-1 text-center">
           <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
-            Bộ phận Hỗ trợ của NXX315
+            Trợ lý AI NXX315
           </h1>
           <p className="text-[10.5px] font-medium text-[#8a8d93]">
-            Trợ lý AI • Phản hồi trong vài giây
+            Phản hồi trong vài giây
           </p>
         </div>
         <a
@@ -915,7 +1123,7 @@ function ChatView({ conversation, user, category, onBack }) {
               disabled={uploading}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
             >
-                    {uploading ? (
+                  {uploading ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
                 <Plus size={20} strokeWidth={2.4} />
@@ -1032,8 +1240,7 @@ function ChatView({ conversation, user, category, onBack }) {
     </div>
   );
 }
-
- function StatusBubble({ message }) {
+function StatusBubble({ message }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -1280,4 +1487,4 @@ function MessageBubble({
       </div>
     </div>
   );
-                    }            
+            }
