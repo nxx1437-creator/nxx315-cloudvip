@@ -266,3 +266,78 @@ export async function reportPost({ postId, userId, reason }) {
   }
   return true;
 }
+// =====================================================
+// TOGGLE SAVE
+// =====================================================
+export async function toggleSave(postId, userId, isSaved) {
+  if (!userId) return false;
+
+  if (isSaved) {
+    // Unsave
+    const { error } = await supabase
+      .from("post_saves")
+      .delete()
+      .eq("post_id", postId)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("unsave error:", error);
+      return false;
+    }
+    return true;
+  } else {
+    // Save
+    const { error } = await supabase
+      .from("post_saves")
+      .insert({ post_id: postId, user_id: userId });
+
+    if (error) {
+      if (error.code === "23505") return true; // Already saved
+      console.error("save error:", error);
+      return false;
+    }
+    return true;
+  }
+}
+
+// =====================================================
+// GET SAVED POSTS
+// =====================================================
+export async function getMySavedPosts(userId) {
+  if (!userId) return [];
+
+  const { data, error } = await supabase
+    .from("post_saves")
+    .select(
+      `
+      post_id,
+      created_at,
+      post:posts!post_saves_post_id_fkey (
+        id,
+        author_id,
+        content,
+        image_url,
+        category,
+        video_links,
+        status,
+        likes_count,
+        comments_count,
+        created_at,
+        author:profiles!posts_author_id_fkey (
+          id,
+          username,
+          avatar_url
+        )
+      )
+    `
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getMySavedPosts error:", error);
+    return [];
+  }
+
+  return (data || []).map((r) => r.post).filter(Boolean);
+}
