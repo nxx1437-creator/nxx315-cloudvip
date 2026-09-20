@@ -49,7 +49,7 @@ const SUPPORT = {
   zalo: "0865245988",
   zaloUrl: "https://zalo.me/0865245988",
   email: "nxx315hub@gmail.com",
-  hours: "8:00 - 24:00 (T2 - CN)",
+  hours: "12:00 - 13:00 (T2 - CN)",
 };
 
 const AI_ENDPOINT =
@@ -264,32 +264,21 @@ Bạn gửi ảnh màn hình lỗi + mô tả giúp mình nhé. Mình sẽ phân
       "Ảnh tin nhắn lỗi từ hệ thống",
     ],
   },
-  "Hợp tác / Đại lý": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn hợp tác hay làm đại lý cho NXX315? Cho mình biết thêm thông tin nhé.`,
-    suggestions: [
-      "Tôi muốn làm đại lý cấp 1",
-      "Chính sách chiết khấu thế nào?",
-      "Tôi muốn hợp tác quảng cáo",
-      "Cần bao nhiêu vốn để làm đại lý?",
-    ],
-  },
-  "Báo cáo vi phạm": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn báo cáo vi phạm gì? Bạn gửi thông tin (ảnh chụp, bằng chứng) giúp mình nhé.`,
-    suggestions: [
-      "Tôi muốn báo cáo tài khoản lừa đảo",
-      "Báo cáo đơn hàng giả mạo",
-      "Báo cáo nội dung xấu",
-      "Báo cáo tài khoản mạo danh NXX315",
-    ],
-  },
 };
 
 function getSubCardPrompt(title) {
   return SUB_CARD_PROMPTS[title] || null;
+}
+
+// Sub-card thuộc category "other" → KHÔNG mở chat AI, chỉ scroll xuống FAQ
+const NO_CHAT_SUB_CARDS = [
+  "Hợp tác / Đại lý",
+  "Báo cáo vi phạm",
+  "Câu hỏi chung",
+];
+
+function isNoChatSubCard(title) {
+  return NO_CHAT_SUB_CARDS.includes(title);
 }
 
 function getGreeting(category) {
@@ -596,13 +585,24 @@ function HelpView({ category, onBack, onStartChat, onStartChatWith }) {
                 style={{ scrollbarWidth: "none" }}
               >
                 {subCards.map((card) => {
-                  const Icon = ICON_MAP[card.icon] || HelpCircle;
-                  return (
-                    <button
-                      key={card.id}
-                      onClick={() => onStartChatWith(card.title)}
-                      className="flex w-[140px] shrink-0 flex-col items-start gap-3 rounded-[18px] bg-[#f5f5f5] p-4 text-left transition active:scale-[0.97]"
-                    >
+  const Icon = ICON_MAP[card.icon] || HelpCircle;
+  const isNoChat = isNoChatSubCard(card.title);
+
+  return (
+    <button
+      key={card.id}
+      onClick={() => {
+        if (isNoChat) {
+          // Scroll xuống FAQ
+          document
+            .querySelector("#help-faq-section")
+            ?.scrollIntoView({ behavior: "smooth" });
+        } else {
+          onStartChatWith(card.title);
+        }
+      }}
+      className="flex w-[140px] shrink-0 flex-col items-start gap-3 rounded-[18px] bg-[#f5f5f5] p-4 text-left transition active:scale-[0.97]"
+    >
                       <div
                         className="flex h-9 w-9 items-center justify-center rounded-[10px]"
                         style={{ backgroundColor: `${card.color}22` }}
@@ -624,10 +624,10 @@ function HelpView({ category, onBack, onStartChat, onStartChatWith }) {
           )}
 
           {faqs.length > 0 ? (
-            <div className="px-5">
-              <h3 className="mb-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#161823]">
-                Câu hỏi thường gặp
-              </h3>
+  <div id="help-faq-section" className="px-5">
+    <h3 className="mb-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#161823]">
+      Câu hỏi thường gặp
+    </h3>
 
               <div>
                 {faqs.map((faq) => {
