@@ -42,24 +42,9 @@ export async function fetchPosts(cursor = null, limit = 10) {
 }
 
 // =====================================================
-// GET MY REACTIONS (liked posts)
+// GET MY REACTIONS
 // =====================================================
-
-// =====================================================
-// CREATE POST
-// =====================================================
-export async function createPost({ userId, content, imageUrl, category }) {
-  const { data, error } = await supabase
-    .from("posts")
-    .insert({
-      author_id: userId,
-      content: content.trim(),
-      image_url: imageUrl || null,
-      category: category || "general",
-      status: "pending",
-    })
-    .select(
-      `export async function getMyReactions(postIds, userId) {
+export async function getMyReactions(postIds, userId) {
   if (!postIds.length || !userId) {
     return { liked: new Set(), saved: new Set() };
   }
@@ -77,18 +62,27 @@ export async function createPost({ userId, content, imageUrl, category }) {
       .in("post_id", postIds),
   ]);
 
-  if (likesRes.error) {
-    console.error("getMyReactions likes error:", likesRes.error);
-  }
-  if (savesRes.error) {
-    console.error("getMyReactions saves error:", savesRes.error);
-  }
-
   const liked = new Set((likesRes.data || []).map((r) => r.post_id));
   const saved = new Set((savesRes.data || []).map((r) => r.post_id));
 
   return { liked, saved };
 }
+
+// =====================================================
+// CREATE POST
+// =====================================================
+export async function createPost({ userId, content, imageUrl, category }) {
+  const { data, error } = await supabase
+    .from("posts")
+    .insert({
+      author_id: userId,
+      content: content.trim(),
+      image_url: imageUrl || null,
+      category: category || "general",
+      status: "pending",
+    })
+    .select(
+      `
       id,
       author_id,
       content,
@@ -139,14 +133,13 @@ export async function checkCanPost(userId) {
   const minCoins = Number(
     settings?.find((s) => s.key === "min_coin_balance_to_post")?.value || 100
   );
-  const minEarned = Number(
-    settings?.find((s) => s.key === "min_coin_earned_to_post")?.value || 500
-  );
 
   if ((profile.coins || 0) < minCoins) {
     return {
       allowed: false,
-      reason: `Cần ít nhất ${minCoins} Coin trong ví để đăng bài. Bạn đang có ${profile.coins || 0} Coin.`,
+      reason: `Cần ít nhất ${minCoins} Coin trong ví để đăng bài. Bạn đang có ${
+        profile.coins || 0
+      } Coin.`,
     };
   }
 
@@ -158,7 +151,6 @@ export async function checkCanPost(userId) {
 // =====================================================
 export async function toggleLike(postId, userId, isLiked) {
   if (isLiked) {
-    // Unlike
     const { error } = await supabase
       .from("post_likes")
       .delete()
@@ -173,13 +165,12 @@ export async function toggleLike(postId, userId, isLiked) {
     await supabase.rpc("decrement_post_like", { p_post_id: postId });
     return true;
   } else {
-    // Like
     const { error } = await supabase
       .from("post_likes")
       .insert({ post_id: postId, user_id: userId });
 
     if (error) {
-      if (error.code === "23505") return true; // Already liked
+      if (error.code === "23505") return true;
       console.error("like error:", error);
       return false;
     }
@@ -187,8 +178,41 @@ export async function toggleLike(postId, userId, isLiked) {
     await supabase.rpc("increment_post_like", { p_post_id: postId });
     return true;
   }
+}
+
+// =====================================================
+// TOGGLE SAVE
+// =====================================================
+export async function toggleSave(postId, userId, isSaved) {
+  if (!userId) return false;
+
+  if (isSaved) {
+    const { error } = await supabase
+      .from("post_saves")
+      .delete()
+      .eq("post_id", postId)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("unsave error:", error);
+      return false;
     }
-     // =====================================================
+    return true;
+  } else {
+    const { error } = await supabase
+      .from("post_saves")
+      .insert({ post_id: postId, user_id: userId });
+
+    if (error) {
+      if (error.code === "23505") return true;
+      console.error("save error:", error);
+      return false;
+    }
+    return true;
+  }
+}
+
+// =====================================================
 // FETCH COMMENTS
 // =====================================================
 export async function fetchComments(postId) {
@@ -277,39 +301,6 @@ export async function reportPost({ postId, userId, reason }) {
   }
   return true;
 }
-// =====================================================
-// TOGGLE SAVE
-// =====================================================
-export async function toggleSave(postId, userId, isSaved) {
-  if (!userId) return false;
-
-  if (isSaved) {
-    // Unsave
-    const { error } = await supabase
-      .from("post_saves")
-      .delete()
-      .eq("post_id", postId)
-      .eq("user_id", userId);
-
-    if (error) {
-      console.error("unsave error:", error);
-      return false;
-    }
-    return true;
-  } else {
-    // Save
-    const { error } = await supabase
-      .from("post_saves")
-      .insert({ post_id: postId, user_id: userId });
-
-    if (error) {
-      if (error.code === "23505") return true; // Already saved
-      console.error("save error:", error);
-      return false;
-    }
-    return true;
-  }
-}
 
 // =====================================================
 // GET SAVED POSTS
@@ -351,4 +342,4 @@ export async function getMySavedPosts(userId) {
   }
 
   return (data || []).map((r) => r.post).filter(Boolean);
-}
+    }
