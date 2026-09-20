@@ -4,16 +4,16 @@ import BottomNav from "../components/BottomNav.jsx";
 import PostForm from "../components/community/PostForm";
 import PostCard from "../components/community/PostCard";
 import CommentDrawer from "../components/community/CommentDrawer";
-import {
-  fetchPosts,
-  getMyReactions,
-  toggleLike,
-} from "../lib/community";
+import { fetchPosts, getMyReactions, toggleLike } from "../lib/community";
+import useSession from "../hooks/useSession";
 import useProfile from "../hooks/useProfile";
 import { Loader2, Users } from "lucide-react";
 
 export default function Community() {
-  const { profile } = useProfile();
+  const { session } = useSession();
+  const user = session?.user;
+  const { profile } = useProfile(user?.id);
+
   const [posts, setPosts] = useState([]);
   const [liked, setLiked] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -35,10 +35,10 @@ export default function Community() {
       setPosts(data);
       setHasMore(data.length >= 10);
 
-      if (profile?.id && data.length) {
+      if (user?.id && data.length) {
         const { liked: l } = await getMyReactions(
           data.map((p) => p.id),
-          profile.id
+          user.id
         );
         setLiked(l);
       }
@@ -47,7 +47,7 @@ export default function Community() {
     } finally {
       setLoading(false);
     }
-  }, [profile?.id]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadInitial();
@@ -62,10 +62,10 @@ export default function Community() {
       setPosts((prev) => [...prev, ...more]);
       setHasMore(more.length >= 10);
 
-      if (profile?.id && more.length) {
+      if (user?.id && more.length) {
         const { liked: l } = await getMyReactions(
           more.map((p) => p.id),
-          profile.id
+          user.id
         );
         setLiked((prev) => new Set([...prev, ...l]));
       }
@@ -77,7 +77,10 @@ export default function Community() {
   };
 
   const handleToggleLike = async (postId, isLiked) => {
-    if (!profile?.id) return;
+    if (!user?.id) {
+      showToast("Vui lòng đăng nhập để thích bài viết", "error");
+      return;
+    }
 
     // Optimistic UI
     setLiked((prev) => {
@@ -101,7 +104,7 @@ export default function Community() {
       )
     );
 
-    const success = await toggleLike(postId, profile.id, isLiked);
+    const success = await toggleLike(postId, user.id, isLiked);
     if (!success) {
       // Rollback
       setLiked((prev) => {
@@ -133,14 +136,14 @@ export default function Community() {
         likes_count: 0,
         comments_count: 0,
         author: {
-          id: profile.id,
-          username: profile.username,
-          avatar_url: profile.avatar_url,
+          id: user.id,
+          username: profile?.username || user.email?.split("@")[0] || "Bạn",
+          avatar_url: profile?.avatar_url || null,
         },
       },
       ...prev,
     ]);
-    showToast("Đã đăng bài! Chờ duyệt trong vài phút.", "success");
+    showToast("Đã đăng bài!", "success");
   };
 
   const handleCommentAdded = (postId) => {
@@ -152,9 +155,9 @@ export default function Community() {
       )
     );
   };
-    return (
+
+  return (
     <div className="min-h-screen bg-[#f5f5f5] pb-24">
-      {/* Toast */}
       {toast && (
         <div
           className={`fixed left-1/2 top-4 z-50 w-[calc(100%-32px)] max-w-md -translate-x-1/2 rounded-2xl border px-4 py-3 shadow-lg ${
@@ -170,29 +173,22 @@ export default function Community() {
       <TopHeader />
 
       <main className="mx-auto max-w-lg px-3 py-4">
-        {/* Header */}
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
             <Users size={20} className="text-white" strokeWidth={2.4} />
           </div>
           <div>
             <h1 className="text-lg font-bold text-slate-900">Cộng đồng</h1>
-            <p className="text-xs text-slate-500">
-              Chia sẻ, học hỏi, kết nối
-            </p>
+            <p className="text-xs text-slate-500">Chia sẻ, học hỏi, kết nối</p>
           </div>
         </div>
 
-        {/* Post Form */}
-        {profile?.id && <PostForm onPostCreated={handlePostCreated} />}
+        {user?.id && <PostForm onPostCreated={handlePostCreated} />}
 
-        {/* Feed */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader2 size={24} className="animate-spin text-slate-300" />
-            <p className="mt-3 text-sm text-slate-400">
-              Đang tải bảng tin...
-            </p>
+            <p className="mt-3 text-sm text-slate-400">Đang tải bảng tin...</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center">
@@ -211,7 +207,7 @@ export default function Community() {
                 key={post.id}
                 post={post}
                 isLiked={liked.has(post.id)}
-                currentUserId={profile?.id}
+                currentUserId={user?.id}
                 onToggleLike={handleToggleLike}
                 onOpenComments={setActivePost}
                 onToast={showToast}
@@ -240,15 +236,14 @@ export default function Community() {
 
       <BottomNav />
 
-      {/* Comment Drawer */}
       {activePost && (
         <CommentDrawer
           post={activePost}
-          currentUserId={profile?.id}
+          currentUserId={user?.id}
           onClose={() => setActivePost(null)}
           onCommentAdded={handleCommentAdded}
         />
       )}
     </div>
   );
-}
+          }
