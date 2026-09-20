@@ -382,16 +382,15 @@ function BannerSlideshow({ navigate }) {
           onTouchEnd={() => setIsPaused(false)}
         >
           {BANNERS.map((banner, index) => {
-            if (imageErrors[index]) return null;
+  if (imageErrors[index]) return null;
+  if (index !== currentIndex) return null;  
 
-            return (
-              <img
-                key={banner.image}
-                src={getImageUrl(banner.image)}
-                alt={`Banner ${index + 1}`}
-                className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
-                  index === currentIndex ? 'opacity-100' : 'opacity-0'
-                }`}
+  return (
+    <img
+      key={banner.image}
+      src={getImageUrl(banner.image)}
+      alt={`Banner ${index + 1}`}
+      className="pointer-events-none absolute inset-0 h-full w-full object-cover"
                 onError={() => {
                   setImageErrors((prev) => ({ ...prev, [index]: true }));
                 }}
@@ -446,19 +445,20 @@ function BannerSlideshow({ navigate }) {
 
 // ============= GAME CARD =============
 
-function GameCard({ game, onClick }) {
+const GameCard = React.memo(function GameCard({ game, onClick }) {
   const [imageError, setImageError] = useState(false);
+  const imageUrl = React.useMemo(() => getImageUrl(game.logo), [game.logo]);
 
   return (
     <button
       type="button"
       onClick={() => onClick(game)}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-shadow hover:shadow-md active:scale-[0.99]"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
         {!imageError ? (
           <img
-            src={getImageUrl(game.logo)}
+            src={imageUrl}
             alt={game.name}
             loading="lazy"
             className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
@@ -491,7 +491,7 @@ function GameCard({ game, onClick }) {
       </div>
     </button>
   );
-}
+});
 
 // ============= GAME IMAGE (fallback cho search) =============
 
