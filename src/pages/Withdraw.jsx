@@ -16,6 +16,8 @@ import {
   Headphones,
   Gift,
   Users,
+  Search,
+  Clock3,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -889,8 +891,8 @@ export default function Withdraw() {
           </div>
         </>
       )}
-
+    </div>
             <BottomNav />
     </div>
   );
- }
+    }
