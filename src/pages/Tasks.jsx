@@ -433,21 +433,65 @@ useEffect(() => {
       setIsLoading(false);
     }
   };
-    // ✅ Nếu đang check IP
+    // ✅ Nếu đang check IP — hiện loading có BottomNav
 if (checkingIp) {
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <TopHeader />
-      <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
-      </div>
+
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
+        {/* Hero skeleton */}
+        <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5">
+          <div className="h-6 w-40 animate-pulse rounded-full bg-white/70" />
+          <div className="mt-3 flex items-start gap-3">
+            <div className="h-14 w-14 animate-pulse rounded-2xl bg-sky-300/60" />
+            <div className="flex-1 space-y-2">
+              <div className="h-7 w-48 animate-pulse rounded bg-white/70" />
+              <div className="h-4 w-32 animate-pulse rounded bg-white/60" />
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-16 animate-pulse rounded-xl bg-white/60"
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Task skeleton */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="overflow-hidden rounded-2xl border border-white bg-white shadow-sm"
+            >
+              <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600 opacity-60" />
+              <div className="space-y-3 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 animate-pulse rounded-xl bg-slate-100" />
+                    <div className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+                  </div>
+                  <div className="h-6 w-14 animate-pulse rounded-full bg-slate-100" />
+                </div>
+                <div className="h-14 animate-pulse rounded-xl bg-slate-50" />
+                <div className="h-11 animate-pulse rounded-full bg-slate-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Text */}
+        <div className="text-center text-[12px] text-slate-400">
+          Đang kiểm tra thiết bị...
+        </div>
+      </main>
+
+      <BottomNav />
     </div>
   );
-}
-
-// ✅ Nếu IP bị chặn → hiện màn hình block
-if (ipBlocked) {
-  return <IpBlockedScreen reason={ipBlocked.reason} canAppeal={ipBlocked.can_appeal} />;
 }
 
 return (
