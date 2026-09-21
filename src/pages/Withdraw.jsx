@@ -2,17 +2,26 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  ChevronDown,
+  Search,
+  ChevronRight,
   Loader2,
   AlertCircle,
   CheckCircle2,
-  History,
   X,
+  Clock3,
+  History,
+  BarChart3,
+  BookOpen,
+  Headphones,
+  Gift,
+  Users,
+  Banknote,
+  Smartphone,
+  Building2,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-import useProfile from "../hooks/useProfile.js";
 
 const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
 const STORAGE_BUCKET = "game_logos";
@@ -45,6 +54,14 @@ const BANKS = [
   { code: "NAB", name: "Nam A Bank",  logo: "nab.png" },
 ];
 
+const TOP_BANKS = ["VCB", "TCB", "MB", "BIDV", "VPB", "ACB", "VTB", "TPB"];
+
+const WALLETS = [
+  { id: "momo", name: "MoMo", logo: "momo.png", color: "#A50064" },
+  { id: "zalopay", name: "ZaloPay", logo: "zalopay.png", color: "#0068FF" },
+  { id: "viettelpay", name: "ViettelPay", logo: "viettelpay.png", color: "#EE0033" },
+];
+
 const QUICK_AMOUNTS = [50000, 100000, 200000, 500000];
 
 function formatMoney(v) {
@@ -52,48 +69,62 @@ function formatMoney(v) {
 }
 
 function getBankInfo(code) {
-  return BANKS.find((b) => b.code === code) || BANKS[0];
+  return BANKS.find((b) => b.code === code);
+}
+
+function getWalletInfo(id) {
+  return WALLETS.find((w) => w.id === id);
 }
 
 export default function Withdraw() {
   const navigate = useNavigate();
 
-  // Số dư & thông tin user lấy qua hook chung, đồng bộ với toàn app
-  const { profile, loading: profileLoading, setProfile } = useProfile();
-
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
 
+  // Modal flow
+  const [modalStep, setModalStep] = useState(null); // null | 'pickWallet' | 'pickBank' | 'form'
+  const [bankSearch, setBankSearch] = useState("");
+  const [selectedMethod, setSelectedMethod] = useState(null); // {type: 'bank'|'wallet', code?, wallet?}
+
+  // Form
   const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("bank");
-  const [bankCode, setBankCode] = useState("VCB");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
 
-  const [showBankPicker, setShowBankPicker] = useState(false);
+  // UI
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadUserAndHistory();
+    loadData();
   }, []);
 
-  const loadUserAndHistory = async () => {
-    setHistoryLoading(true);
+  const loadData = async () => {
+    setLoading(true);
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setUser(null);
-        setHistoryLoading(false);
+        setLoading(false);
         return;
       }
+
       setUser(user);
+
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("coins")
+        .eq("id", user.id)
+        .single();
+
+      setProfile(prof);
 
       const { data: hist } = await supabase
         .from("withdrawals")
@@ -106,11 +137,9 @@ export default function Withdraw() {
     } catch (err) {
       console.error("Load error:", err);
     } finally {
-      setHistoryLoading(false);
+      setLoading(false);
     }
   };
-
-  const loading = profileLoading || historyLoading;
 
   const numericAmount = Number(amount) || 0;
   const totalDeduct = numericAmount + FEE;
@@ -126,21 +155,76 @@ export default function Withdraw() {
     };
   }, [withdrawals]);
 
+  const filteredBanks = useMemo(() => {
+    const kw = bankSearch.trim().toLowerCase();
+    if (!kw) return BANKS;
+    return BANKS.filter(
+      (b) =>
+        b.name.toLowerCase().includes(kw) ||
+        b.code.toLowerCase().includes(kw)
+    );
+  }, [bankSearch]);
+
+  const closeModal = () => {
+    setModalStep(null);
+    setBankSearch("");
+    setSelectedMethod(null);
+    setAmount("");
+    setAccountNumber("");
+    setAccountName("");
+    setContactPhone("");
+    setError("");
+    setSuccess("");
+  };
+
+  const openPickWallet = () => {
+    setModalStep("pickWallet");
+    setBankSearch("");
+    setError("");
+  };
+
+  const openPickBank = () => {
+    setModalStep("pickBank");
+    setBankSearch("");
+    setError("");
+  };
+
+  const chooseWallet = (walletId) => {
+    setSelectedMethod({ type: "wallet", wallet: walletId });
+    setModalStep("form");
+  };
+
+  const chooseBank = (bankCode) => {
+    setSelectedMethod({ type: "bank", code: bankCode });
+    setModalStep("form");
+  };
+
+  const goBackModal = () => {
+    if (modalStep === "form") {
+      if (selectedMethod?.type === "bank") setModalStep("pickBank");
+      else setModalStep("pickWallet");
+      setError("");
+    } else {
+      closeModal();
+    }
+  };
+
   const handleSubmit = async () => {
     setError("");
     setSuccess("");
 
     if (!user) return setError("Vui lòng đăng nhập.");
+    if (!selectedMethod) return setError("Chưa chọn phương thức.");
     if (numericAmount < MIN_AMOUNT)
-      return setError(`Số tiền rút tối thiểu ${formatMoney(MIN_AMOUNT)}.`);
+      return setError(`Số tiền tối thiểu ${formatMoney(MIN_AMOUNT)}.`);
     if (numericAmount > MAX_AMOUNT)
-      return setError(`Số tiền rút tối đa ${formatMoney(MAX_AMOUNT)}.`);
+      return setError(`Số tiền tối đa ${formatMoney(MAX_AMOUNT)}.`);
     if (totalDeduct > (profile?.coins || 0))
       return setError(
         `Số dư không đủ. Cần ${formatMoney(totalDeduct)} (gồm phí ${formatMoney(FEE)}).`
       );
     if (todayInfo.count >= MAX_TIMES_PER_DAY)
-      return setError(`Đã đạt giới hạn ${MAX_TIMES_PER_DAY} lần/ngày.`);
+      return setError(`Đã đạt ${MAX_TIMES_PER_DAY} lần/ngày.`);
     if (todayInfo.amount + numericAmount > MAX_PER_DAY)
       return setError(`Vượt ${formatMoney(MAX_PER_DAY)}/ngày.`);
     if (!accountNumber.trim()) return setError("Nhập số tài khoản.");
@@ -155,6 +239,9 @@ export default function Withdraw() {
       } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Chưa đăng nhập");
 
+      const method = selectedMethod.type === "bank" ? "bank" : selectedMethod.wallet;
+      const bankCode = selectedMethod.type === "bank" ? selectedMethod.code : null;
+
       const res = await fetch(
         `${SUPABASE_URL}/functions/v1/request-withdrawal`,
         {
@@ -167,7 +254,7 @@ export default function Withdraw() {
           body: JSON.stringify({
             amount: numericAmount,
             method,
-            bank_code: method === "bank" ? bankCode : null,
+            bank_code: bankCode,
             account_number: accountNumber.trim(),
             account_name: accountName.trim(),
             contact_phone: contactPhone.trim(),
@@ -184,17 +271,12 @@ export default function Withdraw() {
         return;
       }
 
-      // Trừ số dư ngay trên UI (useProfile không có hàm refetch thủ công)
-      setProfile((prev) => ({
-        ...prev,
-        coins: (prev?.coins || 0) - data.amount - FEE,
-      }));
-
       setSuccess(`Đã gửi yêu cầu rút ${formatMoney(data.amount)}. Chờ 24h.`);
       setAmount("");
       setAccountNumber("");
       setAccountName("");
-      await loadUserAndHistory();
+      await loadData();
+      setTimeout(() => closeModal(), 2000);
     } catch (err) {
       setError(err?.message || "Không thể gửi yêu cầu.");
     } finally {
@@ -231,293 +313,581 @@ export default function Withdraw() {
     );
   }
 
-  const bankInfo = getBankInfo(bankCode);
+  const savedCards = withdrawals
+    .filter((w) => w.status !== "rejected")
+    .slice(0, 3)
+    .map((w) => ({
+      ...w,
+      bankInfo: w.bank_code ? getBankInfo(w.bank_code) : null,
+      walletInfo: w.method !== "bank" ? getWalletInfo(w.method) : null,
+    }));
+    return (
+  <div className="min-h-screen bg-white pb-24 text-slate-900">
+    <TopHeader />
 
-  return (
-    <div className="min-h-screen bg-white pb-24 text-slate-900">
-      <TopHeader />
-
-      {/* HEADER */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center"
-        >
-          <ArrowLeft size={22} strokeWidth={2} />
-        </button>
-        <h1 className="flex-1 text-[17px] font-bold">Rút tiền</h1>
-        <button
-          onClick={() => navigate("/withdraw/history")}
-          className="flex items-center gap-1 text-[13px] font-semibold text-slate-600"
-        >
-          <History size={15} strokeWidth={2.2} />
+    {/* HEADER */}
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex h-9 w-9 items-center justify-center"
+      >
+        <ArrowLeft size={22} strokeWidth={2} />
+      </button>
+      <h1 className="flex-1 text-[17px] font-bold">Rút tiền</h1>
+      <button
+        onClick={() => navigate("/withdraw/history")}
+        className="flex h-9 items-center gap-1.5 rounded-full bg-slate-100 px-3"
+      >
+        <History size={15} strokeWidth={2.2} className="text-slate-700" />
+        <span className="text-[12px] font-semibold text-slate-700">
           Lịch sử
-        </button>
-      </div>
+        </span>
+      </button>
+    </div>
 
-      <div className="mx-auto max-w-2xl px-4 py-4">
-        {/* SỐ DƯ — 1 dòng text */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <span className="text-[14px] text-slate-500">Số dư khả dụng</span>
-          <span className="text-[16px] font-bold text-slate-900">
-            {formatMoney(profile?.coins || 0)}
-          </span>
-        </div>
-
-        {/* HÔM NAY */}
-        <div className="flex items-center justify-between border-b border-slate-100 py-3">
-          <span className="text-[13px] text-slate-500">Hôm nay</span>
-          <span className="text-[13px] font-semibold text-slate-700">
-            {todayInfo.count}/{MAX_TIMES_PER_DAY} lần ·{" "}
-            {formatMoney(todayInfo.amount)}/{formatMoney(MAX_PER_DAY)}
-          </span>
-        </div>
-
-        {/* SỐ TIỀN */}
-        <div className="pt-5">
-          <label className="text-[14px] font-semibold text-slate-700">
-            Số tiền muốn rút
-          </label>
+    <div className="mx-auto max-w-2xl">
+      {/* SEARCH BOX */}
+      <div className="px-4 pt-4">
+        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5">
+          <Search size={18} className="shrink-0 text-slate-400" strokeWidth={2.4} />
           <input
             type="text"
             inputMode="numeric"
             value={amount ? Number(amount).toLocaleString("vi-VN") : ""}
             onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-            placeholder="Nhập số tiền"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3.5 text-[16px] font-semibold outline-none focus:border-slate-900"
+            placeholder="Nhập số tiền muốn rút"
+            className="flex-1 bg-transparent text-[14px] font-semibold outline-none placeholder:font-normal placeholder:text-slate-400"
           />
-
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            {QUICK_AMOUNTS.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setAmount(String(v))}
-                className={`rounded-lg border py-2.5 text-[13px] font-semibold transition ${
-                  amount === String(v)
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                {v / 1000}K
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* PHƯƠNG THỨC — Tab đơn giản */}
-        <div className="pt-5">
-          <label className="text-[14px] font-semibold text-slate-700">
-            Nhận tiền qua
-          </label>
-          <div className="mt-2 flex gap-2">
-            {[
-              { key: "bank", label: "Ngân hàng" },
-              { key: "momo", label: "MoMo" },
-              { key: "zalopay", label: "ZaloPay" },
-            ].map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setMethod(item.key)}
-                className={`flex-1 rounded-lg border py-2.5 text-[13px] font-semibold transition ${
-                  method === item.key
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* NGÂN HÀNG — Chỉ hiện khi method = bank */}
-        {method === "bank" && (
-          <div className="pt-5">
-            <label className="text-[14px] font-semibold text-slate-700">
-              Ngân hàng
-            </label>
+          {amount && (
             <button
-              type="button"
-              onClick={() => setShowBankPicker(true)}
-              className="mt-2 flex w-full items-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-left"
+              onClick={() => setAmount("")}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200"
             >
-              <img
-                src={getImageUrl(bankInfo.logo)}
-                alt=""
-                className="h-7 w-7 shrink-0 object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.parentElement.innerHTML = `<span style="font-weight:900;font-size:12px">${bankInfo.code}</span>`;
-                }}
-              />
-              <span className="flex-1 text-[15px] font-semibold">
-                {bankInfo.name}
-              </span>
-              <ChevronDown size={18} className="text-slate-400" />
+              <X size={12} strokeWidth={2.6} />
             </button>
-          </div>
-        )}
-
-        {/* SỐ TK */}
-        <div className="pt-5">
-          <label className="text-[14px] font-semibold text-slate-700">
-            {method === "bank" ? "Số tài khoản" : "Số điện thoại ví"}
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={accountNumber}
-            onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-            placeholder={method === "bank" ? "Nhập số tài khoản" : "Nhập SĐT ví"}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3.5 text-[15px] font-semibold outline-none focus:border-slate-900"
-          />
-        </div>
-
-        {/* TÊN */}
-        <div className="pt-5">
-          <label className="text-[14px] font-semibold text-slate-700">
-            Tên chủ tài khoản
-          </label>
-          <input
-            type="text"
-            value={accountName}
-            onChange={(e) => setAccountName(e.target.value.toUpperCase())}
-            placeholder="NGUYEN VAN A"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3.5 text-[15px] font-semibold uppercase outline-none focus:border-slate-900"
-          />
-        </div>
-
-        {/* SĐT */}
-        <div className="pt-5">
-          <label className="text-[14px] font-semibold text-slate-700">
-            SĐT liên hệ
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, ""))}
-            placeholder="0865245988"
-            maxLength={11}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3.5 text-[15px] font-semibold outline-none focus:border-slate-900"
-          />
-        </div>
-
-        {/* TỔNG KẾT */}
-        {numericAmount > 0 && (
-          <div className="mt-5 space-y-2 border-t border-slate-100 pt-5 text-[14px]">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Số tiền rút</span>
-              <span className="font-semibold">{formatMoney(numericAmount)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Phí giao dịch</span>
-              <span className="font-semibold text-slate-700">
-                -{formatMoney(FEE)}
-              </span>
-            </div>
-            <div className="flex justify-between border-t border-slate-100 pt-2">
-              <span className="font-semibold">Tổng trừ</span>
-              <span className="text-[16px] font-bold">
-                {formatMoney(totalDeduct)}
-              </span>
-            </div>
-            <div className="flex justify-between text-[13px]">
-              <span className="text-slate-500">Còn lại</span>
-              <span
-                className={`font-semibold ${
-                  remaining < 0 ? "text-rose-600" : "text-slate-700"
-                }`}
-              >
-                {formatMoney(remaining)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* THÔNG BÁO */}
-        {error && (
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-[13px] text-rose-700">
-            <AlertCircle size={15} className="mt-0.5 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-        {success && (
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[13px] text-emerald-700">
-            <CheckCircle2 size={15} className="mt-0.5 shrink-0" />
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* NÚT SUBMIT */}
-        <button
-          onClick={handleSubmit}
-          disabled={submitting || !numericAmount}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-4 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:opacity-40"
-        >
-          {submitting ? (
-            <>
-              <Loader2 size={18} className="animate-spin" />
-              Đang xử lý...
-            </>
-          ) : (
-            "Xác nhận rút tiền"
           )}
-        </button>
+        </div>
 
-        <p className="mt-4 pb-6 text-center text-[12px] text-slate-400">
-          Tiền sẽ được chuyển trong vòng 24h sau khi admin duyệt
-        </p>
+        {/* Quick amount */}
+        <div className="mt-2.5 grid grid-cols-4 gap-2">
+          {QUICK_AMOUNTS.map((v) => (
+            <button
+              key={v}
+              onClick={() => setAmount(String(v))}
+              className={`rounded-xl border py-2.5 text-[12px] font-bold transition ${
+                amount === String(v)
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-600"
+              }`}
+            >
+              {v / 1000}K
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* BANK PICKER MODAL */}
-      {showBankPicker && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/50"
-            onClick={() => setShowBankPicker(false)}
-          />
-          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-hidden rounded-t-2xl bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-              <h3 className="text-[16px] font-bold">Chọn ngân hàng</h3>
-              <button
-                onClick={() => setShowBankPicker(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"
-              >
-                <X size={16} />
-              </button>
-            </div>
+      {/* SỐ DƯ */}
+      <div className="px-4 pt-4">
+        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3.5">
+          <span className="text-[13px] text-slate-500">Số dư khả dụng</span>
+          <span className="text-[15px] font-bold text-slate-900">
+            {formatMoney(profile?.coins || 0)}
+          </span>
+        </div>
+      </div>
 
-            <div className="max-h-[70vh] overflow-y-auto">
-              {BANKS.map((bank) => (
-                <button
-                  key={bank.code}
-                  onClick={() => {
-                    setBankCode(bank.code);
-                    setShowBankPicker(false);
-                  }}
-                  className={`flex w-full items-center gap-3 border-b border-slate-50 px-4 py-3.5 text-left transition hover:bg-slate-50 ${
-                    bankCode === bank.code ? "bg-slate-50" : ""
-                  }`}
-                >
+      {/* RÚT TIỀN ĐẾN */}
+      <div className="px-4 pt-5">
+        <h3 className="text-[14px] font-bold text-slate-900">
+          Rút tiền đến
+        </h3>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {/* Ví điện tử */}
+          <button
+            onClick={openPickWallet}
+            className="flex items-center gap-3 rounded-2xl border-2 border-pink-100 bg-pink-50/60 p-4 text-left transition active:scale-[0.98]"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-500">
+              <Smartphone size={18} className="text-white" strokeWidth={2.4} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-pink-900">
+                Ví điện tử
+              </p>
+              <p className="mt-0.5 truncate text-[11px] text-pink-700">
+                MoMo, ZaloPay...
+              </p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-pink-500" />
+          </button>
+
+          {/* Ngân hàng */}
+          <button
+            onClick={openPickBank}
+            className="flex items-center gap-3 rounded-2xl border-2 border-sky-100 bg-sky-50/60 p-4 text-left transition active:scale-[0.98]"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500">
+              <Building2 size={18} className="text-white" strokeWidth={2.4} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-sky-900">Ngân hàng</p>
+              <p className="mt-0.5 truncate text-[11px] text-sky-700">
+                Vietcombank, MB...
+              </p>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-sky-500" />
+          </button>
+        </div>
+      </div>
+
+      {/* NGÂN HÀNG PHỔ BIẾN — scroll ngang */}
+      <div className="pt-5">
+        <div className="flex items-center justify-between px-4">
+          <h3 className="text-[14px] font-bold text-slate-900">
+            Ngân hàng phổ biến
+          </h3>
+          <button
+            onClick={openPickBank}
+            className="text-[12px] font-bold text-sky-500"
+          >
+            Xem tất cả
+          </button>
+        </div>
+
+        <div className="mt-3 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {TOP_BANKS.map((code) => {
+            const bank = getBankInfo(code);
+            if (!bank) return null;
+            return (
+              <button
+                key={code}
+                onClick={() => {
+                  setSelectedMethod({ type: "bank", code });
+                  setModalStep("form");
+                }}
+                className="flex w-[68px] shrink-0 flex-col items-center gap-2 transition active:scale-95"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-100 bg-white shadow-sm">
                   <img
                     src={getImageUrl(bank.logo)}
                     alt=""
-                    className="h-9 w-9 shrink-0 object-contain"
+                    className="h-8 w-8 object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
-                      e.currentTarget.parentElement.innerHTML = `<span style="font-weight:900;font-size:11px">${bank.code}</span>`;
+                      e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${bank.code}</span>`;
                     }}
                   />
-                  <span className="flex-1 text-[14.5px] font-semibold text-slate-800">
-                    {bank.name}
-                  </span>
-                  {bankCode === bank.code && (
-                    <CheckCircle2 size={18} className="text-slate-900" strokeWidth={2.4} />
-                  )}
+                </div>
+                <span className="w-full truncate text-center text-[10.5px] font-semibold text-slate-700">
+                  {bank.code === "TCB" ? "Techcombank" : bank.code === "VTB" ? "VietinBank" : bank.code === "VPB" ? "VPBank" : bank.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* RÚT NHANH — List đã lưu */}
+      {savedCards.length > 0 && (
+        <div className="pt-6">
+          <h3 className="px-4 text-[14px] font-bold text-slate-900">
+            Rút nhanh
+          </h3>
+          <div className="mt-3 space-y-2 px-4">
+            {savedCards.map((w, idx) => {
+              const bank = w.bankInfo;
+              const wallet = w.walletInfo;
+              const label = bank ? bank.name : wallet ? wallet.name : "Ví";
+              const logo = bank ? bank.logo : wallet?.logo;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSelectedMethod({
+                      type: w.method === "bank" ? "bank" : "wallet",
+                      code: w.bank_code,
+                      wallet: w.method !== "bank" ? w.method : null,
+                    });
+                    setAccountNumber(w.account_number || "");
+                    setAccountName(w.account_name || "");
+                    setModalStep("form");
+                  }}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 text-left transition active:scale-[0.99]"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white">
+                    {logo ? (
+                      <img
+                        src={getImageUrl(logo)}
+                        alt=""
+                        className="h-7 w-7 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${(bank?.code || "V").slice(0, 4)}</span>`;
+                        }}
+                      />
+                    ) : (
+                      <Smartphone size={18} className="text-slate-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13.5px] font-bold text-slate-900">
+                      {label} - ****{(w.account_number || "").slice(-3)}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] uppercase text-slate-500">
+                      {w.account_name}
+                    </p>
+                  </div>
+                  <Clock3 size={18} className="shrink-0 text-slate-300" strokeWidth={2.2} />
                 </button>
-              ))}
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* DỊCH VỤ KHÁC */}
+      <div className="pt-6 pb-6">
+        <h3 className="px-4 text-[14px] font-bold text-slate-900">
+          Dịch vụ khác
+        </h3>
+
+        <div className="mt-3 grid grid-cols-3 gap-3 px-4">
+          {[
+            { icon: History, label: "Lịch sử", href: "/withdraw/history", color: "#FE2C55" },
+            { icon: BarChart3, label: "Thống kê", href: "/withdraw", color: "#8B5CF6" },
+            { icon: BookOpen, label: "Hướng dẫn", href: "/help", color: "#0EA5E9" },
+            { icon: Headphones, label: "Trợ giúp", href: "/support", color: "#10B981" },
+            { icon: Gift, label: "Ưu đãi", href: "/store", color: "#F59E0B" },
+            { icon: Users, label: "Bạn bè", href: "/invite", color: "#EC4899" },
+          ].map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={idx}
+                onClick={() => navigate(item.href)}
+                className="flex flex-col items-center gap-2 transition active:scale-95"
+              >
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `${item.color}15` }}
+                >
+                  <Icon
+                    size={22}
+                    style={{ color: item.color }}
+                    strokeWidth={2.2}
+                  />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-700">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+          {/* MODAL */}
+      {modalStep && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50"
+            onClick={closeModal}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col overflow-hidden rounded-t-3xl bg-white">
+            {/* MODAL HEADER */}
+            <div className="flex shrink-0 items-center gap-3 border-b border-slate-100 px-4 py-3.5">
+              {modalStep !== "pickWallet" && (
+                <button
+                  onClick={goBackModal}
+                  className="flex h-8 w-8 items-center justify-center"
+                >
+                  <ArrowLeft size={20} strokeWidth={2.2} />
+                </button>
+              )}
+              <h3 className="flex-1 text-[16px] font-bold text-slate-900">
+                {modalStep === "pickWallet" && "Chọn ví điện tử"}
+                {modalStep === "pickBank" && "Chọn ngân hàng"}
+                {modalStep === "form" && "Nhập thông tin rút"}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"
+              >
+                <X size={16} strokeWidth={2.4} />
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="flex-1 overflow-y-auto">
+              {/* STEP 1: PICK WALLET */}
+              {modalStep === "pickWallet" && (
+                <div className="p-4 space-y-2">
+                  {WALLETS.map((w) => (
+                    <button
+                      key={w.id}
+                      onClick={() => chooseWallet(w.id)}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 text-left transition hover:bg-slate-50 active:scale-[0.99]"
+                    >
+                      <div
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+                        style={{ backgroundColor: `${w.color}15` }}
+                      >
+                        <img
+                          src={getImageUrl(w.logo)}
+                          alt=""
+                          className="h-7 w-7 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement.innerHTML = `<span style="color:${w.color};font-weight:900;font-size:13px">${w.name.slice(0,2)}</span>`;
+                          }}
+                        />
+                      </div>
+                      <span className="flex-1 text-[15px] font-bold text-slate-900">
+                        {w.name}
+                      </span>
+                      <ChevronRight size={18} className="text-slate-400" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 2: PICK BANK */}
+              {modalStep === "pickBank" && (
+                <div className="p-4">
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
+                    <Search size={16} className="shrink-0 text-slate-400" />
+                    <input
+                      type="text"
+                      value={bankSearch}
+                      onChange={(e) => setBankSearch(e.target.value)}
+                      placeholder="Tìm ngân hàng..."
+                      className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-slate-400"
+                    />
+                    {bankSearch && (
+                      <button
+                        onClick={() => setBankSearch("")}
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200"
+                      >
+                        <X size={11} strokeWidth={2.6} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-4 gap-2.5">
+                    {filteredBanks.map((bank) => (
+                      <button
+                        key={bank.code}
+                        onClick={() => chooseBank(bank.code)}
+                        className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 transition hover:border-sky-200 active:scale-95"
+                      >
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-white">
+                          <img
+                            src={getImageUrl(bank.logo)}
+                            alt=""
+                            className="h-7 w-7 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${bank.code}</span>`;
+                            }}
+                          />
+                        </div>
+                        <span className="line-clamp-2 text-center text-[10px] font-semibold leading-tight text-slate-700">
+                          {bank.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {filteredBanks.length === 0 && (
+                    <div className="py-10 text-center text-[13px] text-slate-400">
+                      Không tìm thấy ngân hàng
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* STEP 3: FORM */}
+              {modalStep === "form" && selectedMethod && (
+                <div className="space-y-4 p-4">
+                  {/* Selected info */}
+                  <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white">
+                      {selectedMethod.type === "bank" ? (
+                        <img
+                          src={getImageUrl(getBankInfo(selectedMethod.code)?.logo)}
+                          alt=""
+                          className="h-7 w-7 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${selectedMethod.code}</span>`;
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={getImageUrl(getWalletInfo(selectedMethod.wallet)?.logo)}
+                          alt=""
+                          className="h-7 w-7 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement.innerHTML = '<span style="font-size:16px">📱</span>';
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] text-slate-500">Rút qua</p>
+                      <p className="text-[14px] font-bold text-slate-900">
+                        {selectedMethod.type === "bank"
+                          ? getBankInfo(selectedMethod.code)?.name
+                          : getWalletInfo(selectedMethod.wallet)?.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Số tiền */}
+                  <div>
+                    <label className="text-[13px] font-semibold text-slate-700">
+                      Số tiền rút
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={amount ? Number(amount).toLocaleString("vi-VN") : ""}
+                      onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
+                      placeholder="Nhập số tiền"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[16px] font-bold outline-none focus:border-slate-900"
+                    />
+                    <div className="mt-2 grid grid-cols-4 gap-2">
+                      {QUICK_AMOUNTS.map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setAmount(String(v))}
+                          className={`rounded-lg border py-2 text-[11.5px] font-bold transition ${
+                            amount === String(v)
+                              ? "border-slate-900 bg-slate-900 text-white"
+                              : "border-slate-200 bg-white text-slate-600"
+                          }`}
+                        >
+                          {v / 1000}K
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Số TK */}
+                  <div>
+                    <label className="text-[13px] font-semibold text-slate-700">
+                      {selectedMethod.type === "bank"
+                        ? "Số tài khoản"
+                        : "Số điện thoại ví"}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
+                      placeholder={
+                        selectedMethod.type === "bank"
+                          ? "Nhập số tài khoản"
+                          : "Nhập SĐT ví"
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[15px] font-semibold outline-none focus:border-slate-900"
+                    />
+                  </div>
+
+                  {/* Tên */}
+                  <div>
+                    <label className="text-[13px] font-semibold text-slate-700">
+                      Tên chủ tài khoản
+                    </label>
+                    <input
+                      type="text"
+                      value={accountName}
+                      onChange={(e) => setAccountName(e.target.value.toUpperCase())}
+                      placeholder="NGUYEN VAN A"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[15px] font-semibold uppercase outline-none focus:border-slate-900"
+                    />
+                  </div>
+
+                  {/* SĐT */}
+                  <div>
+                    <label className="text-[13px] font-semibold text-slate-700">
+                      SĐT liên hệ
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, ""))}
+                      placeholder="0865245988"
+                      maxLength={11}
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[15px] font-semibold outline-none focus:border-slate-900"
+                    />
+                  </div>
+
+                  {/* Tổng kết */}
+                  {numericAmount > 0 && (
+                    <div className="space-y-2 rounded-2xl bg-slate-50 p-4 text-[13px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Tiền rút</span>
+                        <span className="font-bold">{formatMoney(numericAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Phí</span>
+                        <span className="font-bold text-rose-600">-{formatMoney(FEE)}</span>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-200 pt-2">
+                        <span className="font-bold text-slate-900">Tổng trừ</span>
+                        <span className="text-[15px] font-black">
+                          {formatMoney(totalDeduct)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[12px]">
+                        <span className="text-slate-500">Còn lại</span>
+                        <span
+                          className={`font-bold ${
+                            remaining < 0 ? "text-rose-600" : "text-slate-700"
+                          }`}
+                        >
+                          {formatMoney(remaining)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notifications */}
+                  {error && (
+                    <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-[12.5px] text-rose-700">
+                      <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+                  {success && (
+                    <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[12.5px] text-emerald-700">
+                      <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
+                      <span>{success}</span>
+                    </div>
+                  )}
+
+                  {/* Submit */}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting || !numericAmount}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:opacity-40"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Xác nhận rút tiền"
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -526,4 +896,4 @@ export default function Withdraw() {
       <BottomNav />
     </div>
   );
-}
+                  }
