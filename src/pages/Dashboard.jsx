@@ -6,7 +6,6 @@ import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import Footer from "../components/Footer.jsx";
-import MidAutumnBanner from "../components/MidAutumnBanner.jsx";
 
 function getGreeting() {
   const h = new Date().getHours();
