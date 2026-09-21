@@ -489,10 +489,22 @@ if (checkingIp) {
         </div>
       </main>
 
-      <BottomNav />
+            <BottomNav />
     </div>
   );
 }
+
+// ✅ Nếu IP bị chặn → hiện màn hình block
+if (ipBlocked) {
+  return (
+    <IpBlockedScreen
+      reason={ipBlocked.reason}
+      canAppeal={ipBlocked.can_appeal}
+    />
+  );
+}
+
+return (
 
 return (
 <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
