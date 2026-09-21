@@ -13,6 +13,9 @@ import {
   XCircle,
   History,
   ListChecks,
+  AlertCircle,
+  ShieldAlert,
+  Send,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -26,6 +29,7 @@ import { supabase } from "../lib/supabaseClient.js";
 // =====================================================
 const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
 const STORAGE_BUCKET = "game_logos";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
@@ -201,28 +205,77 @@ export default function Tasks() {
   const [startingTaskId, setStartingTaskId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [ipBlocked, setIpBlocked] = useState(null); // { reason, can_appeal }
+  const [checkingIp, setCheckingIp] = useState(true);
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  // Reload khi quay lại tab
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        reload();
-        setHistoryLoaded(false);
+  // ✅ Check IP lần đầu vào trang
+useEffect(() => {
+  if (!user?.id) return;
+
+  const checkIp = async () => {
+    setCheckingIp(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setCheckingIp(false);
+        return;
       }
-    };
 
-    document.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("focus", handleVisibility);
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/log-ip`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("focus", handleVisibility);
-    };
-  }, [navigate, reload]);
+      const data = await res.json();
+
+      if (data.allowed === false) {
+        setIpBlocked({
+          reason: data.reason,
+          can_appeal: data.can_appeal,
+        });
+      } else {
+        setIpBlocked(null);
+      }
+    } catch (err) {
+      console.error("Check IP error:", err);
+    } finally {
+      setCheckingIp(false);
+    }
+  };
+
+  checkIp();
+}, [user?.id]);
+
+// Reload khi quay lại tab
+useEffect(() => {
+  const handleVisibility = () => {
+    if (document.visibilityState === "visible") {
+      reload();
+      setHistoryLoaded(false);
+    }
+  };
+
+  document.addEventListener("visibilitychange", handleVisibility);
+  window.addEventListener("focus", handleVisibility);
+
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibility);
+    window.removeEventListener("focus", handleVisibility);
+  };
+}, [navigate, reload]);
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
@@ -380,8 +433,25 @@ export default function Tasks() {
       setIsLoading(false);
     }
   };
-    return (
-  <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
+    // ✅ Nếu đang check IP
+if (checkingIp) {
+  return (
+    <div className="min-h-screen bg-white pb-24">
+      <TopHeader />
+      <div className="flex items-center justify-center py-24">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+      </div>
+    </div>
+  );
+}
+
+// ✅ Nếu IP bị chặn → hiện màn hình block
+if (ipBlocked) {
+  return <IpBlockedScreen reason={ipBlocked.reason} canAppeal={ipBlocked.can_appeal} />;
+}
+
+return (
+<div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
     {toast && (
       <div
         className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl ${
@@ -795,3 +865,155 @@ export default function Tasks() {
     </div>
   );
                         }
+// =====================================================
+// COMPONENT: MÀN HÌNH CHẶN IP
+// =====================================================
+function IpBlockedScreen({ reason, canAppeal }) {
+  const [appealText, setAppealText] = useState("");
+  const [contactInfo, setContactInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const submitAppeal = async () => {
+    if (!appealText.trim()) {
+      alert("Vui lòng nhập lý do kháng cáo.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Chưa đăng nhập");
+
+      const { data, error } = await supabase.rpc("submit_fraud_appeal", {
+        p_user_id: session.user.id,
+        p_reason: appealText.trim(),
+        p_contact_info: contactInfo.trim() || null,
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        alert(data.error);
+        return;
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      alert("Không thể gửi kháng cáo: " + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-24">
+      <TopHeader />
+
+      <div className="mx-auto max-w-lg px-4 py-8">
+        {/* Warning card */}
+        <div className="rounded-2xl border-2 border-rose-300 bg-gradient-to-br from-rose-50 to-white p-6 text-center shadow-lg">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100">
+            <ShieldAlert size={32} className="text-rose-600" strokeWidth={2.2} />
+          </div>
+
+          <h2 className="mt-4 text-[20px] font-black text-rose-800">
+            🚫 Không thể làm nhiệm vụ
+          </h2>
+
+          <p className="mt-3 text-[13.5px] leading-6 text-rose-700">
+            {reason}
+          </p>
+        </div>
+
+        {/* Appeal form */}
+        {canAppeal && !submitted && (
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Send size={16} className="text-sky-600" strokeWidth={2.4} />
+              <h3 className="text-[14px] font-black text-slate-900">
+                Gửi kháng cáo
+              </h3>
+            </div>
+
+            <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
+              Nếu bạn cho rằng đây là nhầm lẫn, hãy gửi kháng cáo để admin xem xét trong 24-48h.
+            </p>
+
+            <textarea
+              value={appealText}
+              onChange={(e) => setAppealText(e.target.value)}
+              placeholder="Giải thích lý do tại sao bạn cho rằng mình không gian lận..."
+              rows={4}
+              className="mt-3 w-full rounded-xl border border-slate-200 p-3 text-[13px] outline-none transition focus:border-sky-500"
+            />
+
+            <input
+              type="text"
+              value={contactInfo}
+              onChange={(e) => setContactInfo(e.target.value)}
+              placeholder="SĐT / Zalo liên hệ (không bắt buộc)"
+              className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-[13px] outline-none transition focus:border-sky-500"
+            />
+
+            <button
+              onClick={submitAppeal}
+              disabled={submitting || !appealText.trim()}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-3 text-[13px] font-bold text-white transition hover:bg-rose-700 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Đang gửi...
+                </>
+              ) : (
+                <>
+                  <Send size={14} strokeWidth={2.4} />
+                  Gửi kháng cáo
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Success */}
+        {submitted && (
+          <div className="mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-5 text-center">
+            <CheckCircle2 size={36} className="mx-auto text-emerald-600" />
+            <p className="mt-3 text-[14px] font-black text-emerald-800">
+              Đã gửi kháng cáo!
+            </p>
+            <p className="mt-1 text-[12px] leading-5 text-emerald-700">
+              Admin sẽ xem xét trong 24-48h. Bạn sẽ được thông báo qua Zalo/email sau khi có kết quả.
+            </p>
+          </div>
+        )}
+
+        {/* Hint */}
+        <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3.5">
+          <p className="text-[12px] leading-5 text-sky-700">
+            💡 <b>Gợi ý:</b> Nếu bạn dùng chung WiFi với người khác, hãy tắt WiFi và dùng <b>4G</b> để làm nhiệm vụ.
+          </p>
+        </div>
+
+        {/* Support link */}
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3.5 text-center">
+          <p className="text-[12px] text-slate-500">
+            Cần hỗ trợ thêm? Liên hệ Zalo{" "}
+            <a
+              href="https://zalo.me/0865245988"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-sky-600"
+            >
+              0865245988
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
