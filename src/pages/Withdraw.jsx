@@ -2,22 +2,20 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Search,
-  ChevronRight,
+  Building2,
+  Smartphone,
+  CheckCircle2,
   Loader2,
   AlertCircle,
-  CheckCircle2,
-  X,
-  Clock3,
+  ChevronRight,
   History,
-  BarChart3,
-  BookOpen,
+  Wallet,
+  X,
+  Info,
+  Trophy,
   Headphones,
   Gift,
   Users,
-  Banknote,
-  Smartphone,
-  Building2,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
