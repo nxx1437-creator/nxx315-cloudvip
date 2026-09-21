@@ -47,6 +47,7 @@ import HistoryDetail from "./pages/HistoryDetail.jsx";
 import AdminNotifications from "./pages/AdminNotifications.jsx";
 import AdminChat from "./pages/AdminChat.jsx";
 import Withdraw from "./pages/Withdraw.jsx";
+import WithdrawHistory from "./pages/WithdrawHistory.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -311,6 +312,15 @@ export default function App() {
           />
 
           <Route
+            path="/withdraw/history"
+            element={
+              <ProtectedRoute>
+                <WithdrawHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/profile"
             element={
               <ProtectedRoute>
@@ -335,4 +345,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-}
+                  }
