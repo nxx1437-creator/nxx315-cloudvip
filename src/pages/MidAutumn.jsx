@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   X,
   Clock3,
-  Flame,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -34,11 +33,15 @@ function formatMoney(v) {
 }
 
 function getCountdown(target) {
-  const now = new Date().getTime();
+  const now = Date.now();
+  const start = EVENT_START.getTime();
   const diff = target.getTime() - now;
 
+  if (now < start) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, ended: false, notStarted: true };
+  }
   if (diff <= 0) {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0, ended: true };
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, ended: true, notStarted: false };
   }
 
   return {
@@ -47,9 +50,9 @@ function getCountdown(target) {
     minutes: Math.floor((diff / (1000 * 60)) % 60),
     seconds: Math.floor((diff / 1000) % 60),
     ended: false,
+    notStarted: false,
   };
 }
-
 export default function MidAutumn() {
   const navigate = useNavigate();
 
@@ -58,20 +61,12 @@ export default function MidAutumn() {
   const [profile, setProfile] = useState(null);
   const [status, setStatus] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
-
   const [countdown, setCountdown] = useState(getCountdown(EVENT_END));
 
-  // Minigame state
-  const [activeGame, setActiveGame] = useState(null); // 'lantern' | 'star' | null
-
-  // Lantern game
+  const [activeGame, setActiveGame] = useState(null);
   const [pickingLantern, setPickingLantern] = useState(false);
   const [lanternResult, setLanternResult] = useState(null);
 
-  // Star game
-  const [starGameActive, setStarGameActive] = useState(false);
-
-  // ========== LOAD DATA ==========
   useEffect(() => {
     loadData();
   }, []);
@@ -110,7 +105,6 @@ export default function MidAutumn() {
     }
   };
 
-  // ========== COUNTDOWN ==========
   useEffect(() => {
     const interval = setInterval(() => {
       setCountdown(getCountdown(EVENT_END));
@@ -118,7 +112,6 @@ export default function MidAutumn() {
     return () => clearInterval(interval);
   }, []);
 
-  // ========== LANTERN GAME ==========
   const playLantern = async (lanternIndex) => {
     if (pickingLantern || status?.played_today) return;
 
@@ -137,7 +130,6 @@ export default function MidAutumn() {
         return;
       }
 
-      // Fake delay cho animation
       setTimeout(() => {
         setLanternResult({
           success: true,
@@ -157,7 +149,6 @@ export default function MidAutumn() {
     }
   };
 
-  // ========== STAR GAME ==========
   const submitStarScore = async (score, starsClicked) => {
     try {
       const { data, error } = await supabase.rpc("submit_star_score", {
@@ -177,7 +168,6 @@ export default function MidAutumn() {
     }
   };
 
-  // ========== SHARE ==========
   const handleShare = () => {
     const url = `${window.location.origin}/mid-autumn`;
     const text = "🌕 Mình vừa tham gia sự kiện Trung Thu NXX315! Đập hộp nhận quà cực hot!";
@@ -185,12 +175,11 @@ export default function MidAutumn() {
     if (navigator.share) {
       navigator.share({ title: "Trung Thu NXX315", text, url });
     } else {
-      // Fallback: copy link
       navigator.clipboard?.writeText(`${text}\n${url}`);
       alert("Đã copy link! Dán vào Zalo/Facebook để chia sẻ nhé.");
     }
   };
-  if (loading) {
+       if (loading) {
     return (
       <div className="min-h-screen bg-white pb-24">
         <TopHeader />
@@ -225,7 +214,6 @@ export default function MidAutumn() {
 
       {/* HEADER ĐỎ */}
       <div className="header-mid relative overflow-hidden px-4 py-5">
-        {/* Trang trí mây/trăng */}
         <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-yellow-300/20 moon-glow" />
         <div className="pointer-events-none absolute -left-4 top-8 text-4xl opacity-30 lantern-glow">
           🏮
@@ -267,6 +255,15 @@ export default function MidAutumn() {
             <div className="mt-3 text-center text-[18px] font-black text-red-600">
               🎉 Sự kiện đã kết thúc!
             </div>
+          ) : countdown.notStarted ? (
+            <div className="mt-3 text-center">
+              <p className="text-[16px] font-black text-red-600">
+                🎁 Sự kiện sắp bắt đầu!
+              </p>
+              <p className="mt-1 text-[12px] text-red-500">
+                Quay lại vào 21/9/2026 nhé
+              </p>
+            </div>
           ) : (
             <div className="mt-3 grid grid-cols-4 gap-2">
               {[
@@ -291,7 +288,7 @@ export default function MidAutumn() {
           )}
         </div>
 
-        {/* 3 MENU GAME */}
+        {/* 2 MENU GAME */}
         <div className="mt-4 space-y-3">
           {/* Đoán đèn lồng */}
           <button
@@ -508,8 +505,8 @@ export default function MidAutumn() {
       <BottomNav />
     </div>
   );
-}
-// =====================================================
+          }
+      // =====================================================
 // MINIGAME 1: ĐOÁN ĐÈN LỒNG
 // =====================================================
 function LanternGameModal({
@@ -524,12 +521,10 @@ function LanternGameModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center">
       <div className="theme-mid-autumn relative w-full max-w-lg overflow-hidden rounded-t-3xl bg-gradient-to-b from-red-50 to-yellow-50 p-6 sm:rounded-3xl">
-        {/* Decoration */}
         <div className="pointer-events-none absolute -top-4 -right-4 text-8xl opacity-10">
           🏮
         </div>
 
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-red-600 shadow-md"
@@ -537,7 +532,6 @@ function LanternGameModal({
           <X size={18} strokeWidth={2.4} />
         </button>
 
-        {/* Title */}
         <div className="text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-red-500">
             Minigame Trung thu
@@ -552,7 +546,6 @@ function LanternGameModal({
           </p>
         </div>
 
-        {/* 3 Lanterns */}
         <div className="mt-6 grid grid-cols-3 gap-3">
           {[1, 2, 3].map((idx) => {
             const isPicked = lanternResult?.picked_lantern === idx;
@@ -602,7 +595,6 @@ function LanternGameModal({
           })}
         </div>
 
-        {/* Loading */}
         {pickingLantern && (
           <div className="mt-4 flex items-center justify-center gap-2 text-[13px] font-bold text-red-600">
             <Loader2 size={16} className="animate-spin" />
@@ -610,7 +602,6 @@ function LanternGameModal({
           </div>
         )}
 
-        {/* Result */}
         {lanternResult && !pickingLantern && (
           <div className="mt-5 rounded-2xl border-2 border-yellow-400 bg-white p-4 text-center shadow-lg">
             {lanternResult.error ? (
@@ -646,7 +637,6 @@ function LanternGameModal({
           </div>
         )}
 
-        {/* Footer hint */}
         {!playedToday && !lanternResult && (
           <p className="mt-4 text-center text-[11px] text-red-500/70">
             💡 Mỗi người được chơi 1 lần/ngày
@@ -655,14 +645,13 @@ function LanternGameModal({
       </div>
     </div>
   );
-}
+            }
 // =====================================================
 // MINIGAME 2: ĐẾM SAO
 // =====================================================
 function StarGameModal({ onClose, onSubmitScore }) {
-  const GAME_DURATION = 30; // 30 giây
-  const SPAWN_INTERVAL = 500; // Tạo sao mới mỗi 500ms
-  const STAR_LIFETIME = 2000; // Sao tồn tại 2s
+  const GAME_DURATION = 30;
+  const SPAWN_INTERVAL = 500;
 
   const [playing, setPlaying] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
@@ -671,6 +660,11 @@ function StarGameModal({ onClose, onSubmitScore }) {
   const [clicked, setClicked] = useState(0);
   const [finished, setFinished] = useState(false);
   const [result, setResult] = useState(null);
+
+  // ✅ REF — luôn có giá trị mới nhất, không bị closure cũ
+  const scoreRef = useRef(0);
+  const clickedRef = useRef(0);
+  const playingRef = useRef(false);
 
   // Timer countdown
   useEffect(() => {
@@ -698,15 +692,14 @@ function StarGameModal({ onClose, onSubmitScore }) {
       const id = Date.now() + Math.random();
       const newStar = {
         id,
-        x: Math.random() * 85 + 5, // 5-90%
-        y: -10, // Bắt đầu trên màn hình
-        size: Math.random() * 20 + 30, // 30-50px
-        speed: Math.random() * 1000 + 2500, // 2.5-3.5s rơi
+        x: Math.random() * 85 + 5,
+        y: -10,
+        size: Math.random() * 20 + 40,
+        speed: Math.random() * 1000 + 2500,
       };
 
       setStars((prev) => [...prev, newStar]);
 
-      // Auto remove sau khi rơi hết
       setTimeout(() => {
         setStars((prev) => prev.filter((s) => s.id !== id));
       }, newStar.speed);
@@ -723,34 +716,44 @@ function StarGameModal({ onClose, onSubmitScore }) {
     setClicked(0);
     setFinished(false);
     setResult(null);
+
+    scoreRef.current = 0;
+    clickedRef.current = 0;
+    playingRef.current = true;
   };
 
   const endGame = async () => {
+    playingRef.current = false;
     setPlaying(false);
     setFinished(true);
 
-    const data = await onSubmitScore(score, clicked);
+    const finalScore = scoreRef.current;
+    const finalClicked = clickedRef.current;
+
+    console.log('[StarGame] End — score:', finalScore, 'clicked:', finalClicked);
+
+    const data = await onSubmitScore(finalScore, finalClicked);
     if (data?.success) {
       setResult(data);
     }
   };
 
-  const handleStarClick = (star) => {
-    if (!playing) return;
+  const handleStarClick = React.useCallback((star) => {
+    if (!playingRef.current) return;
 
-    // Xóa sao khỏi màn hình
     setStars((prev) => prev.filter((s) => s.id !== star.id));
 
-    // Cộng điểm
     const points = 100;
     setScore((prev) => prev + points);
     setClicked((prev) => prev + 1);
-  };
+
+    scoreRef.current += points;
+    clickedRef.current += 1;
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div className="theme-mid-autumn relative w-full max-w-lg overflow-hidden rounded-3xl bg-gradient-to-b from-indigo-900 via-purple-900 to-indigo-900">
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-yellow-100 backdrop-blur-sm"
@@ -758,7 +761,6 @@ function StarGameModal({ onClose, onSubmitScore }) {
           <X size={18} strokeWidth={2.4} />
         </button>
 
-        {/* Header */}
         <div className="relative z-10 border-b border-white/10 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -779,9 +781,7 @@ function StarGameModal({ onClose, onSubmitScore }) {
           </div>
         </div>
 
-        {/* Game area */}
         <div className="relative h-[400px] overflow-hidden bg-gradient-to-b from-indigo-950 to-purple-950">
-          {/* Sao nền */}
           {Array.from({ length: 30 }).map((_, i) => (
             <div
               key={i}
@@ -794,33 +794,37 @@ function StarGameModal({ onClose, onSubmitScore }) {
             />
           ))}
 
-          {/* Mặt trăng */}
           <div className="absolute right-8 top-6 h-16 w-16 rounded-full bg-gradient-to-br from-yellow-200 to-yellow-400 moon-glow" />
 
-          {/* Sao rơi */}
           {playing &&
             stars.map((star) => (
-              <button
+              <div
                 key={star.id}
-                onClick={() => handleStarClick(star)}
-                className="absolute cursor-pointer transition-transform active:scale-75"
+                onPointerDown={() => handleStarClick(star)}
+                className="absolute cursor-pointer select-none"
                 style={{
                   left: `${star.x}%`,
-                  top: 0,
+                  top: -60,
                   width: star.size,
                   height: star.size,
-                  animation: `starFall ${star.speed}ms linear forwards`,
+                  animationName: 'starFall',
+                  animationDuration: `${star.speed}ms`,
+                  animationTimingFunction: 'linear',
+                  animationFillMode: 'forwards',
+                  animationIterationCount: 1,
+                  zIndex: 20,
+                  pointerEvents: 'auto',
+                  touchAction: 'manipulation',
                 }}
               >
                 <Star
                   size={star.size}
-                  className="text-yellow-400 drop-shadow-[0_0_10px_#FBBF24]"
+                  className="pointer-events-none text-yellow-400 drop-shadow-[0_0_12px_#FBBF24]"
                   fill="#FBBF24"
                 />
-              </button>
+              </div>
             ))}
 
-          {/* Start button */}
           {!playing && !finished && (
             <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
               <div className="text-6xl">⭐</div>
@@ -842,9 +846,8 @@ function StarGameModal({ onClose, onSubmitScore }) {
             </div>
           )}
 
-              {/* Playing overlay stats */}
-          {playing && (
-            <div className="absolute left-4 top-4 z-10 space-y-1.5">
+                    {playing && (
+            <div className="absolute left-4 top-4 z-30 space-y-1.5">
               <div className="rounded-full bg-black/40 px-3 py-1 backdrop-blur-sm">
                 <span className="text-[11px] font-bold text-yellow-300">
                   ⭐ {clicked} sao
@@ -858,9 +861,8 @@ function StarGameModal({ onClose, onSubmitScore }) {
             </div>
           )}
 
-          {/* Finished */}
           {finished && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 px-6 backdrop-blur-sm">
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 px-6 backdrop-blur-sm">
               <div className="text-6xl">🎉</div>
               <h3 className="mt-3 text-[20px] font-black text-yellow-100">
                 Hoàn thành!
@@ -898,7 +900,6 @@ function StarGameModal({ onClose, onSubmitScore }) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="relative z-10 border-t border-white/10 px-5 py-3 text-center">
           <p className="text-[11px] text-yellow-200/60">
             🏆 Top 10 điểm cao nhất sẽ nhận quà đặc biệt cuối sự kiện
@@ -908,3 +909,4 @@ function StarGameModal({ onClose, onSubmitScore }) {
     </div>
   );
 }
+
