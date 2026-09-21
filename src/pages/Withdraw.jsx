@@ -890,7 +890,7 @@ export default function Withdraw() {
         </>
       )}
 
-      <BottomNav />
+            <BottomNav />
     </div>
   );
-}
+ }
