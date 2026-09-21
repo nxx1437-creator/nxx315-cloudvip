@@ -987,7 +987,7 @@ function WithdrawBanner({ navigate }) {
             {/* Banner icon (ảnh hoặc placeholder) */}
             {!bannerImgError ? (
               <img
-                src={getImageUrl("withdraw-banner-icon.png")}
+                src={getImageUrl("withdraw-banner-icon1.png")}
                 alt=""
                 className="h-20 w-20 shrink-0 object-contain"
                 onError={() => setBannerImgError(true)}
