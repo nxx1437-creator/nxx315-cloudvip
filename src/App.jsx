@@ -48,7 +48,6 @@ import AdminNotifications from "./pages/AdminNotifications.jsx";
 import AdminChat from "./pages/AdminChat.jsx";
 import Withdraw from "./pages/Withdraw.jsx";
 import WithdrawHistory from "./pages/WithdrawHistory.jsx";
-import MidAutumn from "./pages/MidAutumn.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -249,14 +248,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-  path="/mid-autumn"
-  element={
-    <ProtectedRoute>
-      <MidAutumn />
-    </ProtectedRoute>
-  }
-/>
 
           <Route
             path="/admin"
@@ -354,4 +345,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-                  }
+            }
