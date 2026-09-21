@@ -150,24 +150,38 @@ export default function MidAutumn() {
   };
 
   const submitStarScore = async (score, starsClicked) => {
-    try {
-      const { data, error } = await supabase.rpc("submit_star_score", {
-        p_user_id: user.id,
-        p_score: score,
-        p_stars_clicked: starsClicked,
-      });
+  try {
+    const { data, error } = await supabase.rpc("submit_star_score", {
+      p_user_id: user.id,
+      p_score: score,
+      p_stars_clicked: starsClicked,
+    });
 
-      if (error) throw error;
-      if (data?.success) {
-        loadData();
-      }
-      return data;
-    } catch (err) {
-      console.error("Submit star error:", err);
-      return null;
+    if (error) throw error;
+    if (data?.success) {
+      // ✅ Force reload BXH
+      await loadLeaderboard();
     }
-  };
+    return data;
+  } catch (err) {
+    console.error("Submit star error:", err);
+    return null;
+  }
+};
 
+// ✅ Function riêng để load BXH
+const loadLeaderboard = async () => {
+  try {
+    const { data, error } = await supabase.rpc("get_star_leaderboard", {
+      p_limit: 10,
+    });
+    if (error) throw error;
+    if (data) setLeaderboard(data);
+  } catch (err) {
+    console.error("Load leaderboard error:", err);
+  }
+};
+    
   const handleShare = () => {
     const url = `${window.location.origin}/mid-autumn`;
     const text = "🌕 Mình vừa tham gia sự kiện Trung Thu NXX315! Đập hộp nhận quà cực hot!";
@@ -495,12 +509,16 @@ export default function MidAutumn() {
       )}
 
       {/* MODAL: STAR GAME */}
-      {activeGame === "star" && (
-        <StarGameModal
-          onClose={() => setActiveGame(null)}
-          onSubmitScore={submitStarScore}
-        />
-      )}
+{activeGame === "star" && (
+  <StarGameModal
+    onClose={async () => {
+      setActiveGame(null);
+      // ✅ Reload BXH khi đóng modal
+      await loadLeaderboard();
+    }}
+    onSubmitScore={submitStarScore}
+  />
+)}
 
       <BottomNav />
     </div>
