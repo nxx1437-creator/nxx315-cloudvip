@@ -968,11 +968,11 @@ function WithdrawBanner({ navigate }) {
           >
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-medium leading-tight text-slate-500">
-                Rút tiền & Chill
+                Đổi điểm thành tiền 
               </p>
               <div className="mt-1 flex items-center gap-2">
                 <h3 className="text-[22px] font-black leading-tight tracking-[-0.02em] text-slate-900">
-                  Giải trí
+                  khám phá ngay
                 </h3>
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm transition group-hover:bg-slate-50">
                   <ChevronRight
