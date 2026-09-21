@@ -8,7 +8,6 @@ import {
   XCircle,
   AlertCircle,
   Building2,
-  Smartphone,
   RotateCw,
   Copy,
 } from "lucide-react";
@@ -39,8 +38,8 @@ const BANKS = [
 ];
 
 const WALLETS = {
-  momo: { name: "Ví MoMo", logo: "momo.png", color: "#A50064" },
-  zalopay: { name: "ZaloPay", logo: "zalopay.png", color: "#0068FF" },
+  momo: { name: "Ví MoMo", logo: "momo.png" },
+  zalopay: { name: "ZaloPay", logo: "zalopay.png" },
 };
 
 const STATUS_INFO = {
@@ -113,7 +112,6 @@ export default function WithdrawHistory() {
 
       if (error) throw error;
 
-      // Decrypt từng record
       const decrypted = await Promise.all(
         (data || []).map(async (w) => {
           const [number, name, phone] = await Promise.all([
@@ -171,29 +169,27 @@ export default function WithdrawHistory() {
   const copyText = (text) => {
     if (text) navigator.clipboard?.writeText(text);
   };
-      return (
+     return (
     <div className="min-h-screen bg-white pb-24 text-slate-900">
       <TopHeader />
 
-      {/* HEADER */}
-      <div className="bg-[#0A2540] px-4 py-4">
-        <div className="mx-auto flex max-w-2xl items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
-          >
-            <ArrowLeft size={20} strokeWidth={2.4} />
-          </button>
-          <h1 className="flex-1 text-[16px] font-bold tracking-tight text-white">
-            Lịch sử rút tiền
-          </h1>
-          <button
-            onClick={loadHistory}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white"
-          >
-            <RotateCw size={18} strokeWidth={2.4} />
-          </button>
-        </div>
+      {/* HEADER TRẮNG */}
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center"
+        >
+          <ArrowLeft size={22} strokeWidth={2} className="text-slate-900" />
+        </button>
+        <h1 className="flex-1 text-[17px] font-black tracking-tight text-slate-900">
+          Lịch sử rút tiền
+        </h1>
+        <button
+          onClick={loadHistory}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100"
+        >
+          <RotateCw size={18} strokeWidth={2.4} className="text-slate-700" />
+        </button>
       </div>
 
       <div className="mx-auto w-full max-w-2xl px-4 py-5">
@@ -240,7 +236,7 @@ export default function WithdrawHistory() {
         <div className="mt-4">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-6 w-6 animate-spin text-[#0A2540]" />
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 py-16 text-center">
@@ -257,7 +253,7 @@ export default function WithdrawHistory() {
               {withdrawals.length === 0 && (
                 <button
                   onClick={() => navigate("/withdraw")}
-                  className="mt-4 rounded-xl bg-[#0A2540] px-5 py-2.5 text-[13px] font-bold text-white"
+                  className="mt-4 rounded-xl bg-slate-900 px-5 py-2.5 text-[13px] font-bold text-white"
                 >
                   Rút tiền ngay
                 </button>
@@ -278,7 +274,7 @@ export default function WithdrawHistory() {
                     key={w.id}
                     className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
                   >
-                    {/* Row 1: Logo + Label + Status */}
+                    {/* Row 1 */}
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-white">
                         {logoFile ? (
@@ -311,27 +307,23 @@ export default function WithdrawHistory() {
                       </span>
                     </div>
 
-                    {/* Row 2: Amount */}
+                    {/* Row 2 */}
                     <div className="mt-3 flex items-baseline justify-between border-t border-slate-100 pt-3">
                       <div>
-                        <p className="text-[10.5px] text-slate-400">
-                          Số tiền rút
-                        </p>
+                        <p className="text-[10.5px] text-slate-400">Số tiền rút</p>
                         <p className="text-[18px] font-black text-slate-900">
                           {formatMoney(w.amount)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10.5px] text-slate-400">
-                          Phí
-                        </p>
+                        <p className="text-[10.5px] text-slate-400">Phí</p>
                         <p className="text-[12.5px] font-bold text-rose-600">
                           -{formatMoney(w.fee)}
                         </p>
                       </div>
                     </div>
 
-                    {/* Row 3: Info */}
+                    {/* Row 3 */}
                     <div className="mt-3 space-y-1.5 rounded-xl bg-slate-50 p-3">
                       <div className="flex items-center justify-between text-[11.5px]">
                         <span className="text-slate-500">
@@ -351,7 +343,6 @@ export default function WithdrawHistory() {
                           )}
                         </span>
                       </div>
-
                       <div className="flex items-center justify-between text-[11.5px]">
                         <span className="text-slate-500">Tên chủ TK</span>
                         <span className="truncate text-right font-bold uppercase text-slate-800">
@@ -360,14 +351,12 @@ export default function WithdrawHistory() {
                       </div>
                     </div>
 
-                    {/* Rejected reason */}
                     {w.rejected_reason && (
                       <div className="mt-3 rounded-lg bg-rose-50 p-2.5 text-[11.5px] text-rose-700">
                         <b>Lý do từ chối:</b> {w.rejected_reason}
                       </div>
                     )}
 
-                    {/* Pending hint */}
                     {(w.status === "pending" || w.status === "processing") && (
                       <div className="mt-3 flex items-center gap-1.5 text-[11px] text-amber-600">
                         <Clock3 size={11} strokeWidth={2.4} />
@@ -385,4 +374,4 @@ export default function WithdrawHistory() {
       <BottomNav />
     </div>
   );
-}
+                       }
