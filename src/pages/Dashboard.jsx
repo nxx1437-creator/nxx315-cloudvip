@@ -295,10 +295,7 @@ export default function Dashboard() {
 
         {!loading && (
   <>
-    {/* Banner Trung thu */}
-    <MidAutumnBanner />
-
-    {/* Hero */}
+       {/* Hero */}
     <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
 
