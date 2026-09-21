@@ -503,9 +503,7 @@ if (ipBlocked) {
     />
   );
 }
-
-return (
-
+  
 return (
 <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
     {toast && (
