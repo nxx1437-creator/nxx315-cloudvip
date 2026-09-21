@@ -264,7 +264,7 @@ export default function VersionChecker() {
           onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          🚀 Tải lại ngay
+           Tải lại ngay
         </button>
 
         {/* Hint */}
@@ -278,7 +278,7 @@ export default function VersionChecker() {
             lineHeight: 1.5,
           }}
         >
-          💡 Nếu bạn đang nhập thông tin, hãy lưu lại trước khi tải lại.
+           Nếu bạn đang nhập thông tin, hãy lưu lại trước khi tải lại.
         </p>
       </div>
 
