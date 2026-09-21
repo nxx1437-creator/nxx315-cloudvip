@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import Footer from "../components/Footer.jsx";
+import MidAutumnBanner from "../components/MidAutumnBanner.jsx";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -293,9 +294,12 @@ export default function Dashboard() {
         {showSkeleton && loading && <DashboardSkeleton />}
 
         {!loading && (
-          <>
-            {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
+  <>
+    {/* Banner Trung thu */}
+    <MidAutumnBanner />
+
+    {/* Hero */}
+    <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
 
               <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
