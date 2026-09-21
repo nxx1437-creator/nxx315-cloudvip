@@ -1,12 +1,62 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
-const CHECK_INTERVAL = 60000; // 60 giây
+const CHECK_INTERVAL = 60 * 1000; // 60 giây
+const IDLE_DELAY = 30 * 1000; // Chờ 30 giây user không tương tác
+const IDLE_EVENTS = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart', 'input'];
 
 export default function VersionChecker() {
-  const [outdated, setOutdated] = useState(false);
   const currentVersion = useRef(null);
+  const pendingReload = useRef(false);
+  const lastActivity = useRef(Date.now());
+  const reloadTimer = useRef(null);
 
   useEffect(() => {
+    // ========== 1. TRACK USER ACTIVITY ==========
+    const handleActivity = () => {
+      lastActivity.current = Date.now();
+
+      if (pendingReload.current) {
+        scheduleReload();
+      }
+    };
+
+    IDLE_EVENTS.forEach((event) => {
+      document.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // ========== 2. SCHEDULE RELOAD ==========
+    const scheduleReload = () => {
+      if (!pendingReload.current) return;
+
+      if (reloadTimer.current) {
+        clearTimeout(reloadTimer.current);
+      }
+
+      const idleTime = Date.now() - lastActivity.current;
+      const waitTime = Math.max(0, IDLE_DELAY - idleTime);
+
+      reloadTimer.current = setTimeout(() => {
+        const finalIdleTime = Date.now() - lastActivity.current;
+
+        if (finalIdleTime >= IDLE_DELAY) {
+          performSilentReload();
+        } else {
+          scheduleReload();
+        }
+      }, waitTime);
+    };
+
+    // ========== 3. SILENT RELOAD ==========
+    const performSilentReload = () => {
+      console.log('[VersionChecker] Silent reload to new version');
+      try {
+        window.location.reload();
+      } catch (err) {
+        console.error('[VersionChecker] Reload error:', err);
+      }
+    };
+
+    // ========== 4. CHECK VERSION ==========
     const checkVersion = async () => {
       try {
         const res = await fetch(`/version.json?t=${Date.now()}`, {
@@ -17,57 +67,104 @@ export default function VersionChecker() {
         if (currentVersion.current === null) {
           currentVersion.current = data.version;
         } else if (data.version !== currentVersion.current) {
-          setOutdated(true);
+          console.log('[VersionChecker] New version detected:', data.version);
+          pendingReload.current = true;
+          scheduleReload();
         }
       } catch (err) {
-        // bỏ qua lỗi mạng tạm thời
+        // Bỏ qua lỗi mạng
       }
     };
 
-    checkVersion();
+    // ========== 5. CHECK KHI QUAY LẠI TAB / MỞ LẠI APP ==========
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        lastActivity.current = Date.now();
+
+        // ✅ QUAN TRỌNG: khi user quay lại tab
+        // → force check version NGAY + reload nếu có version mới
+        forceCheckAndReload();
+      }
+    };
+
+    // ✅ Force check + reload (không đợi idle)
+    const forceCheckAndReload = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`, {
+          cache: 'no-store',
+        });
+        const data = await res.json();
+
+        if (
+          currentVersion.current !== null &&
+          data.version !== currentVersion.current
+        ) {
+          // Có version mới → reload ngay (không đợi 30s)
+          console.log('[VersionChecker] Force reload on tab return');
+          window.location.reload();
+        } else if (currentVersion.current === null) {
+          currentVersion.current = data.version;
+        }
+      } catch (err) {
+        // Bỏ qua lỗi mạng
+      }
+    };
+
+    // ========== 6. CHECK KHI PAGE LOAD LẠI ==========
+    const checkOnLoad = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`, {
+          cache: 'no-store',
+        });
+        const data = await res.json();
+
+        // Lưu version hiện tại ngay lần đầu
+        if (currentVersion.current === null) {
+          currentVersion.current = data.version;
+
+          // ✅ Check xem localStorage có version cũ không
+          const storedVersion = localStorage.getItem('nxx315_app_version');
+          if (storedVersion && storedVersion !== data.version) {
+            // Version cũ → force reload để lấy version mới
+            console.log('[VersionChecker] Old version detected on load');
+            localStorage.setItem('nxx315_app_version', data.version);
+            window.location.reload();
+            return;
+          }
+
+          // Lưu version mới
+          localStorage.setItem('nxx315_app_version', data.version);
+        }
+      } catch (err) {
+        // Bỏ qua lỗi mạng
+      }
+    };
+
+    // ========== 7. START ==========
+    checkOnLoad();
+
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        checkVersion();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
 
+    // ✅ Listen custom event để reload từ bất kỳ đâu
+    const handleForceReload = () => {
+      console.log('[VersionChecker] Force reload triggered');
+      window.location.reload();
+    };
+    window.addEventListener('nxx315:force-reload', handleForceReload);
+
+    // ========== 8. CLEANUP ==========
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
+      if (reloadTimer.current) clearTimeout(reloadTimer.current);
+      IDLE_EVENTS.forEach((event) => {
+        document.removeEventListener(event, handleActivity);
+      });
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('nxx315:force-reload', handleForceReload);
     };
   }, []);
 
-  if (!outdated) return null;
-
-  return (
-    <div style={overlayStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>Có phiên bản mới!</h1>
-        <p style={textStyle}>
-          Vui lòng tải lại trang để cập nhật phiên bản mới nhất trước khi tiếp tục sử dụng.
-        </p>
-        <button style={buttonStyle} onClick={() => window.location.reload()}>
-          Tải lại trang
-        </button>
-      </div>
-    </div>
-  );
+  return null;
 }
-
-const overlayStyle = {
-  position: 'fixed', inset: 0, zIndex: 99999,
-  background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  flexDirection: 'column', textAlign: 'center', padding: 24,
-  fontFamily: 'system-ui, sans-serif',
-};
-const cardStyle = { maxWidth: 320 };
-const titleStyle = { fontSize: 18, fontWeight: 700, color: '#0f172a', margin: 0 };
-const textStyle = { fontSize: 14, color: '#64748b', marginTop: 8 };
-const buttonStyle = {
-  marginTop: 24, background: 'linear-gradient(to right, #38bdf8, #2563eb)',
-  color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px',
-  fontSize: 14, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
-};
