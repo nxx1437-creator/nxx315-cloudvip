@@ -146,3 +146,74 @@ body {
     transform: translateX(0);
   }
 }
+/* ============ MID-AUTUMN THEME ============ */
+.theme-mid-autumn {
+  --mid-red: #DC143C;
+  --mid-gold: #FFD700;
+  --mid-orange: #FF8C00;
+  --mid-pink-light: #FFE4E1;
+}
+
+/* Nút đỏ */
+.theme-mid-autumn .btn-mid-primary {
+  background: linear-gradient(135deg, #DC143C, #FF8C00);
+  color: white;
+}
+
+.theme-mid-autumn .btn-mid-gold {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #7a1c1c;
+}
+
+/* Card viền vàng */
+.theme-mid-autumn .card-mid {
+  border: 2px solid #FFD700;
+  background: linear-gradient(180deg, #FFFEF5, #FFF8DC);
+}
+
+/* Header đỏ */
+.theme-mid-autumn .header-mid {
+  background: linear-gradient(135deg, #DC143C, #B01030);
+  color: #FFD700;
+}
+
+/* Text vàng */
+.theme-mid-autumn .text-mid-gold {
+  color: #FFD700;
+}
+
+/* Lantern glow animation */
+@keyframes lanternGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px #FFD700); 
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px #FF8C00); 
+    transform: scale(1.05);
+  }
+}
+
+.theme-mid-autumn .lantern-glow {
+  animation: lanternGlow 2s ease-in-out infinite;
+}
+
+/* Star twinkle */
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.theme-mid-autumn .star-twinkle {
+  animation: starTwinkle 1.2s ease-in-out infinite;
+}
+
+/* Moon glow */
+@keyframes moonGlow {
+  0%, 100% { box-shadow: 0 0 40px #FFD700, 0 0 80px #FFA500; }
+  50% { box-shadow: 0 0 60px #FFD700, 0 0 120px #FF8C00; }
+}
+
+.theme-mid-autumn .moon-glow {
+  animation: moonGlow 3s ease-in-out infinite;
+       }
