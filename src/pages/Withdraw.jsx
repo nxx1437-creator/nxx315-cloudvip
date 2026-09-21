@@ -12,6 +12,7 @@ import {
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+import useProfile from "../hooks/useProfile.js";
 
 const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
 const STORAGE_BUCKET = "game_logos";
@@ -57,10 +58,12 @@ function getBankInfo(code) {
 export default function Withdraw() {
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
+  // Số dư & thông tin user lấy qua hook chung, đồng bộ với toàn app
+  const { profile, loading: profileLoading, setProfile } = useProfile();
+
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("bank");
@@ -75,30 +78,22 @@ export default function Withdraw() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadUserAndHistory();
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadUserAndHistory = async () => {
+    setHistoryLoading(true);
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setLoading(false);
+        setUser(null);
+        setHistoryLoading(false);
         return;
       }
-
       setUser(user);
-
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("coins")
-        .eq("id", user.id)
-        .single();
-
-      setProfile(prof);
 
       const { data: hist } = await supabase
         .from("withdrawals")
@@ -111,9 +106,11 @@ export default function Withdraw() {
     } catch (err) {
       console.error("Load error:", err);
     } finally {
-      setLoading(false);
+      setHistoryLoading(false);
     }
   };
+
+  const loading = profileLoading || historyLoading;
 
   const numericAmount = Number(amount) || 0;
   const totalDeduct = numericAmount + FEE;
@@ -187,11 +184,17 @@ export default function Withdraw() {
         return;
       }
 
+      // Trừ số dư ngay trên UI (useProfile không có hàm refetch thủ công)
+      setProfile((prev) => ({
+        ...prev,
+        coins: (prev?.coins || 0) - data.amount - FEE,
+      }));
+
       setSuccess(`Đã gửi yêu cầu rút ${formatMoney(data.amount)}. Chờ 24h.`);
       setAmount("");
       setAccountNumber("");
       setAccountName("");
-      await loadData();
+      await loadUserAndHistory();
     } catch (err) {
       setError(err?.message || "Không thể gửi yêu cầu.");
     } finally {
@@ -301,7 +304,6 @@ export default function Withdraw() {
             ))}
           </div>
         </div>
-
         {/* PHƯƠNG THỨC — Tab đơn giản */}
         <div className="pt-5">
           <label className="text-[14px] font-semibold text-slate-700">
@@ -524,4 +526,4 @@ export default function Withdraw() {
       <BottomNav />
     </div>
   );
-                       }
+}
