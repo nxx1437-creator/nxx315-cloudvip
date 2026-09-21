@@ -7,6 +7,9 @@ import {
   ChevronLeft,
   History as HistoryIcon,
   TrendingUp,
+  Wallet,
+  Building2,
+  Smartphone,
 } from 'lucide-react';
 
 import TopHeader from '../components/TopHeader.jsx';
@@ -156,8 +159,11 @@ export default function Store() {
         </section>
       )}
 
-      {/* DANH SÁCH GAME */}
-      <section className="px-4 pt-7">
+      {/* BANNER RÚT TIỀN */}
+<WithdrawBanner navigate={navigate} />
+
+{/* DANH SÁCH GAME */}
+<section className="px-4 pt-7">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-4 text-xl font-black uppercase text-gray-900">
             DANH SÁCH GAME
@@ -915,3 +921,118 @@ function getIconColorByStatus(status) {
     return 'text-rose-600';
   return 'text-slate-500';
     }
+// ============= WITHDRAW BANNER =============
+function WithdrawBanner({ navigate }) {
+  const [hasImage, setHasImage] = useState(true);
+
+  const SERVICES = [
+    {
+      icon: Building2,
+      label: "Rút ngân hàng",
+      desc: "Vietcombank, Techcombank...",
+      color: "from-emerald-500 to-teal-500",
+      bg: "bg-emerald-50",
+    },
+    {
+      icon: Smartphone,
+      label: "Ví MoMo",
+      desc: "Nhận nhanh trong 24h",
+      color: "from-pink-500 to-rose-500",
+      bg: "bg-pink-50",
+    },
+    {
+      icon: Wallet,
+      label: "ZaloPay",
+      desc: "Tiện lợi, an toàn",
+      color: "from-blue-500 to-cyan-500",
+      bg: "bg-blue-50",
+    },
+  ];
+
+  return (
+    <section className="px-4 pt-6">
+      <div className="mx-auto max-w-5xl">
+        {/* BANNER */}
+        <div
+          onClick={() => navigate('/withdraw')}
+          className="group relative cursor-pointer overflow-hidden rounded-[20px] shadow-[0_8px_24px_rgba(16,185,129,0.15)] transition active:scale-[0.99]"
+        >
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500" />
+
+          {/* Pattern mờ */}
+          <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-8 -left-4 h-24 w-24 rounded-full bg-white/10" />
+
+          {/* Ảnh banner (nếu có) */}
+          {hasImage && (
+            <img
+              src={getImageUrl('withdraw-banner.png')}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+              onError={() => setHasImage(false)}
+            />
+          )}
+
+          {/* Nội dung */}
+          <div className="relative flex items-center gap-4 p-5">
+            {/* Icon to */}
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/30">
+              <Wallet size={26} className="text-white" strokeWidth={2.4} />
+            </div>
+
+            {/* Text */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-[17px] font-black leading-tight text-white drop-shadow-sm">
+                  Rút tiền & Chill
+                </h3>
+                <span className="text-lg">💰</span>
+              </div>
+              <p className="mt-0.5 text-[12.5px] font-medium leading-tight text-white/90">
+                Rút xu về ngân hàng — Nhanh chóng, an toàn
+              </p>
+              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm transition group-hover:bg-white/30">
+                Khám phá ngay
+                <ChevronRight size={12} strokeWidth={2.8} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 DỊCH VỤ CON */}
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {SERVICES.map((service, idx) => {
+            const Icon = service.icon;
+            return (
+              <button
+                key={idx}
+                onClick={() => navigate('/withdraw')}
+                className="group flex items-center gap-3 rounded-[14px] border border-slate-200 bg-white p-3.5 text-left shadow-sm transition hover:border-emerald-200 hover:shadow-md active:scale-[0.98]"
+              >
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${service.color}`}
+                >
+                  <Icon size={18} className="text-white" strokeWidth={2.4} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13.5px] font-bold text-slate-900">
+                    {service.label}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                    {service.desc}
+                  </p>
+                </div>
+                <ChevronRight
+                  size={16}
+                  className="shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-500"
+                  strokeWidth={2.6}
+                />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
