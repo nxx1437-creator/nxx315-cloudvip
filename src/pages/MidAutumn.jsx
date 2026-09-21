@@ -25,8 +25,9 @@ import { supabase } from "../lib/supabaseClient.js";
 const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Ngày kết thúc sự kiện: 16/8 âm lịch = 7/10/2026 dương lịch
-const EVENT_END = new Date("2026-10-07T23:59:59+07:00");
+// Sự kiện: 21/9/2026 → 26/9/2026
+const EVENT_START = new Date("2026-09-21T00:00:00+07:00");
+const EVENT_END = new Date("2026-09-26T23:59:59+07:00");
 
 function formatMoney(v) {
   return new Intl.NumberFormat("vi-VN").format(Number(v || 0));
