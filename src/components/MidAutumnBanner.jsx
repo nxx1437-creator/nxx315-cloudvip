@@ -2,17 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Sparkles } from "lucide-react";
 
-const EVENT_END = new Date("2026-10-07T23:59:59+07:00");
+const EVENT_START = new Date("2026-09-21T00:00:00+07:00");
+const EVENT_END = new Date("2026-09-26T23:59:59+07:00");
 
 function getCountdown(target) {
-  const diff = target.getTime() - Date.now();
-  if (diff <= 0) return { d: 0, h: 0, m: 0, ended: true };
+  const now = Date.now();
+  const start = EVENT_START.getTime();
+  const diff = target.getTime() - now;
+
+  if (now < start) {
+    return { d: 0, h: 0, m: 0, ended: false, notStarted: true };
+  }
+  if (diff <= 0) {
+    return { d: 0, h: 0, m: 0, ended: true, notStarted: false };
+  }
 
   return {
     d: Math.floor(diff / (1000 * 60 * 60 * 24)),
     h: Math.floor((diff / (1000 * 60 * 60)) % 24),
     m: Math.floor((diff / (1000 * 60)) % 60),
     ended: false,
+    notStarted: false,
   };
 }
 
