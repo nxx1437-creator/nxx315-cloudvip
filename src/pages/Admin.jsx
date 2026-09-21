@@ -25,6 +25,7 @@ import {
   Coins,
   Loader2,
   Image as ImageIcon,
+  Wallet,  
     Bell,
   Trophy,
   Gamepad2,
@@ -41,6 +42,7 @@ import PlayTogetherOrdersTab from "../pages/PlayTogetherOrdersTab";
 import PubgOrdersTab from "../pages/PubgOrdersTab";        
 import FreeFireOrdersTab from "../pages/FreeFireOrdersTab";
 import BroadcastForm from "../components/admin/BroadcastForm";
+import WithdrawalsTab from "../pages/WithdrawalsTab";
 
 const ADMIN_CHAT_ID = "6152450878";
 
@@ -73,6 +75,7 @@ const tabs = [
   { id: "affiliate", label: "Affiliate", icon: HandCoins },
   { id: "posts", label: "Bài viết", icon: FileText },
   { id: "notify", label: "Thông báo", icon: Bell },
+  { id: "withdrawals", label: "Rút tiền", icon: Wallet },
 ];
 
 export default function Admin() {
@@ -134,6 +137,7 @@ export default function Admin() {
         {activeTab === "affiliate" && <AffiliateTab />}
         {activeTab === "posts" && <PostsTab />}
         {activeTab === "notify" && <BroadcastForm />}
+        {activeTab === "withdrawals" && <WithdrawalsTab />}
       </div>
     </div>
   );
