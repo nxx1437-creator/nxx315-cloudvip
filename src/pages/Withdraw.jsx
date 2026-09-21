@@ -547,46 +547,45 @@ export default function Withdraw() {
       )}
 
       {/* DỊCH VỤ KHÁC */}
-      <div className="pt-6 pb-6">
-        <h3 className="px-4 text-[14px] font-bold text-slate-900">
-          Dịch vụ khác
-        </h3>
+<div className="pt-6 pb-6">
+  <h3 className="px-4 text-[14px] font-bold text-slate-900">
+    Dịch vụ khác
+  </h3>
 
-        <div className="mt-3 grid grid-cols-3 gap-3 px-4">
-          {[
-            { icon: History, label: "Lịch sử", href: "/withdraw/history", color: "#FE2C55" },
-            { icon: BarChart3, label: "Thống kê", href: "/withdraw", color: "#8B5CF6" },
-            { icon: BookOpen, label: "Hướng dẫn", href: "/help", color: "#0EA5E9" },
-            { icon: Headphones, label: "Trợ giúp", href: "/support", color: "#10B981" },
-            { icon: Gift, label: "Ưu đãi", href: "/store", color: "#F59E0B" },
-            { icon: Users, label: "Bạn bè", href: "/invite", color: "#EC4899" },
-          ].map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={idx}
-                onClick={() => navigate(item.href)}
-                className="flex flex-col items-center gap-2 transition active:scale-95"
-              >
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `${item.color}15` }}
-                >
-                  <Icon
-                    size={22}
-                    style={{ color: item.color }}
-                    strokeWidth={2.2}
-                  />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-700">
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+  <div className="mt-3 grid grid-cols-3 gap-3 px-4">
+    {[
+      { icon: History, label: "Lịch sử", href: "/withdraw/history", color: "#FE2C55" },
+      { icon: Wallet, label: "Ví của tôi", href: "/wallet", color: "#0EA5E9" },
+      { icon: Gift, label: "Nạp tiền", href: "/store", color: "#10B981" },
+      { icon: Headphones, label: "Trợ giúp", href: "/support", color: "#8B5CF6" },
+      { icon: Trophy, label: "Ưu đãi", href: "/tasks", color: "#F59E0B" },
+      { icon: Users, label: "Bạn bè", href: "/invite", color: "#EC4899" },
+    ].map((item, idx) => {
+      const Icon = item.icon;
+      return (
+        <button
+          key={idx}
+          onClick={() => navigate(item.href)}
+          className="flex flex-col items-center gap-2 transition active:scale-95"
+        >
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-2xl"
+            style={{ backgroundColor: `${item.color}15` }}
+          >
+            <Icon
+              size={22}
+              style={{ color: item.color }}
+              strokeWidth={2.2}
+            />
+          </div>
+          <span className="text-[11px] font-semibold text-slate-700">
+            {item.label}
+          </span>
+        </button>
+      );
+    })}
+  </div>
+</div>
           {/* MODAL */}
       {modalStep && (
         <>
