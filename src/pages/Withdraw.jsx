@@ -1,899 +1,633 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Search,
-  ChevronRight,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
+  RefreshCw,
+  Eye,
   X,
-  Clock3,
-  History,
-  BarChart3,
-  BookOpen,
-  Headphones,
-  Gift,
-  Users,
-  Banknote,
-  Smartphone,
+  Check,
+  AlertCircle,
+  Loader2,
+  EyeOff,
+  Copy,
   Building2,
+  Smartphone,
+  Clock3,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
-import TopHeader from "../components/TopHeader.jsx";
-import BottomNav from "../components/BottomNav.jsx";
-import { supabase } from "../lib/supabaseClient.js";
+import { supabase } from "../lib/supabaseClient";
 
-const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
-const STORAGE_BUCKET = "game_logos";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-const getImageUrl = (file) =>
-  `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${file}`;
-
-const FEE = 2000;
-const MIN_AMOUNT = 10000;
-const MAX_AMOUNT = 500000;
-const MAX_PER_DAY = 500000;
-const MAX_TIMES_PER_DAY = 5;
+const SECRET_KEY = "NXX315_SECRET_KEY_2026";
 
 const BANKS = [
-  { code: "VCB", name: "Vietcombank", logo: "vcb.png" },
-  { code: "TCB", name: "Techcombank", logo: "tcb.png" },
-  { code: "MB",  name: "MB Bank",     logo: "mb.png"  },
-  { code: "VPB", name: "VPBank",      logo: "vpb.png" },
-  { code: "TPB", name: "TPBank",      logo: "tpb.png" },
-  { code: "ACB", name: "ACB",         logo: "acb.png" },
-  { code: "BIDV", name: "BIDV",       logo: "bidv.png" },
-  { code: "VTB", name: "VietinBank",  logo: "vtb.png" },
-  { code: "STB", name: "Sacombank",   logo: "stb.png" },
-  { code: "EIB", name: "Eximbank",    logo: "eib.png" },
-  { code: "OCB", name: "OCB",         logo: "ocb.png" },
-  { code: "MSB", name: "MSB",         logo: "msb.png" },
-  { code: "HDB", name: "HDBank",      logo: "hdb.png" },
-  { code: "SEAB", name: "SeABank",    logo: "seab.png" },
-  { code: "NAB", name: "Nam A Bank",  logo: "nab.png" },
+  { code: "VCB", name: "Vietcombank" },
+  { code: "TCB", name: "Techcombank" },
+  { code: "MB",  name: "MB Bank" },
+  { code: "BIDV", name: "BIDV" },
+  { code: "VTB", name: "VietinBank" },
+  { code: "VPB", name: "VPBank" },
+  { code: "ACB", name: "ACB" },
+  { code: "TPB", name: "TPBank" },
+  { code: "STB", name: "Sacombank" },
+  { code: "AGR", name: "Agribank" },
+  { code: "SHB", name: "SHB" },
+  { code: "VIB", name: "VIB" },
 ];
 
-const TOP_BANKS = ["VCB", "TCB", "MB", "BIDV", "VPB", "ACB", "VTB", "TPB"];
+const WALLETS = {
+  momo: { name: "Ví MoMo" },
+  zalopay: { name: "ZaloPay" },
+};
 
-const WALLETS = [
-  { id: "momo", name: "MoMo", logo: "momo.png", color: "#A50064" },
-  { id: "zalopay", name: "ZaloPay", logo: "zalopay.png", color: "#0068FF" },
-  { id: "viettelpay", name: "ViettelPay", logo: "viettelpay.png", color: "#EE0033" },
-];
-
-const QUICK_AMOUNTS = [50000, 100000, 200000, 500000];
+const STATUS_INFO = {
+  pending: { label: "Chờ duyệt", className: "bg-amber-100 text-amber-700", icon: Clock3 },
+  processing: { label: "Đang xử lý", className: "bg-sky-100 text-sky-700", icon: Loader2 },
+  completed: { label: "Đã chuyển", className: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
+  rejected: { label: "Từ chối", className: "bg-rose-100 text-rose-700", icon: XCircle },
+  cancelled: { label: "Đã hủy", className: "bg-slate-100 text-slate-600", icon: XCircle },
+};
 
 function formatMoney(v) {
   return new Intl.NumberFormat("vi-VN").format(Number(v || 0)) + "đ";
 }
 
-function getBankInfo(code) {
-  return BANKS.find((b) => b.code === code);
+function formatDate(v) {
+  if (!v) return "—";
+  return new Date(v).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-function getWalletInfo(id) {
-  return WALLETS.find((w) => w.id === id);
+function getBankName(code) {
+  return BANKS.find((b) => b.code === code)?.name || code;
 }
 
-export default function Withdraw() {
-  const navigate = useNavigate();
+function maskText(text, visible = 4) {
+  if (!text) return "—";
+  const s = String(text);
+  if (s.length <= visible) return s;
+  return "*".repeat(s.length - visible) + s.slice(-visible);
+}
 
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+export default function WithdrawalsTab() {
   const [withdrawals, setWithdrawals] = useState([]);
-
-  // Modal flow
-  const [modalStep, setModalStep] = useState(null); // null | 'pickWallet' | 'pickBank' | 'form'
-  const [bankSearch, setBankSearch] = useState("");
-  const [selectedMethod, setSelectedMethod] = useState(null); // {type: 'bank'|'wallet', code?, wallet?}
-
-  // Form
-  const [amount, setAmount] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-
-  // UI
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Modal chi tiết
+  const [detail, setDetail] = useState(null);
+  const [revealed, setRevealed] = useState({});
 
-  const loadData = async () => {
-    setLoading(true);
+  // Modal từ chối
+  const [rejectItem, setRejectItem] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  // ========== FETCH ==========
+  const fetchData = async (silent = false) => {
+    if (silent) setRefreshing(true);
+    else setLoading(true);
+
+    setError("");
+
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      setUser(user);
-
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("coins")
-        .eq("id", user.id)
-        .single();
-
-      setProfile(prof);
-
-      const { data: hist } = await supabase
+      const { data, error: fetchErr } = await supabase
         .from("withdrawals")
         .select("*")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(200);
 
-      setWithdrawals(hist || []);
+      if (fetchErr) throw fetchErr;
+
+      // Giải mã từng record
+      const decrypted = await Promise.all(
+        (data || []).map(async (w) => {
+          const [number, name, phone] = await Promise.all([
+            decrypt(w.account_number_enc),
+            decrypt(w.account_name_enc),
+            decrypt(w.contact_phone_enc),
+          ]);
+          return {
+            ...w,
+            _account_number: number,
+            _account_name: name,
+            _contact_phone: phone,
+          };
+        })
+      );
+
+      setWithdrawals(decrypted);
     } catch (err) {
-      console.error("Load error:", err);
+      console.error("Fetch withdrawals error:", err);
+      setError(err?.message || "Không thể tải dữ liệu.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const numericAmount = Number(amount) || 0;
-  const totalDeduct = numericAmount + FEE;
-  const remaining = (profile?.coins || 0) - totalDeduct;
-
-  const todayInfo = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const list = withdrawals.filter((w) => new Date(w.created_at) >= today);
-    return {
-      count: list.length,
-      amount: list.reduce((s, w) => s + w.amount, 0),
-    };
-  }, [withdrawals]);
-
-  const filteredBanks = useMemo(() => {
-    const kw = bankSearch.trim().toLowerCase();
-    if (!kw) return BANKS;
-    return BANKS.filter(
-      (b) =>
-        b.name.toLowerCase().includes(kw) ||
-        b.code.toLowerCase().includes(kw)
-    );
-  }, [bankSearch]);
-
-  const closeModal = () => {
-    setModalStep(null);
-    setBankSearch("");
-    setSelectedMethod(null);
-    setAmount("");
-    setAccountNumber("");
-    setAccountName("");
-    setContactPhone("");
-    setError("");
-    setSuccess("");
-  };
-
-  const openPickWallet = () => {
-    setModalStep("pickWallet");
-    setBankSearch("");
-    setError("");
-  };
-
-  const openPickBank = () => {
-    setModalStep("pickBank");
-    setBankSearch("");
-    setError("");
-  };
-
-  const chooseWallet = (walletId) => {
-    setSelectedMethod({ type: "wallet", wallet: walletId });
-    setModalStep("form");
-  };
-
-  const chooseBank = (bankCode) => {
-    setSelectedMethod({ type: "bank", code: bankCode });
-    setModalStep("form");
-  };
-
-  const goBackModal = () => {
-    if (modalStep === "form") {
-      if (selectedMethod?.type === "bank") setModalStep("pickBank");
-      else setModalStep("pickWallet");
-      setError("");
-    } else {
-      closeModal();
-    }
-  };
-
-  const handleSubmit = async () => {
-    setError("");
-    setSuccess("");
-
-    if (!user) return setError("Vui lòng đăng nhập.");
-    if (!selectedMethod) return setError("Chưa chọn phương thức.");
-    if (numericAmount < MIN_AMOUNT)
-      return setError(`Số tiền tối thiểu ${formatMoney(MIN_AMOUNT)}.`);
-    if (numericAmount > MAX_AMOUNT)
-      return setError(`Số tiền tối đa ${formatMoney(MAX_AMOUNT)}.`);
-    if (totalDeduct > (profile?.coins || 0))
-      return setError(
-        `Số dư không đủ. Cần ${formatMoney(totalDeduct)} (gồm phí ${formatMoney(FEE)}).`
-      );
-    if (todayInfo.count >= MAX_TIMES_PER_DAY)
-      return setError(`Đã đạt ${MAX_TIMES_PER_DAY} lần/ngày.`);
-    if (todayInfo.amount + numericAmount > MAX_PER_DAY)
-      return setError(`Vượt ${formatMoney(MAX_PER_DAY)}/ngày.`);
-    if (!accountNumber.trim()) return setError("Nhập số tài khoản.");
-    if (!accountName.trim()) return setError("Nhập tên chủ tài khoản.");
-    if (!/^[0-9]{10,11}$/.test(contactPhone.trim()))
-      return setError("SĐT liên hệ không hợp lệ.");
-
-    setSubmitting(true);
+  const decrypt = async (encrypted) => {
+    if (!encrypted) return null;
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Chưa đăng nhập");
-
-      const method = selectedMethod.type === "bank" ? "bank" : selectedMethod.wallet;
-      const bankCode = selectedMethod.type === "bank" ? selectedMethod.code : null;
-
-      const res = await fetch(
-        `${SUPABASE_URL}/functions/v1/request-withdrawal`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            amount: numericAmount,
-            method,
-            bank_code: bankCode,
-            account_number: accountNumber.trim(),
-            account_name: accountName.trim(),
-            contact_phone: contactPhone.trim(),
-            save_account: true,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        setError(data.error || "Có lỗi xảy ra.");
-        setSubmitting(false);
-        return;
-      }
-
-      setSuccess(`Đã gửi yêu cầu rút ${formatMoney(data.amount)}. Chờ 24h.`);
-      setAmount("");
-      setAccountNumber("");
-      setAccountName("");
-      await loadData();
-      setTimeout(() => closeModal(), 2000);
-    } catch (err) {
-      setError(err?.message || "Không thể gửi yêu cầu.");
-    } finally {
-      setSubmitting(false);
+      const { data, error } = await supabase.rpc("decrypt_sensitive", {
+        p_encrypted: encrypted,
+        p_key: SECRET_KEY,
+      });
+      if (error) return null;
+      return data;
+    } catch {
+      return null;
     }
   };
 
-  if (loading) {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // ========== ACTIONS ==========
+  const handleComplete = async (w) => {
+    if (!confirm(`Xác nhận đã chuyển ${formatMoney(w.amount)} cho user?`)) return;
+
+    setProcessing(true);
+    setError("");
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Chưa đăng nhập");
+
+      const { data, error: rpcErr } = await supabase.rpc("complete_withdrawal", {
+        p_admin_id: user.id,
+        p_withdrawal_id: w.id,
+      });
+
+      if (rpcErr) throw rpcErr;
+      if (data?.error) throw new Error(data.error);
+
+      await fetchData(true);
+      setDetail(null);
+    } catch (err) {
+      setError(err?.message || "Không thể duyệt.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectItem) return;
+    if (!rejectReason.trim()) {
+      setError("Vui lòng nhập lý do từ chối.");
+      return;
+    }
+
+    setProcessing(true);
+    setError("");
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Chưa đăng nhập");
+
+      const { data, error: rpcErr } = await supabase.rpc("reject_withdrawal", {
+        p_admin_id: user.id,
+        p_withdrawal_id: rejectItem.id,
+        p_reason: rejectReason.trim(),
+      });
+
+      if (rpcErr) throw rpcErr;
+      if (data?.error) throw new Error(data.error);
+
+      await fetchData(true);
+      setRejectItem(null);
+      setRejectReason("");
+      setDetail(null);
+    } catch (err) {
+      setError(err?.message || "Không thể từ chối.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const copyText = (text) => {
+    navigator.clipboard?.writeText(text);
+  };
+
+  const toggleReveal = (key) => {
+    setRevealed((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // ========== FILTER ==========
+  const filtered = useMemo(() => {
+    const kw = search.trim().toLowerCase();
+
+    return withdrawals.filter((w) => {
+      if (filter !== "all" && w.status !== filter) return false;
+      if (!kw) return true;
+
+      return [
+        w.id,
+        w.user_id,
+        w._account_number,
+        w._account_name,
+        w._contact_phone,
+        w.bank_code,
+        w.method,
+      ]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(kw));
+    });
+  }, [withdrawals, search, filter]);
+
+  const stats = useMemo(
+    () => ({
+      total: withdrawals.length,
+      pending: withdrawals.filter((w) => w.status === "pending").length,
+      completed: withdrawals.filter((w) => w.status === "completed").length,
+      rejected: withdrawals.filter((w) => w.status === "rejected").length,
+    }),
+    [withdrawals]
+  );
+    if (loading) {
     return (
-      <div className="min-h-screen bg-white pb-24">
-        <TopHeader />
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <span className="ml-2 text-slate-500">Đang tải...</span>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-white pb-24">
-        <TopHeader />
-        <div className="mx-auto max-w-lg px-4 py-16 text-center">
-          <AlertCircle size={40} className="mx-auto text-slate-300" strokeWidth={2} />
-          <h2 className="mt-4 text-lg font-bold">Vui lòng đăng nhập</h2>
-          <button
-            onClick={() => navigate("/login")}
-            className="mt-4 rounded-lg bg-slate-900 px-6 py-3 font-bold text-white"
-          >
-            Đăng nhập
-          </button>
+  return (
+    <div className="space-y-5">
+      {/* HEADER */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Rút tiền</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Duyệt yêu cầu rút tiền của user
+          </p>
         </div>
+        <button
+          onClick={() => fetchData(true)}
+          disabled={refreshing}
+          className="rounded-xl border bg-white p-2.5 text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+        >
+          <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+        </button>
       </div>
-    );
-  }
 
-  const savedCards = withdrawals
-    .filter((w) => w.status !== "rejected")
-    .slice(0, 3)
-    .map((w) => ({
-      ...w,
-      bankInfo: w.bank_code ? getBankInfo(w.bank_code) : null,
-      walletInfo: w.method !== "bank" ? getWalletInfo(w.method) : null,
-    }));
-    return (
-  <div className="min-h-screen bg-white pb-24 text-slate-900">
-    <TopHeader />
+      {/* STATS */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard title="Tổng" value={stats.total} />
+        <StatCard title="Chờ duyệt" value={stats.pending} color="text-amber-600" />
+        <StatCard title="Đã chuyển" value={stats.completed} color="text-emerald-600" />
+        <StatCard title="Từ chối" value={stats.rejected} color="text-rose-600" />
+      </div>
 
-    {/* HEADER */}
-    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex h-9 w-9 items-center justify-center"
-      >
-        <ArrowLeft size={22} strokeWidth={2} />
-      </button>
-      <h1 className="flex-1 text-[17px] font-bold">Rút tiền</h1>
-      <button
-        onClick={() => navigate("/withdraw/history")}
-        className="flex h-9 items-center gap-1.5 rounded-full bg-slate-100 px-3"
-      >
-        <History size={15} strokeWidth={2.2} className="text-slate-700" />
-        <span className="text-[12px] font-semibold text-slate-700">
-          Lịch sử
-        </span>
-      </button>
-    </div>
-
-    <div className="mx-auto max-w-2xl">
-      {/* SEARCH BOX */}
-      <div className="px-4 pt-4">
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5">
-          <Search size={18} className="shrink-0 text-slate-400" strokeWidth={2.4} />
+      {/* SEARCH + FILTER */}
+      <div className="flex flex-col gap-3 rounded-2xl border bg-white p-4 md:flex-row">
+        <div className="relative flex-1">
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
           <input
-            type="text"
-            inputMode="numeric"
-            value={amount ? Number(amount).toLocaleString("vi-VN") : ""}
-            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-            placeholder="Nhập số tiền muốn rút"
-            className="flex-1 bg-transparent text-[14px] font-semibold outline-none placeholder:font-normal placeholder:text-slate-400"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo STK, tên, SĐT, user_id..."
+            className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none transition focus:border-blue-500"
           />
-          {amount && (
-            <button
-              onClick={() => setAmount("")}
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200"
-            >
-              <X size={12} strokeWidth={2.6} />
-            </button>
-          )}
         </div>
-
-        {/* Quick amount */}
-        <div className="mt-2.5 grid grid-cols-4 gap-2">
-          {QUICK_AMOUNTS.map((v) => (
-            <button
-              key={v}
-              onClick={() => setAmount(String(v))}
-              className={`rounded-xl border py-2.5 text-[12px] font-bold transition ${
-                amount === String(v)
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-200 bg-white text-slate-600"
-              }`}
-            >
-              {v / 1000}K
-            </button>
-          ))}
-        </div>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-blue-500"
+        >
+          <option value="all">Tất cả</option>
+          <option value="pending">Chờ duyệt</option>
+          <option value="processing">Đang xử lý</option>
+          <option value="completed">Đã chuyển</option>
+          <option value="rejected">Từ chối</option>
+        </select>
       </div>
 
-      {/* SỐ DƯ */}
-      <div className="px-4 pt-4">
-        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3.5">
-          <span className="text-[13px] text-slate-500">Số dư khả dụng</span>
-          <span className="text-[15px] font-bold text-slate-900">
-            {formatMoney(profile?.coins || 0)}
-          </span>
-        </div>
-      </div>
-
-      {/* RÚT TIỀN ĐẾN */}
-      <div className="px-4 pt-5">
-        <h3 className="text-[14px] font-bold text-slate-900">
-          Rút tiền đến
-        </h3>
-
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {/* Ví điện tử */}
-          <button
-            onClick={openPickWallet}
-            className="flex items-center gap-3 rounded-2xl border-2 border-pink-100 bg-pink-50/60 p-4 text-left transition active:scale-[0.98]"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-500">
-              <Smartphone size={18} className="text-white" strokeWidth={2.4} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-pink-900">
-                Ví điện tử
-              </p>
-              <p className="mt-0.5 truncate text-[11px] text-pink-700">
-                MoMo, ZaloPay...
-              </p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-pink-500" />
-          </button>
-
-          {/* Ngân hàng */}
-          <button
-            onClick={openPickBank}
-            className="flex items-center gap-3 rounded-2xl border-2 border-sky-100 bg-sky-50/60 p-4 text-left transition active:scale-[0.98]"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500">
-              <Building2 size={18} className="text-white" strokeWidth={2.4} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-sky-900">Ngân hàng</p>
-              <p className="mt-0.5 truncate text-[11px] text-sky-700">
-                Vietcombank, MB...
-              </p>
-            </div>
-            <ChevronRight size={16} className="shrink-0 text-sky-500" />
-          </button>
-        </div>
-      </div>
-
-      {/* NGÂN HÀNG PHỔ BIẾN — scroll ngang */}
-      <div className="pt-5">
-        <div className="flex items-center justify-between px-4">
-          <h3 className="text-[14px] font-bold text-slate-900">
-            Ngân hàng phổ biến
-          </h3>
-          <button
-            onClick={openPickBank}
-            className="text-[12px] font-bold text-sky-500"
-          >
-            Xem tất cả
-          </button>
-        </div>
-
-        <div className="mt-3 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TOP_BANKS.map((code) => {
-            const bank = getBankInfo(code);
-            if (!bank) return null;
-            return (
-              <button
-                key={code}
-                onClick={() => {
-                  setSelectedMethod({ type: "bank", code });
-                  setModalStep("form");
-                }}
-                className="flex w-[68px] shrink-0 flex-col items-center gap-2 transition active:scale-95"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-slate-100 bg-white shadow-sm">
-                  <img
-                    src={getImageUrl(bank.logo)}
-                    alt=""
-                    className="h-8 w-8 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${bank.code}</span>`;
-                    }}
-                  />
-                </div>
-                <span className="w-full truncate text-center text-[10.5px] font-semibold text-slate-700">
-                  {bank.code === "TCB" ? "Techcombank" : bank.code === "VTB" ? "VietinBank" : bank.code === "VPB" ? "VPBank" : bank.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* RÚT NHANH — List đã lưu */}
-      {savedCards.length > 0 && (
-        <div className="pt-6">
-          <h3 className="px-4 text-[14px] font-bold text-slate-900">
-            Rút nhanh
-          </h3>
-          <div className="mt-3 space-y-2 px-4">
-            {savedCards.map((w, idx) => {
-              const bank = w.bankInfo;
-              const wallet = w.walletInfo;
-              const label = bank ? bank.name : wallet ? wallet.name : "Ví";
-              const logo = bank ? bank.logo : wallet?.logo;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setSelectedMethod({
-                      type: w.method === "bank" ? "bank" : "wallet",
-                      code: w.bank_code,
-                      wallet: w.method !== "bank" ? w.method : null,
-                    });
-                    setAccountNumber(w.account_number || "");
-                    setAccountName(w.account_name || "");
-                    setModalStep("form");
-                  }}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 text-left transition active:scale-[0.99]"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white">
-                    {logo ? (
-                      <img
-                        src={getImageUrl(logo)}
-                        alt=""
-                        className="h-7 w-7 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${(bank?.code || "V").slice(0, 4)}</span>`;
-                        }}
-                      />
-                    ) : (
-                      <Smartphone size={18} className="text-slate-500" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13.5px] font-bold text-slate-900">
-                      {label} - ****{(w.account_number || "").slice(-3)}
-                    </p>
-                    <p className="mt-0.5 truncate text-[11px] uppercase text-slate-500">
-                      {w.account_name}
-                    </p>
-                  </div>
-                  <Clock3 size={18} className="shrink-0 text-slate-300" strokeWidth={2.2} />
-                </button>
-              );
-            })}
-          </div>
+      {/* ERROR */}
+      {error && (
+        <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* DỊCH VỤ KHÁC */}
-      <div className="pt-6 pb-6">
-        <h3 className="px-4 text-[14px] font-bold text-slate-900">
-          Dịch vụ khác
-        </h3>
-
-        <div className="mt-3 grid grid-cols-3 gap-3 px-4">
-          {[
-            { icon: History, label: "Lịch sử", href: "/withdraw/history", color: "#FE2C55" },
-            { icon: BarChart3, label: "Thống kê", href: "/withdraw", color: "#8B5CF6" },
-            { icon: BookOpen, label: "Hướng dẫn", href: "/help", color: "#0EA5E9" },
-            { icon: Headphones, label: "Trợ giúp", href: "/support", color: "#10B981" },
-            { icon: Gift, label: "Ưu đãi", href: "/store", color: "#F59E0B" },
-            { icon: Users, label: "Bạn bè", href: "/invite", color: "#EC4899" },
-          ].map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={idx}
-                onClick={() => navigate(item.href)}
-                className="flex flex-col items-center gap-2 transition active:scale-95"
-              >
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `${item.color}15` }}
-                >
-                  <Icon
-                    size={22}
-                    style={{ color: item.color }}
-                    strokeWidth={2.2}
-                  />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-700">
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
+      {/* TABLE */}
+      {filtered.length === 0 ? (
+        <div className="rounded-2xl border bg-white py-16 text-center text-slate-500">
+          Không có yêu cầu rút nào
         </div>
-      </div>
-    </div>
-          {/* MODAL */}
-      {modalStep && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/50"
-            onClick={closeModal}
-          />
-          <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col overflow-hidden rounded-t-3xl bg-white">
-            {/* MODAL HEADER */}
-            <div className="flex shrink-0 items-center gap-3 border-b border-slate-100 px-4 py-3.5">
-              {modalStep !== "pickWallet" && (
-                <button
-                  onClick={goBackModal}
-                  className="flex h-8 w-8 items-center justify-center"
-                >
-                  <ArrowLeft size={20} strokeWidth={2.2} />
-                </button>
-              )}
-              <h3 className="flex-1 text-[16px] font-bold text-slate-900">
-                {modalStep === "pickWallet" && "Chọn ví điện tử"}
-                {modalStep === "pickBank" && "Chọn ngân hàng"}
-                {modalStep === "form" && "Nhập thông tin rút"}
-              </h3>
-              <button
-                onClick={closeModal}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"
-              >
-                <X size={16} strokeWidth={2.4} />
-              </button>
-            </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[950px] text-sm">
+              <thead className="border-b bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">ID</th>
+                  <th className="px-4 py-3 text-left">User</th>
+                  <th className="px-4 py-3 text-left">Số tiền</th>
+                  <th className="px-4 py-3 text-left">Phương thức</th>
+                  <th className="px-4 py-3 text-left">STK / Ví</th>
+                  <th className="px-4 py-3 text-left">Trạng thái</th>
+                  <th className="px-4 py-3 text-left">Thời gian</th>
+                  <th className="px-4 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filtered.map((w) => {
+                  const info = STATUS_INFO[w.status] || STATUS_INFO.pending;
+                  const Icon = info.icon;
+                  const methodLabel =
+                    w.method === "bank"
+                      ? getBankName(w.bank_code)
+                      : WALLETS[w.method]?.name || w.method;
 
-            {/* BODY */}
-            <div className="flex-1 overflow-y-auto">
-              {/* STEP 1: PICK WALLET */}
-              {modalStep === "pickWallet" && (
-                <div className="p-4 space-y-2">
-                  {WALLETS.map((w) => (
-                    <button
-                      key={w.id}
-                      onClick={() => chooseWallet(w.id)}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3.5 text-left transition hover:bg-slate-50 active:scale-[0.99]"
-                    >
-                      <div
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                        style={{ backgroundColor: `${w.color}15` }}
-                      >
-                        <img
-                          src={getImageUrl(w.logo)}
-                          alt=""
-                          className="h-7 w-7 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            e.currentTarget.parentElement.innerHTML = `<span style="color:${w.color};font-weight:900;font-size:13px">${w.name.slice(0,2)}</span>`;
-                          }}
-                        />
-                      </div>
-                      <span className="flex-1 text-[15px] font-bold text-slate-900">
-                        {w.name}
-                      </span>
-                      <ChevronRight size={18} className="text-slate-400" />
-                    </button>
-                  ))}
-                </div>
-              )}
+                  return (
+                    <tr key={w.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-4 font-mono text-xs text-slate-500">
+                        {String(w.id).slice(0, 8)}
+                      </td>
 
-              {/* STEP 2: PICK BANK */}
-              {modalStep === "pickBank" && (
-                <div className="p-4">
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
-                    <Search size={16} className="shrink-0 text-slate-400" />
-                    <input
-                      type="text"
-                      value={bankSearch}
-                      onChange={(e) => setBankSearch(e.target.value)}
-                      placeholder="Tìm ngân hàng..."
-                      className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-slate-400"
-                    />
-                    {bankSearch && (
-                      <button
-                        onClick={() => setBankSearch("")}
-                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200"
-                      >
-                        <X size={11} strokeWidth={2.6} />
-                      </button>
-                    )}
-                  </div>
+                      <td className="px-4 py-4 font-mono text-xs text-slate-500">
+                        {String(w.user_id).slice(0, 8)}
+                      </td>
 
-                  <div className="mt-3 grid grid-cols-4 gap-2.5">
-                    {filteredBanks.map((bank) => (
-                      <button
-                        key={bank.code}
-                        onClick={() => chooseBank(bank.code)}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 transition hover:border-sky-200 active:scale-95"
-                      >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-100 bg-white">
-                          <img
-                            src={getImageUrl(bank.logo)}
-                            alt=""
-                            className="h-7 w-7 object-contain"
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                              e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${bank.code}</span>`;
-                            }}
-                          />
+                      <td className="px-4 py-4 font-bold text-slate-900">
+                        {formatMoney(w.amount)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          {w.method === "bank" ? (
+                            <Building2 size={14} className="text-sky-600" />
+                          ) : (
+                            <Smartphone size={14} className="text-pink-600" />
+                          )}
+                          <span className="font-medium text-slate-700">
+                            {methodLabel}
+                          </span>
                         </div>
-                        <span className="line-clamp-2 text-center text-[10px] font-semibold leading-tight text-slate-700">
-                          {bank.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                      </td>
 
-                  {filteredBanks.length === 0 && (
-                    <div className="py-10 text-center text-[13px] text-slate-400">
-                      Không tìm thấy ngân hàng
-                    </div>
-                  )}
-                </div>
-              )}
+                      <td className="px-4 py-4">
+                        <div className="font-mono text-xs text-slate-700">
+                          {w._account_number
+                            ? maskText(w._account_number, 4)
+                            : "—"}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          {w._account_name || "—"}
+                        </div>
+                      </td>
 
-              {/* STEP 3: FORM */}
-              {modalStep === "form" && selectedMethod && (
-                <div className="space-y-4 p-4">
-                  {/* Selected info */}
-                  <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white">
-                      {selectedMethod.type === "bank" ? (
-                        <img
-                          src={getImageUrl(getBankInfo(selectedMethod.code)?.logo)}
-                          alt=""
-                          className="h-7 w-7 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            e.currentTarget.parentElement.innerHTML = `<span style="color:#0A2540;font-weight:900;font-size:11px">${selectedMethod.code}</span>`;
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={getImageUrl(getWalletInfo(selectedMethod.wallet)?.logo)}
-                          alt=""
-                          className="h-7 w-7 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            e.currentTarget.parentElement.innerHTML = '<span style="font-size:16px">📱</span>';
-                          }}
-                        />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] text-slate-500">Rút qua</p>
-                      <p className="text-[14px] font-bold text-slate-900">
-                        {selectedMethod.type === "bank"
-                          ? getBankInfo(selectedMethod.code)?.name
-                          : getWalletInfo(selectedMethod.wallet)?.name}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Số tiền */}
-                  <div>
-                    <label className="text-[13px] font-semibold text-slate-700">
-                      Số tiền rút
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={amount ? Number(amount).toLocaleString("vi-VN") : ""}
-                      onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-                      placeholder="Nhập số tiền"
-                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[16px] font-bold outline-none focus:border-slate-900"
-                    />
-                    <div className="mt-2 grid grid-cols-4 gap-2">
-                      {QUICK_AMOUNTS.map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setAmount(String(v))}
-                          className={`rounded-lg border py-2 text-[11.5px] font-bold transition ${
-                            amount === String(v)
-                              ? "border-slate-900 bg-slate-900 text-white"
-                              : "border-slate-200 bg-white text-slate-600"
-                          }`}
-                        >
-                          {v / 1000}K
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Số TK */}
-                  <div>
-                    <label className="text-[13px] font-semibold text-slate-700">
-                      {selectedMethod.type === "bank"
-                        ? "Số tài khoản"
-                        : "Số điện thoại ví"}
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-                      placeholder={
-                        selectedMethod.type === "bank"
-                          ? "Nhập số tài khoản"
-                          : "Nhập SĐT ví"
-                      }
-                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[15px] font-semibold outline-none focus:border-slate-900"
-                    />
-                  </div>
-
-                  {/* Tên */}
-                  <div>
-                    <label className="text-[13px] font-semibold text-slate-700">
-                      Tên chủ tài khoản
-                    </label>
-                    <input
-                      type="text"
-                      value={accountName}
-                      onChange={(e) => setAccountName(e.target.value.toUpperCase())}
-                      placeholder="NGUYEN VAN A"
-                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[15px] font-semibold uppercase outline-none focus:border-slate-900"
-                    />
-                  </div>
-
-                  {/* SĐT */}
-                  <div>
-                    <label className="text-[13px] font-semibold text-slate-700">
-                      SĐT liên hệ
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={contactPhone}
-                      onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, ""))}
-                      placeholder="0865245988"
-                      maxLength={11}
-                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 text-[15px] font-semibold outline-none focus:border-slate-900"
-                    />
-                  </div>
-
-                  {/* Tổng kết */}
-                  {numericAmount > 0 && (
-                    <div className="space-y-2 rounded-2xl bg-slate-50 p-4 text-[13px]">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Tiền rút</span>
-                        <span className="font-bold">{formatMoney(numericAmount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Phí</span>
-                        <span className="font-bold text-rose-600">-{formatMoney(FEE)}</span>
-                      </div>
-                      <div className="flex justify-between border-t border-slate-200 pt-2">
-                        <span className="font-bold text-slate-900">Tổng trừ</span>
-                        <span className="text-[15px] font-black">
-                          {formatMoney(totalDeduct)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-[12px]">
-                        <span className="text-slate-500">Còn lại</span>
+                      <td className="px-4 py-4">
                         <span
-                          className={`font-bold ${
-                            remaining < 0 ? "text-rose-600" : "text-slate-700"
-                          }`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${info.className}`}
                         >
-                          {formatMoney(remaining)}
+                          <Icon size={10} strokeWidth={2.6} />
+                          {info.label}
                         </span>
-                      </div>
-                    </div>
-                  )}
+                      </td>
 
-                  {/* Notifications */}
-                  {error && (
-                    <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-[12.5px] text-rose-700">
-                      <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                      <span>{error}</span>
-                    </div>
-                  )}
-                  {success && (
-                    <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[12.5px] text-emerald-700">
-                      <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
-                      <span>{success}</span>
-                    </div>
-                  )}
+                      <td className="px-4 py-4 text-xs text-slate-500">
+                        {formatDate(w.created_at)}
+                      </td>
 
-                  {/* Submit */}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submitting || !numericAmount}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-4 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:opacity-40"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
-                        Đang xử lý...
-                      </>
-                    ) : (
-                      "Xác nhận rút tiền"
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
+                      <td className="px-4 py-4 text-right">
+                        <button
+                          onClick={() => {
+                            setDetail(w);
+                            setRevealed({});
+                          }}
+                          className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
       )}
 
-      <BottomNav />
+      {/* MODAL DETAIL */}
+      {detail && (
+        <Modal
+          title={`Yêu cầu #${String(detail.id).slice(0, 8)}`}
+          onClose={() => setDetail(null)}
+        >
+          <div className="space-y-3">
+            <InfoBox
+              label="User ID"
+              value={
+                <span className="font-mono text-xs">{detail.user_id}</span>
+              }
+            />
+
+            <InfoBox label="Số tiền rút" value={formatMoney(detail.amount)} />
+            <InfoBox label="Phí" value={formatMoney(detail.fee)} />
+            <InfoBox
+              label="Tổng trừ xu"
+              value={formatMoney(detail.total_deducted)}
+            />
+
+            <InfoBox
+              label="Phương thức"
+              value={
+                detail.method === "bank"
+                  ? `Ngân hàng - ${getBankName(detail.bank_code)}`
+                  : WALLETS[detail.method]?.name || detail.method
+              }
+            />
+
+            {/* Số TK - encrypted */}
+            <SecretBox
+              label="Số tài khoản"
+              value={detail._account_number}
+              revealed={revealed.number}
+              onToggle={() => toggleReveal("number")}
+              onCopy={() => copyText(detail._account_number)}
+            />
+
+            {/* Tên chủ TK */}
+            <SecretBox
+              label="Tên chủ tài khoản"
+              value={detail._account_name}
+              revealed={revealed.name}
+              onToggle={() => toggleReveal("name")}
+              onCopy={() => copyText(detail._account_name)}
+            />
+
+            {/* SĐT */}
+            <SecretBox
+              label="SĐT liên hệ"
+              value={detail._contact_phone}
+              revealed={revealed.phone}
+              onToggle={() => toggleReveal("phone")}
+              onCopy={() => copyText(detail._contact_phone)}
+            />
+
+            <InfoBox
+              label="Trạng thái"
+              value={
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                    STATUS_INFO[detail.status]?.className
+                  }`}
+                >
+                  {STATUS_INFO[detail.status]?.label || detail.status}
+                </span>
+              }
+            />
+
+            {detail.rejected_reason && (
+              <InfoBox label="Lý do từ chối" value={detail.rejected_reason} />
+            )}
+
+            {/* ACTIONS */}
+            {["pending", "processing"].includes(detail.status) && (
+              <div className="flex gap-2 pt-3">
+                <button
+                  disabled={processing}
+                  onClick={() => handleComplete(detail)}
+                  className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  <Check size={17} className="mr-2 inline" />
+                  Đã chuyển khoản
+                </button>
+
+                <button
+                  disabled={processing}
+                  onClick={() => setRejectItem(detail)}
+                  className="flex-1 rounded-xl bg-rose-600 px-4 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
+                >
+                  <X size={17} className="mr-2 inline" />
+                  Từ chối
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* MODAL REJECT */}
+      {rejectItem && (
+        <Modal
+          title="Từ chối yêu cầu rút tiền"
+          onClose={() => {
+            setRejectItem(null);
+            setRejectReason("");
+          }}
+        >
+          <div className="space-y-3">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+              <b>Lưu ý:</b> User sẽ được hoàn lại{" "}
+              <b>{formatMoney(rejectItem.amount)}</b> (giữ phí{" "}
+              {formatMoney(rejectItem.fee)}).
+            </div>
+
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Nhập lý do từ chối..."
+              rows={4}
+              className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
+            />
+
+            <button
+              disabled={processing || !rejectReason.trim()}
+              onClick={handleReject}
+              className="w-full rounded-xl bg-rose-600 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50"
+            >
+              {processing ? "Đang xử lý..." : "Xác nhận từ chối"}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
-                  }
+      }
+// ========== HELPER COMPONENTS ==========
+function StatCard({ title, value, color = "text-slate-900" }) {
+  return (
+    <div className="rounded-2xl border bg-white p-4">
+      <div className="text-xs text-slate-500">{title}</div>
+      <div className={`mt-1 text-2xl font-bold ${color}`}>{value}</div>
+    </div>
+  );
+}
+
+function Modal({ title, children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b px-5 py-4">
+          <h3 className="font-bold text-slate-900">{title}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function InfoBox({ label, value }) {
+  return (
+    <div className="rounded-xl border bg-slate-50 p-3">
+      <div className="mb-1 text-xs font-semibold uppercase text-slate-400">
+        {label}
+      </div>
+      <div className="text-sm font-medium text-slate-800">{value}</div>
+    </div>
+  );
+}
+
+function SecretBox({ label, value, revealed, onToggle, onCopy }) {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3">
+      <div className="mb-1 flex items-center justify-between">
+        <div className="text-xs font-semibold uppercase text-amber-700">
+          {label} 🔒
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={onToggle}
+            className="rounded-lg p-1.5 text-amber-700 hover:bg-amber-100"
+            title={revealed ? "Ẩn" : "Hiện"}
+          >
+            {revealed ? <EyeOff size={14} /> : <Eye size={14} />}
+          </button>
+          <button
+            onClick={onCopy}
+            className="rounded-lg p-1.5 text-amber-700 hover:bg-amber-100"
+            title="Copy"
+          >
+            <Copy size={14} />
+          </button>
+        </div>
+      </div>
+      <div className="font-mono text-sm text-slate-800">
+        {revealed ? value || "—" : maskText(value, 4)}
+      </div>
+    </div>
+  );
+        }
