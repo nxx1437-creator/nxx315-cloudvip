@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import OtpInput from "../components/OtpInput.jsx";
-import MfaChallenge from "../components/MfaChallenge.jsx"; // <-- Import Modal MFA
+import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function ForgotPassword() {
@@ -15,8 +15,7 @@ export default function ForgotPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  // State mới để bật/tắt Modal MFA
+
   const [showMfaModal, setShowMfaModal] = useState(false);
 
   const handleSendOtp = async (e) => {
@@ -32,15 +31,15 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
 
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: false },
-    });
+    // ✅ Dùng resetPasswordForEmail → gửi template "Reset Password"
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      email.trim()
+    );
 
     setLoading(false);
-    if (otpError) {
-      console.error("Send OTP error:", otpError);
-      setError(otpError.message || "Không thể gửi mã. Vui lòng thử lại.");
+    if (resetError) {
+      console.error("Send OTP error:", resetError);
+      setError(resetError.message || "Không thể gửi mã. Vui lòng thử lại.");
       return;
     }
 
@@ -61,10 +60,11 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
+      // ✅ Verify OTP cho Reset Password
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: otp,
-        type: "email",
+        type: "recovery",
       });
 
       if (verifyError) {
@@ -74,18 +74,16 @@ export default function ForgotPassword() {
         return;
       }
 
-      // --- KIỂM TRA MFA ---
+      // Kiểm tra MFA
       const { data: factorsData } = await supabase.auth.mfa.listFactors();
       const hasMfa = factorsData?.totp?.some((f) => f.status === "verified");
 
       if (hasMfa) {
-        // Nếu có MFA, mở Modal xác thực 2 lớp
         setLoading(false);
         setShowMfaModal(true);
         return;
       }
 
-      // Nếu không có MFA, đổi mật khẩu luôn
       await updatePassword();
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -94,7 +92,6 @@ export default function ForgotPassword() {
     }
   };
 
-  // Hàm dùng chung để đổi mật khẩu (gọi sau khi đã có session hợp lệ)
   const updatePassword = async () => {
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
@@ -115,9 +112,7 @@ export default function ForgotPassword() {
     });
   };
 
-  // Hàm callback khi Modal MFA xác thực thành công
   const handleMfaVerified = () => {
-    // Session đã lên AAL2, giờ mới đổi mật khẩu
     setLoading(true);
     updatePassword();
   };
@@ -162,7 +157,11 @@ export default function ForgotPassword() {
               disabled={loading}
               className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
             >
-              {loading ? <Loader2 size={20} className="animate-spin" /> : "Gửi mã xác minh"}
+              {loading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                "Gửi mã xác minh"
+              )}
             </button>
           </form>
         )}
@@ -173,7 +172,12 @@ export default function ForgotPassword() {
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Mã OTP
               </label>
-              <OtpInput value={otp} onChange={setOtp} length={6} disabled={loading} />
+              <OtpInput
+                value={otp}
+                onChange={setOtp}
+                length={6}
+                disabled={loading}
+              />
             </div>
 
             <div>
@@ -181,7 +185,10 @@ export default function ForgotPassword() {
                 Mật khẩu mới
               </label>
               <div className="relative">
-                <Lock size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock
+                  size={16}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={newPassword}
@@ -210,7 +217,11 @@ export default function ForgotPassword() {
               disabled={loading}
               className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
             >
-              {loading ? <Loader2 size={20} className="animate-spin" /> : "Xác nhận đổi mật khẩu"}
+              {loading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                "Xác nhận đổi mật khẩu"
+              )}
             </button>
 
             <button
@@ -226,18 +237,19 @@ export default function ForgotPassword() {
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Nhớ mật khẩu rồi?{" "}
-          <Link to="/login" className="font-semibold text-slate-900 hover:underline">
+          <Link
+            to="/login"
+            className="font-semibold text-slate-900 hover:underline"
+          >
             Đăng nhập
           </Link>
         </p>
       </AuthShell>
 
-      {/* Modal MFA - chỉ hiện khi user có bật 2FA */}
       {showMfaModal && (
         <MfaChallenge
           onVerified={handleMfaVerified}
           onCancel={() => {
-            // Nếu user huỷ, reset về bước email cho an toàn
             setShowMfaModal(false);
             setError("Bạn đã huỷ xác thực 2 lớp. Vui lòng thử lại.");
           }}
@@ -245,4 +257,4 @@ export default function ForgotPassword() {
       )}
     </>
   );
-    }
+  }
