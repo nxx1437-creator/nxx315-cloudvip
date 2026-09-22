@@ -171,29 +171,23 @@ export default function Register() {
       }
 
       if (data.user) {
-      if (data.user) {
-  const isExistingUser =
-    !data.user.identities || data.user.identities.length === 0;
+        const isExistingUser =
+          !data.user.identities || data.user.identities.length === 0;
 
-  if (isExistingUser) {
-    setError(
-      `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
-        `Vui lòng:\n` +
-        `• Đăng nhập nếu đây là tài khoản của bạn\n` +
-        `• Hoặc dùng email khác để đăng ký`
-    );
-    setErrorType("email_exists");
-    return;
-  }
+        if (isExistingUser) {
+          setError(
+            `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
+              `Vui lòng:\n` +
+              `• Đăng nhập nếu đây là tài khoản của bạn\n` +
+              `• Hoặc dùng email khác để đăng ký`
+          );
+          setErrorType("email_exists");
+          return;
+        }
 
-  // ✅ Nếu Supabase trả session → không cần xác minh → vào onboarding luôn
-  if (data.session) {
-    navigate("/onboarding", { replace: true });
-  } else {
-    // Fallback: nếu vẫn yêu cầu xác minh → vào verify-email
-    navigate("/verify-email", { state: { email: form.email } });
-  }
-} else {
+        // ✅ Vào onboarding luôn, không qua verify-email
+        navigate("/onboarding", { replace: true });
+      } else {
         setError(
           "Không thể tạo tài khoản. Vui lòng thử lại hoặc dùng email khác."
         );
@@ -237,8 +231,7 @@ export default function Register() {
           </h3>
 
           <p className="mt-2 text-[13px] leading-6 text-rose-700">
-            Thiết bị này đã có tài khoản:{" "}
-            <b>{existingEmail}</b>
+            Thiết bị này đã có tài khoản: <b>{existingEmail}</b>
             <br />
             <br />
             Vui lòng đăng nhập lại tài khoản cũ để tiếp tục sử dụng.
@@ -285,7 +278,7 @@ export default function Register() {
     );
   }
 
-  // Form bình thường + cảnh báo
+  // Form bình thường
   return (
     <AuthShell
       title="Tạo tài khoản"
@@ -298,7 +291,9 @@ export default function Register() {
           <div className="text-[12px] leading-5 text-amber-800">
             <p className="font-bold">Lưu ý quan trọng</p>
             <ul className="mt-1 list-inside list-disc space-y-0.5">
-              <li>Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b></li>
+              <li>
+                Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b>
+              </li>
               <li>Nếu cố tạo thêm, hệ thống sẽ khóa</li>
               <li>Đã có tài khoản rồi? Vui lòng đăng nhập</li>
             </ul>
@@ -398,4 +393,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-          }
+      }
