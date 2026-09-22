@@ -15,17 +15,18 @@ import {
   Play,
   ExternalLink,
   Sparkles,
+  Headphones,
+  Home,
+  ChevronRight,
+  Star,
+  Bot,
+  TrendingUp,
+  Clock,
 } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 import useSession from "../hooks/useSession.js";
-
-const SUPABASE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co";
-const STORAGE_BUCKET = "game_logos";
-
-const getImageUrl = (fileName) =>
-  `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
 
 function formatNumber(n) {
   if (!n) return "0";
@@ -42,6 +43,13 @@ function timeAgo(date) {
   if (seconds < 86400) return Math.floor(seconds / 3600) + " giờ trước";
   if (seconds < 604800) return Math.floor(seconds / 86400) + " ngày trước";
   return new Date(date).toLocaleDateString("vi-VN");
+}
+
+// Tính rating từ likes/views
+function calculateRating(video) {
+  if (!video.likes_count || !video.views_count) return null;
+  const score = (video.likes_count / video.views_count) * 10;
+  return Math.min(10, Math.max(6, Number(score.toFixed(1))));
 }
 
 export default function Videos() {
@@ -83,7 +91,6 @@ export default function Videos() {
     loadVideos();
   }, []);
 
-  // Filter theo search
   const filtered = videos.filter((v) =>
     !search.trim()
       ? true
@@ -91,11 +98,10 @@ export default function Videos() {
         (v.description || "").toLowerCase().includes(search.trim().toLowerCase())
   );
 
-  // Chia sections
   const featured = filtered.filter((v) => v.is_featured);
   const others = filtered.filter((v) => !v.is_featured);
+  const bannerVideo = featured[0] || filtered[0];
 
-  // Cập nhật video trong state
   const updateVideoInState = (videoId, patch) => {
     setVideos((prev) =>
       prev.map((v) => (v.id === videoId ? { ...v, ...patch } : v))
@@ -104,9 +110,9 @@ export default function Videos() {
       prev && prev.id === videoId ? { ...prev, ...patch } : prev
     );
   };
-  if (loading) {
+    if (loading) {
     return (
-      <div className="min-h-screen bg-white pb-24">
+      <div className="min-h-screen bg-slate-50 pb-24">
         <TopHeader />
         <div className="flex items-center justify-center py-24">
           <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
@@ -133,43 +139,124 @@ export default function Videos() {
 
       <TopHeader />
 
-      {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+      {/* HEADER giống MoMo */}
+      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white px-4 py-3">
         <button
           onClick={() => navigate(-1)}
           className="flex h-9 w-9 items-center justify-center"
         >
           <ArrowLeft size={22} strokeWidth={2} className="text-slate-900" />
         </button>
-        <h1 className="flex-1 text-[17px] font-black tracking-tight text-slate-900">
-          Video
+        <h1 className="flex-1 text-[16px] font-black tracking-tight text-slate-900">
+          Khám phá video
         </h1>
+        <a
+          href="/support"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700"
+        >
+          <Headphones size={18} strokeWidth={2.2} />
+        </a>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700"
+        >
+          <Home size={18} strokeWidth={2.2} />
+        </button>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 pt-4">
-        {/* Search */}
-        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <Search size={16} className="shrink-0 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm video..."
-            className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-          />
+      <div className="mx-auto max-w-2xl">
+        {/* SEARCH + TRỢ LÝ */}
+        <div className="px-4 pt-4">
+          <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <Search size={16} className="shrink-0 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Tìm video..."
+                className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              />
+            </div>
+            <button
+              onClick={() => navigate("/support")}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3.5 py-3 text-[12px] font-bold text-sky-600 shadow-sm"
+            >
+              <Bot size={14} strokeWidth={2.4} />
+              Trợ lý
+            </button>
+          </div>
         </div>
 
-        {/* Featured Videos */}
+        {/* BANNER */}
+        {bannerVideo && (
+          <div className="px-4 pt-4">
+            <button
+              onClick={() => setActiveVideo(bannerVideo)}
+              className="group relative w-full overflow-hidden rounded-2xl text-left shadow-md transition active:scale-[0.99]"
+            >
+              {/* Ảnh nền */}
+              <div className="relative aspect-[16/7] w-full overflow-hidden bg-slate-900">
+                {bannerVideo.thumbnail_url && (
+                  <img
+                    src={bannerVideo.thumbnail_url}
+                    alt=""
+                    className="h-full w-full object-cover opacity-70"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                {/* Text overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white">
+                      HOT
+                    </span>
+                    {bannerVideo.reward_coins > 0 && (
+                      <span className="flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-black text-amber-600">
+                        <Coins size={10} />
+                        +{bannerVideo.reward_coins} xu
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-2 line-clamp-2 text-[15px] font-black leading-tight text-white">
+                    {bannerVideo.title}
+                  </h3>
+                  <div className="mt-2 flex items-center gap-2 text-[11px] text-white/80">
+                    <Eye size={12} />
+                    {formatNumber(bannerVideo.views_count)} lượt xem
+                  </div>
+                </div>
+
+                {/* Play button */}
+                <div className="absolute right-4 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-xl">
+                  <Play
+                    size={20}
+                    className="ml-0.5 text-slate-900"
+                    fill="currentColor"
+                  />
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* VIDEO NỔI BẬT */}
         {featured.length > 0 && (
-          <div className="mt-5">
-            <h2 className="mb-3 flex items-center gap-2 text-[15px] font-black text-slate-900">
-              <Sparkles size={15} className="text-amber-500" />
-              Video nổi bật
-            </h2>
+          <div className="pt-6">
+            <div className="flex items-center justify-between px-4">
+              <h2 className="flex items-center gap-1.5 text-[15px] font-black text-slate-900">
+                <TrendingUp size={16} className="text-amber-500" />
+                Đáng xem tuần này
+              </h2>
+              {featured.length > 2 && (
+                <ChevronRight size={18} className="text-slate-400" />
+              )}
+            </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="mt-3 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {featured.map((video) => (
-                <VideoCard
+                <FeaturedCard
                   key={video.id}
                   video={video}
                   onClick={() => setActiveVideo(video)}
@@ -179,29 +266,31 @@ export default function Videos() {
           </div>
         )}
 
-        {/* All Videos */}
+        {/* VIDEO MỚI NHẤT */}
         {others.length > 0 && (
-          <div className="mt-5">
-            <h2 className="mb-3 text-[15px] font-black text-slate-900">
-              Tất cả video
-            </h2>
+          <div className="pt-6">
+            <div className="flex items-center justify-between px-4">
+              <h2 className="flex items-center gap-1.5 text-[15px] font-black text-slate-900">
+                <Clock size={16} className="text-sky-500" />
+                Video mới nhất
+              </h2>
+            </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="mt-3 space-y-3 px-4">
               {others.map((video) => (
-                <VideoCard
+                <VideoRow
                   key={video.id}
                   video={video}
                   onClick={() => setActiveVideo(video)}
-                  compact
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* Empty */}
+        {/* EMPTY */}
         {!loading && filtered.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center">
+          <div className="mx-4 mt-6 rounded-2xl border border-slate-200 bg-white py-16 text-center">
             <Play size={32} className="mx-auto mb-3 text-slate-300" />
             <p className="text-sm font-bold text-slate-600">
               {search ? "Không tìm thấy video" : "Chưa có video nào"}
@@ -211,6 +300,8 @@ export default function Videos() {
             </p>
           </div>
         )}
+
+        <div className="pb-6" />
       </div>
 
       {/* Modal Video */}
@@ -230,77 +321,21 @@ export default function Videos() {
 }
 
 // =====================================================
-// VIDEO CARD
+// FEATURED CARD (to, có rating)
 // =====================================================
-function VideoCard({ video, onClick, compact }) {
+function FeaturedCard({ video, onClick }) {
   const [imageError, setImageError] = useState(false);
   const isVertical = video.orientation === "vertical";
+  const rating = calculateRating(video);
 
-  if (compact) {
-    return (
-      <button
-        onClick={onClick}
-        className="group overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm transition active:scale-[0.98]"
-      >
-        <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-          {!imageError && video.thumbnail_url ? (
-            <img
-              src={video.thumbnail_url}
-              alt=""
-              className="h-full w-full object-cover"
-              loading="lazy"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <Play size={32} className="text-slate-300" />
-            </div>
-          )}
-
-          {/* Play button overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90">
-              <Play size={20} className="ml-1 text-slate-900" fill="currentColor" />
-            </div>
-          </div>
-
-          {/* Reward badge */}
-          {video.reward_coins > 0 && (
-            <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white shadow-md">
-              <Coins size={10} />
-              +{video.reward_coins}
-            </div>
-          )}
-        </div>
-
-        <div className="p-2.5">
-          <h3 className="line-clamp-2 text-[12.5px] font-bold leading-tight text-slate-900">
-            {video.title}
-          </h3>
-          <div className="mt-1.5 flex items-center gap-3 text-[10px] text-slate-500">
-            <span className="flex items-center gap-1">
-              <Eye size={10} />
-              {formatNumber(video.views_count)}
-            </span>
-            <span className="flex items-center gap-1">
-              <Heart size={10} />
-              {formatNumber(video.likes_count)}
-            </span>
-          </div>
-        </div>
-      </button>
-    );
-  }
-
-  // Featured card (scroll ngang)
   return (
     <button
       onClick={onClick}
-      className="group w-[220px] shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm transition active:scale-[0.98]"
+      className="group w-[140px] shrink-0 text-left transition active:scale-[0.97]"
     >
       <div
-        className={`relative w-full overflow-hidden bg-slate-100 ${
-          isVertical ? "aspect-[3/4]" : "aspect-video"
+        className={`relative w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm ${
+          isVertical ? "aspect-[2/3]" : "aspect-[2/3]"
         }`}
       >
         {!imageError && video.thumbnail_url ? (
@@ -312,44 +347,128 @@ function VideoCard({ video, onClick, compact }) {
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Play size={40} className="text-slate-300" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
+            <Play size={32} className="text-slate-400" />
           </div>
         )}
 
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90">
-            <Play size={20} className="ml-1 text-slate-900" fill="currentColor" />
-          </div>
-        </div>
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
+        {/* Reward badge */}
         {video.reward_coins > 0 && (
           <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white shadow-md">
             <Coins size={10} />
             +{video.reward_coins}
           </div>
         )}
+
+        {/* Play button center */}
+        <div className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 shadow-lg transition group-hover:opacity-100">
+          <Play size={16} className="ml-0.5 text-slate-900" fill="currentColor" />
+        </div>
+
+        {/* Rating bottom */}
+        {rating && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 backdrop-blur-sm">
+            <Star size={10} fill="#FBBF24" className="text-amber-400" />
+            <span className="text-[10px] font-bold text-white">{rating}</span>
+          </div>
+        )}
       </div>
 
-      <div className="p-3">
+      <h3 className="mt-2 line-clamp-2 text-[12px] font-bold leading-tight text-slate-900">
+        {video.title}
+      </h3>
+
+      <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
+        <span className="flex items-center gap-1">
+          <Eye size={10} />
+          {formatNumber(video.views_count)}
+        </span>
+        <span className="flex items-center gap-1">
+          <Heart size={10} />
+          {formatNumber(video.likes_count)}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+// =====================================================
+// VIDEO ROW (dạng list ngang)
+// =====================================================
+function VideoRow({ video, onClick }) {
+  const [imageError, setImageError] = useState(false);
+  const rating = calculateRating(video);
+
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full items-start gap-3 rounded-2xl border border-slate-100 bg-white p-2.5 text-left shadow-sm transition active:scale-[0.99]"
+    >
+      {/* Thumbnail */}
+      <div className="relative aspect-video w-[140px] shrink-0 overflow-hidden rounded-xl bg-slate-100">
+        {!imageError && video.thumbnail_url ? (
+          <img
+            src={video.thumbnail_url}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-slate-200">
+            <Play size={22} className="text-slate-400" />
+          </div>
+        )}
+
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90">
+            <Play size={14} className="ml-0.5 text-slate-900" fill="currentColor" />
+          </div>
+        </div>
+
+        {video.reward_coins > 0 && (
+          <div className="absolute right-1 top-1 flex items-center gap-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-black text-white shadow">
+            <Coins size={9} />+{video.reward_coins}
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
         <h3 className="line-clamp-2 text-[13px] font-bold leading-tight text-slate-900">
           {video.title}
         </h3>
-        <div className="mt-2 flex items-center gap-3 text-[10.5px] text-slate-500">
+
+        {video.description && (
+          <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500">
+            {video.description}
+          </p>
+        )}
+
+        <div className="mt-1.5 flex items-center gap-3 text-[10.5px] text-slate-500">
+          {rating && (
+            <span className="flex items-center gap-1">
+              <Star size={10} fill="#FBBF24" className="text-amber-400" />
+              <b className="text-slate-700">{rating}</b>
+            </span>
+          )}
           <span className="flex items-center gap-1">
-            <Eye size={11} />
+            <Eye size={10} />
             {formatNumber(video.views_count)}
           </span>
           <span className="flex items-center gap-1">
-            <Heart size={11} />
+            <Heart size={10} />
             {formatNumber(video.likes_count)}
           </span>
         </div>
       </div>
     </button>
   );
-}
-// =====================================================
+    }
+    // =====================================================
 // VIDEO PLAYER MODAL
 // =====================================================
 function VideoPlayerModal({ video, user, onClose, onUpdate, showToast }) {
