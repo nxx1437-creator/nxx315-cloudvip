@@ -171,22 +171,29 @@ export default function Register() {
       }
 
       if (data.user) {
-        const isExistingUser =
-          !data.user.identities || data.user.identities.length === 0;
+      if (data.user) {
+  const isExistingUser =
+    !data.user.identities || data.user.identities.length === 0;
 
-        if (isExistingUser) {
-          setError(
-            `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
-              `Vui lòng:\n` +
-              `• Đăng nhập nếu đây là tài khoản của bạn\n` +
-              `• Hoặc dùng email khác để đăng ký`
-          );
-          setErrorType("email_exists");
-          return;
-        }
+  if (isExistingUser) {
+    setError(
+      `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
+        `Vui lòng:\n` +
+        `• Đăng nhập nếu đây là tài khoản của bạn\n` +
+        `• Hoặc dùng email khác để đăng ký`
+    );
+    setErrorType("email_exists");
+    return;
+  }
 
-        navigate("/verify-email", { state: { email: form.email } });
-      } else {
+  // ✅ Nếu Supabase trả session → không cần xác minh → vào onboarding luôn
+  if (data.session) {
+    navigate("/onboarding", { replace: true });
+  } else {
+    // Fallback: nếu vẫn yêu cầu xác minh → vào verify-email
+    navigate("/verify-email", { state: { email: form.email } });
+  }
+} else {
         setError(
           "Không thể tạo tài khoản. Vui lòng thử lại hoặc dùng email khác."
         );
