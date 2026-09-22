@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Sparkles, // Thay cho Coins
+  Zap,
   ShieldCheck,
   Users,
   Star,
@@ -11,10 +11,10 @@ import {
   UserPlus,
   ListChecks,
   Gift,
-  Zap, // Thay cho Gamepad2
+  Rocket
 } from "lucide-react";
 
-// --- Dữ liệu cho các phần ---
+// --- Dữ liệu nội dung ---
 const TRUST_STATS = [
   { icon: Users, value: "10K+", label: "NGƯỜI DÙNG" },
   { icon: Gift, value: "50K+", label: "ĐƠN HÀNG" },
@@ -24,8 +24,8 @@ const TRUST_STATS = [
 const WHY_CARDS = [
   { 
     icon: Zap, 
-    title: "Kiếm Coin dễ dàng", 
-    desc: "Hoàn thành nhiệm vụ đơn giản, nhận Coin ngay vào ví." 
+    title: "Nạp game chính hãng", 
+    desc: "Nạp Robux, Quân Huy, Kim Cương, UC cho 8+ tựa game hot nhất." 
   },
   { 
     icon: ShieldCheck, 
@@ -34,56 +34,18 @@ const WHY_CARDS = [
   },
   { 
     icon: Users, 
-    title: "Cộng đồng lớn", 
-    desc: "Hơn 10,000 người dùng tin tưởng mỗi ngày." 
+    title: "Kiếm thưởng miễn phí", 
+    desc: "Làm nhiệm vụ để nhận Coin đổi quà, rút tiền về ngân hàng." 
   },
 ];
 
 const HOW_IT_WORKS = [
-  { n: "1", icon: UserPlus, title: "Đăng ký tài khoản", desc: "Tạo tài khoản miễn phí chỉ trong 30 giây" },
-  { n: "2", icon: ListChecks, title: "Làm nhiệm vụ", desc: "Chọn nhiệm vụ và hoàn thành để nhận Coin" },
-  { n: "3", icon: Gift, title: "Đổi thưởng", desc: "Dùng Coin mua tài khoản Premium trong Shop" },
+  { n: "1", title: "Đăng ký tài khoản", desc: "Tạo tài khoản miễn phí chỉ trong 30 giây" },
+  { n: "2", title: "Làm nhiệm vụ", desc: "Chọn nhiệm vụ và hoàn thành để nhận Coin" },
+  { n: "3", title: "Đổi thưởng", desc: "Dùng Coin mua tài khoản Premium trong Shop" },
 ];
 
-// --- Hook và Component cho hiệu ứng xuất hiện ---
-function useReveal() {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, visible];
-}
-
-function Reveal({ children, className = "", delay = 0 }) {
-  const [ref, visible] = useReveal();
-  return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      } ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-// --- Component chính ---
-export default function CloudVIPLanding() {
+export default function NXX315Landing() {
   const navigate = useNavigate();
 
   const scrollToHowItWorks = () => {
@@ -91,19 +53,23 @@ export default function CloudVIPLanding() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white font-[Be_Vietnam_Pro] text-slate-900">
+    <div className="min-h-screen w-full bg-[#FAFBFC] font-[Be_Vietnam_Pro] text-slate-900">
       {/* Nhúng Font chữ */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
       `}</style>
 
-      {/* NAVBAR */}
+      {/* HEADER */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white">
-            <Sparkles size={18} />
+            {/* Icon Logo giống hình mẫu */}
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
           </div>
-          <span className="text-lg font-bold text-slate-800">CloudVIP</span>
+          <span className="text-lg font-bold text-slate-800">NXX315 Studio</span>
         </div>
         <div className="flex items-center gap-2">
           <button className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600">
@@ -121,60 +87,51 @@ export default function CloudVIPLanding() {
       {/* HERO SECTION */}
       <section className="relative px-4 pb-12 pt-10 text-center sm:px-6 sm:pt-16">
         <div className="mx-auto max-w-lg">
-          <Reveal>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
-              <Sparkles size={14} />
-              Kiếm Coin — Đổi tài khoản Premium
+          
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
+            <Zap size={14} className="fill-current" />
+            Nạp game chính hãng & Kiếm thưởng miễn phí
+          </div>
+
+          <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
+            Nền tảng kiếm Coin
+            <br />
+            <span className="text-blue-500">đổi tài khoản Premium</span>
+          </h1>
+
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-slate-500 sm:text-base">
+            Nạp Robux, Quân Huy, Kim Cương, UC cho 8+ tựa game hot nhất. Hoặc làm nhiệm vụ để nhận Coin đổi quà, rút tiền về ngân hàng.
+          </p>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3">
+            <button
+              onClick={() => navigate("/register")}
+              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+            >
+              <Rocket size={18} className="fill-current" />
+              Bắt đầu ngay — Miễn phí
+              <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+            </button>
+            <button
+              onClick={scrollToHowItWorks}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <PlayCircle size={18} /> Cách hoạt động
+            </button>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 size={14} className="text-green-500" /> Không cần nạp tiền
             </span>
-          </Reveal>
-
-          <Reveal delay={80}>
-            <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
-              Nền tảng kiếm Coin
-              <br />
-              <span className="text-blue-500">đổi tài khoản Premium</span>
-            </h1>
-          </Reveal>
-
-          <Reveal delay={160}>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-slate-500 sm:text-base">
-              Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi tài khoản Netflix, Spotify, YouTube Premium an toàn 100%.
-            </p>
-          </Reveal>
-
-          <Reveal delay={240}>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3">
-              <button
-                onClick={() => navigate("/register")}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-600"
-              >
-                <Zap size={18} className="fill-current" />
-                Bắt đầu ngay — Miễn phí
-                <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
-              </button>
-              <button
-                onClick={scrollToHowItWorks}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <PlayCircle size={18} /> Cách hoạt động
-              </button>
-            </div>
-          </Reveal>
-
-          <Reveal delay={300}>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-green-500" /> Không cần nạp tiền
-              </span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-blue-500" /> Tài khoản thật 100%
-              </span>
-            </div>
-          </Reveal>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-blue-500" /> Tài khoản thật 100%
+            </span>
+          </div>
         </div>
 
         {/* STATS */}
-        <Reveal delay={380} className="mx-auto mt-10 grid max-w-lg grid-cols-3 gap-3">
+        <div className="mx-auto mt-10 grid max-w-lg grid-cols-3 gap-3">
           {TRUST_STATS.map(({ icon: Icon, value, label }) => (
             <div key={label} className="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
               <Icon size={20} className="mb-1.5 text-blue-400" />
@@ -182,66 +139,62 @@ export default function CloudVIPLanding() {
               <div className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">{label}</div>
             </div>
           ))}
-        </Reveal>
+        </div>
       </section>
 
       {/* WHY CHOOSE SECTION */}
       <section className="mx-auto max-w-lg px-4 py-12 sm:px-6">
-        <Reveal className="text-center">
+        <div className="text-center">
           <span className="text-xs font-bold uppercase tracking-widest text-blue-500">Tính năng nổi bật</span>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
-            Tại sao chọn <span className="text-blue-500">CloudVIP?</span>
+            Tại sao chọn <span className="text-blue-500">NXX315?</span>
           </h2>
-        </Reveal>
+        </div>
 
         <div className="mt-8 space-y-4">
-          {WHY_CARDS.map(({ icon: Icon, title, desc }, i) => (
-            <Reveal key={title} delay={i * 100}>
-              <div className="flex gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-                  <Icon size={22} className="text-blue-500" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">{title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{desc}</p>
-                </div>
+          {WHY_CARDS.map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="flex gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                <Icon size={22} className="text-blue-500" />
               </div>
-            </Reveal>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">{title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-slate-500">{desc}</p>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
       {/* HOW IT WORKS SECTION */}
       <section id="how-it-works" className="mx-auto max-w-lg px-4 py-12 pb-20 sm:px-6">
-        <Reveal className="text-center">
+        <div className="text-center">
           <span className="text-xs font-bold uppercase tracking-widest text-blue-500">3 bước đơn giản</span>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">Cách hoạt động</h2>
-        </Reveal>
+        </div>
 
         <div className="mt-8 space-y-4">
-          {HOW_IT_WORKS.map(({ n, title, desc }, i) => (
-            <Reveal key={n} delay={i * 100}>
-              <div className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-400 text-lg font-bold text-white">
-                  {n}
-                </div>
-                <h3 className="mt-4 text-base font-bold text-slate-900">{title}</h3>
-                <p className="mt-1 text-sm text-slate-500">{desc}</p>
+          {HOW_IT_WORKS.map(({ n, title, desc }) => (
+            <div key={n} className="flex flex-col items-center rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-400 text-lg font-bold text-white">
+                {n}
               </div>
-            </Reveal>
+              <h3 className="mt-4 text-base font-bold text-slate-900">{title}</h3>
+              <p className="mt-1 text-sm text-slate-500">{desc}</p>
+            </div>
           ))}
         </div>
 
-        <Reveal delay={300} className="mt-8">
+        <div className="mt-8">
           <button
             onClick={() => navigate("/register")}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             Bắt đầu kiếm Coin ngay <ArrowRight size={16} />
           </button>
-        </Reveal>
+        </div>
       </section>
 
     </div>
   );
-                }
+}
