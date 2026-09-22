@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
@@ -66,6 +66,20 @@ export default function Login() {
       title="Chào mừng trở lại"
       subtitle="Đăng nhập vào NXX315 Studio Rewards để tiếp tục."
     >
+      {/* ✅ Cảnh báo quan trọng */}
+      <div className="mb-4 rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
+        <div className="flex items-start gap-2">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-sky-600" />
+          <div className="text-[12px] leading-5 text-sky-800">
+            <p className="font-bold">💡 Lưu ý</p>
+            <p className="mt-1">
+              Nếu bạn đã từng tạo tài khoản trên thiết bị này, vui lòng đăng nhập
+              lại tài khoản <b>cũ</b>. Mỗi thiết bị chỉ được dùng 1 tài khoản.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           type="email"
@@ -145,4 +159,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-}
+        }
