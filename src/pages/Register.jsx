@@ -292,7 +292,7 @@ export default function Register() {
         <div className="flex items-start gap-2">
           <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
           <div className="text-[12px] leading-5 text-amber-800">
-            <p className="font-bold">⚠️ Lưu ý quan trọng</p>
+            <p className="font-bold"> Lưu ý quan trọng</p>
             <ul className="mt-1 list-inside list-disc space-y-0.5">
               <li>Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b></li>
               <li>Nếu cố tạo thêm → hệ thống sẽ khóa</li>
