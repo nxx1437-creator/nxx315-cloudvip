@@ -52,6 +52,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
 import VersionChecker from "./VersionChecker";
+import DeviceChecker from "./components/DeviceChecker.jsx";
 
 export default function App() {
   return (
@@ -342,7 +343,8 @@ export default function App() {
         </Routes>
 
         <VersionChecker />
+        <DeviceChecker />
       </BrowserRouter>
     </BanGate>
   );
-            }
+}
