@@ -4,7 +4,6 @@ import { Loader2, AlertTriangle, ShieldAlert, LogIn } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase, getClientIp } from "../lib/supabaseClient.js";
-import FingerprintJS from "https://openfpcdn.io/fingerprintjs/v4/iife.min.js" assert { type: "js" };
 
 const FP_CDN = "https://openfpcdn.io/fingerprintjs/v4/iife.min.js";
 const STORAGE_KEY = "nxx315_fingerprint";
@@ -48,12 +47,10 @@ export default function Register() {
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
-  // ✅ State cho việc check thiết bị đã có account chưa
   const [deviceBlocked, setDeviceBlocked] = useState(false);
   const [existingEmail, setExistingEmail] = useState(null);
   const [checking, setChecking] = useState(true);
 
-  // ✅ Check khi vào trang
   useEffect(() => {
     const checkDevice = async () => {
       try {
@@ -152,9 +149,9 @@ export default function Register() {
         ) {
           setError(
             `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
-            `Vui lòng:\n` +
-            `• Đăng nhập nếu đây là tài khoản của bạn\n` +
-            `• Hoặc dùng email khác để đăng ký`
+              `Vui lòng:\n` +
+              `• Đăng nhập nếu đây là tài khoản của bạn\n` +
+              `• Hoặc dùng email khác để đăng ký`
           );
           setErrorType("email_exists");
         } else if (msg.includes("invalid email")) {
@@ -180,9 +177,9 @@ export default function Register() {
         if (isExistingUser) {
           setError(
             `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
-            `Vui lòng:\n` +
-            `• Đăng nhập nếu đây là tài khoản của bạn\n` +
-            `• Hoặc dùng email khác để đăng ký`
+              `Vui lòng:\n` +
+              `• Đăng nhập nếu đây là tài khoản của bạn\n` +
+              `• Hoặc dùng email khác để đăng ký`
           );
           setErrorType("email_exists");
           return;
@@ -216,7 +213,7 @@ export default function Register() {
     if (authError) setError(authError.message);
   };
 
-  // ✅ Nếu thiết bị đã có tài khoản → hiện màn hình chặn
+  // Nếu thiết bị đã có tài khoản → hiện màn hình chặn
   if (!checking && deviceBlocked) {
     return (
       <AuthShell
@@ -229,7 +226,7 @@ export default function Register() {
           </div>
 
           <h3 className="mt-3 text-[15px] font-black text-rose-800">
-             Không thể tạo tài khoản mới
+            Không thể tạo tài khoản mới
           </h3>
 
           <p className="mt-2 text-[13px] leading-6 text-rose-700">
@@ -251,7 +248,7 @@ export default function Register() {
 
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
           <p className="text-[12px] leading-5 text-amber-700">
-           <b>Lưu ý:</b> Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ Zalo{" "}
+            <b>Lưu ý:</b> Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ Zalo{" "}
             <a
               href="https://zalo.me/0865245988"
               target="_blank"
@@ -267,7 +264,7 @@ export default function Register() {
     );
   }
 
-  // ✅ Đang check fingerprint
+  // Đang check fingerprint
   if (checking) {
     return (
       <AuthShell
@@ -281,21 +278,21 @@ export default function Register() {
     );
   }
 
-  // ✅ Form bình thường + cảnh báo
+  // Form bình thường + cảnh báo
   return (
     <AuthShell
       title="Tạo tài khoản"
       subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
     >
-      {/* ✅ Cảnh báo quan trọng */}
+      {/* Cảnh báo quan trọng */}
       <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
         <div className="flex items-start gap-2">
           <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
           <div className="text-[12px] leading-5 text-amber-800">
-            <p className="font-bold"> Lưu ý quan trọng</p>
+            <p className="font-bold">Lưu ý quan trọng</p>
             <ul className="mt-1 list-inside list-disc space-y-0.5">
               <li>Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b></li>
-              <li>Nếu cố tạo thêm → hệ thống sẽ khóa</li>
+              <li>Nếu cố tạo thêm, hệ thống sẽ khóa</li>
               <li>Đã có tài khoản rồi? Vui lòng đăng nhập</li>
             </ul>
           </div>
@@ -394,4 +391,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-        }
+          }
