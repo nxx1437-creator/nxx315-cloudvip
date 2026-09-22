@@ -1,304 +1,277 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-const CHECK_INTERVAL = 30 * 1000; // Check mỗi 30s
-const STORAGE_KEY = 'nxx315_app_version';
-const COUNTDOWN_SECONDS = 5; // Đếm ngược 5 giây trước khi reload
+const CHECK_INTERVAL = 60 * 1000; // Check mỗi 60 giây
+const STORAGE_KEY = "nxx315_app_version";
 
 export default function VersionChecker() {
   const currentVersion = useRef(null);
-  const hasTriggered = useRef(false);
-  const reloadTimer = useRef(null);
-
   const [showBanner, setShowBanner] = useState(false);
-  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
 
-  // ========== TRIGGER UPDATE ==========
-  const triggerUpdate = (newVersion) => {
-    if (hasTriggered.current) return;
-    hasTriggered.current = true;
+  useEffect(() => {
+    // ========== 1. CHECK VERSION ==========
+    const checkVersion = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`, {
+          cache: "no-store",
+        });
+        const data = await res.json();
 
-    console.log(`[VersionChecker] New version detected: ${newVersion}`);
-    console.log(`[VersionChecker] Auto reload in ${COUNTDOWN_SECONDS}s...`);
-
-    // Lưu version mới
-    localStorage.setItem(STORAGE_KEY, newVersion);
-
-    // Hiện banner
-    setShowBanner(true);
-    setCountdown(COUNTDOWN_SECONDS);
-
-    // Đếm ngược
-    let remaining = COUNTDOWN_SECONDS;
-    const countdownInterval = setInterval(() => {
-      remaining -= 1;
-      setCountdown(remaining);
-
-      if (remaining <= 0) {
-        clearInterval(countdownInterval);
-        performReload();
+        if (currentVersion.current === null) {
+          currentVersion.current = data.version;
+          localStorage.setItem(STORAGE_KEY, data.version);
+        } else if (data.version !== currentVersion.current) {
+          // ✅ Có version mới → HIỆN BANNER (không auto reload)
+          console.log("[VersionChecker] New version detected:", data.version);
+          setShowBanner(true);
+        }
+      } catch (err) {
+        // Bỏ qua lỗi mạng
       }
-    }, 1000);
+    };
 
-    reloadTimer.current = countdownInterval;
-  };
+    // ========== 2. CHECK ON LOAD ==========
+    const checkOnLoad = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`, {
+          cache: "no-store",
+        });
+        const data = await res.json();
 
-  const performReload = () => {
-    if (reloadTimer.current) clearInterval(reloadTimer.current);
-    console.log('[VersionChecker] Reloading now...');
-    window.location.reload();
-  };
+        const storedVersion = localStorage.getItem(STORAGE_KEY);
 
-  // ========== CHECK VERSION ==========
-  const checkVersion = async () => {
-    // Đã trigger rồi → không check nữa
-    if (hasTriggered.current) return;
+        if (storedVersion && storedVersion !== data.version) {
+          // ✅ LocalStorage cũ → hiện banner
+          console.log("[VersionChecker] Old version detected");
+          setShowBanner(true);
+        }
 
-    try {
-      const res = await fetch(`/version.json?t=${Date.now()}`, {
-        cache: 'no-store',
-      });
-      const data = await res.json();
-
-      if (currentVersion.current === null) {
         currentVersion.current = data.version;
         localStorage.setItem(STORAGE_KEY, data.version);
-        return;
+      } catch (err) {
+        // Bỏ qua
       }
+    };
 
-      if (data.version !== currentVersion.current) {
-        triggerUpdate(data.version);
-      }
-    } catch (err) {
-      // Bỏ qua lỗi mạng
-    }
-  };
-
-  // ========== CHECK ON LOAD ==========
-  const checkOnLoad = async () => {
-    try {
-      const res = await fetch(`/version.json?t=${Date.now()}`, {
-        cache: 'no-store',
-      });
-      const data = await res.json();
-
-      const storedVersion = localStorage.getItem(STORAGE_KEY);
-
-      // Version localStorage khác version server → trigger update
-      if (storedVersion && storedVersion !== data.version) {
-        triggerUpdate(data.version);
-        return;
-      }
-
-      currentVersion.current = data.version;
-      localStorage.setItem(STORAGE_KEY, data.version);
-    } catch (err) {
-      // Bỏ qua
-    }
-  };
-
-  // ========== EFFECTS ==========
-  useEffect(() => {
+    // ========== 3. START ==========
     checkOnLoad();
 
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
-    // Check khi quay lại tab
+    // Check khi user quay lại tab
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         checkVersion();
       }
     };
 
-    // Check khi focus window
-    const handleFocus = () => {
-      checkVersion();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('focus', handleFocus);
-
-    // Listen custom event để force reload từ bất kỳ đâu
-    const handleForceReload = () => {
-      localStorage.removeItem(STORAGE_KEY);
-      window.location.reload();
-    };
-    window.addEventListener('nxx315:force-reload', handleForceReload);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       clearInterval(interval);
-      if (reloadTimer.current) clearInterval(reloadTimer.current);
-      document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('nxx315:force-reload', handleForceReload);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
-  // ========== RENDER ==========
+  // ========== 4. HANDLERS ==========
+  const handleReload = () => {
+    // Xóa version cũ
+    localStorage.removeItem(STORAGE_KEY);
+    // Reload với cache bypass
+    window.location.reload();
+  };
+
+  const handleDismiss = () => {
+    setShowBanner(false);
+    // Cập nhật version để không hiện lại
+    fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        currentVersion.current = d.version;
+        localStorage.setItem(STORAGE_KEY, d.version);
+      })
+      .catch(() => {});
+  };
+
+  // ========== 5. RENDER ==========
   if (!showBanner) return null;
 
   return (
     <div
       style={{
-        position: 'fixed',
-        inset: 0,
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
         zIndex: 999999,
-        background: 'rgba(15, 23, 42, 0.85)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        padding: 16,
+        paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        animation: "versionSlideUp 0.3s ease-out",
       }}
     >
       <div
         style={{
-          maxWidth: 380,
-          width: '100%',
-          background: 'white',
+          maxWidth: 480,
+          margin: "0 auto",
+          background: "white",
           borderRadius: 20,
-          padding: 28,
-          textAlign: 'center',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-          animation: 'versionPop 0.3s ease-out',
+          padding: 20,
+          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.25)",
+          border: "2px solid #FEE2E2",
         }}
       >
-        {/* Icon */}
+        {/* Header */}
         <div
           style={{
-            fontSize: 56,
-            marginBottom: 16,
-            animation: 'versionSpin 2s linear infinite',
-            display: 'inline-block',
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 12,
           }}
         >
-          🔄
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              flexShrink: 0,
+              borderRadius: 14,
+              background: "#FEE2E2",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#DC2626"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+            </svg>
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3
+              style={{
+                fontSize: 15,
+                fontWeight: 900,
+                color: "#991B1B",
+                margin: 0,
+                marginBottom: 4,
+              }}
+            >
+               Có lỗi xảy ra!
+            </h3>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#64748B",
+                margin: 0,
+                lineHeight: 1.5,
+              }}
+            >
+              Ứng dụng đã có phiên bản mới. Vui lòng tải lại trang để tiếp tục sử dụng.
+            </p>
+          </div>
         </div>
 
-        {/* Title */}
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 800,
-            color: '#0f172a',
-            margin: 0,
-            marginBottom: 8,
-          }}
-        >
-          Có bản cập nhật mới!
-        </h2>
-
-        {/* Subtitle */}
-        <p
-          style={{
-            fontSize: 14,
-            color: '#64748b',
-            margin: 0,
-            marginBottom: 20,
-            lineHeight: 1.5,
-          }}
-        >
-          Ứng dụng sẽ tự động tải lại để cập nhật phiên bản mới nhất.
-        </p>
-
-        {/* Countdown */}
+        {/* Buttons */}
         <div
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
+            display: "flex",
             gap: 8,
-            padding: '10px 20px',
-            background: 'linear-gradient(135deg, #EAF2FE 0%, #D9E7FD 100%)',
-            borderRadius: 12,
-            marginBottom: 20,
+            marginTop: 16,
           }}
         >
-          <span
+          <button
+            type="button"
+            onClick={handleDismiss}
             style={{
-              fontSize: 14,
-              color: '#3478F6',
-              fontWeight: 600,
+              flex: 1,
+              padding: "12px 16px",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#64748B",
+              background: "#F1F5F9",
+              border: "none",
+              borderRadius: 12,
+              cursor: "pointer",
+              transition: "background 0.15s",
             }}
+            onMouseDown={(e) => (e.currentTarget.style.background = "#E2E8F0")}
+            onMouseUp={(e) => (e.currentTarget.style.background = "#F1F5F9")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#F1F5F9")}
           >
-            Tự động tải lại sau
-          </span>
-          <span
+            Để sau
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReload}
             style={{
-              fontSize: 24,
+              flex: 2,
+              padding: "12px 16px",
+              fontSize: 13,
               fontWeight: 900,
-              color: '#3478F6',
-              minWidth: 32,
-              display: 'inline-block',
+              color: "white",
+              background: "linear-gradient(135deg, #DC2626, #B91C1C)",
+              border: "none",
+              borderRadius: 12,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              boxShadow: "0 4px 16px rgba(220, 38, 38, 0.35)",
+              transition: "transform 0.15s",
             }}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.97)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            {countdown}
-          </span>
-          <span
-            style={{
-              fontSize: 14,
-              color: '#3478F6',
-              fontWeight: 600,
-            }}
-          >
-            giây
-          </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+              <path d="M8 16H3v5" />
+            </svg>
+             Tải lại trang
+          </button>
         </div>
-
-        {/* Button */}
-        <button
-          onClick={performReload}
-          style={{
-            width: '100%',
-            padding: '14px 20px',
-            fontSize: 15,
-            fontWeight: 700,
-            color: 'white',
-            background: 'linear-gradient(135deg, #3478F6 0%, #0878C9 100%)',
-            border: 'none',
-            borderRadius: 12,
-            cursor: 'pointer',
-            boxShadow: '0 4px 16px rgba(52, 120, 246, 0.35)',
-            transition: 'transform 0.15s ease-out',
-          }}
-          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
-          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-           Tải lại ngay
-        </button>
-
-        {/* Hint */}
-        <p
-          style={{
-            fontSize: 11.5,
-            color: '#94a3b8',
-            marginTop: 16,
-            margin: 0,
-            marginTop: 16,
-            lineHeight: 1.5,
-          }}
-        >
-           Nếu bạn đang nhập thông tin, hãy lưu lại trước khi tải lại.
-        </p>
       </div>
 
-      {/* Global animation */}
+      {/* Animation */}
       <style>{`
-        @keyframes versionPop {
+        @keyframes versionSlideUp {
           from {
             opacity: 0;
-            transform: scale(0.9);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
-            transform: scale(1);
+            transform: translateY(0);
           }
-        }
-        @keyframes versionSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
   );
-        }
+          }
