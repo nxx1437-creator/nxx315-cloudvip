@@ -10,6 +10,7 @@ import {
   Wallet,
   Sparkles,
   ChevronRight,
+  PlayCircle,
 } from "lucide-react";
 
 // --- Dữ liệu ---
@@ -57,6 +58,11 @@ const STEPS = [
 export default function CloudVIPLanding() {
   const navigate = useNavigate();
 
+  // Hàm cuộn xuống phần Cách hoạt động
+  const scrollToHowItWorks = () => {
+    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <>
       {/* Load Font chữ trực tiếp từ Google Fonts */}
@@ -78,7 +84,6 @@ export default function CloudVIPLanding() {
         <header className="relative z-50 border-b border-white/5 bg-[#09090b]/80 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
             <div className="flex items-center gap-3">
-              {/* Đã xóa icon Gamepad2, thay bằng icon Zap */}
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-500/20">
                 <Zap size={20} className="text-white" fill="currentColor" />
               </div>
@@ -123,26 +128,26 @@ export default function CloudVIPLanding() {
               </span>
             </h1>
             
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
+            {/* ĐÃ CHỈNH SỬA: Chữ giới thiệu bé lại, font nhỏ hơn, màu nhạt hơn */}
+            <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
               Nạp Robux, Quân Huy, Kim Cương, UC cho 8+ tựa game hot nhất. 
               Hoặc làm nhiệm vụ để nhận Coin đổi quà, rút tiền về ngân hàng.
             </p>
 
+            {/* ĐÃ CHỈNH SỬA: Đổi nút bấm thành Đăng ký ngay & Cách hoạt động */}
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              {/* Chuyển hướng về /store thay vì /nap-game */}
               <button
-                onClick={() => navigate("/store")}
+                onClick={() => navigate("/register")}
                 className="group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-base font-bold text-black transition hover:bg-emerald-400 sm:w-auto"
               >
-                Nạp Game Ngay
+                Đăng ký ngay
                 <ArrowRight size={18} className="transition group-hover:translate-x-1" />
               </button>
-              {/* Chuyển hướng về /tasks thay vì /kiem-thuong */}
               <button
-                onClick={() => navigate("/tasks")}
+                onClick={scrollToHowItWorks}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-sm transition hover:bg-white/10 sm:w-auto"
               >
-                <Zap size={18} className="text-amber-400" /> Kiếm Thưởng
+                <PlayCircle size={18} className="text-emerald-400" /> Cách hoạt động
               </button>
             </div>
 
@@ -210,8 +215,8 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* --- HOW IT WORKS --- */}
-        <section className="relative z-10 border-t border-white/5 bg-white/[0.01] py-24">
+        {/* --- HOW IT WORKS (Đã thêm ID để cuộn tới) --- */}
+        <section id="how-it-works" className="relative z-10 border-t border-white/5 bg-white/[0.01] py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-16 text-center">
               <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -275,4 +280,4 @@ export default function CloudVIPLanding() {
       </div>
     </>
   );
-          }
+}
