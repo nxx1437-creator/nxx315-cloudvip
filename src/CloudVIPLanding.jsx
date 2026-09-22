@@ -115,7 +115,7 @@ export default function CloudVIPLanding() {
         <section className="relative z-10 px-4 pt-12 pb-10 sm:px-6 sm:pt-20">
           <div className="mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold text-emerald-400 sm:text-xs">
-              <Sparkles size={12} /> Nền tảng nạp game & kiếm thưởng 
+              <Sparkles size={12} /> Nền tảng nạp game & kiếm thưởng thế hệ mới
             </div>
             
             {/* ĐÃ GIẢM MẠNH KÍCH THƯỚC CHỮ TRÊN MOBILE */}
