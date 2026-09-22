@@ -1,9 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, ShieldAlert, LogIn } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase, getClientIp } from "../lib/supabaseClient.js";
+import FingerprintJS from "https://openfpcdn.io/fingerprintjs/v4/iife.min.js" assert { type: "js" };
+
+const FP_CDN = "https://openfpcdn.io/fingerprintjs/v4/iife.min.js";
+const STORAGE_KEY = "nxx315_fingerprint";
+
+let fpPromise = null;
+function loadFingerprintJS() {
+  if (fpPromise) return fpPromise;
+  fpPromise = new Promise((resolve, reject) => {
+    if (window.FingerprintJS) {
+      resolve(window.FingerprintJS);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = FP_CDN;
+    script.async = true;
+    script.onload = () => {
+      if (window.FingerprintJS) resolve(window.FingerprintJS);
+      else reject(new Error("FingerprintJS không load được"));
+    };
+    script.onerror = () => reject(new Error("CDN load fail"));
+    document.head.appendChild(script);
+  });
+  return fpPromise;
+}
+
+async function getFingerprint() {
+  let fp = localStorage.getItem(STORAGE_KEY);
+  if (fp) return fp;
+  const FP = await loadFingerprintJS();
+  const fpInstance = await FP.load();
+  const result = await fpInstance.get();
+  fp = result.visitorId;
+  localStorage.setItem(STORAGE_KEY, fp);
+  return fp;
+}
 
 export default function Register() {
   const navigate = useNavigate();
@@ -12,8 +48,57 @@ export default function Register() {
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
+  // ✅ State cho việc check thiết bị đã có account chưa
+  const [deviceBlocked, setDeviceBlocked] = useState(false);
+  const [existingEmail, setExistingEmail] = useState(null);
+  const [checking, setChecking] = useState(true);
+
+  // ✅ Check khi vào trang
+  useEffect(() => {
+    const checkDevice = async () => {
+      try {
+        const fp = await getFingerprint();
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        const res = await fetch(
+          `${SUPABASE_URL}/functions/v1/check-device-public`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ fingerprint: fp }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (data.exists === true) {
+          setDeviceBlocked(true);
+          setExistingEmail(data.masked_email || "tài khoản trước");
+        }
+      } catch (err) {
+        console.error("Check device error:", err);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkDevice();
+  }, []);
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
+    if (deviceBlocked) {
+      setError(
+        "Thiết bị này đã có tài khoản. Vui lòng đăng nhập lại tài khoản cũ."
+      );
+      setErrorType("device_blocked");
+      return;
+    }
 
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
@@ -39,6 +124,7 @@ export default function Register() {
 
     try {
       const ip = await getClientIp();
+      const fp = await getFingerprint();
 
       const { data, error: authError } = await supabase.auth.signUp({
         email: form.email,
@@ -47,13 +133,13 @@ export default function Register() {
           data: {
             username: form.username || form.email.split("@")[0],
             registration_ip: ip || null,
+            device_fingerprint: fp || null,
           },
         },
       });
 
       setLoading(false);
 
-      // ✅ Bắt lỗi từ Supabase
       if (authError) {
         const msg = authError.message?.toLowerCase() || "";
 
@@ -87,7 +173,6 @@ export default function Register() {
         return;
       }
 
-      // ✅ Bắt email đã tồn tại (Supabase silent mode)
       if (data.user) {
         const isExistingUser =
           !data.user.identities || data.user.identities.length === 0;
@@ -105,7 +190,6 @@ export default function Register() {
 
         navigate("/verify-email", { state: { email: form.email } });
       } else {
-        // data.user null bất thường
         setError(
           "Không thể tạo tài khoản. Vui lòng thử lại hoặc dùng email khác."
         );
@@ -132,11 +216,92 @@ export default function Register() {
     if (authError) setError(authError.message);
   };
 
+  // ✅ Nếu thiết bị đã có tài khoản → hiện màn hình chặn
+  if (!checking && deviceBlocked) {
+    return (
+      <AuthShell
+        title="Thiết bị đã có tài khoản"
+        subtitle="Mỗi thiết bị chỉ được tạo 1 tài khoản duy nhất."
+      >
+        <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-5 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-100">
+            <ShieldAlert size={28} className="text-rose-600" strokeWidth={2.2} />
+          </div>
+
+          <h3 className="mt-3 text-[15px] font-black text-rose-800">
+            🚫 Không thể tạo tài khoản mới
+          </h3>
+
+          <p className="mt-2 text-[13px] leading-6 text-rose-700">
+            Thiết bị này đã có tài khoản:{" "}
+            <b>{existingEmail}</b>
+            <br />
+            <br />
+            Vui lòng đăng nhập lại tài khoản cũ để tiếp tục sử dụng.
+          </p>
+        </div>
+
+        <Link
+          to="/login"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-3.5 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 active:scale-[0.98]"
+        >
+          <LogIn size={16} strokeWidth={2.4} />
+          Đăng nhập tài khoản cũ
+        </Link>
+
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+          <p className="text-[12px] leading-5 text-amber-700">
+            💡 <b>Lưu ý:</b> Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ Zalo{" "}
+            <a
+              href="https://zalo.me/0865245988"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold underline"
+            >
+              0865245988
+            </a>{" "}
+            để được hỗ trợ.
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  // ✅ Đang check fingerprint
+  if (checking) {
+    return (
+      <AuthShell
+        title="Đang kiểm tra thiết bị"
+        subtitle="Vui lòng chờ trong giây lát..."
+      >
+        <div className="flex flex-col items-center justify-center py-10">
+          <Loader2 size={32} className="animate-spin text-slate-400" />
+        </div>
+      </AuthShell>
+    );
+  }
+
+  // ✅ Form bình thường + cảnh báo
   return (
     <AuthShell
       title="Tạo tài khoản"
       subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
     >
+      {/* ✅ Cảnh báo quan trọng */}
+      <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
+        <div className="flex items-start gap-2">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+          <div className="text-[12px] leading-5 text-amber-800">
+            <p className="font-bold">⚠️ Lưu ý quan trọng</p>
+            <ul className="mt-1 list-inside list-disc space-y-0.5">
+              <li>Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b></li>
+              <li>Nếu cố tạo thêm → hệ thống sẽ khóa</li>
+              <li>Đã có tài khoản rồi? Vui lòng đăng nhập</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           type="text"
@@ -229,4 +394,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-    }
+        }
