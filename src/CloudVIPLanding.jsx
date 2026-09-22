@@ -15,8 +15,8 @@ import {
 
 // --- Dữ liệu ---
 const STATS = [
-  { value: "0", label: "Người dùng" },
-  { value: "0", label: "Giao dịch" },
+  { value: "10K+", label: "Người dùng" },
+  { value: "50K+", label: "Giao dịch" },
   { value: "99%", label: "Hài lòng" },
 ];
 
@@ -64,7 +64,6 @@ export default function CloudVIPLanding() {
 
   return (
     <>
-      {/* Load Font chữ trực tiếp từ Google Fonts */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -73,7 +72,6 @@ export default function CloudVIPLanding() {
         className="min-h-screen w-full bg-[#09090b] text-slate-200 selection:bg-emerald-500/30"
         style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
       >
-        {/* --- BACKGROUND GRADIENT MESH --- */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[120px]" />
           <div className="absolute top-[20%] right-[-10%] h-[400px] w-[400px] rounded-full bg-indigo-500/10 blur-[120px]" />
@@ -113,14 +111,15 @@ export default function CloudVIPLanding() {
         </header>
 
         {/* --- HERO SECTION --- */}
-        <section className="relative z-10 px-4 pt-16 pb-12 sm:px-6 sm:pt-24">
+        {/* ĐÃ GIẢM PADDING TOP ĐỂ GỌN HƠN */}
+        <section className="relative z-10 px-4 pt-12 pb-10 sm:px-6 sm:pt-20">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-400 sm:text-xs">
-              <Sparkles size={12} /> Nền tảng nạp game & kiếm thưởng thế hệ mới
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-semibold text-emerald-400 sm:text-xs">
+              <Sparkles size={12} /> Nền tảng nạp game & kiếm thưởng 
             </div>
             
-            {/* ĐÃ CHỈNH SỬA: Giảm kích thước chữ tiêu đề chính */}
-            <h1 className="mt-6 text-3xl font-extrabold leading-[1.2] tracking-tight text-white sm:text-5xl">
+            {/* ĐÃ GIẢM MẠNH KÍCH THƯỚC CHỮ TRÊN MOBILE */}
+            <h1 className="mt-5 text-2xl font-extrabold leading-[1.25] tracking-tight text-white sm:text-5xl">
               Nạp Game Chính Hãng.
               <br />
               <span className="bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">
@@ -128,56 +127,57 @@ export default function CloudVIPLanding() {
               </span>
             </h1>
             
-            {/* ĐÃ CHỈNH SỬA: Giảm kích thước chữ mô tả */}
-            <p className="mx-auto mt-4 max-w-lg text-xs leading-relaxed text-slate-400 sm:text-sm">
+            {/* CHỮ MÔ TẢ NHỎ LẠI */}
+            <p className="mx-auto mt-4 max-w-md text-[11px] leading-relaxed text-slate-400 sm:text-sm">
               Nạp Robux, Quân Huy, Kim Cương, UC cho 8+ tựa game hot nhất. 
               Hoặc làm nhiệm vụ để nhận Coin đổi quà, rút tiền về ngân hàng.
             </p>
 
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            {/* NÚT BẤM GỌN HƠN */}
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 onClick={() => navigate("/register")}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-black transition hover:bg-emerald-400 sm:w-auto"
+                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-xs font-bold text-black transition hover:bg-emerald-400 sm:w-auto sm:text-sm"
               >
                 Đăng ký ngay
                 <ArrowRight size={16} className="transition group-hover:translate-x-1" />
               </button>
               <button
                 onClick={scrollToHowItWorks}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/10 sm:w-auto"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/10 sm:w-auto sm:text-sm"
               >
                 <PlayCircle size={16} className="text-emerald-400" /> Cách hoạt động
               </button>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
+            {/* TRUST INDICATORS GỌN HƠN */}
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] text-slate-500 sm:text-xs">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-500" /> Giao dịch tự động 24/7
+                <CheckCircle2 size={12} className="text-emerald-500" /> Giao dịch tự động 24/7
               </span>
               <span className="flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-emerald-500" /> Bảo mật 100%
+                <ShieldCheck size={12} className="text-emerald-500" /> Bảo mật 100%
               </span>
               <span className="flex items-center gap-1.5">
-                <Star size={14} className="text-amber-400" /> 4.9/5 (2K+ đánh giá)
+                <Star size={12} className="text-amber-400" /> 4.9/5 (2K+ đánh giá)
               </span>
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/5 pt-8">
+          {/* STATS GỌN HƠN */}
+          <div className="mx-auto mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/5 pt-8">
             {STATS.map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-2xl font-extrabold text-white sm:text-3xl">{stat.value}</div>
-                <div className="mt-1 text-[10px] font-medium uppercase tracking-wider text-slate-500 sm:text-xs">{stat.label}</div>
+                <div className="text-xl font-extrabold text-white sm:text-3xl">{stat.value}</div>
+                <div className="mt-1 text-[9px] font-medium uppercase tracking-wider text-slate-500 sm:text-xs">{stat.label}</div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* --- GAME LOGOS / MARQUEE --- */}
+        {/* --- GAME LOGOS --- */}
         <section className="relative z-10 border-y border-white/5 bg-white/[0.02] py-5">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-4 text-xs font-semibold text-slate-500 sm:gap-x-10 sm:text-sm">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-4 text-[11px] font-semibold text-slate-500 sm:gap-x-10 sm:text-sm">
             {GAMES.map((game) => (
               <span key={game} className="transition hover:text-slate-300">{game}</span>
             ))}
@@ -185,28 +185,28 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* --- FEATURES SECTION --- */}
-        <section className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6">
-          <div className="mb-12 max-w-2xl">
-            <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+        <section className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <div className="mb-10 max-w-2xl">
+            <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-3xl">
               Tại sao chọn <span className="text-emerald-400">NXX315?</span>
             </h2>
-            <p className="mt-3 text-sm text-slate-400">
+            <p className="mt-3 text-xs text-slate-400 sm:text-sm">
               Chúng tôi xây dựng nền tảng dựa trên sự tin cậy, tốc độ và bảo mật. 
               Mọi giao dịch đều được xử lý minh bạch.
             </p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {FEATURES.map((feat) => (
               <div 
                 key={feat.title} 
-                className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 transition hover:bg-white/[0.04]"
+                className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-5 transition hover:bg-white/[0.04]"
               >
-                <div className={`mb-5 flex h-11 w-11 items-center justify-center rounded-xl ${feat.bg} ${feat.color}`}>
-                  <feat.icon size={22} />
+                <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${feat.bg} ${feat.color}`}>
+                  <feat.icon size={20} />
                 </div>
-                <h3 className="mb-2 text-base font-bold text-white">{feat.title}</h3>
-                <p className="text-xs leading-relaxed text-slate-400 sm:text-sm">{feat.desc}</p>
+                <h3 className="mb-2 text-sm font-bold text-white sm:text-base">{feat.title}</h3>
+                <p className="text-[11px] leading-relaxed text-slate-400 sm:text-sm">{feat.desc}</p>
                 
                 <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-0 transition group-hover:opacity-100" />
               </div>
@@ -215,27 +215,27 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* --- HOW IT WORKS --- */}
-        <section id="how-it-works" className="relative z-10 border-t border-white/5 bg-white/[0.01] py-20">
+        <section id="how-it-works" className="relative z-10 border-t border-white/5 bg-white/[0.01] py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-12 text-center">
-              <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+            <div className="mb-10 text-center">
+              <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-3xl">
                 Quy trình <span className="text-emerald-400">3 bước</span>
               </h2>
-              <p className="mt-3 text-sm text-slate-400">Bắt đầu chỉ trong chưa đầy 1 phút.</p>
+              <p className="mt-3 text-xs text-slate-400 sm:text-sm">Bắt đầu chỉ trong chưa đầy 1 phút.</p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-3">
               {STEPS.map((step, idx) => (
                 <div key={step.n} className="relative flex flex-col items-center text-center">
                   {idx !== STEPS.length - 1 && (
-                    <div className="absolute top-8 left-[60%] hidden h-[1px] w-[80%] bg-gradient-to-r from-emerald-500/50 to-transparent md:block" />
+                    <div className="absolute top-7 left-[60%] hidden h-[1px] w-[80%] bg-gradient-to-r from-emerald-500/50 to-transparent md:block" />
                   )}
                   
-                  <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-[#09090b] text-xl font-black text-emerald-400 shadow-xl shadow-emerald-500/10">
+                  <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-[#09090b] text-lg font-black text-emerald-400 shadow-xl shadow-emerald-500/10">
                     {step.n}
                   </div>
-                  <h3 className="mt-5 text-base font-bold text-white">{step.title}</h3>
-                  <p className="mt-1.5 text-xs text-slate-400 sm:text-sm">{step.desc}</p>
+                  <h3 className="mt-4 text-sm font-bold text-white sm:text-base">{step.title}</h3>
+                  <p className="mt-1 text-[11px] text-slate-400 sm:text-sm">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -243,25 +243,25 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* --- CTA SECTION --- */}
-        <section className="relative z-10 px-4 py-20 sm:px-6">
+        <section className="relative z-10 px-4 py-16 sm:px-6">
           <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-8 text-center backdrop-blur-xl sm:p-12">
-            <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-4xl">
               Sẵn sàng trải nghiệm?
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-xs text-slate-400 sm:text-sm">
+            <p className="mx-auto mt-3 max-w-md text-[11px] text-slate-400 sm:text-sm">
               Tham gia cùng hàng ngàn game thủ khác. Nạp game giá rẻ, kiếm thưởng 
               khủng và rút tiền về ví ngân hàng của bạn ngay hôm nay.
             </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 onClick={() => navigate("/register")}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-black transition hover:bg-emerald-400 sm:w-auto"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-xs font-bold text-black transition hover:bg-emerald-400 sm:w-auto sm:text-sm"
               >
                 Đăng ký miễn phí <ChevronRight size={16} />
               </button>
               <button
                 onClick={() => navigate("/support")}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-transparent px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/5 sm:w-auto"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-transparent px-5 py-3 text-xs font-bold text-white transition hover:bg-white/5 sm:w-auto sm:text-sm"
               >
                 Liên hệ hỗ trợ
               </button>
