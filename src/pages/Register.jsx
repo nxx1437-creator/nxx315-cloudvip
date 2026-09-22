@@ -229,7 +229,7 @@ export default function Register() {
           </div>
 
           <h3 className="mt-3 text-[15px] font-black text-rose-800">
-            🚫 Không thể tạo tài khoản mới
+             Không thể tạo tài khoản mới
           </h3>
 
           <p className="mt-2 text-[13px] leading-6 text-rose-700">
@@ -251,7 +251,7 @@ export default function Register() {
 
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
           <p className="text-[12px] leading-5 text-amber-700">
-            💡 <b>Lưu ý:</b> Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ Zalo{" "}
+           <b>Lưu ý:</b> Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ Zalo{" "}
             <a
               href="https://zalo.me/0865245988"
               target="_blank"
