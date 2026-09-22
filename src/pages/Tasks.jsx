@@ -16,6 +16,7 @@ import {
   AlertCircle,
   ShieldAlert,
   Send,
+  Headphones,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -496,12 +497,7 @@ if (checkingIp) {
 
 // ✅ Nếu IP bị chặn → hiện màn hình block
 if (ipBlocked) {
-  return (
-    <IpBlockedScreen
-      reason={ipBlocked.reason}
-      canAppeal={ipBlocked.can_appeal}
-    />
-  );
+  return <IpBlockedScreen reason={ipBlocked.reason} />;
 }
   
 return (
@@ -919,48 +915,10 @@ return (
     </div>
   );
                         }
-// =====================================================
+            // =====================================================
 // COMPONENT: MÀN HÌNH CHẶN IP
 // =====================================================
-function IpBlockedScreen({ reason, canAppeal }) {
-  const [appealText, setAppealText] = useState("");
-  const [contactInfo, setContactInfo] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const submitAppeal = async () => {
-    if (!appealText.trim()) {
-      alert("Vui lòng nhập lý do kháng cáo.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) throw new Error("Chưa đăng nhập");
-
-      const { data, error } = await supabase.rpc("submit_fraud_appeal", {
-        p_user_id: session.user.id,
-        p_reason: appealText.trim(),
-        p_contact_info: contactInfo.trim() || null,
-      });
-
-      if (error) throw error;
-      if (data?.error) {
-        alert(data.error);
-        return;
-      }
-
-      setSubmitted(true);
-    } catch (err) {
-      alert("Không thể gửi kháng cáo: " + err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+function IpBlockedScreen({ reason }) {
   return (
     <div className="min-h-screen bg-white pb-24">
       <TopHeader />
@@ -973,7 +931,7 @@ function IpBlockedScreen({ reason, canAppeal }) {
           </div>
 
           <h2 className="mt-4 text-[20px] font-black text-rose-800">
-            🚫 Không thể làm nhiệm vụ
+             Không thể làm nhiệm vụ
           </h2>
 
           <p className="mt-3 text-[13.5px] leading-6 text-rose-700">
@@ -981,88 +939,45 @@ function IpBlockedScreen({ reason, canAppeal }) {
           </p>
         </div>
 
-        {/* Appeal form */}
-        {canAppeal && !submitted && (
-          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Send size={16} className="text-sky-600" strokeWidth={2.4} />
-              <h3 className="text-[14px] font-black text-slate-900">
-                Gửi kháng cáo
-              </h3>
-            </div>
-
-            <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
-              Nếu bạn cho rằng đây là nhầm lẫn, hãy gửi kháng cáo để admin xem xét trong 24-48h.
-            </p>
-
-            <textarea
-              value={appealText}
-              onChange={(e) => setAppealText(e.target.value)}
-              placeholder="Giải thích lý do tại sao bạn cho rằng mình không gian lận..."
-              rows={4}
-              className="mt-3 w-full rounded-xl border border-slate-200 p-3 text-[13px] outline-none transition focus:border-sky-500"
-            />
-
-            <input
-              type="text"
-              value={contactInfo}
-              onChange={(e) => setContactInfo(e.target.value)}
-              placeholder="SĐT / Zalo liên hệ (không bắt buộc)"
-              className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-[13px] outline-none transition focus:border-sky-500"
-            />
-
-            <button
-              onClick={submitAppeal}
-              disabled={submitting || !appealText.trim()}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 py-3 text-[13px] font-bold text-white transition hover:bg-rose-700 disabled:opacity-50"
-            >
-              {submitting ? (
-                <>
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Đang gửi...
-                </>
-              ) : (
-                <>
-                  <Send size={14} strokeWidth={2.4} />
-                  Gửi kháng cáo
-                </>
-              )}
-            </button>
+        {/* Liên hệ Zalo để được gỡ */}
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Headphones size={16} className="text-sky-600" strokeWidth={2.4} />
+            <h3 className="text-[14px] font-black text-slate-900">
+              Liên hệ hỗ trợ để được gỡ
+            </h3>
           </div>
-        )}
 
-        {/* Success */}
-        {submitted && (
-          <div className="mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-5 text-center">
-            <CheckCircle2 size={36} className="mx-auto text-emerald-600" />
-            <p className="mt-3 text-[14px] font-black text-emerald-800">
-              Đã gửi kháng cáo!
+          <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
+            Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ Zalo để được admin xem xét và gỡ trong 24h.
+          </p>
+
+          <a
+            href="https://zalo.me/0865245988"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3.5 text-[14px] font-black text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 active:scale-[0.98]"
+          >
+            <Headphones size={16} strokeWidth={2.6} />
+            Chat Zalo 0865245988
+          </a>
+
+          <div className="mt-3 rounded-xl bg-slate-50 p-3">
+            <p className="text-[11.5px] leading-5 text-slate-600">
+              📸 <b>Gửi kèm:</b>
             </p>
-            <p className="mt-1 text-[12px] leading-5 text-emerald-700">
-              Admin sẽ xem xét trong 24-48h. Bạn sẽ được thông báo qua Zalo/email sau khi có kết quả.
-            </p>
+            <ul className="mt-1 list-inside list-disc text-[11.5px] leading-5 text-slate-600">
+              <li>Ảnh chụp màn hình cảnh báo này</li>
+              <li>Tên tài khoản của bạn</li>
+              <li>Giải thích lý do</li>
+            </ul>
           </div>
-        )}
+        </div>
 
         {/* Hint */}
         <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3.5">
           <p className="text-[12px] leading-5 text-sky-700">
             💡 <b>Gợi ý:</b> Nếu bạn dùng chung WiFi với người khác, hãy tắt WiFi và dùng <b>4G</b> để làm nhiệm vụ.
-          </p>
-        </div>
-
-        {/* Support link */}
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3.5 text-center">
-          <p className="text-[12px] text-slate-500">
-            Cần hỗ trợ thêm? Liên hệ Zalo{" "}
-            <a
-              href="https://zalo.me/0865245988"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold text-sky-600"
-            >
-              0865245988
-            </a>
           </p>
         </div>
       </div>
