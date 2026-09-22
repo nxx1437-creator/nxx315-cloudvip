@@ -1,628 +1,359 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "./lib/supabaseClient.js";
 import {
-  ArrowRight,
+  Coins,
   ShieldCheck,
-  Gift,
-  Gamepad2,
-  Target,
-  Bot,
   Users,
-  Sparkles,
-  CheckCircle2,
+  Star,
+  ArrowRight,
   PlayCircle,
-  ChevronRight,
-  Globe2,
-  HeartHandshake,
+  CheckCircle2,
+  Gamepad2,
+  Timer,
+  BadgeCheck,
+  UserPlus,
+  ListChecks,
+  Gift,
 } from "lucide-react";
 
-// =====================================================
-// NXX315 STUDIO — ABOUT PAGE
-// Theme: White + Ocean Blue
-// =====================================================
-
-const FEATURES = [
-  {
-    icon: Gift,
-    title: "Rewards",
-    desc: "Khám phá hệ thống phần thưởng và các hoạt động tích điểm trên NXX315 Studio Rewards.",
-  },
-  {
-    icon: Gamepad2,
-    title: "Gaming",
-    desc: "Tập trung xây dựng những tiện ích và trải nghiệm dành cho cộng đồng game thủ.",
-  },
-  {
-    icon: Target,
-    title: "Nhiệm vụ",
-    desc: "Tham gia các nhiệm vụ phù hợp để tích lũy điểm và khám phá thêm nhiều hoạt động.",
-  },
-  {
-    icon: Bot,
-    title: "AI Support",
-    desc: "Trợ lý AI giúp giải đáp những câu hỏi thường gặp và hỗ trợ người dùng.",
-  },
+const TRUST_STATS = [
+  { icon: Users, value: "—", label: "Người dùng" },
+  { icon: Gift, value: "—", label: "Robux đã nạp" },
+  { icon: Star, value: "—", label: "Đánh giá 5 sao" },
 ];
 
-const VALUES = [
-  {
-    icon: ShieldCheck,
-    title: "An toàn",
-    desc: "Ưu tiên bảo vệ tài khoản và thông tin của người dùng trong quá trình sử dụng nền tảng.",
-  },
-  {
-    icon: Sparkles,
-    title: "Đơn giản",
-    desc: "Thiết kế giao diện rõ ràng để mọi người có thể dễ dàng tìm và sử dụng các tính năng.",
-  },
-  {
-    icon: Globe2,
-    title: "Minh bạch",
-    desc: "Thông tin về dịch vụ, phần thưởng và các hoạt động được trình bày rõ ràng.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Cộng đồng",
-    desc: "Xây dựng một không gian thân thiện và hướng đến cộng đồng người dùng.",
-  },
+const HOW_IT_WORKS = [
+  { n: "1", icon: UserPlus, title: "Đăng ký tài khoản", desc: "Tạo tài khoản miễn phí chỉ trong 30 giây." },
+  { n: "2", icon: ListChecks, title: "Làm nhiệm vụ", desc: "Chọn nhiệm vụ, hoàn thành và chờ admin duyệt để nhận Coin." },
+  { n: "3", icon: Gamepad2, title: "Đổi Robux chính hãng", desc: "Dùng Coin đổi Robux, nạp thẳng vào tài khoản Roblox (VNG) của bạn." },
 ];
 
-const TIMELINE = [
-  {
-    year: "01",
-    title: "Bắt đầu",
-    desc: "NXX315 Studio bắt đầu phát triển các sản phẩm và nội dung dành cho cộng đồng.",
-  },
-  {
-    year: "02",
-    title: "NXX315 Rewards",
-    desc: "Hệ thống Rewards được xây dựng để mang đến nhiều hoạt động và phần thưởng hơn.",
-  },
-  {
-    year: "03",
-    title: "Mở rộng",
-    desc: "Tiếp tục phát triển thêm các tiện ích, dịch vụ và trải nghiệm cho người dùng.",
-  },
+const WHY_CARDS = [
+  { icon: Coins, title: "Kiếm Coin dễ dàng", desc: "Hoàn thành nhiệm vụ đơn giản, nhận Coin ngay vào ví sau khi admin duyệt." },
+  { icon: ShieldCheck, title: "Robux chính hãng, minh bạch", desc: "Robux được mua từ nguồn chính hãng và nạp trực tiếp vào tài khoản VNG — không dùng tài khoản trung gian." },
+  { icon: Timer, title: "Nạp nhanh, có xác nhận", desc: "Yêu cầu đổi thưởng được xử lý thủ công và có xác nhận rõ ràng cho từng giao dịch." },
 ];
 
-export default function About() {
+const ROBUX_PACKAGES = [
+  { robux: "80", coin: "8,000" },
+  { robux: "400", coin: "38,000" },
+  { robux: "800", coin: "72,000" },
+  { robux: "1,700", coin: "150,000" },
+];
+
+const SOCIAL_PROVIDERS = [
+  { id: "google", label: "Google", Icon: GoogleMark },
+  { id: "facebook", label: "Facebook", Icon: FacebookMark },
+  { id: "discord", label: "Discord", Icon: DiscordMark },
+];
+
+function GoogleMark({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.44-1.64 4.22-5.27 4.22-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3.01.77 3.7 1.43l2.52-2.43C16.86 3.99 14.7 3 12.18 3 7.03 3 2.86 7.14 2.86 12.25s4.17 9.25 9.32 9.25c5.38 0 8.95-3.78 8.95-9.11 0-.61-.07-1.08-.16-1.29Z" />
+    </svg>
+  );
+}
+
+function FacebookMark({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.9h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
+    </svg>
+  );
+}
+
+function DiscordMark({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M20.32 4.37a19.8 19.8 0 00-4.89-1.52.07.07 0 00-.08.04c-.21.38-.44.86-.61 1.25a18.3 18.3 0 00-5.49 0 12.6 12.6 0 00-.62-1.25.08.08 0 00-.08-.04 19.74 19.74 0 00-4.88 1.52.07.07 0 00-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 00.03.06c2.05 1.5 4.04 2.42 5.99 3.03a.08.08 0 00.08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 00-.04-.11 12.4 12.4 0 01-1.87-.89.08.08 0 01-.01-.13c.13-.1.25-.19.37-.29a.07.07 0 01.08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 01.08.01c.12.1.25.2.37.29a.08.08 0 010 .13c-.6.35-1.22.64-1.87.89a.08.08 0 00-.04.11c.36.7.77 1.36 1.22 1.99a.08.08 0 00.09.03c1.96-.61 3.95-1.52 6-3.03a.08.08 0 00.03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 00-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42Z" />
+    </svg>
+  );
+}
+
+function useReveal() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
+}
+
+function Reveal({ children, className = "", delay = 0 }) {
+  const [ref, visible] = useReveal();
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ease-out ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+export default function CloudVIPLanding() {
   const navigate = useNavigate();
 
-  const scrollToSection = (id) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
+  const scrollToHowItWorks = () => {
+    document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSocialLogin = async (provider) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
+    if (error) console.error("Đăng nhập thất bại:", error.message);
   };
 
   return (
-    <>
-      {/* =====================================================
-          GOOGLE FONT
-      ===================================================== */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet"
-      />
+    <div className="min-h-screen w-full bg-[#FAFBFC] font-[Be_Vietnam_Pro] text-slate-900">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+      `}</style>
 
-      <div
-        className="min-h-screen w-full overflow-hidden bg-[#f8fbff] text-slate-900"
-        style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
-      >
-        {/* =====================================================
-            BACKGROUND DECORATION
-        ===================================================== */}
-        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-          <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-sky-200/30 blur-3xl" />
-          <div className="absolute right-[-180px] top-[25%] h-[420px] w-[420px] rounded-full bg-blue-200/20 blur-3xl" />
-          <div className="absolute bottom-[-200px] left-[25%] h-[400px] w-[400px] rounded-full bg-cyan-100/40 blur-3xl" />
+      {/* NAV */}
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
+              <Coins size={18} className="text-white" />
+            </div>
+            <span className="text-base font-bold tracking-tight text-slate-900">
+              NXX315 Studio <span className="text-sky-600">Rewards</span>
+            </span>
+          </div>
+          <button
+            onClick={() => navigate("/register")}
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Đăng ký
+          </button>
         </div>
+      </header>
 
-        {/* =====================================================
-            NAVBAR
-        ===================================================== */}
-        <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
-            {/* LOGO */}
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-3"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/20">
-                <Sparkles
-                  size={19}
-                  className="text-white"
-                  fill="currentColor"
-                />
-              </div>
+      {/* HERO */}
+      <section className="relative px-5 pb-16 pt-14 sm:pt-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <Reveal>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
+              <Gamepad2 size={13} className="text-sky-600" />
+              Kiếm Coin — Đổi Robux chính hãng
+            </span>
+          </Reveal>
 
-              <div className="text-left leading-none">
-                <div className="text-[15px] font-extrabold tracking-tight text-slate-900">
-                  NXX315
-                </div>
-                <div className="mt-1 text-[10px] font-semibold text-sky-600">
-                  STUDIO
-                </div>
-              </div>
-            </button>
+          <Reveal delay={80}>
+            <h1 className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
+              Nền tảng kiếm Coin
+              <br />
+              <span className="text-sky-600">đổi Robux chính hãng</span>
+            </h1>
+          </Reveal>
 
-            {/* DESKTOP NAV */}
-            <nav className="hidden items-center gap-7 text-sm font-medium text-slate-500 lg:flex">
-              <button
-                onClick={() => scrollToSection("about")}
-                className="transition hover:text-sky-600"
-              >
-                Giới thiệu
-              </button>
+          <Reveal delay={160}>
+            <p className="mx-auto mt-5 max-w-xl text-base text-slate-500 sm:text-lg">
+              Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi ngay Robux chính
+              hãng — nạp thẳng vào tài khoản Roblox liên kết VNG của bạn.
+            </p>
+          </Reveal>
 
-              <button
-                onClick={() => navigate("/tasks")}
-                className="transition hover:text-sky-600"
-              >
-                Rewards
-              </button>
-
-              <button
-                onClick={() => navigate("/videos")}
-                className="transition hover:text-sky-600"
-              >
-                Videos
-              </button>
-
-              <button
-                onClick={() => navigate("/feed")}
-                className="transition hover:text-sky-600"
-              >
-                Cộng đồng
-              </button>
-
-              <button
-                onClick={() => navigate("/help")}
-                className="transition hover:text-sky-600"
-              >
-                Hỗ trợ
-              </button>
-            </nav>
-
-            {/* ACTIONS */}
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={() => navigate("/login")}
-                className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:block"
-              >
-                Đăng nhập
-              </button>
-
+          <Reveal delay={240}>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 onClick={() => navigate("/register")}
-                className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition hover:bg-sky-600"
+                className="group flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                Bắt đầu
-                <ArrowRight size={15} />
+                Bắt đầu ngay — Miễn phí
+                <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+              </button>
+              <button
+                onClick={scrollToHowItWorks}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <PlayCircle size={16} /> Cách hoạt động
               </button>
             </div>
-          </div>
-        </header>
+          </Reveal>
 
-        {/* =====================================================
-            HERO
-        ===================================================== */}
-        <main className="relative z-10">
-          <section className="relative px-4 pb-16 pt-14 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8">
-            <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-              {/* LEFT */}
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-[11px] font-bold text-sky-600 sm:text-xs">
-                  <Sparkles size={13} />
-                  NXX315 STUDIO REWARDS
-                </div>
-
-                <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.12] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-                  Một hệ sinh thái
-                  <span className="block text-sky-500">
-                    dành cho cộng đồng.
-                  </span>
-                </h1>
-
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
-                  NXX315 Studio Rewards là nền tảng được xây dựng với mục tiêu
-                  mang đến những trải nghiệm Rewards, gaming và tiện ích đơn
-                  giản, dễ sử dụng cho cộng đồng.
-                </p>
-
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          {/* SOCIAL LOGIN */}
+          <Reveal delay={300}>
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <div className="flex items-center gap-3 text-xs text-slate-400">
+                <span className="h-px w-10 bg-slate-200" />
+                hoặc đăng nhập nhanh với
+                <span className="h-px w-10 bg-slate-200" />
+              </div>
+              <div className="flex items-center gap-3">
+                {SOCIAL_PROVIDERS.map(({ id, label, Icon }) => (
                   <button
-                    onClick={() => navigate("/tasks")}
-                    className="group flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-600"
+                    key={id}
+                    onClick={() => handleSocialLogin(id)}
+                    aria-label={`Đăng nhập với ${label}`}
+                    className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
                   >
-                    Khám phá Rewards
-                    <ArrowRight
-                      size={17}
-                      className="transition group-hover:translate-x-1"
-                    />
+                    <Icon className="h-5 w-5" />
                   </button>
-
-                  <button
-                    onClick={() => navigate("/videos")}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-600"
-                  >
-                    <PlayCircle size={17} />
-                    Xem Videos
-                  </button>
-                </div>
-
-                {/* TRUST */}
-                <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-medium text-slate-500 sm:text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 size={14} className="text-sky-500" />
-                    Giao diện dễ sử dụng
-                  </span>
-
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck size={14} className="text-sky-500" />
-                    Ưu tiên an toàn
-                  </span>
-
-                  <span className="flex items-center gap-1.5">
-                    <Users size={14} className="text-sky-500" />
-                    Hướng đến cộng đồng
-                  </span>
-                </div>
-              </div>
-
-              {/* RIGHT VISUAL */}
-              <div className="relative mx-auto w-full max-w-[520px]">
-                <div className="absolute inset-8 rounded-[32px] bg-sky-400/20 blur-3xl" />
-
-                <div className="relative overflow-hidden rounded-[28px] border border-sky-100 bg-white p-3 shadow-2xl shadow-sky-900/10">
-                  <div className="overflow-hidden rounded-[20px] bg-gradient-to-br from-sky-500 via-blue-600 to-sky-700 p-6 sm:p-8">
-                    {/* Decorative circles */}
-                    <div className="absolute right-[-45px] top-[-45px] h-40 w-40 rounded-full border border-white/10" />
-                    <div className="absolute bottom-[-60px] left-[-40px] h-44 w-44 rounded-full border border-white/10" />
-
-                    <div className="relative">
-                      <div className="flex items-center justify-between">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur">
-                          <Sparkles size={20} />
-                        </div>
-
-                        <span className="rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/90">
-                          NXX315
-                        </span>
-                      </div>
-
-                      <div className="mt-16">
-                        <div className="text-xs font-semibold text-sky-100">
-                          NXX315 STUDIO
-                        </div>
-
-                        <div className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
-                          Rewards
-                        </div>
-
-                        <p className="mt-3 max-w-xs text-xs leading-5 text-sky-100 sm:text-sm">
-                          Khám phá. Tích điểm. Nhận thưởng.
-                        </p>
-                      </div>
-
-                      <div className="mt-12 flex items-end justify-between">
-                        <div>
-                          <div className="text-[10px] text-sky-100">
-                            Nền tảng
-                          </div>
-                          <div className="mt-1 text-sm font-bold text-white">
-                            NXX315 Studio
-                          </div>
-                        </div>
-
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sky-600">
-                          <ArrowRight size={18} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
-          </section>
+          </Reveal>
 
-          {/* =====================================================
-              ABOUT
-          ===================================================== */}
-          <section
-            id="about"
-            className="scroll-mt-24 border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8"
-          >
-            <div className="mx-auto max-w-7xl">
-              <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-500">
-                    Về chúng tôi
-                  </div>
-
-                  <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                    NXX315 Studio
-                    <span className="block text-sky-500">
-                      là gì?
-                    </span>
-                  </h2>
-                </div>
-
-                <div>
-                  <p className="text-sm leading-7 text-slate-600 sm:text-base">
-                    NXX315 Studio là một dự án tập trung phát triển các sản
-                    phẩm, tiện ích và nội dung dành cho cộng đồng. NXX315 Studio
-                    Rewards là một phần trong hệ sinh thái đó, hướng đến việc
-                    tạo ra một nơi để người dùng khám phá các hoạt động,
-                    tích điểm và nhận phần thưởng.
-                  </p>
-
-                  <p className="mt-4 text-sm leading-7 text-slate-500 sm:text-base">
-                    Chúng tôi muốn giữ mọi thứ đơn giản, dễ hiểu và thuận tiện
-                    để người dùng có thể tập trung vào trải nghiệm thay vì phải
-                    mất thời gian tìm hiểu một giao diện phức tạp.
-                  </p>
-                </div>
-              </div>
+          <Reveal delay={380}>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 size={14} className="text-emerald-500" /> Không cần nạp tiền
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-sky-600" /> Robux chính hãng 100%
+              </span>
+              <span className="flex items-center gap-1.5">
+                <BadgeCheck size={14} className="text-sky-600" /> Duyệt thủ công!
+              </span>
             </div>
-          </section>
+          </Reveal>
+        </div>
 
-          {/* =====================================================
-              FEATURES
-          ===================================================== */}
-          <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <div className="mx-auto max-w-7xl">
-              <div className="max-w-2xl">
-                <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-500">
-                  Hệ sinh thái
+        {/* STATS */}
+        <Reveal delay={440} className="mx-auto mt-14 grid max-w-3xl grid-cols-3 gap-3">
+          {TRUST_STATS.map(({ icon: Icon, value, label }) => (
+            <div key={label} className="rounded-xl border border-slate-200 bg-white px-4 py-5 text-center">
+              <Icon size={18} className="mx-auto mb-2 text-slate-400" />
+              <div className="text-xl font-semibold text-slate-900">{value}</div>
+              <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-400">{label}</div>
+            </div>
+          ))}
+        </Reveal>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" className="mx-auto max-w-5xl px-5 py-16">
+        <Reveal className="text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">3 bước đơn giản</span>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Cách hoạt động</h2>
+        </Reveal>
+        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          {HOW_IT_WORKS.map(({ n, icon: Icon, title, desc }, i) => (
+            <Reveal key={n} delay={i * 100}>
+              <div className="h-full rounded-xl border border-slate-200 bg-white p-6">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+                  {n}
                 </div>
+                <Icon size={20} className="mt-4 text-sky-600" />
+                <h3 className="mt-3 text-base font-semibold text-slate-900">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                  Những gì bạn có thể
-                  <span className="text-sky-500"> khám phá</span>
-                </h2>
-
-                <p className="mt-4 text-sm leading-6 text-slate-500 sm:text-base">
-                  NXX315 Studio tiếp tục phát triển thêm nhiều tính năng để
-                  mang đến trải nghiệm thuận tiện hơn cho cộng đồng.
+      {/* ROBUX REDEMPTION */}
+      <section className="mx-auto max-w-5xl px-5 py-6">
+        <Reveal>
+          <div className="rounded-xl border border-slate-200 bg-white p-7 sm:p-10">
+            <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+              <div className="max-w-sm">
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <ShieldCheck size={13} /> Đổi thưởng minh bạch
+                </span>
+                <h3 className="mt-4 text-2xl font-bold leading-snug tracking-tight text-slate-900">
+                  Đổi Coin lấy Robux
+                  <br />
+                  <span className="text-sky-600">chính hãng</span>
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                  Nhập User ID Roblox liên kết tài khoản VNG của bạn — admin
+                  xác nhận và nạp Robux trực tiếp vào tài khoản trong vòng
+                  24 giờ.
                 </p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={15} className="shrink-0 text-emerald-500" /> Nạp thẳng vào tài khoản Roblox (VNG)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={15} className="shrink-0 text-emerald-500" /> Có xác nhận giao dịch rõ ràng
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={15} className="shrink-0 text-emerald-500" /> Nguồn Robux chính hãng
+                  </li>
+                </ul>
               </div>
-
-              <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {FEATURES.map((feature) => {
-                  const Icon = feature.icon;
-
-                  return (
-                    <div
-                      key={feature.title}
-                      className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-900/5"
-                    >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-500 transition group-hover:bg-sky-500 group-hover:text-white">
-                        <Icon size={21} />
-                      </div>
-
-                      <h3 className="mt-5 text-base font-extrabold text-slate-900">
-                        {feature.title}
-                      </h3>
-
-                      <p className="mt-2 text-xs leading-6 text-slate-500 sm:text-sm">
-                        {feature.desc}
-                      </p>
+              <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:min-w-[280px]">
+                {ROBUX_PACKAGES.map((p) => (
+                  <div key={p.robux} className="rounded-lg border border-slate-200 bg-white px-4 py-3.5 text-center transition hover:border-slate-300">
+                    <div className="text-lg font-bold text-slate-900">
+                      {p.robux} <span className="text-xs font-medium text-slate-500">R$</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          {/* =====================================================
-              VALUES
-          ===================================================== */}
-          <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <div className="mx-auto max-w-7xl">
-              <div className="text-center">
-                <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-500">
-                  Giá trị
-                </div>
-
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                  Điều chúng tôi hướng đến
-                </h2>
-
-                <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                  Mỗi tính năng được xây dựng với mục tiêu tạo ra trải nghiệm
-                  rõ ràng, thuận tiện và thân thiện hơn.
-                </p>
-              </div>
-
-              <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {VALUES.map((value) => {
-                  const Icon = value.icon;
-
-                  return (
-                    <div
-                      key={value.title}
-                      className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sky-500 shadow-sm">
-                        <Icon size={19} />
-                      </div>
-
-                      <h3 className="mt-4 text-sm font-extrabold text-slate-900 sm:text-base">
-                        {value.title}
-                      </h3>
-
-                      <p className="mt-2 text-xs leading-6 text-slate-500 sm:text-sm">
-                        {value.desc}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          {/* =====================================================
-              TIMELINE
-          ===================================================== */}
-          <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <div className="mx-auto max-w-7xl">
-              <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr]">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-sky-500">
-                    Hành trình
+                    <div className="mt-1 text-xs text-slate-500">{p.coin} Coin</div>
                   </div>
-
-                  <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                    Từ một ý tưởng
-                    <span className="block text-sky-500">
-                      đến một hệ sinh thái.
-                    </span>
-                  </h2>
-
-                  <p className="mt-4 max-w-md text-sm leading-6 text-slate-500 sm:text-base">
-                    NXX315 Studio được phát triển từng bước với mục tiêu tạo
-                    ra những sản phẩm hữu ích và gần gũi với cộng đồng.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {TIMELINE.map((item, index) => (
-                    <div
-                      key={item.year}
-                      className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-                    >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-xs font-black text-sky-600">
-                        {item.year}
-                      </div>
-
-                      <div>
-                        <div className="text-base font-extrabold text-slate-900">
-                          {item.title}
-                        </div>
-
-                        <p className="mt-1 text-xs leading-6 text-slate-500 sm:text-sm">
-                          {item.desc}
-                        </p>
-                      </div>
-
-                      {index !== TIMELINE.length - 1 && (
-                        <div className="absolute -bottom-5 left-[41px] z-10 hidden h-5 w-px bg-sky-200 sm:block" />
-                      )}
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
-            </div>
-          </section>
-
-          {/* =====================================================
-              CTA
-          ===================================================== */}
-          <section className="px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8">
-            <div className="mx-auto max-w-7xl">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 to-blue-700 px-6 py-12 text-center shadow-xl shadow-sky-900/15 sm:px-10 sm:py-16">
-                <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full border border-white/10" />
-                <div className="absolute -bottom-24 -left-20 h-64 w-64 rounded-full border border-white/10" />
-
-                <div className="relative">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur">
-                    <Sparkles size={22} />
-                  </div>
-
-                  <h2 className="mt-5 text-2xl font-black tracking-tight text-white sm:text-4xl">
-                    Khám phá NXX315 Studio Rewards
-                  </h2>
-
-                  <p className="mx-auto mt-3 max-w-xl text-xs leading-6 text-sky-100 sm:text-sm">
-                    Bắt đầu trải nghiệm các tính năng và hoạt động đang có
-                    trên nền tảng NXX315 Studio.
-                  </p>
-
-                  <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-                    <button
-                      onClick={() => navigate("/tasks")}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-sky-600 transition hover:bg-sky-50"
-                    >
-                      Bắt đầu ngay
-                      <ChevronRight size={17} />
-                    </button>
-
-                    <button
-                      onClick={() => navigate("/help")}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-white/15"
-                    >
-                      Trung tâm hỗ trợ
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        {/* =====================================================
-            FOOTER
-        ===================================================== */}
-        <footer className="border-t border-slate-200 bg-white px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500">
-                    <Sparkles
-                      size={15}
-                      className="text-white"
-                      fill="currentColor"
-                    />
-                  </div>
-
-                  <span className="text-sm font-extrabold text-slate-900">
-                    NXX315 Studio
-                  </span>
-                </div>
-
-                <p className="mt-2 text-[11px] text-slate-400">
-                  Xây dựng trải nghiệm cho cộng đồng.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-slate-500">
-                <button
-                  onClick={() => navigate("/help")}
-                  className="transition hover:text-sky-600"
-                >
-                  Hỗ trợ
-                </button>
-
-                <button
-                  onClick={() => navigate("/terms")}
-                  className="transition hover:text-sky-600"
-                >
-                  Điều khoản
-                </button>
-
-                <button
-                  onClick={() => navigate("/privacy")}
-                  className="transition hover:text-sky-600"
-                >
-                  Chính sách
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-7 border-t border-slate-100 pt-5 text-[10px] text-slate-400 sm:text-xs">
-              © {new Date().getFullYear()} NXX315 Studio. All rights reserved.
             </div>
           </div>
-        </footer>
-      </div>
-    </>
+        </Reveal>
+      </section>
+
+      {/* WHY CHOOSE */}
+      <section className="mx-auto max-w-5xl px-5 py-16">
+        <Reveal className="text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Tính năng nổi bật</span>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+            Tại sao chọn <span className="text-sky-600">NXX315</span>?
+          </h2>
+        </Reveal>
+        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          {WHY_CARDS.map(({ icon: Icon, title, desc }, i) => (
+            <Reveal key={title} delay={i * 100}>
+              <div className="h-full rounded-xl border border-slate-200 bg-white p-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                  <Icon size={18} className="text-slate-700" />
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FOOTER CTA */}
+      <section className="mx-auto max-w-3xl px-5 pb-20 pt-6 text-center">
+        <Reveal>
+          <div className="rounded-xl border border-slate-200 bg-white px-6 py-10">
+            <h3 className="text-2xl font-bold tracking-tight text-slate-900">Sẵn sàng kiếm Coin và đổi Robux?</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+              Đăng ký miễn phí và hoàn thành nhiệm vụ đầu tiên ngay hôm nay.
+            </p>
+            <button
+              onClick={() => navigate("/register")}
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Bắt đầu ngay — Miễn phí <ArrowRight size={16} />
+            </button>
+          </div>
+        </Reveal>
+      </section>
+
+      <footer className="border-t border-slate-200 px-5 py-6 text-center text-xs text-slate-400">
+        © {new Date().getFullYear()} NXX315 Studio Rewards. Robux là thương hiệu của Roblox Corporation.
+      </footer>
+    </div>
   );
-}
+                             }
