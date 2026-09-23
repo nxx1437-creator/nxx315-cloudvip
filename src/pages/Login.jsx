@@ -6,6 +6,27 @@ import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
+// ✅ Tạo fingerprint từ thông tin trình duyệt
+function generateFingerprint() {
+  const data = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + "x" + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || "unknown",
+    navigator.platform || "unknown",
+  ].join("|");
+
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return "fp_" + Math.abs(hash).toString(36);
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -27,12 +48,57 @@ export default function Login() {
       password: form.password,
     });
 
-    setLoading(false);
     if (authError) {
       setError("Email hoặc mật khẩu không đúng.");
+      setLoading(false);
       return;
     }
 
+    // ✅ Check IP/fingerprint sau khi login thành công
+    const accessToken = data?.session?.access_token;
+    if (accessToken) {
+      try {
+        let fingerprint = localStorage.getItem("device_fingerprint");
+        if (!fingerprint) {
+          fingerprint = generateFingerprint();
+          localStorage.setItem("device_fingerprint", fingerprint);
+        }
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/log-ip`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fingerprint }),
+          }
+        );
+
+        const ipData = await res.json();
+
+        if (ipData.allowed === false) {
+          // ✅ Bị chặn → signOut + hiện thông báo
+          await supabase.auth.signOut();
+          localStorage.removeItem("device_fingerprint");
+          setError(
+            ipData.reason ||
+              "Tài khoản của bạn đã bị chặn do trùng thiết bị với tài khoản khác."
+          );
+          setLoading(false);
+          return;
+        }
+      } catch (ipErr) {
+        console.error("Check IP error:", ipErr);
+        // Không chặn nếu lỗi mạng — để user vào bình thường
+      }
+    }
+
+    setLoading(false);
+
+    // Check MFA
     if (data.session) {
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
@@ -45,6 +111,7 @@ export default function Login() {
 
   const handleMfaCancel = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem("device_fingerprint");
     setShowMfa(false);
   };
 
@@ -71,7 +138,7 @@ export default function Login() {
         <div className="flex items-start gap-2">
           <AlertTriangle size={16} className="mt-0.5 shrink-0 text-sky-600" />
           <div className="text-[12px] leading-5 text-sky-800">
-            <p className="font-bold"> Lưu ý</p>
+            <p className="font-bold">Lưu ý</p>
             <p className="mt-1">
               Nếu bạn đã từng tạo tài khoản trên thiết bị này, vui lòng đăng nhập
               lại tài khoản <b>cũ</b>. Mỗi thiết bị chỉ được dùng 1 tài khoản.
@@ -159,4 +226,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-        }
+             }
