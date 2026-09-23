@@ -68,7 +68,7 @@ export default function TopHeader() {
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false })
-        .limit(15);
+        .limit(10);
 
       setNotifications(data || []);
       setUnreadCount((data || []).filter((n) => !n.is_read).length);
@@ -87,7 +87,7 @@ export default function TopHeader() {
           filter: `user_id=eq.${session.user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new, ...prev].slice(0, 15));
+          setNotifications((prev) => [payload.new, ...prev].slice(0, 10));
           setUnreadCount((c) => c + 1);
         }
       )
@@ -219,6 +219,7 @@ export default function TopHeader() {
             )}
           </div>
 
+          {/* Nút chuông */}
           <div ref={notifRef} className="relative shrink-0">
             <button
               onClick={handleOpenNotif}
@@ -237,8 +238,8 @@ export default function TopHeader() {
                 {/* Header xanh nhạt */}
                 <div className="flex items-center justify-between bg-sky-50/80 px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Bell size={16} className="text-sky-600" />
-                    <h3 className="text-sm font-bold text-slate-900">
+                    <Bell size={15} className="text-sky-600" />
+                    <h3 className="text-[13.5px] font-bold text-slate-900">
                       Thông báo
                     </h3>
                   </div>
@@ -252,11 +253,11 @@ export default function TopHeader() {
                   )}
                 </div>
 
-                {/* List */}
-                <div className="max-h-[400px] overflow-y-auto">
+                {/* ✅ List gọn — không có icon tròn bên trái */}
+                <div className="max-h-[360px] overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="p-8 text-center">
-                      <Bell size={28} className="mx-auto mb-2 text-slate-300" />
+                      <Bell size={26} className="mx-auto mb-2 text-slate-300" />
                       <p className="text-xs font-semibold text-slate-500">
                         Chưa có thông báo nào
                       </p>
@@ -274,7 +275,7 @@ export default function TopHeader() {
                       >
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-[13.5px] leading-5 ${
+                            className={`text-[13px] leading-5 ${
                               !n.is_read
                                 ? "font-bold text-slate-900"
                                 : "font-semibold text-slate-700"
@@ -283,7 +284,7 @@ export default function TopHeader() {
                             {n.title}
                           </p>
                           {n.body && (
-                            <p className="mt-0.5 text-[12px] leading-5 text-slate-500">
+                            <p className="mt-0.5 text-[11.5px] leading-5 text-slate-500">
                               {n.body}
                             </p>
                           )}
@@ -296,12 +297,13 @@ export default function TopHeader() {
                   )}
                 </div>
 
+                {/* Nút xem tất cả */}
                 <button
                   onClick={() => {
                     setNotifOpen(false);
                     navigate("/notifications");
                   }}
-                  className="flex w-full items-center justify-center gap-1 border-t border-slate-100 bg-white px-4 py-3 text-[12.5px] font-bold text-sky-600 transition hover:bg-sky-50"
+                  className="flex w-full items-center justify-center border-t border-slate-100 bg-white px-4 py-3 text-[12.5px] font-bold text-sky-600 transition hover:bg-sky-50"
                 >
                   Xem tất cả thông báo →
                 </button>
@@ -328,4 +330,4 @@ export default function TopHeader() {
       />
     </>
   );
-                       }
+          }
