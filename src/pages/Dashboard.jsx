@@ -590,10 +590,7 @@ export default function Dashboard() {
                 >
                   {chartData.map((d, i) => {
                     const max = Math.max(...chartData.map((x) => x.value), 1);
-                    const heightPct =
-                      d.value === 0
-                        ? 8
-                        : Math.max(12, Math.round((d.value / max) * 100));
+                    const heightPct = d.value === 0 ? 20 : Math.max(20, Math.round((d.value / max) * 100));
 
                     return (
                       <div
