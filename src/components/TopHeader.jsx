@@ -11,9 +11,6 @@ import {
   Wallet,
   User,
   ShieldCheck,
-  Flame,
-  Trophy,
-  Sparkles,
   Check,
 } from "lucide-react";
 
@@ -31,21 +28,6 @@ const SEARCH_INDEX = [
   { label: "Cài đặt", path: "/profile", icon: User, keywords: "cai dat settings tai khoan profile" },
   { label: "Kiểm tra tài khoản", path: "/account-review", icon: ShieldCheck, keywords: "flag nghi ngo da tai khoan" },
 ];
-
-// ✅ Icon map theo loại thông báo
-const NOTIF_ICONS = {
-  bell: Bell,
-  flame: Flame,
-  trophy: Trophy,
-  sparkles: Sparkles,
-};
-
-// ✅ Class màu theo loại thông báo
-const NOTIF_COLORS = {
-  task_reminder: "bg-rose-100 text-rose-500",
-  streak_complete: "bg-amber-100 text-amber-600",
-  top_rank: "bg-purple-100 text-purple-600",
-};
 
 export default function TopHeader() {
   const navigate = useNavigate();
@@ -77,7 +59,7 @@ export default function TopHeader() {
       )
     : [];
 
-  // ✅ Load notifications + Realtime subscription
+  // Load notifications + Realtime
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -95,7 +77,6 @@ export default function TopHeader() {
 
     loadNotifs();
 
-    // ✅ Realtime: nhận thông báo mới ngay lập tức
     const channel = supabase
       .channel(`notifications-${session.user.id}`)
       .on(
@@ -142,25 +123,12 @@ export default function TopHeader() {
     navigate(path);
   };
 
-  // ✅ Mở/đóng dropdown (không tự động mark all as read nữa)
+  // Mở/đóng dropdown
   const handleOpenNotif = () => {
     setNotifOpen((prev) => !prev);
   };
 
-  // ✅ Click vào 1 thông báo → mark as read + điều hướng
-  const handleClickNotif = async (notif) => {
-    if (!notif.is_read) {
-      await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    }
-    if (notif.action_url) navigate(notif.action_url);
-    setNotifOpen(false);
-  };
-
-  // ✅ Đọc hết
+  // Đọc hết
   const handleMarkAllAsRead = async () => {
     if (!session?.user?.id) return;
     await supabase
@@ -173,13 +141,30 @@ export default function TopHeader() {
     setUnreadCount(0);
   };
 
-  // ✅ Format thời gian
+  // Click thông báo
+  const handleClickNotif = async (notif) => {
+    if (!notif.is_read) {
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notif.id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+    }
+    if (notif.action_url) navigate(notif.action_url);
+    setNotifOpen(false);
+  };
+
+  // Format thời gian ngắn gọn (giống ảnh)
   const formatTime = (dateStr) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-    if (diff < 60) return "Vừa xong";
+    if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-    return `${Math.floor(diff / 86400)} ngày trước`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+    return new Date(dateStr).toLocaleDateString("vi-VN");
   };
 
   return (
@@ -239,7 +224,7 @@ export default function TopHeader() {
             )}
           </div>
 
-          {/* ✅ Nút chuông thông báo */}
+          {/* ✅ Nút chuông */}
           <div ref={notifRef} className="relative shrink-0">
             <button
               onClick={handleOpenNotif}
@@ -255,23 +240,26 @@ export default function TopHeader() {
 
             {notifOpen && (
               <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-32px)] max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
-                {/* Header dropdown */}
-                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                    Thông báo {unreadCount > 0 && `(${unreadCount})`}
-                  </p>
+                {/* Header xanh nhạt */}
+                <div className="flex items-center justify-between bg-sky-50/80 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Bell size={16} className="text-sky-600" />
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Thông báo
+                    </h3>
+                  </div>
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllAsRead}
-                      className="flex items-center gap-1 text-[11px] font-bold text-sky-600 hover:text-sky-700"
+                      className="text-[11px] font-semibold text-sky-600 hover:text-sky-700"
                     >
-                      <Check size={11} /> Đọc hết
+                      Tất cả đã đọc
                     </button>
                   )}
                 </div>
 
-                {/* List */}
-                <div className="max-h-80 overflow-y-auto">
+                {/* List thông báo */}
+                <div className="max-h-[400px] overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="p-8 text-center">
                       <Bell size={28} className="mx-auto mb-2 text-slate-300" />
@@ -280,52 +268,50 @@ export default function TopHeader() {
                       </p>
                     </div>
                   ) : (
-                    notifications.map((n) => {
-                      const Icon = NOTIF_ICONS[n.icon] || Bell;
-                      const colorClass =
-                        NOTIF_COLORS[n.type] || "bg-slate-100 text-slate-500";
-                      return (
-                        <button
-                          key={n.id}
-                          onClick={() => handleClickNotif(n)}
-                          className={`flex w-full items-start gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 ${
-                            !n.is_read
-                              ? "bg-sky-50/50 hover:bg-sky-50"
-                              : "hover:bg-slate-50"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${colorClass}`}
+                    notifications.map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => handleClickNotif(n)}
+                        className={`flex w-full items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 text-left transition last:border-0 ${
+                          !n.is_read
+                            ? "bg-sky-50/40 hover:bg-sky-50"
+                            : "bg-white hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`text-[13.5px] leading-5 ${
+                              !n.is_read
+                                ? "font-bold text-slate-900"
+                                : "font-semibold text-slate-700"
+                            }`}
                           >
-                            <Icon size={16} strokeWidth={2.4} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className={`text-[13px] ${
-                                !n.is_read
-                                  ? "font-bold text-slate-900"
-                                  : "font-semibold text-slate-700"
-                              }`}
-                            >
-                              {n.title}
+                            {n.title}
+                          </p>
+                          {n.body && (
+                            <p className="mt-0.5 text-[12px] leading-5 text-slate-500">
+                              {n.body}
                             </p>
-                            {n.body && (
-                              <p className="mt-0.5 text-[11px] leading-5 text-slate-500">
-                                {n.body}
-                              </p>
-                            )}
-                            <p className="mt-1 text-[10px] text-slate-400">
-                              {formatTime(n.created_at)}
-                            </p>
-                          </div>
-                          {!n.is_read && (
-                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-500" />
                           )}
-                        </button>
-                      );
-                    })
+                        </div>
+                        <span className="shrink-0 pt-0.5 text-[10.5px] text-slate-400">
+                          {formatTime(n.created_at)}
+                        </span>
+                      </button>
+                    ))
                   )}
                 </div>
+
+                {/* Nút Xem tất cả */}
+                <button
+                  onClick={() => {
+                    setNotifOpen(false);
+                    navigate("/notifications");
+                  }}
+                  className="flex w-full items-center justify-center gap-1 border-t border-slate-100 bg-white px-4 py-3 text-[12.5px] font-bold text-sky-600 transition hover:bg-sky-50"
+                >
+                  Xem tất cả thông báo →
+                </button>
               </div>
             )}
           </div>
@@ -349,4 +335,4 @@ export default function TopHeader() {
       />
     </>
   );
-               }
+      }
