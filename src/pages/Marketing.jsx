@@ -1,203 +1,323 @@
-import React, { useState, useEffect } from "react";
-import { Megaphone, Music, Youtube, Sparkles, Coins, Loader2, CheckCircle2, XCircle, Copy, Wallet, TrendingUp, ChevronRight, Info } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useSession from "../hooks/useSession.js";
-import { supabase } from "../lib/supabaseClient.js";
+import {
+  ArrowLeft,
+  Megaphone,
+  Send,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Coins,
+} from "lucide-react";
+import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import { supabase } from "../lib/supabaseClient.js";
 
-export default function Marketing() {
+const PLATFORMS = [
+  { value: "TikTok", label: "TikTok" },
+  { value: "YouTube", label: "YouTube" },
+];
+
+const FILTERS = [
+  { key: "all", label: "Tất cả" },
+  { key: "pending", label: "Chờ duyệt" },
+  { key: "approved", label: "Đã duyệt" },
+  { key: "paid", label: "Đã trả coin" },
+  { key: "rejected", label: "Từ chối" },
+];
+
+const STATUS_META = {
+  pending: { label: "Chờ duyệt", cls: "bg-amber-50 text-amber-600", Icon: Clock },
+  approved: { label: "Đã duyệt", cls: "bg-sky-50 text-sky-600", Icon: CheckCircle2 },
+  paid: { label: "Đã trả coin", cls: "bg-emerald-50 text-emerald-600", Icon: Coins },
+  rejected: { label: "Từ chối", cls: "bg-rose-50 text-rose-600", Icon: XCircle },
+};
+
+export default function MarketingVideo() {
   const navigate = useNavigate();
-  const { session } = useSession();
+
+  const [userId, setUserId] = useState(null);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("all");
-  const [showRewardTable, setShowRewardTable] = useState(false);
 
-  const [marketingCode, setMarketingCode] = useState("NXX315-DEFAULT");
-  const [wallet, setWallet] = useState(null);
-  const [campaigns, setCampaigns] = useState([]);
-  const [isCopied, setIsCopied] = useState(false);
+  const [platform, setPlatform] = useState("TikTok");
+  const [link, setLink] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!session?.user?.id) return;
-      
-      const { data: walletData } = await supabase.from("marketing_wallets").select("*").eq("user_id", session.user.id).single();
-      setWallet(walletData);
+    loadVideos();
+  }, []);
 
-      const { data: profileData } = await supabase.from("profiles").select("marketing_code").eq("id", session.user.id).single();
-      if (profileData?.marketing_code) {
-        setMarketingCode(profileData.marketing_code);
+  const loadVideos = async () => {
+    setLoading(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
       }
+      setUserId(user.id);
 
-      const { data: videoData } = await supabase.from("marketing_videos").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
-      setVideos(videoData ?? []);
+      const { data, error: err } = await supabase
+        .from("marketing_videos")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (err) console.error("Load marketing videos error:", err);
+      setVideos(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
       setLoading(false);
-    };
-    fetchData();
-  }, [session]);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(marketingCode);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    }
   };
 
-  const getStatus = (status) => {
-    const config = {
-      pending: { label: "Chờ", color: "bg-amber-50 text-amber-600" },
-      approved: { label: "Đã duyệt", color: "bg-emerald-50 text-emerald-600" },
-      rejected: { label: "Từ chối", color: "bg-rose-50 text-rose-600" }
-    };
-    return config[status] || config.pending;
+  const stats = useMemo(() => {
+    const total = videos.length;
+    const pending = videos.filter((v) => v.status === "pending").length;
+    const approved = videos.filter((v) => v.status === "approved" || v.status === "paid").length;
+    const coinEarned = videos
+      .filter((v) => v.status === "approved" || v.status === "paid")
+      .reduce((s, v) => s + (v.coin_awarded || 0), 0);
+    return { total, pending, approved, coinEarned };
+  }, [videos]);
+
+  const filteredVideos =
+    filter === "all" ? videos : videos.filter((v) => v.status === filter);
+
+  const handleSubmit = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!userId) return setError("Vui lòng đăng nhập.");
+    if (!link.trim()) return setError("Dán link video vào đây.");
+    if (!/^https?:\/\//i.test(link.trim()))
+      return setError("Link không hợp lệ (phải bắt đầu bằng http:// hoặc https://).");
+
+    setSubmitting(true);
+    try {
+      const { error: insertErr } = await supabase.from("marketing_videos").insert({
+        user_id: userId,
+        link: link.trim(),
+        platform,
+        status: "pending",
+      });
+
+      if (insertErr) throw insertErr;
+
+      setSuccess("Đã gửi video, chờ admin duyệt nhé!");
+      setLink("");
+      await loadVideos();
+    } catch (e) {
+      setError(e?.message || "Không gửi được, thử lại sau.");
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  const filteredVideos = videos.filter((v) => activeTab === "all" ? true : v.status === activeTab);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-        .font-display { font-family: 'Baloo 2', sans-serif; }
-      `}</style>
+    <div className="min-h-screen bg-white pb-24 text-slate-900">
+      <TopHeader />
 
-      <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-lg font-bold text-slate-900">Marketing</h1>
-            <p className="text-xs text-slate-500">Kiếm thưởng từ nội dung của bạn</p>
-          </div>
-          <button onClick={() => navigate("/marketing-wallet")} className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <Wallet size={16} />
-          </button>
-        </div>
-      </header>
+      {/* Header */}
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-9 w-9 items-center justify-center"
+        >
+          <ArrowLeft size={22} strokeWidth={2} />
+        </button>
+        <h1 className="text-[17px] font-bold">Marketing Video</h1>
+      </div>
 
-      <main className="mx-auto max-w-md px-4 py-4">
-        {/* 1. SỐ DƯ MARKETING */}
-        <div className="rounded-3xl bg-gradient-to-br from-sky-400 to-blue-600 p-6 text-white shadow-lg shadow-blue-500/30">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-white/80">💰 Số dư Marketing</span>
-            <Coins size={20} className="text-amber-300" />
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="font-display text-4xl font-bold">{wallet?.available_balance || 0}</span>
-            <span className="text-lg text-white/80">đ</span>
-          </div>
-          <p className="mt-1 text-xs text-white/60">Đang chờ: {wallet?.pending_balance || 0}đ</p>
-          <div className="mt-4 flex gap-2">
-            <button onClick={() => navigate("/marketing-wallet")} className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-white/20 py-2.5 text-sm font-semibold backdrop-blur-sm hover:bg-white/30">
-              <TrendingUp size={14} /> Rút tiền
-            </button>
-            <button className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-white py-2.5 text-sm font-semibold text-blue-600 hover:bg-sky-50">
-              Đổi xu
-            </button>
-          </div>
-          <p className="mt-2 text-[10px] text-white/50">Phí nền tảng: 5%</p>
-        </div>
-
-        {/* 2. MÃ MARKETING */}
-        <div className="mt-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600"><Megaphone size={16} /></span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Mã Marketing</span>
-          </div>
-          <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="font-display text-xl font-bold tracking-widest text-blue-600">{marketingCode}</p>
-            <button onClick={handleCopy} className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600">
-              {isCopied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-slate-400">Chia sẻ mã này khi quảng bá nội dung của bạn.</p>
-        </div>
-
-        {/* 3. CÁCH KIẾM THƯỞNG (MINI) */}
-        <div className="mt-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <button onClick={() => setShowRewardTable(!showRewardTable)} className="flex w-full items-center justify-between">
-            <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <Sparkles size={16} className="text-amber-500" /> Thưởng theo lượt truy cập hợp lệ
+      <div className="mx-auto max-w-2xl px-4 py-4">
+        {/* Banner giới thiệu */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+              <Megaphone size={18} />
             </span>
-            <ChevronRight size={16} className={`text-slate-400 transition-transform ${showRewardTable ? "rotate-90" : ""}`} />
-          </button>
-
-          {showRewardTable && (
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
-                <span className="font-bold text-slate-700">1.000 lượt truy cập hợp lệ</span>
-                <span className="font-bold text-blue-600">500 coin</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
-                <span className="font-bold text-slate-700">10.000 lượt truy cập hợp lệ</span>
-                <span className="font-bold text-blue-600">5.000 coin</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 text-sm">
-                <span className="font-bold text-slate-700">100.000 lượt truy cập hợp lệ</span>
-                <span className="font-bold text-blue-600">50.000 coin</span>
-              </div>
-              <p className="mt-2 text-xs text-slate-400">
-                <Info size={12} className="inline" /> Mức thưởng: 0.5 coin / valid visit. Chỉ lượt truy cập hợp lệ mới được tính.
+            <div>
+              <h2 className="text-[15px] font-bold">
+                Kiếm coin từ TikTok / YouTube
+              </h2>
+              <p className="mt-1 text-[13px] text-slate-500">
+                Quay video giới thiệu trang web, đăng lên TikTok hoặc YouTube,
+                gửi link tại đây — admin duyệt và trả coin theo lượt xem.
               </p>
             </div>
-          )}
-
-          <p className="mt-2 text-[11px] text-slate-400">Phí 5% khi rút hoặc đổi xu.</p>
+          </div>
         </div>
 
-        {/* 4. NỘI DUNG CỦA BẠN */}
-        <div className="mt-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Nội dung của bạn</h2>
-            <button className="text-xs font-semibold text-blue-600">Xem tất cả</button>
+        {/* Form nộp video */}
+        <div className="mt-4 rounded-xl border border-slate-200 p-4">
+          <label className="text-[14px] font-semibold text-slate-700">
+            Nền tảng
+          </label>
+          <div className="mt-2 flex gap-2">
+            {PLATFORMS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPlatform(p.value)}
+                className={`flex-1 rounded-lg border py-2.5 text-[13px] font-semibold transition ${
+                  platform === p.value
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-white text-slate-600"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
 
-          <div className="mb-4 flex gap-2">
-            <button onClick={() => setActiveTab("all")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "all" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Tất cả</button>
-            <button onClick={() => setActiveTab("pending")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "pending" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Chờ</button>
-            <button onClick={() => setActiveTab("approved")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "approved" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Duyệt</button>
-            <button onClick={() => setActiveTab("rejected")} className={`px-4 py-1.5 rounded-full text-xs font-semibold ${activeTab === "rejected" ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"}`}>Từ chối</button>
+          <label className="mt-4 block text-[14px] font-semibold text-slate-700">
+            Link video
+          </label>
+          <input
+            type="text"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder="Dán link TikTok / YouTube"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-[14px] outline-none focus:border-slate-900"
+          />
+
+          {error && <p className="mt-2 text-[13px] text-rose-600">{error}</p>}
+          {success && <p className="mt-2 text-[13px] text-emerald-600">{success}</p>}
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-3 text-[14px] font-bold text-white transition active:opacity-90 disabled:opacity-40"
+          >
+            {submitting ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Send size={15} />
+            )}
+            Gửi duyệt
+          </button>
+        </div>
+
+        {/* Thống kê */}
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-slate-200 p-3">
+            <p className="text-[12px] text-slate-500">Tổng video</p>
+            <p className="mt-1 text-xl font-black">{stats.total}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <p className="text-[12px] text-slate-500">Chờ duyệt</p>
+            <p className="mt-1 text-xl font-black text-amber-600">{stats.pending}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <p className="text-[12px] text-slate-500">Đã duyệt</p>
+            <p className="mt-1 text-xl font-black text-sky-600">{stats.approved}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <p className="text-[12px] text-slate-500">Coin đã nhận</p>
+            <p className="mt-1 text-xl font-black text-emerald-600">
+              {stats.coinEarned.toLocaleString("vi-VN")}
+            </p>
+          </div>
+        </div>
+
+        {/* Danh sách video */}
+        <div className="mt-5">
+          <h3 className="text-[15px] font-bold">Video của bạn</h3>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold transition ${
+                  filter === f.key
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 text-slate-600"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
 
-          <div className="space-y-3">
+          <div className="mt-3 space-y-3">
             {loading ? (
-              <p className="py-8 text-center text-sm text-slate-400">Đang tải...</p>
-            ) : filteredVideos.length === 0 ? (
-              <div className="py-10 text-center">
-                <Megaphone size={40} className="mx-auto text-slate-300" />
-                <p className="mt-3 text-sm font-medium text-slate-500">Bắt đầu ngay để kiếm coin nào!</p>
-                <p className="mt-1 text-xs text-slate-400">Gửi nội dung quảng bá đầu tiên của bạn</p>
+              <div className="flex justify-center py-10">
+                <Loader2 size={20} className="animate-spin text-slate-300" />
               </div>
-            ) : filteredVideos.map((video) => {
-              const statusConfig = getStatus(video.status);
-              return (
-                <div key={video.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-sm font-bold text-slate-800">
-                      {video.platform === "TikTok" ? <Music size={16} className="text-rose-500" /> : <Youtube size={16} className="text-red-500" />}
-                      {video.platform === "TikTok" ? "TikTok" : "YouTube Short"}
-                    </span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${statusConfig.color}`}>
-                      {statusConfig.label}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-xs text-slate-500">
-                    {video.status === "approved" ? (
-                      <>12.4K lượt truy cập hợp lệ</>
-                    ) : (
-                      <>Đã gửi {new Date(video.created_at).toLocaleDateString("vi-VN")}</>
+            ) : filteredVideos.length === 0 ? (
+              <p className="py-10 text-center text-[13px] text-slate-400">
+                Chưa có video nào.
+              </p>
+            ) : (
+              filteredVideos.map((v) => {
+                const meta = STATUS_META[v.status] || STATUS_META.pending;
+                const StatusIcon = meta.Icon;
+                return (
+                  <div key={v.id} className="rounded-xl border border-slate-200 p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="inline-block rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                          {v.platform}
+                        </span>
+                        <p className="mt-1.5 truncate text-[13px] text-sky-600">{v.link}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">
+                          {new Date(v.created_at).toLocaleString("vi-VN")}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${meta.cls}`}
+                        >
+                          <StatusIcon size={12} />
+                          {meta.label}
+                        </span>
+                        <p className="mt-1.5 text-[13px] font-bold text-amber-600">
+                          {(v.coin_awarded || 0).toLocaleString("vi-VN")} coin
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 grid grid-cols-4 gap-2 border-t border-slate-100 pt-2.5 text-center">
+                      <div>
+                        <p className="text-[10px] text-slate-400">View</p>
+                        <p className="text-[12px] font-bold">{v.view_count || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400">Like</p>
+                        <p className="text-[12px] font-bold">{v.like_count || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400">Cmt</p>
+                        <p className="text-[12px] font-bold">{v.comment_count || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400">CTR</p>
+                        <p className="text-[12px] font-bold">{v.ctr || "0%"}</p>
+                      </div>
+                    </div>
+
+                    {v.status === "rejected" && v.admin_note && (
+                      <p className="mt-2 rounded-lg bg-rose-50 p-2 text-[12px] text-rose-600">
+                        Admin: {v.admin_note}
+                      </p>
                     )}
                   </div>
-                  {video.status === "approved" && (
-                    <p className="mt-1 text-sm font-bold text-amber-500">+{video.coin_awarded || 0} coin</p>
-                  )}
-                  {video.admin_note && <p className="mt-2 rounded-lg bg-slate-50 p-2 text-xs italic text-slate-500">{video.admin_note}</p>}
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
-      </main>
+      </div>
 
       <BottomNav />
     </div>
   );
-            }
+          }
+  
