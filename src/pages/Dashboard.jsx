@@ -473,29 +473,45 @@ export default function Dashboard() {
                   <p className="mt-0.5 text-xs text-[#C4CAD2]">Hoàn thành nhiệm vụ để bắt đầu theo dõi thu nhập Coin</p>
                 </div>
               ) : (
-                <div className="mt-5 flex items-end justify-between gap-2" style={{ height: "120px" }}>
-                  {chartData.map((d, i) => {
-                    const max = Math.max(...chartData.map((x) => x.value), 1);
-                    const heightPct = Math.max(4, Math.round((d.value / max) * 100));
-                    return (
-                      <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-[#9CA3AF]">{d.value > 0 ? d.value : ""}</span>
-                        <div className="flex w-full flex-1 items-end">
-                          <div
-                            className={`w-full rounded-t-md ${d.isToday ? "bg-[#3478F6]" : "bg-[#D9E7FD]"}`}
-                            style={{ height: `${heightPct}%` }}
-                          />
-                        </div>
-                        <span className={`text-[10px] ${d.isToday ? "font-bold text-[#3478F6]" : "text-[#9CA3AF]"}`}>
-                          {d.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
+                <div className="mt-5 flex items-end justify-between gap-2" style={{ height: "140px" }}>
+  {chartData.map((d, i) => {
+    const max = Math.max(...chartData.map((x) => x.value), 1);
+    // ✅ Chiều cao tối thiểu 8% để cột luôn hiển thị
+    const heightPct = d.value === 0 ? 8 : Math.max(12, Math.round((d.value / max) * 100));
+    
+    return (
+      <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
+        {/* Số coin trên đầu cột */}
+        <span className={`text-[10px] font-bold ${
+          d.value > 0 ? "text-[#374151]" : "text-transparent"
+        }`}>
+          {d.value > 0 ? d.value : "0"}
+        </span>
+        
+        {/* Cột */}
+        <div className="flex w-full flex-1 items-end">
+          <div
+            className={`w-full rounded-t-md transition-all ${
+              d.isToday 
+                ? "bg-gradient-to-t from-[#3478F6] to-[#5B9DF9]" 
+                : d.value > 0 
+                ? "bg-[#D9E7FD]" 
+                : "bg-[#EEF2F7]"
+            }`}
+            style={{ height: `${heightPct}%`, minHeight: "6px" }}
+          />
+        </div>
+        
+        {/* Nhãn ngày */}
+        <span className={`text-[10px] ${
+          d.isToday ? "font-bold text-[#3478F6]" : "text-[#9CA3AF]"
+        }`}>
+          {d.label}
+        </span>
+      </div>
+    );
+  })}
+</div>
 
 {/* Hành động nhanh */}
 <div>
