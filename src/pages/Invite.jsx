@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Users,
   Coins,
   TrendingUp,
@@ -21,6 +20,7 @@ import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
+import TopHeader from "../components/TopHeader.jsx";
 
 const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
 
@@ -119,6 +119,7 @@ function MilestoneCard({ milestone, reward, currentCount, claimed, onClaim, clai
     </button>
   );
 }
+
 export default function Invite() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -168,14 +169,12 @@ export default function Invite() {
 
   const nameMap = Object.fromEntries(referredUsers.map((u) => [u.id, u.username]));
 
-  // ✅ Tổng hoa hồng theo từng người được giới thiệu
   const commissionByUser = {};
   commissions.forEach((c) => {
     if (!commissionByUser[c.referred_id]) commissionByUser[c.referred_id] = 0;
     commissionByUser[c.referred_id] += c.commission;
   });
 
-  // ✅ Top 3 người mời nhiều hoa hồng nhất
   const topReferrals = [...referredUsers]
     .map((u) => ({
       ...u,
@@ -184,7 +183,6 @@ export default function Invite() {
     .sort((a, b) => b.totalCommission - a.totalCommission)
     .slice(0, 3);
 
-  // ✅ Biểu đồ hoa hồng 7 ngày qua
   const last7Days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
@@ -236,16 +234,11 @@ export default function Invite() {
   };
 
   const shareZalo = () => {
-    window.open(
-      `https://zalo.me/share?u=${encodeURIComponent(inviteLink)}`,
-      "_blank"
-    );
+    window.open(`https://zalo.me/share?u=${encodeURIComponent(inviteLink)}`, "_blank");
   };
   const shareFacebook = () => {
     window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-        inviteLink
-      )}`,
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteLink)}`,
       "_blank"
     );
   };
@@ -283,233 +276,224 @@ export default function Invite() {
 
     alert(`Nhận thành công +${data.reward} coin!`);
   };
-return (
-  <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
-    <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-[#E5E7EB] bg-white/95 px-4 py-3.5 backdrop-blur-md">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-[#6B7280] hover:bg-[#F5F7FB]"
-      >
-        <ArrowLeft size={18} />
-      </button>
-      <h1 className="flex-1 text-[15px] font-bold text-[#111827]">
-        Giới thiệu bạn bè
-      </h1>
-      <button
-        onClick={() => setShowGuide(true)}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-[#6B7280] hover:bg-[#F5F7FB]"
-      >
-        <HelpCircle size={18} />
-      </button>
-    </header>
 
-    <main className="mx-auto max-w-md space-y-4 px-4 py-5">
-      {/* ✅ HERO — Header nền gradient giống ảnh */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-500 p-5 text-white shadow-lg shadow-emerald-500/20">
-        {/* Hiệu ứng nền */}
-        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white/5 blur-2xl" />
+  return (
+    <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
+      {/* ✅ Header xanh nước biển dùng chung */}
+      <TopHeader />
 
-        <div className="relative flex items-start gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-            <Gift size={24} />
-          </span>
-          <div className="min-w-0">
-            <h1 className="text-lg font-black leading-tight">
-              Giới Thiệu Bạn Bè
-            </h1>
-            <p className="mt-1 text-xs leading-5 text-white/90">
-              Mời bạn — họ nhận 200 Coin, bạn ăn 15% hoa hồng từ mỗi nhiệm vụ
-              họ làm
-            </p>
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5">
+        {/* Card giới thiệu */}
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+              <Users size={20} className="text-emerald-600" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-black text-[#111827]">
+                Giới Thiệu Bạn Bè
+              </p>
+              <p className="mt-0.5 text-xs leading-5 text-[#6B7280]">
+                Mời bạn — họ nhận 200 Coin, bạn ăn 15% hoa hồng từ mỗi nhiệm vụ
+                họ làm
+              </p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[#E5E7EB] bg-[#F5F7FB] p-3">
+              <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                <Users size={11} /> Đã giới thiệu
+              </p>
+              <p className="mt-1 text-2xl font-black text-[#111827]">
+                {referredUsers.length}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#E5E7EB] bg-[#F5F7FB] p-3">
+              <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                <Coins size={11} /> Tổng hoa hồng
+              </p>
+              <p className="mt-1 text-2xl font-black text-[#F2A900]">
+                {formatCoins(totalCommission)}đ
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="relative mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
-            <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/80">
-              <Users size={11} /> Đã giới thiệu
-            </p>
-            <p className="mt-1 text-2xl font-black">
-              {referredUsers.length}
-            </p>
+        {/* Mã giới thiệu + Link */}
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+            Mã giới thiệu của bạn
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 rounded-xl border-2 border-dashed border-sky-300 bg-[#EAF2FE] py-3 text-center">
+              <span className="text-lg font-black tracking-widest text-[#3478F6]">
+                {referralCode || "..."}
+              </span>
+            </div>
+            <button
+              onClick={() => handleCopy(referralCode, "code")}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${
+                copiedCode ? "bg-emerald-500" : "bg-[#3478F6]"
+              }`}
+            >
+              {copiedCode ? <Check size={16} /> : <Copy size={16} />}
+            </button>
           </div>
-          <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
-            <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/80">
-              <Coins size={11} /> Tổng hoa hồng
-            </p>
-            <p className="mt-1 text-2xl font-black text-amber-200">
-              {formatCoins(totalCommission)}đ
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* Mã giới thiệu + Link */}
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-          Mã giới thiệu của bạn
-        </p>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 rounded-xl border-2 border-dashed border-sky-300 bg-[#EAF2FE] py-3 text-center">
-            <span className="text-lg font-black tracking-widest text-[#3478F6]">
-              {referralCode || "..."}
+          <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+            Link mời bạn bè
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 truncate rounded-xl border border-[#E5E7EB] bg-[#F5F7FB] px-3.5 py-3 text-xs text-[#6B7280]">
+              {inviteLink}
+            </div>
+            <button
+              onClick={handleShare}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F5F7FB] text-[#6B7280] hover:bg-[#EAF2FE] hover:text-[#3478F6]"
+            >
+              <Share2 size={16} />
+            </button>
+          </div>
+
+          {/* Nút chia sẻ mạng xã hội */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <SocialShareButton
+              icon={<span className="text-base font-bold text-white">Z</span>}
+              label="Zalo"
+              color="bg-[#0068FF]"
+              onClick={shareZalo}
+            />
+            <SocialShareButton
+              icon={<span className="text-base font-bold text-white">f</span>}
+              label="Facebook"
+              color="bg-[#1877F2]"
+              onClick={shareFacebook}
+            />
+            <SocialShareButton
+              icon={<span className="text-base font-bold text-white">✈</span>}
+              label="Telegram"
+              color="bg-[#229ED9]"
+              onClick={shareTelegram}
+            />
+          </div>
+
+          <button
+            onClick={() => setShowQr(true)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white py-3 text-xs font-bold text-[#3478F6] transition hover:bg-[#EAF2FE]"
+          >
+            <QrCode size={14} />
+            Hiện mã QR để bạn bè quét
+          </button>
+
+          {/* Hướng dẫn 3 bước */}
+          <div className="mt-4 space-y-2.5">
+            <StepRow number="1" text="Chia sẻ mã/link cho bạn bè" />
+            <StepRow
+              number="2"
+              text="Bạn của bạn nhập mã khi đăng ký → +200 Coin"
+            />
+            <StepRow
+              number="3"
+              text="Bạn ăn 15% Coin từ mỗi nhiệm vụ họ hoàn thành"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowGuide(true)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white py-3 text-xs font-bold text-[#6B7280] transition hover:bg-[#F5F7FB]"
+          >
+            <HelpCircle size={14} />
+            Xem hướng dẫn chi tiết
+          </button>
+        </div>
+
+        {/* Mốc thưởng mời bạn */}
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
+              <Gift size={14} className="text-[#F2A900]" />
+              Nhiệm vụ mời bạn
+            </p>
+            <span className="text-xs font-semibold text-[#9CA3AF]">
+              {referredUsers.length} bạn
             </span>
           </div>
-          <button
-            onClick={() => handleCopy(referralCode, "code")}
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${
-              copiedCode ? "bg-emerald-500" : "bg-[#3478F6]"
-            }`}
-          >
-            {copiedCode ? <Check size={16} /> : <Copy size={16} />}
-          </button>
-        </div>
 
-        <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-          Link mời bạn bè
-        </p>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 truncate rounded-xl border border-[#E5E7EB] bg-[#F5F7FB] px-3.5 py-3 text-xs text-[#6B7280]">
-            {inviteLink}
+          <div className="grid grid-cols-4 gap-2">
+            {REFERRAL_MILESTONES.map((m) => (
+              <MilestoneCard
+                key={m.count}
+                milestone={m.count}
+                reward={m.reward}
+                currentCount={referredUsers.length}
+                claimed={false}
+                claiming={claimingMilestone === m.count}
+                onClaim={handleClaimMilestone}
+              />
+            ))}
           </div>
-          <button
-            onClick={handleShare}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F5F7FB] text-[#6B7280] hover:bg-[#EAF2FE] hover:text-[#3478F6]"
-          >
-            <Share2 size={16} />
-          </button>
         </div>
 
-        {/* Nút QR + Chia sẻ mạng xã hội */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <SocialShareButton
-            icon={<span className="text-base font-bold text-white">Z</span>}
-            label="Zalo"
-            color="bg-[#0068FF]"
-            onClick={shareZalo}
-          />
-          <SocialShareButton
-            icon={<span className="text-base font-bold text-white">f</span>}
-            label="Facebook"
-            color="bg-[#1877F2]"
-            onClick={shareFacebook}
-          />
-          <SocialShareButton
-            icon={<span className="text-base font-bold text-white">✈</span>}
-            label="Telegram"
-            color="bg-[#229ED9]"
-            onClick={shareTelegram}
-          />
-        </div>
+        {/* Top 3 người mời nhiều hoa hồng */}
+        {topReferrals.length > 0 && (
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-bold text-[#111827]">
+              <Trophy size={14} className="text-[#F2A900]" />
+              Top 3 bạn kiếm nhiều nhất
+            </p>
 
-        <button
-          onClick={() => setShowQr(true)}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white py-3 text-xs font-bold text-[#3478F6] transition hover:bg-[#EAF2FE]"
-        >
-          <QrCode size={14} />
-          Hiện mã QR để bạn bè quét
-        </button>
-
-        {/* Hướng dẫn 3 bước */}
-        <div className="mt-4 space-y-2.5">
-          <StepRow number="1" text="Chia sẻ mã/link cho bạn bè" />
-          <StepRow
-            number="2"
-            text="Bạn của bạn nhập mã khi đăng ký → +200 Coin"
-          />
-          <StepRow
-            number="3"
-            text="Bạn ăn 15% Coin từ mỗi nhiệm vụ họ hoàn thành"
-          />
-        </div>
-      </div>
-
-      {/* Mốc thưởng mời bạn */}
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
-            <Gift size={14} className="text-[#F2A900]" />
-            Nhiệm vụ mời bạn
-          </p>
-          <span className="text-xs font-semibold text-[#9CA3AF]">
-            {referredUsers.length} bạn
-          </span>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {REFERRAL_MILESTONES.map((m) => (
-            <MilestoneCard
-              key={m.count}
-              milestone={m.count}
-              reward={m.reward}
-              currentCount={referredUsers.length}
-              claimed={false}
-              claiming={claimingMilestone === m.count}
-              onClaim={handleClaimMilestone}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Top 3 người mời nhiều hoa hồng */}
-      {topReferrals.length > 0 && (
-        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
-          <p className="mb-3 flex items-center gap-1.5 text-sm font-bold text-[#111827]">
-            <Trophy size={14} className="text-[#F2A900]" />
-            Top 3 bạn kiếm nhiều nhất
-          </p>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            {topReferrals.map((u, idx) => {
-              const rank = idx + 1;
-              const bgColors = {
-                1: "from-amber-100 to-amber-50 border-amber-300",
-                2: "from-slate-200 to-slate-100 border-slate-300",
-                3: "from-orange-100 to-orange-50 border-orange-300",
-              };
-              const textColors = {
-                1: "text-amber-700",
-                2: "text-slate-700",
-                3: "text-orange-700",
-              };
-              const icons = {
-                1: <Crown size={16} className="text-amber-500" />,
-                2: <Trophy size={16} className="text-slate-500" />,
-                3: <Trophy size={16} className="text-orange-500" />,
-              };
-              return (
-                <div
-                  key={u.id}
-                  className={`flex flex-col items-center rounded-2xl border bg-gradient-to-br p-3 ${bgColors[rank]}`}
-                >
-                  <div className="mb-1 flex h-6 items-center justify-center">
-                    {icons[rank]}
-                  </div>
-                  <Avatar
-                    src={u.avatar_url}
-                    name={u.username}
-                    size="h-10 w-10"
-                    text="text-sm"
-                  />
-                  <p
-                    className={`mt-2 w-full truncate text-center text-[11px] font-bold ${textColors[rank]}`}
+            <div className="grid grid-cols-3 gap-2.5">
+              {topReferrals.map((u, idx) => {
+                const rank = idx + 1;
+                const bgColors = {
+                  1: "from-amber-100 to-amber-50 border-amber-300",
+                  2: "from-slate-200 to-slate-100 border-slate-300",
+                  3: "from-orange-100 to-orange-50 border-orange-300",
+                };
+                const textColors = {
+                  1: "text-amber-700",
+                  2: "text-slate-700",
+                  3: "text-orange-700",
+                };
+                const icons = {
+                  1: <Crown size={16} className="text-amber-500" />,
+                  2: <Trophy size={16} className="text-slate-500" />,
+                  3: <Trophy size={16} className="text-orange-500" />,
+                };
+                return (
+                  <div
+                    key={u.id}
+                    className={`flex flex-col items-center rounded-2xl border bg-gradient-to-br p-3 ${bgColors[rank]}`}
                   >
-                    {u.username || "Người dùng"}
-                  </p>
-                  <div className="mt-0.5 flex items-center gap-0.5 text-amber-500">
-                    <Coins size={10} />
-                    <span className="text-[10px] font-black">
-                      {formatCoins(u.totalCommission)}
-                    </span>
+                    <div className="mb-1 flex h-6 items-center justify-center">
+                      {icons[rank]}
+                    </div>
+                    <Avatar
+                      src={u.avatar_url}
+                      name={u.username}
+                      size="h-10 w-10"
+                      text="text-sm"
+                    />
+                    <p
+                      className={`mt-2 w-full truncate text-center text-[11px] font-bold ${textColors[rank]}`}
+                    >
+                      {u.username || "Người dùng"}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-0.5 text-amber-500">
+                      <Coins size={10} />
+                      <span className="text-[10px] font-black">
+                        {formatCoins(u.totalCommission)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
         {/* Biểu đồ hoa hồng 7 ngày */}
         <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
@@ -577,7 +561,7 @@ return (
           </div>
         ) : (
           <>
-            {/* Người đã giới thiệu */}
+             {/* Người đã giới thiệu */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-bold text-[#111827]">
