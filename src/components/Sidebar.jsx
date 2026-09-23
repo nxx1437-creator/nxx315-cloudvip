@@ -17,15 +17,11 @@ import {
   HelpCircle,
   Search,
   ChevronDown,
-  Trophy,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { supabase } from "../lib/supabaseClient.js";
 
-// Chia menu thành từng nhóm có thể thu gọn, giống ảnh mẫu.
-// Không thêm mục nào chưa có route thật (Marketing Video / Buff MXH Free
-// trong ảnh mẫu chưa tồn tại trong hệ thống nên không đưa vào đây).
 const SECTIONS = [
   {
     title: "Tổng quan",
@@ -172,6 +168,7 @@ export default function Sidebar({ open, onClose, coins }) {
     ...s,
     items: q ? s.items.filter((i) => i.label.toLowerCase().includes(q)) : s.items,
   })).filter((s) => s.items.length > 0);
+
   return (
     <>
       {/* Overlay */}
@@ -257,7 +254,7 @@ export default function Sidebar({ open, onClose, coins }) {
 
         {/* Balance Card */}
         <div className="px-4 pt-4">
-          <div className="rounded-xl bg-gradient-to-br from-sky-50 to-blue-50 p-4">
+          <div className="rounded-xl bg-slate-50 p-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               Số dư khả dụng
             </p>
@@ -269,21 +266,13 @@ export default function Sidebar({ open, onClose, coins }) {
                 <span className="ml-1.5 text-sm font-bold text-amber-600">Coin</span>
               </p>
             )}
-            {/* MEME: chưa có cột dữ liệu tương ứng trong DB, để 0 tạm */}
-            <p className="mt-0.5 text-xs font-bold text-emerald-600">0 MEME</p>
-
-            {/* VIP: chưa có hệ thống hạng VIP thật, để placeholder tạm */}
-            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-              <Trophy size={13} />
-              VIP Đồng
-            </span>
 
             <button
               onClick={() => {
                 navigate("/wallet");
                 onClose();
               }}
-              className="mt-3 flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 py-2.5 text-xs font-black text-white transition hover:brightness-110"
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-slate-900 py-2.5 text-xs font-black text-white transition active:opacity-90"
             >
               Nạp Coin
             </button>
@@ -323,9 +312,7 @@ export default function Sidebar({ open, onClose, coins }) {
                         key={item.label}
                         onClick={() => handleNavigate(item.path)}
                         className={`group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
-                          isActive
-                            ? "bg-gradient-to-r from-sky-50 to-blue-50"
-                            : "hover:bg-slate-50"
+                          isActive ? "bg-sky-50" : "hover:bg-slate-50"
                         }`}
                       >
                         {isActive && (
@@ -379,4 +366,4 @@ export default function Sidebar({ open, onClose, coins }) {
       </aside>
     </>
   );
-                              }
+      }
