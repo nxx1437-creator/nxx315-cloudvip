@@ -53,6 +53,7 @@ import Videos from "./pages/Videos.jsx";
 import Leaderboard from "./pages/Leaderboard.jsx";
 import MarketingVideo from "./pages/MarketingVideo.jsx";
 import MarketingWallet from "./pages/MarketingWallet.jsx";
+import Notifications from "./pages/Notifications.jsx"; // ✅ MỚI
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -93,13 +94,23 @@ export default function App() {
           <Route path="/account-review" element={<AccountReview />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route
-  path="/level"
-  element={
-    <ProtectedRoute>
-      <Level />
-    </ProtectedRoute>
-  }
-/>
+            path="/level"
+            element={
+              <ProtectedRoute>
+                <Level />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ✅ MỚI: Trang tất cả thông báo */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/dashboard"
@@ -396,4 +407,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-                                                 }
+                }
