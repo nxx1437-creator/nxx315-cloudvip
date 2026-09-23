@@ -51,6 +51,8 @@ import Withdraw from "./pages/Withdraw.jsx";
 import WithdrawHistory from "./pages/WithdrawHistory.jsx";
 import Videos from "./pages/Videos.jsx";
 import Leaderboard from "./pages/Leaderboard.jsx";
+import MarketingVideo from "./pages/MarketingVideo.jsx";
+import MarketingWallet from "./pages/MarketingWallet.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -351,6 +353,24 @@ export default function App() {
           />
 
           <Route
+            path="/marketing-video"
+            element={
+              <ProtectedRoute>
+                <MarketingVideo />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/marketing-wallet"
+            element={
+              <ProtectedRoute>
+                <MarketingWallet />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/profile"
             element={
               <ProtectedRoute>
@@ -376,4 +396,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-}
+                                                 }
