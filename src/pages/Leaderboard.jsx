@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Crown, Medal, Coins, ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Crown, Medal, Coins } from "lucide-react";
 
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
@@ -16,7 +17,9 @@ function Avatar({ src, name, size = "h-12 w-12", text = "text-sm", ring = true }
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
 
-  const ringClass = ring ? "border-2 border-white shadow-[0_4px_14px_rgba(0,0,0,0.12)]" : "";
+  const ringClass = ring
+    ? "border-2 border-white shadow-[0_4px_14px_rgba(0,0,0,0.12)]"
+    : "";
 
   if (src && !failed) {
     return (
@@ -28,6 +31,7 @@ function Avatar({ src, name, size = "h-12 w-12", text = "text-sm", ring = true }
       />
     );
   }
+
   return (
     <div
       className={`${size} ${text} ${ringClass} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500`}
@@ -39,17 +43,23 @@ function Avatar({ src, name, size = "h-12 w-12", text = "text-sm", ring = true }
 
 /* ---------- Icon cúp cho podium ---------- */
 function TrophyIcon({ rank, size = 26 }) {
-  if (rank === 1) return <Crown className="text-amber-400" size={size} strokeWidth={2.4} />;
-  if (rank === 2) return <Medal className="text-slate-400" size={size} strokeWidth={2.2} />;
-  if (rank === 3) return <Medal className="text-orange-400" size={size} strokeWidth={2.2} />;
+  if (rank === 1)
+    return <Crown className="text-amber-400" size={size} strokeWidth={2.4} />;
+  if (rank === 2)
+    return <Medal className="text-slate-400" size={size} strokeWidth={2.2} />;
+  if (rank === 3)
+    return <Medal className="text-orange-400" size={size} strokeWidth={2.2} />;
   return null;
 }
 
 /* ---------- Icon hạng cho list 4+ ---------- */
 function RankIcon({ rank }) {
-  if (rank === 1) return <Crown className="text-amber-400" size={22} strokeWidth={2.4} />;
-  if (rank === 2) return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
-  if (rank === 3) return <Medal className="text-orange-400" size={22} strokeWidth={2.2} />;
+  if (rank === 1)
+    return <Crown className="text-amber-400" size={22} strokeWidth={2.4} />;
+  if (rank === 2)
+    return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
+  if (rank === 3)
+    return <Medal className="text-orange-400" size={22} strokeWidth={2.2} />;
   return (
     <span className="w-[22px] text-center text-sm font-bold text-slate-400">
       {rank}
@@ -57,7 +67,7 @@ function RankIcon({ rank }) {
   );
 }
 
-/* ---------- Podium ---------- */
+/* ---------- Podium styles ---------- */
 const PODIUM_STYLES = {
   1: {
     card: "bg-gradient-to-b from-amber-100 to-amber-50 border-amber-200",
@@ -93,12 +103,10 @@ function PodiumCard({ user, rank }) {
     <div
       className={`flex flex-1 flex-col items-center rounded-2xl border ${s.card} ${s.padding} px-2 transition`}
     >
-      {/* Icon cúp */}
       <div className="mb-3">
         <TrophyIcon rank={rank} size={isFirst ? 28 : 24} />
       </div>
 
-      {/* Avatar */}
       <Avatar
         src={user.avatar_url}
         name={user.display_name || user.username}
@@ -107,15 +115,17 @@ function PodiumCard({ user, rank }) {
         ring={true}
       />
 
-      {/* Tên */}
-      <p className={`mt-3 w-full truncate text-center text-[13px] font-bold ${s.name}`}>
+      <p
+        className={`mt-3 w-full truncate text-center text-[13px] font-bold ${s.name}`}
+      >
         {user.display_name || user.username}
       </p>
 
-      {/* Coin */}
       <div className="mt-1 flex items-center gap-1 text-amber-500">
         <Coins size={isFirst ? 15 : 14} strokeWidth={2.6} />
-        <span className={`${isFirst ? "text-[15px]" : "text-[13px]"} font-black`}>
+        <span
+          className={`${isFirst ? "text-[15px]" : "text-[13px]"} font-black`}
+        >
           {formatCoins(user.coins)}
         </span>
       </div>
@@ -124,7 +134,6 @@ function PodiumCard({ user, rank }) {
 }
 
 export default function Leaderboard() {
-  const navigate = useNavigate();
   const [tab, setTab] = useState("week");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
@@ -163,18 +172,10 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50/60 via-white to-white pb-24">
-      {/* Header quay lại */}
-      <div className="flex items-center gap-3 px-4 pt-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-600 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-        >
-          <ChevronLeft size={18} />
-        </button>
-      </div>
+      <TopHeader />
 
       {/* Title block */}
-      <div className="mt-3 flex items-center gap-3 px-4">
+      <div className="mt-4 flex items-center gap-3 px-4">
         <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_16px_rgba(56,130,246,0.35)]">
           <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
             <path
@@ -283,7 +284,9 @@ export default function Leaderboard() {
                     <p className="truncate text-[15px] font-bold text-slate-800">
                       {u.display_name || u.username}
                     </p>
-                    <p className="text-[13px] text-slate-400">Lv.{u.level || 1}</p>
+                    <p className="text-[13px] text-slate-400">
+                      Lv.{u.level || 1}
+                    </p>
                   </div>
 
                   <div className="shrink-0 text-right">
@@ -301,6 +304,8 @@ export default function Leaderboard() {
               );
             })}
       </div>
+
+      <BottomNav />
     </div>
   );
-            }
+                                                                             }
