@@ -225,7 +225,7 @@ export default function Tasks() {
   const { profile } = useProfile(user?.id);
   const { tasks, loading, reload } = useTasks(user?.id);
   const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("hot");
+  const [activeTab, setActiveTab] = useState("all");
   const [startingTaskId, setStartingTaskId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -238,50 +238,6 @@ export default function Tasks() {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
-
-  // ✅ Check IP lần đầu vào trang
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const checkIp = async () => {
-      setCheckingIp(true);
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session?.access_token) {
-          setCheckingIp(false);
-          return;
-        }
-
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/log-ip`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: SUPABASE_ANON_KEY,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const data = await res.json();
-
-        if (data.allowed === false) {
-          setIpBlocked({
-            reason: data.reason,
-            can_appeal: data.can_appeal,
-          });
-        } else {
-          setIpBlocked(null);
-        }
-      } catch (err) {
-        console.error("Check IP error:", err);
-      } finally {
-        setCheckingIp(false);
-      }
-    };
-
-    checkIp();
-  }, [user?.id]);
 
   // ✅ Check IP + fingerprint lần đầu vào trang
 useEffect(() => {
