@@ -33,7 +33,7 @@ registerSW({
       align-items: center;
       gap: 6px;
     `;
-    toast.innerHTML = "🔄 Đang cập nhật phiên bản mới...";
+    toast.innerHTML = " Đang cập nhật phiên bản mới...";
     document.body.appendChild(toast);
 
     // Tự reload sau 2 giây để load bản mới
