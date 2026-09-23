@@ -149,6 +149,27 @@ function formatDateTime(d) {
     minute: "2-digit",
   });
 }
+// ✅ Tạo fingerprint từ thông tin trình duyệt
+function generateFingerprint() {
+  const data = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + "x" + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || "unknown",
+    navigator.platform || "unknown",
+  ].join("|");
+
+  // Hash đơn giản
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return "fp_" + Math.abs(hash).toString(36);
+}
 
 function TaskCardSkeleton() {
   return (
@@ -262,24 +283,60 @@ export default function Tasks() {
     checkIp();
   }, [user?.id]);
 
-  // ✅ MỚI: Load level của user để lấy task_bonus
-  useEffect(() => {
-    if (!user?.id) return;
+  // ✅ Check IP + fingerprint lần đầu vào trang
+useEffect(() => {
+  if (!user?.id) return;
 
-    const loadLevel = async () => {
-      try {
-        const { data, error } = await supabase.rpc("get_user_level", {
-          p_user_id: user.id,
-        });
-        if (error) throw error;
-        if (data) setUserLevel(data);
-      } catch (err) {
-        console.error("Load level error:", err);
+  const checkIp = async () => {
+    setCheckingIp(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setCheckingIp(false);
+        return;
       }
-    };
 
-    loadLevel();
-  }, [user?.id]);
+      // ✅ Lấy fingerprint từ device
+      let fingerprint = localStorage.getItem("device_fingerprint");
+      if (!fingerprint) {
+        fingerprint = generateFingerprint();
+        localStorage.setItem("device_fingerprint", fingerprint);
+      }
+
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/log-ip`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fingerprint }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.allowed === false) {
+        setIpBlocked({
+          reason: data.reason,
+          can_appeal: data.can_appeal,
+        });
+      } else {
+        setIpBlocked(null);
+      }
+    } catch (err) {
+      console.error("Check IP error:", err);
+    } finally {
+      setCheckingIp(false);
+    }
+  };
+
+  checkIp();
+}, [user?.id]);
 
   // Reload khi quay lại tab
   useEffect(() => {
