@@ -343,25 +343,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Mua hàng kiếm sao */}
-            <button
-              onClick={() => navigate("/shop-earn")}
-              className="flex w-full items-center justify-between rounded-2xl border border-[#E5E7EB] bg-white p-4 transition hover:border-[#F2A900]/40"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFF4DB] text-[#B87700]">
-                  <ShoppingBag size={17} />
-                </span>
-                <div className="text-left">
-                  <p className="flex items-center gap-1 text-sm font-bold text-[#111827]">
-                    <Star size={12} className="fill-[#F2A900] text-[#F2A900]" />
-                    Mua hàng kiếm sao
-                  </p>
-                  <p className="text-xs text-[#9CA3AF]">Đổi điểm sang Xu hoặc rút về ngân hàng</p>
-                </div>
-              </div>
-              <span className="text-[#D1D5DB]">→</span>
-            </button>
+            {/* ✅ Top 3 tuần này */}
+<LeaderboardCard />
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -513,8 +496,6 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* ✅ MỚI: Top 3 tuần này */}
-<LeaderboardCard />
 
 {/* Hành động nhanh */}
 <div>
