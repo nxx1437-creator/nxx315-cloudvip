@@ -12,9 +12,11 @@ const TABS = [
 const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
 
 /* ---------- Avatar có fallback chữ cái ---------- */
-function Avatar({ src, name, size = "h-11 w-11", text = "text-sm" }) {
+function Avatar({ src, name, size = "h-12 w-12", text = "text-sm", ring = true }) {
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
+
+  const ringClass = ring ? "border-2 border-white shadow-[0_4px_14px_rgba(0,0,0,0.12)]" : "";
 
   if (src && !failed) {
     return (
@@ -22,28 +24,28 @@ function Avatar({ src, name, size = "h-11 w-11", text = "text-sm" }) {
         src={src}
         alt={name}
         onError={() => setFailed(true)}
-        className={`${size} shrink-0 rounded-full object-cover`}
+        className={`${size} ${ringClass} shrink-0 rounded-full object-cover`}
       />
     );
   }
   return (
     <div
-      className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500`}
+      className={`${size} ${text} ${ringClass} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500`}
     >
       {initial}
     </div>
   );
 }
 
-/* ---------- Icon cúp/huy chương cho podium ---------- */
-function TrophyIcon({ rank }) {
-  if (rank === 1) return <Crown className="text-amber-400" size={26} strokeWidth={2.4} />;
-  if (rank === 2) return <Medal className="text-slate-400" size={26} strokeWidth={2.2} />;
-  if (rank === 3) return <Medal className="text-orange-400" size={26} strokeWidth={2.2} />;
+/* ---------- Icon cúp cho podium ---------- */
+function TrophyIcon({ rank, size = 26 }) {
+  if (rank === 1) return <Crown className="text-amber-400" size={size} strokeWidth={2.4} />;
+  if (rank === 2) return <Medal className="text-slate-400" size={size} strokeWidth={2.2} />;
+  if (rank === 3) return <Medal className="text-orange-400" size={size} strokeWidth={2.2} />;
   return null;
 }
 
-/* ---------- Icon huy chương cho list 4+ ---------- */
+/* ---------- Icon hạng cho list 4+ ---------- */
 function RankIcon({ rank }) {
   if (rank === 1) return <Crown className="text-amber-400" size={22} strokeWidth={2.4} />;
   if (rank === 2) return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
@@ -55,28 +57,28 @@ function RankIcon({ rank }) {
   );
 }
 
-/* ---------- Style cho podium từng hạng ---------- */
+/* ---------- Podium ---------- */
 const PODIUM_STYLES = {
   1: {
-    card: "bg-gradient-to-b from-amber-100 to-amber-50",
-    height: "py-5",
+    card: "bg-gradient-to-b from-amber-100 to-amber-50 border-amber-200",
+    padding: "pt-5 pb-5",
     name: "text-slate-800",
-    coin: "text-amber-500",
-    coinIcon: "text-amber-400",
+    avatarSize: "h-16 w-16",
+    avatarText: "text-xl",
   },
   2: {
-    card: "bg-gradient-to-b from-slate-200 to-slate-100",
-    height: "py-4 mt-3",
+    card: "bg-gradient-to-b from-slate-200 to-slate-100 border-slate-200",
+    padding: "pt-4 pb-4 mt-4",
     name: "text-slate-700",
-    coin: "text-amber-500",
-    coinIcon: "text-amber-400",
+    avatarSize: "h-14 w-14",
+    avatarText: "text-lg",
   },
   3: {
-    card: "bg-gradient-to-b from-orange-100 to-orange-50",
-    height: "py-4 mt-3",
+    card: "bg-gradient-to-b from-orange-100 to-orange-50 border-orange-200",
+    padding: "pt-4 pb-4 mt-4",
     name: "text-slate-700",
-    coin: "text-amber-500",
-    coinIcon: "text-amber-400",
+    avatarSize: "h-14 w-14",
+    avatarText: "text-lg",
   },
 };
 
@@ -89,22 +91,31 @@ function PodiumCard({ user, rank }) {
 
   return (
     <div
-      className={`flex flex-1 flex-col items-center rounded-2xl ${s.card} ${s.height} px-2 transition`}
+      className={`flex flex-1 flex-col items-center rounded-2xl border ${s.card} ${s.padding} px-2 transition`}
     >
       {/* Icon cúp */}
       <div className="mb-3">
-        <TrophyIcon rank={rank} />
+        <TrophyIcon rank={rank} size={isFirst ? 28 : 24} />
       </div>
 
-      {/* Tên user — không có avatar */}
-      <p className={`w-full truncate text-center text-[13px] font-bold ${s.name}`}>
+      {/* Avatar */}
+      <Avatar
+        src={user.avatar_url}
+        name={user.display_name || user.username}
+        size={s.avatarSize}
+        text={s.avatarText}
+        ring={true}
+      />
+
+      {/* Tên */}
+      <p className={`mt-3 w-full truncate text-center text-[13px] font-bold ${s.name}`}>
         {user.display_name || user.username}
       </p>
 
       {/* Coin */}
-      <div className={`mt-1 flex items-center gap-1 ${s.coin}`}>
+      <div className="mt-1 flex items-center gap-1 text-amber-500">
         <Coins size={isFirst ? 15 : 14} strokeWidth={2.6} />
-        <span className={`${isFirst ? "text-[14px]" : "text-[13px]"} font-black`}>
+        <span className={`${isFirst ? "text-[15px]" : "text-[13px]"} font-black`}>
           {formatCoins(user.coins)}
         </span>
       </div>
@@ -152,7 +163,7 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50/60 via-white to-white pb-24">
-      {/* ===== Header quay lại ===== */}
+      {/* Header quay lại */}
       <div className="flex items-center gap-3 px-4 pt-4">
         <button
           onClick={() => navigate(-1)}
@@ -162,10 +173,9 @@ export default function Leaderboard() {
         </button>
       </div>
 
-      {/* ===== Title block: icon cúp + tiêu đề 2 dòng ===== */}
+      {/* Title block */}
       <div className="mt-3 flex items-center gap-3 px-4">
         <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_16px_rgba(56,130,246,0.35)]">
-          {/* Icon cúp SVG đơn giản — thay cho lucide Trophy cho giống ảnh mẫu */}
           <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
             <path
               d="M6 4h12v3a6 6 0 0 1-12 0V4Z"
@@ -197,7 +207,7 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* ===== Tabs Tuần / Tháng ===== */}
+      {/* Tabs */}
       <div className="mt-4 flex gap-3 px-4">
         {TABS.map((t) => {
           const active = tab === t.key;
@@ -217,14 +227,14 @@ export default function Leaderboard() {
         })}
       </div>
 
-      {/* ===== Podium Top 3 ===== */}
+      {/* Podium */}
       <div className="mt-4 px-4">
         {loading ? (
           <div className="flex gap-3">
             {[2, 1, 3].map((r) => (
               <div
                 key={r}
-                className="h-[130px] flex-1 animate-pulse rounded-2xl bg-slate-100"
+                className="h-[150px] flex-1 animate-pulse rounded-2xl bg-slate-100"
               />
             ))}
           </div>
@@ -241,7 +251,7 @@ export default function Leaderboard() {
         )}
       </div>
 
-      {/* ===== List từ hạng 4+ ===== */}
+      {/* List 4+ */}
       <div className="mt-4 space-y-3 px-4">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
@@ -257,20 +267,18 @@ export default function Leaderboard() {
                   key={u.id}
                   className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
                 >
-                  {/* Icon hạng (cúp/huy chương/số) */}
                   <div className="flex w-7 shrink-0 justify-center">
                     <RankIcon rank={rank} />
                   </div>
 
-                  {/* Avatar */}
                   <Avatar
                     src={u.avatar_url}
                     name={u.display_name || u.username}
                     size="h-12 w-12"
                     text="text-base"
+                    ring={false}
                   />
 
-                  {/* Tên + Level */}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-bold text-slate-800">
                       {u.display_name || u.username}
@@ -278,7 +286,6 @@ export default function Leaderboard() {
                     <p className="text-[13px] text-slate-400">Lv.{u.level || 1}</p>
                   </div>
 
-                  {/* Coin */}
                   <div className="shrink-0 text-right">
                     <div className="flex items-center justify-end gap-1 text-amber-500">
                       <Coins size={15} strokeWidth={2.6} />
@@ -296,4 +303,4 @@ export default function Leaderboard() {
       </div>
     </div>
   );
-      }
+            }
