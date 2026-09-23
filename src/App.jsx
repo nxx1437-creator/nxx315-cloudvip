@@ -53,11 +53,10 @@ import Videos from "./pages/Videos.jsx";
 import Leaderboard from "./pages/Leaderboard.jsx";
 import MarketingVideo from "./pages/MarketingVideo.jsx";
 import MarketingWallet from "./pages/MarketingWallet.jsx";
-import Notifications from "./pages/Notifications.jsx"; // ✅ MỚI
+import Notifications from "./pages/Notifications.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
-import VersionChecker from "./VersionChecker";
 import DeviceChecker from "./components/DeviceChecker.jsx";
 
 export default function App() {
@@ -102,7 +101,6 @@ export default function App() {
             }
           />
 
-          {/* ✅ MỚI: Trang tất cả thông báo */}
           <Route
             path="/notifications"
             element={
@@ -402,9 +400,8 @@ export default function App() {
           />
         </Routes>
 
-        <VersionChecker />
         <DeviceChecker />
       </BrowserRouter>
     </BanGate>
   );
-                }
+}
