@@ -4,14 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabaseClient.js";
 
-const TABS = [
-  { key: "week", label: "Tuần này" },
-  { key: "month", label: "Tháng này" },
-];
-
 const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
 
-/* ---------- Avatar với fallback chữ cái ---------- */
 function Avatar({ src, name, size = "h-11 w-11", text = "text-sm" }) {
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
@@ -35,7 +29,6 @@ function Avatar({ src, name, size = "h-11 w-11", text = "text-sm" }) {
   );
 }
 
-/* ---------- Icon huy chương ---------- */
 function RankIcon({ rank }) {
   if (rank === 1) return <Crown className="text-amber-400" size={22} strokeWidth={2.2} />;
   if (rank === 2) return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
@@ -47,7 +40,6 @@ function RankIcon({ rank }) {
   );
 }
 
-/* ---------- Podium top 3 ---------- */
 const PODIUM_STYLES = {
   1: { card: "bg-gradient-to-b from-amber-100 to-amber-50 border-amber-200" },
   2: { card: "bg-gradient-to-b from-slate-100 to-slate-50 border-slate-200" },
@@ -84,10 +76,8 @@ function PodiumCard({ user, rank }) {
   );
 }
 
-/* ---------- Main ---------- */
 export default function Leaderboard() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("week");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
 
@@ -98,7 +88,7 @@ export default function Leaderboard() {
       setLoading(true);
       try {
         const { data, error } = await supabase.rpc("get_leaderboard", {
-          period: tab,
+          period: "all",
           limit_count: 50,
         });
 
@@ -116,7 +106,7 @@ export default function Leaderboard() {
     return () => {
       alive = false;
     };
-  }, [tab]);
+  }, []);
 
   const top1 = users[0];
   const top2 = users[1];
@@ -125,7 +115,6 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50/70 via-white to-sky-50/40 pb-24">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-5">
         <button
           onClick={() => navigate(-1)}
@@ -136,38 +125,16 @@ export default function Leaderboard() {
         <h1 className="text-lg font-black text-slate-900">Bảng Xếp Hạng</h1>
       </div>
 
-      {/* Title block */}
       <div className="mt-4 flex items-center gap-3 px-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_18px_rgba(56,130,246,0.35)]">
           <Trophy size={24} strokeWidth={2.2} />
         </div>
         <div>
           <h2 className="text-xl font-black text-slate-900">Bảng Xếp Hạng</h2>
-          <p className="text-xs text-slate-500">Top user kiếm Coin nhiều nhất</p>
+          <p className="text-xs text-slate-500">Top user sở hữu Coin nhiều nhất</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mt-4 flex gap-2 px-4">
-        {TABS.map((t) => {
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-                active
-                  ? "bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-[0_4px_12px_rgba(56,130,246,0.35)]"
-                  : "bg-white text-slate-500 shadow-[0_2px_8px_rgba(56,120,190,0.08)]"
-              }`}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Podium */}
       <div className="mt-5 px-4">
         {loading ? (
           <div className="flex gap-3">
@@ -188,7 +155,6 @@ export default function Leaderboard() {
         )}
       </div>
 
-      {/* List từ hạng 4 */}
       <div className="mt-5 space-y-2.5 px-4">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
@@ -225,7 +191,7 @@ export default function Leaderboard() {
                         {formatCoins(u.coins)}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400">Coin kiếm được</p>
+                    <p className="text-[11px] text-slate-400">Coin</p>
                   </div>
                 </div>
               );
