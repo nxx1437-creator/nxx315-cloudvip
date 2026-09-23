@@ -33,6 +33,7 @@ import TaskCallback from "./pages/TaskCallback.jsx";
 import Banned from "./pages/Banned.jsx";
 import AccountReview from "./pages/AccountReview.jsx";
 import Onboarding from "./pages/Onboarding.jsx";
+import Level from "./pages/Level.jsx";
 import Feed from "./pages/Feed.jsx";
 import Roblox from "./pages/Roblox.jsx";
 import PlayTogether from "./pages/PlayTogether.jsx";
@@ -89,6 +90,14 @@ export default function App() {
           <Route path="/banned" element={<Banned />} />
           <Route path="/account-review" element={<AccountReview />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route
+  path="/level"
+  element={
+    <ProtectedRoute>
+      <Level />
+    </ProtectedRoute>
+  }
+/>
 
           <Route
             path="/dashboard"
