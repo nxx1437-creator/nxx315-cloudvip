@@ -57,6 +57,12 @@ const SECTIONS = [
   },
 ];
 
+const BADGE_STYLES = {
+  hot: "border border-rose-200 bg-rose-50 text-rose-500 shadow-[0_2px_8px_rgba(244,63,94,0.18)]",
+  new: "border border-emerald-200 bg-emerald-50 text-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.18)]",
+  coin: "border border-amber-200 bg-amber-50 text-amber-500 shadow-[0_2px_8px_rgba(245,158,11,0.18)]",
+};
+
 export default function Sidebar({ open, onClose, coins }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -173,21 +179,21 @@ export default function Sidebar({ open, onClose, coins }) {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-sky-950/30 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar — nền loang xanh nhạt mềm theo ảnh mẫu */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-white transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-gradient-to-b from-sky-50/90 via-white to-sky-50/40 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ boxShadow: "4px 0 24px rgba(0,0,0,0.08)" }}
+        style={{ boxShadow: "8px 0 32px rgba(56,120,190,0.12)" }}
       >
         {/* Header — Avatar + Tên + Nút đóng */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4">
+        <div className="flex items-center justify-between gap-3 px-4 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="relative shrink-0">
               {loadingProfile ? (
@@ -198,7 +204,7 @@ export default function Sidebar({ open, onClose, coins }) {
                     <img
                       src={avatarUrl}
                       alt={displayName}
-                      className="h-12 w-12 rounded-full border border-slate-200 object-cover"
+                      className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-[0_2px_10px_rgba(56,120,190,0.2)]"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         if (e.currentTarget.nextElementSibling) {
@@ -208,7 +214,7 @@ export default function Sidebar({ open, onClose, coins }) {
                     />
                   ) : null}
                   <div
-                    className={`h-12 w-12 items-center justify-center rounded-full bg-sky-500 text-lg font-black text-white ${
+                    className={`h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-lg font-black text-white shadow-[0_2px_10px_rgba(56,120,190,0.25)] ${
                       avatarUrl ? "hidden" : "flex"
                     }`}
                   >
@@ -225,7 +231,7 @@ export default function Sidebar({ open, onClose, coins }) {
                 </>
               ) : (
                 <>
-                  <p className="truncate text-[15px] font-bold text-slate-900">{displayName}</p>
+                  <p className="truncate text-[15px] font-bold text-slate-800">{displayName}</p>
                   <p className="truncate text-xs text-slate-400">{username}</p>
                 </>
               )}
@@ -233,15 +239,15 @@ export default function Sidebar({ open, onClose, coins }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 shadow-[0_2px_8px_rgba(56,120,190,0.12)] transition hover:text-slate-600"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Search */}
-        <div className="px-4 pt-4">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-400">
+        {/* Search — bo tròn, nền trắng nổi mềm */}
+        <div className="px-4">
+          <div className="flex items-center gap-2 rounded-2xl bg-white px-3.5 py-3 text-sm text-slate-400 shadow-[0_4px_16px_rgba(56,120,190,0.10)]">
             <Search size={15} className="shrink-0" />
             <input
               value={query}
@@ -252,18 +258,18 @@ export default function Sidebar({ open, onClose, coins }) {
           </div>
         </div>
 
-        {/* Balance Card — nền phẳng, chỉ coin chính */}
+        {/* Balance Card — nền loang xanh nhạt, chỉ Coin + nút Nạp */}
         <div className="px-4 pt-4">
-          <div className="rounded-xl bg-slate-50 p-4">
+          <div className="rounded-2xl bg-gradient-to-b from-sky-100/90 via-sky-50/80 to-blue-50/60 p-4 shadow-[0_6px_20px_rgba(56,120,190,0.12)]">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               Số dư khả dụng
             </p>
             {loadingProfile ? (
-              <div className="mt-1.5 h-7 w-32 animate-pulse rounded bg-slate-200" />
+              <div className="mt-1.5 h-8 w-32 animate-pulse rounded bg-white/70" />
             ) : (
-              <p className="mt-0.5 text-2xl font-black text-slate-900">
+              <p className="mt-0.5 text-3xl font-black text-slate-900">
                 {finalCoins.toLocaleString("vi-VN")}
-                <span className="ml-1.5 text-sm font-bold text-orange-500">Coin</span>
+                <span className="ml-1.5 text-sm font-bold text-amber-500">Coin</span>
               </p>
             )}
 
@@ -272,24 +278,25 @@ export default function Sidebar({ open, onClose, coins }) {
                 navigate("/wallet");
                 onClose();
               }}
-              className="mt-3 flex w-full items-center justify-center rounded-lg bg-slate-900 py-2.5 text-xs font-black text-white transition active:opacity-90"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white shadow-[0_4px_12px_rgba(15,23,42,0.25)] transition active:scale-[0.98]"
             >
+              <Coins size={13} />
               Nạp Coin
             </button>
           </div>
         </div>
 
         {/* Menu — chia nhóm thu gọn được (accordion) */}
-        <div className="flex-1 overflow-y-auto px-2 pt-3 pb-4">
+        <div className="flex-1 overflow-y-auto px-3 pt-3 pb-4">
           {filteredSections.map((section) => {
             const isOpen = q ? true : openSections.has(section.title);
             return (
               <div key={section.title} className="mb-1">
                 <button
                   onClick={() => toggleSection(section.title)}
-                  className="flex w-full items-center gap-1.5 px-3 py-2 text-left"
+                  className="flex w-full items-center gap-1.5 px-3 py-2.5 text-left"
                 >
-                  <span className="h-1 w-1 rounded-full bg-sky-400" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-sky-300" />
                   <span className="flex-1 text-[11px] font-bold uppercase tracking-widest text-slate-400">
                     {section.title}
                   </span>
@@ -311,35 +318,35 @@ export default function Sidebar({ open, onClose, coins }) {
                       <button
                         key={item.label}
                         onClick={() => handleNavigate(item.path)}
-                        className={`group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left transition ${
-                          isActive ? "bg-sky-50" : "hover:bg-slate-50"
+                        className={`group relative flex w-full items-center gap-3.5 rounded-2xl px-3 py-3 text-left transition ${
+                          isActive
+                            ? "bg-gradient-to-r from-sky-100/90 to-blue-50/70 shadow-[0_4px_16px_rgba(56,130,246,0.14)]"
+                            : "hover:bg-white/70"
                         }`}
                       >
                         {isActive && (
-                          <span className="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-sky-500" />
+                          <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-sky-400 to-blue-500" />
                         )}
                         <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                            isActive ? "bg-sky-500 text-white" : "bg-slate-100 text-slate-500"
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                            isActive
+                              ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_4px_12px_rgba(56,130,246,0.35)]"
+                              : "bg-slate-100/90 text-slate-500"
                           }`}
                         >
                           <Icon size={16} strokeWidth={isActive ? 2.4 : 2} />
                         </span>
                         <span
                           className={`min-w-0 flex-1 truncate text-[15px] ${
-                            isActive ? "font-bold text-sky-700" : "font-medium text-slate-700"
+                            isActive ? "font-bold text-slate-900" : "font-medium text-slate-600"
                           }`}
                         >
                           {item.label}
                         </span>
                         {item.badge && (
                           <span
-                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                              item.badgeType === "hot"
-                                ? "bg-rose-100 text-rose-600"
-                                : item.badgeType === "new"
-                                ? "bg-emerald-100 text-emerald-600"
-                                : "bg-amber-100 text-amber-600"
+                            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-black ${
+                              BADGE_STYLES[item.badgeType] || BADGE_STYLES.coin
                             }`}
                           >
                             {item.badge}
@@ -354,16 +361,16 @@ export default function Sidebar({ open, onClose, coins }) {
         </div>
 
         {/* Footer — Logout */}
-        <div className="border-t border-slate-100 p-4">
+        <div className="p-4">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-100"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-[15px] font-bold text-rose-500 transition hover:bg-rose-50"
           >
-            <LogOut size={16} />
+            <LogOut size={18} />
             Đăng xuất
           </button>
         </div>
       </aside>
     </>
   );
-        }
+    }
