@@ -293,6 +293,25 @@ useEffect(() => {
 
   checkIp();
 }, [user?.id]);
+  
+  // ✅ Load level của user
+useEffect(() => {
+  if (!user?.id) return;
+
+  const loadLevel = async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_user_level", {
+        p_user_id: user.id,
+      });
+      if (error) throw error;
+      if (data) setUserLevel(data);
+    } catch (err) {
+      console.error("Load level error:", err);
+    }
+  };
+
+  loadLevel();
+}, [user?.id]);
 
   // Reload khi quay lại tab
   useEffect(() => {
