@@ -4,51 +4,35 @@ import App from "./App.jsx";
 import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 
-// ✅ Tự động cập nhật Service Worker (PWA)
+// ✅ Cập nhật ngầm khi user không để ý
 registerSW({
   onNeedRefresh() {
-    console.log("[PWA] Có bản mới, đang tự động cập nhật...");
+    console.log("[PWA] Có bản mới, sẽ cập nhật khi user rảnh...");
 
-    // Hiện toast nhỏ báo user
-    const existing = document.getElementById("pwa-update-toast");
-    if (existing) existing.remove();
+    // Chờ đến khi user chuyển tab hoặc đóng app
+    const handleVisibility = () => {
+      if (document.hidden) {
+        console.log("[PWA] User không để ý, đang cập nhật...");
+        window.location.reload();
+      }
+    };
 
-    const toast = document.createElement("div");
-    toast.id = "pwa-update-toast";
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #3478F6;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 9999;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    `;
-    toast.innerHTML = " Đang cập nhật phiên bản mới...";
-    document.body.appendChild(toast);
+    document.addEventListener("visibilitychange", handleVisibility);
 
-    // Tự reload sau 2 giây để load bản mới
+    // Fallback: nếu user không chuyển tab trong 5 phút, reload luôn
     setTimeout(() => {
+      console.log("[PWA] Đã 5 phút, cập nhật luôn...");
       window.location.reload();
-    }, 2000);
+    }, 5 * 60 * 1000);
   },
   onOfflineReady() {
     console.log("[PWA] App sẵn sàng dùng offline");
   },
   onRegistered(registration) {
-    console.log("[PWA] Service Worker đã đăng ký:", registration);
+    console.log("[PWA] Service Worker đã đăng ký");
   },
   onRegisterError(error) {
-    console.error("[PWA] Đăng ký Service Worker thất bại:", error);
+    console.error("[PWA] Lỗi đăng ký Service Worker:", error);
   },
   immediate: true,
 });
