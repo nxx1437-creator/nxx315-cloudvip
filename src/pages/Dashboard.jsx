@@ -511,7 +511,9 @@ export default function Dashboard() {
       </div>
     );
   })}
+  })}
 </div>
+</div>   
 
 {/* Hành động nhanh */}
 <div>
