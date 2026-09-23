@@ -514,10 +514,9 @@ export default function Dashboard() {
 </div>
 
 {/* Hành động nhanh */}
-<div className="...">
+<div>
   <p className="mb-3 text-sm font-bold text-[#111827]">Hành động nhanh</p>
-  <p className="mb-3 text-sm font-bold text-[#111827]">Hành động nhanh</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <QuickAction icon={CheckSquare} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" label="Nhiệm vụ" onClick={() => navigate("/tasks")} />
                 <QuickAction icon={ShoppingBag} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" label="Cửa hàng" onClick={() => navigate("/store")} />
                 <QuickAction icon={ArrowLeftRight} iconBg="bg-[#FFF4DB]" iconColor="text-[#B87700]" label="Nạp / Rút" onClick={() => navigate("/shop-earn")} />
