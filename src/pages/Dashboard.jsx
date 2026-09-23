@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import Footer from "../components/Footer.jsx";
+import LeaderboardCard from "../components/LeaderboardCard.jsx";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -299,7 +300,7 @@ export default function Dashboard() {
               <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
 
               <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
-                ✨ Hoàn thành nhiệm vụ hôm nay để nhận thưởng bonus
+                 Hoàn thành nhiệm vụ hôm nay để nhận thưởng bonus
               </span>
 
               <h1 className="relative mt-3 text-2xl font-bold leading-tight text-[#111827]">
@@ -512,9 +513,12 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Hành động nhanh */}
-            <div>
-              <p className="mb-3 text-sm font-bold text-[#111827]">Hành động nhanh</p>
+            {/* ✅ MỚI: Top 3 tuần này */}
+<LeaderboardCard />
+
+{/* Hành động nhanh */}
+<div>
+  <p className="mb-3 text-sm font-bold text-[#111827]">Hành động nhanh</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <QuickAction icon={CheckSquare} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" label="Nhiệm vụ" onClick={() => navigate("/tasks")} />
                 <QuickAction icon={ShoppingBag} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" label="Cửa hàng" onClick={() => navigate("/store")} />
