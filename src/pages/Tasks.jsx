@@ -520,7 +520,7 @@ return (
       </div>
     )}
   {isLoading && (
-  <div className="fixed inset-x-0 top-0 bottom-20 z-40 flex items-center justify-center bg-white/30 px-6 backdrop-blur-md">
+  <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/20 px-6 backdrop-blur-sm">
     <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
         <Loader2 size={26} className="animate-spin text-sky-500" />
@@ -529,7 +529,7 @@ return (
         Đang tạo link nhiệm vụ...
       </h3>
       <p className="mt-2 text-sm text-slate-500">
-        Vui lòng chờ trong giây lát, hệ thống sẽ tự mở tab mới khi sẵn sàng!
+        Vui lòng chờ trong giây lát, hệ thống sẽ tự mở tab mới khi sẵn sàng.
       </p>
     </div>
   </div>
