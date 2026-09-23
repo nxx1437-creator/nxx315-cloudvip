@@ -6,25 +6,40 @@ import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
-// ✅ Tạo fingerprint từ thông tin trình duyệt
-function generateFingerprint() {
-  const data = [
-    navigator.userAgent,
-    navigator.language,
-    screen.width + "x" + screen.height,
-    screen.colorDepth,
-    new Date().getTimezoneOffset(),
-    navigator.hardwareConcurrency || "unknown",
-    navigator.platform || "unknown",
-  ].join("|");
+// ✅ Dùng cùng FingerprintJS với Register
+const FP_CDN = "https://openfpcdn.io/fingerprintjs/v4/iife.min.js";
+const STORAGE_KEY = "nxx315_fingerprint";
 
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return "fp_" + Math.abs(hash).toString(36);
+let fpPromise = null;
+function loadFingerprintJS() {
+  if (fpPromise) return fpPromise;
+  fpPromise = new Promise((resolve, reject) => {
+    if (window.FingerprintJS) {
+      resolve(window.FingerprintJS);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = FP_CDN;
+    script.async = true;
+    script.onload = () => {
+      if (window.FingerprintJS) resolve(window.FingerprintJS);
+      else reject(new Error("FingerprintJS không load được"));
+    };
+    script.onerror = () => reject(new Error("CDN load fail"));
+    document.head.appendChild(script);
+  });
+  return fpPromise;
+}
+
+async function getFingerprint() {
+  let fp = localStorage.getItem(STORAGE_KEY);
+  if (fp) return fp;
+  const FP = await loadFingerprintJS();
+  const fpInstance = await FP.load();
+  const result = await fpInstance.get();
+  fp = result.visitorId;
+  localStorage.setItem(STORAGE_KEY, fp);
+  return fp;
 }
 
 export default function Login() {
@@ -58,11 +73,7 @@ export default function Login() {
     const accessToken = data?.session?.access_token;
     if (accessToken) {
       try {
-        let fingerprint = localStorage.getItem("device_fingerprint");
-        if (!fingerprint) {
-          fingerprint = generateFingerprint();
-          localStorage.setItem("device_fingerprint", fingerprint);
-        }
+        const fp = await getFingerprint();
 
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/log-ip`,
@@ -73,16 +84,15 @@ export default function Login() {
               apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ fingerprint }),
+            body: JSON.stringify({ fingerprint: fp }),
           }
         );
 
         const ipData = await res.json();
 
         if (ipData.allowed === false) {
-          // ✅ Bị chặn → signOut + hiện thông báo
           await supabase.auth.signOut();
-          localStorage.removeItem("device_fingerprint");
+          localStorage.removeItem(STORAGE_KEY);
           setError(
             ipData.reason ||
               "Tài khoản của bạn đã bị chặn do trùng thiết bị với tài khoản khác."
@@ -92,13 +102,11 @@ export default function Login() {
         }
       } catch (ipErr) {
         console.error("Check IP error:", ipErr);
-        // Không chặn nếu lỗi mạng — để user vào bình thường
       }
     }
 
     setLoading(false);
 
-    // Check MFA
     if (data.session) {
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
@@ -111,7 +119,7 @@ export default function Login() {
 
   const handleMfaCancel = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("device_fingerprint");
+    localStorage.removeItem(STORAGE_KEY);
     setShowMfa(false);
   };
 
@@ -133,7 +141,6 @@ export default function Login() {
       title="Chào mừng trở lại"
       subtitle="Đăng nhập vào NXX315 Studio Rewards để tiếp tục."
     >
-      {/* ✅ Cảnh báo quan trọng */}
       <div className="mb-4 rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
         <div className="flex items-start gap-2">
           <AlertTriangle size={16} className="mt-0.5 shrink-0 text-sky-600" />
@@ -195,7 +202,6 @@ export default function Login() {
         </Link>
       </div>
 
-      {/* OR */}
       <div className="relative my-7">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
@@ -226,4 +232,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-             }
+          }
