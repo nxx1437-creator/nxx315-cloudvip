@@ -12,16 +12,22 @@ import {
 import { supabase } from "../lib/supabaseClient.js";
 
 const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
-const CANCEL_TIMEOUT_SECONDS = 30; // Hủy token sau 30s không xác nhận
-const REDIRECT_DELAY_MS = 5000; // Chuyển hướng sau 5 giây
+const CANCEL_TIMEOUT_SECONDS = 30;
+const REDIRECT_DELAY_MS = 5000;
 
 export default function TaskCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+
+  const token = params.get("token");
+  const taskId = params.get("task");
+  const provider = params.get("provider") || "Nhiệm vụ";
+  const rewardFromUrl = parseInt(params.get("reward") || "0", 10);
+
   const [state, setState] = useState({
-    status: "idle", // idle → captcha → verifying → success / error / cancelled
+    status: "idle",
     message: "",
-    reward: 0,
+    reward: rewardFromUrl,
   });
   const [captchaReady, setCaptchaReady] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(5);
@@ -29,36 +35,27 @@ export default function TaskCallback() {
   const timerRef = useRef(null);
   const redirectTimerRef = useRef(null);
   const cancelledRef = useRef(false);
-  const token = params.get("token");
-
-  // Đo thời gian ở tab này
   const enteredAtRef = useRef(Date.now());
 
-  // ✅ Chỉ bắt đầu đếm ngược ngầm khi user bấm "Xác minh và thưởng"
+  // Đếm ngầm 30s
   const startCancelCountdown = () => {
-    if (timerRef.current) return; // đã chạy rồi thì thôi
-
+    if (timerRef.current) return;
     let remaining = CANCEL_TIMEOUT_SECONDS;
     timerRef.current = setInterval(() => {
       remaining -= 1;
       if (remaining <= 0) {
         clearInterval(timerRef.current);
-        if (!cancelledRef.current) {
-          cancelToken("timeout");
-        }
+        if (!cancelledRef.current) cancelToken("timeout");
       }
     }, 1000);
   };
 
-  // Hủy token
   const cancelToken = async (reason) => {
     if (cancelledRef.current) return;
     cancelledRef.current = true;
-
     try {
       const sessionRes = await supabase.auth.getSession();
       const accessToken = sessionRes.data.session?.access_token;
-
       await fetch(
         "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/cancel-task",
         {
@@ -73,7 +70,6 @@ export default function TaskCallback() {
     } catch (err) {
       console.error("cancel-task error:", err);
     }
-
     setState({
       status: "cancelled",
       message:
@@ -84,7 +80,7 @@ export default function TaskCallback() {
     });
   };
 
-  // Mark token as redirected khi vào trang
+  // Mark redirected
   useEffect(() => {
     if (!token) {
       setState({
@@ -94,7 +90,6 @@ export default function TaskCallback() {
       });
       return;
     }
-
     const markRedirected = async () => {
       try {
         const sessionRes = await supabase.auth.getSession();
@@ -117,13 +112,12 @@ export default function TaskCallback() {
     markRedirected();
   }, [token]);
 
-  // ✅ Load reCAPTCHA script trước (chưa render widget)
+  // Load captcha script
   useEffect(() => {
     if (window.grecaptcha) {
       setCaptchaReady(true);
       return;
     }
-
     const script = document.createElement("script");
     script.src = "https://www.google.com/recaptcha/api.js";
     script.async = true;
@@ -132,12 +126,11 @@ export default function TaskCallback() {
     document.body.appendChild(script);
   }, []);
 
-  // ✅ Render captcha khi state = "captcha"
+  // Render captcha
   useEffect(() => {
     if (state.status !== "captcha") return;
     if (!captchaReady) return;
     if (!window.grecaptcha) return;
-
     window.grecaptcha.ready(() => {
       if (
         document.getElementById("recaptcha-box") &&
@@ -151,10 +144,9 @@ export default function TaskCallback() {
     });
   }, [state.status, captchaReady]);
 
-  // ✅ Auto redirect sau 5 giây khi success
+  // Auto redirect 5s
   useEffect(() => {
     if (state.status !== "success") return;
-
     setRedirectCountdown(5);
     redirectTimerRef.current = setInterval(() => {
       setRedirectCountdown((c) => {
@@ -166,11 +158,9 @@ export default function TaskCallback() {
         return c - 1;
       });
     }, 1000);
-
     return () => clearInterval(redirectTimerRef.current);
   }, [state.status, navigate]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current);
@@ -178,20 +168,17 @@ export default function TaskCallback() {
     };
   }, []);
 
-  // ✅ User bấm "Xác minh và thưởng"
   const handleStartVerify = () => {
-    setState({ status: "captcha", message: "", reward: 0 });
-    startCancelCountdown(); // ✅ đếm ngầm, không hiện UI
+    setState((s) => ({ ...s, status: "captcha", message: "" }));
+    startCancelCountdown();
   };
 
-  // ✅ Xử lý khi user tick captcha
   const handleCaptchaSolved = async (captchaToken) => {
     clearInterval(timerRef.current);
     setState({ status: "verifying", message: "", reward: 0 });
 
     try {
       const timeAway = Math.floor((Date.now() - enteredAtRef.current) / 1000);
-
       const sessionRes = await supabase.auth.getSession();
       const accessToken = sessionRes.data.session?.access_token;
 
@@ -204,22 +191,21 @@ export default function TaskCallback() {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            captchaToken: captchaToken,
-            token: token,
+            captchaToken,
+            token,
             time_away_seconds: timeAway,
           }),
         }
       );
 
       const data = await res.json();
-
       cancelledRef.current = true;
 
       if (data?.success) {
         setState({
           status: "success",
           message: data.message || "Hoàn thành nhiệm vụ!",
-          reward: data.reward || 0,
+          reward: data.reward || rewardFromUrl,
         });
       } else {
         setState({
@@ -237,7 +223,7 @@ export default function TaskCallback() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center font-[Be_Vietnam_Pro]">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
-        {/* ================= IDLE: Màn hình chờ, có nút "Xác minh và thưởng" ================= */}
+        {/* IDLE */}
         {state.status === "idle" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-50">
@@ -246,11 +232,13 @@ export default function TaskCallback() {
             <h1 className="mt-4 text-xl font-bold text-slate-900">
               Xác minh nhiệm vụ
             </h1>
-            <p className="mt-1.5 text-sm text-slate-500">LINK4M</p>
+            <p className="mt-1.5 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              {provider}
+            </p>
 
             <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="flex items-center justify-center gap-2 text-lg font-bold text-amber-600">
-                <Coins size={20} /> +{state.reward || 360} đ
+                <Coins size={20} /> +{rewardFromUrl} đ
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Phần thưởng khi xác thực thành công
@@ -267,7 +255,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ================= CAPTCHA (không hiện đếm ngược) ================= */}
+        {/* CAPTCHA */}
         {state.status === "captcha" && (
           <>
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
@@ -279,12 +267,11 @@ export default function TaskCallback() {
             <p className="mt-1.5 text-sm text-slate-500">
               Tick vào ô bên dưới để nhận thưởng nhé
             </p>
-
             <div id="recaptcha-box" className="mt-6 flex justify-center" />
           </>
         )}
 
-        {/* ================= VERIFYING ================= */}
+        {/* VERIFYING */}
         {state.status === "verifying" && (
           <>
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
@@ -299,7 +286,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ================= SUCCESS ================= */}
+        {/* SUCCESS */}
         {state.status === "success" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
@@ -314,8 +301,6 @@ export default function TaskCallback() {
             <p className="mt-3 text-xs text-slate-400">
               Coin đã được cộng vào ví của bạn
             </p>
-
-            {/* ✅ Auto redirect countdown */}
             <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
               <Sparkles size={16} className="text-sky-600" />
               <p className="text-sm font-semibold text-sky-700">
@@ -326,7 +311,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ================= ERROR ================= */}
+        {/* ERROR */}
         {state.status === "error" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50">
@@ -339,7 +324,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ================= CANCELLED ================= */}
+        {/* CANCELLED */}
         {state.status === "cancelled" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
@@ -349,14 +334,11 @@ export default function TaskCallback() {
               Đã hủy nhiệm vụ
             </h1>
             <p className="mt-2 text-sm text-slate-500">{state.message}</p>
-            <p className="mt-3 text-xs text-slate-400">
-              Bạn cần xác nhận trong vòng 30 giây sau khi mở trang này
-            </p>
           </>
         )}
 
-        {/* ✅ Chỉ hiện nút quay lại khi không phải success */}
-        {state.status !== "success" && (
+        {/* ✅ Nút quay lại CHỈ hiện khi state KHÔNG PHẢI idle và success */}
+        {state.status !== "idle" && state.status !== "success" && (
           <button
             onClick={() => navigate("/tasks")}
             className="mt-6 w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
@@ -367,4 +349,4 @@ export default function TaskCallback() {
       </div>
     </div>
   );
-        }
+          }
