@@ -1,196 +1,339 @@
-import React, { useState, useEffect } from "react";
-import { Coins, TrendingUp, Wallet, Loader2, Plus, ArrowRight } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useSession from "../hooks/useSession.js";
-import { supabase } from "../lib/supabaseClient.js";
+import {
+  ArrowLeft,
+  Wallet,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from "lucide-react";
+import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import { supabase } from "../lib/supabaseClient.js";
+
+const METHODS = [
+  { value: "bank", label: "Ngân hàng" },
+  { value: "momo", label: "MoMo" },
+  { value: "zalopay", label: "ZaloPay" },
+];
+
+const WD_STATUS_META = {
+  pending: { label: "Chờ duyệt", cls: "bg-amber-50 text-amber-600", Icon: Clock },
+  approved: { label: "Đã duyệt", cls: "bg-emerald-50 text-emerald-600", Icon: CheckCircle2 },
+  rejected: { label: "Từ chối", cls: "bg-rose-50 text-rose-600", Icon: XCircle },
+};
+
+function formatCoin(v) {
+  return new Intl.NumberFormat("vi-VN").format(Number(v || 0));
+}
 
 export default function MarketingWallet() {
   const navigate = useNavigate();
-  const { session } = useSession();
+
+  const [tab, setTab] = useState("overview"); // overview | withdraw
+  const [userId, setUserId] = useState(null);
   const [wallet, setWallet] = useState(null);
-  const [ledger, setLedger] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [withdrawModal, setWithdrawModal] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawMethod, setWithdrawMethod] = useState("bank");
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [method, setMethod] = useState("bank");
   const [accountInfo, setAccountInfo] = useState("");
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    fetchWalletData();
-  }, [session]);
+    loadAll();
+  }, []);
 
-  const fetchWalletData = async () => {
-    if (!session?.user?.id) return;
-    setIsLoading(true);
-    
-    const { data: walletData } = await supabase
-      .from("marketing_wallets")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .single();
-      
-    const { data: ledgerData } = await supabase
-      .from("marketing_ledger")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-      
-    setWallet(walletData);
-    setLedger(ledgerData ?? []);
-    setIsLoading(false);
+  const loadAll = async () => {
+    setLoading(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setUserId(user.id);
+
+      const [{ data: w }, { data: wd }] = await Promise.all([
+        supabase.from("marketing_wallets").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("marketing_withdrawals")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(30),
+      ]);
+
+      setWallet(
+        w || {
+          available_balance: 0,
+          pending_balance: 0,
+          locked_balance: 0,
+          total_earned: 0,
+          total_withdrawn: 0,
+        }
+      );
+      setWithdrawals(wd || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const numericAmount = Number(amount) || 0;
+  const estFee = Math.round(numericAmount * 0.05); // 5% — khớp với RPC request_marketing_withdrawal
+  const estNet = numericAmount - estFee;
 
   const handleWithdraw = async () => {
-    const amount = parseInt(withdrawAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert("Vui lòng nhập số tiền hợp lệ!");
-      return;
-    }
-    if (!accountInfo.trim()) {
-      alert("Vui lòng nhập thông tin tài khoản nhận tiền!");
-      return;
-    }
+    setError("");
+    setSuccess("");
 
-    setIsWithdrawing(true);
-    
-    // Gọi RPC để tạo yêu cầu rút tiền (Server mới quyết định)
-    const { error } = await supabase.rpc("request_marketing_withdrawal", {
-      p_amount: amount,
-      p_method: withdrawMethod,
-      p_account_info: accountInfo.trim()
-    });
+    if (!userId) return setError("Vui lòng đăng nhập.");
+    if (numericAmount <= 0) return setError("Nhập số coin muốn rút.");
+    if (numericAmount > (wallet?.available_balance || 0))
+      return setError("Số dư khả dụng không đủ.");
+    if (!accountInfo.trim()) return setError("Nhập thông tin tài khoản nhận tiền.");
 
-    setIsWithdrawing(false);
-    if (error) {
-      alert(error.message);
-      return;
+    setSubmitting(true);
+    try {
+      const { error: rpcErr } = await supabase.rpc("request_marketing_withdrawal", {
+        p_amount: numericAmount,
+        p_method: method,
+        p_account_info: accountInfo.trim(),
+      });
+
+      if (rpcErr) throw rpcErr;
+
+      setSuccess("Đã gửi yêu cầu rút, chờ admin duyệt nhé!");
+      setAmount("");
+      setAccountInfo("");
+      await loadAll();
+    } catch (e) {
+      setError(e?.message || "Không gửi được yêu cầu, thử lại sau.");
+    } finally {
+      setSubmitting(false);
     }
-
-    alert("Đã gửi yêu cầu rút tiền!");
-    setWithdrawAmount("");
-    setAccountInfo("");
-    setWithdrawModal(false);
-    fetchWalletData();
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white pb-24">
+        <TopHeader />
+        <div className="flex justify-center py-24">
+          <Loader2 size={20} className="animate-spin text-slate-300" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
-      <header className="sticky top-0 z-20 border-b border-slate-100 bg-white/90 px-4 py-4 backdrop-blur-md">
-        <h1 className="font-display text-xl font-bold text-slate-900">Ví Marketing</h1>
-      </header>
+    <div className="min-h-screen bg-white pb-24 text-slate-900">
+      <TopHeader />
 
-      <main className="mx-auto max-w-md px-4 py-5">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-sky-500" />
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center">
+          <ArrowLeft size={22} strokeWidth={2} />
+        </button>
+        <h1 className="text-[17px] font-bold">Ví Marketing</h1>
+      </div>
+
+      <div className="mx-auto max-w-2xl px-4 py-4">
+        {/* Balance card */}
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+              <Wallet size={18} />
+            </span>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Số dư khả dụng
+              </p>
+              <p className="text-xl font-black text-slate-900">
+                {formatCoin(wallet?.available_balance)}
+                <span className="ml-1 text-xs font-bold text-amber-600">Coin</span>
+              </p>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Số dư */}
-            <div className="rounded-3xl bg-gradient-to-br from-sky-400 to-blue-600 p-6 text-white shadow-lg shadow-blue-500/30">
-              <p className="text-sm text-white/80">Số dư khả dụng</p>
-              <div className="mt-2 flex items-center gap-2">
-                <Coins size={32} className="text-amber-300" />
-                <span className="font-display text-4xl font-bold">{wallet?.available_balance || 0}</span>
-                <span className="text-lg text-white/80">đ</span>
-              </div>
-              <div className="mt-4 flex items-center justify-between text-sm text-white/80">
-                <span>Đang khóa: {wallet?.locked_balance || 0}</span>
-                <span>Tổng kiếm: {wallet?.total_earned || 0}</span>
-              </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg bg-white p-2">
+              <p className="text-[10px] text-slate-400">Đang khóa</p>
+              <p className="text-[13px] font-bold">{formatCoin(wallet?.locked_balance)}</p>
+            </div>
+            <div className="rounded-lg bg-white p-2">
+              <p className="text-[10px] text-slate-400">Tổng kiếm</p>
+              <p className="text-[13px] font-bold">{formatCoin(wallet?.total_earned)}</p>
+            </div>
+            <div className="rounded-lg bg-white p-2">
+              <p className="text-[10px] text-slate-400">Đã rút</p>
+              <p className="text-[13px] font-bold">{formatCoin(wallet?.total_withdrawn)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="mt-4 flex gap-2">
+          {[
+            { key: "overview", label: "Tổng quan" },
+            { key: "withdraw", label: "Bank & Ví" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-1 rounded-lg border py-2.5 text-[13px] font-semibold transition ${
+                tab === t.key
+                  ? "border-slate-900 bg-slate-900 text-white"
+                  : "border-slate-200 text-slate-600"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "withdraw" && (
+          <div className="mt-4 rounded-xl border border-slate-200 p-4">
+            <label className="text-[14px] font-semibold text-slate-700">Phương thức</label>
+            <div className="mt-2 flex gap-2">
+              {METHODS.map((m) => (
+                <button
+                  key={m.value}
+                  onClick={() => setMethod(m.value)}
+                  className={`flex-1 rounded-lg border py-2.5 text-[13px] font-semibold transition ${
+                    method === m.value
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 text-slate-600"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
 
-            {/* Nút hành động */}
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button onClick={() => navigate("/marketing")} className="flex flex-col items-center gap-2 rounded-2xl bg-white p-5 shadow-sm">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-                  <TrendingUp size={18} />
-                </span>
-                <span className="text-sm font-semibold text-slate-700">Kiếm thêm</span>
-              </button>
-              <button onClick={() => setWithdrawModal(true)} className="flex flex-col items-center gap-2 rounded-2xl bg-white p-5 shadow-sm">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-500">
-                  <Wallet size={18} />
-                </span>
-                <span className="text-sm font-semibold text-slate-700">Rút tiền</span>
-              </button>
-            </div>
-
-            {/* Ledger */}
-            <div className="mt-6">
-              <h2 className="mb-3 text-lg font-bold text-slate-900">Lịch sử giao dịch</h2>
-              <div className="space-y-3">
-                {ledger.length === 0 ? (
-                  <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-                    <p className="text-sm text-slate-400">Chưa có giao dịch nào.</p>
-                  </div>
-                ) : ledger.map((entry) => (
-                  <div key={entry.id} className="rounded-2xl bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-slate-800">{entry.description}</p>
-                      <span className={`font-bold ${
-                        entry.net_amount > 0 ? "text-emerald-500" : "text-rose-500"
-                      }`}>
-                        {entry.net_amount > 0 ? "+" : ""}{entry.net_amount.toLocaleString()}đ
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between">
-                      <p className="text-xs text-slate-400">{entry.type}</p>
-                      <p className="text-xs text-slate-400">{new Date(entry.created_at).toLocaleString("vi-VN")}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </main>
-
-      {/* Modal rút tiền */}
-      {withdrawModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-slate-900">Rút tiền</h2>
-            <p className="mt-2 text-sm text-slate-500">Phí rút tiền là 5% (sẽ hiển thị khi xác nhận).</p>
-            
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="Số tiền (đ)"
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400"
-            />
-
-            <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Phương thức</p>
-              <div className="mt-2 flex gap-2">
-                <button onClick={() => setWithdrawMethod("bank")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${withdrawMethod === "bank" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Bank</button>
-                <button onClick={() => setWithdrawMethod("momo")} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${withdrawMethod === "momo" ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"}`}>Momo</button>
-              </div>
-            </div>
-
+            <label className="mt-4 block text-[14px] font-semibold text-slate-700">
+              Thông tin nhận tiền
+            </label>
             <input
               type="text"
               value={accountInfo}
               onChange={(e) => setAccountInfo(e.target.value)}
-              placeholder={withdrawMethod === "bank" ? "Số tài khoản ngân hàng" : "Số điện thoại Momo"}
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-blue-400"
+              placeholder={
+                method === "bank"
+                  ? "Ngân hàng - Số TK - Chủ TK"
+                  : "Số điện thoại ví + Tên chủ ví"
+              }
+              className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-[14px] outline-none focus:border-slate-900"
             />
 
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setWithdrawModal(false)} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">Hủy</button>
-              <button onClick={handleWithdraw} disabled={isWithdrawing} className="flex-1 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-50">
-                {isWithdrawing ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Gửi yêu cầu"}
-              </button>
-            </div>
+            <label className="mt-4 block text-[14px] font-semibold text-slate-700">
+              Số coin muốn rút
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
+              placeholder="Nhập số coin"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-[14px] font-semibold outline-none focus:border-slate-900"
+            />
+
+            {numericAmount > 0 && (
+              <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-[13px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Phí (5%)</span>
+                  <span className="font-semibold">-{formatCoin(estFee)} coin</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Thực nhận</span>
+                  <span className="text-[15px] font-bold text-sky-600">
+                    {formatCoin(estNet)} coin
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg bg-rose-50 p-2.5 text-[12px] text-rose-600">
+                <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 p-2.5 text-[12px] text-emerald-600">
+                <CheckCircle2 size={14} className="mt-0.5 shrink-0" />
+                {success}
+              </div>
+            )}
+
+            <button
+              onClick={handleWithdraw}
+              disabled={submitting || !numericAmount}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 py-3 text-[14px] font-bold text-white transition active:opacity-90 disabled:opacity-40"
+            >
+              {submitting && <Loader2 size={16} className="animate-spin" />}
+              Gửi yêu cầu rút
+            </button>
+          </div>
+        )}
+
+        {/* Lịch sử rút — hiện ở cả 2 tab, dưới cùng */}
+        <div className="mt-5">
+          <h3 className="text-[15px] font-bold">Lịch sử rút</h3>
+          <div className="mt-2 space-y-2.5">
+            {withdrawals.length === 0 ? (
+              <p className="py-8 text-center text-[13px] text-slate-400">
+                Chưa có yêu cầu rút nào.
+              </p>
+            ) : (
+              withdrawals.map((w) => {
+                const meta = WD_STATUS_META[w.status] || WD_STATUS_META.pending;
+                const Icon = meta.Icon;
+                return (
+                  <div key={w.id} className="rounded-xl border border-slate-200 p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-[13px] font-bold capitalize">{w.method}</p>
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          {new Date(w.created_at).toLocaleString("vi-VN")}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${meta.cls}`}
+                      >
+                        <Icon size={12} />
+                        {meta.label}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex justify-between border-t border-slate-100 pt-2 text-[13px]">
+                      <span className="text-slate-500">
+                        -{formatCoin(w.amount)} coin (phí {formatCoin(w.fee)})
+                      </span>
+                      <span className="font-bold text-sky-600">
+                        {formatCoin(w.net_amount)} coin
+                      </span>
+                    </div>
+                    {w.status === "rejected" && w.admin_note && (
+                      <p className="mt-2 rounded-lg bg-rose-50 p-2 text-[12px] text-rose-600">
+                        Admin: {w.admin_note}
+                      </p>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       <BottomNav />
     </div>
   );
-          }
+      }
