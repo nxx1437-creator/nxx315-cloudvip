@@ -7,14 +7,12 @@ import {
   Coins,
   ShieldCheck,
   Clock,
-  AlertTriangle,
   Sparkles,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
 const CANCEL_TIMEOUT_SECONDS = 30; // Hủy token sau 30s không xác nhận
-const MIN_TIME_AWAY_SECONDS = 30; // Phải ở lại tab ít nhất 30s
 const REDIRECT_DELAY_MS = 5000; // Chuyển hướng sau 5 giây
 
 export default function TaskCallback() {
@@ -25,7 +23,6 @@ export default function TaskCallback() {
     message: "",
     reward: 0,
   });
-  const [countdown, setCountdown] = useState(CANCEL_TIMEOUT_SECONDS);
   const [captchaReady, setCaptchaReady] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(5);
   const widgetIdRef = useRef(null);
@@ -37,21 +34,19 @@ export default function TaskCallback() {
   // Đo thời gian ở tab này
   const enteredAtRef = useRef(Date.now());
 
-  // ✅ Chỉ bắt đầu đếm ngược khi user bấm "Xác minh và thưởng"
+  // ✅ Chỉ bắt đầu đếm ngược ngầm khi user bấm "Xác minh và thưởng"
   const startCancelCountdown = () => {
     if (timerRef.current) return; // đã chạy rồi thì thôi
 
+    let remaining = CANCEL_TIMEOUT_SECONDS;
     timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(timerRef.current);
-          if (!cancelledRef.current) {
-            cancelToken("timeout");
-          }
-          return 0;
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(timerRef.current);
+        if (!cancelledRef.current) {
+          cancelToken("timeout");
         }
-        return c - 1;
-      });
+      }
     }, 1000);
   };
 
@@ -186,7 +181,7 @@ export default function TaskCallback() {
   // ✅ User bấm "Xác minh và thưởng"
   const handleStartVerify = () => {
     setState({ status: "captcha", message: "", reward: 0 });
-    startCancelCountdown();
+    startCancelCountdown(); // ✅ đếm ngầm, không hiện UI
   };
 
   // ✅ Xử lý khi user tick captcha
@@ -251,9 +246,7 @@ export default function TaskCallback() {
             <h1 className="mt-4 text-xl font-bold text-slate-900">
               Xác minh nhiệm vụ
             </h1>
-            <p className="mt-1.5 text-sm text-slate-500">
-              LINK4M
-            </p>
+            <p className="mt-1.5 text-sm text-slate-500">LINK4M</p>
 
             <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="flex items-center justify-center gap-2 text-lg font-bold text-amber-600">
@@ -274,7 +267,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ================= CAPTCHA ================= */}
+        {/* ================= CAPTCHA (không hiện đếm ngược) ================= */}
         {state.status === "captcha" && (
           <>
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
@@ -287,27 +280,7 @@ export default function TaskCallback() {
               Tick vào ô bên dưới để nhận thưởng nhé
             </p>
 
-            <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <Clock size={16} className="text-amber-600" />
-              <p className="text-sm font-semibold text-amber-700">
-                Còn <span className="text-lg font-bold">{countdown}s</span> để
-                xác nhận
-              </p>
-            </div>
-
-            <div id="recaptcha-box" className="mt-5 flex justify-center" />
-
-            {countdown <= 10 && (
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-left">
-                <AlertTriangle
-                  size={14}
-                  className="mt-0.5 shrink-0 text-rose-500"
-                />
-                <p className="text-xs font-semibold text-rose-700">
-                  Sắp hết thời gian! Xác nhận ngay để không bị hủy.
-                </p>
-              </div>
-            )}
+            <div id="recaptcha-box" className="mt-6 flex justify-center" />
           </>
         )}
 
@@ -394,4 +367,4 @@ export default function TaskCallback() {
       </div>
     </div>
   );
-  }
+        }
