@@ -49,6 +49,7 @@ import AdminChat from "./pages/AdminChat.jsx";
 import Withdraw from "./pages/Withdraw.jsx";
 import WithdrawHistory from "./pages/WithdrawHistory.jsx";
 import Videos from "./pages/Videos.jsx";
+import Leaderboard from "./pages/Leaderboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -121,6 +122,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Videos />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <Leaderboard />
               </ProtectedRoute>
             }
           />
@@ -357,4 +367,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-            }
+}
