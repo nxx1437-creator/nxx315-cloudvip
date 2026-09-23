@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Trophy, Crown, Medal, Coins, ChevronLeft } from "lucide-react";
+import { Crown, Medal, Coins, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabaseClient.js";
 
+const TABS = [
+  { key: "week", label: "Tuần này" },
+  { key: "month", label: "Tháng này" },
+];
+
 const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
 
+/* ---------- Avatar có fallback chữ cái ---------- */
 function Avatar({ src, name, size = "h-11 w-11", text = "text-sm" }) {
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
@@ -16,21 +22,30 @@ function Avatar({ src, name, size = "h-11 w-11", text = "text-sm" }) {
         src={src}
         alt={name}
         onError={() => setFailed(true)}
-        className={`${size} shrink-0 rounded-full border-2 border-white object-cover shadow-[0_2px_8px_rgba(56,120,190,0.15)]`}
+        className={`${size} shrink-0 rounded-full object-cover`}
       />
     );
   }
   return (
     <div
-      className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-black text-slate-500`}
+      className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500`}
     >
       {initial}
     </div>
   );
 }
 
+/* ---------- Icon cúp/huy chương cho podium ---------- */
+function TrophyIcon({ rank }) {
+  if (rank === 1) return <Crown className="text-amber-400" size={26} strokeWidth={2.4} />;
+  if (rank === 2) return <Medal className="text-slate-400" size={26} strokeWidth={2.2} />;
+  if (rank === 3) return <Medal className="text-orange-400" size={26} strokeWidth={2.2} />;
+  return null;
+}
+
+/* ---------- Icon huy chương cho list 4+ ---------- */
 function RankIcon({ rank }) {
-  if (rank === 1) return <Crown className="text-amber-400" size={22} strokeWidth={2.2} />;
+  if (rank === 1) return <Crown className="text-amber-400" size={22} strokeWidth={2.4} />;
   if (rank === 2) return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
   if (rank === 3) return <Medal className="text-orange-400" size={22} strokeWidth={2.2} />;
   return (
@@ -40,37 +55,58 @@ function RankIcon({ rank }) {
   );
 }
 
+/* ---------- Style cho podium từng hạng ---------- */
 const PODIUM_STYLES = {
-  1: { card: "bg-gradient-to-b from-amber-100 to-amber-50 border-amber-200" },
-  2: { card: "bg-gradient-to-b from-slate-100 to-slate-50 border-slate-200" },
-  3: { card: "bg-gradient-to-b from-orange-100 to-orange-50 border-orange-200" },
+  1: {
+    card: "bg-gradient-to-b from-amber-100 to-amber-50",
+    height: "py-5",
+    name: "text-slate-800",
+    coin: "text-amber-500",
+    coinIcon: "text-amber-400",
+  },
+  2: {
+    card: "bg-gradient-to-b from-slate-200 to-slate-100",
+    height: "py-4 mt-3",
+    name: "text-slate-700",
+    coin: "text-amber-500",
+    coinIcon: "text-amber-400",
+  },
+  3: {
+    card: "bg-gradient-to-b from-orange-100 to-orange-50",
+    height: "py-4 mt-3",
+    name: "text-slate-700",
+    coin: "text-amber-500",
+    coinIcon: "text-amber-400",
+  },
 };
 
 function PodiumCard({ user, rank }) {
-  if (!user) return <div className="flex-1" />;
-  const style = PODIUM_STYLES[rank];
+  if (!user) {
+    return <div className="flex-1" />;
+  }
+  const s = PODIUM_STYLES[rank];
   const isFirst = rank === 1;
 
   return (
     <div
-      className={`flex flex-1 flex-col items-center rounded-2xl border ${style.card} px-2 ${
-        isFirst ? "-mt-2 py-4" : "mt-2 py-3"
-      } transition`}
+      className={`flex flex-1 flex-col items-center rounded-2xl ${s.card} ${s.height} px-2 transition`}
     >
-      <div className="mb-1.5">
-        <RankIcon rank={rank} />
+      {/* Icon cúp */}
+      <div className="mb-3">
+        <TrophyIcon rank={rank} />
       </div>
-      <Avatar
-        src={user.avatar_url}
-        name={user.display_name || user.username}
-        size={isFirst ? "h-14 w-14" : "h-12 w-12"}
-      />
-      <p className="mt-2 w-full truncate text-center text-[12px] font-bold text-slate-800">
+
+      {/* Tên user — không có avatar */}
+      <p className={`w-full truncate text-center text-[13px] font-bold ${s.name}`}>
         {user.display_name || user.username}
       </p>
-      <div className="mt-0.5 flex items-center gap-1 text-amber-500">
-        <Coins size={12} strokeWidth={2.4} />
-        <span className="text-[12px] font-black">{formatCoins(user.coins)}</span>
+
+      {/* Coin */}
+      <div className={`mt-1 flex items-center gap-1 ${s.coin}`}>
+        <Coins size={isFirst ? 15 : 14} strokeWidth={2.6} />
+        <span className={`${isFirst ? "text-[14px]" : "text-[13px]"} font-black`}>
+          {formatCoins(user.coins)}
+        </span>
       </div>
     </div>
   );
@@ -78,6 +114,7 @@ function PodiumCard({ user, rank }) {
 
 export default function Leaderboard() {
   const navigate = useNavigate();
+  const [tab, setTab] = useState("week");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
 
@@ -88,7 +125,7 @@ export default function Leaderboard() {
       setLoading(true);
       try {
         const { data, error } = await supabase.rpc("get_leaderboard", {
-          period: "all",
+          period: tab,
           limit_count: 50,
         });
 
@@ -106,7 +143,7 @@ export default function Leaderboard() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [tab]);
 
   const top1 = users[0];
   const top2 = users[1];
@@ -114,36 +151,85 @@ export default function Leaderboard() {
   const rest = users.slice(3);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50/70 via-white to-sky-50/40 pb-24">
-      <div className="flex items-center gap-3 px-4 pt-5">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50/60 via-white to-white pb-24">
+      {/* ===== Header quay lại ===== */}
+      <div className="flex items-center gap-3 px-4 pt-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-500 shadow-[0_2px_8px_rgba(56,120,190,0.12)]"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-600 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
         >
           <ChevronLeft size={18} />
         </button>
-        <h1 className="text-lg font-black text-slate-900">Bảng Xếp Hạng</h1>
       </div>
 
-      <div className="mt-4 flex items-center gap-3 px-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_18px_rgba(56,130,246,0.35)]">
-          <Trophy size={24} strokeWidth={2.2} />
+      {/* ===== Title block: icon cúp + tiêu đề 2 dòng ===== */}
+      <div className="mt-3 flex items-center gap-3 px-4">
+        <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_16px_rgba(56,130,246,0.35)]">
+          {/* Icon cúp SVG đơn giản — thay cho lucide Trophy cho giống ảnh mẫu */}
+          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
+            <path
+              d="M6 4h12v3a6 6 0 0 1-12 0V4Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M6 6H4a2 2 0 0 0 0 4h2M18 6h2a2 2 0 0 1 0 4h-2"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M9 14h6M12 14v4M9 20h6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
-        <div>
-          <h2 className="text-xl font-black text-slate-900">Bảng Xếp Hạng</h2>
-          <p className="text-xs text-slate-500">Top user sở hữu Coin nhiều nhất</p>
+        <div className="min-w-0">
+          <h1 className="text-[22px] font-black leading-tight text-slate-900">
+            Bảng Xếp Hạng
+          </h1>
+          <p className="text-[13px] text-slate-500">
+            Top user kiếm Coin nhiều nhất
+          </p>
         </div>
       </div>
 
-      <div className="mt-5 px-4">
+      {/* ===== Tabs Tuần / Tháng ===== */}
+      <div className="mt-4 flex gap-3 px-4">
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`rounded-full px-5 py-2.5 text-sm font-bold transition ${
+                active
+                  ? "bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-[0_4px_14px_rgba(56,130,246,0.35)]"
+                  : "bg-white text-slate-500 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ===== Podium Top 3 ===== */}
+      <div className="mt-4 px-4">
         {loading ? (
           <div className="flex gap-3">
             {[2, 1, 3].map((r) => (
-              <div key={r} className="h-36 flex-1 animate-pulse rounded-2xl bg-slate-100" />
+              <div
+                key={r}
+                className="h-[130px] flex-1 animate-pulse rounded-2xl bg-slate-100"
+              />
             ))}
           </div>
         ) : users.length === 0 ? (
-          <div className="rounded-2xl bg-white p-6 text-center text-sm text-slate-400 shadow-[0_4px_16px_rgba(56,120,190,0.08)]">
+          <div className="rounded-2xl bg-white p-6 text-center text-sm text-slate-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
             Chưa có dữ liệu xếp hạng
           </div>
         ) : (
@@ -155,12 +241,13 @@ export default function Leaderboard() {
         )}
       </div>
 
-      <div className="mt-5 space-y-2.5 px-4">
+      {/* ===== List từ hạng 4+ ===== */}
+      <div className="mt-4 space-y-3 px-4">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="h-[68px] animate-pulse rounded-2xl bg-white shadow-[0_2px_8px_rgba(56,120,190,0.06)]"
+                className="h-[76px] animate-pulse rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
               />
             ))
           : rest.map((u, idx) => {
@@ -168,30 +255,40 @@ export default function Leaderboard() {
               return (
                 <div
                   key={u.id}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-3 py-3 shadow-[0_2px_10px_rgba(56,120,190,0.08)]"
+                  className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
                 >
-                  <div className="flex w-6 shrink-0 justify-center">
+                  {/* Icon hạng (cúp/huy chương/số) */}
+                  <div className="flex w-7 shrink-0 justify-center">
                     <RankIcon rank={rank} />
                   </div>
+
+                  {/* Avatar */}
                   <Avatar
                     src={u.avatar_url}
                     name={u.display_name || u.username}
-                    size="h-11 w-11"
+                    size="h-12 w-12"
+                    text="text-base"
                   />
+
+                  {/* Tên + Level */}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[15px] font-bold text-slate-800">
                       {u.display_name || u.username}
                     </p>
-                    <p className="text-xs text-slate-400">Lv.{u.level || 1}</p>
+                    <p className="text-[13px] text-slate-400">Lv.{u.level || 1}</p>
                   </div>
+
+                  {/* Coin */}
                   <div className="shrink-0 text-right">
                     <div className="flex items-center justify-end gap-1 text-amber-500">
-                      <Coins size={14} strokeWidth={2.4} />
-                      <span className="text-[15px] font-black">
+                      <Coins size={15} strokeWidth={2.6} />
+                      <span className="text-[16px] font-black">
                         {formatCoins(u.coins)}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400">Coin</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400">
+                      Coin kiếm được
+                    </p>
                   </div>
                 </div>
               );
@@ -199,4 +296,4 @@ export default function Leaderboard() {
       </div>
     </div>
   );
-}
+      }
