@@ -11,7 +11,6 @@ import {
   Wallet,
   User,
   ShieldCheck,
-  Check,
 } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
@@ -123,12 +122,10 @@ export default function TopHeader() {
     navigate(path);
   };
 
-  // Mở/đóng dropdown
   const handleOpenNotif = () => {
     setNotifOpen((prev) => !prev);
   };
 
-  // Đọc hết
   const handleMarkAllAsRead = async () => {
     if (!session?.user?.id) return;
     await supabase
@@ -141,7 +138,6 @@ export default function TopHeader() {
     setUnreadCount(0);
   };
 
-  // Click thông báo
   const handleClickNotif = async (notif) => {
     if (!notif.is_read) {
       await supabase
@@ -157,7 +153,6 @@ export default function TopHeader() {
     setNotifOpen(false);
   };
 
-  // Format thời gian ngắn gọn (giống ảnh)
   const formatTime = (dateStr) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
     if (diff < 60) return "vừa xong";
@@ -224,7 +219,6 @@ export default function TopHeader() {
             )}
           </div>
 
-          {/* ✅ Nút chuông */}
           <div ref={notifRef} className="relative shrink-0">
             <button
               onClick={handleOpenNotif}
@@ -239,7 +233,7 @@ export default function TopHeader() {
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-32px)] max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
+              <div className="fixed left-3 right-3 top-[68px] z-50 mx-auto max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
                 {/* Header xanh nhạt */}
                 <div className="flex items-center justify-between bg-sky-50/80 px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -258,7 +252,7 @@ export default function TopHeader() {
                   )}
                 </div>
 
-                {/* List thông báo */}
+                {/* List */}
                 <div className="max-h-[400px] overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="p-8 text-center">
@@ -302,7 +296,6 @@ export default function TopHeader() {
                   )}
                 </div>
 
-                {/* Nút Xem tất cả */}
                 <button
                   onClick={() => {
                     setNotifOpen(false);
@@ -335,4 +328,4 @@ export default function TopHeader() {
       />
     </>
   );
-      }
+                       }
