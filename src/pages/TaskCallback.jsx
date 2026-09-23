@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Clock,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
@@ -31,6 +32,8 @@ export default function TaskCallback() {
   });
   const [captchaReady, setCaptchaReady] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(5);
+  const [userRank, setUserRank] = useState(null);
+
   const widgetIdRef = useRef(null);
   const timerRef = useRef(null);
   const redirectTimerRef = useRef(null);
@@ -144,7 +147,35 @@ export default function TaskCallback() {
     });
   }, [state.status, captchaReady]);
 
-  // Auto redirect 5s
+  // ✅ Load rank khi success
+  useEffect(() => {
+    if (state.status !== "success") return;
+
+    const loadRank = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data } = await supabase.rpc("get_leaderboard", {
+          period: "week",
+          limit_count: 100,
+        });
+
+        if (data) {
+          const idx = data.findIndex((u) => u.id === user.id);
+          setUserRank(idx >= 0 ? idx + 1 : null);
+        }
+      } catch (err) {
+        console.error("Load rank error:", err);
+      }
+    };
+
+    loadRank();
+  }, [state.status]);
+
+  // ✅ Auto redirect 5s
   useEffect(() => {
     if (state.status !== "success") return;
     setRedirectCountdown(5);
@@ -161,6 +192,7 @@ export default function TaskCallback() {
     return () => clearInterval(redirectTimerRef.current);
   }, [state.status, navigate]);
 
+  // Cleanup
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current);
@@ -221,9 +253,9 @@ export default function TaskCallback() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 text-center font-[Be_Vietnam_Pro]">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
-        {/* IDLE */}
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 py-6 text-center font-[Be_Vietnam_Pro]">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+        {/* ================= IDLE ================= */}
         {state.status === "idle" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-50">
@@ -255,7 +287,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* CAPTCHA */}
+        {/* ================= CAPTCHA ================= */}
         {state.status === "captcha" && (
           <>
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
@@ -271,7 +303,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* VERIFYING */}
+        {/* ================= VERIFYING ================= */}
         {state.status === "verifying" && (
           <>
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
@@ -286,7 +318,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* SUCCESS */}
+        {/* ================= SUCCESS ================= */}
         {state.status === "success" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
@@ -301,7 +333,35 @@ export default function TaskCallback() {
             <p className="mt-3 text-xs text-slate-400">
               Coin đã được cộng vào ví của bạn
             </p>
-            <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+
+            {/* ✅ Nhắc nhở leo top */}
+            {userRank && (
+              <button
+                onClick={() => navigate("/leaderboard")}
+                className="mt-4 flex w-full items-center gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 text-left transition hover:brightness-105"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                  <Trophy size={17} className="text-amber-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12.5px] font-bold text-amber-800">
+                    {userRank <= 3
+                      ? `🏆 Bạn đang ở top ${userRank}! Giữ vững phong độ nhé!`
+                      : userRank <= 10
+                      ? `🏆 Bạn đang ở top ${userRank}! Cố lên top 3 nào!`
+                      : userRank <= 20
+                      ? `🏆 Bạn đang ở top ${userRank}! Sắp lọt top 10 rồi!`
+                      : `🏆 Bạn đang ở top ${userRank}. Làm thêm để leo top nhé!`}
+                  </p>
+                  <p className="mt-0.5 text-[10.5px] font-semibold text-amber-600">
+                    Xem bảng xếp hạng →
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* ✅ Auto redirect countdown */}
+            <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
               <Sparkles size={16} className="text-sky-600" />
               <p className="text-sm font-semibold text-sky-700">
                 Tự động quay lại sau{" "}
@@ -311,7 +371,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ERROR */}
+        {/* ================= ERROR ================= */}
         {state.status === "error" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50">
@@ -324,7 +384,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* CANCELLED */}
+        {/* ================= CANCELLED ================= */}
         {state.status === "cancelled" && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
@@ -337,7 +397,7 @@ export default function TaskCallback() {
           </>
         )}
 
-        {/* ✅ Nút quay lại CHỈ hiện khi state KHÔNG PHẢI idle và success */}
+        {/* ✅ Nút quay lại CHỈ hiện khi không phải idle và success */}
         {state.status !== "idle" && state.status !== "success" && (
           <button
             onClick={() => navigate("/tasks")}
@@ -349,4 +409,4 @@ export default function TaskCallback() {
       </div>
     </div>
   );
-          }
+                                  }
