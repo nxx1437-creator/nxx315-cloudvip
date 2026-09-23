@@ -18,6 +18,7 @@ import {
   Send,
   Headphones,
   Loader2,
+  TrendingUp,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -195,7 +196,7 @@ function HistorySkeleton() {
       </div>
     </div>
   );
-}
+        }
 export default function Tasks() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -210,74 +211,93 @@ export default function Tasks() {
   const [ipBlocked, setIpBlocked] = useState(null); // { reason, can_appeal }
   const [checkingIp, setCheckingIp] = useState(true);
 
+  // ✅ MỚI: State lưu level và ưu đãi
+  const [userLevel, setUserLevel] = useState(null);
+
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
   // ✅ Check IP lần đầu vào trang
-useEffect(() => {
-  if (!user?.id) return;
+  useEffect(() => {
+    if (!user?.id) return;
 
-  const checkIp = async () => {
-    setCheckingIp(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        setCheckingIp(false);
-        return;
-      }
+    const checkIp = async () => {
+      setCheckingIp(true);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          setCheckingIp(false);
+          return;
+        }
 
-      const res = await fetch(
-        `${SUPABASE_URL}/functions/v1/log-ip`,
-        {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/log-ip`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${session.access_token}`,
             apikey: SUPABASE_ANON_KEY,
             "Content-Type": "application/json",
           },
-        }
-      );
-
-      const data = await res.json();
-
-      if (data.allowed === false) {
-        setIpBlocked({
-          reason: data.reason,
-          can_appeal: data.can_appeal,
         });
-      } else {
-        setIpBlocked(null);
+
+        const data = await res.json();
+
+        if (data.allowed === false) {
+          setIpBlocked({
+            reason: data.reason,
+            can_appeal: data.can_appeal,
+          });
+        } else {
+          setIpBlocked(null);
+        }
+      } catch (err) {
+        console.error("Check IP error:", err);
+      } finally {
+        setCheckingIp(false);
       }
-    } catch (err) {
-      console.error("Check IP error:", err);
-    } finally {
-      setCheckingIp(false);
-    }
-  };
+    };
 
-  checkIp();
-}, [user?.id]);
+    checkIp();
+  }, [user?.id]);
 
-// Reload khi quay lại tab
-useEffect(() => {
-  const handleVisibility = () => {
-    if (document.visibilityState === "visible") {
-      reload();
-      setHistoryLoaded(false);
-    }
-  };
+  // ✅ MỚI: Load level của user để lấy task_bonus
+  useEffect(() => {
+    if (!user?.id) return;
 
-  document.addEventListener("visibilitychange", handleVisibility);
-  window.addEventListener("focus", handleVisibility);
+    const loadLevel = async () => {
+      try {
+        const { data, error } = await supabase.rpc("get_user_level", {
+          p_user_id: user.id,
+        });
+        if (error) throw error;
+        if (data) setUserLevel(data);
+      } catch (err) {
+        console.error("Load level error:", err);
+      }
+    };
 
-  return () => {
-    document.removeEventListener("visibilitychange", handleVisibility);
-    window.removeEventListener("focus", handleVisibility);
-  };
-}, [navigate, reload]);
+    loadLevel();
+  }, [user?.id]);
+
+  // Reload khi quay lại tab
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        reload();
+        setHistoryLoaded(false);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
+  }, [navigate, reload]);
 
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
@@ -300,6 +320,14 @@ useEffect(() => {
   const totalRemaining = tasks.reduce((sum, t) => sum + t.remainingToday, 0);
   const availableCount = tasks.filter((t) => t.remainingToday > 0).length;
   const hotCount = tasks.filter((t) => t.is_hot).length;
+
+  // ✅ MỚI: Hàm tính reward sau khi cộng bonus theo level
+  const getBoostedReward = (baseReward) => {
+    const bonusPct = userLevel?.task_bonus || 0;
+    const finalReward = Math.floor(baseReward * (1 + bonusPct / 100));
+    const bonusAmount = finalReward - baseReward;
+    return { finalReward, bonusAmount, bonusPct };
+  };
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -375,7 +403,6 @@ useEffect(() => {
       return;
     }
 
-    // Gọi API trực tiếp, không qua modal
     await startTaskApi(task);
   };
 
@@ -417,8 +444,12 @@ useEffect(() => {
 
         window.open(data.shortUrl, "_blank");
 
+        // ✅ Hiển thị reward đã cộng bonus trong toast
+        const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
         showToast(
-          `Đã mở link ${task.provider}! Làm xong quay lại để nhận thưởng.`
+          `Đã mở link ${task.provider}! Nhận ${finalReward} coin${
+            bonusPct > 0 ? ` (+${bonusPct}% bonus)` : ""
+          } khi hoàn thành.`
         );
 
         setTimeout(() => {
@@ -435,14 +466,13 @@ useEffect(() => {
       setIsLoading(false);
     }
   };
-    // ✅ Nếu đang check IP — hiện loading có BottomNav
+     // ✅ Nếu đang check IP — hiện loading có BottomNav
 if (checkingIp) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
       <TopHeader />
 
       <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
-        {/* Hero skeleton */}
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-200 via-sky-50 to-white p-5">
           <div className="h-6 w-40 animate-pulse rounded-full bg-white/70" />
           <div className="mt-3 flex items-start gap-3">
@@ -462,7 +492,6 @@ if (checkingIp) {
           </div>
         </div>
 
-        {/* Task skeleton */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
@@ -485,13 +514,12 @@ if (checkingIp) {
           ))}
         </div>
 
-        {/* Text */}
         <div className="text-center text-[12px] text-slate-400">
           Đang kiểm tra thiết bị...
         </div>
       </main>
 
-            <BottomNav />
+      <BottomNav />
     </div>
   );
 }
@@ -500,9 +528,9 @@ if (checkingIp) {
 if (ipBlocked) {
   return <IpBlockedScreen reason={ipBlocked.reason} />;
 }
-  
+
 return (
-<div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
+  <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
     {toast && (
       <div
         className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl ${
@@ -519,23 +547,23 @@ return (
         <p className="text-sm font-semibold">{toast.message}</p>
       </div>
     )}
-  {isLoading && (
-  <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/20 px-6 backdrop-blur-sm">
-    <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
-        <Loader2 size={26} className="animate-spin text-sky-500" />
-      </div>
-      <h3 className="mt-4 text-base font-bold text-slate-900">
-        Đang tạo link nhiệm vụ...
-      </h3>
-      <p className="mt-2 text-sm text-slate-500">
-        Vui lòng chờ trong giây lát, hệ thống sẽ tự mở tab mới khi sẵn sàng.
-      </p>
-    </div>
-  </div>
-)}
 
-  
+    {isLoading && (
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/20 px-6 backdrop-blur-sm">
+        <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
+            <Loader2 size={26} className="animate-spin text-sky-500" />
+          </div>
+          <h3 className="mt-4 text-base font-bold text-slate-900">
+            Đang tạo link nhiệm vụ...
+          </h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Vui lòng chờ trong giây lát, hệ thống sẽ tự mở tab mới khi sẵn sàng.
+          </p>
+        </div>
+      </div>
+    )}
+
     <TopHeader />
 
     <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
@@ -591,10 +619,22 @@ return (
             }`}
           >
             {isAdmin
-              ? " Admin — Miễn kiểm tra"
+              ? "Admin — Miễn kiểm tra"
               : isBlocked
               ? `Rủi ro: ${profile.risk_score}/100 — Tài khoản bị hạn chế`
               : `Rủi ro: ${profile.risk_score}/100`}
+          </div>
+        )}
+
+        {/* ✅ MỚI: Badge hiển thị ưu đãi cấp độ */}
+        {userLevel && userLevel.task_bonus > 0 && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2">
+            <TrendingUp size={14} className="shrink-0 text-amber-600" />
+            <p className="text-xs font-semibold text-amber-700">
+              Cấp {userLevel.level} — Thưởng thêm{" "}
+              <span className="font-bold">+{userLevel.task_bonus}%</span> coin
+              mỗi nhiệm vụ
+            </p>
           </div>
         )}
 
@@ -742,6 +782,10 @@ return (
                   const isDone = task.remainingToday <= 0;
                   const isThisStarting = startingTaskId === task.id;
 
+                  // ✅ MỚI: Tính reward đã cộng bonus
+                  const { finalReward, bonusAmount, bonusPct } =
+                    getBoostedReward(task.reward_coins);
+
                   return (
                     <div
                       key={task.id}
@@ -763,17 +807,25 @@ return (
                           )}
                         </div>
 
+                        {/* ✅ Reward đã cộng bonus */}
                         <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5">
                           <div>
                             <p className="text-[11px] uppercase tracking-wide text-slate-400">
                               Phần thưởng
                             </p>
-                            <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
-                              <Coins size={15} /> {task.reward_coins}{" "}
-                              <span className="text-xs font-normal text-slate-400">
-                                /lượt
-                              </span>
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="flex items-center gap-1 text-lg font-bold text-amber-500">
+                                <Coins size={15} /> {finalReward}
+                                <span className="text-xs font-normal text-slate-400">
+                                  /lượt
+                                </span>
+                              </p>
+                              {bonusAmount > 0 && (
+                                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600">
+                                  +{bonusPct}%
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
                             {task.remainingToday} còn
@@ -931,8 +983,9 @@ return (
       <BottomNav />
     </div>
   );
-                        }
-            // =====================================================
+}
+
+// =====================================================
 // COMPONENT: MÀN HÌNH CHẶN IP
 // =====================================================
 function IpBlockedScreen({ reason }) {
@@ -941,14 +994,13 @@ function IpBlockedScreen({ reason }) {
       <TopHeader />
 
       <div className="mx-auto max-w-lg px-4 py-8">
-        {/* Warning card */}
         <div className="rounded-2xl border-2 border-rose-300 bg-gradient-to-br from-rose-50 to-white p-6 text-center shadow-lg">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100">
             <ShieldAlert size={32} className="text-rose-600" strokeWidth={2.2} />
           </div>
 
           <h2 className="mt-4 text-[20px] font-black text-rose-800">
-             Không thể làm nhiệm vụ
+            Không thể làm nhiệm vụ
           </h2>
 
           <p className="mt-3 text-[13.5px] leading-6 text-rose-700">
@@ -956,7 +1008,6 @@ function IpBlockedScreen({ reason }) {
           </p>
         </div>
 
-        {/* Liên hệ Zalo để được gỡ */}
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <Headphones size={16} className="text-sky-600" strokeWidth={2.4} />
@@ -966,7 +1017,8 @@ function IpBlockedScreen({ reason }) {
           </div>
 
           <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
-            Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ Zalo để được admin xem xét và gỡ trong 24h.
+            Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ Zalo để được admin xem
+            xét và gỡ trong 24h.
           </p>
 
           <a
@@ -991,10 +1043,10 @@ function IpBlockedScreen({ reason }) {
           </div>
         </div>
 
-        {/* Hint */}
         <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3.5">
           <p className="text-[12px] leading-5 text-sky-700">
-            💡 <b>Gợi ý:</b> Nếu bạn dùng chung WiFi với người khác, hãy tắt WiFi và dùng <b>4G</b> để làm nhiệm vụ.
+            💡 <b>Gợi ý:</b> Nếu bạn dùng chung WiFi với người khác, hãy tắt WiFi
+            và dùng <b>4G</b> để làm nhiệm vụ.
           </p>
         </div>
       </div>
@@ -1002,4 +1054,4 @@ function IpBlockedScreen({ reason }) {
       <BottomNav />
     </div>
   );
-}
+              }
