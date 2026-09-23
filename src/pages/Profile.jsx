@@ -16,6 +16,7 @@ import TopHeader from "../components/TopHeader.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import AvatarUploader from "../components/AvatarUploader.jsx";
 import ProfileSkeleton from "../components/ProfileSkeleton.jsx";
+import { LevelBadge, LevelProgress } from "../components/LevelBadge.jsx";
 import { isPushSupported, getPushPermissionState, subscribeToPush, unsubscribeFromPush } from "../lib/pushNotifications.js";
 import { checkUsernameChangeAllowed } from "../lib/usernameUtils.js";
 
@@ -57,6 +58,7 @@ export default function ProfilePage() {
   const [pushLoading, setPushLoading] = useState(false);
   const [pushError, setPushError] = useState("");
   const [usernameCooldown, setUsernameCooldown] = useState({ canChange: true, remainingText: "" });
+  const [userLevel, setUserLevel] = useState(null);
 
   const displayName = profile.username || "Thành viên";
   const initial = displayName.charAt(0).toUpperCase();
@@ -82,29 +84,46 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!session?.user?.id) return;
+  const loadProfile = async () => {
+    if (!session?.user?.id) return;
 
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*, last_username_change")
-          .eq("id", session.user.id)
-          .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*, last_username_change")
+        .eq("id", session.user.id)
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data) {
-          setProfile(data);
-          setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
-        }
-      } catch (err) {
-        console.error("Load profile error:", err);
+      if (data) {
+        setProfile(data);
+        setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
       }
-    };
+    } catch (err) {
+      console.error("Load profile error:", err);
+    }
+  };
 
-    loadProfile();
-  }, [session?.user?.id]);
+  loadProfile();
+}, [session?.user?.id]);
+
+// ✅ Load level khi user login
+useEffect(() => {
+  const loadLevel = async () => {
+    if (!session?.user?.id) return;
+    try {
+      const { data, error } = await supabase.rpc("get_user_level", {
+        p_user_id: session.user.id,
+      });
+      if (error) throw error;
+      if (data) setUserLevel(data);
+    } catch (err) {
+      console.error("Load level error:", err);
+    }
+  };
+  loadLevel();
+}, [session?.user?.id]);
 
   const handleTogglePush = async () => {
     setPushError("");
@@ -314,15 +333,92 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setShowEditProfile(true)}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                >
-                  <Pencil size={12} />
-                  Chỉnh sửa hồ sơ
-                </button>
-              </div>
-            </div>
+                    <button
+      onClick={() => setShowEditProfile(true)}
+      className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+    >
+      <Pencil size={12} />
+      Chỉnh sửa hồ sơ
+    </button>
+  </div>
+</div>
+
+{/* ✅ MỚI: Cấp độ & Ưu đãi */}
+{userLevel && (
+  <div className="space-y-3">
+    <div className="flex items-center justify-between px-1">
+      <h2 className="text-[13px] font-black uppercase tracking-wider text-slate-500">
+        Cấp độ & Ưu đãi
+      </h2>
+      <button
+        onClick={() => navigate("/level")}
+        className="flex items-center gap-1 text-[12px] font-bold text-sky-600 transition hover:text-sky-700"
+      >
+        Xem tất cả
+        <ChevronRight size={14} />
+      </button>
+    </div>
+
+    {/* Card Level hiện tại */}
+    <div
+      className="relative overflow-hidden rounded-xl p-4 text-white shadow-md"
+      style={{
+        background: `linear-gradient(135deg, ${userLevel.color}, ${userLevel.color}CC)`,
+      }}
+    >
+      <div className="pointer-events-none absolute -right-4 -top-4 text-6xl opacity-20">
+        {userLevel.level >= 10 ? "👑" : userLevel.level >= 5 ? "⭐" : "✨"}
+      </div>
+
+      <div className="relative flex items-center gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
+          <span className="text-[16px] font-black">
+            {userLevel.level}
+          </span>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[10.5px] font-bold uppercase tracking-wider text-white/80">
+            Level {userLevel.level}
+          </p>
+          <p className="text-[15px] font-black leading-tight">
+            {userLevel.label}
+          </p>
+          <p className="mt-0.5 text-[11px] font-medium text-white/80">
+            {Number(userLevel.lifetime_coins || 0).toLocaleString("vi-VN")} coin
+          </p>
+        </div>
+
+        <div className="shrink-0 space-y-1 text-right">
+          <div className="rounded-lg bg-white/15 px-2.5 py-1 backdrop-blur-sm">
+            <p className="text-[9px] font-bold uppercase text-white/80">
+              Shop
+            </p>
+            <p className="text-[13px] font-black">
+              -{userLevel.shop_discount}%
+            </p>
+          </div>
+          <div className="rounded-lg bg-white/15 px-2.5 py-1 backdrop-blur-sm">
+            <p className="text-[9px] font-bold uppercase text-white/80">
+              Task
+            </p>
+            <p className="text-[13px] font-black">
+              +{userLevel.task_bonus}%
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Progress đến level tiếp */}
+    <LevelProgress
+      level={userLevel.level}
+      lifetimeCoins={userLevel.lifetime_coins}
+      nextLevel={userLevel.next_level}
+      color={userLevel.color}
+    />
+  </div>
+)}
 
             {profile?.multi_account_flag && !profile?.is_banned && (
               <button
