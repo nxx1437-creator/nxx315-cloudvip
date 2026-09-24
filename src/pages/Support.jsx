@@ -14,7 +14,7 @@ import EmojiPicker from "emoji-picker-react";
 import TopHeader from "../components/TopHeader.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
-// 👇 Avatar Bot cố định (admin set, user không đổi được)
+// Avatar Bot cố định (admin set, user không đổi được)
 const BOT_AVATAR_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png";
 
@@ -313,33 +313,33 @@ export default function Support() {
   };
 
   return (
-  <div className="min-h-screen bg-white pb-24 text-slate-900">
-    <TopHeader />
-    <main className="mx-auto w-full max-w-2xl">
-      {view === "home" && <HomeView onOpenHelp={openHelp} />}
-      {view === "help" && (
-        <HelpView
-          category={selectedCategory}
-          onBack={() => setView("home")}
-          onStartChat={() => startAIChat(selectedCategory)}
-          onStartChatWith={(subCardTitle) =>
-            startAIChat(selectedCategory, subCardTitle)
-          }
-        />
-      )}
-      {view === "chat" && conversation && (
-        <ChatView
-          conversation={conversation}
-          user={user}
-          category={selectedCategory}
-          onBack={() => setView("help")}
-          onNewChat={() => startAIChat(selectedCategory)}
-          onOpenConversation={openConversation}
-        />
-      )}
-    </main>
-  </div>
- );
+    <div className="min-h-screen bg-white pb-24 text-slate-900">
+      <TopHeader />
+      <main className="mx-auto w-full max-w-2xl">
+        {view === "home" && <HomeView onOpenHelp={openHelp} />}
+        {view === "help" && (
+          <HelpView
+            category={selectedCategory}
+            onBack={() => setView("home")}
+            onStartChat={() => startAIChat(selectedCategory)}
+            onStartChatWith={(subCardTitle) =>
+              startAIChat(selectedCategory, subCardTitle)
+            }
+          />
+        )}
+        {view === "chat" && conversation && (
+          <ChatView
+            conversation={conversation}
+            user={user}
+            category={selectedCategory}
+            onBack={() => setView("help")}
+            onNewChat={() => startAIChat(selectedCategory)}
+            onOpenConversation={openConversation}
+          />
+        )}
+      </main>
+    </div>
+  );
 }
 
 function HomeView({ onOpenHelp }) {
@@ -552,8 +552,8 @@ function StatusBubble({ message }) {
       )}
     </div>
   );
-}
-function WelcomeScreen({ onCardClick }) {
+          }
+     function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
     {
       id: 1,
@@ -605,7 +605,6 @@ function WelcomeScreen({ onCardClick }) {
                 alt={card.title}
                 className="h-full w-full object-cover"
                 onError={(e) => {
-                  // Nếu ảnh lỗi, hiện emoji thay thế
                   e.target.style.display = "none";
                   e.target.parentElement.innerHTML = card.id === 1 ? "📦" : card.id === 2 ? "💳" : "🛠️";
                   e.target.parentElement.style.fontSize = "28px";
@@ -631,7 +630,6 @@ function WelcomeScreen({ onCardClick }) {
   );
 }
 
-      
 function HistoryDrawer({ open, onClose, userId, currentConvId, onOpenConversation, onNewChat }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -702,8 +700,8 @@ function HistoryDrawer({ open, onClose, userId, currentConvId, onOpenConversatio
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed left-0 top-0 z-50 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl">
+      <div className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed left-0 top-0 z-[101] flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
           <h2 className="text-[17px] font-bold text-slate-800">Lịch sử trò chuyện</h2>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100">
@@ -741,7 +739,7 @@ function HistoryDrawer({ open, onClose, userId, currentConvId, onOpenConversatio
       </div>
     </>
   );
-}
+              }
 function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConversation }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -803,28 +801,26 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
   };
 
   const loadMessages = async () => {
-  setLoading(true);
-  try {
-    const { data, error } = await supabase
-      .from("support_messages")
-      .select("*")
-      .eq("conversation_id", conversation.id)
-      .order("created_at", { ascending: true });
-    if (error) throw error;
-    setMessages(data || []);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("support_messages")
+        .select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setMessages(data || []);
 
-    // 👇 Chỉ ẩn WelcomeScreen nếu có message từ user
-    const hasUserMessage = data?.some((m) => m.sender_type === "user");
-    if (hasUserMessage) {
-      setShowWelcome(false);
+      const hasUserMessage = data?.some((m) => m.sender_type === "user");
+      if (hasUserMessage) setShowWelcome(false);
+    } catch (error) {
+      console.error("Load error:", error);
+    } finally {
+      setLoading(false);
+      setTimeout(() => scrollToBottom(), 100);
     }
-  } catch (error) {
-    console.error("Load error:", error);
-  } finally {
-    setLoading(false);
-    setTimeout(() => scrollToBottom(), 100);
-  }
-};
+  };
+
   useEffect(() => {
     loadMessages();
   }, [conversation.id]);
@@ -998,56 +994,61 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
   const hasInput = input.trim() || pendingImage;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+    <div className="fixed inset-0 z-30 flex flex-col bg-white">
       {/* HEADER */}
-<div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
-  <button
-    onClick={onBack}
-    className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
-  >
-    <ArrowLeft size={22} strokeWidth={2.2} />
-  </button>
+      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
+        <button
+          onClick={onBack}
+          className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
+        >
+          <ArrowLeft size={22} strokeWidth={2.2} />
+        </button>
 
-  <div className="min-w-0 flex-1 text-center">
-    <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
-      Trợ lý NXX315
-    </h1>
-    <p className="text-[10.5px] font-medium text-[#8a8d93]">
-      Trợ lý AI của bạn
-    </p>
-  </div>
+        <div className="min-w-0 flex-1 text-center">
+          <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
+            Trợ lý NXX315
+          </h1>
+          <p className="text-[10.5px] font-medium text-[#8a8d93]">
+            Trợ lý AI của bạn
+          </p>
+        </div>
 
-  <button
-    onClick={() => setShowHistoryDrawer(true)}
-    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
-    title="Lịch sử trò chuyện"
-  >
-    <History size={20} strokeWidth={2} />
-  </button>
+        <button
+          onClick={() => setShowHistoryDrawer(true)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+          title="Lịch sử trò chuyện"
+        >
+          <History size={20} strokeWidth={2} />
+        </button>
 
-  <a
-    href={SUPPORT.zaloUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
-  >
-    <Headphones size={19} strokeWidth={2} />
-  </a>
-</div>
-      
-<HistoryDrawer
-  open={showHistoryDrawer}
-  onClose={() => setShowHistoryDrawer(false)}
-  userId={user?.id}
-  currentConvId={conv.id}
-  onOpenConversation={onOpenConversation}
-  onNewChat={onNewChat}
-/>
+        <a
+          href={SUPPORT.zaloUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
+        >
+          <Headphones size={19} strokeWidth={2} />
+        </a>
+      </div>
+
+      <HistoryDrawer
+        open={showHistoryDrawer}
+        onClose={() => setShowHistoryDrawer(false)}
+        userId={user?.id}
+        currentConvId={conv.id}
+        onOpenConversation={onOpenConversation}
+        onNewChat={onNewChat}
+      />
+
       {/* KHU VỰC CHÍNH */}
       {showWelcome ? (
         <WelcomeScreen onCardClick={handleWelcomeCardClick} />
       ) : (
-        <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4" style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}>
+        <div
+          ref={scrollRef}
+          className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
+          style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}
+        >
           {loading ? (
             <div className="flex h-full items-center justify-center">
               <Loader2 size={20} className="animate-spin text-slate-300" />
@@ -1106,7 +1107,10 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
         )}
 
         <div className="flex items-end gap-2">
-          <button onClick={() => setShowFileMenu(true)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-white text-[#161823] transition active:scale-95">
+          <button
+            onClick={() => setShowFileMenu(true)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-white text-[#161823] transition active:scale-95"
+          >
             <Plus size={22} strokeWidth={2.2} />
           </button>
 
@@ -1212,8 +1216,7 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
       </div>
     </div>
   );
-}
-
+      }
 function MessageBubble({ message, streamingText, isLastAIMessage, onSuggestionClick, sending, onShowLogin, hiddenSuggestionIds = [], onHideSuggestions }) {
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState(null);
@@ -1326,7 +1329,7 @@ function MessageBubble({ message, streamingText, isLastAIMessage, onSuggestionCl
           </div>
         )}
 
-                {hasSuggestions && (
+        {hasSuggestions && (
           <div className="mt-3 space-y-2">
             {message.suggestions.map((reply, idx) => (
               <button
