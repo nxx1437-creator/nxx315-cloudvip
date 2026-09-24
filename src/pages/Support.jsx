@@ -1307,7 +1307,7 @@ function MessageBubble({ message, streamingText, isLastAIMessage, onSuggestionCl
           </div>
         )}
 
-        {hasSuggestions && (
+                {hasSuggestions && (
           <div className="mt-3 space-y-2">
             {message.suggestions.map((reply, idx) => (
               <button
@@ -1316,8 +1316,14 @@ function MessageBubble({ message, streamingText, isLastAIMessage, onSuggestionCl
                 disabled={sending}
                 className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-black/[0.06] bg-white px-4 py-3.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
               >
-                <span className="text-[14px] font-medium text-slate-700">{reply}</span>
-                <ArrowRight size={16} className="shrink-0 text-slate-400" strokeWidth={2.2} />
+                <span className="text-[14px] font-medium text-slate-700">
+                  {reply}
+                </span>
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 text-slate-400"
+                  strokeWidth={2.2}
+                />
               </button>
             ))}
 
