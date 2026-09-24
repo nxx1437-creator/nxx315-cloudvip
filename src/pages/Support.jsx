@@ -47,7 +47,6 @@ import {
 import EmojiPicker from "emoji-picker-react";
 
 import TopHeader from "../components/TopHeader.jsx";
-import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 // 👇 Avatar Bot cố định (admin set, user không đổi được)
@@ -386,7 +385,6 @@ export default function Support() {
           />
         )}
       </main>
-      <BottomNav />
     </div>
   );
 }
