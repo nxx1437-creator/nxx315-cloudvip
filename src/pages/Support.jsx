@@ -1475,7 +1475,7 @@ function ChatView({ conversation, user, category, onBack }) {
               placeholder="Hỏi bất cứ điều gì"
               className="h-11 w-full rounded-full border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
             />
-            {input.trim() && (
+                        {input.trim() && (
               <button
                 onClick={() => sendMessage()}
                 disabled={sending}
@@ -1498,4 +1498,300 @@ function ChatView({ conversation, user, category, onBack }) {
           </button>
         </div>
 
-   
+        {/* Hidden Inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelect(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelect(file);
+            e.target.value = "";
+          }}
+        />
+
+        {/* BOTTOM SHEET */}
+        {showFileMenu && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+              onClick={() => setShowFileMenu(false)}
+            />
+            <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[24px] bg-white pb-[max(20px,env(safe-area-inset-bottom))] pt-2 shadow-2xl transition-transform duration-300">
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+              <div className="px-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-800">Tải lên</h3>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-sm font-semibold text-blue-500"
+                  >
+                    Tất cả ảnh
+                  </button>
+                </div>
+                <div className="mt-4 flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      cameraInputRef.current?.click();
+                    }}
+                    className="flex w-24 flex-col items-center gap-2"
+                  >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+                      <Camera size={28} />
+                    </div>
+                    <span className="text-xs font-medium text-slate-600">
+                      Camera
+                    </span>
+                  </button>
+                </div>
+                <div className="mt-6 border-t border-slate-100 pt-4">
+                  <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 py-3 text-sm font-semibold text-slate-700">
+                    <Edit size={16} /> Chỉnh sửa hình ảnh
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* EMOJI PICKER */}
+        {showEmoji && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setShowEmoji(false)}
+            />
+            <div className="absolute bottom-20 right-4 z-50 overflow-hidden rounded-lg border border-slate-200 shadow-2xl">
+              <EmojiPicker
+                onEmojiClick={(e) => setInput((prev) => prev + e.emoji)}
+                theme="light"
+                height={350}
+                width={300}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MessageBubble({
+  message,
+  streamingText,
+  isLastAIMessage,
+  onSuggestionClick,
+  sending,
+  onShowLogin,
+  hiddenSuggestionIds = [],
+  onHideSuggestions,
+}) {
+  const navigate = useNavigate();
+  const [feedback, setFeedback] = useState(null);
+
+  const isUser = message.sender_type === "user";
+  const isAI = message.sender_type === "ai";
+  const isAgent = message.sender_type === "agent";
+  const isSystem = message.sender_type === "system";
+
+  const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
+
+  if (isSystem) {
+    return (
+      <div className="flex justify-center">
+        <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
+          {message.message}
+        </div>
+      </div>
+    );
+  }
+
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div className="relative max-w-[78%]">
+          <div className="absolute -right-[5px] top-0 h-3 w-3 bg-[#FFE5EC] [clip-path:polygon(0_0,100%_0,0_100%)]" />
+          <div className="rounded-[20px] rounded-tr-[6px] bg-[#FFE5EC] px-4 py-2.5 shadow-[0_2px_8px_rgba(254,44,85,0.08)]">
+            {message.image_url && (
+              <img
+                src={message.image_url}
+                alt="User upload"
+                className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
+                loading="lazy"
+              />
+            )}
+            {message.message && (
+              <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+                {message.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayText = streamingText !== null ? streamingText : message.message;
+  const isStreaming = streamingText !== null;
+
+  const hasSuggestions =
+    isLastAIMessage &&
+    message.suggestions?.length > 0 &&
+    !isStreaming &&
+    !isSuggestionHidden;
+
+  const hasActions =
+    message.actions &&
+    Array.isArray(message.actions) &&
+    message.actions.length > 0;
+
+  const showLoginButton =
+    isLastAIMessage &&
+    !isStreaming &&
+    !isSuggestionHidden &&
+    shouldShowLoginButton(message.message);
+
+  const handleSuggestionClick = (reply) => {
+    if (onHideSuggestions) onHideSuggestions();
+    onSuggestionClick(reply);
+  };
+
+  const handleActionClick = (action) => {
+    if (!action?.path) return;
+    if (action.path.startsWith("http")) {
+      window.open(action.path, "_blank", "noopener,noreferrer");
+      return;
+    }
+    navigate(action.path);
+  };
+
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[82%]">
+        <div className="relative">
+          <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
+          <div className="rounded-[20px] rounded-tl-[6px] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            {message.image_url && (
+              <img
+                src={message.image_url}
+                alt="Message"
+                className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
+                loading="lazy"
+              />
+            )}
+            <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+              {displayText}
+              {isStreaming && (
+                <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+              )}
+            </p>
+          </div>
+        </div>
+
+        {!isStreaming && (
+          <div className="mt-1.5 flex items-center gap-2 px-2">
+            <span className="flex items-center gap-1 text-[11px] text-[#8a8d93]">
+              {isAI && <Sparkles size={11} strokeWidth={2.4} />}
+              {isAI ? "Do AI tạo" : isAgent ? "Nhân viên hỗ trợ" : ""}
+            </span>
+            {isAI && (
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() =>
+                    setFeedback(feedback === "like" ? null : "like")
+                  }
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+                    feedback === "like"
+                      ? "bg-sky-50 text-sky-600"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                >
+                  <ThumbsUp size={12} strokeWidth={2.2} />
+                </button>
+                <button
+                  onClick={() =>
+                    setFeedback(feedback === "dislike" ? null : "dislike")
+                  }
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+                    feedback === "dislike"
+                      ? "bg-rose-50 text-rose-600"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                >
+                  <ThumbsDown size={12} strokeWidth={2.2} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {hasActions && !isStreaming && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {message.actions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleActionClick(action)}
+                className="group flex items-center justify-between gap-2 rounded-[14px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] active:scale-[0.97]"
+              >
+                <span className="line-clamp-2 text-[12.5px] font-bold leading-tight text-[#161823]">
+                  {action.label}
+                </span>
+                <ArrowRight
+                  size={14}
+                  className="shrink-0 text-[#FE2C55]"
+                  strokeWidth={2.6}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {hasSuggestions && (
+          <div className="mt-3 space-y-2">
+            {message.suggestions.map((reply, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSuggestionClick(reply)}
+                disabled={sending}
+                className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-black/[0.06] bg-white px-4 py-3.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
+              >
+                <span className="text-[14px] font-medium text-slate-700">
+                  {reply}
+                </span>
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 text-slate-400"
+                  strokeWidth={2.2}
+                />
+              </button>
+            ))}
+
+            {showLoginButton && (
+              <button
+                onClick={onShowLogin}
+                className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-[#FE2C55] px-4 py-3 text-sm font-extrabold text-white shadow-[0_5px_15px_rgba(254,44,85,0.15)] transition hover:brightness-110 active:scale-[0.99]"
+              >
+                <LogIn size={16} strokeWidth={2.4} />
+                Đăng nhập
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+  }
