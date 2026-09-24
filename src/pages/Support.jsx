@@ -309,7 +309,7 @@ export default function Support() {
   // 👇 Hàm tạo cuộc trò chuyện mới (có thể xóa conversation cũ hoặc giữ lại)
   const startAIChat = async (category, subCardTitle = null) => {
   if (!user?.id) {
-    alert("Bạn chưa đăng nhập");
+    alert("Vui lòng đăng nhập để chat với AI.");
     return;
   }
 
@@ -329,12 +329,7 @@ export default function Support() {
       .select()
       .single();
 
-    if (convError) {
-      alert("LỖI TẠO CONV: " + convError.message);
-      return;
-    }
-
-    alert("TẠO CONV OK: " + conv.id);
+    if (convError) throw convError;
 
     const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
     const greeting = subPrompt?.greeting || getGreeting(category);
@@ -348,15 +343,13 @@ export default function Support() {
       suggestions: suggestions,
     });
 
-    if (msgError) {
-      alert("LỖI TẠO MESSAGE: " + msgError.message);
-      return;
-    }
+    if (msgError) throw msgError;
 
     setConversation(conv);
     setView("chat");
   } catch (error) {
-    alert("LỖI KHÔNG XÁC ĐỊNH: " + error.message);
+    console.error("Start chat error:", error);
+    alert("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
   }
 };
 
