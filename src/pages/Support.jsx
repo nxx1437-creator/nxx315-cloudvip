@@ -281,7 +281,7 @@ function shouldShowLoginButton(text) {
 
 // 👇 Hằng số avatar mặc định
 const DEFAULT_BOT_AVATAR =
-  "https://ui-avatars.com/api/?name=NXX&background=FE2C55&color=fff&size=128";
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png";
 export default function Support() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -702,10 +702,7 @@ function StatusBubble({ message }) {
     </div>
   );
     }
-function WelcomeScreen({ onCardClick, botAvatar, onAvatarChange }) {
-  const avatarInputRef = useRef(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-
+function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
     {
       id: 1,
@@ -737,89 +734,15 @@ function WelcomeScreen({ onCardClick, botAvatar, onAvatarChange }) {
     "Làm sao để liên hệ nhân viên hỗ trợ?",
   ];
 
-  // 👇 HÀM UPLOAD AVATAR LÊN SUPABASE STORAGE
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chọn file ảnh");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Ảnh không được vượt quá 2MB");
-      return;
-    }
-
-    setUploadingAvatar(true);
-
-    // 1. Hiển thị tạm base64 để phản hồi ngay
-    const reader = new FileReader();
-    reader.onload = (ev) => onAvatarChange(ev.target.result);
-    reader.readAsDataURL(file);
-
-    // 2. Upload lên Supabase Storage
-    try {
-      const fileExt = file.name.split(".").pop() || "png";
-      const fileName = `${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("bot-avatars")
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from("bot-avatars")
-        .getPublicUrl(fileName);
-
-      if (data?.publicUrl) {
-        onAvatarChange(data.publicUrl);
-        // 3. Lưu URL vào localStorage để lần sau load lại vẫn còn
-        localStorage.setItem("bot_avatar_url", data.publicUrl);
-      }
-    } catch (err) {
-      console.error("[avatar upload]", err);
-      alert(
-        "Không thể tải ảnh lên. Kiểm tra bucket 'bot-avatars' đã tạo chưa nhé."
-      );
-    } finally {
-      setUploadingAvatar(false);
-      e.target.value = "";
-    }
-  };
-
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
       <div className="text-center">
-        {/* AVATAR BOT + NÚT ĐỔI ẢNH */}
-        <div className="relative mx-auto mb-4 h-20 w-20">
+        {/* CHỈ HIỂN THỊ AVATAR - KHÔNG CÓ NÚT ĐỔI */}
+        <div className="mx-auto mb-4 h-20 w-20">
           <img
-            src={botAvatar || DEFAULT_BOT_AVATAR}
+            src={BOT_AVATAR_URL}
             alt="Bot Avatar"
             className="h-20 w-20 rounded-full border-2 border-white object-cover shadow-md"
-          />
-          <button
-            onClick={() => avatarInputRef.current?.click()}
-            disabled={uploadingAvatar}
-            className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#FE2C55] text-white shadow-md transition active:scale-95 disabled:opacity-60"
-            title="Đổi ảnh đại diện"
-          >
-            {uploadingAvatar ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Camera size={14} strokeWidth={2.4} />
-            )}
-          </button>
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handleAvatarUpload}
           />
         </div>
 
@@ -890,7 +813,8 @@ function WelcomeScreen({ onCardClick, botAvatar, onAvatarChange }) {
       </div>
     </div>
   );
-            }
+        }
+
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -907,11 +831,6 @@ function ChatView({ conversation, user, category, onBack }) {
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-
-  // 👇 Load avatar từ localStorage (Cách 2)
-  const [botAvatar, setBotAvatar] = useState(() => {
-    return localStorage.getItem("bot_avatar_url") || null;
-  });
 
   const scrollRef = useRef(null);
   const sentIds = useRef(new Set());
@@ -1374,11 +1293,7 @@ function ChatView({ conversation, user, category, onBack }) {
 
       {/* KHU VỰC CHÍNH */}
       {showWelcome ? (
-        <WelcomeScreen
-          onCardClick={handleWelcomeCardClick}
-          botAvatar={botAvatar}
-          onAvatarChange={setBotAvatar}
-        />
+        <WelcomeScreen onCardClick={handleWelcomeCardClick} />
       ) : (
         <div
           ref={scrollRef}
