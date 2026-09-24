@@ -308,49 +308,57 @@ export default function Support() {
 
   // 👇 Hàm tạo cuộc trò chuyện mới (có thể xóa conversation cũ hoặc giữ lại)
   const startAIChat = async (category, subCardTitle = null) => {
-    if (!user?.id) {
-      alert("Vui lòng đăng nhập để chat với AI.");
+  if (!user?.id) {
+    alert("Bạn chưa đăng nhập");
+    return;
+  }
+
+  try {
+    const { data: conv, error: convError } = await supabase
+      .from("support_conversations")
+      .insert({
+        user_id: user.id,
+        title: subCardTitle
+          ? subCardTitle
+          : category
+          ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === category)?.label}`
+          : "Cuộc trò chuyện mới",
+        category,
+        status: "ai",
+      })
+      .select()
+      .single();
+
+    if (convError) {
+      alert("LỖI TẠO CONV: " + convError.message);
       return;
     }
 
-    try {
-      // Tạo conversation MỚI (không xóa cũ để lưu lịch sử)
-      const { data: conv, error: convError } = await supabase
-        .from("support_conversations")
-        .insert({
-          user_id: user.id,
-          title: subCardTitle
-            ? subCardTitle
-            : category
-            ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === category)?.label}`
-            : "Cuộc trò chuyện mới",
-          category,
-          status: "ai",
-        })
-        .select()
-        .single();
+    alert("TẠO CONV OK: " + conv.id);
 
-      if (convError) throw convError;
+    const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
+    const greeting = subPrompt?.greeting || getGreeting(category);
+    const suggestions = subPrompt?.suggestions || getSuggestions(category);
 
-      const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
-      const greeting = subPrompt?.greeting || getGreeting(category);
-      const suggestions = subPrompt?.suggestions || getSuggestions(category);
+    const { error: msgError } = await supabase.from("support_messages").insert({
+      conversation_id: conv.id,
+      user_id: user.id,
+      message: greeting,
+      sender_type: "ai",
+      suggestions: suggestions,
+    });
 
-      await supabase.from("support_messages").insert({
-        conversation_id: conv.id,
-        user_id: user.id,
-        message: greeting,
-        sender_type: "ai",
-        suggestions: suggestions,
-      });
-
-      setConversation(conv);
-      setView("chat");
-    } catch (error) {
-      console.error("Start chat error:", error);
-      alert("Không thể bắt đầu cuộc trò chuyện: " + error.message);
+    if (msgError) {
+      alert("LỖI TẠO MESSAGE: " + msgError.message);
+      return;
     }
-  };
+
+    setConversation(conv);
+    setView("chat");
+  } catch (error) {
+    alert("LỖI KHÔNG XÁC ĐỊNH: " + error.message);
+  }
+};
 
   // 👇 Hàm mở 1 conversation cũ từ lịch sử
   const openConversation = (conv) => {
