@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  Home,
+  LayoutGrid,
   ListChecks,
   Store,
   Sparkles,
@@ -12,7 +12,10 @@ import {
   LifeBuoy,
   X,
   LogOut,
-  Coins,
+  CircleCheck,
+  Megaphone,
+  Rocket,
+  Trophy,
   FileWarning,
   HelpCircle,
   Search,
@@ -26,20 +29,27 @@ const SECTIONS = [
   {
     title: "Tổng quan",
     items: [
-      { path: "/dashboard", label: "Trang chính", icon: Home },
+      { path: "/dashboard", label: "Trang chính", icon: LayoutGrid },
       { path: "/profile", label: "Hồ sơ", icon: User },
     ],
   },
   {
     title: "Kiếm coin",
     items: [
-      { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
+      { path: "/tasks", label: "Nhiệm vụ", icon: CircleCheck },
       {
-        path: "/minigames",
-        label: "Mini Games",
-        icon: Sparkles,
-        badge: "NEW",
-        badgeType: "new",
+        path: "/marketing-video",
+        label: "Marketing Video",
+        icon: Megaphone,
+        badge: "HOT",
+        badgeType: "hot",
+      },
+      {
+        path: "/buff-mxh",
+        label: "Buff MXH Free",
+        icon: Rocket,
+        badge: "FREE",
+        badgeType: "free",
       },
       {
         path: "/invite",
@@ -75,14 +85,15 @@ const SECTIONS = [
   },
 ];
 
-// Chip trạng thái: HOT hồng / NEW xanh ngọc / +200 vàng — viền + bóng phát sáng nhẹ
+// Chip trạng thái: HOT hồng / NEW xanh ngọc / FREE xanh lá / +200 vàng
 const BADGE_STYLES = {
   hot: "border border-rose-300 bg-rose-100 text-rose-500 shadow-[0_0_14px_rgba(244,63,94,0.38)]",
   new: "border border-cyan-300 bg-cyan-100 text-cyan-500 shadow-[0_0_14px_rgba(6,182,212,0.38)]",
+  free: "border border-teal-300 bg-teal-100 text-teal-500 shadow-[0_0_14px_rgba(20,184,166,0.38)]",
   coin: "border border-amber-300 bg-amber-100 text-amber-500 shadow-[0_0_14px_rgba(245,158,11,0.42)]",
 };
 
-export default function Sidebar({ open, onClose, coins }) {
+export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -126,6 +137,13 @@ export default function Sidebar({ open, onClose, coins }) {
 
         if (error) console.warn("Load profile error:", error);
 
+        // ⚠️ Đổi "meme" / "vip_tier" thành tên cột thật trong bảng profiles của bạn
+        const { data: extraData } = await supabase
+          .from("profiles")
+          .select("meme, vip_tier")
+          .eq("id", user.id)
+          .maybeSingle();
+
         if (alive) {
           setProfile({
             id: user.id,
@@ -137,6 +155,8 @@ export default function Sidebar({ open, onClose, coins }) {
               fallbackUsername,
             avatar_url: data?.avatar_url || fallbackAvatar,
             coins: data?.coins ?? 0,
+            meme: extraData?.meme ?? 0,
+            vip_tier: extraData?.vip_tier || "Đồng",
           });
         }
       } catch (error) {
@@ -186,6 +206,8 @@ export default function Sidebar({ open, onClose, coins }) {
   const avatarUrl = profile?.avatar_url;
   const initial = (displayName || "U").charAt(0).toUpperCase();
   const finalCoins = Number(profile?.coins ?? coins ?? 0);
+  const finalMeme = Number(profile?.meme ?? meme ?? 0);
+  const finalVip = profile?.vip_tier || vipTier || "Đồng";
 
   const q = query.trim().toLowerCase();
   const filteredSections = SECTIONS.map((s) => ({
@@ -205,7 +227,7 @@ export default function Sidebar({ open, onClose, coins }) {
         onClick={onClose}
       />
 
-      {/* Sidebar — nền trắng đặc, độ tương phản rõ theo ảnh mẫu */}
+      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-white transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
@@ -268,7 +290,7 @@ export default function Sidebar({ open, onClose, coins }) {
           </button>
         </div>
 
-        {/* Search — khối xám nhạt lớn theo ảnh mẫu */}
+        {/* Search */}
         <div className="px-4">
           <div className="flex h-14 items-center gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 text-slate-500 shadow-[0_3px_12px_rgba(71,85,105,0.10)]">
             <Search
@@ -285,33 +307,37 @@ export default function Sidebar({ open, onClose, coins }) {
           </div>
         </div>
 
-        {/* Balance Card — xanh pastel rõ, chỉ Coin + nút Nạp */}
+        {/* Balance Card — Coin + MEME + Huy hiệu VIP */}
         <div className="px-4 pt-5">
           <div className="rounded-[26px] border border-sky-200 bg-gradient-to-br from-blue-100 via-sky-50 to-cyan-100 p-5 shadow-[0_10px_28px_rgba(56,130,246,0.22)]">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               Số dư khả dụng
             </p>
+
             {loadingProfile ? (
               <div className="mt-1.5 h-8 w-32 animate-pulse rounded bg-white/70" />
             ) : (
-              <p className="mt-1 text-4xl font-black text-slate-950">
-                {finalCoins.toLocaleString("vi-VN")}
-                <span className="ml-2 text-base font-extrabold text-amber-500">
-                  Coin
-                </span>
-              </p>
+              <>
+                <p className="mt-1 text-4xl font-black text-slate-950">
+                  {finalCoins.toLocaleString("vi-VN")}
+                  <span className="ml-2 text-base font-extrabold text-amber-500">
+                    Coin
+                  </span>
+                </p>
+                <p className="mt-1 text-lg font-extrabold text-teal-500">
+                  {finalMeme.toLocaleString("vi-VN")}
+                  <span className="ml-1 text-sm">MEME</span>
+                </p>
+              </>
             )}
 
-            <button
-              onClick={() => {
-                navigate("/wallet");
-                onClose();
-              }}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white shadow-[0_7px_18px_rgba(15,23,42,0.28)] transition active:scale-[0.98]"
-            >
-              <Coins size={13} />
-              Nạp Coin
-            </button>
+            {/* Huy hiệu VIP */}
+            <div className="mt-4 inline-flex items-center gap-2 rounded-xl border-2 border-amber-400/70 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 shadow-[0_4px_14px_rgba(245,158,11,0.25)]">
+              <Trophy size={15} className="text-amber-500" />
+              <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-sm font-black text-transparent">
+                VIP {finalVip}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -360,10 +386,10 @@ export default function Sidebar({ open, onClose, coins }) {
                           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
                             isActive
                               ? "bg-sky-300 text-white shadow-[0_6px_18px_rgba(56,189,248,0.48)]"
-                              : "bg-slate-50 text-slate-500"
+                              : "text-slate-400"
                           }`}
                         >
-                          <Icon size={21} strokeWidth={isActive ? 2.5 : 2} />
+                          <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                         </span>
                         <span
                           className={`min-w-0 flex-1 truncate text-[16px] ${
@@ -404,5 +430,5 @@ export default function Sidebar({ open, onClose, coins }) {
       </aside>
     </>
   );
-    }
-                  
+      }
+          
