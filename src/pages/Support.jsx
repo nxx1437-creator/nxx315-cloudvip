@@ -701,48 +701,114 @@ function StatusBubble({ message }) {
     </div>
   );
     }
-function WelcomeScreen({ onCardClick }) {
+          function WelcomeScreen({ onCardClick, botAvatar, onAvatarChange }) {
+  const avatarInputRef = useRef(null);
+
   const greetingCards = [
     {
       id: 1,
-      title: "Hỏi về video bạn đã xem",
-      icon: "🎥",
-      bg: "bg-pink-50",
-      prompt: "Video tôi vừa xem nói về gì?",
+      title: "Kiểm tra tình trạng đơn hàng",
+      icon: "📦",
+      bg: "bg-blue-50",
+      prompt: "Cho tôi kiểm tra tình trạng đơn hàng RBX-000138",
     },
     {
       id: 2,
-      title: "Lập kế hoạch cho kỳ nghỉ tiếp theo",
-      icon: "✈️",
-      bg: "bg-blue-50",
-      prompt: "Gợi ý cho tôi một lịch trình du lịch 3 ngày 2 đêm",
+      title: "Hướng dẫn nạp tiền / thanh toán",
+      icon: "💳",
+      bg: "bg-green-50",
+      prompt: "Hướng dẫn tôi cách nạp tiền vào tài khoản",
     },
     {
       id: 3,
-      title: "Gợi ý một công thức nấu ăn",
-      icon: "🍳",
+      title: "Báo lỗi hoặc sự cố kỹ thuật",
+      icon: "🛠️",
       bg: "bg-orange-50",
-      prompt: "Gợi ý cho tôi một công thức nấu ăn tối nay",
+      prompt: "Tôi đang gặp lỗi không đăng nhập được, cần hỗ trợ",
     },
   ];
 
   const suggestedQuestions = [
-    "Viết một bài thơ về tình yêu",
-    "Làm thế nào để chụp ảnh đẹp bằng điện thoại?",
-    "Tòa nhà cao nhất thế giới là gì?",
-    "Ăn quá nhiều hoặc quá ít ảnh hưởng đến cơ thể như thế nào?",
+    "Tôi quên mật khẩu, làm sao để khôi phục?",
+    "Đơn hàng của tôi chưa được xử lý",
+    "Tôi muốn yêu cầu hoàn tiền",
+    "Làm sao để liên hệ nhân viên hỗ trợ?",
   ];
+
+  const handleAvatarUpload = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("Vui lòng chọn file ảnh");
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Ảnh không được vượt quá 2MB");
+    return;
+  }
+
+  // Hiển thị tạm base64 để phản hồi nhanh
+  const reader = new FileReader();
+  reader.onload = (ev) => onAvatarChange(ev.target.result);
+  reader.readAsDataURL(file);
+
+  // Upload lên Supabase Storage
+  try {
+    const fileExt = file.name.split(".").pop() || "png";
+    const fileName = `bot-avatars/${Date.now()}.${fileExt}`;
+    const { error } = await supabase.storage
+      .from("support-images")
+      .upload(fileName, file, { cacheControl: "3600", upsert: false });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from("support-images")
+      .getPublicUrl(fileName);
+
+    if (data?.publicUrl) {
+      onAvatarChange(data.publicUrl);
+    }
+  } catch (err) {
+    console.error("[avatar upload]", err);
+    // Nếu lỗi, vẫn giữ base64 tạm
+  }
+  e.target.value = "";
+};
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
       <div className="text-center">
+        {/* AVATAR BOT + NÚT ĐỔI ẢNH */}
+        <div className="relative mx-auto mb-4 h-20 w-20">
+          <img
+            src={botAvatar || "https://ui-avatars.com/api/?name=NXX&background=FE2C55&color=fff&size=128"}
+            alt="Bot Avatar"
+            className="h-20 w-20 rounded-full border-2 border-white object-cover shadow-md"
+          />
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#FE2C55] text-white shadow-md transition active:scale-95"
+            title="Đổi ảnh đại diện"
+          >
+            <Camera size={14} strokeWidth={2.4} />
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleAvatarUpload}
+          />
+        </div>
+
         <h2 className="text-[22px] font-extrabold leading-[1.3] tracking-[-0.02em] text-[#161823]">
-          Xin chào, tôi là Tako,
+          Xin chào, tôi là trợ lý AI
           <br />
-          trợ lý AI của bạn trên TikTok.
+          của NXX315 Studio.
         </h2>
         <p className="mt-2 text-[13px] text-[#8a8d93]">
-          Tôi có thể giúp bạn tìm, sáng tạo hoặc lập kế hoạch.{" "}
+          Tôi có thể giúp bạn kiểm tra đơn hàng, xử lý thanh toán hoặc giải đáp thắc mắc.{" "}
           <button className="font-medium text-sky-600">Tìm hiểu thêm</button>
         </p>
       </div>
@@ -755,9 +821,7 @@ function WelcomeScreen({ onCardClick }) {
             onClick={() => onCardClick(card.prompt)}
             className="flex w-full items-center gap-4 rounded-[20px] border border-black/[0.06] bg-white p-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:border-black/[0.12] hover:bg-[#fafafa] active:scale-[0.98]"
           >
-            <div
-              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${card.bg} text-2xl`}
-            >
+            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${card.bg} text-2xl`}>
               {card.icon}
             </div>
             <div className="flex-1">
@@ -775,7 +839,7 @@ function WelcomeScreen({ onCardClick }) {
       {/* Gợi ý câu hỏi */}
       <div className="mt-8">
         <h3 className="mb-3 text-sm font-bold text-slate-800">
-          Chúng ta nên bắt đầu từ đâu?
+          Bạn cần hỗ trợ gì?
         </h3>
         <div className="space-y-2">
           {suggestedQuestions.map((q, idx) => (
@@ -785,11 +849,7 @@ function WelcomeScreen({ onCardClick }) {
               className="flex w-full items-center justify-between rounded-[14px] border border-black/[0.06] bg-[#f8f8f8] px-4 py-3.5 text-left text-[14px] text-[#161823] transition hover:bg-[#f2f2f2] active:scale-[0.99]"
             >
               <span>{q}</span>
-              <ArrowRight
-                size={16}
-                className="shrink-0 text-slate-400"
-                strokeWidth={2.2}
-              />
+              <ArrowRight size={16} className="shrink-0 text-slate-400" strokeWidth={2.2} />
             </button>
           ))}
         </div>
@@ -802,8 +862,7 @@ function WelcomeScreen({ onCardClick }) {
       </div>
     </div>
   );
-}
-
+    }
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -820,11 +879,8 @@ function ChatView({ conversation, user, category, onBack }) {
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-
-  const scrollRef = useRef(null);
-  const sentIds = useRef(new Set());
-  const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
+  
+  const [botAvatar, setBotAvatar] = useState(null);
 
   const scrollToBottom = (smooth = false) => {
     requestAnimationFrame(() => {
@@ -1185,14 +1241,21 @@ function ChatView({ conversation, user, category, onBack }) {
         >
           <ArrowLeft size={22} strokeWidth={2.2} />
         </button>
-        <div className="min-w-0 flex-1 text-center">
-          <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
-            TikTok Tako
-          </h1>
-          <p className="text-[10.5px] font-medium text-[#8a8d93]">
-            Trợ lý AI của bạn
-          </p>
-        </div>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+  <img
+    src={botAvatar || "https://ui-avatars.com/api/?name=NXX&background=FE2C55&color=fff&size=64"}
+    alt="Bot"
+    className="h-8 w-8 rounded-full border border-slate-200 object-cover"
+  />
+  <div className="text-left">
+    <h1 className="truncate text-[14px] font-bold tracking-[-0.01em] text-[#161823]">
+      Trợ lý NXX315
+    </h1>
+    <p className="text-[10px] font-medium text-[#8a8d93]">
+      Phản hồi trong vài giây
+    </p>
+  </div>
+</div>
         <button
           onClick={() => setShowHistoryDrawer(true)}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
@@ -1269,8 +1332,12 @@ function ChatView({ conversation, user, category, onBack }) {
 
       {/* KHU VỰC CHÍNH: WELCOME HOẶC CHAT */}
       {showWelcome ? (
-        <WelcomeScreen onCardClick={handleWelcomeCardClick} />
-      ) : (
+  <WelcomeScreen
+    onCardClick={handleWelcomeCardClick}
+    botAvatar={botAvatar}
+    onAvatarChange={setBotAvatar}
+  />
+) : (
         <div
           ref={scrollRef}
           className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
