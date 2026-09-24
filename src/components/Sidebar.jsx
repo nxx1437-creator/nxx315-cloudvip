@@ -57,10 +57,11 @@ const SECTIONS = [
   },
 ];
 
+// Chip trạng thái: HOT hồng / NEW xanh ngọc / +200 vàng — viền + bóng phát sáng nhẹ
 const BADGE_STYLES = {
-  hot: "border border-rose-200 bg-rose-50 text-rose-500 shadow-[0_2px_8px_rgba(244,63,94,0.18)]",
-  new: "border border-emerald-200 bg-emerald-50 text-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.18)]",
-  coin: "border border-amber-200 bg-amber-50 text-amber-500 shadow-[0_2px_8px_rgba(245,158,11,0.18)]",
+  hot: "border border-rose-200/80 bg-rose-50 text-rose-500 shadow-[0_1px_6px_rgba(244,63,94,0.25)]",
+  new: "border border-emerald-200/80 bg-emerald-50 text-emerald-500 shadow-[0_1px_6px_rgba(16,185,129,0.25)]",
+  coin: "border border-amber-200/80 bg-amber-50 text-amber-500 shadow-[0_1px_6px_rgba(245,158,11,0.25)]",
 };
 
 export default function Sidebar({ open, onClose, coins }) {
@@ -179,18 +180,18 @@ export default function Sidebar({ open, onClose, coins }) {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-sky-950/30 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-sky-950/25 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
       />
 
-      {/* Sidebar — nền loang xanh nhạt mềm theo ảnh mẫu */}
+      {/* Sidebar — nền trắng phớt xanh nhạt mềm, đặc 100%, bóng xanh loang như ảnh mẫu */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-gradient-to-b from-sky-50/90 via-white to-sky-50/40 transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-gradient-to-b from-sky-50/80 via-white to-blue-50/70 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ boxShadow: "8px 0 32px rgba(56,120,190,0.12)" }}
+        style={{ boxShadow: "10px 0 40px rgba(56,120,190,0.14)" }}
       >
         {/* Header — Avatar + Tên + Nút đóng */}
         <div className="flex items-center justify-between gap-3 px-4 py-4">
@@ -204,7 +205,7 @@ export default function Sidebar({ open, onClose, coins }) {
                     <img
                       src={avatarUrl}
                       alt={displayName}
-                      className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-[0_2px_10px_rgba(56,120,190,0.2)]"
+                      className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-[0_2px_12px_rgba(56,130,246,0.25)]"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         if (e.currentTarget.nextElementSibling) {
@@ -214,7 +215,7 @@ export default function Sidebar({ open, onClose, coins }) {
                     />
                   ) : null}
                   <div
-                    className={`h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-lg font-black text-white shadow-[0_2px_10px_rgba(56,120,190,0.25)] ${
+                    className={`h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-lg font-black text-white shadow-[0_2px_12px_rgba(56,130,246,0.3)] ${
                       avatarUrl ? "hidden" : "flex"
                     }`}
                   >
@@ -239,7 +240,7 @@ export default function Sidebar({ open, onClose, coins }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 shadow-[0_2px_8px_rgba(56,120,190,0.12)] transition hover:text-slate-600"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 shadow-[0_2px_10px_rgba(56,130,246,0.15)] transition hover:text-slate-600"
           >
             <X size={16} />
           </button>
@@ -247,8 +248,8 @@ export default function Sidebar({ open, onClose, coins }) {
 
         {/* Search — bo tròn, nền trắng nổi mềm */}
         <div className="px-4">
-          <div className="flex items-center gap-2 rounded-2xl bg-white px-3.5 py-3 text-sm text-slate-400 shadow-[0_4px_16px_rgba(56,120,190,0.10)]">
-            <Search size={15} className="shrink-0" />
+          <div className="flex items-center gap-2 rounded-2xl bg-white px-3.5 py-3 text-sm text-slate-400 shadow-[0_4px_18px_rgba(56,130,246,0.12)]">
+            <Search size={15} className="shrink-0 text-sky-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -258,10 +259,10 @@ export default function Sidebar({ open, onClose, coins }) {
           </div>
         </div>
 
-        {/* Balance Card — nền loang xanh nhạt, chỉ Coin + nút Nạp */}
+        {/* Balance Card — xanh pastel mềm, chỉ Coin + nút Nạp */}
         <div className="px-4 pt-4">
-          <div className="rounded-2xl bg-gradient-to-b from-sky-100/90 via-sky-50/80 to-blue-50/60 p-4 shadow-[0_6px_20px_rgba(56,120,190,0.12)]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          <div className="rounded-2xl bg-gradient-to-br from-sky-100 via-sky-50 to-indigo-50 p-4 shadow-[0_8px_24px_rgba(56,130,246,0.16)]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-sky-600/80">
               Số dư khả dụng
             </p>
             {loadingProfile ? (
@@ -278,7 +279,7 @@ export default function Sidebar({ open, onClose, coins }) {
                 navigate("/wallet");
                 onClose();
               }}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white shadow-[0_4px_12px_rgba(15,23,42,0.25)] transition active:scale-[0.98]"
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white shadow-[0_6px_16px_rgba(15,23,42,0.3)] transition active:scale-[0.98]"
             >
               <Coins size={13} />
               Nạp Coin
@@ -296,7 +297,7 @@ export default function Sidebar({ open, onClose, coins }) {
                   onClick={() => toggleSection(section.title)}
                   className="flex w-full items-center gap-1.5 px-3 py-2.5 text-left"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-300" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
                   <span className="flex-1 text-[11px] font-bold uppercase tracking-widest text-slate-400">
                     {section.title}
                   </span>
@@ -320,8 +321,8 @@ export default function Sidebar({ open, onClose, coins }) {
                         onClick={() => handleNavigate(item.path)}
                         className={`group relative flex w-full items-center gap-3.5 rounded-2xl px-3 py-3 text-left transition ${
                           isActive
-                            ? "bg-gradient-to-r from-sky-100/90 to-blue-50/70 shadow-[0_4px_16px_rgba(56,130,246,0.14)]"
-                            : "hover:bg-white/70"
+                            ? "border border-sky-200/80 bg-gradient-to-r from-sky-100/90 to-blue-50 shadow-[0_4px_18px_rgba(56,130,246,0.16)]"
+                            : "border border-transparent hover:bg-white/80"
                         }`}
                       >
                         {isActive && (
@@ -330,8 +331,8 @@ export default function Sidebar({ open, onClose, coins }) {
                         <span
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
                             isActive
-                              ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_4px_12px_rgba(56,130,246,0.35)]"
-                              : "bg-slate-100/90 text-slate-500"
+                              ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_4px_14px_rgba(56,130,246,0.4)]"
+                              : "bg-white text-slate-500 shadow-[0_2px_8px_rgba(56,130,246,0.10)]"
                           }`}
                         >
                           <Icon size={16} strokeWidth={isActive ? 2.4 : 2} />
@@ -373,4 +374,4 @@ export default function Sidebar({ open, onClose, coins }) {
       </aside>
     </>
   );
-    }
+}
