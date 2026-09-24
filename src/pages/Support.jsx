@@ -1335,4 +1335,4 @@ function MessageBubble({ message, streamingText, isLastAIMessage, onSuggestionCl
       </div>
     </div>
   );
-                                             }
+}
