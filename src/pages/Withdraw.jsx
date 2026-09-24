@@ -30,7 +30,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const getImageUrl = (file) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${file}`;
 
-const FEE = 2000;
+const FEE = 1000;
 const MIN_AMOUNT = 10000;
 const MAX_AMOUNT = 500000;
 const MAX_PER_DAY = 500000;
