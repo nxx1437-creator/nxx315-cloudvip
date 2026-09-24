@@ -313,32 +313,33 @@ export default function Support() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <TopHeader />
-      <main className="mx-auto w-full max-w-2xl">
-        {view === "home" && <HomeView onOpenHelp={openHelp} />}
-        {view === "help" && (
-          <HelpView
-            category={selectedCategory}
-            onBack={() => setView("home")}
-            onStartChat={() => startAIChat(selectedCategory)}
-            onStartChatWith={(subCardTitle) => startAIChat(selectedCategory, subCardTitle)}
-          />
-        )}
-        {view === "chat" && conversation && (
-          <ChatView
-            conversation={conversation}
-            user={user}
-            category={selectedCategory}
-            onBack={() => setView("help")}
-            onNewChat={() => startAIChat(selectedCategory)}
-            onOpenConversation={openConversation}
-          />
-        )}
-      </main>
-    </div>
-  );
-}
+  <div className="min-h-screen bg-white pb-24 text-slate-900">
+    <TopHeader />
+    <main className="mx-auto w-full max-w-2xl">
+      {view === "home" && <HomeView onOpenHelp={openHelp} />}
+      {view === "help" && (
+        <HelpView
+          category={selectedCategory}
+          onBack={() => setView("home")}
+          onStartChat={() => startAIChat(selectedCategory)}
+          onStartChatWith={(subCardTitle) =>
+            startAIChat(selectedCategory, subCardTitle)
+          }
+        />
+      )}
+      {view === "chat" && conversation && (
+        <ChatView
+          conversation={conversation}
+          user={user}
+          category={selectedCategory}
+          onBack={() => setView("help")}
+          onNewChat={() => startAIChat(selectedCategory)}
+          onOpenConversation={openConversation}
+        />
+      )}
+    </main>
+  </div>
+);
 
 function HomeView({ onOpenHelp }) {
   return (
@@ -553,69 +554,69 @@ function StatusBubble({ message }) {
       }
 function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
-    { id: 1, title: "Kiểm tra tình trạng đơn hàng", icon: "📦", bg: "bg-blue-50", prompt: "Cho tôi kiểm tra tình trạng đơn hàng RBX-000138" },
-    { id: 2, title: "Hướng dẫn nạp tiền / thanh toán", icon: "💳", bg: "bg-green-50", prompt: "Hướng dẫn tôi cách nạp tiền vào tài khoản" },
-    { id: 3, title: "Báo lỗi hoặc sự cố kỹ thuật", icon: "🛠️", bg: "bg-orange-50", prompt: "Tôi đang gặp lỗi không đăng nhập được, cần hỗ trợ" },
-  ];
-
-  const suggestedQuestions = [
-    "Tôi quên mật khẩu, làm sao để khôi phục?",
-    "Đơn hàng của tôi chưa được xử lý",
-    "Tôi muốn yêu cầu hoàn tiền",
-    "Làm sao để liên hệ nhân viên hỗ trợ?",
+    {
+      id: 1,
+      title: "Hỏi về đơn hàng của bạn",
+      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png",
+      bg: "bg-pink-50",
+      prompt: "Cho tôi kiểm tra tình trạng đơn hàng RBX-000138",
+    },
+    {
+      id: 2,
+      title: "Lập kế hoạch nạp tiền / thanh toán",
+      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png",
+      bg: "bg-blue-50",
+      prompt: "Hướng dẫn tôi cách nạp tiền vào tài khoản",
+    },
+    {
+      id: 3,
+      title: "Báo lỗi hoặc sự cố kỹ thuật",
+      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png",
+      bg: "bg-orange-50",
+      prompt: "Tôi đang gặp lỗi không đăng nhập được, cần hỗ trợ",
+    },
   ];
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
       <div className="text-center">
-        <div className="mx-auto mb-4 h-20 w-20">
-          <img src={BOT_AVATAR_URL} alt="Bot Avatar" className="h-20 w-20 rounded-full border-2 border-white object-cover shadow-md" />
-        </div>
-        <h2 className="text-[22px] font-extrabold leading-[1.3] tracking-[-0.02em] text-[#161823]">
-          Xin chào, tôi là trợ lý AI<br />của NXX315 Studio.
+        <h2 className="text-[24px] font-extrabold leading-[1.25] tracking-[-0.02em] text-[#161823]">
+          Xin chào, tôi là trợ lý AI,<br />
+          trợ lý của bạn trên NXX315.
         </h2>
-        <p className="mt-2 text-[13px] text-[#8a8d93]">
-          Tôi có thể giúp bạn kiểm tra đơn hàng, xử lý thanh toán hoặc giải đáp thắc mắc.{" "}
+        <p className="mt-3 text-[13px] leading-5 text-[#8a8d93]">
+          Tôi có thể giúp bạn kiểm tra đơn hàng, xử lý thanh toán<br />
+          hoặc giải đáp thắc mắc.{" "}
           <button className="font-medium text-sky-600">Tìm hiểu thêm</button>
         </p>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-7 space-y-3">
         {greetingCards.map((card) => (
           <button
             key={card.id}
             onClick={() => onCardClick(card.prompt)}
             className="flex w-full items-center gap-4 rounded-[20px] border border-black/[0.06] bg-white p-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:border-black/[0.12] hover:bg-[#fafafa] active:scale-[0.98]"
           >
-            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${card.bg} text-2xl`}>{card.icon}</div>
-            <div className="flex-1">
-              <p className="text-[14.5px] font-semibold text-[#161823]">{card.title}</p>
+            <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${card.bg}`}>
+              <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+            <div className="flex-1">
+              <p className="text-[14.5px] font-semibold leading-tight text-[#161823]">
+                {card.title}
+              </p>
+            </div>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
               <ArrowRight size={16} strokeWidth={2.4} />
             </div>
           </button>
         ))}
       </div>
 
-      <div className="mt-8">
-        <h3 className="mb-3 text-sm font-bold text-slate-800">Bạn cần hỗ trợ gì?</h3>
-        <div className="space-y-2">
-          {suggestedQuestions.map((q, idx) => (
-            <button
-              key={idx}
-              onClick={() => onCardClick(q)}
-              className="flex w-full items-center justify-between rounded-[14px] border border-black/[0.06] bg-[#f8f8f8] px-4 py-3.5 text-left text-[14px] text-[#161823] transition hover:bg-[#f2f2f2] active:scale-[0.99]"
-            >
-              <span>{q}</span>
-              <ArrowRight size={16} className="shrink-0 text-slate-400" strokeWidth={2.2} />
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="mt-8 text-center">
-        <p className="text-[11px] text-slate-400">AI có thể mắc lỗi. Tìm hiểu thêm</p>
+        <p className="text-[11px] text-slate-400">
+          AI có thể mắc lỗi.
+        </p>
       </div>
     </div>
   );
@@ -792,24 +793,28 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
   };
 
   const loadMessages = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("support_messages")
-        .select("*")
-        .eq("conversation_id", conversation.id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      setMessages(data || []);
-      if (data && data.length > 0) setShowWelcome(false);
-    } catch (error) {
-      console.error("Load error:", error);
-    } finally {
-      setLoading(false);
-      setTimeout(() => scrollToBottom(), 100);
-    }
-  };
+  setLoading(true);
+  try {
+    const { data, error } = await supabase
+      .from("support_messages")
+      .select("*")
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    setMessages(data || []);
 
+    // 👇 Chỉ ẩn WelcomeScreen nếu có message từ user
+    const hasUserMessage = data?.some((m) => m.sender_type === "user");
+    if (hasUserMessage) {
+      setShowWelcome(false);
+    }
+  } catch (error) {
+    console.error("Load error:", error);
+  } finally {
+    setLoading(false);
+    setTimeout(() => scrollToBottom(), 100);
+  }
+};
   useEffect(() => {
     loadMessages();
   }, [conversation.id]);
@@ -985,34 +990,40 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
       {/* HEADER */}
-      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
-        <button onClick={onBack} className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]">
-          <ArrowLeft size={22} strokeWidth={2.2} />
-        </button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <img src={BOT_AVATAR_URL} alt="Bot" className="h-8 w-8 rounded-full border border-slate-200 object-cover" />
-          <div className="text-left">
-            <h1 className="truncate text-[14px] font-bold tracking-[-0.01em] text-[#161823]">Trợ lý NXX315</h1>
-            <p className="text-[10px] font-medium text-[#8a8d93]">Phản hồi trong vài giây</p>
-          </div>
-        </div>
-        <button onClick={() => setShowHistoryDrawer(true)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50" title="Lịch sử trò chuyện">
-          <Menu size={20} strokeWidth={2.2} />
-        </button>
-        <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]">
-          <Headphones size={19} strokeWidth={2} />
-        </a>
-      </div>
+<div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
+  <button
+    onClick={onBack}
+    className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
+  >
+    <ArrowLeft size={22} strokeWidth={2.2} />
+  </button>
 
-      <HistoryDrawer
-        open={showHistoryDrawer}
-        onClose={() => setShowHistoryDrawer(false)}
-        userId={user?.id}
-        currentConvId={conv.id}
-        onOpenConversation={onOpenConversation}
-        onNewChat={onNewChat}
-      />
+  <div className="min-w-0 flex-1 text-center">
+    <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
+      Trợ lý NXX315
+    </h1>
+    <p className="text-[10.5px] font-medium text-[#8a8d93]">
+      Trợ lý AI của bạn
+    </p>
+  </div>
 
+  <button
+    onClick={() => setShowHistoryDrawer(true)}
+    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+    title="Lịch sử trò chuyện"
+  >
+    <History size={20} strokeWidth={2} />
+  </button>
+
+  <a
+    href={SUPPORT.zaloUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
+  >
+    <Headphones size={19} strokeWidth={2} />
+  </a>
+</div>
       {/* KHU VỰC CHÍNH */}
       {showWelcome ? (
         <WelcomeScreen onCardClick={handleWelcomeCardClick} />
