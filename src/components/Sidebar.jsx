@@ -34,14 +34,32 @@ const SECTIONS = [
     title: "Kiếm coin",
     items: [
       { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-      { path: "/minigames", label: "Mini Games", icon: Sparkles, badge: "NEW", badgeType: "new" },
-      { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeType: "coin" },
+      {
+        path: "/minigames",
+        label: "Mini Games",
+        icon: Sparkles,
+        badge: "NEW",
+        badgeType: "new",
+      },
+      {
+        path: "/invite",
+        label: "Mời bạn",
+        icon: Gift,
+        badge: "+200",
+        badgeType: "coin",
+      },
     ],
   },
   {
     title: "Mua sắm",
     items: [
-      { path: "/store", label: "Cửa hàng", icon: Store, badge: "HOT", badgeType: "hot" },
+      {
+        path: "/store",
+        label: "Cửa hàng",
+        icon: Store,
+        badge: "HOT",
+        badgeType: "hot",
+      },
       { path: "/wallet", label: "Ví & Nạp thẻ", icon: CreditCard },
       { path: "/history", label: "Lịch sử đơn hàng", icon: History },
     ],
@@ -59,9 +77,9 @@ const SECTIONS = [
 
 // Chip trạng thái: HOT hồng / NEW xanh ngọc / +200 vàng — viền + bóng phát sáng nhẹ
 const BADGE_STYLES = {
-  hot: "border border-rose-200/80 bg-rose-50 text-rose-500 shadow-[0_1px_6px_rgba(244,63,94,0.25)]",
-  new: "border border-emerald-200/80 bg-emerald-50 text-emerald-500 shadow-[0_1px_6px_rgba(16,185,129,0.25)]",
-  coin: "border border-amber-200/80 bg-amber-50 text-amber-500 shadow-[0_1px_6px_rgba(245,158,11,0.25)]",
+  hot: "border border-rose-300 bg-rose-100 text-rose-500 shadow-[0_0_14px_rgba(244,63,94,0.38)]",
+  new: "border border-cyan-300 bg-cyan-100 text-cyan-500 shadow-[0_0_14px_rgba(6,182,212,0.38)]",
+  coin: "border border-amber-300 bg-amber-100 text-amber-500 shadow-[0_0_14px_rgba(245,158,11,0.42)]",
 };
 
 export default function Sidebar({ open, onClose, coins }) {
@@ -72,7 +90,7 @@ export default function Sidebar({ open, onClose, coins }) {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [query, setQuery] = useState("");
   const [openSections, setOpenSections] = useState(
-    () => new Set(SECTIONS.map((s) => s.title))
+    () => new Set(SECTIONS.map((s) => s.title)),
   );
 
   useEffect(() => {
@@ -98,9 +116,7 @@ export default function Sidebar({ open, onClose, coins }) {
           user.user_metadata?.name ||
           fallbackUsername;
         const fallbackAvatar =
-          user.user_metadata?.avatar_url ||
-          user.user_metadata?.picture ||
-          null;
+          user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 
         const { data, error } = await supabase
           .from("profiles")
@@ -164,7 +180,8 @@ export default function Sidebar({ open, onClose, coins }) {
     onClose();
   };
 
-  const displayName = profile?.display_name || profile?.username || "Người dùng";
+  const displayName =
+    profile?.display_name || profile?.username || "Người dùng";
   const username = profile?.username ? `@${profile.username}` : "@user";
   const avatarUrl = profile?.avatar_url;
   const initial = (displayName || "U").charAt(0).toUpperCase();
@@ -173,7 +190,9 @@ export default function Sidebar({ open, onClose, coins }) {
   const q = query.trim().toLowerCase();
   const filteredSections = SECTIONS.map((s) => ({
     ...s,
-    items: q ? s.items.filter((i) => i.label.toLowerCase().includes(q)) : s.items,
+    items: q
+      ? s.items.filter((i) => i.label.toLowerCase().includes(q))
+      : s.items,
   })).filter((s) => s.items.length > 0);
 
   return (
@@ -186,12 +205,12 @@ export default function Sidebar({ open, onClose, coins }) {
         onClick={onClose}
       />
 
-      {/* Sidebar — nền trắng phớt xanh nhạt mềm, đặc 100%, bóng xanh loang như ảnh mẫu */}
+      {/* Sidebar — nền trắng đặc, độ tương phản rõ theo ảnh mẫu */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-gradient-to-b from-sky-50/80 via-white to-blue-50/70 transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-white transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ boxShadow: "10px 0 40px rgba(56,120,190,0.14)" }}
+        style={{ boxShadow: "12px 0 42px rgba(56,120,190,0.22)" }}
       >
         {/* Header — Avatar + Tên + Nút đóng */}
         <div className="flex items-center justify-between gap-3 px-4 py-4">
@@ -209,7 +228,8 @@ export default function Sidebar({ open, onClose, coins }) {
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         if (e.currentTarget.nextElementSibling) {
-                          e.currentTarget.nextElementSibling.style.display = "flex";
+                          e.currentTarget.nextElementSibling.style.display =
+                            "flex";
                         }
                       }}
                     />
@@ -232,7 +252,9 @@ export default function Sidebar({ open, onClose, coins }) {
                 </>
               ) : (
                 <>
-                  <p className="truncate text-[15px] font-bold text-slate-800">{displayName}</p>
+                  <p className="truncate text-[15px] font-bold text-slate-800">
+                    {displayName}
+                  </p>
                   <p className="truncate text-xs text-slate-400">{username}</p>
                 </>
               )}
@@ -240,37 +262,43 @@ export default function Sidebar({ open, onClose, coins }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 shadow-[0_2px_10px_rgba(56,130,246,0.15)] transition hover:text-slate-600"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-700"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Search — bo tròn, nền trắng nổi mềm */}
+        {/* Search — khối xám nhạt lớn theo ảnh mẫu */}
         <div className="px-4">
-          <div className="flex items-center gap-2 rounded-2xl bg-white px-3.5 py-3 text-sm text-slate-400 shadow-[0_4px_18px_rgba(56,130,246,0.12)]">
-            <Search size={15} className="shrink-0 text-sky-400" />
+          <div className="flex h-14 items-center gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 text-slate-500 shadow-[0_3px_12px_rgba(71,85,105,0.10)]">
+            <Search
+              size={21}
+              strokeWidth={2.2}
+              className="shrink-0 text-slate-500"
+            />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Tìm kiếm..."
-              className="w-full min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+              className="w-full min-w-0 bg-transparent text-[16px] font-medium text-slate-700 placeholder:text-slate-400 outline-none"
             />
           </div>
         </div>
 
-        {/* Balance Card — xanh pastel mềm, chỉ Coin + nút Nạp */}
-        <div className="px-4 pt-4">
-          <div className="rounded-2xl bg-gradient-to-br from-sky-100 via-sky-50 to-indigo-50 p-4 shadow-[0_8px_24px_rgba(56,130,246,0.16)]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-sky-600/80">
+        {/* Balance Card — xanh pastel rõ, chỉ Coin + nút Nạp */}
+        <div className="px-4 pt-5">
+          <div className="rounded-[26px] border border-sky-200 bg-gradient-to-br from-blue-100 via-sky-50 to-cyan-100 p-5 shadow-[0_10px_28px_rgba(56,130,246,0.22)]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               Số dư khả dụng
             </p>
             {loadingProfile ? (
               <div className="mt-1.5 h-8 w-32 animate-pulse rounded bg-white/70" />
             ) : (
-              <p className="mt-0.5 text-3xl font-black text-slate-900">
+              <p className="mt-1 text-4xl font-black text-slate-950">
                 {finalCoins.toLocaleString("vi-VN")}
-                <span className="ml-1.5 text-sm font-bold text-amber-500">Coin</span>
+                <span className="ml-2 text-base font-extrabold text-amber-500">
+                  Coin
+                </span>
               </p>
             )}
 
@@ -279,7 +307,7 @@ export default function Sidebar({ open, onClose, coins }) {
                 navigate("/wallet");
                 onClose();
               }}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white shadow-[0_6px_16px_rgba(15,23,42,0.3)] transition active:scale-[0.98]"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white shadow-[0_7px_18px_rgba(15,23,42,0.28)] transition active:scale-[0.98]"
             >
               <Coins size={13} />
               Nạp Coin
@@ -288,17 +316,17 @@ export default function Sidebar({ open, onClose, coins }) {
         </div>
 
         {/* Menu — chia nhóm thu gọn được (accordion) */}
-        <div className="flex-1 overflow-y-auto px-3 pt-3 pb-4">
+        <div className="flex-1 overflow-y-auto px-3 pt-4 pb-4">
           {filteredSections.map((section) => {
             const isOpen = q ? true : openSections.has(section.title);
             return (
-              <div key={section.title} className="mb-1">
+              <div key={section.title} className="mb-2">
                 <button
                   onClick={() => toggleSection(section.title)}
-                  className="flex w-full items-center gap-1.5 px-3 py-2.5 text-left"
+                  className="flex w-full items-center gap-2 px-3 py-3 text-left"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                  <span className="flex-1 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                  <span className="h-2 w-2 rounded-full bg-blue-400" />
+                  <span className="flex-1 text-xs font-bold uppercase tracking-widest text-slate-400">
                     {section.title}
                   </span>
                   <ChevronDown
@@ -319,34 +347,36 @@ export default function Sidebar({ open, onClose, coins }) {
                       <button
                         key={item.label}
                         onClick={() => handleNavigate(item.path)}
-                        className={`group relative flex w-full items-center gap-3.5 rounded-2xl px-3 py-3 text-left transition ${
+                        className={`group relative mb-1 flex w-full items-center gap-4 rounded-[20px] px-3 py-3.5 text-left transition ${
                           isActive
-                            ? "border border-sky-200/80 bg-gradient-to-r from-sky-100/90 to-blue-50 shadow-[0_4px_18px_rgba(56,130,246,0.16)]"
-                            : "border border-transparent hover:bg-white/80"
+                            ? "border border-blue-300 bg-gradient-to-r from-blue-100 via-sky-50 to-white shadow-[0_7px_22px_rgba(59,130,246,0.25)]"
+                            : "border border-transparent hover:bg-slate-50"
                         }`}
                       >
                         {isActive && (
-                          <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-sky-400 to-blue-500" />
+                          <span className="absolute left-0 top-1/2 h-10 w-1.5 -translate-y-1/2 rounded-r-full bg-blue-500" />
                         )}
                         <span
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
                             isActive
-                              ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_4px_14px_rgba(56,130,246,0.4)]"
-                              : "bg-white text-slate-500 shadow-[0_2px_8px_rgba(56,130,246,0.10)]"
+                              ? "bg-sky-300 text-white shadow-[0_6px_18px_rgba(56,189,248,0.48)]"
+                              : "bg-slate-50 text-slate-500"
                           }`}
                         >
-                          <Icon size={16} strokeWidth={isActive ? 2.4 : 2} />
+                          <Icon size={21} strokeWidth={isActive ? 2.5 : 2} />
                         </span>
                         <span
-                          className={`min-w-0 flex-1 truncate text-[15px] ${
-                            isActive ? "font-bold text-slate-900" : "font-medium text-slate-600"
+                          className={`min-w-0 flex-1 truncate text-[16px] ${
+                            isActive
+                              ? "font-extrabold text-slate-950"
+                              : "font-semibold text-slate-600"
                           }`}
                         >
                           {item.label}
                         </span>
                         {item.badge && (
                           <span
-                            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-black ${
+                            className={`shrink-0 rounded-2xl px-3 py-1.5 text-[11px] font-black ${
                               BADGE_STYLES[item.badgeType] || BADGE_STYLES.coin
                             }`}
                           >
@@ -374,4 +404,5 @@ export default function Sidebar({ open, onClose, coins }) {
       </aside>
     </>
   );
-}
+    }
+                  
