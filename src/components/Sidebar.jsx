@@ -12,7 +12,7 @@ import {
   LifeBuoy,
   X,
   LogOut,
-  CircleCheck,
+  CheckCircle,
   Megaphone,
   Rocket,
   Trophy,
@@ -36,7 +36,7 @@ const SECTIONS = [
   {
     title: "Kiếm coin",
     items: [
-      { path: "/tasks", label: "Nhiệm vụ", icon: CircleCheck },
+      { path: "/tasks", label: "Nhiệm vụ", icon: CheckCircle },
       {
         path: "/marketing-video",
         label: "Marketing Video",
@@ -431,4 +431,3 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
     </>
   );
       }
-          
