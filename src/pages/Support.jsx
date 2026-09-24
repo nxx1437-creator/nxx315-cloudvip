@@ -1550,5 +1550,3 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
     </div>
   );
 }
-
-f
