@@ -556,7 +556,6 @@ function StatusBubble({ message }) {
 function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
     {
-    {
   id: 1,
   title: "Hỏi về đơn hàng của bạn",
   image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/order.png",
