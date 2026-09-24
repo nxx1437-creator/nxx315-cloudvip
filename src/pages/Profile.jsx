@@ -344,27 +344,73 @@ useEffect(() => {
 </div>
 
 
-    {/* ✅ MỚI: Cấp độ & Ưu đãi */}
+    {/* ✅ Cấp độ */}
 {userLevel && (
-  <div className="space-y-3">
-    <div className="flex items-center justify-between px-1">
-      <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-        Cấp độ & Ưu đãi
-      </h2>
-      <button
-        onClick={() => navigate("/level")}
-        className="flex items-center gap-0.5 text-[12px] font-bold text-sky-600 transition hover:text-sky-700"
-      >
-        Xem tất cả
-        <ChevronRight size={14} />
-      </button>
+  <button
+    onClick={() => navigate("/level")}
+    className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:bg-slate-50"
+  >
+    {/* Vòng tròn level */}
+    <div
+      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white"
+      style={{ backgroundColor: userLevel.color || "#64748B" }}
+    >
+      <span className="text-lg font-bold">{userLevel.level}</span>
     </div>
 
-    <LevelCard
-      userLevel={userLevel}
-      onClick={() => navigate("/level")}
-    />
-  </div>
+    {/* Tên cấp + progress */}
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center gap-2">
+        <p className="text-base font-bold text-slate-900">
+          {userLevel.label}
+        </p>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+          Lv.{userLevel.level}
+        </span>
+      </div>
+
+      {/* Progress bar lên cấp tiếp */}
+      {userLevel.next_level && (
+        <div className="mt-1.5">
+          <div className="flex items-center justify-between text-[10px] font-medium text-slate-500">
+            <span>
+              {(userLevel.lifetime_coins || 0).toLocaleString("vi-VN")} /{" "}
+              {(userLevel.next_level.coins_required || 0).toLocaleString("vi-VN")} coin
+            </span>
+            <span className="font-bold text-slate-700">
+              {Math.min(
+                100,
+                Math.round(
+                  ((userLevel.lifetime_coins || 0) /
+                    (userLevel.next_level.coins_required || 1)) *
+                    100
+                )
+              )}
+              %
+            </span>
+          </div>
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(
+                  100,
+                  Math.round(
+                    ((userLevel.lifetime_coins || 0) /
+                      (userLevel.next_level.coins_required || 1)) *
+                      100
+                  )
+                )}%`,
+                backgroundColor: userLevel.color || "#64748B",
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+
+    <ChevronRight size={18} className="shrink-0 text-slate-400" />
+  </button>
 )}
 
             {profile?.multi_account_flag && !profile?.is_banned && (
