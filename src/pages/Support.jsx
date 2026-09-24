@@ -22,7 +22,7 @@ import {
   ThumbsDown,
   LogIn,
   Lightbulb,
-  ImageIcon,
+  Image as ImageIcon,
   Sparkles,
   HelpCircle,
   KeyRound,
@@ -38,6 +38,10 @@ import {
   ImagePlus,
   Handshake,
   AlertTriangle,
+  Camera,
+  Edit,
+  History,
+  X,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
@@ -128,14 +132,7 @@ const SUGGESTIONS_BY_CATEGORY = {
 /* Prompt riêng khi bấm sub-card */
 const SUB_CARD_PROMPTS = {
   "Khôi phục tài khoản": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn đang muốn khôi phục tài khoản. Bạn gặp trường hợp nào?
-• Quên mật khẩu, không đăng nhập được
-• Mất quyền truy cập email
-• Tài khoản bị khóa
-
-Mô tả cụ thể giúp mình nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn đang muốn khôi phục tài khoản. Bạn gặp trường hợp nào?\n• Quên mật khẩu, không đăng nhập được\n• Mất quyền truy cập email\n• Tài khoản bị khóa\n\nMô tả cụ thể giúp mình nhé.`,
     suggestions: [
       "Tôi quên mật khẩu, không đăng nhập được",
       "Tôi mất email đã đăng ký",
@@ -144,9 +141,7 @@ Mô tả cụ thể giúp mình nhé.`,
     ],
   },
   "Trung tâm an toàn": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Về bảo mật tài khoản, bạn cần hỗ trợ gì?`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nVề bảo mật tài khoản, bạn cần hỗ trợ gì?`,
     suggestions: [
       "Làm sao để bảo mật tài khoản?",
       "Tôi nghi ngờ tài khoản bị xâm nhập",
@@ -155,9 +150,7 @@ Về bảo mật tài khoản, bạn cần hỗ trợ gì?`,
     ],
   },
   "Đổi email / SĐT": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn đổi email hay số điện thoại đăng ký?`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn muốn đổi email hay số điện thoại đăng ký?`,
     suggestions: [
       "Tôi muốn đổi email đăng ký",
       "Tôi muốn đổi số điện thoại",
@@ -166,9 +159,7 @@ Bạn muốn đổi email hay số điện thoại đăng ký?`,
     ],
   },
   "Phương thức thanh toán": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn cần hỗ trợ gì về phương thức thanh toán?`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn cần hỗ trợ gì về phương thức thanh toán?`,
     suggestions: [
       "Có những phương thức thanh toán nào?",
       "Tôi muốn đổi phương thức thanh toán",
@@ -177,9 +168,7 @@ Bạn cần hỗ trợ gì về phương thức thanh toán?`,
     ],
   },
   "Hoàn tiền": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn yêu cầu hoàn tiền cho đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn muốn yêu cầu hoàn tiền cho đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     suggestions: [
       "Đơn của tôi bị lỗi, muốn hoàn tiền",
       "Tôi nạp trùng 2 lần",
@@ -188,9 +177,7 @@ Bạn muốn yêu cầu hoàn tiền cho đơn nào? Cho mình mã đơn (RBX-xx
     ],
   },
   "Lịch sử giao dịch": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn xem lịch sử giao dịch hay kiểm tra đơn hàng?`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn muốn xem lịch sử giao dịch hay kiểm tra đơn hàng?`,
     suggestions: [
       "Tôi muốn xem lịch sử nạp tiền",
       "Tôi không thấy giao dịch gần đây",
@@ -199,9 +186,7 @@ Bạn muốn xem lịch sử giao dịch hay kiểm tra đơn hàng?`,
     ],
   },
   "Tra cứu đơn hàng": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn tra cứu đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn muốn tra cứu đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     suggestions: [
       "Đơn RBX-000138 đang ở trạng thái nào?",
       "Cho mình xem đơn gần đây nhất",
@@ -210,9 +195,7 @@ Bạn muốn tra cứu đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     ],
   },
   "Hủy đơn": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn hủy đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn muốn hủy đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     suggestions: [
       "Tôi muốn hủy đơn RBX-000138",
       "Đơn đang xử lý có hủy được không?",
@@ -221,9 +204,7 @@ Bạn muốn hủy đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     ],
   },
   "Theo dõi đơn": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn muốn theo dõi đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn muốn theo dõi đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     suggestions: [
       "Đơn của tôi bao giờ xử lý xong?",
       "Đơn RBX-000138 đang ở đâu?",
@@ -232,9 +213,7 @@ Bạn muốn theo dõi đơn nào? Cho mình mã đơn (RBX-xxxxx) nhé.`,
     ],
   },
   "Lỗi website": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn đang gặp lỗi gì trên website? Mô tả hoặc gửi ảnh màn hình giúp mình nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn đang gặp lỗi gì trên website? Mô tả hoặc gửi ảnh màn hình giúp mình nhé.`,
     suggestions: [
       "Trang web bị trắng, không load được",
       "Nút bấm không phản hồi",
@@ -243,9 +222,7 @@ Bạn đang gặp lỗi gì trên website? Mô tả hoặc gửi ảnh màn hìn
     ],
   },
   "Lỗi ứng dụng": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn gặp lỗi gì trên ứng dụng? Mô tả hoặc gửi ảnh màn hình giúp mình nhé.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn gặp lỗi gì trên ứng dụng? Mô tả hoặc gửi ảnh màn hình giúp mình nhé.`,
     suggestions: [
       "App bị văng khi đang dùng",
       "App không load được dữ liệu",
@@ -254,9 +231,7 @@ Bạn gặp lỗi gì trên ứng dụng? Mô tả hoặc gửi ảnh màn hình
     ],
   },
   "Gửi ảnh lỗi": {
-    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.
-
-Bạn gửi ảnh màn hình lỗi + mô tả giúp mình nhé. Mình sẽ phân tích và hướng dẫn bạn khắc phục.`,
+    greeting: `Chào bạn. Mình là trợ lý AI của NXX315 Studio.\n\nBạn gửi ảnh màn hình lỗi + mô tả giúp mình nhé. Mình sẽ phân tích và hướng dẫn bạn khắc phục.`,
     suggestions: [
       "Tôi muốn gửi ảnh lỗi",
       "Ảnh chụp màn hình thanh toán",
@@ -270,7 +245,6 @@ function getSubCardPrompt(title) {
   return SUB_CARD_PROMPTS[title] || null;
 }
 
-// Sub-card thuộc category "other" → KHÔNG mở chat AI, chỉ scroll xuống FAQ
 const NO_CHAT_SUB_CARDS = [
   "Hợp tác / Đại lý",
   "Báo cáo vi phạm",
@@ -305,6 +279,7 @@ function shouldShowLoginButton(text) {
     lower.includes("login")
   );
 }
+
 export default function Support() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -325,82 +300,72 @@ export default function Support() {
     setSelectedCategory(category);
     setView("help");
   };
-const startAIChat = async (category, subCardTitle = null) => {
-  if (!user?.id) {
-    alert("Vui lòng đăng nhập để chat với AI.");
-    return;
-  }
 
-  try {
-    // 1. XÓA TẤT CẢ conversation cũ của user này
-    const { data: oldConvs } = await supabase
-      .from("support_conversations")
-      .select("id")
-      .eq("user_id", user.id);
-
-    if (oldConvs && oldConvs.length > 0) {
-      const oldIds = oldConvs.map((c) => c.id);
-
-      // Xóa messages cũ
-      await supabase
-        .from("support_messages")
-        .delete()
-        .in("conversation_id", oldIds);
-
-      // Xóa conversations cũ
-      await supabase
-        .from("support_conversations")
-        .delete()
-        .in("id", oldIds);
+  const startAIChat = async (category, subCardTitle = null) => {
+    if (!user?.id) {
+      alert("Vui lòng đăng nhập để chat với AI.");
+      return;
     }
 
-    // 2. TẠO conversation MỚI
-    const { data: conv, error: convError } = await supabase
-      .from("support_conversations")
-      .insert({
+    try {
+      // 1. XÓA TẤT CẢ conversation cũ của user này
+      const { data: oldConvs } = await supabase
+        .from("support_conversations")
+        .select("id")
+        .eq("user_id", user.id);
+
+      if (oldConvs && oldConvs.length > 0) {
+        const oldIds = oldConvs.map((c) => c.id);
+        await supabase.from("support_messages").delete().in("conversation_id", oldIds);
+        await supabase.from("support_conversations").delete().in("id", oldIds);
+      }
+
+      // 2. TẠO conversation MỚI
+      const { data: conv, error: convError } = await supabase
+        .from("support_conversations")
+        .insert({
+          user_id: user.id,
+          title: subCardTitle
+            ? subCardTitle
+            : category
+            ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === category)?.label}`
+            : "Cuộc trò chuyện mới",
+          category,
+          status: "ai",
+        })
+        .select()
+        .single();
+
+      if (convError) throw convError;
+
+      // 3. Lấy greeting + suggestions (sub-card ưu tiên)
+      const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
+      const greeting = subPrompt?.greeting || getGreeting(category);
+      const suggestions = subPrompt?.suggestions || getSuggestions(category);
+
+      // 4. Insert tin nhắn chào của AI
+      await supabase.from("support_messages").insert({
+        conversation_id: conv.id,
         user_id: user.id,
-        title: subCardTitle
-          ? subCardTitle
-          : category
-          ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === category)?.label}`
-          : "Cuộc trò chuyện mới",
-        category,
-        status: "ai",
-      })
-      .select()
-      .single();
+        message: greeting,
+        sender_type: "ai",
+        suggestions: suggestions,
+      });
 
-    if (convError) throw convError;
+      // 5. Set state
+      setConversation(conv);
+      setView("chat");
+    } catch (error) {
+      console.error("Start chat error:", error);
+      alert("Không thể bắt đầu cuộc trò chuyện: " + error.message);
+    }
+  };
 
-    // 3. Lấy greeting + suggestions (sub-card ưu tiên)
-    const subPrompt = subCardTitle ? getSubCardPrompt(subCardTitle) : null;
-    const greeting = subPrompt?.greeting || getGreeting(category);
-    const suggestions = subPrompt?.suggestions || getSuggestions(category);
-
-    // 4. Insert tin nhắn chào của AI
-    await supabase.from("support_messages").insert({
-      conversation_id: conv.id,
-      user_id: user.id,
-      message: greeting,
-      sender_type: "ai",
-      suggestions: suggestions,
-    });
-
-    // 5. Set state
-    setConversation(conv);
-    setView("chat");
-  } catch (error) {
-    console.error("Start chat error:", error);
-    alert("Không thể bắt đầu cuộc trò chuyện: " + error.message);
-  }
-};
   return (
     <div className="min-h-screen bg-white pb-24 text-slate-900">
       <TopHeader />
-
       <main className="mx-auto w-full max-w-2xl">
         {view === "home" && <HomeView onOpenHelp={openHelp} />}
-
         {view === "help" && (
           <HelpView
             category={selectedCategory}
@@ -411,7 +376,6 @@ const startAIChat = async (category, subCardTitle = null) => {
             }
           />
         )}
-
         {view === "chat" && conversation && (
           <ChatView
             conversation={conversation}
@@ -421,12 +385,10 @@ const startAIChat = async (category, subCardTitle = null) => {
           />
         )}
       </main>
-
       <BottomNav />
     </div>
   );
-}
-
+                   }
 function HomeView({ onOpenHelp }) {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-white">
@@ -585,24 +547,23 @@ function HelpView({ category, onBack, onStartChat, onStartChatWith }) {
                 style={{ scrollbarWidth: "none" }}
               >
                 {subCards.map((card) => {
-  const Icon = ICON_MAP[card.icon] || HelpCircle;
-  const isNoChat = isNoChatSubCard(card.title);
+                  const Icon = ICON_MAP[card.icon] || HelpCircle;
+                  const isNoChat = isNoChatSubCard(card.title);
 
-  return (
-    <button
-      key={card.id}
-      onClick={() => {
-        if (isNoChat) {
-          // Scroll xuống FAQ
-          document
-            .querySelector("#help-faq-section")
-            ?.scrollIntoView({ behavior: "smooth" });
-        } else {
-          onStartChatWith(card.title);
-        }
-      }}
-      className="flex w-[140px] shrink-0 flex-col items-start gap-3 rounded-[18px] bg-[#f5f5f5] p-4 text-left transition active:scale-[0.97]"
-    >
+                  return (
+                    <button
+                      key={card.id}
+                      onClick={() => {
+                        if (isNoChat) {
+                          document
+                            .querySelector("#help-faq-section")
+                            ?.scrollIntoView({ behavior: "smooth" });
+                        } else {
+                          onStartChatWith(card.title);
+                        }
+                      }}
+                      className="flex w-[140px] shrink-0 flex-col items-start gap-3 rounded-[18px] bg-[#f5f5f5] p-4 text-left transition active:scale-[0.97]"
+                    >
                       <div
                         className="flex h-9 w-9 items-center justify-center rounded-[10px]"
                         style={{ backgroundColor: `${card.color}22` }}
@@ -624,11 +585,10 @@ function HelpView({ category, onBack, onStartChat, onStartChatWith }) {
           )}
 
           {faqs.length > 0 ? (
-  <div id="help-faq-section" className="px-5">
-    <h3 className="mb-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#161823]">
-      Câu hỏi thường gặp
-    </h3>
-
+            <div id="help-faq-section" className="px-5">
+              <h3 className="mb-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#161823]">
+                Câu hỏi thường gặp
+              </h3>
               <div>
                 {faqs.map((faq) => {
                   const isOpen = openId === faq.id;
@@ -652,7 +612,6 @@ function HelpView({ category, onBack, onStartChat, onStartChatWith }) {
                           strokeWidth={2.2}
                         />
                       </button>
-
                       {isOpen && (
                         <div className="pb-4">
                           <p className="whitespace-pre-wrap text-[14px] leading-6 text-[#4a4d54]">
@@ -707,6 +666,144 @@ function HelpView({ category, onBack, onStartChat, onStartChatWith }) {
     </div>
   );
 }
+
+function StatusBubble({ message }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="px-1 py-0.5">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2.5 rounded-[14px] border border-black/[0.06] bg-white px-3.5 py-2.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:bg-slate-50 active:scale-[0.99]"
+      >
+        <Lightbulb
+          size={16}
+          className="shrink-0 text-slate-500"
+          strokeWidth={2.2}
+        />
+        <span className="flex-1 truncate text-[13px] font-medium text-slate-700">
+          {message.message}
+        </span>
+        <ChevronRight
+          size={16}
+          className={`shrink-0 text-slate-400 transition-transform ${
+            expanded ? "rotate-90" : ""
+          }`}
+          strokeWidth={2.2}
+        />
+      </button>
+
+      {expanded && (
+        <div className="mt-1.5 rounded-[12px] border border-black/[0.05] bg-slate-50 px-3.5 py-2.5 text-[12px] leading-5 text-slate-600">
+          AI đang xử lý yêu cầu của bạn. Quá trình này có thể mất vài giây.
+        </div>
+      )}
+    </div>
+  );
+    }
+function WelcomeScreen({ onCardClick }) {
+  const greetingCards = [
+    {
+      id: 1,
+      title: "Hỏi về video bạn đã xem",
+      icon: "🎥",
+      bg: "bg-pink-50",
+      prompt: "Video tôi vừa xem nói về gì?",
+    },
+    {
+      id: 2,
+      title: "Lập kế hoạch cho kỳ nghỉ tiếp theo",
+      icon: "✈️",
+      bg: "bg-blue-50",
+      prompt: "Gợi ý cho tôi một lịch trình du lịch 3 ngày 2 đêm",
+    },
+    {
+      id: 3,
+      title: "Gợi ý một công thức nấu ăn",
+      icon: "🍳",
+      bg: "bg-orange-50",
+      prompt: "Gợi ý cho tôi một công thức nấu ăn tối nay",
+    },
+  ];
+
+  const suggestedQuestions = [
+    "Viết một bài thơ về tình yêu",
+    "Làm thế nào để chụp ảnh đẹp bằng điện thoại?",
+    "Tòa nhà cao nhất thế giới là gì?",
+    "Ăn quá nhiều hoặc quá ít ảnh hưởng đến cơ thể như thế nào?",
+  ];
+
+  return (
+    <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
+      <div className="text-center">
+        <h2 className="text-[22px] font-extrabold leading-[1.3] tracking-[-0.02em] text-[#161823]">
+          Xin chào, tôi là Tako,
+          <br />
+          trợ lý AI của bạn trên TikTok.
+        </h2>
+        <p className="mt-2 text-[13px] text-[#8a8d93]">
+          Tôi có thể giúp bạn tìm, sáng tạo hoặc lập kế hoạch.{" "}
+          <button className="font-medium text-sky-600">Tìm hiểu thêm</button>
+        </p>
+      </div>
+
+      {/* Các thẻ gợi ý */}
+      <div className="mt-6 space-y-3">
+        {greetingCards.map((card) => (
+          <button
+            key={card.id}
+            onClick={() => onCardClick(card.prompt)}
+            className="flex w-full items-center gap-4 rounded-[20px] border border-black/[0.06] bg-white p-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:border-black/[0.12] hover:bg-[#fafafa] active:scale-[0.98]"
+          >
+            <div
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${card.bg} text-2xl`}
+            >
+              {card.icon}
+            </div>
+            <div className="flex-1">
+              <p className="text-[14.5px] font-semibold text-[#161823]">
+                {card.title}
+              </p>
+            </div>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+              <ArrowRight size={16} strokeWidth={2.4} />
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Gợi ý câu hỏi */}
+      <div className="mt-8">
+        <h3 className="mb-3 text-sm font-bold text-slate-800">
+          Chúng ta nên bắt đầu từ đâu?
+        </h3>
+        <div className="space-y-2">
+          {suggestedQuestions.map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => onCardClick(q)}
+              className="flex w-full items-center justify-between rounded-[14px] border border-black/[0.06] bg-[#f8f8f8] px-4 py-3.5 text-left text-[14px] text-[#161823] transition hover:bg-[#f2f2f2] active:scale-[0.99]"
+            >
+              <span>{q}</span>
+              <ArrowRight
+                size={16}
+                className="shrink-0 text-slate-400"
+                strokeWidth={2.2}
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8 text-center">
+        <p className="text-[11px] text-slate-400">
+          AI có thể mắc lỗi. Tìm hiểu thêm
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ChatView({ conversation, user, category, onBack }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -721,10 +818,13 @@ function ChatView({ conversation, user, category, onBack }) {
   const [uploading, setUploading] = useState(false);
   const [conv, setConv] = useState(conversation);
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
-  const [showHistoryMenu, setShowHistoryMenu] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+
   const scrollRef = useRef(null);
   const sentIds = useRef(new Set());
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const scrollToBottom = (smooth = false) => {
     requestAnimationFrame(() => {
@@ -853,229 +953,232 @@ function ChatView({ conversation, user, category, onBack }) {
 
     return () => supabase.removeChannel(channel);
   }, [conversation.id]);
-      const callAI = async (imageUrl, messageText) => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error("Chưa đăng nhập");
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  const callAI = async (imageUrl, messageText) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Chưa đăng nhập");
 
-  const bodyPayload = {
-    conversation_id: conv.id,
-    user_message: imageUrl ? "Phân tích ảnh này giúp mình" : messageText,
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    const bodyPayload = {
+      conversation_id: conv.id,
+      user_message: imageUrl ? "Phân tích ảnh này giúp mình" : messageText,
+    };
+    if (imageUrl) bodyPayload.image_url = imageUrl;
+
+    const response = await fetch(AI_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify(bodyPayload),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errData = {};
+      try {
+        errData = await response.json();
+      } catch (_) {}
+      throw new Error(errData?.error || `AI trả về lỗi ${response.status}`);
+    }
+
+    return response.json();
   };
-  if (imageUrl) bodyPayload.image_url = imageUrl;
 
-  const response = await fetch(AI_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify(bodyPayload),
-    signal: controller.signal,
-  });
+  const sendMessage = async (customText) => {
+    const content = (customText || input).trim();
+    if (!content || sending || !user?.id) return;
 
-  clearTimeout(timeoutId);
-
-  if (!response.ok) {
-    let errData = {};
+    setSending(true);
+    setShowWelcome(false);
     try {
-      errData = await response.json();
-    } catch (_) {}
-    throw new Error(errData?.error || `AI trả về lỗi ${response.status}`);
-  }
+      const { data: userMsg, error } = await supabase
+        .from("support_messages")
+        .insert({
+          conversation_id: conv.id,
+          user_id: user.id,
+          message: content,
+          sender_type: "user",
+        })
+        .select()
+        .single();
 
-  return response.json();
-};
+      if (error) throw error;
+      sentIds.current.add(userMsg.id);
 
-const sendMessage = async (customText) => {
-  const content = (customText || input).trim();
-  if (!content || sending || !user?.id) return;
+      setMessages((prev) => [
+        ...prev.filter((m) => m.sender_type !== "status"),
+        userMsg,
+      ]);
 
-  setSending(true);
-  try {
-    const { data: userMsg, error } = await supabase
-      .from("support_messages")
-      .insert({
-        conversation_id: conv.id,
-        user_id: user.id,
-        message: content,
-        sender_type: "user",
-      })
-      .select()
-      .single();
+      setInput("");
+      setShowEmoji(false);
+      setShowFileMenu(false);
+      scrollToBottom(true);
 
-    if (error) throw error;
-    sentIds.current.add(userMsg.id);
+      if (conv.status === "ai") {
+        const typingTimer = setTimeout(() => setAiTyping(true), 1500);
 
-    setMessages((prev) => [
-      ...prev.filter((m) => m.sender_type !== "status"),
-      userMsg,
-    ]);
+        try {
+          const data = await callAI(null, content);
+          console.log(`[Support AI] Provider: ${data.provider} (${data.model})`);
+        } catch (err) {
+          console.error("AI error:", err);
+          setMessages((prev) => prev.filter((m) => m.sender_type !== "status"));
 
-    setInput("");
-    setShowEmoji(false);
+          const { data: errMsg } = await supabase
+            .from("support_messages")
+            .insert({
+              conversation_id: conv.id,
+              user_id: user.id,
+              message:
+                "Xin lỗi, mình đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ trực tiếp.",
+              sender_type: "ai",
+              suggestions: [],
+            })
+            .select()
+            .single();
+          if (errMsg) {
+            sentIds.current.add(errMsg.id);
+            setMessages((prev) => [...prev, errMsg]);
+            runTypewriter(errMsg);
+          }
+        } finally {
+          clearTimeout(typingTimer);
+          setAiTyping(false);
+        }
+      }
+    } catch (error) {
+      console.error("Send error:", error);
+      alert("Không thể gửi tin nhắn.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleFileSelect = async (file) => {
+    if (!file || !user?.id || uploading) return;
+
+    setUploading(true);
     setShowFileMenu(false);
-    scrollToBottom(true);
 
-    if (conv.status === "ai") {
-      const typingTimer = setTimeout(() => setAiTyping(true), 1500);
-
-      try {
-        const data = await callAI(null, content);
-        console.log(
-          `[Support AI] Provider: ${data.provider} (${data.model})`
-        );
-      } catch (err) {
-        console.error("AI error:", err);
-        setMessages((prev) =>
-          prev.filter((m) => m.sender_type !== "status")
-        );
-
-        const { data: errMsg } = await supabase
-          .from("support_messages")
-          .insert({
-            conversation_id: conv.id,
-            user_id: user.id,
-            message:
-              "Xin lỗi, mình đang gặp sự cố kỹ thuật. Bạn vui lòng thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ trực tiếp.",
-            sender_type: "ai",
-            suggestions: [],
-          })
-          .select()
-          .single();
-        if (errMsg) {
-          sentIds.current.add(errMsg.id);
-          setMessages((prev) => [...prev, errMsg]);
-          runTypewriter(errMsg);
-        }
-      } finally {
-        clearTimeout(typingTimer);
-        setAiTyping(false);
+    try {
+      if (!file.type.startsWith("image/")) {
+        alert("Chỉ hỗ trợ file ảnh");
+        return;
       }
-    }
-  } catch (error) {
-    console.error("Send error:", error);
-    alert("Không thể gửi tin nhắn.");
-  } finally {
-    setSending(false);
-  }
-};
 
-const handleFileSelect = async (file) => {
-  if (!file || !user?.id || uploading) return;
-
-  setUploading(true);
-  setShowFileMenu(false);
-
-  try {
-    if (!file.type.startsWith("image/")) {
-      alert("Chỉ hỗ trợ file ảnh");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ảnh không được vượt quá 5MB");
-      return;
-    }
-
-    const fileExt = file.name.split(".").pop() || "jpg";
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("support-images")
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage
-      .from("support-images")
-      .getPublicUrl(fileName);
-
-    const publicUrl = urlData?.publicUrl;
-    if (!publicUrl) throw new Error("Không lấy được URL ảnh");
-
-    const { data: userMsg, error: msgError } = await supabase
-      .from("support_messages")
-      .insert({
-        conversation_id: conv.id,
-        user_id: user.id,
-        message: "",
-        sender_type: "user",
-        image_url: publicUrl,
-      })
-      .select()
-      .single();
-
-    if (msgError) throw msgError;
-
-    sentIds.current.add(userMsg.id);
-    setMessages((prev) => [...prev, userMsg]);
-    scrollToBottom(true);
-
-    if (conv.status === "ai") {
-      const typingTimer = setTimeout(() => setAiTyping(true), 1500);
-
-      try {
-        const data = await callAI(publicUrl, null);
-        console.log(
-          `[Support AI - image] Provider: ${data.provider} (${data.model})`
-        );
-      } catch (err) {
-        console.error("AI image error:", err);
-        setMessages((prev) =>
-          prev.filter((m) => m.sender_type !== "status")
-        );
-
-        const { data: errMsg } = await supabase
-          .from("support_messages")
-          .insert({
-            conversation_id: conv.id,
-            user_id: user.id,
-            message:
-              "Xin lỗi, mình không phân tích được ảnh này. Bạn thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ.",
-            sender_type: "ai",
-            suggestions: [],
-          })
-          .select()
-          .single();
-        if (errMsg) {
-          sentIds.current.add(errMsg.id);
-          setMessages((prev) => [...prev, errMsg]);
-          runTypewriter(errMsg);
-        }
-      } finally {
-        clearTimeout(typingTimer);
-        setAiTyping(false);
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ảnh không được vượt quá 5MB");
+        return;
       }
-    }
-  } catch (err) {
-    console.error("[upload] error:", err);
-    alert("Không thể gửi ảnh. Vui lòng thử lại.");
-  } finally {
-    setUploading(false);
-  }
-};
 
-const hideAllSuggestions = () => {
-  setHiddenSuggestionIds((prev) => {
-    const allIds = messages
-      .filter((m) => m.suggestions?.length > 0)
-      .map((m) => m.id);
-    return [...new Set([...prev, ...allIds])];
-  });
-};
-    return (
-    <div className="relative flex h-[calc(100vh-0px)] flex-col bg-[#fafafa]">
+      const fileExt = file.name.split(".").pop() || "jpg";
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("support-images")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("support-images")
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData?.publicUrl;
+      if (!publicUrl) throw new Error("Không lấy được URL ảnh");
+
+      const { data: userMsg, error: msgError } = await supabase
+        .from("support_messages")
+        .insert({
+          conversation_id: conv.id,
+          user_id: user.id,
+          message: "",
+          sender_type: "user",
+          image_url: publicUrl,
+        })
+        .select()
+        .single();
+
+      if (msgError) throw msgError;
+
+      sentIds.current.add(userMsg.id);
+      setMessages((prev) => [...prev, userMsg]);
+      setShowWelcome(false);
+      scrollToBottom(true);
+
+      if (conv.status === "ai") {
+        const typingTimer = setTimeout(() => setAiTyping(true), 1500);
+
+        try {
+          const data = await callAI(publicUrl, null);
+          console.log(`[Support AI - image] Provider: ${data.provider} (${data.model})`);
+        } catch (err) {
+          console.error("AI image error:", err);
+          setMessages((prev) => prev.filter((m) => m.sender_type !== "status"));
+
+          const { data: errMsg } = await supabase
+            .from("support_messages")
+            .insert({
+              conversation_id: conv.id,
+              user_id: user.id,
+              message:
+                "Xin lỗi, mình không phân tích được ảnh này. Bạn thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ.",
+              sender_type: "ai",
+              suggestions: [],
+            })
+            .select()
+            .single();
+          if (errMsg) {
+            sentIds.current.add(errMsg.id);
+            setMessages((prev) => [...prev, errMsg]);
+            runTypewriter(errMsg);
+          }
+        } finally {
+          clearTimeout(typingTimer);
+          setAiTyping(false);
+        }
+      }
+    } catch (err) {
+      console.error("[upload] error:", err);
+      alert("Không thể gửi ảnh. Vui lòng thử lại.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const hideAllSuggestions = () => {
+    setHiddenSuggestionIds((prev) => {
+      const allIds = messages
+        .filter((m) => m.suggestions?.length > 0)
+        .map((m) => m.id);
+      return [...new Set([...prev, ...allIds])];
+    });
+  };
+
+  const handleWelcomeCardClick = (promptText) => {
+    setShowWelcome(false);
+    setTimeout(() => {
+      sendMessage(promptText);
+    }, 100);
+  };
+
+  return (
+    <div className="relative flex h-[100dvh] flex-col bg-white">
       {/* HEADER */}
-      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
+      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
         <button
           onClick={onBack}
           className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
@@ -1084,12 +1187,18 @@ const hideAllSuggestions = () => {
         </button>
         <div className="min-w-0 flex-1 text-center">
           <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
-            Trợ lý AI NXX315
+            TikTok Tako
           </h1>
           <p className="text-[10.5px] font-medium text-[#8a8d93]">
-            Phản hồi trong vài giây
+            Trợ lý AI của bạn
           </p>
         </div>
+        <button
+          onClick={() => setShowHistoryDrawer(true)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+        >
+          <History size={20} strokeWidth={2} />
+        </button>
         <a
           href={SUPPORT.zaloUrl}
           target="_blank"
@@ -1098,215 +1207,186 @@ const hideAllSuggestions = () => {
         >
           <Headphones size={19} strokeWidth={2} />
         </a>
-        <button
-          onClick={() => setShowHistoryMenu((v) => !v)}
-          className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
-        >
-          <FileText size={19} strokeWidth={2} />
-          {hiddenSuggestionIds.length > 0 && (
-            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-500" />
-          )}
-        </button>
       </div>
 
-      {/* HISTORY MENU */}
-      {showHistoryMenu && (
+      {/* HISTORY DRAWER */}
+      {showHistoryDrawer && (
         <>
           <div
-            className="fixed inset-0 z-30"
-            onClick={() => setShowHistoryMenu(false)}
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+            onClick={() => setShowHistoryDrawer(false)}
           />
-          <div className="absolute right-3 top-14 z-40 w-72 overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.12)]">
-            <div className="border-b border-slate-100 px-4 py-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                Đề xuất đã ẩn
-              </p>
-              <p className="mt-0.5 text-[10px] text-slate-400">
-                {hiddenSuggestionIds.length} tin nhắn có suggestions đã ẩn
-              </p>
+          <div className="fixed right-0 top-0 z-50 h-full w-[85%] max-w-sm bg-white shadow-2xl transition-transform duration-300 ease-out">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+              <h2 className="text-lg font-bold text-slate-800">Lịch sử</h2>
+              <button
+                onClick={() => setShowHistoryDrawer(false)}
+                className="text-slate-400"
+              >
+                <X size={20} />
+              </button>
             </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <button
+                onClick={() => {
+                  setShowHistoryDrawer(false);
+                }}
+                className="mb-6 flex w-full items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-left font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <Plus size={18} />
+                Cuộc trò chuyện mới
+              </button>
 
-            <div className="max-h-80 overflow-y-auto">
-              {hiddenSuggestionIds.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-slate-400">
-                  Chưa có suggestions nào bị ẩn
-                </div>
-              ) : (
-                hiddenSuggestionIds.map((msgId) => {
-                  const msg = messages.find((m) => m.id === msgId);
-                  if (!msg) return null;
-                  return (
-                    <button
-                      key={msgId}
-                      onClick={() => {
-                        setHiddenSuggestionIds((prev) =>
-                          prev.filter((id) => id !== msgId)
-                        );
-                        setShowHistoryMenu(false);
-                        scrollToBottom(true);
-                      }}
-                      className="flex w-full items-center justify-between gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 hover:bg-slate-50"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-slate-700">
-                          {msg.message.slice(0, 50)}
-                          {msg.message.length > 50 ? "..." : ""}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-slate-400">
-                          {msg.suggestions?.length || 0} đề xuất
-                        </p>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-400" />
+              <div className="space-y-6">
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    7 ngày qua
+                  </h3>
+                  <div className="space-y-1">
+                    <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                      Xe cẩm Nhang ở Đuôi
                     </button>
-                  );
-                })
-              )}
-            </div>
-
-            {hiddenSuggestionIds.length > 0 && (
-              <div className="border-t border-slate-100 p-2">
-                <button
-                  onClick={() => {
-                    setHiddenSuggestionIds([]);
-                    setShowHistoryMenu(false);
-                    scrollToBottom(true);
-                  }}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-50 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
-                >
-                  <RefreshCw size={12} />
-                  Hiện lại tất cả
-                </button>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Trước đây
+                  </h3>
+                  <div className="space-y-1">
+                    <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                      Quốc Tịch Sachitone
+                    </button>
+                    <button className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">
+                      Cuộc trò chuyện mới
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </>
       )}
 
-      {/* MESSAGES */}
-      <div
-        ref={scrollRef}
-        className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
-        style={{
-          scrollBehavior: "smooth",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 size={20} className="animate-spin text-slate-300" />
-          </div>
-        ) : (
-          <>
-            {messages.map((msg, idx) => {
-              if (msg.sender_type === "status") {
-                return <StatusBubble key={msg.id} message={msg} />;
-              }
+      {/* KHU VỰC CHÍNH: WELCOME HOẶC CHAT */}
+      {showWelcome ? (
+        <WelcomeScreen onCardClick={handleWelcomeCardClick} />
+      ) : (
+        <div
+          ref={scrollRef}
+          className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
+          style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}
+        >
+          {loading ? (
+            <div className="flex h-full items-center justify-center">
+              <Loader2 size={20} className="animate-spin text-slate-300" />
+            </div>
+          ) : (
+            <>
+              {messages.map((msg, idx) => {
+                if (msg.sender_type === "status") {
+                  return <StatusBubble key={msg.id} message={msg} />;
+                }
 
-              const isLastAIMessage =
-                idx === messages.length - 1 &&
-                msg.sender_type === "ai" &&
+                const isLastAIMessage =
+                  idx === messages.length - 1 &&
+                  msg.sender_type === "ai" &&
+                  !streamingMsgId &&
+                  !aiTyping;
+
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    message={msg}
+                    streamingText={
+                      streamingMsgId === msg.id ? streamingText : null
+                    }
+                    isLastAIMessage={isLastAIMessage}
+                    onSuggestionClick={(text) => {
+                      hideAllSuggestions();
+                      sendMessage(text);
+                    }}
+                    sending={sending}
+                    onShowLogin={() => navigate("/login")}
+                    hiddenSuggestionIds={hiddenSuggestionIds}
+                    onHideSuggestions={hideAllSuggestions}
+                  />
+                );
+              })}
+
+                        {aiTyping &&
                 !streamingMsgId &&
-                !aiTyping;
-
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  streamingText={
-                    streamingMsgId === msg.id ? streamingText : null
-                  }
-                  isLastAIMessage={isLastAIMessage}
-                  onSuggestionClick={sendMessage}
-                  sending={sending}
-                  onShowLogin={() => navigate("/login")}
-                  hiddenSuggestionIds={hiddenSuggestionIds}
-                  onHideSuggestions={hideAllSuggestions}
-                />
-              );
-            })}
-
-            {aiTyping &&
-              !streamingMsgId &&
-              !messages.some((m) => m.sender_type === "status") && (
-                <div className="flex justify-start">
-                  <div className="rounded-[20px] rounded-tl-[6px] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-                    <div className="flex gap-1">
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
-                        style={{ animationDelay: "0ms" }}
-                      />
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
-                        style={{ animationDelay: "150ms" }}
-                      />
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
-                        style={{ animationDelay: "300ms" }}
-                      />
+                !messages.some((m) => m.sender_type === "status") && (
+                  <div className="flex justify-start">
+                    <div className="rounded-[20px] rounded-tl-[6px] border border-slate-100 bg-white px-4 py-3.5 shadow-sm">
+                      <div className="flex gap-1">
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
+                          style={{ animationDelay: "0ms" }}
+                        />
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
+                          style={{ animationDelay: "150ms" }}
+                        />
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-slate-300"
+                          style={{ animationDelay: "300ms" }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-          </>
-        )}
-      </div>
-
-      {/* Nút Zalo */}
-      <div className="border-t border-black/[0.05] bg-white px-3.5 py-2.5">
-        <a
-          href={SUPPORT.zaloUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-[#0068FF]/30 bg-[#0068FF]/[0.05] px-4 py-2.5 text-[13px] font-semibold text-[#0068FF] transition hover:bg-[#0068FF]/[0.10] active:scale-[0.99]"
-        >
-          <Headphones size={16} strokeWidth={2.4} />
-          Cần gặp nhân viên? Chat qua Zalo
-        </a>
-      </div>
-
-      {/* INPUT */}
-      <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
-        <div className="flex items-center gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder="Gửi tin nhắn..."
-            className="h-11 flex-1 rounded-full border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
-          />
-
-          {input.trim() ? (
-            <button
-              onClick={() => sendMessage()}
-              disabled={sending}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FE2C55] text-white shadow-[0_4px_12px_rgba(254,44,85,0.2)] transition active:scale-95 disabled:opacity-40"
-            >
-              {sending ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Send size={18} strokeWidth={2.4} />
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowFileMenu((v) => !v)}
-              disabled={uploading}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-[#f2f2f2] text-[#161823] transition active:scale-95 disabled:opacity-40"
-            >
-              {uploading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Plus size={20} strokeWidth={2.4} />
-              )}
-            </button>
+                )}
+            </>
           )}
         </div>
+      )}
 
+      {/* INPUT BAR */}
+      <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
+        <div className="flex items-end gap-2">
+          <button
+            onClick={() => setShowFileMenu(true)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.07] bg-white text-[#161823] transition active:scale-95"
+          >
+            <Plus size={22} strokeWidth={2.2} />
+          </button>
+
+          <div className="relative flex-1">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Hỏi bất cứ điều gì"
+              className="h-11 w-full rounded-full border border-black/[0.07] bg-[#f2f2f2] px-4 text-[14px] text-[#161823] outline-none transition placeholder:text-[#8a8d93] focus:border-[#b9bdc5] focus:bg-white"
+            />
+            {input.trim() && (
+              <button
+                onClick={() => sendMessage()}
+                disabled={sending}
+                className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-[#FE2C55] text-white transition active:scale-95 disabled:opacity-40"
+              >
+                {sending ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Send size={16} strokeWidth={2.4} />
+                )}
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={() => setShowEmoji(true)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#161823] transition active:scale-95"
+          >
+            <Smile size={22} strokeWidth={2.2} />
+          </button>
+        </div>
+
+        {/* Hidden Inputs */}
         <input
           ref={fileInputRef}
           type="file"
@@ -1318,83 +1398,65 @@ const hideAllSuggestions = () => {
             e.target.value = "";
           }}
         />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelect(file);
+            e.target.value = "";
+          }}
+        />
 
-        {/* FILE MENU */}
+        {/* BOTTOM SHEET */}
         {showFileMenu && (
           <>
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
               onClick={() => setShowFileMenu(false)}
             />
-            <div className="absolute bottom-20 right-4 z-50 w-60 overflow-hidden rounded-[16px] border border-black/[0.06] bg-white shadow-[0_14px_40px_rgba(0,0,0,0.15)]">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-50">
-                  <ImageIcon
-                    size={18}
-                    className="text-rose-600"
-                    strokeWidth={2.2}
-                  />
+            <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[24px] bg-white pb-[max(20px,env(safe-area-inset-bottom))] pt-2 shadow-2xl transition-transform duration-300">
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+              <div className="px-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-800">Tải lên</h3>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-sm font-semibold text-blue-500"
+                  >
+                    Tất cả ảnh
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-slate-800">
-                    Gửi ảnh
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    Bill, lỗi, đơn hàng
-                  </p>
+                <div className="mt-4 flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      cameraInputRef.current?.click();
+                    }}
+                    className="flex w-24 flex-col items-center gap-2"
+                  >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+                      <Camera size={28} />
+                    </div>
+                    <span className="text-xs font-medium text-slate-600">
+                      Camera
+                    </span>
+                  </button>
                 </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowFileMenu(false);
-                  setShowEmoji(true);
-                }}
-                className="flex w-full items-center gap-3 border-t border-slate-50 px-4 py-3 text-left transition hover:bg-slate-50"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50">
-                  <Smile
-                    size={18}
-                    className="text-amber-600"
-                    strokeWidth={2.2}
-                  />
+                <div className="mt-6 border-t border-slate-100 pt-4">
+                  <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 py-3 text-sm font-semibold text-slate-700">
+                    <Edit size={16} /> Chỉnh sửa hình ảnh
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-slate-800">
-                    Biểu tượng cảm xúc
-                  </p>
-                  <p className="text-[11px] text-slate-500">Emoji</p>
-                </div>
-              </button>
-
-              <a
-                href={SUPPORT.zaloUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setShowFileMenu(false)}
-                className="flex w-full items-center gap-3 border-t border-slate-50 px-4 py-3 text-left transition hover:bg-slate-50"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-50">
-                  <Headphones
-                    size={18}
-                    className="text-sky-600"
-                    strokeWidth={2.2}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-slate-800">
-                    Gặp nhân viên
-                  </p>
-                  <p className="text-[11px] text-slate-500">Chat qua Zalo</p>
-                </div>
-              </a>
+              </div>
             </div>
           </>
         )}
 
+        {/* EMOJI PICKER */}
         {showEmoji && (
           <>
             <div
@@ -1414,41 +1476,8 @@ const hideAllSuggestions = () => {
       </div>
     </div>
   );
-                          }
-function StatusBubble({ message }) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="px-1 py-0.5">
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2.5 rounded-[14px] border border-black/[0.06] bg-white px-3.5 py-2.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:bg-slate-50 active:scale-[0.99]"
-      >
-        <Lightbulb
-          size={16}
-          className="shrink-0 text-slate-500"
-          strokeWidth={2.2}
-        />
-        <span className="flex-1 truncate text-[13px] font-medium text-slate-700">
-          {message.message}
-        </span>
-        <ChevronRight
-          size={16}
-          className={`shrink-0 text-slate-400 transition-transform ${
-            expanded ? "rotate-90" : ""
-          }`}
-          strokeWidth={2.2}
-        />
-      </button>
-
-      {expanded && (
-        <div className="mt-1.5 rounded-[12px] border border-black/[0.05] bg-slate-50 px-3.5 py-2.5 text-[12px] leading-5 text-slate-600">
-          AI đang xử lý yêu cầu của bạn. Quá trình này có thể mất vài giây.
-        </div>
-      )}
-    </div>
-  );
 }
+
 function MessageBubble({
   message,
   streamingText,
@@ -1537,103 +1566,104 @@ function MessageBubble({
     }
     navigate(action.path);
   };
+
   return (
-  <div className="flex justify-start">
-    <div className="max-w-[82%]">
-      <div className="relative">
-        <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
-        <div className="rounded-[20px] rounded-tl-[6px] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-          {message.image_url && (
-            <img
-              src={message.image_url}
-              alt="Message"
-              className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
-              loading="lazy"
-            />
-          )}
-          <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
-            {displayText}
-            {isStreaming && (
-              <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
-            )}
-          </p>
-        </div>
-      </div>
-
-      {!isStreaming && (
-        <div className="mt-1.5 flex items-center gap-2 px-2">
-          <span className="flex items-center gap-1 text-[11px] text-[#8a8d93]">
-            {isAI && <Sparkles size={11} strokeWidth={2.4} />}
-            {isAI ? "Do AI tạo" : isAgent ? "Nhân viên hỗ trợ" : ""}
-          </span>
-          {isAI && (
-            <div className="flex items-center gap-0.5">
-              <button
-                onClick={() =>
-                  setFeedback(feedback === "like" ? null : "like")
-                }
-                className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
-                  feedback === "like"
-                    ? "bg-sky-50 text-sky-600"
-                    : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                }`}
-              >
-                <ThumbsUp size={12} strokeWidth={2.2} />
-              </button>
-              <button
-                onClick={() =>
-                  setFeedback(feedback === "dislike" ? null : "dislike")
-                }
-                className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
-                  feedback === "dislike"
-                    ? "bg-rose-50 text-rose-600"
-                    : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                }`}
-              >
-                <ThumbsDown size={12} strokeWidth={2.2} />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {hasActions && !isStreaming && (
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {message.actions.map((action, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleActionClick(action)}
-              className="group flex items-center justify-between gap-2 rounded-[14px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] active:scale-[0.97]"
-            >
-              <span className="line-clamp-2 text-[12.5px] font-bold leading-tight text-[#161823]">
-                {action.label}
-              </span>
-              <ArrowRight
-                size={14}
-                className="shrink-0 text-[#FE2C55]"
-                strokeWidth={2.6}
+    <div className="flex justify-start">
+      <div className="max-w-[82%]">
+        <div className="relative">
+          <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
+          <div className="rounded-[20px] rounded-tl-[6px] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            {message.image_url && (
+              <img
+                src={message.image_url}
+                alt="Message"
+                className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
+                loading="lazy"
               />
-            </button>
-          ))}
+            )}
+            <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+              {displayText}
+              {isStreaming && (
+                <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+              )}
+            </p>
+          </div>
         </div>
-      )}
 
-           {hasSuggestions && (
-          <div className="mt-2.5 space-y-2">
+        {!isStreaming && (
+          <div className="mt-1.5 flex items-center gap-2 px-2">
+            <span className="flex items-center gap-1 text-[11px] text-[#8a8d93]">
+              {isAI && <Sparkles size={11} strokeWidth={2.4} />}
+              {isAI ? "Do AI tạo" : isAgent ? "Nhân viên hỗ trợ" : ""}
+            </span>
+            {isAI && (
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() =>
+                    setFeedback(feedback === "like" ? null : "like")
+                  }
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+                    feedback === "like"
+                      ? "bg-sky-50 text-sky-600"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                >
+                  <ThumbsUp size={12} strokeWidth={2.2} />
+                </button>
+                <button
+                  onClick={() =>
+                    setFeedback(feedback === "dislike" ? null : "dislike")
+                  }
+                  className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+                    feedback === "dislike"
+                      ? "bg-rose-50 text-rose-600"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                >
+                  <ThumbsDown size={12} strokeWidth={2.2} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {hasActions && !isStreaming && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {message.actions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleActionClick(action)}
+                className="group flex items-center justify-between gap-2 rounded-[14px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] active:scale-[0.97]"
+              >
+                <span className="line-clamp-2 text-[12.5px] font-bold leading-tight text-[#161823]">
+                  {action.label}
+                </span>
+                <ArrowRight
+                  size={14}
+                  className="shrink-0 text-[#FE2C55]"
+                  strokeWidth={2.6}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {hasSuggestions && (
+          <div className="mt-3 space-y-2">
             {message.suggestions.map((reply, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSuggestionClick(reply)}
                 disabled={sending}
-                className="flex w-full items-center justify-between gap-3 rounded-[14px] border border-black/[0.06] bg-white px-4 py-3 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
+                className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-black/[0.06] bg-white px-4 py-3.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
               >
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-[14px] font-medium text-slate-700">
                   {reply}
                 </span>
                 <ArrowRight
                   size={16}
-                  className="shrink-0 text-rose-400"
-                  strokeWidth={2.4}
+                  className="shrink-0 text-slate-400"
+                  strokeWidth={2.2}
                 />
               </button>
             ))}
@@ -1652,4 +1682,4 @@ function MessageBubble({
       </div>
     </div>
   );
-}
+                }
