@@ -4,35 +4,32 @@ import App from "./App.jsx";
 import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 
-// ✅ Cập nhật ngầm khi user không để ý
 registerSW({
   onNeedRefresh() {
     console.log("[PWA] Có bản mới, sẽ cập nhật khi user rảnh...");
 
-    // Chờ đến khi user chuyển tab hoặc đóng app
-    const handleVisibility = () => {
-      if (document.hidden) {
-        console.log("[PWA] User không để ý, đang cập nhật...");
-        window.location.reload();
-      }
+    const doReload = () => {
+      console.log("[PWA] Reload ngầm...");
+      window.location.reload();
     };
 
+    // Reload khi user chuyển tab / ẩn app
+    const handleVisibility = () => {
+      if (document.hidden) {
+        document.removeEventListener("visibilitychange", handleVisibility);
+        doReload();
+      }
+    };
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // Fallback: nếu user không chuyển tab trong 5 phút, reload luôn
+    // Fallback: nếu 5 phút không chuyển tab → reload luôn
     setTimeout(() => {
-      console.log("[PWA] Đã 5 phút, cập nhật luôn...");
-      window.location.reload();
+      document.removeEventListener("visibilitychange", handleVisibility);
+      doReload();
     }, 5 * 60 * 1000);
   },
   onOfflineReady() {
     console.log("[PWA] App sẵn sàng dùng offline");
-  },
-  onRegistered(registration) {
-    console.log("[PWA] Service Worker đã đăng ký");
-  },
-  onRegisterError(error) {
-    console.error("[PWA] Lỗi đăng ký Service Worker:", error);
   },
   immediate: true,
 });
