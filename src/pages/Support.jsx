@@ -556,23 +556,27 @@ function StatusBubble({ message }) {
 function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
     {
-  id: 1,
-  title: "Hỏi về đơn hàng của bạn",
-  image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/order.png",
-  // ...
-},
-{
-  id: 2,
-  title: "Lập kế hoạch nạp tiền / thanh toán",
-  image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/payment.png",
-  // ...
-},
-{
-  id: 3,
-  title: "Báo lỗi hoặc sự cố kỹ thuật",
-  image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/bug.png",
-  // ...
-},
+      id: 1,
+      title: "Hỏi về đơn hàng của bạn",
+      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/order.png",
+      bg: "bg-pink-50",
+      prompt: "Cho tôi kiểm tra tình trạng đơn hàng RBX-000138",
+    },
+    {
+      id: 2,
+      title: "Lập kế hoạch nạp tiền / thanh toán",
+      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/payment.png",
+      bg: "bg-blue-50",
+      prompt: "Hướng dẫn tôi cách nạp tiền vào tài khoản",
+    },
+    {
+      id: 3,
+      title: "Báo lỗi hoặc sự cố kỹ thuật",
+      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/bug.png",
+      bg: "bg-orange-50",
+      prompt: "Tôi đang gặp lỗi không đăng nhập được, cần hỗ trợ",
+    },
+  ];
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
@@ -596,7 +600,17 @@ function WelcomeScreen({ onCardClick }) {
             className="flex w-full items-center gap-4 rounded-[20px] border border-black/[0.06] bg-white p-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:border-black/[0.12] hover:bg-[#fafafa] active:scale-[0.98]"
           >
             <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${card.bg}`}>
-              <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
+              <img
+                src={card.image}
+                alt={card.title}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  // Nếu ảnh lỗi, hiện emoji thay thế
+                  e.target.style.display = "none";
+                  e.target.parentElement.innerHTML = card.id === 1 ? "📦" : card.id === 2 ? "💳" : "🛠️";
+                  e.target.parentElement.style.fontSize = "28px";
+                }}
+              />
             </div>
             <div className="flex-1">
               <p className="text-[14.5px] font-semibold leading-tight text-[#161823]">
@@ -611,14 +625,13 @@ function WelcomeScreen({ onCardClick }) {
       </div>
 
       <div className="mt-8 text-center">
-        <p className="text-[11px] text-slate-400">
-          AI có thể mắc lỗi.
-        </p>
+        <p className="text-[11px] text-slate-400">AI có thể mắc lỗi.</p>
       </div>
     </div>
   );
 }
 
+      
 function HistoryDrawer({ open, onClose, userId, currentConvId, onOpenConversation, onNewChat }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
