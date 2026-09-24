@@ -339,7 +339,8 @@ export default function Support() {
       )}
     </main>
   </div>
-);
+ );
+}
 
 function HomeView({ onOpenHelp }) {
   return (
@@ -551,7 +552,7 @@ function StatusBubble({ message }) {
       )}
     </div>
   );
-      }
+}
 function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
     {
@@ -731,7 +732,7 @@ function HistoryDrawer({ open, onClose, userId, currentConvId, onOpenConversatio
       </div>
     </>
   );
-        }
+}
 function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConversation }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
