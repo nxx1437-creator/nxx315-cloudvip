@@ -442,11 +442,13 @@ useEffect(() => {
     setIsLoading(true);
     setStartingTaskId(task.id);
 
+    // Mở sẵn tab trống NGAY khi bấm (còn trong user-gesture, tránh bị chặn popup)
+    const newTab = window.open("", "_blank");
+
     try {
       const { data, error } = await supabase.functions.invoke("start-task", {
         body: { task_id: task.id },
       });
-
       setStartingTaskId(null);
 
       if (error) {
@@ -474,7 +476,11 @@ useEffect(() => {
         localStorage.setItem("pending_task_id", task.id);
         localStorage.setItem("pending_task_provider", task.provider || "");
 
-        window.open(data.shortUrl, "_blank");
+        if (newTab) {
+          newTab.location.href = data.shortUrl;
+        } else {
+          window.open(data.shortUrl, "_blank");
+        }
 
         // ✅ Hiển thị reward đã cộng bonus trong toast
         const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
@@ -709,7 +715,7 @@ return (
       {isBlocked && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
           <p className="text-sm font-semibold text-rose-700">
-            🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ
+             Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ
           </p>
           <p className="mt-1 text-xs text-rose-600">
             Vui lòng liên hệ hỗ trợ để được giải quyết
