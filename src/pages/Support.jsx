@@ -556,27 +556,24 @@ function StatusBubble({ message }) {
 function WelcomeScreen({ onCardClick }) {
   const greetingCards = [
     {
-      id: 1,
-      title: "Hỏi về đơn hàng của bạn",
-      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png",
-      bg: "bg-pink-50",
-      prompt: "Cho tôi kiểm tra tình trạng đơn hàng RBX-000138",
-    },
     {
-      id: 2,
-      title: "Lập kế hoạch nạp tiền / thanh toán",
-      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png",
-      bg: "bg-blue-50",
-      prompt: "Hướng dẫn tôi cách nạp tiền vào tài khoản",
-    },
-    {
-      id: 3,
-      title: "Báo lỗi hoặc sự cố kỹ thuật",
-      image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png",
-      bg: "bg-orange-50",
-      prompt: "Tôi đang gặp lỗi không đăng nhập được, cần hỗ trợ",
-    },
-  ];
+  id: 1,
+  title: "Hỏi về đơn hàng của bạn",
+  image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/order.png",
+  // ...
+},
+{
+  id: 2,
+  title: "Lập kế hoạch nạp tiền / thanh toán",
+  image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/payment.png",
+  // ...
+},
+{
+  id: 3,
+  title: "Báo lỗi hoặc sự cố kỹ thuật",
+  image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/bug.png",
+  // ...
+},
 
   return (
     <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
@@ -1025,6 +1022,15 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
     <Headphones size={19} strokeWidth={2} />
   </a>
 </div>
+      
+<HistoryDrawer
+  open={showHistoryDrawer}
+  onClose={() => setShowHistoryDrawer(false)}
+  userId={user?.id}
+  currentConvId={conv.id}
+  onOpenConversation={onOpenConversation}
+  onNewChat={onNewChat}
+/>
       {/* KHU VỰC CHÍNH */}
       {showWelcome ? (
         <WelcomeScreen onCardClick={handleWelcomeCardClick} />
