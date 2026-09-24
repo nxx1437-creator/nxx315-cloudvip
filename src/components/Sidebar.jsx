@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  LayoutGrid,
+  Home,
   ListChecks,
   Store,
   Sparkles,
@@ -12,10 +12,7 @@ import {
   LifeBuoy,
   X,
   LogOut,
-  CheckCircle,
-  Megaphone,
-  Rocket,
-  Trophy,
+  Coins,
   FileWarning,
   HelpCircle,
   Search,
@@ -29,47 +26,22 @@ const SECTIONS = [
   {
     title: "Tổng quan",
     items: [
-      { path: "/dashboard", label: "Trang chính", icon: LayoutGrid },
+      { path: "/dashboard", label: "Trang chính", icon: Home },
       { path: "/profile", label: "Hồ sơ", icon: User },
     ],
   },
   {
     title: "Kiếm coin",
     items: [
-      { path: "/tasks", label: "Nhiệm vụ", icon: CheckCircle },
-      {
-        path: "/marketing-video",
-        label: "Marketing Video",
-        icon: Megaphone,
-        badge: "HOT",
-        badgeType: "hot",
-      },
-      {
-        path: "/buff-mxh",
-        label: "Buff MXH Free",
-        icon: Rocket,
-        badge: "FREE",
-        badgeType: "free",
-      },
-      {
-        path: "/invite",
-        label: "Mời bạn",
-        icon: Gift,
-        badge: "+200",
-        badgeType: "coin",
-      },
+      { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
+      { path: "/minigames", label: "Mini Games", icon: Sparkles, badge: "NEW", badgeType: "new" },
+      { path: "/invite", label: "Mời bạn", icon: Gift, badge: "+200", badgeType: "coin" },
     ],
   },
   {
     title: "Mua sắm",
     items: [
-      {
-        path: "/store",
-        label: "Cửa hàng",
-        icon: Store,
-        badge: "HOT",
-        badgeType: "hot",
-      },
+      { path: "/store", label: "Cửa hàng", icon: Store, badge: "HOT", badgeType: "hot" },
       { path: "/wallet", label: "Ví & Nạp thẻ", icon: CreditCard },
       { path: "/history", label: "Lịch sử đơn hàng", icon: History },
     ],
@@ -85,15 +57,13 @@ const SECTIONS = [
   },
 ];
 
-// Chip trạng thái: HOT hồng / NEW xanh ngọc / FREE xanh lá / +200 vàng
 const BADGE_STYLES = {
-  hot: "border border-rose-300 bg-rose-100 text-rose-500 shadow-[0_0_14px_rgba(244,63,94,0.38)]",
-  new: "border border-cyan-300 bg-cyan-100 text-cyan-500 shadow-[0_0_14px_rgba(6,182,212,0.38)]",
-  free: "border border-teal-300 bg-teal-100 text-teal-500 shadow-[0_0_14px_rgba(20,184,166,0.38)]",
-  coin: "border border-amber-300 bg-amber-100 text-amber-500 shadow-[0_0_14px_rgba(245,158,11,0.42)]",
+  hot: "border border-rose-200 bg-rose-50 text-rose-500 shadow-[0_2px_8px_rgba(244,63,94,0.18)]",
+  new: "border border-emerald-200 bg-emerald-50 text-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.18)]",
+  coin: "border border-amber-200 bg-amber-50 text-amber-500 shadow-[0_2px_8px_rgba(245,158,11,0.18)]",
 };
 
-export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
+export default function Sidebar({ open, onClose, coins }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -101,7 +71,7 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [query, setQuery] = useState("");
   const [openSections, setOpenSections] = useState(
-    () => new Set(SECTIONS.map((s) => s.title)),
+    () => new Set(SECTIONS.map((s) => s.title))
   );
 
   useEffect(() => {
@@ -127,7 +97,9 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
           user.user_metadata?.name ||
           fallbackUsername;
         const fallbackAvatar =
-          user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+          user.user_metadata?.avatar_url ||
+          user.user_metadata?.picture ||
+          null;
 
         const { data, error } = await supabase
           .from("profiles")
@@ -136,13 +108,6 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
           .maybeSingle();
 
         if (error) console.warn("Load profile error:", error);
-
-        // ⚠️ Đổi "meme" / "vip_tier" thành tên cột thật trong bảng profiles của bạn
-        const { data: extraData } = await supabase
-          .from("profiles")
-          .select("meme, vip_tier")
-          .eq("id", user.id)
-          .maybeSingle();
 
         if (alive) {
           setProfile({
@@ -155,8 +120,6 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
               fallbackUsername,
             avatar_url: data?.avatar_url || fallbackAvatar,
             coins: data?.coins ?? 0,
-            meme: extraData?.meme ?? 0,
-            vip_tier: extraData?.vip_tier || "Đồng",
           });
         }
       } catch (error) {
@@ -200,39 +163,34 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
     onClose();
   };
 
-  const displayName =
-    profile?.display_name || profile?.username || "Người dùng";
+  const displayName = profile?.display_name || profile?.username || "Người dùng";
   const username = profile?.username ? `@${profile.username}` : "@user";
   const avatarUrl = profile?.avatar_url;
   const initial = (displayName || "U").charAt(0).toUpperCase();
   const finalCoins = Number(profile?.coins ?? coins ?? 0);
-  const finalMeme = Number(profile?.meme ?? meme ?? 0);
-  const finalVip = profile?.vip_tier || vipTier || "Đồng";
 
   const q = query.trim().toLowerCase();
   const filteredSections = SECTIONS.map((s) => ({
     ...s,
-    items: q
-      ? s.items.filter((i) => i.label.toLowerCase().includes(q))
-      : s.items,
+    items: q ? s.items.filter((i) => i.label.toLowerCase().includes(q)) : s.items,
   })).filter((s) => s.items.length > 0);
 
   return (
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-sky-950/25 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-sky-950/30 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar — nền loang xanh nhạt mềm theo ảnh mẫu */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-white transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 z-50 flex h-full w-[86%] max-w-[330px] flex-col bg-gradient-to-b from-sky-50/90 via-white to-sky-50/40 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ boxShadow: "12px 0 42px rgba(56,120,190,0.22)" }}
+        style={{ boxShadow: "8px 0 32px rgba(56,120,190,0.12)" }}
       >
         {/* Header — Avatar + Tên + Nút đóng */}
         <div className="flex items-center justify-between gap-3 px-4 py-4">
@@ -246,18 +204,17 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
                     <img
                       src={avatarUrl}
                       alt={displayName}
-                      className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-[0_2px_12px_rgba(56,130,246,0.25)]"
+                      className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-[0_2px_10px_rgba(56,120,190,0.2)]"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         if (e.currentTarget.nextElementSibling) {
-                          e.currentTarget.nextElementSibling.style.display =
-                            "flex";
+                          e.currentTarget.nextElementSibling.style.display = "flex";
                         }
                       }}
                     />
                   ) : null}
                   <div
-                    className={`h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-lg font-black text-white shadow-[0_2px_12px_rgba(56,130,246,0.3)] ${
+                    className={`h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-lg font-black text-white shadow-[0_2px_10px_rgba(56,120,190,0.25)] ${
                       avatarUrl ? "hidden" : "flex"
                     }`}
                   >
@@ -274,9 +231,7 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
                 </>
               ) : (
                 <>
-                  <p className="truncate text-[15px] font-bold text-slate-800">
-                    {displayName}
-                  </p>
+                  <p className="truncate text-[15px] font-bold text-slate-800">{displayName}</p>
                   <p className="truncate text-xs text-slate-400">{username}</p>
                 </>
               )}
@@ -284,75 +239,65 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-700"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 shadow-[0_2px_8px_rgba(56,120,190,0.12)] transition hover:text-slate-600"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Search */}
+        {/* Search — bo tròn, nền trắng nổi mềm */}
         <div className="px-4">
-          <div className="flex h-14 items-center gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 text-slate-500 shadow-[0_3px_12px_rgba(71,85,105,0.10)]">
-            <Search
-              size={21}
-              strokeWidth={2.2}
-              className="shrink-0 text-slate-500"
-            />
+          <div className="flex items-center gap-2 rounded-2xl bg-white px-3.5 py-3 text-sm text-slate-400 shadow-[0_4px_16px_rgba(56,120,190,0.10)]">
+            <Search size={15} className="shrink-0" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Tìm kiếm..."
-              className="w-full min-w-0 bg-transparent text-[16px] font-medium text-slate-700 placeholder:text-slate-400 outline-none"
+              className="w-full min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
             />
           </div>
         </div>
 
-        {/* Balance Card — Coin + MEME + Huy hiệu VIP */}
-        <div className="px-4 pt-5">
-          <div className="rounded-[26px] border border-sky-200 bg-gradient-to-br from-blue-100 via-sky-50 to-cyan-100 p-5 shadow-[0_10px_28px_rgba(56,130,246,0.22)]">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+        {/* Balance Card — nền loang xanh nhạt, chỉ Coin + nút Nạp */}
+        <div className="px-4 pt-4">
+          <div className="rounded-2xl bg-gradient-to-b from-sky-100/90 via-sky-50/80 to-blue-50/60 p-4 shadow-[0_6px_20px_rgba(56,120,190,0.12)]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               Số dư khả dụng
             </p>
-
             {loadingProfile ? (
               <div className="mt-1.5 h-8 w-32 animate-pulse rounded bg-white/70" />
             ) : (
-              <>
-                <p className="mt-1 text-4xl font-black text-slate-950">
-                  {finalCoins.toLocaleString("vi-VN")}
-                  <span className="ml-2 text-base font-extrabold text-amber-500">
-                    Coin
-                  </span>
-                </p>
-                <p className="mt-1 text-lg font-extrabold text-teal-500">
-                  {finalMeme.toLocaleString("vi-VN")}
-                  <span className="ml-1 text-sm">MEME</span>
-                </p>
-              </>
+              <p className="mt-0.5 text-3xl font-black text-slate-900">
+                {finalCoins.toLocaleString("vi-VN")}
+                <span className="ml-1.5 text-sm font-bold text-amber-500">Coin</span>
+              </p>
             )}
 
-            {/* Huy hiệu VIP */}
-            <div className="mt-4 inline-flex items-center gap-2 rounded-xl border-2 border-amber-400/70 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 shadow-[0_4px_14px_rgba(245,158,11,0.25)]">
-              <Trophy size={15} className="text-amber-500" />
-              <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-sm font-black text-transparent">
-                VIP {finalVip}
-              </span>
-            </div>
+            <button
+              onClick={() => {
+                navigate("/wallet");
+                onClose();
+              }}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white shadow-[0_4px_12px_rgba(15,23,42,0.25)] transition active:scale-[0.98]"
+            >
+              <Coins size={13} />
+              Nạp Coin
+            </button>
           </div>
         </div>
 
         {/* Menu — chia nhóm thu gọn được (accordion) */}
-        <div className="flex-1 overflow-y-auto px-3 pt-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-3 pt-3 pb-4">
           {filteredSections.map((section) => {
             const isOpen = q ? true : openSections.has(section.title);
             return (
-              <div key={section.title} className="mb-2">
+              <div key={section.title} className="mb-1">
                 <button
                   onClick={() => toggleSection(section.title)}
-                  className="flex w-full items-center gap-2 px-3 py-3 text-left"
+                  className="flex w-full items-center gap-1.5 px-3 py-2.5 text-left"
                 >
-                  <span className="h-2 w-2 rounded-full bg-blue-400" />
-                  <span className="flex-1 text-xs font-bold uppercase tracking-widest text-slate-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-sky-300" />
+                  <span className="flex-1 text-[11px] font-bold uppercase tracking-widest text-slate-400">
                     {section.title}
                   </span>
                   <ChevronDown
@@ -373,36 +318,34 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
                       <button
                         key={item.label}
                         onClick={() => handleNavigate(item.path)}
-                        className={`group relative mb-1 flex w-full items-center gap-4 rounded-[20px] px-3 py-3.5 text-left transition ${
+                        className={`group relative flex w-full items-center gap-3.5 rounded-2xl px-3 py-3 text-left transition ${
                           isActive
-                            ? "border border-blue-300 bg-gradient-to-r from-blue-100 via-sky-50 to-white shadow-[0_7px_22px_rgba(59,130,246,0.25)]"
-                            : "border border-transparent hover:bg-slate-50"
+                            ? "bg-gradient-to-r from-sky-100/90 to-blue-50/70 shadow-[0_4px_16px_rgba(56,130,246,0.14)]"
+                            : "hover:bg-white/70"
                         }`}
                       >
                         {isActive && (
-                          <span className="absolute left-0 top-1/2 h-10 w-1.5 -translate-y-1/2 rounded-r-full bg-blue-500" />
+                          <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-sky-400 to-blue-500" />
                         )}
                         <span
-                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
                             isActive
-                              ? "bg-sky-300 text-white shadow-[0_6px_18px_rgba(56,189,248,0.48)]"
-                              : "text-slate-400"
+                              ? "bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_4px_12px_rgba(56,130,246,0.35)]"
+                              : "bg-slate-100/90 text-slate-500"
                           }`}
                         >
-                          <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                          <Icon size={16} strokeWidth={isActive ? 2.4 : 2} />
                         </span>
                         <span
-                          className={`min-w-0 flex-1 truncate text-[16px] ${
-                            isActive
-                              ? "font-extrabold text-slate-950"
-                              : "font-semibold text-slate-600"
+                          className={`min-w-0 flex-1 truncate text-[15px] ${
+                            isActive ? "font-bold text-slate-900" : "font-medium text-slate-600"
                           }`}
                         >
                           {item.label}
                         </span>
                         {item.badge && (
                           <span
-                            className={`shrink-0 rounded-2xl px-3 py-1.5 text-[11px] font-black ${
+                            className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-black ${
                               BADGE_STYLES[item.badgeType] || BADGE_STYLES.coin
                             }`}
                           >
@@ -430,4 +373,4 @@ export default function Sidebar({ open, onClose, coins, meme = 0, vipTier }) {
       </aside>
     </>
   );
-      }
+          }
