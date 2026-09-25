@@ -806,10 +806,17 @@ export default function HistoryDetail() {
                 )}
 
                 {coin != null && (
-                  <InfoRow
-                    label="Số xu"
-                    value={`${Number(coin).toLocaleString("vi-VN")} xu`}
-                  />
+                  {order?.payment_method === "coin" || order?.payment_method === "coins" ? (
+  <InfoRow 
+    label="Số xu" 
+    value={`${Number(coin || money).toLocaleString("vi-VN")} xu`} 
+  />
+) : (
+  <InfoRow 
+    label="Số tiền" 
+    value={`${Number(money).toLocaleString("vi-VN")}đ`} 
+  />
+)}
                 )}
 
                 {money != null && (
