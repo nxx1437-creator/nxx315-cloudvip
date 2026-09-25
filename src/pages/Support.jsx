@@ -1004,14 +1004,24 @@ function ChatView({ conversation, user, category, onBack, onNewChat, onOpenConve
           <ArrowLeft size={22} strokeWidth={2.2} />
         </button>
 
-        <div className="min-w-0 flex-1 text-center">
-          <h1 className="truncate text-[15px] font-bold tracking-[-0.01em] text-[#161823]">
-            Trợ lý NXX315
-          </h1>
-          <p className="text-[10.5px] font-medium text-[#8a8d93]">
-            Trợ lý AI của bạn
-          </p>
-        </div>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+  <img
+    src={BOT_AVATAR_URL}
+    alt="Bot"
+    className="h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover"
+    onError={(e) => {
+      e.target.style.display = "none";
+    }}
+  />
+  <div className="text-left">
+    <h1 className="truncate text-[14px] font-bold tracking-[-0.01em] text-[#161823]">
+      Trợ lý NXX315
+    </h1>
+    <p className="text-[10.5px] font-medium text-[#8a8d93]">
+      Trợ lý AI của bạn
+    </p>
+  </div>
+</div>
 
         <button
           onClick={() => setShowHistoryDrawer(true)}
