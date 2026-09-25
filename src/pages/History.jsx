@@ -904,7 +904,6 @@ const mergeOrder = (oldOrder, newOrder) => {
     </div>
   </div>
 )}
-
               {order.status === "processing" && (
                 <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
                   <div className="flex items-start gap-3">
