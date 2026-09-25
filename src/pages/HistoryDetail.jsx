@@ -817,7 +817,6 @@ export default function HistoryDetail() {
     value={`${Number(money).toLocaleString("vi-VN")}đ`} 
   />
 )}
-                )}
 
                 {money != null && (
                   <InfoRow
