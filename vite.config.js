@@ -37,36 +37,50 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: [
+          "**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,otf,webp,json}",
+        ],
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api/, /^\/task\/callback/],
+        // ✅ Fallback về index.html cho SPA
+        navigateFallback: "index.html",
+        // ✅ Bỏ qua các route động khỏi fallback
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /^\/task\/callback/,
+          /^\/history\/order\//,
+          /^\/store\//,
+          /^\/minigames\//,
+          /^\/task\//,
+        ],
         runtimeCaching: [
+          // ✅ Supabase API — ưu tiên network, timeout 5s
           {
             urlPattern: /^https:\/\/rwglwovohbyqmbbzdvdj\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-api",
-              networkTimeoutSeconds: 10,
+              networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60,
+                maxAgeSeconds: 60 * 60, // 1 giờ
               },
             },
           },
+          // ✅ Ảnh — ưu tiên cache
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
             handler: "CacheFirst",
             options: {
               cacheName: "images",
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 ngày
               },
             },
           },
+          // ✅ Font Google — cache vĩnh viễn
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: "CacheFirst",
@@ -74,7 +88,31 @@ export default defineConfig({
               cacheName: "google-fonts",
               expiration: {
                 maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 năm
+              },
+            },
+          },
+          // ✅ Font files
+          {
+            urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "fonts",
+              expiration: {
+                maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+          // ✅ CDN bên ngoài (openfpcdn, esm.sh...)
+          {
+            urlPattern: /^https:\/\/openfpcdn\.io\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "external-cdn",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
               },
             },
           },
