@@ -880,18 +880,30 @@ const mergeOrder = (oldOrder, newOrder) => {
               )}
 
               {order.status === "paid" && (
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
-                  <div className="flex items-start gap-3">
-                    <CreditCard className="mt-0.5 shrink-0" size={19} />
-                    <div>
-                      <p className="font-bold">Đã ghi nhận chuyển khoản</p>
-                      <p className="mt-1 text-xs leading-5">
-                        Hệ thống đã ghi nhận thanh toán. Đơn hàng đang được kiểm tra.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+    <div className="flex items-start gap-3">
+      <CreditCard className="mt-0.5 shrink-0" size={19} />
+      <div>
+        <p className="font-bold">
+          {order.payment_method === "coin" || order.payment_method === "coins"
+            ? "Đã trừ xu"
+            : order.payment_method === "card"
+            ? "Đã ghi nhận thẻ cào"
+            : order.payment_method === "bank"
+            ? "Đã ghi nhận chuyển khoản"
+            : "Đã ghi nhận thanh toán"}
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          {order.payment_method === "coin" || order.payment_method === "coins"
+            ? "Hệ thống đã trừ xu từ ví của bạn. Đơn hàng đang chờ admin kiểm tra và duyệt trong 24h."
+            : order.payment_method === "card"
+            ? "Hệ thống đã ghi nhận thẻ cào. Đơn hàng đang chờ kiểm tra trong 24h."
+            : "Hệ thống đã ghi nhận thanh toán. Đơn hàng đang được kiểm tra."}
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 
               {order.status === "processing" && (
                 <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
