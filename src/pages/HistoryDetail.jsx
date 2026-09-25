@@ -892,27 +892,37 @@ export default function HistoryDetail() {
                   <InfoRow label="Ghi chú" value={order.note} />
                 )}
               </section>
-                          {["paid", "processing"].includes(statusKey) && (
-                <section className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-500">
-                      <Clock3 size={20} />
-                    </div>
+                 {["paid", "processing"].includes(statusKey) && (
+  <section className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-5">
+    <div className="flex items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-500">
+        <Clock3 size={20} />
+      </div>
 
-                    <div>
-                      <p className="text-sm font-black text-blue-700">
-                        Đã ghi nhận chuyển khoản
-                      </p>
+      <div>
+        <p className="text-sm font-black text-blue-700">
+          {order?.payment_method === "coin" || order?.payment_method === "coins"
+            ? "Đã trừ xu"
+            : order?.payment_method === "card"
+            ? "Đã ghi nhận thẻ cào"
+            : order?.payment_method === "bank"
+            ? "Đã ghi nhận chuyển khoản"
+            : "Đang kiểm tra"}
+        </p>
 
-                      <p className="mt-1 text-xs leading-5 text-blue-600">
-                        Hệ thống đang chờ kiểm tra giao dịch. Khi thanh toán
-                        được xác nhận, trạng thái đơn sẽ được cập nhật.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-              )}
-
+        <p className="mt-1 text-xs leading-5 text-blue-600">
+          {order?.payment_method === "coin" || order?.payment_method === "coins"
+            ? "Hệ thống đã trừ xu từ ví của bạn. Đơn hàng đang chờ admin kiểm tra và duyệt trong 24h."
+            : order?.payment_method === "card"
+            ? "Hệ thống đã ghi nhận thẻ cào. Đơn hàng đang chờ admin kiểm tra trong 24h."
+            : order?.payment_method === "bank"
+            ? "Hệ thống đã ghi nhận thanh toán chuyển khoản. Đơn hàng đang chờ admin kiểm tra."
+            : "Hệ thống đang chờ kiểm tra giao dịch. Khi thanh toán được xác nhận, trạng thái đơn sẽ được cập nhật."}
+        </p>
+      </div>
+    </div>
+  </section>
+)}         
               {statusKey === "pending" && (
                 <section className="mt-3 rounded-3xl border border-amber-100 bg-amber-50 p-5">
                   <div className="flex items-start gap-3">
