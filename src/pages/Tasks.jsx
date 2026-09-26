@@ -19,6 +19,7 @@ import {
   Headphones,
   Loader2,
   TrendingUp,
+  ShieldCheck,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -36,6 +37,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const getImageUrl = (fileName) =>
   `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
+
+const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
 
 const PROVIDER_LOGOS = {
   layma: "layma.png",
@@ -239,6 +242,89 @@ export default function Tasks() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
+  // ✅ Captcha trước khi tạo link nhiệm vụ
+  const [captchaTask, setCaptchaTask] = useState(null);
+  const [captchaReady, setCaptchaReady] = useState(false);
+  const [captchaVerifying, setCaptchaVerifying] = useState(false);
+  const captchaWidgetIdRef = React.useRef(null);
+
+  // Load script reCAPTCHA
+  useEffect(() => {
+    if (window.grecaptcha) {
+      setCaptchaReady(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://www.google.com/recaptcha/api.js";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setCaptchaReady(true);
+    document.body.appendChild(script);
+  }, []);
+
+  // Render widget reCAPTCHA khi mở modal
+  useEffect(() => {
+    if (!captchaTask) return;
+    if (!captchaReady || !window.grecaptcha) return;
+    window.grecaptcha.ready(() => {
+      if (
+        document.getElementById("tasks-recaptcha-box") &&
+        captchaWidgetIdRef.current === null
+      ) {
+        captchaWidgetIdRef.current = window.grecaptcha.render(
+          "tasks-recaptcha-box",
+          {
+            sitekey: RECAPTCHA_SITE_KEY,
+            callback: handleTaskCaptchaSolved,
+          }
+        );
+      }
+    });
+  }, [captchaTask, captchaReady]);
+
+  const closeCaptchaModal = () => {
+    setCaptchaTask(null);
+    setCaptchaVerifying(false);
+    if (window.grecaptcha && captchaWidgetIdRef.current !== null) {
+      try {
+        window.grecaptcha.reset(captchaWidgetIdRef.current);
+      } catch (e) {}
+    }
+    captchaWidgetIdRef.current = null;
+  };
+
+  const handleTaskCaptchaSolved = async (captchaToken) => {
+    setCaptchaVerifying(true);
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const accessToken = sessionRes.data.session?.access_token;
+      const res = await fetch(
+        "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/rapid-handler",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ captchaToken }),
+        }
+      );
+      const data = await res.json();
+
+      if (data?.success) {
+        const task = captchaTask;
+        closeCaptchaModal();
+        await startTaskApi(task);
+      } else {
+        showToast(data?.error || "Xác minh captcha thất bại!", "error");
+        closeCaptchaModal();
+      }
+    } catch (err) {
+      showToast("Lỗi xác minh: " + err.message, "error");
+      closeCaptchaModal();
+    }
+  };
+
   // ✅ Check IP + fingerprint lần đầu vào trang
 useEffect(() => {
   if (!user?.id) return;
@@ -252,8 +338,7 @@ useEffect(() => {
       if (!session?.access_token) {
         setCheckingIp(false);
         return;
-      }
-
+         }
       // ✅ Lấy fingerprint từ device
       let fingerprint = localStorage.getItem("device_fingerprint");
       if (!fingerprint) {
@@ -435,15 +520,12 @@ useEffect(() => {
       return;
     }
 
-    await startTaskApi(task);
+    setCaptchaTask(task);
   };
 
   const startTaskApi = async (task) => {
     setIsLoading(true);
     setStartingTaskId(task.id);
-
-    // Mở sẵn tab trống NGAY khi bấm (còn trong user-gesture, tránh bị trình duyệt chặn popup)
-    const newTab = window.open("", "_blank");
 
     try {
       const { data, error } = await supabase.functions.invoke("start-task", {
@@ -453,7 +535,6 @@ useEffect(() => {
       setStartingTaskId(null);
 
       if (error) {
-        if (newTab) newTab.close();
         if (
           error.message?.includes("Quá nhiều request") ||
           error.status === 429
@@ -467,7 +548,6 @@ useEffect(() => {
       }
 
       if (data?.error) {
-        if (newTab) newTab.close();
         showToast(data.error, "error");
         setIsLoading(false);
         return;
@@ -479,11 +559,7 @@ useEffect(() => {
         localStorage.setItem("pending_task_id", task.id);
         localStorage.setItem("pending_task_provider", task.provider || "");
 
-        if (newTab) {
-          newTab.location.href = data.shortUrl;
-        } else {
-          window.open(data.shortUrl, "_blank");
-        }
+        window.open(data.shortUrl, "_blank");
 
         // ✅ Hiển thị reward đã cộng bonus trong toast
         const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
@@ -498,11 +574,9 @@ useEffect(() => {
           setHistoryLoaded(false);
         }, 2000);
       } else {
-        if (newTab) newTab.close();
         showToast("Không lấy được link nhiệm vụ!", "error");
       }
     } catch (err) {
-      if (newTab) newTab.close();
       setStartingTaskId(null);
       showToast("Lỗi: " + err.message, "error");
     } finally {
@@ -591,6 +665,41 @@ return (
       </div>
     )}
 
+    {captchaTask && (
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/20 px-6 backdrop-blur-sm">
+        <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
+          {captchaVerifying ? (
+            <>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
+                <Loader2 size={26} className="animate-spin text-sky-500" />
+              </div>
+              <h3 className="mt-4 text-base font-bold text-slate-900">
+                Đang xác thực...
+              </h3>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
+                <ShieldCheck size={26} className="text-sky-500" />
+              </div>
+              <h3 className="mt-4 text-base font-bold text-slate-900">
+                Xác nhận bạn không phải bot
+              </h3>
+              <p className="mt-1.5 text-sm text-slate-500">
+                Tick vào ô bên dưới để bắt đầu nhiệm vụ
+              </p>
+              <div id="tasks-recaptcha-box" className="mt-4 flex justify-center" />
+              <button
+                onClick={closeCaptchaModal}
+                className="mt-4 w-full rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500"
+              >
+                Huỷ
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )}
     {isLoading && (
       <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/20 px-6 backdrop-blur-sm">
         <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
@@ -829,6 +938,16 @@ return (
                   const { finalReward, bonusAmount, bonusPct } =
                     getBoostedReward(task.reward_coins);
 
+                  // ✅ Tên hiển thị riêng cho từng provider (không đổi task.provider gốc,
+                  // vì backend start-task đang so khớp đúng chuỗi này)
+                  const LINK999_STEP_LABELS = { "3": "3 Bước", "4": "2 Bước", "5": "4 Bước" };
+                  const displayName =
+                    task.provider === "TASKDAILY"
+                      ? "TASKDAILY - Google Maps Review"
+                      : task.provider === "LINK999"
+                      ? `LINK999 - Google Search ${LINK999_STEP_LABELS[task.url] || ""}`
+                      : task.provider;
+
                   return (
                     <div
                       key={task.id}
@@ -840,7 +959,7 @@ return (
                           <div className="flex items-center gap-3">
                             <ProviderLogo task={task} />
                             <span className="block text-base font-bold text-slate-900">
-                              {task.provider}
+                              {displayName}
                             </span>
                           </div>
                           {task.is_hot && (
@@ -874,6 +993,13 @@ return (
                             {task.remainingToday} còn
                           </span>
                         </div>
+
+                        {/* ✅ Ghi chú thời gian duyệt riêng cho TASKDAILY */}
+                        {task.provider === "TASKDAILY" && (
+                          <p className="mt-2 text-center text-[11px] font-medium text-amber-600">
+                            ⏳ Xu sẽ được cộng sau khi hệ thống duyệt (trong vòng 10 ngày)
+                          </p>
+                        )}
 
                         <div className="mt-3">
                           <div className="flex items-center justify-between text-xs text-slate-400">
@@ -914,8 +1040,7 @@ return (
             )}
           </>
         )}
-
-        {/* TAB HISTORY */}
+      {/* TAB HISTORY */}
         {activeTab === "history" && (
           <>
             {historyLoading ? (
@@ -1097,4 +1222,4 @@ function IpBlockedScreen({ reason }) {
       <BottomNav />
     </div>
   );
-              }
+}
