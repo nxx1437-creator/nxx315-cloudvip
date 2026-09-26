@@ -241,17 +241,31 @@ export default function Register() {
   };
 
   const handleSocial = async (provider, supported) => {
-    setError("");
-    if (!supported) {
-      setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
-      return;
-    }
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    });
-    if (authError) setError(authError.message);
-  };
+  setError("");
+  if (!supported) {
+    setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
+    return;
+  }
+
+  // ✅ Check IP trước khi cho đăng ký bằng social
+  if (!ipChecked) {
+    await checkIp();
+  }
+
+  if (ipBlocked) {
+    setError(
+      "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
+    );
+    setErrorType("ip_blocked");
+    return;
+  }
+
+  const { error: authError } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: `${window.location.origin}/dashboard` },
+  });
+  if (authError) setError(authError.message);
+};
 
   return (
     <AuthShell
