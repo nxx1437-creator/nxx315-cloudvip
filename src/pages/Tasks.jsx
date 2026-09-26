@@ -641,11 +641,8 @@ if (checkingIp) {
   );
 }
 
-// ✅ Nếu IP bị chặn → hiện màn hình block
-if (ipBlocked) {
-  return <IpBlockedScreen reason={ipBlocked.reason} />;
-}
-
+// ✅ KHÔNG chặn toàn bộ — chỉ hiện banner
+// (đã xóa dòng return IpBlockedScreen)
 return (
   <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
     {toast && (
@@ -826,17 +823,24 @@ return (
         </div>
       </div>
 
-      {isBlocked && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
-          <p className="text-sm font-semibold text-rose-700">
-            🚫 Tài khoản của bạn đang bị tạm khóa làm nhiệm vụ
-          </p>
-          <p className="mt-1 text-xs text-rose-600">
-            Vui lòng liên hệ hỗ trợ để được giải quyết
-          </p>
-        </div>
-      )}
-
+      {/* ✅ Banner thông báo bị chặn — không chặn toàn bộ app */}
+{(isBlocked || ipBlocked) && (
+  <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
+    <p className="text-sm font-semibold text-rose-700">
+      🚫 Bạn không thể làm nhiệm vụ lúc này
+    </p>
+    <p className="mt-1 text-xs text-rose-600">
+      {ipBlocked?.reason || "Tài khoản đang bị tạm khóa làm nhiệm vụ"}
+    </p>
+    <p className="mt-2 text-xs text-rose-500">
+      Vui lòng liên hệ Zalo{" "}
+      <a href="https://zalo.me/0865245988" className="font-bold underline">
+        0865245988
+      </a>{" "}
+      để được hỗ trợ
+    </p>
+  </div>
+)}
       {/* Search + Tabs */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm md:order-2 md:w-80">
