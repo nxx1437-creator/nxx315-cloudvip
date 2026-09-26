@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { PlayCircle, X, ExternalLink } from "lucide-react";
+import { PlayCircle, X, ArrowUpRight } from "lucide-react";
 
 // 👇 THAY LINK YOUTUBE CỦA BẠN VÀO ĐÂY
 const YOUTUBE_LINK = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID";
 
-// 👇 THAY ĐƯỜNG DẪN ẢNH MINH HOẠ CỦA BẠN VÀO ĐÂY
+// 👇 THAY LINK ẢNH CHỤP MÀN HÌNH PAYWALL CỦA BẠN VÀO ĐÂY
 const IMAGE_URL = "https://your-image-host.com/paywall-demo.jpg"; 
 
 export default function HomeTutorial() {
@@ -12,92 +12,85 @@ export default function HomeTutorial() {
 
   if (!isVisible) return null;
 
-  const handleOpenVideo = () => {
-    // Mở link YouTube trong tab mới
-    window.open(YOUTUBE_LINK, "_blank");
-  };
-
   return (
-    <div className="w-full px-4 mb-2 fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
-            Tính năng mới
-          </span>
-        </div>
-        {/* Nút đóng (X) giống trong hình */}
+    <div className="w-full px-1 mb-2 fade-in">
+      {/* Card Bọc Ngoài */}
+      <div className="relative overflow-hidden rounded-[32px] border border-slate-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        
+        {/* Nút Đóng (X) */}
         <button 
           onClick={() => setIsVisible(false)}
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 transition hover:bg-slate-200 dark:bg-slate-800"
+          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition hover:bg-slate-100"
         >
-          <X size={14} />
+          <X size={16} />
         </button>
-      </div>
 
-      {/* Slider Container (Dùng CSS scroll snap để vuốt mượt trên mobile) */}
-      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 hide-scrollbar">
-        
-        {/* Card Hướng dẫn */}
-        <div 
-          onClick={handleOpenVideo}
-          className="group relative w-[85vw] max-w-[340px] shrink-0 snap-center cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
-        >
-          {/* Hình ảnh thu nhỏ (Thumbnail) */}
-          <div className="relative h-40 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+        {/* Mockup Khung Máy Tính (Browser Frame) */}
+        <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200/60 bg-slate-50 shadow-sm">
+          {/* Thanh điều hướng giả lập */}
+          <div className="flex items-center gap-1.5 bg-white px-3 py-2.5 border-b border-slate-100">
+            <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+          </div>
+          
+          {/* Vùng chứa ảnh */}
+          <div className="relative aspect-video w-full bg-slate-900 cursor-pointer" onClick={() => window.open(YOUTUBE_LINK, "_blank")}>
             <img 
               src={IMAGE_URL} 
-              alt="Video Thumbnail" 
-              className="h-full w-full object-cover opacity-90 transition group-hover:scale-105 group-hover:opacity-100" 
-              onError={(e) => { e.target.src = "https://placehold.co/600x400/1e293b/ffffff?text=Video+Hướng+Dẫn" }}
+              alt="Paywall Demo" 
+              className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105"
+              onError={(e) => { e.target.src = "https://placehold.co/600x400/1e293b/ffffff?text=Paywall+Demo" }}
             />
-            {/* Overlay Play Button */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition group-hover:bg-black/40">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-white">
-                <PlayCircle size={28} className="text-blue-600" />
+            {/* Nút Play ở giữa */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/30">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition hover:scale-110">
+                <PlayCircle size={28} className="text-[#3478F6]" />
               </div>
             </div>
           </div>
-
-          {/* Nội dung text */}
-          <div className="p-4">
-            <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
-              Paywall Link
-            </h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400 line-clamp-2">
-              Bán quyền truy cập nội dung số của bạn. Chỉ cần chia sẻ link, người mua thanh toán, nội dung sẽ tự động mở khóa.
-            </p>
-            
-            {/* Nút CTA nhỏ */}
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-              <span>Xem video hướng dẫn</span>
-              <ExternalLink size={12} />
-            </div>
-          </div>
         </div>
 
-        {/* Bạn có thể thêm Card thứ 2 ở đây nếu muốn */}
-        {/* <div className="w-[85vw] max-w-[340px] shrink-0 snap-center ...">...</div> */}
+        {/* Thẻ Tag "Tính năng mới" */}
+        <div className="mt-5">
+          <span className="inline-block rounded-full bg-[#EAF2FE] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#3478F6]">
+            Tính năng mới
+          </span>
+        </div>
+
+        {/* Tiêu đề kèm gạch chân uốn lượn */}
+        <div className="relative mt-2 inline-block">
+          <h3 className="font-display text-2xl font-black text-slate-900">
+            Paywall Link
+          </h3>
+          {/* SVG tạo gạch chân uốn lượn giống hình mẫu */}
+          <svg className="absolute -bottom-1 left-0 w-full" height="8" viewBox="0 0 100 8" preserveAspectRatio="none">
+            <path d="M0,5 Q50,0 100,5" fill="none" stroke="#3478F6" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        {/* Mô tả */}
+        <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
+          Bán quyền truy cập nội dung số của bạn. Chỉ cần chia sẻ link, người mua thanh toán, nội dung sẽ tự động mở khóa.
+        </p>
+
+        {/* Nút Xem Video (CTA) */}
+        <button 
+          onClick={() => window.open(YOUTUBE_LINK, "_blank")}
+          className="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#3478F6] transition hover:underline"
+        >
+          Xem video hướng dẫn
+          <ArrowUpRight size={14} />
+        </button>
+
+        {/* Dấu chấm điều hướng (Dots) */}
+        <div className="mt-6 flex items-center justify-center gap-1.5">
+          <span className="h-2 w-6 rounded-full bg-[#3478F6] transition-all duration-300"></span>
+          <span className="h-2 w-2 rounded-full bg-slate-200"></span>
+          <span className="h-2 w-2 rounded-full bg-slate-200"></span>
+        </div>
 
       </div>
-
-      {/* Dấu chấm điều hướng (Dots) - Chỉ mang tính trang trí */}
-      <div className="mt-2 flex items-center justify-center gap-1.5">
-        <span className="h-1.5 w-4 rounded-full bg-blue-600 transition-all duration-300"></span>
-        <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-        <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-      </div>
-
-      {/* Custom CSS để ẩn thanh cuộn ngang */}
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
-          }
+}
