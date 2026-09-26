@@ -4,7 +4,6 @@ import {
   Coins,
   ShieldCheck,
   Users,
-  Star,
   ArrowRight,
   CheckCircle2,
   Gamepad2,
@@ -25,6 +24,9 @@ import {
   Gift,
   Sparkles,
 } from "lucide-react";
+
+const BLUE = "#087EA4";
+const BLUE_DARK = "#066B8B";
 
 const HOW_IT_WORKS = [
   {
@@ -85,25 +87,40 @@ const FAQS = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Send, label: "Telegram", href: "https://t.me/nxx315" },
-  { icon: MessageCircle, label: "Zalo", href: "https://zalo.me/0865245988" },
-  { icon: Mail, label: "Email", href: "mailto:nxx315hub@gmail.com" },
+  {
+    icon: Send,
+    label: "Telegram",
+    href: "https://t.me/nxx315",
+  },
+  {
+    icon: MessageCircle,
+    label: "Zalo",
+    href: "https://zalo.me/0865245988",
+  },
+  {
+    icon: Mail,
+    label: "Email",
+    href: "mailto:nxx315hub@gmail.com",
+  },
 ];
 
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-sky-200">
+    <div className="overflow-hidden border border-slate-200 bg-white">
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
       >
-        <span className="text-sm font-bold text-slate-900 sm:text-base">
+        <span className="text-sm font-semibold text-slate-900 sm:text-base">
           {q}
         </span>
 
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-600">
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500"
+          style={{ backgroundColor: "#F1F8FA" }}
+        >
           {open ? <Minus size={15} /> : <Plus size={15} />}
         </span>
       </button>
@@ -120,16 +137,22 @@ function FAQItem({ q, a }) {
 function Logo() {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 shadow-lg shadow-sky-600/20">
-        <Coins size={20} className="text-white" />
+      <div
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
+        style={{ backgroundColor: BLUE }}
+      >
+        <Coins size={19} />
       </div>
 
       <div className="leading-none">
-        <div className="text-[15px] font-black tracking-tight text-slate-950">
+        <div className="text-[15px] font-extrabold tracking-tight text-slate-950">
           NXX315
         </div>
 
-        <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-600">
+        <div
+          className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em]"
+          style={{ color: BLUE }}
+        >
           Studio Rewards
         </div>
       </div>
@@ -161,55 +184,54 @@ export default function CloudVIPLanding() {
       `}</style>
 
       {/* NAVBAR */}
-      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
 
           <Logo />
 
-          <nav className="hidden items-center gap-7 md:flex">
-
+          <nav className="hidden items-center gap-8 md:flex">
             <button
               onClick={() => scrollTo("how")}
-              className="text-sm font-semibold text-slate-600 transition hover:text-sky-600"
+              className="text-sm font-medium text-slate-600 hover:text-slate-950"
             >
               Cách hoạt động
             </button>
 
             <button
               onClick={() => scrollTo("why")}
-              className="text-sm font-semibold text-slate-600 transition hover:text-sky-600"
+              className="text-sm font-medium text-slate-600 hover:text-slate-950"
             >
               Tính năng
             </button>
 
             <button
               onClick={() => scrollTo("faq")}
-              className="text-sm font-semibold text-slate-600 transition hover:text-sky-600"
+              className="text-sm font-medium text-slate-600 hover:text-slate-950"
             >
               FAQ
             </button>
-
           </nav>
 
           <div className="flex items-center gap-2">
 
             <button
               onClick={() => navigate("/login")}
-              className="hidden rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 sm:block"
+              className="hidden rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:block"
             >
               Đăng nhập
             </button>
 
             <button
               onClick={() => navigate("/register")}
-              className="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-sky-600/20 transition hover:bg-sky-700"
+              className="rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+              style={{ backgroundColor: BLUE }}
             >
               Đăng ký
             </button>
 
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 md:hidden"
             >
               {mobileMenu ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -218,33 +240,33 @@ export default function CloudVIPLanding() {
         </div>
 
         {mobileMenu && (
-          <div className="border-t border-slate-100 bg-white px-5 py-4 md:hidden">
+          <div className="border-t border-slate-200 bg-white px-5 py-4 md:hidden">
             <div className="mx-auto max-w-6xl space-y-1">
 
               <button
                 onClick={() => scrollTo("how")}
-                className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-sky-50"
+                className="block w-full px-3 py-3 text-left text-sm font-medium text-slate-700"
               >
                 Cách hoạt động
               </button>
 
               <button
                 onClick={() => scrollTo("why")}
-                className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-sky-50"
+                className="block w-full px-3 py-3 text-left text-sm font-medium text-slate-700"
               >
                 Tính năng
               </button>
 
               <button
                 onClick={() => scrollTo("faq")}
-                className="block w-full rounded-xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-sky-50"
+                className="block w-full px-3 py-3 text-left text-sm font-medium text-slate-700"
               >
                 FAQ
               </button>
 
               <button
                 onClick={() => navigate("/login")}
-                className="mt-2 block w-full rounded-xl border border-slate-200 py-3 text-center text-sm font-bold text-slate-700"
+                className="mt-2 block w-full rounded-lg border border-slate-200 py-3 text-center text-sm font-semibold text-slate-700"
               >
                 Đăng nhập
               </button>
@@ -257,32 +279,34 @@ export default function CloudVIPLanding() {
       {/* HERO */}
       <main>
 
-        <section className="relative overflow-hidden border-b border-slate-100">
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
 
-          <div className="absolute -left-32 top-10 h-72 w-72 rounded-full bg-sky-100/70 blur-3xl" />
-
-          <div className="absolute -right-32 top-20 h-80 w-80 rounded-full bg-blue-100/60 blur-3xl" />
-
-          <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pb-20 sm:pt-20">
-
-            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
+            <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_.95fr]">
 
               <div>
 
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3.5 py-2 text-xs font-bold text-sky-700">
+                <div
+                  className="inline-flex items-center gap-2 border px-3 py-1.5 text-xs font-semibold"
+                  style={{
+                    borderColor: "#CDE8EF",
+                    backgroundColor: "#F1F8FA",
+                    color: BLUE,
+                  }}
+                >
                   <Sparkles size={13} />
-                  Nền tảng NXX315 Studio Rewards
+                  NXX315 Studio Rewards
                 </div>
 
-                <h1 className="mt-6 max-w-2xl text-4xl font-extrabold leading-[1.12] tracking-tight text-slate-950 sm:text-6xl">
+                <h1 className="mt-6 max-w-2xl text-4xl font-extrabold leading-[1.08] tracking-[-0.035em] text-slate-950 sm:text-6xl">
                   Kiếm Coin.
                   <br />
-                  <span className="text-sky-600">
+                  <span style={{ color: BLUE }}>
                     Đổi phần thưởng.
                   </span>
                 </h1>
 
-                <p className="mt-5 max-w-xl text-[15px] font-medium leading-7 text-slate-500 sm:text-lg">
+                <p className="mt-5 max-w-xl text-[15px] font-normal leading-7 text-slate-500 sm:text-base">
                   Hoàn thành nhiệm vụ, tích lũy Coin và sử dụng Coin cho những
                   phần thưởng được hỗ trợ trên NXX315.
                 </p>
@@ -291,7 +315,8 @@ export default function CloudVIPLanding() {
 
                   <button
                     onClick={() => navigate("/register")}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-sky-600/20 transition hover:bg-sky-700"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
+                    style={{ backgroundColor: BLUE }}
                   >
                     Bắt đầu ngay
                     <ArrowRight size={16} />
@@ -299,27 +324,36 @@ export default function CloudVIPLanding() {
 
                   <button
                     onClick={() => scrollTo("how")}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     Xem cách hoạt động
                   </button>
 
                 </div>
 
-                <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500">
+                <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-slate-500">
 
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 size={14} className="text-sky-600" />
+                    <CheckCircle2
+                      size={14}
+                      style={{ color: BLUE }}
+                    />
                     Đăng ký miễn phí
                   </span>
 
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 size={14} className="text-sky-600" />
+                    <CheckCircle2
+                      size={14}
+                      style={{ color: BLUE }}
+                    />
                     Theo dõi số dư
                   </span>
 
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 size={14} className="text-sky-600" />
+                    <CheckCircle2
+                      size={14}
+                      style={{ color: BLUE }}
+                    />
                     Hỗ trợ trực tuyến
                   </span>
 
@@ -327,175 +361,162 @@ export default function CloudVIPLanding() {
 
               </div>
 
-              {/* Dashboard preview */}
-              <div className="relative">
+              {/* DASHBOARD */}
+              <div className="border border-slate-200 bg-slate-50 p-2">
 
-                <div className="rounded-[28px] border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-900/10">
+                <div className="overflow-hidden border border-slate-200 bg-white">
 
-                  <div className="overflow-hidden rounded-[22px] bg-slate-50">
+                  <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
 
-                    <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
-                      </div>
-
-                      <span className="text-[10px] font-bold text-slate-400">
-                        NXX315 DASHBOARD
-                      </span>
-
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
                     </div>
 
-                    <div className="p-5 sm:p-7">
-
-                      <div className="flex items-start justify-between">
-
-                        <div>
-                          <p className="text-xs font-semibold text-slate-400">
-                            Số dư Coin
-                          </p>
-
-                          <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">
-                            1.250.000
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700">
-                          Coin
-                        </div>
-
-                      </div>
-
-                      <div className="mt-6 grid grid-cols-2 gap-3">
-
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50">
-                            <CheckCircle2
-                              size={17}
-                              className="text-sky-600"
-                            />
-                          </div>
-
-                          <p className="mt-3 text-xs font-semibold text-slate-400">
-                            Nhiệm vụ
-                          </p>
-
-                          <p className="mt-1 text-lg font-black text-slate-900">
-                            12
-                          </p>
-
-                        </div>
-
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50">
-                            <Trophy
-                              size={17}
-                              className="text-sky-600"
-                            />
-                          </div>
-
-                          <p className="mt-3 text-xs font-semibold text-slate-400">
-                            Trạng thái
-                          </p>
-
-                          <p className="mt-1 text-lg font-black text-slate-900">
-                            Hoạt động
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                      <div className="mt-4 space-y-2">
-
-                        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">
-
-                          <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                            <Gamepad2
-                              size={14}
-                              className="text-sky-600"
-                            />
-                            Roblox
-                          </span>
-
-                          <span className="text-xs font-bold text-slate-500">
-                            Đổi thưởng
-                          </span>
-
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">
-
-                          <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                            <Flame
-                              size={14}
-                              className="text-sky-600"
-                            />
-                            Nhiệm vụ
-                          </span>
-
-                          <span className="text-xs font-bold text-emerald-600">
-                            + Coin
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-
-                <div className="absolute -bottom-5 -left-4 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl sm:block">
-
-                  <div className="flex items-center gap-2">
-
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50">
-                      <ShieldCheck
-                        size={16}
-                        className="text-sky-600"
-                      />
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-semibold text-slate-400">
-                        Hệ thống
-                      </p>
-
-                      <p className="text-xs font-black text-slate-900">
-                        Đang hoạt động
-                      </p>
-                    </div>
+                    <span className="text-[10px] font-semibold tracking-wide text-slate-400">
+                      NXX315 DASHBOARD
+                    </span>
 
                   </div>
 
-                </div>
+                  <div className="p-5 sm:p-7">
 
+                    <div className="flex items-start justify-between">
+
+                      <div>
+                        <p className="text-xs font-medium text-slate-400">
+                          Số dư Coin
+                        </p>
+
+                        <p className="mt-1 text-3xl font-extrabold tracking-tight text-slate-950">
+                          1.250.000
+                        </p>
+                      </div>
+
+                      <div
+                        className="px-3 py-2 text-xs font-semibold"
+                        style={{
+                          backgroundColor: "#F1F8FA",
+                          color: BLUE,
+                        }}
+                      >
+                        Coin
+                      </div>
+
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+
+                      <div className="border border-slate-200 bg-white p-4">
+
+                        <div
+                          className="flex h-9 w-9 items-center justify-center rounded-lg"
+                          style={{ backgroundColor: "#F1F8FA" }}
+                        >
+                          <CheckCircle2
+                            size={17}
+                            style={{ color: BLUE }}
+                          />
+                        </div>
+
+                        <p className="mt-3 text-xs font-medium text-slate-400">
+                          Nhiệm vụ
+                        </p>
+
+                        <p className="mt-1 text-lg font-extrabold text-slate-900">
+                          12
+                        </p>
+
+                      </div>
+
+                      <div className="border border-slate-200 bg-white p-4">
+
+                        <div
+                          className="flex h-9 w-9 items-center justify-center rounded-lg"
+                          style={{ backgroundColor: "#F1F8FA" }}
+                        >
+                          <Trophy
+                            size={17}
+                            style={{ color: BLUE }}
+                          />
+                        </div>
+
+                        <p className="mt-3 text-xs font-medium text-slate-400">
+                          Trạng thái
+                        </p>
+
+                        <p className="mt-1 text-lg font-extrabold text-slate-900">
+                          Hoạt động
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+
+                      <div className="flex items-center justify-between border border-slate-200 bg-white px-4 py-3">
+
+                        <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                          <Gamepad2
+                            size={14}
+                            style={{ color: BLUE }}
+                          />
+                          Roblox
+                        </span>
+
+                        <span className="text-xs font-medium text-slate-500">
+                          Đổi thưởng
+                        </span>
+
+                      </div>
+
+                      <div className="flex items-center justify-between border border-slate-200 bg-white px-4 py-3">
+
+                        <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                          <Flame
+                            size={14}
+                            style={{ color: BLUE }}
+                          />
+                          Nhiệm vụ
+                        </span>
+
+                        <span className="text-xs font-semibold text-emerald-600">
+                          + Coin
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
               </div>
 
             </div>
           </div>
         </section>
-            {/* HOW */}
+
+        {/* HOW */}
         <section
           id="how"
           className="mx-auto max-w-6xl px-5 py-20"
         >
           <div className="max-w-2xl">
 
-            <span className="text-xs font-black uppercase tracking-[0.18em] text-sky-600">
+            <span
+              className="text-xs font-bold uppercase tracking-[0.15em]"
+              style={{ color: BLUE }}
+            >
               Bắt đầu thật đơn giản
             </span>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
               Ba bước để bắt đầu
             </h2>
 
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+            <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
               Không cần thao tác phức tạp. Mọi thứ được thiết kế để bạn dễ
               hiểu và dễ theo dõi.
             </p>
@@ -507,22 +528,25 @@ export default function CloudVIPLanding() {
             {HOW_IT_WORKS.map(({ n, title, desc, icon: Icon }) => (
               <div
                 key={n}
-                className="group rounded-3xl border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl hover:shadow-sky-900/5"
+                className="border border-slate-200 bg-white p-6 transition hover:border-slate-300"
               >
 
                 <div className="flex items-center justify-between">
 
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-600 text-white">
-                    <Icon size={19} />
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg text-white"
+                    style={{ backgroundColor: BLUE }}
+                  >
+                    <Icon size={18} />
                   </div>
 
-                  <span className="text-3xl font-black text-slate-100">
+                  <span className="text-2xl font-extrabold text-slate-200">
                     {n}
                   </span>
 
                 </div>
 
-                <h3 className="mt-6 text-lg font-extrabold text-slate-950">
+                <h3 className="mt-6 text-base font-bold text-slate-950">
                   {title}
                 </h3>
 
@@ -535,11 +559,10 @@ export default function CloudVIPLanding() {
 
           </div>
         </section>
-
-        {/* WHY */}
+            {/* WHY */}
         <section
           id="why"
-          className="border-y border-slate-100 bg-slate-50/70"
+          className="border-y border-slate-200 bg-slate-50"
         >
           <div className="mx-auto max-w-6xl px-5 py-20">
 
@@ -547,12 +570,15 @@ export default function CloudVIPLanding() {
 
               <div>
 
-                <span className="text-xs font-black uppercase tracking-[0.18em] text-sky-600">
+                <span
+                  className="text-xs font-bold uppercase tracking-[0.15em]"
+                  style={{ color: BLUE }}
+                >
                   Vì sao NXX315
                 </span>
 
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                  Gọn, rõ ràng và tập trung vào trải nghiệm
+                <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
+                  Gọn, rõ ràng và dễ sử dụng
                 </h2>
 
                 <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -562,7 +588,8 @@ export default function CloudVIPLanding() {
 
                 <button
                   onClick={() => navigate("/register")}
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-700"
+                  className="mt-6 inline-flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ backgroundColor: BLUE }}
                 >
                   Tạo tài khoản
                   <ArrowRight size={15} />
@@ -570,22 +597,25 @@ export default function CloudVIPLanding() {
 
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="grid gap-3">
 
                 {WHY_CARDS.map(({ icon: Icon, title, desc }) => (
                   <div
                     key={title}
-                    className="rounded-2xl border border-slate-200 bg-white p-5"
+                    className="border border-slate-200 bg-white p-5"
                   >
 
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
+                    <div
+                      className="flex h-10 w-10 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: "#F1F8FA" }}
+                    >
                       <Icon
                         size={18}
-                        className="text-sky-600"
+                        style={{ color: BLUE }}
                       />
                     </div>
 
-                    <h3 className="mt-4 text-base font-extrabold text-slate-950">
+                    <h3 className="mt-4 text-base font-bold text-slate-950">
                       {title}
                     </h3>
 
@@ -605,28 +635,34 @@ export default function CloudVIPLanding() {
         {/* SECURITY */}
         <section className="mx-auto max-w-6xl px-5 py-20">
 
-          <div className="overflow-hidden rounded-[30px] border border-sky-100 bg-sky-600">
+          <div
+            className="overflow-hidden border px-6 py-10 sm:px-10"
+            style={{
+              backgroundColor: "#087EA4",
+              borderColor: "#087EA4",
+            }}
+          >
 
-            <div className="grid gap-8 px-6 py-10 sm:px-10 lg:grid-cols-[1fr_.7fr] lg:items-center">
+            <div className="grid gap-8 lg:grid-cols-[1fr_.7fr] lg:items-center">
 
               <div>
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-white">
-                  <Lock size={20} />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white">
+                  <Lock size={19} />
                 </div>
 
-                <h2 className="mt-5 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                <h2 className="mt-5 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
                   Ưu tiên an toàn tài khoản
                 </h2>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-sky-50">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
                   Hệ thống áp dụng các biện pháp kiểm tra và giới hạn để giảm
                   hành vi gian lận, đồng thời hỗ trợ theo dõi lịch sử hoạt động.
                 </p>
 
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-px border border-white/20 bg-white/20">
 
                 {[
                   ["01", "Kiểm tra hoạt động"],
@@ -637,14 +673,14 @@ export default function CloudVIPLanding() {
 
                   <div
                     key={n}
-                    className="rounded-2xl border border-white/15 bg-white/10 p-4"
+                    className="bg-[#087EA4] p-4"
                   >
 
-                    <span className="text-xs font-black text-sky-100">
+                    <span className="text-xs font-bold text-white/60">
                       {n}
                     </span>
 
-                    <p className="mt-2 text-xs font-bold leading-5 text-white">
+                    <p className="mt-2 text-xs font-semibold leading-5 text-white">
                       {t}
                     </p>
 
@@ -666,12 +702,18 @@ export default function CloudVIPLanding() {
 
           <div className="text-center">
 
-            <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700">
+            <span
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold"
+              style={{
+                backgroundColor: "#F1F8FA",
+                color: BLUE,
+              }}
+            >
               <Search size={13} />
               Giải đáp
             </span>
 
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
               Câu hỏi thường gặp
             </h2>
 
@@ -697,13 +739,22 @@ export default function CloudVIPLanding() {
         {/* CTA */}
         <section className="mx-auto max-w-6xl px-5 pb-20">
 
-          <div className="rounded-[30px] border border-sky-100 bg-sky-50 px-6 py-12 text-center sm:px-10">
+          <div
+            className="border px-6 py-12 text-center sm:px-10"
+            style={{
+              borderColor: "#CDE8EF",
+              backgroundColor: "#F1F8FA",
+            }}
+          >
 
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg shadow-sky-600/20">
-              <Coins size={21} />
+            <div
+              className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg text-white"
+              style={{ backgroundColor: BLUE }}
+            >
+              <Coins size={20} />
             </div>
 
-            <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h2 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
               Sẵn sàng bắt đầu?
             </h2>
 
@@ -713,7 +764,8 @@ export default function CloudVIPLanding() {
 
             <button
               onClick={() => navigate("/register")}
-              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-sky-600 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-sky-600/20 transition hover:bg-sky-700"
+              className="mt-7 inline-flex items-center gap-2 rounded-lg px-7 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
+              style={{ backgroundColor: BLUE }}
             >
               Đăng ký miễn phí
               <ArrowRight size={16} />
@@ -726,7 +778,7 @@ export default function CloudVIPLanding() {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-100 bg-white px-5 py-12">
+      <footer className="border-t border-slate-200 bg-white px-5 py-12">
 
         <div className="mx-auto max-w-6xl">
 
@@ -745,29 +797,29 @@ export default function CloudVIPLanding() {
 
             <div>
 
-              <h4 className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
+              <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
                 Khám phá
               </h4>
 
-              <div className="mt-4 space-y-3 text-sm font-semibold text-slate-600">
+              <div className="mt-4 space-y-3 text-sm font-medium text-slate-600">
 
                 <button
                   onClick={() => navigate("/register")}
-                  className="block hover:text-sky-600"
+                  className="block hover:text-slate-950"
                 >
                   Đăng ký kiếm Coin
                 </button>
 
                 <button
                   onClick={() => navigate("/tasks")}
-                  className="block hover:text-sky-600"
+                  className="block hover:text-slate-950"
                 >
                   Làm nhiệm vụ
                 </button>
 
                 <button
                   onClick={() => navigate("/store")}
-                  className="block hover:text-sky-600"
+                  className="block hover:text-slate-950"
                 >
                   Đổi thưởng
                 </button>
@@ -778,7 +830,7 @@ export default function CloudVIPLanding() {
 
             <div>
 
-              <h4 className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
+              <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
                 Liên hệ
               </h4>
 
@@ -786,9 +838,12 @@ export default function CloudVIPLanding() {
 
                 <a
                   href="mailto:nxx315hub@gmail.com"
-                  className="flex items-center gap-2 hover:text-sky-600"
+                  className="flex items-center gap-2 hover:text-slate-950"
                 >
-                  <Mail size={15} className="text-sky-600" />
+                  <Mail
+                    size={15}
+                    style={{ color: BLUE }}
+                  />
                   nxx315hub@gmail.com
                 </a>
 
@@ -796,11 +851,11 @@ export default function CloudVIPLanding() {
                   href="https://zalo.me/0865245988"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-sky-600"
+                  className="flex items-center gap-2 hover:text-slate-950"
                 >
                   <MessageCircle
                     size={15}
-                    className="text-sky-600"
+                    style={{ color: BLUE }}
                   />
                   Zalo 0865245988
                 </a>
@@ -808,7 +863,7 @@ export default function CloudVIPLanding() {
                 <div className="flex items-center gap-2">
                   <Clock
                     size={15}
-                    className="text-sky-600"
+                    style={{ color: BLUE }}
                   />
                   Hỗ trợ trực tuyến
                 </div>
@@ -825,7 +880,7 @@ export default function CloudVIPLanding() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-600"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-900"
                     >
                       <Icon size={15} />
                     </a>
@@ -853,4 +908,4 @@ export default function CloudVIPLanding() {
 
     </div>
   );
-}    
+            }
