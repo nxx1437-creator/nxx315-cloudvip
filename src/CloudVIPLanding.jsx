@@ -329,25 +329,30 @@ export default function CloudVIPLanding() {
                 </div>
 
                 {/* Social proof */}
-                <div className="mt-7 flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {["T", "H", "N", "L"].map((c, i) => (
-                      <div
-                        key={i}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-sm"
-                        style={{ backgroundColor: BLUE }}
-                      >
-                        {c}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600">
-                    <b className="text-slate-900">10.000+</b> user đang kiếm Coin
-                    mỗi ngày
-                  </p>
-                </div>
-              </div>
-
+<div className="mt-7 flex items-center gap-3">
+  <div className="flex -space-x-2">
+    {[
+      `${AVATAR_URL}/user-1.jpg`,
+      `${AVATAR_URL}/user-2.jpg`,
+      `${AVATAR_URL}/user-3.jpg`,
+      `${AVATAR_URL}/user-4.jpg`,
+    ].map((src, i) => (
+      <img
+        key={i}
+        src={src}
+        alt="User"
+        className="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    ))}
+  </div>
+  <p className="text-xs font-semibold text-slate-600">
+    <b className="text-slate-900">10.000+</b> user đang kiếm Coin
+    mỗi ngày
+  </p>
+</div>
               {/* DASHBOARD MOCKUP */}
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm">
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
