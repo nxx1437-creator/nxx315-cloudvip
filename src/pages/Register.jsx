@@ -58,22 +58,23 @@ export default function Register() {
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
-  // ✅ IP check
+  // ✅ IP check — mặc định true để disable Social ngay khi vào trang
   const [ipBlocked, setIpBlocked] = useState(false);
-  const [ipChecking, setIpChecking] = useState(false);
+  const [ipChecking, setIpChecking] = useState(true);
   const [ipChecked, setIpChecked] = useState(false);
   const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
   // ✅ Kiểm tra IP
   const checkIp = async () => {
-    if (ipChecking) return;
+    if (ipChecking && ipChecked) return;
+    if (ipChecked && !ipError) return;
 
     setIpChecking(true);
     setIpError(false);
 
     try {
-      // ✅ Timeout 5s
+      // ✅ Timeout 5s cho getClientIp
       const ip = await Promise.race([
         getClientIp(),
         new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
@@ -134,6 +135,12 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
+    if (ipChecking) {
+      setError("Đang kiểm tra IP, vui lòng đợi...");
+      setErrorType("error");
+      return;
+    }
 
     if (ipError) {
       setError(
@@ -240,6 +247,7 @@ export default function Register() {
           return;
         }
 
+        // ✅ Áp dụng mã mời nếu có
         if (form.referral.trim() && data.user) {
           try {
             const { data: refResult, error: refError } = await supabase.rpc(
@@ -279,6 +287,12 @@ export default function Register() {
     setError("");
     if (!supported) {
       setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
+      return;
+    }
+
+    // ✅ Chặn nếu đang check IP
+    if (ipChecking) {
+      setError("Đang kiểm tra IP, vui lòng đợi...");
       return;
     }
 
@@ -414,6 +428,7 @@ export default function Register() {
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
 
+        {/* ✅ Ô nhập mã mời (không bắt buộc) */}
         <div className="relative">
           <Gift
             size={16}
@@ -463,13 +478,18 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={loading || ipBlocked || ipError}
+          disabled={loading || ipBlocked || ipError || ipChecking}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Đang tạo tài khoản...
+            </>
+          ) : ipChecking ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Đang kiểm tra IP...
             </>
           ) : ipError ? (
             "Không thể kiểm tra IP"
@@ -492,9 +512,12 @@ export default function Register() {
         </div>
       </div>
 
+      {/* ✅ Disable Social khi đang check IP, IP trùng, hoặc lỗi */}
       <div
         className={
-          ipBlocked || ipError ? "pointer-events-none opacity-50" : ""
+          ipBlocked || ipError || ipChecking
+            ? "pointer-events-none opacity-50"
+            : ""
         }
       >
         <SocialRow onSelect={handleSocial} />
@@ -508,4 +531,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-    }
+                   }
