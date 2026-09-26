@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Loader2,
@@ -64,15 +64,16 @@ export default function Register() {
   const [ipChecked, setIpChecked] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
-  // ✅ Kiểm tra IP khi user nhập email (debounce)
+  // ✅ Kiểm tra IP
   const checkIp = async () => {
-    if (ipChecked || ipChecking) return;
+    if (ipChecking) return;
 
     setIpChecking(true);
     try {
       const ip = await getClientIp();
       if (!ip) {
         setIpChecking(false);
+        setIpChecked(true);
         return;
       }
 
@@ -107,13 +108,21 @@ export default function Register() {
     }
   };
 
-  // ✅ Gọi checkIp khi user focus vào input email
-  const handleEmailFocus = () => {
-    if (!ipChecked) checkIp();
-  };
+  // ✅ Tự động check IP ngay khi vào trang
+  useEffect(() => {
+    checkIp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
+    // ✅ Chờ check IP xong
+    if (!ipChecked || ipChecking) {
+      setError("Đang kiểm tra IP, vui lòng đợi...");
+      await checkIp();
+      return;
+    }
 
     if (ipBlocked) {
       setError(
@@ -179,6 +188,11 @@ export default function Register() {
               `• Hoặc dùng email khác để đăng ký`
           );
           setErrorType("email_exists");
+        } else if (msg.includes("ip_already_registered")) {
+          setError(
+            "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ."
+          );
+          setErrorType("ip_blocked");
         } else if (msg.includes("invalid email")) {
           setError("Email không hợp lệ. Vui lòng kiểm tra lại.");
         } else if (msg.includes("password")) {
@@ -217,7 +231,10 @@ export default function Register() {
 
             if (refError) {
               console.warn("Apply referral error:", refError);
-            } else if (!refResult?.[0]?.success && !refResult?.success) {
+            } else if (
+              refResult?.[0]?.success === false ||
+              refResult?.success === false
+            ) {
               console.warn("Referral fail:", refResult);
             }
           } catch (err) {
@@ -241,31 +258,31 @@ export default function Register() {
   };
 
   const handleSocial = async (provider, supported) => {
-  setError("");
-  if (!supported) {
-    setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
-    return;
-  }
+    setError("");
+    if (!supported) {
+      setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
+      return;
+    }
 
-  // ✅ Check IP trước khi cho đăng ký bằng social
-  if (!ipChecked) {
-    await checkIp();
-  }
+    // ✅ Chờ check IP xong
+    if (!ipChecked || ipChecking) {
+      await checkIp();
+    }
 
-  if (ipBlocked) {
-    setError(
-      "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
-    );
-    setErrorType("ip_blocked");
-    return;
-  }
+    if (ipBlocked) {
+      setError(
+        "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
+      );
+      setErrorType("ip_blocked");
+      return;
+    }
 
-  const { error: authError } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}/dashboard` },
-  });
-  if (authError) setError(authError.message);
-};
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (authError) setError(authError.message);
+  };
 
   return (
     <AuthShell
@@ -337,7 +354,6 @@ export default function Register() {
           type="email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          onFocus={handleEmailFocus}
           placeholder="Email của bạn"
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
@@ -400,13 +416,18 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={loading || ipBlocked}
+          disabled={loading || ipBlocked || ipChecking}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Đang tạo tài khoản...
+            </>
+          ) : ipChecking ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Đang kiểm tra IP...
             </>
           ) : ipBlocked ? (
             "Không thể đăng ký"
@@ -437,4 +458,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-          }
+  }
