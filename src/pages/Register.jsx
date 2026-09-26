@@ -58,14 +58,12 @@ export default function Register() {
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
-  // ✅ IP check — mặc định true để disable Social ngay khi vào trang
   const [ipBlocked, setIpBlocked] = useState(false);
   const [ipChecking, setIpChecking] = useState(true);
   const [ipChecked, setIpChecked] = useState(false);
   const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
-  // ✅ Kiểm tra IP
   const checkIp = async () => {
     if (ipChecking && ipChecked) return;
     if (ipChecked && !ipError) return;
@@ -74,7 +72,6 @@ export default function Register() {
     setIpError(false);
 
     try {
-      // ✅ Timeout 5s cho getClientIp
       const ip = await Promise.race([
         getClientIp(),
         new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
@@ -107,9 +104,7 @@ export default function Register() {
 
       clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
 
@@ -143,17 +138,13 @@ export default function Register() {
     }
 
     if (ipError) {
-      setError(
-        "Không thể kiểm tra IP. Vui lòng kiểm tra kết nối mạng và thử lại."
-      );
+      setError("Không thể kiểm tra IP. Vui lòng thử lại.");
       setErrorType("ip_error");
       return;
     }
 
     if (ipBlocked) {
-      setError(
-        "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
-      );
+      setError("IP của bạn đã có tài khoản.");
       setErrorType("ip_blocked");
       return;
     }
@@ -215,9 +206,7 @@ export default function Register() {
           );
           setErrorType("email_exists");
         } else if (msg.includes("ip_already_registered")) {
-          setError(
-            "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ."
-          );
+          setError("IP của bạn đã có tài khoản.");
           setErrorType("ip_blocked");
         } else if (msg.includes("invalid email")) {
           setError("Email không hợp lệ. Vui lòng kiểm tra lại.");
@@ -247,7 +236,6 @@ export default function Register() {
           return;
         }
 
-        // ✅ Áp dụng mã mời nếu có
         if (form.referral.trim() && data.user) {
           try {
             const { data: refResult, error: refError } = await supabase.rpc(
@@ -272,9 +260,7 @@ export default function Register() {
         navigate("/onboarding", { replace: true });
       } else {
         setLoading(false);
-        setError(
-          "Không thể tạo tài khoản. Vui lòng thử lại hoặc dùng email khác."
-        );
+        setError("Không thể tạo tài khoản. Vui lòng thử lại.");
       }
     } catch (err) {
       console.error("[register] error:", err);
@@ -290,24 +276,19 @@ export default function Register() {
       return;
     }
 
-    // ✅ Chặn nếu đang check IP
     if (ipChecking) {
       setError("Đang kiểm tra IP, vui lòng đợi...");
       return;
     }
 
     if (ipError) {
-      setError(
-        "Không thể kiểm tra IP. Vui lòng kiểm tra kết nối mạng và thử lại."
-      );
+      setError("Không thể kiểm tra IP. Vui lòng thử lại.");
       setErrorType("ip_error");
       return;
     }
 
     if (ipBlocked) {
-      setError(
-        "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
-      );
+      setError("IP của bạn đã có tài khoản.");
       setErrorType("ip_blocked");
       return;
     }
@@ -319,36 +300,17 @@ export default function Register() {
     if (authError) setError(authError.message);
   };
 
-  return (
-    <AuthShell
-      title="Tạo tài khoản"
-      subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
-    >
-      {/* Cảnh báo quan trọng */}
-      <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
-        <div className="flex items-start gap-2">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
-          <div className="text-[12px] leading-5 text-amber-800">
-            <p className="font-bold">Lưu ý quan trọng</p>
-            <ul className="mt-1 list-inside list-disc space-y-0.5">
-              <li>
-                Mỗi IP chỉ được tạo <b>1 tài khoản</b>
-              </li>
-              <li>Nếu cố tạo thêm, hệ thống sẽ khóa</li>
-              <li>Đã có tài khoản rồi? Vui lòng đăng nhập</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ Lỗi check IP */}
-      {ipError && (
-        <div className="mb-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
-          <div className="flex items-start gap-2">
+  // ✅ Chỉ hiển thị 1 cảnh báo duy nhất theo ưu tiên
+  const renderAlert = () => {
+    // Ưu tiên 1: Lỗi check IP
+    if (ipError) {
+      return (
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
             <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600" />
-            <div>
+            <div className="flex-1">
               <p className="text-[13px] font-bold text-amber-800">
-                Không thể kiểm tra IP
+                Không thể kiểm tra thiết bị
               </p>
               <p className="mt-1 text-[12px] leading-5 text-amber-700">
                 Vui lòng kiểm tra kết nối mạng và thử lại.
@@ -359,49 +321,68 @@ export default function Register() {
                   setIpError(false);
                   checkIp();
                 }}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-[12px] font-bold text-white"
+                className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-[12px] font-bold text-white transition hover:bg-amber-600"
               >
                 Thử lại
               </button>
             </div>
           </div>
         </div>
-      )}
+      );
+    }
 
-      {/* ✅ IP đã có tài khoản */}
-      {ipBlocked && (
-        <div className="mb-4 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
-          <div className="flex items-start gap-2">
+    // Ưu tiên 2: IP trùng
+    if (ipBlocked) {
+      return (
+        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+          <div className="flex items-start gap-3">
             <ShieldAlert size={18} className="mt-0.5 shrink-0 text-rose-600" />
-            <div>
+            <div className="flex-1">
               <p className="text-[13px] font-bold text-rose-800">
-                IP của bạn đã có tài khoản
+                Thiết bị này đã có tài khoản
               </p>
               <p className="mt-1 text-[12px] leading-5 text-rose-700">
-                Tài khoản: <b>{blockedEmail}</b>
-                <br />
-                Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo{" "}
-                <a
-                  href="https://zalo.me/0865245988"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold underline"
-                >
-                  0865245988
-                </a>{" "}
-                để được hỗ trợ.
+                Tài khoản: <b>{blockedEmail}</b>. Mỗi thiết bị chỉ được tạo 1
+                tài khoản.
               </p>
               <Link
                 to="/login"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-[12px] font-bold text-white"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-rose-500 px-4 py-2 text-[12px] font-bold text-white transition hover:bg-rose-600"
               >
                 <LogIn size={13} />
-                Đăng nhập ngay
+                Đăng nhập tài khoản cũ
               </Link>
             </div>
           </div>
         </div>
-      )}
+      );
+    }
+
+    // Ưu tiên 3: Lưu ý chung (chỉ hiện khi không có lỗi)
+    return (
+      <div className="mb-4 rounded-2xl border border-sky-100 bg-sky-50/60 p-3.5">
+        <div className="flex items-start gap-2.5">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100">
+            <span className="text-[11px] font-bold text-sky-600">i</span>
+          </div>
+          <p className="text-[12px] leading-5 text-sky-800">
+            Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b>. Đã có tài khoản?{" "}
+            <Link to="/login" className="font-bold underline">
+              Đăng nhập
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <AuthShell
+      title="Tạo tài khoản"
+      subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
+    >
+      {/* ✅ Chỉ 1 cảnh báo duy nhất */}
+      {renderAlert()}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
@@ -409,7 +390,8 @@ export default function Register() {
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
           placeholder="Tên hiển thị (tùy chọn)"
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+          disabled={ipChecking}
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
         />
 
         <input
@@ -417,7 +399,8 @@ export default function Register() {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           placeholder="Email của bạn"
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+          disabled={ipChecking}
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
         />
 
         <input
@@ -425,10 +408,10 @@ export default function Register() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           placeholder="Mật khẩu (ít nhất 6 ký tự)"
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+          disabled={ipChecking}
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
         />
 
-        {/* ✅ Ô nhập mã mời (không bắt buộc) */}
         <div className="relative">
           <Gift
             size={16}
@@ -442,7 +425,8 @@ export default function Register() {
             }
             placeholder="Mã mời (tùy chọn) — nhận +200 xu"
             maxLength={10}
-            className="w-full rounded-full border border-amber-200 bg-amber-50/50 py-3.5 pl-11 pr-5 text-sm font-semibold tracking-wider text-amber-900 uppercase outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-amber-400 focus:border-amber-400 focus:bg-white"
+            disabled={ipChecking}
+            className="w-full rounded-full border border-amber-200 bg-amber-50/50 py-3.5 pl-11 pr-5 text-sm font-semibold tracking-wider text-amber-900 uppercase outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-amber-400 focus:border-amber-400 focus:bg-white disabled:opacity-60"
           />
         </div>
 
@@ -454,12 +438,6 @@ export default function Register() {
                 : "border-rose-200 bg-rose-50 text-rose-600"
             }`}
           >
-            {errorType === "email_exists" && (
-              <div className="mb-1.5 flex items-center gap-1.5 font-bold">
-                <AlertTriangle size={14} />
-                Email đã được đăng ký
-              </div>
-            )}
             {errorType === "email_exists" ? (
               <>
                 <p className="whitespace-pre-line">{error}</p>
@@ -489,12 +467,12 @@ export default function Register() {
           ) : ipChecking ? (
             <>
               <Loader2 size={16} className="animate-spin" />
-              Đang kiểm tra IP...
+              Đang kiểm tra...
             </>
           ) : ipError ? (
-            "Không thể kiểm tra IP"
+            "Không thể kiểm tra thiết bị"
           ) : ipBlocked ? (
-            "Không thể đăng ký"
+            "Thiết bị đã có tài khoản"
           ) : (
             "Đăng ký"
           )}
@@ -512,7 +490,6 @@ export default function Register() {
         </div>
       </div>
 
-      {/* ✅ Disable Social khi đang check IP, IP trùng, hoặc lỗi */}
       <div
         className={
           ipBlocked || ipError || ipChecking
@@ -531,4 +508,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-                   }
+        }
