@@ -65,6 +65,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
 import DeviceChecker from "./components/DeviceChecker.jsx";
+import VersionChecker from "./components/VersionChecker.jsx"; // ✅ MỚI
 
 export default function App() {
   return (
@@ -136,8 +137,11 @@ export default function App() {
           </Routes>
         </Suspense>
 
+        {/* ✅ Auto reload khi có bản mới */}
+        <VersionChecker />
+
         <DeviceChecker />
       </BrowserRouter>
     </BanGate>
   );
-  }
+              }
