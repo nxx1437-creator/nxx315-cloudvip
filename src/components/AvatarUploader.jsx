@@ -1,52 +1,12 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import Cropper from "react-easy-crop";
+import React, { useRef, useState, useEffect } from "react";
 import { Camera, Loader2, X, Check, AlertTriangle, ZoomIn, ZoomOut } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { validateAvatarFile, uploadAvatar, checkAvatarUploadLimit } from "../lib/avatarUpload.js";
 
-// --- Hàm tiện ích để xử lý cắt ảnh ---
-const createImage = (url) =>
-  new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (error) => reject(error));
-    image.setAttribute("crossOrigin", "anonymous"); // Cần thiết cho ảnh từ domain khác
-    image.src = url;
-  });
-
-async function getCroppedImg(imageSrc, pixelCrop) {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) return null;
-
-  // Kích thước ảnh đại diện đầu ra (400x400px)
-  const MAX_SIZE = 400;
-  canvas.width = MAX_SIZE;
-  canvas.height = MAX_SIZE;
-
-  // Vẽ phần ảnh đã cắt vào canvas
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    MAX_SIZE,
-    MAX_SIZE
-  );
-
-  // Trả về dạng Blob
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      resolve(blob);
-    }, "image/jpeg", 0.9);
-  });
-}
-// --------------------------------------
+// Kích thước khung cắt (pixel)
+const CROP_SIZE = 300; 
+// Kích thước ảnh đầu ra
+const OUTPUT_SIZE = 400;
 
 export default function AvatarUploader({ userId, currentUrl, initial, onUploaded }) {
   const fileRef = useRef(null);
@@ -57,10 +17,12 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
   const [limit, setLimit] = useState({ remaining: 2, limit: 2 });
 
   // State cho phần cắt ảnh
-  const [imageSrc, setImageSrc] = useState(null); // Ảnh gốc dạng base64 để cắt
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [imageSrc, setImageSrc] = useState(null);
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (currentUrl && !preview) setPreview(currentUrl);
@@ -83,7 +45,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     fileRef.current?.click();
   };
 
-  // Bước 1: Chọn file -> Validate -> Mở modal cắt ảnh
+  // Bước 1: Chọn file -> Validate -> Đọc ảnh -> Mở modal
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -95,12 +57,16 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     try {
       await validateAvatarFile(file);
 
-      // Đọc file thành chuỗi base64 để hiển thị lên Cropper
       const reader = new FileReader();
       reader.addEventListener("load", () => {
-        setImageSrc(reader.result);
-        setZoom(1);
-        setCrop({ x: 0, y: 0 });
+        const img = new Image();
+        img.onload = () => {
+          setImgDimensions({ width: img.width, height: img.height });
+          setImageSrc(reader.result);
+          setZoom(1);
+          setOffset({ x: 0, y: 0 });
+        };
+        img.src = reader.result;
       });
       reader.readAsDataURL(file);
     } catch (err) {
@@ -109,33 +75,88 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     }
   };
 
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
+  // Xử lý kéo thả ảnh
+  const handlePointerDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
 
-  // Bước 2: Người dùng bấm "Lưu" trên modal -> Cắt ảnh -> Upload
+  const handlePointerMove = (e) => {
+    if (!isDragging) return;
+    setOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
+
+  // Bước 2: Cắt ảnh bằng Canvas và Upload
   const handleSaveCroppedImage = async () => {
-    if (!imageSrc || !croppedAreaPixels) return;
+    if (!imageSrc || !imgDimensions.width) return;
 
     try {
       setUploading(true);
       setError("");
 
-      // 1. Cắt ảnh từ canvas
-      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      // Tính toán tỷ lệ để vẽ lên canvas
+      const canvas = document.createElement("canvas");
+      canvas.width = OUTPUT_SIZE;
+      canvas.height = OUTPUT_SIZE;
+      const ctx = canvas.getContext("2d");
+
+      const img = new Image();
+      img.src = imageSrc;
+      await new Promise((resolve) => (img.onload = resolve));
+
+      // Tính toán vị trí cắt dựa trên offset và zoom
+      const scale = zoom;
+      const scaledWidth = imgDimensions.width * scale;
+      const scaledHeight = imgDimensions.height * scale;
+
+      // Tọa độ top-left của ảnh trong khung crop (300x300)
+      const left = (CROP_SIZE - scaledWidth) / 2 + offset.x;
+      const top = (CROP_SIZE - scaledHeight) / 2 + offset.y;
+
+      // Tọa độ trên ảnh gốc cần cắt
+      const sourceX = -left / scale;
+      const sourceY = -top / scale;
+      const sourceWidth = CROP_SIZE / scale;
+      const sourceHeight = CROP_SIZE / scale;
+
+      // Vẽ ảnh đã cắt lên canvas
+      ctx.drawImage(
+        img,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        OUTPUT_SIZE,
+        OUTPUT_SIZE
+      );
+
+      // Chuyển canvas thành Blob
+      const croppedBlob = await new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+      });
+
       if (!croppedBlob) throw new Error("Không thể xử lý ảnh.");
 
-      // 2. Chuyển Blob thành File để uploadAvatar có thể xử lý
+      // Tạo File từ Blob để upload
       const croppedFile = new File(
         [croppedBlob],
         `avatar_${userId}_${Date.now()}.jpg`,
         { type: "image/jpeg" }
       );
 
-      // 3. Upload lên Supabase (dùng hàm uploadAvatar hiện tại của bạn)
+      // Upload lên Supabase
       const publicUrl = await uploadAvatar(userId, croppedFile);
 
-      // 4. Cập nhật database
+      // Cập nhật database
       const { error: dbError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
@@ -143,7 +164,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
       if (dbError) throw dbError;
 
-      // 5. Cập nhật giao diện
+      // Cập nhật giao diện
       setPreview(publicUrl);
       setSuccess(true);
       setImageSrc(null); // Đóng modal
@@ -229,30 +250,42 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
         </div>
       )}
 
-      {/* --- MODAL CẮT ẢNH --- */}
+      {/* --- MODAL CẮT ẢNH (KHÔNG CẦN THƯ VIỆN) --- */}
       {imageSrc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-900">
             
-            {/* Header */}
             <div className="border-b border-slate-100 p-4 dark:border-slate-800">
               <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
                 Cắt ảnh đại diện
               </h3>
             </div>
 
-            {/* Vùng Crop ảnh */}
-            <div className="relative h-80 w-full bg-slate-900">
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                cropShape="round"
-                showGrid={false}
-                onCropChange={setCrop}
-                onCropComplete={onCropComplete}
-                onZoomChange={setZoom}
+            {/* Vùng Crop ảnh (Dùng CSS transform thay vì thư viện) */}
+            <div 
+              className="relative flex h-[300px] w-full items-center justify-center overflow-hidden bg-slate-900"
+              style={{ touchAction: "none" }} // Quan trọng để kéo thả trên mobile không bị cuộn trang
+            >
+              {/* Khung tròn mask */}
+              <div className="absolute inset-0 z-10 m-auto h-[300px] w-[300px] rounded-full border-2 border-white/50 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none" />
+              
+              {/* Ảnh có thể kéo thả và zoom */}
+              <img
+                src={imageSrc}
+                alt="Crop preview"
+                draggable={false}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+                className="absolute max-w-none cursor-grab active:cursor-grabbing"
+                style={{
+                  transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+                  transformOrigin: "center",
+                  // Tính toán kích thước ban đầu để vừa vặn với khung
+                  width: imgDimensions.width > imgDimensions.height ? "auto" : "100%",
+                  height: imgDimensions.height >= imgDimensions.width ? "auto" : "100%",
+                }}
               />
             </div>
 
@@ -266,7 +299,6 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
                   min={1}
                   max={3}
                   step={0.1}
-                  aria-labelledby="Zoom"
                   onChange={(e) => setZoom(Number(e.target.value))}
                   className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-accent-600 dark:bg-slate-700"
                 />
@@ -304,4 +336,4 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       )}
     </div>
   );
-}
+  }
