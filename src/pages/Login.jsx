@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Loader2, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
@@ -8,18 +8,33 @@ import { supabase } from "../lib/supabaseClient.js";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
   const [showMfa, setShowMfa] = useState(false);
+
+  // ✅ Hiện thông báo nếu bị redirect từ check-user-ip
+  useEffect(() => {
+    const errParam = searchParams.get("error");
+    if (errParam === "ip_duplicate") {
+      setError(
+        "IP của bạn đã có tài khoản khác. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
+      );
+      setErrorType("ip_duplicate");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
+      setErrorType("error");
       return;
     }
     setError("");
+    setErrorType("error");
     setLoading(true);
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -34,12 +49,11 @@ export default function Login() {
     }
 
     // ✅ BỎ CHECK IP — user cũ đăng nhập không bị chặn
-    // (check IP chỉ áp dụng khi ĐĂNG KÝ, không áp dụng khi ĐĂNG NHẬP)
-
     setLoading(false);
 
     if (data.session) {
-      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: aalData } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
         setShowMfa(true);
         return;
@@ -55,6 +69,7 @@ export default function Login() {
 
   const handleSocial = async (provider, supported) => {
     setError("");
+    setErrorType("error");
     if (!supported) {
       setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
       return;
@@ -71,6 +86,7 @@ export default function Login() {
       title="Chào mừng trở lại"
       subtitle="Đăng nhập vào NXX315 Studio Rewards để tiếp tục."
     >
+      {/* Cảnh báo chung */}
       <div className="mb-4 rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
         <div className="flex items-start gap-2">
           <AlertTriangle size={16} className="mt-0.5 shrink-0 text-sky-600" />
@@ -83,6 +99,32 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Thông báo IP trùng (nếu bị redirect từ check-user-ip) */}
+      {errorType === "ip_duplicate" && (
+        <div className="mb-4 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
+          <div className="flex items-start gap-2">
+            <ShieldAlert size={18} className="mt-0.5 shrink-0 text-rose-600" />
+            <div>
+              <p className="text-[13px] font-bold text-rose-800">
+                IP của bạn đã có tài khoản khác
+              </p>
+              <p className="mt-1 text-[12px] leading-5 text-rose-700">
+                Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo{" "}
+                <a
+                  href="https://zalo.me/0865245988"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline"
+                >
+                  0865245988
+                </a>{" "}
+                để được hỗ trợ.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
@@ -101,7 +143,7 @@ export default function Login() {
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
 
-        {error && (
+        {error && errorType !== "ip_duplicate" && (
           <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
             {error}
           </p>
@@ -162,4 +204,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-}
+      }
