@@ -508,21 +508,29 @@ useEffect(() => {
   }, [activeTab, user?.id, historyLoaded]);
 
   const handleStart = async (task) => {
-    if (isLoading) return;
+  if (isLoading) return;
 
-    if (!user?.id) {
-      showToast("Vui lòng đăng nhập!", "error");
-      return;
-    }
+  if (!user?.id) {
+    showToast("Vui lòng đăng nhập!", "error");
+    return;
+  }
 
-    if (isBlocked) {
-      showToast("Tài khoản của bạn đang bị hạn chế!", "error");
-      return;
-    }
+  if (isBlocked) {
+    showToast("Tài khoản của bạn đang bị hạn chế!", "error");
+    return;
+  }
 
-    setCaptchaTask(task);
-  };
+  // ✅ Chặn nếu IP bị block
+  if (ipBlocked) {
+    showToast(
+      ipBlocked.reason || "Bạn không thể làm nhiệm vụ lúc này!",
+      "error"
+    );
+    return;
+  }
 
+  setCaptchaTask(task);
+};
   const startTaskApi = async (task) => {
     setIsLoading(true);
     setStartingTaskId(task.id);
@@ -827,7 +835,7 @@ return (
 {(isBlocked || ipBlocked) && (
   <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
     <p className="text-sm font-semibold text-rose-700">
-      🚫 Bạn không thể làm nhiệm vụ lúc này
+       Bạn không thể làm nhiệm vụ lúc này
     </p>
     <p className="mt-1 text-xs text-rose-600">
       {ipBlocked?.reason || "Tài khoản đang bị tạm khóa làm nhiệm vụ"}
@@ -1001,7 +1009,7 @@ return (
                         {/* ✅ Ghi chú thời gian duyệt riêng cho TASKDAILY */}
                         {task.provider === "TASKDAILY" && (
                           <p className="mt-2 text-center text-[11px] font-medium text-amber-600">
-                            ⏳ Xu sẽ được cộng sau khi hệ thống duyệt (trong vòng 10 ngày)
+                             Xu sẽ được cộng sau khi hệ thống duyệt (trong vòng 10 ngày)
                           </p>
                         )}
 
@@ -1021,20 +1029,20 @@ return (
                         </div>
 
                         <button
-                          onClick={() => handleStart(task)}
-                          disabled={
-                            isDone || isThisStarting || isBlocked || isLoading
-                          }
+  onClick={() => handleStart(task)}
+  disabled={
+    isDone || isThisStarting || isBlocked || ipBlocked || isLoading
+  }
                           className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <ExternalLink size={15} />
                           {isThisStarting
-                            ? "Đang mở..."
-                            : isBlocked
-                            ? "Tài khoản bị khóa"
-                            : isDone
-                            ? "Đã hết lượt hôm nay"
-                            : "Làm nhiệm vụ"}
+  ? "Đang mở..."
+  : isBlocked || ipBlocked
+  ? "Tài khoản bị khóa"
+  : isDone
+  ? "Đã hết lượt hôm nay"
+  : "Làm nhiệm vụ"}
                         </button>
                       </div>
                     </div>
