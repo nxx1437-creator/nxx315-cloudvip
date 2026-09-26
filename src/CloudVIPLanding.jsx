@@ -30,7 +30,6 @@ const BLUE_LIGHT = "#F1F8FA";
 const BLUE_BORDER = "#CDE8EF";
 
 // ============ URL AVATAR ============
-// ✅ Bác upload ảnh lên bucket "avatars" trong Supabase Storage
 const AVATAR_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/avatars";
 
@@ -54,6 +53,14 @@ const HOW_IT_WORKS = [
     title: "Đổi Robux",
     desc: "Dùng Coin đổi Robux chính hãng, nạp thẳng VNG.",
   },
+];
+
+// ✅ 4 avatar cho social proof
+const SOCIAL_AVATARS = [
+  `${AVATAR_URL}/user-1.jpg`,
+  `${AVATAR_URL}/user-2.jpg`,
+  `${AVATAR_URL}/user-3.jpg`,
+  `${AVATAR_URL}/user-4.jpg`,
 ];
 
 const TESTIMONIALS = [
@@ -328,31 +335,28 @@ export default function CloudVIPLanding() {
                   </span>
                 </div>
 
-                {/* Social proof */}
-<div className="mt-7 flex items-center gap-3">
-  <div className="flex -space-x-2">
-    {[
-      `${AVATAR_URL}/user-1.jpg`,
-      `${AVATAR_URL}/user-2.jpg`,
-      `${AVATAR_URL}/user-3.jpg`,
-      `${AVATAR_URL}/user-4.jpg`,
-    ].map((src, i) => (
-      <img
-        key={i}
-        src={src}
-        alt="User"
-        className="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm"
-        onError={(e) => {
-          e.currentTarget.style.display = "none";
-        }}
-      />
-    ))}
-  </div>
-  <p className="text-xs font-semibold text-slate-600">
-    <b className="text-slate-900">10.000+</b> user đang kiếm Coin
-    mỗi ngày
-  </p>
-</div>
+                {/* ✅ Social proof với avatar thật */}
+                <div className="mt-7 flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {SOCIAL_AVATARS.map((src, i) => (
+                      <img
+                        key={i}
+                        src={src}
+                        alt="User"
+                        className="h-8 w-8 rounded-full border-2 border-white object-cover shadow-sm"
+                        onError={(e) => {
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=U${i + 1}&background=087EA4&color=fff&size=64`;
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs font-semibold text-slate-600">
+                    <b className="text-slate-900">10.000+</b> user đang kiếm Coin
+                    mỗi ngày
+                  </p>
+                </div>
+              </div>
+
               {/* DASHBOARD MOCKUP */}
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 shadow-sm">
                 <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -443,7 +447,7 @@ export default function CloudVIPLanding() {
             </div>
           </div>
         </section>
-        {/* HOW IT WORKS */}
+         {/* HOW IT WORKS */}
 <section id="how" className="mx-auto max-w-6xl px-5 py-20">
   <div className="max-w-2xl">
     <span
@@ -519,7 +523,7 @@ export default function CloudVIPLanding() {
           </div>
           <div>
             <p className="text-sm font-bold text-slate-900">
-              Bộ lọc traffic
+              Bộ lọc người dùng 
             </p>
             <p className="text-xs text-slate-500">
               Đang bảo vệ realtime
@@ -705,8 +709,8 @@ export default function CloudVIPLanding() {
       ))}
     </div>
   </div>
-</section>
-            {/* FAQ */}
+</section>     
+                {/* FAQ */}
         <section id="faq" className="mx-auto max-w-3xl px-5 py-20">
           <div className="text-center">
             <span
@@ -862,4 +866,4 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-}    
+}
