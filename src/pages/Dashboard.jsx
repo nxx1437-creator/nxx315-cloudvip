@@ -211,6 +211,42 @@ export default function Dashboard() {
 
     return () => clearTimeout(skeletonTimer);
   }, [user]);
+  // ✅ Check IP trùng — xóa user nếu IP đã có tài khoản khác
+useEffect(() => {
+  if (!user?.id) return;
+
+  const checkUserIp = async () => {
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const accessToken = sessionRes.data.session?.access_token;
+      if (!accessToken) return;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-user-ip`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data?.ok === false) {
+        console.warn("[check-user-ip] User bị xóa vì IP trùng");
+        await supabase.auth.signOut();
+        window.location.href = "/login?error=ip_duplicate";
+      }
+    } catch (err) {
+      console.error("check-user-ip error:", err);
+    }
+  };
+
+  checkUserIp();
+}, [user?.id]);
 
   useEffect(() => {
     const fetchChart = async () => {
