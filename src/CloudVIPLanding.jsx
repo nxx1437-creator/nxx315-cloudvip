@@ -15,16 +15,7 @@ import {
   ListChecks,
   Gift,
   Zap,
-  Video,
-  TrendingUp,
-  DollarSign,
 } from "lucide-react";
-
-const TRUST_STATS = [
-  { icon: Users, value: "10K+", label: "Người dùng" },
-  { icon: Gift, value: "50K+", label: "Đơn hàng" },
-  { icon: Star, value: "99%", label: "Hài lòng" },
-];
 
 const WHY_CARDS = [
   {
@@ -44,10 +35,10 @@ const WHY_CARDS = [
   },
 ];
 
-const VIDEO_TASKS = [
-  { icon: TrendingUp, title: "TikTok", desc: "2.500 Coin / 1K view" },
-  { icon: TrendingUp, title: "YouTube", desc: "25.000 Coin / 1K view" },
-  { icon: DollarSign, title: "Bonus", desc: "≥5K +10%, ≥10K +20%" },
+const REFERRAL_TASKS = [
+  { icon: Gift, title: "Mời 1 bạn", desc: "+200 Coin cho bạn mới" },
+  { icon: Users, title: "Hoa hồng", desc: "Nhận 15% Coin từ mỗi nhiệm vụ bạn bè làm" },
+  { icon: Star, title: "Mốc thưởng", desc: "Mời 3/5/10/20 bạn — nhận thêm 500đ → 10.000đ" },
 ];
 
 const HOW_IT_WORKS = [
@@ -128,14 +119,14 @@ export default function CloudVIPLanding() {
       </header>
 
       {/* HERO */}
-      <section className="relative px-5 pb-16 pt-14 sm:pt-20">
+      <section className="relative px-5 pb-20 pt-16 sm:pt-24">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-sky-600 shadow-sm">
             <Gamepad2 size={13} />
             Kiếm Coin — Đổi Robux chính hãng
           </span>
 
-          <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
+          <h1 className="mt-7 text-4xl font-extrabold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl">
             Nền tảng kiếm Coin
             <br />
             <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
@@ -143,30 +134,30 @@ export default function CloudVIPLanding() {
             </span>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-xl text-base text-slate-600 sm:text-lg">
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
             Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi ngay Robux chính
             hãng — nạp thẳng vào tài khoản Roblox liên kết VNG của bạn.
           </p>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <button
               onClick={() => navigate("/register")}
-              className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/40 transition hover:brightness-110"
+              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/40 transition hover:brightness-110 sm:w-auto"
             >
               Bắt đầu ngay — Miễn phí
               <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
             </button>
             <button
               onClick={scrollToHowItWorks}
-              className="flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-7 py-3.5 text-sm font-bold text-slate-700 transition hover:bg-sky-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-sky-200 bg-white px-7 py-3.5 text-sm font-bold text-slate-700 transition hover:bg-sky-50 sm:w-auto"
             >
               <PlayCircle size={16} /> Cách hoạt động
             </button>
           </div>
 
           {/* SOCIAL LOGIN */}
-          <div className="mt-8 flex flex-col items-center gap-3">
-            <div className="flex items-center gap-3 text-xs text-slate-400">
+          <div className="mt-10 flex flex-col items-center gap-4">
+            <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
               <span className="h-px w-10 bg-sky-200" />
               hoặc đăng nhập nhanh với
               <span className="h-px w-10 bg-sky-200" />
@@ -177,7 +168,7 @@ export default function CloudVIPLanding() {
                   key={id}
                   onClick={() => handleSocialLogin(id)}
                   aria-label={`Đăng nhập với ${label}`}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-200 bg-white text-slate-600 shadow-sm transition hover:border-sky-400 hover:text-sky-600"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-200 bg-white text-slate-600 shadow-sm transition hover:border-sky-400 hover:text-sky-600"
                 >
                   <Icon className="h-5 w-5" />
                 </button>
@@ -185,7 +176,8 @@ export default function CloudVIPLanding() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-600">
+          {/* TRUST BADGES */}
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-slate-600">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 size={14} className="text-emerald-500" /> Không cần nạp tiền
             </span>
@@ -196,22 +188,6 @@ export default function CloudVIPLanding() {
               <BadgeCheck size={14} className="text-sky-600" /> Duyệt thủ công!
             </span>
           </div>
-        </div>
-
-        {/* STATS */}
-        <div className="mx-auto mt-14 grid max-w-3xl grid-cols-3 gap-3">
-          {TRUST_STATS.map(({ icon: Icon, value, label }) => (
-            <div
-              key={label}
-              className="rounded-2xl border border-sky-100 bg-white px-4 py-5 text-center shadow-sm"
-            >
-              <Icon size={18} className="mx-auto mb-2 text-sky-500" />
-              <div className="text-xl font-extrabold text-slate-900">{value}</div>
-              <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                {label}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -224,7 +200,7 @@ export default function CloudVIPLanding() {
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
             Tại sao chọn{" "}
             <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
-              NXX315 studio
+              NXX315
             </span>
             ?
           </h2>
@@ -245,28 +221,28 @@ export default function CloudVIPLanding() {
         </div>
       </section>
 
-      {/* VIDEO TASKS */}
+      {/* REFERRAL */}
       <section className="mx-auto max-w-5xl px-5 py-6">
         <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 via-blue-50 to-white p-7 shadow-sm sm:p-10">
           <div className="text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-bold text-sky-600">
-              <Video size={13} /> Tính năng mới
+              <Gift size={13} /> Tính năng mới
             </span>
             <h3 className="mt-4 text-2xl font-extrabold leading-snug tracking-tight text-slate-900 sm:text-3xl">
-              Kiếm Coin từ video
+              Kiếm Coin từ việc
               <br />
               <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
-                TikTok & YouTube
+                mời bạn bè
               </span>
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-              Quay video giới thiệu, gửi link cho bot tự đo view/like/comment —
-              admin duyệt và Coin về ví ngay.
+              Mời bạn bè tham gia — bạn nhận hoa hồng 15% từ mỗi nhiệm vụ họ
+              hoàn thành, cộng thêm thưởng mốc khi mời đủ số lượng.
             </p>
           </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {VIDEO_TASKS.map(({ icon: Icon, title, desc }) => (
+            {REFERRAL_TASKS.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
                 className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
@@ -283,7 +259,7 @@ export default function CloudVIPLanding() {
               onClick={() => navigate("/register")}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/40 transition hover:brightness-110"
             >
-              <Video size={16} /> Bắt đầu kiếm Coin
+              <Gift size={16} /> Bắt đầu mời bạn
             </button>
           </div>
         </div>
@@ -339,4 +315,4 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-    }
+                                      }
