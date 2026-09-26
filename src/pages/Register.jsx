@@ -58,27 +58,38 @@ export default function Register() {
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
-  // ✅ IP đã có tài khoản chưa
+  // ✅ IP check
   const [ipBlocked, setIpBlocked] = useState(false);
-  const [ipChecking, setIpChecking] = useState(true); // ✅ Mặc định true
+  const [ipChecking, setIpChecking] = useState(false);
   const [ipChecked, setIpChecked] = useState(false);
+  const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
   // ✅ Kiểm tra IP
   const checkIp = async () => {
-    if (ipChecked) return;
+    if (ipChecking) return;
 
     setIpChecking(true);
+    setIpError(false);
+
     try {
-      const ip = await getClientIp();
+      // ✅ Timeout 5s
+      const ip = await Promise.race([
+        getClientIp(),
+        new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+      ]);
+
       if (!ip) {
-        setIpChecking(false);
-        setIpChecked(true);
+        console.warn("[checkIp] Không lấy được IP");
+        setIpError(true);
         return;
       }
 
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const res = await fetch(
         `${SUPABASE_URL}/functions/v1/check-ip-registered`,
@@ -89,8 +100,15 @@ export default function Register() {
             apikey: SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({ ip }),
+          signal: controller.signal,
         }
       );
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
 
       const data = await res.json();
 
@@ -101,14 +119,14 @@ export default function Register() {
         setIpBlocked(false);
       }
     } catch (err) {
-      console.error("Check IP error:", err);
+      console.warn("[checkIp] Lỗi:", err.message);
+      setIpError(true);
     } finally {
       setIpChecking(false);
       setIpChecked(true);
     }
   };
 
-  // ✅ Tự động check IP ngay khi vào trang
   useEffect(() => {
     checkIp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,9 +135,11 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e?.preventDefault();
 
-    // ✅ Chờ check IP xong
-    if (ipChecking) {
-      setError("Đang kiểm tra IP, vui lòng đợi...");
+    if (ipError) {
+      setError(
+        "Không thể kiểm tra IP. Vui lòng kiểm tra kết nối mạng và thử lại."
+      );
+      setErrorType("ip_error");
       return;
     }
 
@@ -220,7 +240,6 @@ export default function Register() {
           return;
         }
 
-        // ✅ Áp dụng mã mời nếu có
         if (form.referral.trim() && data.user) {
           try {
             const { data: refResult, error: refError } = await supabase.rpc(
@@ -263,9 +282,11 @@ export default function Register() {
       return;
     }
 
-    // ✅ Chờ check IP xong
-    if (ipChecking) {
-      setError("Đang kiểm tra IP, vui lòng đợi...");
+    if (ipError) {
+      setError(
+        "Không thể kiểm tra IP. Vui lòng kiểm tra kết nối mạng và thử lại."
+      );
+      setErrorType("ip_error");
       return;
     }
 
@@ -306,17 +327,34 @@ export default function Register() {
         </div>
       </div>
 
-      {/* ✅ Thông báo đang check IP */}
-      {ipChecking && !ipBlocked && (
-        <div className="mb-4 flex items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 p-3">
-          <Loader2 size={16} className="animate-spin text-sky-600" />
-          <p className="text-[12px] font-semibold text-sky-700">
-            Đang kiểm tra IP...
-          </p>
+      {/* ✅ Lỗi check IP */}
+      {ipError && (
+        <div className="mb-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600" />
+            <div>
+              <p className="text-[13px] font-bold text-amber-800">
+                Không thể kiểm tra IP
+              </p>
+              <p className="mt-1 text-[12px] leading-5 text-amber-700">
+                Vui lòng kiểm tra kết nối mạng và thử lại.
+              </p>
+              <button
+                onClick={() => {
+                  setIpChecked(false);
+                  setIpError(false);
+                  checkIp();
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-[12px] font-bold text-white"
+              >
+                Thử lại
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ✅ Thông báo IP đã có tài khoản */}
+      {/* ✅ IP đã có tài khoản */}
       {ipBlocked && (
         <div className="mb-4 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start gap-2">
@@ -357,8 +395,7 @@ export default function Register() {
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
           placeholder="Tên hiển thị (tùy chọn)"
-          disabled={ipChecking}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
 
         <input
@@ -366,8 +403,7 @@ export default function Register() {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           placeholder="Email của bạn"
-          disabled={ipChecking}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
 
         <input
@@ -375,11 +411,9 @@ export default function Register() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           placeholder="Mật khẩu (ít nhất 6 ký tự)"
-          disabled={ipChecking}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
 
-        {/* ✅ Ô nhập mã mời (không bắt buộc) */}
         <div className="relative">
           <Gift
             size={16}
@@ -393,8 +427,7 @@ export default function Register() {
             }
             placeholder="Mã mời (tùy chọn) — nhận +200 xu"
             maxLength={10}
-            disabled={ipChecking}
-            className="w-full rounded-full border border-amber-200 bg-amber-50/50 py-3.5 pl-11 pr-5 text-sm font-semibold tracking-wider text-amber-900 uppercase outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-amber-400 focus:border-amber-400 focus:bg-white disabled:opacity-60"
+            className="w-full rounded-full border border-amber-200 bg-amber-50/50 py-3.5 pl-11 pr-5 text-sm font-semibold tracking-wider text-amber-900 uppercase outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-amber-400 focus:border-amber-400 focus:bg-white"
           />
         </div>
 
@@ -430,7 +463,7 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={loading || ipBlocked || ipChecking}
+          disabled={loading || ipBlocked || ipError}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
@@ -438,11 +471,8 @@ export default function Register() {
               <Loader2 size={16} className="animate-spin" />
               Đang tạo tài khoản...
             </>
-          ) : ipChecking ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Đang kiểm tra IP...
-            </>
+          ) : ipError ? (
+            "Không thể kiểm tra IP"
           ) : ipBlocked ? (
             "Không thể đăng ký"
           ) : (
@@ -462,10 +492,9 @@ export default function Register() {
         </div>
       </div>
 
-      {/* ✅ Disable Social khi đang check IP */}
       <div
         className={
-          ipChecking || ipBlocked ? "pointer-events-none opacity-50" : ""
+          ipBlocked || ipError ? "pointer-events-none opacity-50" : ""
         }
       >
         <SocialRow onSelect={handleSocial} />
@@ -479,4 +508,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-                   }
+    }
