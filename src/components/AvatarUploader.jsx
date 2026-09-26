@@ -1,7 +1,52 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Camera, Loader2, X, Check, AlertTriangle } from "lucide-react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import Cropper from "react-easy-crop";
+import { Camera, Loader2, X, Check, AlertTriangle, ZoomIn, ZoomOut } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { validateAvatarFile, uploadAvatar, checkAvatarUploadLimit } from "../lib/avatarUpload.js";
+
+// --- Hàm tiện ích để xử lý cắt ảnh ---
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener("load", () => resolve(image));
+    image.addEventListener("error", (error) => reject(error));
+    image.setAttribute("crossOrigin", "anonymous"); // Cần thiết cho ảnh từ domain khác
+    image.src = url;
+  });
+
+async function getCroppedImg(imageSrc, pixelCrop) {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) return null;
+
+  // Kích thước ảnh đại diện đầu ra (400x400px)
+  const MAX_SIZE = 400;
+  canvas.width = MAX_SIZE;
+  canvas.height = MAX_SIZE;
+
+  // Vẽ phần ảnh đã cắt vào canvas
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    MAX_SIZE,
+    MAX_SIZE
+  );
+
+  // Trả về dạng Blob
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    }, "image/jpeg", 0.9);
+  });
+}
+// --------------------------------------
 
 export default function AvatarUploader({ userId, currentUrl, initial, onUploaded }) {
   const fileRef = useRef(null);
@@ -10,6 +55,12 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [limit, setLimit] = useState({ remaining: 2, limit: 2 });
+
+  // State cho phần cắt ảnh
+  const [imageSrc, setImageSrc] = useState(null); // Ảnh gốc dạng base64 để cắt
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   useEffect(() => {
     if (currentUrl && !preview) setPreview(currentUrl);
@@ -32,6 +83,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     fileRef.current?.click();
   };
 
+  // Bước 1: Chọn file -> Validate -> Mở modal cắt ảnh
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -43,13 +95,47 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     try {
       await validateAvatarFile(file);
 
-      const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl);
+      // Đọc file thành chuỗi base64 để hiển thị lên Cropper
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImageSrc(reader.result);
+        setZoom(1);
+        setCrop({ x: 0, y: 0 });
+      });
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Validation error:", err);
+      setError(err.message || "File không hợp lệ.");
+    }
+  };
 
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  // Bước 2: Người dùng bấm "Lưu" trên modal -> Cắt ảnh -> Upload
+  const handleSaveCroppedImage = async () => {
+    if (!imageSrc || !croppedAreaPixels) return;
+
+    try {
       setUploading(true);
+      setError("");
 
-      const publicUrl = await uploadAvatar(userId, file);
+      // 1. Cắt ảnh từ canvas
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      if (!croppedBlob) throw new Error("Không thể xử lý ảnh.");
 
+      // 2. Chuyển Blob thành File để uploadAvatar có thể xử lý
+      const croppedFile = new File(
+        [croppedBlob],
+        `avatar_${userId}_${Date.now()}.jpg`,
+        { type: "image/jpeg" }
+      );
+
+      // 3. Upload lên Supabase (dùng hàm uploadAvatar hiện tại của bạn)
+      const publicUrl = await uploadAvatar(userId, croppedFile);
+
+      // 4. Cập nhật database
       const { error: dbError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
@@ -57,15 +143,16 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
       if (dbError) throw dbError;
 
+      // 5. Cập nhật giao diện
       setPreview(publicUrl);
       setSuccess(true);
+      setImageSrc(null); // Đóng modal
       onUploaded?.(publicUrl);
 
       setTimeout(() => setSuccess(false), 2500);
     } catch (err) {
       console.error("Upload avatar error:", err);
       setError(err.message || "Upload thất bại. Vui lòng thử lại.");
-      setPreview(currentUrl || null);
     } finally {
       setUploading(false);
     }
@@ -141,6 +228,80 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
           </button>
         </div>
       )}
+
+      {/* --- MODAL CẮT ẢNH --- */}
+      {imageSrc && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-900">
+            
+            {/* Header */}
+            <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+              <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
+                Cắt ảnh đại diện
+              </h3>
+            </div>
+
+            {/* Vùng Crop ảnh */}
+            <div className="relative h-80 w-full bg-slate-900">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+
+            {/* Thanh trượt Zoom */}
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <ZoomOut size={18} className="text-slate-400" />
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-accent-600 dark:bg-slate-700"
+                />
+                <ZoomIn size={18} className="text-slate-400" />
+              </div>
+              <p className="mt-2 text-center text-[11px] text-slate-500">
+                Kéo ảnh để di chuyển • dùng thanh trượt để phóng to
+              </p>
+            </div>
+
+            {/* Nút Hủy / Lưu */}
+            <div className="flex gap-3 border-t border-slate-100 p-4 dark:border-slate-800">
+              <button
+                onClick={() => setImageSrc(null)}
+                disabled={uploading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSaveCroppedImage}
+                disabled={uploading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-600 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                {uploading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Check size={18} />
+                )}
+                Lưu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-        }
+}
