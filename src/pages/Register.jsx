@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, AlertTriangle, ShieldAlert, LogIn } from "lucide-react";
+import {
+  Loader2,
+  AlertTriangle,
+  ShieldAlert,
+  LogIn,
+  Gift,
+} from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import { supabase, getClientIp } from "../lib/supabaseClient.js";
@@ -42,58 +48,78 @@ async function getFingerprint() {
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    referral: "",
+  });
   const [error, setError] = useState("");
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
-  const [deviceBlocked, setDeviceBlocked] = useState(false);
-  const [existingEmail, setExistingEmail] = useState(null);
-  const [checking, setChecking] = useState(true);
+  // ✅ IP đã có tài khoản chưa
+  const [ipBlocked, setIpBlocked] = useState(false);
+  const [ipChecking, setIpChecking] = useState(false);
+  const [ipChecked, setIpChecked] = useState(false);
+  const [blockedEmail, setBlockedEmail] = useState(null);
 
-  useEffect(() => {
-    const checkDevice = async () => {
-      try {
-        const fp = await getFingerprint();
-        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-        const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  // ✅ Kiểm tra IP khi user nhập email (debounce)
+  const checkIp = async () => {
+    if (ipChecked || ipChecking) return;
 
-        const res = await fetch(
-          `${SUPABASE_URL}/functions/v1/check-device-public`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({ fingerprint: fp }),
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.exists === true) {
-          setDeviceBlocked(true);
-          setExistingEmail(data.masked_email || "tài khoản trước");
-        }
-      } catch (err) {
-        console.error("Check device error:", err);
-      } finally {
-        setChecking(false);
+    setIpChecking(true);
+    try {
+      const ip = await getClientIp();
+      if (!ip) {
+        setIpChecking(false);
+        return;
       }
-    };
 
-    checkDevice();
-  }, []);
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/check-ip-registered`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ ip }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data?.exists === true) {
+        setIpBlocked(true);
+        setBlockedEmail(data.masked_email || "tài khoản trước");
+      } else {
+        setIpBlocked(false);
+      }
+    } catch (err) {
+      console.error("Check IP error:", err);
+    } finally {
+      setIpChecking(false);
+      setIpChecked(true);
+    }
+  };
+
+  // ✅ Gọi checkIp khi user focus vào input email
+  const handleEmailFocus = () => {
+    if (!ipChecked) checkIp();
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
 
-    if (deviceBlocked) {
+    if (ipBlocked) {
       setError(
-        "Thiết bị này đã có tài khoản. Vui lòng đăng nhập lại tài khoản cũ."
+        "IP của bạn đã có tài khoản. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
       );
-      setErrorType("device_blocked");
+      setErrorType("ip_blocked");
       return;
     }
 
@@ -135,9 +161,8 @@ export default function Register() {
         },
       });
 
-      setLoading(false);
-
       if (authError) {
+        setLoading(false);
         const msg = authError.message?.toLowerCase() || "";
 
         if (
@@ -156,16 +181,12 @@ export default function Register() {
           setErrorType("email_exists");
         } else if (msg.includes("invalid email")) {
           setError("Email không hợp lệ. Vui lòng kiểm tra lại.");
-          setErrorType("error");
         } else if (msg.includes("password")) {
           setError("Mật khẩu không hợp lệ. Vui lòng dùng mật khẩu mạnh hơn.");
-          setErrorType("error");
         } else if (msg.includes("rate limit") || msg.includes("too many")) {
           setError("Bạn thao tác quá nhanh. Vui lòng đợi 1 phút rồi thử lại.");
-          setErrorType("error");
         } else {
           setError(authError.message);
-          setErrorType("error");
         }
         return;
       }
@@ -175,6 +196,7 @@ export default function Register() {
           !data.user.identities || data.user.identities.length === 0;
 
         if (isExistingUser) {
+          setLoading(false);
           setError(
             `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
               `Vui lòng:\n` +
@@ -185,18 +207,35 @@ export default function Register() {
           return;
         }
 
-        // ✅ Vào onboarding luôn, không qua verify-email
+        // ✅ Áp dụng mã mời nếu có
+        if (form.referral.trim() && data.user) {
+          try {
+            const { data: refResult, error: refError } = await supabase.rpc(
+              "apply_referral_code",
+              { p_code: form.referral.trim().toUpperCase() }
+            );
+
+            if (refError) {
+              console.warn("Apply referral error:", refError);
+            } else if (!refResult?.[0]?.success && !refResult?.success) {
+              console.warn("Referral fail:", refResult);
+            }
+          } catch (err) {
+            console.warn("Referral exception:", err);
+          }
+        }
+
+        setLoading(false);
         navigate("/onboarding", { replace: true });
       } else {
+        setLoading(false);
         setError(
           "Không thể tạo tài khoản. Vui lòng thử lại hoặc dùng email khác."
         );
-        setErrorType("error");
       }
     } catch (err) {
       console.error("[register] error:", err);
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
-      setErrorType("error");
       setLoading(false);
     }
   };
@@ -214,71 +253,6 @@ export default function Register() {
     if (authError) setError(authError.message);
   };
 
-  // Nếu thiết bị đã có tài khoản → hiện màn hình chặn
-  if (!checking && deviceBlocked) {
-    return (
-      <AuthShell
-        title="Thiết bị đã có tài khoản"
-        subtitle="Mỗi thiết bị chỉ được tạo 1 tài khoản duy nhất."
-      >
-        <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-5 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-100">
-            <ShieldAlert size={28} className="text-rose-600" strokeWidth={2.2} />
-          </div>
-
-          <h3 className="mt-3 text-[15px] font-black text-rose-800">
-            Không thể tạo tài khoản mới
-          </h3>
-
-          <p className="mt-2 text-[13px] leading-6 text-rose-700">
-            Thiết bị này đã có tài khoản: <b>{existingEmail}</b>
-            <br />
-            <br />
-            Vui lòng đăng nhập lại tài khoản cũ để tiếp tục sử dụng.
-          </p>
-        </div>
-
-        <Link
-          to="/login"
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 py-3.5 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 active:scale-[0.98]"
-        >
-          <LogIn size={16} strokeWidth={2.4} />
-          Đăng nhập tài khoản cũ
-        </Link>
-
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
-          <p className="text-[12px] leading-5 text-amber-700">
-            <b>Lưu ý:</b> Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ Zalo{" "}
-            <a
-              href="https://zalo.me/0865245988"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold underline"
-            >
-              0865245988
-            </a>{" "}
-            để được hỗ trợ.
-          </p>
-        </div>
-      </AuthShell>
-    );
-  }
-
-  // Đang check fingerprint
-  if (checking) {
-    return (
-      <AuthShell
-        title="Đang kiểm tra thiết bị"
-        subtitle="Vui lòng chờ trong giây lát..."
-      >
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 size={32} className="animate-spin text-slate-400" />
-        </div>
-      </AuthShell>
-    );
-  }
-
-  // Form bình thường
   return (
     <AuthShell
       title="Tạo tài khoản"
@@ -292,7 +266,7 @@ export default function Register() {
             <p className="font-bold">Lưu ý quan trọng</p>
             <ul className="mt-1 list-inside list-disc space-y-0.5">
               <li>
-                Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b>
+                Mỗi IP chỉ được tạo <b>1 tài khoản</b>
               </li>
               <li>Nếu cố tạo thêm, hệ thống sẽ khóa</li>
               <li>Đã có tài khoản rồi? Vui lòng đăng nhập</li>
@@ -300,6 +274,41 @@ export default function Register() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Thông báo IP đã có tài khoản */}
+      {ipBlocked && (
+        <div className="mb-4 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
+          <div className="flex items-start gap-2">
+            <ShieldAlert size={18} className="mt-0.5 shrink-0 text-rose-600" />
+            <div>
+              <p className="text-[13px] font-bold text-rose-800">
+                IP của bạn đã có tài khoản
+              </p>
+              <p className="mt-1 text-[12px] leading-5 text-rose-700">
+                Tài khoản: <b>{blockedEmail}</b>
+                <br />
+                Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo{" "}
+                <a
+                  href="https://zalo.me/0865245988"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline"
+                >
+                  0865245988
+                </a>{" "}
+                để được hỗ trợ.
+              </p>
+              <Link
+                to="/login"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-[12px] font-bold text-white"
+              >
+                <LogIn size={13} />
+                Đăng nhập ngay
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
@@ -314,6 +323,7 @@ export default function Register() {
           type="email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onFocus={handleEmailFocus}
           placeholder="Email của bạn"
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
@@ -325,6 +335,24 @@ export default function Register() {
           placeholder="Mật khẩu (ít nhất 6 ký tự)"
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
         />
+
+        {/* ✅ Ô nhập mã mời (không bắt buộc) */}
+        <div className="relative">
+          <Gift
+            size={16}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500"
+          />
+          <input
+            type="text"
+            value={form.referral}
+            onChange={(e) =>
+              setForm({ ...form, referral: e.target.value.toUpperCase() })
+            }
+            placeholder="Mã mời (tùy chọn) — nhận +200 xu"
+            maxLength={10}
+            className="w-full rounded-full border border-amber-200 bg-amber-50/50 py-3.5 pl-11 pr-5 text-sm font-semibold tracking-wider text-amber-900 uppercase outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-amber-400 focus:border-amber-400 focus:bg-white"
+          />
+        </div>
 
         {error && (
           <div
@@ -358,14 +386,16 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
+          disabled={loading || ipBlocked}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Đang tạo tài khoản...
             </>
+          ) : ipBlocked ? (
+            "Không thể đăng ký"
           ) : (
             "Đăng ký"
           )}
@@ -393,4 +423,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-      }
+          }
