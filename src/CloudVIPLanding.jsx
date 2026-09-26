@@ -26,6 +26,7 @@ import {
   Flame,
   Clock,
   Gift,
+  Sparkles, 
 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient.js";
 
