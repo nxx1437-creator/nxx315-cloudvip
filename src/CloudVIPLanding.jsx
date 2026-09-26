@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient.js";
 import {
@@ -10,42 +10,50 @@ import {
   PlayCircle,
   CheckCircle2,
   Gamepad2,
-  Timer,
   BadgeCheck,
   UserPlus,
   ListChecks,
   Gift,
+  Zap,
+  Video,
+  TrendingUp,
+  DollarSign,
 } from "lucide-react";
 
 const TRUST_STATS = [
-  { icon: Users, value: "—", label: "Người dùng" },
-  { icon: Gift, value: "—", label: "Robux đã nạp" },
-  { icon: Star, value: "—", label: "Đánh giá 5 sao" },
+  { icon: Users, value: "10K+", label: "Người dùng" },
+  { icon: Gift, value: "50K+", label: "Đơn hàng" },
+  { icon: Star, value: "99%", label: "Hài lòng" },
+];
+
+const WHY_CARDS = [
+  {
+    icon: Zap,
+    title: "Kiếm Coin dễ dàng",
+    desc: "Hoàn thành nhiệm vụ đơn giản, nhận Coin ngay vào ví sau khi admin duyệt.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "An toàn & Bảo mật",
+    desc: "Hệ thống chống gian lận nâng cao, bảo vệ tài khoản của bạn.",
+  },
+  {
+    icon: Users,
+    title: "Cộng đồng lớn",
+    desc: "Hơn 10,000 người dùng tin tưởng mỗi ngày.",
+  },
+];
+
+const VIDEO_TASKS = [
+  { icon: TrendingUp, title: "TikTok", desc: "2.500 Coin / 1K view" },
+  { icon: TrendingUp, title: "YouTube", desc: "25.000 Coin / 1K view" },
+  { icon: DollarSign, title: "Bonus", desc: "≥5K +10%, ≥10K +20%" },
 ];
 
 const HOW_IT_WORKS = [
   { n: "1", icon: UserPlus, title: "Đăng ký tài khoản", desc: "Tạo tài khoản miễn phí chỉ trong 30 giây." },
-  { n: "2", icon: ListChecks, title: "Làm nhiệm vụ", desc: "Chọn nhiệm vụ, hoàn thành và chờ admin duyệt để nhận Coin." },
-  { n: "3", icon: Gamepad2, title: "Đổi Robux chính hãng", desc: "Dùng Coin đổi Robux, nạp thẳng vào tài khoản Roblox (VNG) của bạn." },
-];
-
-const WHY_CARDS = [
-  { icon: Coins, title: "Kiếm Coin dễ dàng", desc: "Hoàn thành nhiệm vụ đơn giản, nhận Coin ngay vào ví sau khi admin duyệt." },
-  { icon: ShieldCheck, title: "Robux chính hãng, minh bạch", desc: "Robux được mua từ nguồn chính hãng và nạp trực tiếp vào tài khoản VNG — không dùng tài khoản trung gian." },
-  { icon: Timer, title: "Nạp nhanh, có xác nhận", desc: "Yêu cầu đổi thưởng được xử lý thủ công và có xác nhận rõ ràng cho từng giao dịch." },
-];
-
-const ROBUX_PACKAGES = [
-  { robux: "80", coin: "8,000" },
-  { robux: "400", coin: "38,000" },
-  { robux: "800", coin: "72,000" },
-  { robux: "1,700", coin: "150,000" },
-];
-
-const SOCIAL_PROVIDERS = [
-  { id: "google", label: "Google", Icon: GoogleMark },
-  { id: "facebook", label: "Facebook", Icon: FacebookMark },
-  { id: "discord", label: "Discord", Icon: DiscordMark },
+  { n: "2", icon: ListChecks, title: "Làm nhiệm vụ", desc: "Chọn nhiệm vụ và hoàn thành để nhận Coin." },
+  { n: "3", icon: Gamepad2, title: "Đổi thưởng", desc: "Dùng Coin mua Robux chính hãng trong Shop." },
 ];
 
 function GoogleMark({ className }) {
@@ -72,41 +80,11 @@ function DiscordMark({ className }) {
   );
 }
 
-function useReveal() {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, visible];
-}
-
-function Reveal({ children, className = "", delay = 0 }) {
-  const [ref, visible] = useReveal();
-  return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      } ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
+const SOCIAL_PROVIDERS = [
+  { id: "google", label: "Google", Icon: GoogleMark },
+  { id: "facebook", label: "Facebook", Icon: FacebookMark },
+  { id: "discord", label: "Discord", Icon: DiscordMark },
+];
 
 export default function CloudVIPLanding() {
   const navigate = useNavigate();
@@ -124,25 +102,25 @@ export default function CloudVIPLanding() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFBFC] font-[Be_Vietnam_Pro] text-slate-900">
+    <div className="min-h-screen w-full bg-gradient-to-b from-sky-50 via-white to-blue-50 font-[Be_Vietnam_Pro] text-slate-900">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
       `}</style>
 
       {/* NAV */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-sky-100 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600">
               <Coins size={18} className="text-white" />
             </div>
-            <span className="text-base font-bold tracking-tight text-slate-900">
-              NXX315 Studio <span className="text-sky-600">Rewards</span>
+            <span className="text-base font-extrabold tracking-tight text-slate-900">
+              NXX315 Studio <span className="text-sky-500">Rewards</span>
             </span>
           </div>
           <button
             onClick={() => navigate("/register")}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="rounded-lg bg-gradient-to-r from-sky-400 to-blue-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
           >
             Đăng ký
           </button>
@@ -152,208 +130,213 @@ export default function CloudVIPLanding() {
       {/* HERO */}
       <section className="relative px-5 pb-16 pt-14 sm:pt-20">
         <div className="mx-auto max-w-3xl text-center">
-          <Reveal>
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
-              <Gamepad2 size={13} className="text-sky-600" />
-              Kiếm Coin — Đổi Robux chính hãng
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-sky-600 shadow-sm">
+            <Gamepad2 size={13} />
+            Kiếm Coin — Đổi Robux chính hãng
+          </span>
+
+          <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
+            Nền tảng kiếm Coin
+            <br />
+            <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+              đổi Robux chính hãng
             </span>
-          </Reveal>
+          </h1>
 
-          <Reveal delay={80}>
-            <h1 className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
-              Nền tảng kiếm Coin
-              <br />
-              <span className="text-sky-600">đổi Robux chính hãng</span>
-            </h1>
-          </Reveal>
+          <p className="mx-auto mt-5 max-w-xl text-base text-slate-600 sm:text-lg">
+            Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi ngay Robux chính
+            hãng — nạp thẳng vào tài khoản Roblox liên kết VNG của bạn.
+          </p>
 
-          <Reveal delay={160}>
-            <p className="mx-auto mt-5 max-w-xl text-base text-slate-500 sm:text-lg">
-              Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi ngay Robux chính
-              hãng — nạp thẳng vào tài khoản Roblox liên kết VNG của bạn.
-            </p>
-          </Reveal>
-
-          <Reveal delay={240}>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <button
-                onClick={() => navigate("/register")}
-                className="group flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Bắt đầu ngay — Miễn phí
-                <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
-              </button>
-              <button
-                onClick={scrollToHowItWorks}
-                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <PlayCircle size={16} /> Cách hoạt động
-              </button>
-            </div>
-          </Reveal>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              onClick={() => navigate("/register")}
+              className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/40 transition hover:brightness-110"
+            >
+              Bắt đầu ngay — Miễn phí
+              <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+            </button>
+            <button
+              onClick={scrollToHowItWorks}
+              className="flex items-center gap-2 rounded-xl border border-sky-200 bg-white px-7 py-3.5 text-sm font-bold text-slate-700 transition hover:bg-sky-50"
+            >
+              <PlayCircle size={16} /> Cách hoạt động
+            </button>
+          </div>
 
           {/* SOCIAL LOGIN */}
-          <Reveal delay={300}>
-            <div className="mt-8 flex flex-col items-center gap-3">
-              <div className="flex items-center gap-3 text-xs text-slate-400">
-                <span className="h-px w-10 bg-slate-200" />
-                hoặc đăng nhập nhanh với
-                <span className="h-px w-10 bg-slate-200" />
-              </div>
-              <div className="flex items-center gap-3">
-                {SOCIAL_PROVIDERS.map(({ id, label, Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => handleSocialLogin(id)}
-                    aria-label={`Đăng nhập với ${label}`}
-                    className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-                  >
-                    <Icon className="h-5 w-5" />
-                  </button>
-                ))}
-              </div>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3 text-xs text-slate-400">
+              <span className="h-px w-10 bg-sky-200" />
+              hoặc đăng nhập nhanh với
+              <span className="h-px w-10 bg-sky-200" />
             </div>
-          </Reveal>
+            <div className="flex items-center gap-3">
+              {SOCIAL_PROVIDERS.map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => handleSocialLogin(id)}
+                  aria-label={`Đăng nhập với ${label}`}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-200 bg-white text-slate-600 shadow-sm transition hover:border-sky-400 hover:text-sky-600"
+                >
+                  <Icon className="h-5 w-5" />
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <Reveal delay={380}>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-500" /> Không cần nạp tiền
-              </span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-sky-600" /> Robux chính hãng 100%
-              </span>
-              <span className="flex items-center gap-1.5">
-                <BadgeCheck size={14} className="text-sky-600" /> Duyệt thủ công!
-              </span>
-            </div>
-          </Reveal>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-600">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 size={14} className="text-emerald-500" /> Không cần nạp tiền
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-sky-600" /> Robux chính hãng 100%
+            </span>
+            <span className="flex items-center gap-1.5">
+              <BadgeCheck size={14} className="text-sky-600" /> Duyệt thủ công!
+            </span>
+          </div>
         </div>
 
         {/* STATS */}
-        <Reveal delay={440} className="mx-auto mt-14 grid max-w-3xl grid-cols-3 gap-3">
+        <div className="mx-auto mt-14 grid max-w-3xl grid-cols-3 gap-3">
           {TRUST_STATS.map(({ icon: Icon, value, label }) => (
-            <div key={label} className="rounded-xl border border-slate-200 bg-white px-4 py-5 text-center">
-              <Icon size={18} className="mx-auto mb-2 text-slate-400" />
-              <div className="text-xl font-semibold text-slate-900">{value}</div>
-              <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-400">{label}</div>
-            </div>
-          ))}
-        </Reveal>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="mx-auto max-w-5xl px-5 py-16">
-        <Reveal className="text-center">
-          <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">3 bước đơn giản</span>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Cách hoạt động</h2>
-        </Reveal>
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          {HOW_IT_WORKS.map(({ n, icon: Icon, title, desc }, i) => (
-            <Reveal key={n} delay={i * 100}>
-              <div className="h-full rounded-xl border border-slate-200 bg-white p-6">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
-                  {n}
-                </div>
-                <Icon size={20} className="mt-4 text-sky-600" />
-                <h3 className="mt-3 text-base font-semibold text-slate-900">{title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
+            <div
+              key={label}
+              className="rounded-2xl border border-sky-100 bg-white px-4 py-5 text-center shadow-sm"
+            >
+              <Icon size={18} className="mx-auto mb-2 text-sky-500" />
+              <div className="text-xl font-extrabold text-slate-900">{value}</div>
+              <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                {label}
               </div>
-            </Reveal>
+            </div>
           ))}
         </div>
-      </section>
-
-      {/* ROBUX REDEMPTION */}
-      <section className="mx-auto max-w-5xl px-5 py-6">
-        <Reveal>
-          <div className="rounded-xl border border-slate-200 bg-white p-7 sm:p-10">
-            <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-              <div className="max-w-sm">
-                <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                  <ShieldCheck size={13} /> Đổi thưởng minh bạch
-                </span>
-                <h3 className="mt-4 text-2xl font-bold leading-snug tracking-tight text-slate-900">
-                  Đổi Coin lấy Robux
-                  <br />
-                  <span className="text-sky-600">chính hãng</span>
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                  Nhập User ID Roblox liên kết tài khoản VNG của bạn — admin
-                  xác nhận và nạp Robux trực tiếp vào tài khoản trong vòng
-                  24 giờ.
-                </p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 size={15} className="shrink-0 text-emerald-500" /> Nạp thẳng vào tài khoản Roblox (VNG)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 size={15} className="shrink-0 text-emerald-500" /> Có xác nhận giao dịch rõ ràng
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 size={15} className="shrink-0 text-emerald-500" /> Nguồn Robux chính hãng
-                  </li>
-                </ul>
-              </div>
-              <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:min-w-[280px]">
-                {ROBUX_PACKAGES.map((p) => (
-                  <div key={p.robux} className="rounded-lg border border-slate-200 bg-white px-4 py-3.5 text-center transition hover:border-slate-300">
-                    <div className="text-lg font-bold text-slate-900">
-                      {p.robux} <span className="text-xs font-medium text-slate-500">R$</span>
-                    </div>
-                    <div className="mt-1 text-xs text-slate-500">{p.coin} Coin</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Reveal>
       </section>
 
       {/* WHY CHOOSE */}
       <section className="mx-auto max-w-5xl px-5 py-16">
-        <Reveal className="text-center">
-          <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Tính năng nổi bật</span>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-            Tại sao chọn <span className="text-sky-600">NXX315</span>?
+        <div className="text-center">
+          <span className="text-xs font-bold uppercase tracking-widest text-sky-500">
+            Tính năng nổi bật
+          </span>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
+            Tại sao chọn{" "}
+            <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+              NXX315 studio
+            </span>
+            ?
           </h2>
-        </Reveal>
+        </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          {WHY_CARDS.map(({ icon: Icon, title, desc }, i) => (
-            <Reveal key={title} delay={i * 100}>
-              <div className="h-full rounded-xl border border-slate-200 bg-white p-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-                  <Icon size={18} className="text-slate-700" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">{title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
+          {WHY_CARDS.map(({ icon: Icon, title, desc }) => (
+            <div
+              key={title}
+              className="h-full rounded-2xl border border-sky-100 bg-white p-6 shadow-sm transition hover:shadow-md"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-blue-100">
+                <Icon size={20} className="text-sky-600" />
               </div>
-            </Reveal>
+              <h3 className="mt-4 text-base font-bold text-slate-900">{title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* VIDEO TASKS */}
+      <section className="mx-auto max-w-5xl px-5 py-6">
+        <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 via-blue-50 to-white p-7 shadow-sm sm:p-10">
+          <div className="text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-bold text-sky-600">
+              <Video size={13} /> Tính năng mới
+            </span>
+            <h3 className="mt-4 text-2xl font-extrabold leading-snug tracking-tight text-slate-900 sm:text-3xl">
+              Kiếm Coin từ video
+              <br />
+              <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+                TikTok & YouTube
+              </span>
+            </h3>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+              Quay video giới thiệu, gửi link cho bot tự đo view/like/comment —
+              admin duyệt và Coin về ví ngay.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {VIDEO_TASKS.map(({ icon: Icon, title, desc }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+              >
+                <Icon size={20} className="text-sky-500" />
+                <h4 className="mt-3 text-base font-bold text-slate-900">{title}</h4>
+                <p className="mt-1 text-sm text-slate-500">{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => navigate("/register")}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-sky-500/40 transition hover:brightness-110"
+            >
+              <Video size={16} /> Bắt đầu kiếm Coin
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" className="mx-auto max-w-5xl px-5 py-16">
+        <div className="text-center">
+          <span className="text-xs font-bold uppercase tracking-widest text-sky-500">
+            3 bước đơn giản
+          </span>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
+            Cách hoạt động
+          </h2>
+        </div>
+        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          {HOW_IT_WORKS.map(({ n, icon: Icon, title, desc }) => (
+            <div
+              key={n}
+              className="h-full rounded-2xl border border-sky-100 bg-white p-6 text-center shadow-sm"
+            >
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-base font-extrabold text-white shadow-md shadow-sky-500/30">
+                {n}
+              </div>
+              <Icon size={20} className="mx-auto mt-4 text-sky-600" />
+              <h3 className="mt-3 text-base font-bold text-slate-900">{title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{desc}</p>
+            </div>
           ))}
         </div>
       </section>
 
       {/* FOOTER CTA */}
       <section className="mx-auto max-w-3xl px-5 pb-20 pt-6 text-center">
-        <Reveal>
-          <div className="rounded-xl border border-slate-200 bg-white px-6 py-10">
-            <h3 className="text-2xl font-bold tracking-tight text-slate-900">Sẵn sàng kiếm Coin và đổi Robux?</h3>
-            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              Đăng ký miễn phí và hoàn thành nhiệm vụ đầu tiên ngay hôm nay.
-            </p>
-            <button
-              onClick={() => navigate("/register")}
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Bắt đầu ngay — Miễn phí <ArrowRight size={16} />
-            </button>
-          </div>
-        </Reveal>
+        <div className="rounded-3xl border border-sky-100 bg-gradient-to-br from-sky-50 via-blue-50 to-white px-6 py-10 shadow-sm">
+          <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            Sẵn sàng kiếm Coin và đổi Robux?
+          </h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+            Đăng ký miễn phí và hoàn thành nhiệm vụ đầu tiên ngay hôm nay.
+          </p>
+          <button
+            onClick={() => navigate("/register")}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/40 transition hover:brightness-110"
+          >
+            Bắt đầu ngay — Miễn phí <ArrowRight size={16} />
+          </button>
+        </div>
       </section>
 
-      <footer className="border-t border-slate-200 px-5 py-6 text-center text-xs text-slate-400">
+      <footer className="border-t border-sky-100 bg-white/50 px-5 py-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} NXX315 Studio Rewards. Robux là thương hiệu của Roblox Corporation.
       </footer>
     </div>
   );
-                             }
+    }
