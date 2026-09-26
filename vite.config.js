@@ -24,36 +24,28 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // ✅ BỎ "html" khỏi cache → không bị trắng do cache cũ
-        globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,ttf,otf,webp,json}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        navigateFallback: "index.html",
-        navigateFallbackDenylist: [
-          /^\/api/,
-          /^\/task\/callback/,
-          /^\/history\/order\//,
-          /^\/store\//,
-          /^\/minigames\//,
-          /^\/task\//,
-        ],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api/, /^\/task\/callback/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/rwglwovohbyqmbbzdvdj\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-api",
-              networkTimeoutSeconds: 5,
+              networkTimeoutSeconds: 10,
               expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 },
             },
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: "CacheFirst",
             options: {
               cacheName: "images",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
           {
@@ -64,22 +56,6 @@ export default defineConfig({
               expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
-          {
-            urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "fonts",
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/openfpcdn\.io\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "external-cdn",
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
         ],
       },
       devOptions: {
@@ -87,18 +63,4 @@ export default defineConfig({
       },
     }),
   ],
-  // ✅ Chia nhỏ bundle
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "supabase": ["@supabase/supabase-js"],
-          "lucide": ["lucide-react"],
-          "fingerprint": ["@fingerprintjs/fingerprintjs"],
-        },
-      },
-    },
-    chunkSizeWarningLimit: 1000,
-  },
 });
