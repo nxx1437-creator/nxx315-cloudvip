@@ -6,42 +6,6 @@ import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
-// ✅ Dùng cùng FingerprintJS với Register
-const FP_CDN = "https://openfpcdn.io/fingerprintjs/v4/iife.min.js";
-const STORAGE_KEY = "nxx315_fingerprint";
-
-let fpPromise = null;
-function loadFingerprintJS() {
-  if (fpPromise) return fpPromise;
-  fpPromise = new Promise((resolve, reject) => {
-    if (window.FingerprintJS) {
-      resolve(window.FingerprintJS);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = FP_CDN;
-    script.async = true;
-    script.onload = () => {
-      if (window.FingerprintJS) resolve(window.FingerprintJS);
-      else reject(new Error("FingerprintJS không load được"));
-    };
-    script.onerror = () => reject(new Error("CDN load fail"));
-    document.head.appendChild(script);
-  });
-  return fpPromise;
-}
-
-async function getFingerprint() {
-  let fp = localStorage.getItem(STORAGE_KEY);
-  if (fp) return fp;
-  const FP = await loadFingerprintJS();
-  const fpInstance = await FP.load();
-  const result = await fpInstance.get();
-  fp = result.visitorId;
-  localStorage.setItem(STORAGE_KEY, fp);
-  return fp;
-}
-
 export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -69,41 +33,8 @@ export default function Login() {
       return;
     }
 
-    // ✅ Check IP/fingerprint sau khi login thành công
-    const accessToken = data?.session?.access_token;
-    if (accessToken) {
-      try {
-        const fp = await getFingerprint();
-
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/log-ip`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ fingerprint: fp }),
-          }
-        );
-
-        const ipData = await res.json();
-
-        if (ipData.allowed === false) {
-          await supabase.auth.signOut();
-          localStorage.removeItem(STORAGE_KEY);
-          setError(
-            ipData.reason ||
-              "Tài khoản của bạn đã bị chặn do trùng thiết bị với tài khoản khác."
-          );
-          setLoading(false);
-          return;
-        }
-      } catch (ipErr) {
-        console.error("Check IP error:", ipErr);
-      }
-    }
+    // ✅ BỎ CHECK IP — user cũ đăng nhập không bị chặn
+    // (check IP chỉ áp dụng khi ĐĂNG KÝ, không áp dụng khi ĐĂNG NHẬP)
 
     setLoading(false);
 
@@ -119,7 +50,6 @@ export default function Login() {
 
   const handleMfaCancel = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem(STORAGE_KEY);
     setShowMfa(false);
   };
 
@@ -232,4 +162,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-          }
+}
