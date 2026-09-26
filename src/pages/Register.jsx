@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom"; // 👈 Đã thêm useSearchParams
 import {
   Loader2,
   AlertTriangle,
@@ -48,12 +48,18 @@ async function getFingerprint() {
 
 export default function Register() {
   const navigate = useNavigate();
+  
+  // 👇 ĐỌC MÃ REF TỪ URL (Tự động điền vào form)
+  const [searchParams] = useSearchParams();
+  const refFromUrl = searchParams.get("ref") || "";
+
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
-    referral: "",
+    referral: refFromUrl.toUpperCase(), // 👈 Tự động điền mã từ link ?ref=...
   });
+  
   const [error, setError] = useState("");
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
@@ -236,6 +242,7 @@ export default function Register() {
           return;
         }
 
+        // Xử lý mã giới thiệu
         if (form.referral.trim() && data.user) {
           try {
             const { data: refResult, error: refError } = await supabase.rpc(
@@ -508,4 +515,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-        }
+      }
