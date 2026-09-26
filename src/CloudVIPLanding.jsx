@@ -126,13 +126,13 @@ export default function CloudVIPLanding() {
             Kiếm Coin — Đổi Robux chính hãng
           </span>
 
-          <h1 className="mt-7 text-4xl font-extrabold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl">
-            Nền tảng kiếm Coin
-            <br />
-            <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
-              đổi Robux chính hãng
-            </span>
-          </h1>
+          <h1 className="mt-7 text-[32px] font-extrabold leading-[1.2] tracking-tight text-slate-900 sm:text-5xl">
+  Nền tảng kiếm Coin
+  <br />
+  <span className="whitespace-nowrap bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+    đổi thưởng chính hãng
+  </span>
+</h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
             Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi ngay Robux chính
