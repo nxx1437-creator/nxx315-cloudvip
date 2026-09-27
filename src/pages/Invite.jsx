@@ -9,7 +9,6 @@ import {
   Share2,
   Loader2,
   QrCode,
-  Gift,
   Trophy,
   Crown,
   X,
@@ -23,14 +22,6 @@ import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 
 const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
-
-// ✅ Mốc thưởng mời bạn
-const REFERRAL_MILESTONES = [
-  { count: 3, reward: 500 },
-  { count: 5, reward: 1000 },
-  { count: 10, reward: 3000 },
-  { count: 20, reward: 10000 },
-];
 
 // ✅ Avatar có fallback chữ cái
 function Avatar({ src, name, size = "h-10 w-10", text = "text-sm" }) {
@@ -82,44 +73,6 @@ function SocialShareButton({ icon, label, color, onClick }) {
   );
 }
 
-function MilestoneCard({ milestone, reward, currentCount, claimed, onClaim, claiming }) {
-  const reached = currentCount >= milestone;
-  const progressPct = Math.min(100, Math.round((currentCount / milestone) * 100));
-
-  return (
-    <button
-      onClick={() => reached && !claimed && onClaim(milestone)}
-      disabled={!reached || claimed || claiming}
-      className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition ${
-        claimed
-          ? "border-emerald-200 bg-emerald-50"
-          : reached
-          ? "border-[#F2A900]/40 bg-[#FFF8ED]"
-          : "border-[#E5E7EB] bg-white"
-      }`}
-    >
-      <span className="text-xs font-bold text-[#111827]">{milestone} bạn</span>
-      <span
-        className={`flex items-center gap-1 text-sm font-bold ${
-          claimed ? "text-emerald-600" : "text-[#B87700]"
-        }`}
-      >
-        {claimed ? <Check size={13} /> : <Coins size={13} />}
-        +{reward}
-      </span>
-      <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-        <div
-          className={`h-full rounded-full ${claimed ? "bg-emerald-400" : "bg-[#F2A900]"}`}
-          style={{ width: `${progressPct}%` }}
-        />
-      </div>
-      <span className="text-[10px] text-[#9CA3AF]">
-        {currentCount}/{milestone}
-      </span>
-    </button>
-  );
-}
-
 export default function Invite() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -132,7 +85,6 @@ export default function Invite() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const [claimingMilestone, setClaimingMilestone] = useState(null);
 
   const referralCode = profile?.referral_code || "";
   const inviteLink = `${window.location.origin}/register?ref=${referralCode}`;
@@ -251,30 +203,6 @@ export default function Invite() {
       )}`,
       "_blank"
     );
-  };
-
-  const handleClaimMilestone = async (milestone) => {
-    if (!session?.user?.id) return;
-    setClaimingMilestone(milestone);
-
-    const { data, error } = await supabase.rpc("claim_referral_milestone", {
-      p_user_id: session.user.id,
-      p_milestone: milestone,
-    });
-
-    setClaimingMilestone(null);
-
-    if (error) {
-      alert("Lỗi: " + error.message);
-      return;
-    }
-
-    if (!data?.success) {
-      alert(data?.message || "Không thể nhận thưởng.");
-      return;
-    }
-
-    alert(`Nhận thành công +${data.reward} coin!`);
   };
 
   return (
@@ -409,33 +337,6 @@ export default function Invite() {
           </button>
         </div>
 
-        {/* Mốc thưởng mời bạn */}
-        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
-              <Gift size={14} className="text-[#F2A900]" />
-              Nhiệm vụ mời bạn
-            </p>
-            <span className="text-xs font-semibold text-[#9CA3AF]">
-              {referredUsers.length} bạn
-            </span>
-          </div>
-
-          <div className="grid grid-cols-4 gap-2">
-            {REFERRAL_MILESTONES.map((m) => (
-              <MilestoneCard
-                key={m.count}
-                milestone={m.count}
-                reward={m.reward}
-                currentCount={referredUsers.length}
-                claimed={false}
-                claiming={claimingMilestone === m.count}
-                onClaim={handleClaimMilestone}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* Top 3 người mời nhiều hoa hồng */}
         {topReferrals.length > 0 && (
           <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
@@ -561,7 +462,7 @@ export default function Invite() {
           </div>
         ) : (
           <>
-             {/* Người đã giới thiệu */}
+            {/* Người đã giới thiệu */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-bold text-[#111827]">
@@ -625,7 +526,7 @@ export default function Invite() {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {commissions.map((c) => (
+                     {commissions.map((c) => (
                     <div
                       key={c.id}
                       className="flex items-center justify-between border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0"
@@ -731,10 +632,6 @@ export default function Invite() {
               <StepRow
                 number="3"
                 text="Bạn ăn 15% Coin từ mỗi nhiệm vụ họ làm"
-              />
-              <StepRow
-                number="4"
-                text="Đạt mốc 3/5/10/20 bạn → nhận thêm thưởng lớn"
               />
             </div>
 
