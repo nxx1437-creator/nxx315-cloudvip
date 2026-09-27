@@ -67,11 +67,40 @@ import BanGate from "./components/BanGate";
 import DeviceChecker from "./components/DeviceChecker.jsx";
 import VersionChecker from "./components/VersionChecker.jsx"; // ✅ MỚI
 
+// ✅ Fallback hiện khi đang tải trang (thay vì màn hình trắng)
+function RouteLoading() {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f0f9ff",
+        zIndex: 9999,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          border: "3px solid #bae6fd",
+          borderTopColor: "#0284c7",
+          borderRadius: "50%",
+          animation: "app-splash-spin 0.8s linear infinite",
+        }}
+      />
+      <style>{`@keyframes app-splash-spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <BanGate>
       <BrowserRouter>
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteLoading />}>
           <Routes>
             <Route path="/" element={<CloudVIPLanding />} />
             <Route path="/login" element={<Login />} />
@@ -144,4 +173,5 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-              }
+                                                              }
+            
