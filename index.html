@@ -4,10 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="theme-color" content="#0369a1" />
     <title>NXX315 Studio Rewards</title>
 
     <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+
+      /* ========== OCEAN LOADER ========== */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -16,110 +20,205 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+        background: linear-gradient(180deg, #e0f2fe 0%, #7dd3fc 40%, #0ea5e9 100%);
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        transition: opacity 0.3s ease;
+        overflow: hidden;
+        transition: opacity 0.5s ease;
       }
+
       #initial-loader.hide {
         opacity: 0;
         pointer-events: none;
       }
-      .loader-ring {
+
+      /* ==== LOGO nổi trên mặt nước ==== */
+      .ocean-logo-wrap {
         position: relative;
-        width: 110px;
-        height: 110px;
-        margin-bottom: 28px;
+        z-index: 10;
+        margin-bottom: 40px;
+        animation: float-logo 3s ease-in-out infinite;
       }
-      .loader-ring::before,
-      .loader-ring::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 3px solid transparent;
+
+      @keyframes float-logo {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-12px); }
       }
-      .loader-ring::before {
-        border-top-color: #2563eb;
-        border-right-color: #2563eb;
-        animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-      }
-      .loader-ring::after {
-        inset: 10px;
-        border-bottom-color: #6366f1;
-        border-left-color: #6366f1;
-        animation: spin 1.6s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
-      }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-      .loader-logo {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .loader-logo-box {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #2563eb, #4f46e5);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+
+      .ocean-logo-box {
+        width: 90px;
+        height: 90px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        box-shadow:
+          0 12px 40px rgba(14, 165, 233, 0.5),
+          0 0 0 6px rgba(255, 255, 255, 0.4),
+          inset 0 -6px 16px rgba(0, 0, 0, 0.15);
         display: flex;
         align-items: center;
         justify-content: center;
         color: #fff;
         font-weight: 900;
-        font-size: 26px;
-        animation: pulse-logo 1.8s ease-in-out infinite;
+        font-size: 44px;
+        position: relative;
+        overflow: hidden;
       }
-      @keyframes pulse-logo {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+
+      /* Ánh sáng chạy qua logo */
+      .ocean-logo-box::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.6),
+          transparent
+        );
+        animation: shimmer 2.5s ease-in-out infinite;
       }
-      .loader-title {
-        font-size: 24px;
+
+      @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 200%; }
+      }
+
+      /* ==== SÓNG ==== */
+      .ocean-waves {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 45%;
+        min-height: 260px;
+        z-index: 1;
+      }
+
+      .ocean-waves svg {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 200%;
+        height: 100%;
+      }
+
+      /* Sóng 1 — nhạt nhất, chậm nhất */
+      .wave-1 {
+        animation: wave-move 14s linear infinite;
+        opacity: 0.35;
+      }
+
+      /* Sóng 2 — trung bình */
+      .wave-2 {
+        animation: wave-move 10s linear infinite reverse;
+        opacity: 0.5;
+      }
+
+      /* Sóng 3 — đậm nhất, nhanh nhất */
+      .wave-3 {
+        animation: wave-move 7s linear infinite;
+        opacity: 0.75;
+      }
+
+      @keyframes wave-move {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+
+      /* ==== BONG BÓNG bay lên ==== */
+      .bubbles {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .bubble {
+        position: absolute;
+        bottom: -50px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(255, 255, 255, 0.9),
+          rgba(255, 255, 255, 0.3)
+        );
+        animation: bubble-up linear infinite;
+      }
+
+      @keyframes bubble-up {
+        from {
+          transform: translateY(0) scale(0.5);
+          opacity: 0;
+        }
+        20% { opacity: 1; }
+        to {
+          transform: translateY(-110vh) scale(1.2);
+          opacity: 0;
+        }
+      }
+
+      /* ==== TEXT ==== */
+      .ocean-title {
+        position: relative;
+        z-index: 10;
+        font-size: 28px;
         font-weight: 900;
-        margin: 0 0 4px 0;
-        background: linear-gradient(90deg, #2563eb, #4f46e5);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+        margin: 0 0 8px 0;
+        color: #fff;
+        text-shadow: 0 4px 20px rgba(2, 132, 199, 0.5);
       }
-      .loader-subtitle {
+
+      .ocean-subtitle {
+        position: relative;
+        z-index: 10;
         font-size: 14px;
-        color: #475569;
+        color: rgba(255, 255, 255, 0.9);
         font-weight: 600;
         margin: 0 0 4px 0;
       }
-      .loader-hint {
+
+      .ocean-hint {
+        position: relative;
+        z-index: 10;
         font-size: 12.5px;
-        color: #94a3b8;
+        color: rgba(255, 255, 255, 0.75);
         margin: 0;
       }
-      .loader-dots {
+
+      /* ==== 3 CHẤM NHẢY ==== */
+      .ocean-dots {
+        position: relative;
+        z-index: 10;
         display: flex;
-        gap: 6px;
-        margin-top: 22px;
+        gap: 8px;
+        margin-top: 24px;
       }
-      .loader-dots span {
-        width: 8px;
-        height: 8px;
+
+      .ocean-dots span {
+        width: 9px;
+        height: 9px;
         border-radius: 50%;
-        background: #2563eb;
-        animation: bounce-dot 1.4s ease-in-out infinite;
+        background: #fff;
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+        animation: dot-bounce 1.4s ease-in-out infinite;
       }
-      .loader-dots span:nth-child(2) {
-        animation-delay: 0.15s;
-        background: #3b82f6;
-      }
-      .loader-dots span:nth-child(3) {
-        animation-delay: 0.3s;
-        background: #6366f1;
-      }
-      @keyframes bounce-dot {
-        0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-        40% { transform: scale(1); opacity: 1; }
+
+      .ocean-dots span:nth-child(2) { animation-delay: 0.2s; }
+      .ocean-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes dot-bounce {
+        0%, 80%, 100% {
+          transform: scale(0.5);
+          opacity: 0.4;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
     </style>
   </head>
@@ -127,16 +226,59 @@
   <body>
     <div id="root"></div>
 
+    <!-- ========== OCEAN LOADING SCREEN ========== -->
     <div id="initial-loader">
-      <div class="loader-ring">
-        <div class="loader-logo">
-          <div class="loader-logo-box">N</div>
-        </div>
+      <!-- Sóng SVG -->
+      <div class="ocean-waves">
+        <!-- Sóng 1 -->
+        <svg class="wave-1" viewBox="0 0 1440 320" preserveAspectRatio="none">
+          <path
+            fill="#bae6fd"
+            d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,154.7C672,149,768,171,864,181.3C960,192,1056,192,1152,176C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          />
+        </svg>
+
+        <!-- Sóng 2 -->
+        <svg class="wave-2" viewBox="0 0 1440 320" preserveAspectRatio="none">
+          <path
+            fill="#7dd3fc"
+            d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,213.3C672,224,768,224,864,208C960,192,1056,160,1152,160C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          />
+        </svg>
+
+        <!-- Sóng 3 — đậm -->
+        <svg class="wave-3" viewBox="0 0 1440 320" preserveAspectRatio="none">
+          <path
+            fill="#0ea5e9"
+            d="M0,256L48,240C96,224,192,192,288,192C384,192,480,224,576,234.7C672,245,768,235,864,213.3C960,192,1056,160,1152,165.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          />
+        </svg>
       </div>
-      <h1 class="loader-title">NXX315 studio</h1>
-      <p class="loader-subtitle">Đang tải...</p>
-      <p class="loader-hint">Sẽ không mất nhiều thời gian đâu.</p>
-      <div class="loader-dots">
+
+      <!-- Bong bóng -->
+      <div class="bubbles">
+        <div class="bubble" style="left: 10%; width: 12px; height: 12px; animation-duration: 8s; animation-delay: 0s;"></div>
+        <div class="bubble" style="left: 25%; width: 8px; height: 8px; animation-duration: 10s; animation-delay: 1s;"></div>
+        <div class="bubble" style="left: 40%; width: 16px; height: 16px; animation-duration: 12s; animation-delay: 2s;"></div>
+        <div class="bubble" style="left: 55%; width: 10px; height: 10px; animation-duration: 9s; animation-delay: 0.5s;"></div>
+        <div class="bubble" style="left: 70%; width: 14px; height: 14px; animation-duration: 11s; animation-delay: 1.5s;"></div>
+        <div class="bubble" style="left: 85%; width: 9px; height: 9px; animation-duration: 13s; animation-delay: 2.5s;"></div>
+        <div class="bubble" style="left: 15%; width: 6px; height: 6px; animation-duration: 7s; animation-delay: 3s;"></div>
+        <div class="bubble" style="left: 60%; width: 7px; height: 7px; animation-duration: 8.5s; animation-delay: 4s;"></div>
+      </div>
+
+      <!-- Logo -->
+      <div class="ocean-logo-wrap">
+        <div class="ocean-logo-box">N</div>
+      </div>
+
+      <!-- Text -->
+      <h1 class="ocean-title">NXX315</h1>
+      <p class="ocean-subtitle">Đang tải...</p>
+      <p class="ocean-hint">Sẽ không mất nhiều thời gian đâu.</p>
+
+      <!-- 3 chấm -->
+      <div class="ocean-dots">
         <span></span>
         <span></span>
         <span></span>
@@ -157,8 +299,7 @@
           loader.classList.add("hide");
           setTimeout(function () {
             loader.style.display = "none";
-          }, 350);
-          console.log("[Loader] Ẩn loading screen");
+          }, 500);
         }
 
         // Ẩn khi React mount xong
@@ -166,17 +307,15 @@
         if (rootEl) {
           var observer = new MutationObserver(function () {
             if (rootEl.children.length > 0) {
-              setTimeout(hideLoader, 300);
+              setTimeout(hideLoader, 250);
               observer.disconnect();
             }
           });
           observer.observe(rootEl, { childList: true, subtree: true });
         }
 
-        // ✅ FALLBACK: ẩn SAU 3s (dù React lỗi)
+        // Fallback 3s
         setTimeout(hideLoader, 3000);
-
-        console.log("[Loader] Setup OK, fallback 3s");
       })();
     </script>
   </body>
