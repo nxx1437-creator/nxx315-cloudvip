@@ -31,60 +31,6 @@
         pointer-events: none;
       }
 
-      /* ==== LOGO nổi trên mặt nước ==== */
-      .ocean-logo-wrap {
-        position: relative;
-        z-index: 10;
-        margin-bottom: 40px;
-        animation: float-logo 3s ease-in-out infinite;
-      }
-
-      @keyframes float-logo {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-12px); }
-      }
-
-      .ocean-logo-box {
-        width: 90px;
-        height: 90px;
-        border-radius: 24px;
-        background: linear-gradient(135deg, #0ea5e9, #2563eb);
-        box-shadow:
-          0 12px 40px rgba(14, 165, 233, 0.5),
-          0 0 0 6px rgba(255, 255, 255, 0.4),
-          inset 0 -6px 16px rgba(0, 0, 0, 0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 900;
-        font-size: 44px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      /* Ánh sáng chạy qua logo */
-      .ocean-logo-box::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.6),
-          transparent
-        );
-        animation: shimmer 2.5s ease-in-out infinite;
-      }
-
-      @keyframes shimmer {
-        0% { left: -100%; }
-        100% { left: 200%; }
-      }
-
       /* ==== SÓNG ==== */
       .ocean-waves {
         position: absolute;
@@ -104,19 +50,16 @@
         height: 100%;
       }
 
-      /* Sóng 1 — nhạt nhất, chậm nhất */
       .wave-1 {
         animation: wave-move 14s linear infinite;
         opacity: 0.35;
       }
 
-      /* Sóng 2 — trung bình */
       .wave-2 {
         animation: wave-move 10s linear infinite reverse;
         opacity: 0.5;
       }
 
-      /* Sóng 3 — đậm nhất, nhanh nhất */
       .wave-3 {
         animation: wave-move 7s linear infinite;
         opacity: 0.75;
@@ -127,7 +70,7 @@
         to { transform: translateX(-50%); }
       }
 
-      /* ==== BONG BÓNG bay lên ==== */
+      /* ==== BONG BÓNG ==== */
       .bubbles {
         position: absolute;
         inset: 0;
@@ -164,29 +107,44 @@
       .ocean-title {
         position: relative;
         z-index: 10;
-        font-size: 28px;
+        font-size: 34px;
         font-weight: 900;
         letter-spacing: -0.5px;
-        margin: 0 0 8px 0;
+        margin: 0 0 12px 0;
         color: #fff;
-        text-shadow: 0 4px 20px rgba(2, 132, 199, 0.5);
+        text-shadow: 0 4px 24px rgba(2, 132, 199, 0.55);
+        text-align: center;
+        animation: title-glow 2.5s ease-in-out infinite;
+      }
+
+      @keyframes title-glow {
+        0%, 100% {
+          text-shadow: 0 4px 24px rgba(2, 132, 199, 0.55);
+        }
+        50% {
+          text-shadow:
+            0 4px 32px rgba(2, 132, 199, 0.9),
+            0 0 20px rgba(255, 255, 255, 0.6);
+        }
       }
 
       .ocean-subtitle {
         position: relative;
         z-index: 10;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.9);
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.95);
         font-weight: 600;
-        margin: 0 0 4px 0;
+        margin: 0 0 6px 0;
+        text-align: center;
       }
 
       .ocean-hint {
         position: relative;
         z-index: 10;
         font-size: 12.5px;
-        color: rgba(255, 255, 255, 0.75);
+        color: rgba(255, 255, 255, 0.8);
         margin: 0;
+        text-align: center;
       }
 
       /* ==== 3 CHẤM NHẢY ==== */
@@ -195,7 +153,7 @@
         z-index: 10;
         display: flex;
         gap: 8px;
-        margin-top: 24px;
+        margin-top: 28px;
       }
 
       .ocean-dots span {
@@ -230,7 +188,6 @@
     <div id="initial-loader">
       <!-- Sóng SVG -->
       <div class="ocean-waves">
-        <!-- Sóng 1 -->
         <svg class="wave-1" viewBox="0 0 1440 320" preserveAspectRatio="none">
           <path
             fill="#bae6fd"
@@ -238,7 +195,6 @@
           />
         </svg>
 
-        <!-- Sóng 2 -->
         <svg class="wave-2" viewBox="0 0 1440 320" preserveAspectRatio="none">
           <path
             fill="#7dd3fc"
@@ -246,7 +202,6 @@
           />
         </svg>
 
-        <!-- Sóng 3 — đậm -->
         <svg class="wave-3" viewBox="0 0 1440 320" preserveAspectRatio="none">
           <path
             fill="#0ea5e9"
@@ -267,13 +222,8 @@
         <div class="bubble" style="left: 60%; width: 7px; height: 7px; animation-duration: 8.5s; animation-delay: 4s;"></div>
       </div>
 
-      <!-- Logo -->
-      <div class="ocean-logo-wrap">
-        <div class="ocean-logo-box">N</div>
-      </div>
-
       <!-- Text -->
-      <h1 class="ocean-title">NXX315</h1>
+      <h1 class="ocean-title">NXX315 Studio</h1>
       <p class="ocean-subtitle">Đang tải...</p>
       <p class="ocean-hint">Sẽ không mất nhiều thời gian đâu.</p>
 
@@ -302,7 +252,6 @@
           }, 500);
         }
 
-        // Ẩn khi React mount xong
         var rootEl = document.getElementById("root");
         if (rootEl) {
           var observer = new MutationObserver(function () {
@@ -314,7 +263,6 @@
           observer.observe(rootEl, { childList: true, subtree: true });
         }
 
-        // Fallback 3s
         setTimeout(hideLoader, 3000);
       })();
     </script>
