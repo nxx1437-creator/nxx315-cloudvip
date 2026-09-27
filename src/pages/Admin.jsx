@@ -25,12 +25,12 @@ import {
   Coins,
   Loader2,
   Image as ImageIcon,
-  Wallet,  
-    Bell,
+  Wallet,
+  Bell,
   Trophy,
   Gamepad2,
-  Crosshair,   
-  Flame,       
+  Crosshair,
+  Flame,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient";
@@ -39,7 +39,7 @@ import BanUserModal from "../components/BanUserModal";
 import RobloxOrdersTab from "../pages/RobloxOrdersTab";
 import LienQuanOrdersTab from "../pages/LienQuanOrdersTab";
 import PlayTogetherOrdersTab from "../pages/PlayTogetherOrdersTab";
-import PubgOrdersTab from "../pages/PubgOrdersTab";        
+import PubgOrdersTab from "../pages/PubgOrdersTab";
 import FreeFireOrdersTab from "../pages/FreeFireOrdersTab";
 import BroadcastForm from "../components/admin/BroadcastForm";
 import WithdrawalsTab from "../pages/WithdrawalsTab";
@@ -61,88 +61,250 @@ const PACKAGE_IMAGES = {
     "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
 };
 
-const tabs = [
-  { id: "orders", label: "Đơn hàng", icon: Package },
-  { id: "roblox-orders", label: "Roblox", icon: Gift },
-  { id: "lienquan-orders", label: "Liên Quân", icon: Trophy },
-  { id: "playtogether-orders", label: "Play Together", icon: Gamepad2 },
-  { id: "pubg-orders", label: "PUBG Mobile", icon: Crosshair },     // 👈 THÊM
-  { id: "freefire-orders", label: "Free Fire", icon: Flame },        // 👈 THÊM
-  { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
-  { id: "packages", label: "Gói nạp", icon: Coins },
-  { id: "users", label: "Người dùng", icon: Users },
-  { id: "support", label: "Hỗ trợ", icon: MessageCircle },
-  { id: "affiliate", label: "Affiliate", icon: HandCoins },
-  { id: "posts", label: "Bài viết", icon: FileText },
-  { id: "notify", label: "Thông báo", icon: Bell },
-  { id: "withdrawals", label: "Rút tiền", icon: Wallet },
+// ==== CẤU HÌNH NHÓM MENU ====
+const MENU_GROUPS = [
+  {
+    id: "orders",
+    label: "Đơn hàng",
+    icon: Package,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    items: [
+      { id: "orders", label: "Đổi thưởng", icon: Gift },
+      { id: "roblox-orders", label: "Roblox", icon: Gift },
+      { id: "lienquan-orders", label: "Liên Quân", icon: Trophy },
+      { id: "playtogether-orders", label: "Play Together", icon: Gamepad2 },
+      { id: "pubg-orders", label: "PUBG Mobile", icon: Crosshair },
+      { id: "freefire-orders", label: "Free Fire", icon: Flame },
+    ],
+  },
+  {
+    id: "users",
+    label: "Người dùng",
+    icon: Users,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+    items: [
+      { id: "users", label: "Tài khoản", icon: Users },
+      { id: "support", label: "Hỗ trợ", icon: MessageCircle },
+      { id: "affiliate", label: "Affiliate", icon: HandCoins },
+      { id: "withdrawals", label: "Rút tiền", icon: Wallet },
+    ],
+  },
+  {
+    id: "content",
+    label: "Nội dung",
+    icon: FileText,
+    color: "text-violet-600",
+    bg: "bg-violet-50",
+    items: [
+      { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
+      { id: "packages", label: "Gói nạp", icon: Coins },
+      { id: "posts", label: "Bài viết", icon: FileText },
+    ],
+  },
+  {
+    id: "notify",
+    label: "Thông báo",
+    icon: Bell,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    items: [
+      { id: "notify", label: "Gửi thông báo", icon: Bell },
+    ],
+  },
 ];
-
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("orders");
+  const [openGroups, setOpenGroups] = useState(() => {
+    const all = {};
+    MENU_GROUPS.forEach((g) => {
+      all[g.id] = g.items.some((i) => i.id === "orders");
+    });
+    return all;
+  });
+
+  const toggleGroup = (id) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleSelectTab = (tabId) => {
+    setActiveTab(tabId);
+  };
+
+  const activeItem = MENU_GROUPS.flatMap((g) => g.items).find(
+    (i) => i.id === activeTab
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="border-b bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-5">
+      {/* ==== HEADER ==== */}
+      <div className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
               <ShieldCheck size={23} />
             </div>
-
             <div>
               <h1 className="text-xl font-bold text-slate-900">
                 Admin Dashboard
               </h1>
-              <p className="text-sm text-slate-500">
-                Quản lý CloudVIP
-              </p>
+              <p className="text-sm text-slate-500">Quản lý CloudVIP</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-5">
-        <div className="mb-5 flex gap-2 overflow-x-auto rounded-2xl border bg-white p-2">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
+      {/* ==== BODY: SIDEBAR + CONTENT ==== */}
+      <div className="mx-auto flex max-w-7xl gap-5 px-4 py-5">
+        {/* SIDEBAR */}
+        <aside className="hidden w-64 shrink-0 lg:block">
+          <div className="sticky top-24 space-y-2 rounded-2xl border bg-white p-3">
+            {MENU_GROUPS.map((group) => {
+              const GroupIcon = group.icon;
+              const isOpen = openGroups[group.id];
+              const hasActive = group.items.some(
+                (i) => i.id === activeTab
+              );
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                  activeTab === tab.id
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <Icon size={17} />
-                {tab.label}
-              </button>
-            );
-          })}
+              return (
+                <div key={group.id}>
+                  <button
+                    onClick={() => toggleGroup(group.id)}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                      hasActive
+                        ? `${group.bg} ${group.color}`
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <GroupIcon size={18} />
+                      {group.label}
+                    </span>
+                    <ChevronRight
+                      size={16}
+                      className={`transition-transform ${
+                        isOpen ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-100 pl-2">
+                      {group.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        const isActive = activeTab === item.id;
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => handleSelectTab(item.id)}
+                            className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                              isActive
+                                ? "bg-blue-600 text-white shadow-sm"
+                                : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                            }`}
+                          >
+                            <ItemIcon size={15} />
+                            {item.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* MOBILE: thanh chọn nhóm ngang */}
+        <div className="w-full lg:hidden">
+          <div className="mb-4 overflow-x-auto rounded-2xl border bg-white p-2">
+            <div className="flex gap-2">
+              {MENU_GROUPS.map((group) => {
+                const GroupIcon = group.icon;
+                const hasActive = group.items.some(
+                  (i) => i.id === activeTab
+                );
+
+                return (
+                  <button
+                    key={group.id}
+                    onClick={() => {
+                      setOpenGroups((p) => ({ ...p, [group.id]: true }));
+                      handleSelectTab(group.items[0].id);
+                    }}
+                    className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${
+                      hasActive
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    <GroupIcon size={16} />
+                    {group.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+            {MENU_GROUPS.filter((g) =>
+              g.items.some((i) => i.id === activeTab)
+            )
+              .flatMap((g) => g.items)
+              .map((item) => {
+                const ItemIcon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelectTab(item.id)}
+                    className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ${
+                      isActive
+                        ? "bg-slate-900 text-white"
+                        : "bg-white text-slate-500 border"
+                    }`}
+                  >
+                    <ItemIcon size={14} />
+                    {item.label}
+                  </button>
+                );
+              })}
+          </div>
         </div>
 
-        {activeTab === "orders" && <OrdersTab />}
-        {activeTab === "roblox-orders" && <RobloxOrdersTab />}
-        {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
-        {activeTab === "playtogether-orders" && <PlayTogetherOrdersTab />}
-        {activeTab === "pubg-orders" && <PubgOrdersTab />}            {/* 👈 THÊM */}
-        {activeTab === "freefire-orders" && <FreeFireOrdersTab />}    {/* 👈 THÊM */}
-        {activeTab === "tasks" && <TasksTab />}
-        {activeTab === "packages" && <PackagesTab />}
-        {activeTab === "users" && <UsersTab />}
-        {activeTab === "support" && <SupportTab />}
-        {activeTab === "affiliate" && <AffiliateTab />}
-        {activeTab === "posts" && <PostsTab />}
-        {activeTab === "notify" && <BroadcastForm />}
-        {activeTab === "withdrawals" && <WithdrawalsTab />}
+        {/* CONTENT */}
+        <main className="min-w-0 flex-1">
+          <div className="mb-4 hidden items-center gap-2 text-sm text-slate-500 lg:flex">
+            <span>Admin</span>
+            <ChevronRight size={14} />
+            <span className="font-semibold text-slate-800">
+              {activeItem?.label}
+            </span>
+          </div>
+
+          {activeTab === "orders" && <OrdersTab />}
+          {activeTab === "roblox-orders" && <RobloxOrdersTab />}
+          {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
+          {activeTab === "playtogether-orders" && <PlayTogetherOrdersTab />}
+          {activeTab === "pubg-orders" && <PubgOrdersTab />}
+          {activeTab === "freefire-orders" && <FreeFireOrdersTab />}
+          {activeTab === "tasks" && <TasksTab />}
+          {activeTab === "packages" && <PackagesTab />}
+          {activeTab === "users" && <UsersTab />}
+          {activeTab === "support" && <SupportTab />}
+          {activeTab === "affiliate" && <AffiliateTab />}
+          {activeTab === "posts" && <PostsTab />}
+          {activeTab === "notify" && <BroadcastForm />}
+          {activeTab === "withdrawals" && <WithdrawalsTab />}
+        </main>
       </div>
     </div>
   );
-  }
-     function OrdersTab() {
+                          }
+function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -457,8 +619,9 @@ export default function Admin() {
       )}
     </div>
   );
-                            }
-      function SupportTab() {
+}
+
+function SupportTab() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -646,9 +809,8 @@ export default function Admin() {
       )}
     </div>
   );
-}
-
-function UsersTab() {
+              }
+     function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -854,7 +1016,8 @@ function UsersTab() {
       )}
     </div>
   );
-              }
+}
+
 function TasksTab() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1070,7 +1233,7 @@ function PackageSkeleton() {
       </div>
     </div>
   );
-                }
+        }
 function SectionHeader({
   title,
   description,
@@ -1219,7 +1382,7 @@ function Modal({ title, children, onClose }) {
       </div>
     </div>
   );
-}
+      }
 function AffiliateTab() {
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1677,4 +1840,4 @@ function PostsTab() {
       )}
     </div>
   );
-      }
+            }
