@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import { PlayCircle, X, ArrowUpRight } from "lucide-react";
 
+// LINK VIDEO YOUTUBE 
 const YOUTUBE_LINK = "https://youtu.be/juVecn7DhWM?si=bMTU3LILnDXnFQMo";
+
+// TỰ ĐỘNG TÁCH VIDEO ID TỪ LINK (để nhúng iframe)
+const YOUTUBE_ID = "juVecn7DhWM";
+
+// ẢNH THUMBNAIL
 const IMAGE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/huongdan.png"; 
 
 export default function HomeTutorial() {
   const [isVisible, setIsVisible] = useState(true);
+  const [showVideo, setShowVideo] = useState(false); // 👈 State bật/tắt video
 
   if (!isVisible) return null;
 
@@ -27,19 +34,43 @@ export default function HomeTutorial() {
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
           </div>
           
-          <div className="group relative aspect-video w-full bg-slate-900 cursor-pointer" onClick={() => window.open(YOUTUBE_LINK, "_blank")}>
-            {/* 👇 ĐÃ SỬA: Bỏ opacity-90, thêm object-center */}
-            <img 
-              src={IMAGE_URL} 
-              alt="Hướng dẫn làm nhiệm vụ" 
-              className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
-              onError={(e) => { e.target.src = "https://placehold.co/600x400/1e293b/ffffff?text=Huong+Dan" }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/30">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition hover:scale-110">
-                <PlayCircle size={28} className="text-[#3478F6]" />
+          {/* 👇 VÙNG CHỨA ẢNH HOẶC VIDEO */}
+          <div className="group relative aspect-video w-full bg-slate-900">
+            
+            {!showVideo ? (
+              // ==== TRẠNG THÁI 1: Hiển thị ảnh thumbnail ====
+              <div 
+                className="relative h-full w-full cursor-pointer"
+                onClick={() => setShowVideo(true)}
+              >
+                {/* 👇 ĐÃ BỎ HOÀN TOÀN opacity và lớp phủ đen */}
+                <img 
+                  src={IMAGE_URL} 
+                  alt="Hướng dẫn làm nhiệm vụ" 
+                  className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
+                  onError={(e) => { e.target.src = "https://placehold.co/600x400/1e293b/ffffff?text=Huong+Dan" }}
+                />
+                
+                {/* Nút Play ở giữa - Không có lớp phủ đen nữa */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-xl transition hover:scale-110">
+                    <PlayCircle size={32} className="text-[#3478F6]" />
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              // ==== TRẠNG THÁI 2: Phát video trực tiếp ====
+              <div className="h-full w-full bg-black">
+                <iframe
+                  className="h-full w-full"
+                  src={`https://www.youtube.com/embed/${YOUTUBE_ID}?autoplay=1&rel=0&modestbranding=1`}
+                  title="Hướng dẫn làm nhiệm vụ"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -59,11 +90,12 @@ export default function HomeTutorial() {
         </div>
 
         <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
-          Đừng bỏ lỡ! Cách kiếm coin nhanh nhất cho người mới nhé! 
+          Đừng bỏ lỡ! Cách kiếm coin nhanh nhất cho người mới nhé
         </p>
 
+        {/* 👇 Nút này cũng phát video trực tiếp luôn */}
         <button 
-          onClick={() => window.open(YOUTUBE_LINK, "_blank")}
+          onClick={() => setShowVideo(true)}
           className="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#3478F6] transition hover:underline"
         >
           Xem video hướng dẫn
