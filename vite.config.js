@@ -20,23 +20,66 @@ export default defineConfig({
         icons: [
           { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          {
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,ttf,otf,webp}"],
+        // ✅ KHÔNG precache index.html và version.json
+        //    để luôn lấy từ network
+        globPatterns: [
+          "**/*.{css,ico,png,svg,woff,woff2,ttf,otf,webp}",
+        ],
+
+        // ✅ SW mới thay SW cũ ngay lập tức
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        navigateFallback: "index.html",
+
+        // ✅ QUAN TRỌNG: KHÔNG dùng navigateFallback
+        //    → Không cache index.html → luôn lấy từ server
+        navigateFallback: null,
+
+        // ✅ Không cache index.html và version.json
         navigateFallbackDenylist: [
+          /^\/index\.html$/,
+          /^\/version\.json$/,
           /^\/api/,
           /^\/task\/callback/,
           /^\/history\/order\//,
           /^\/store\//,
           /^\/minigames\//,
         ],
+
+        // ✅ Loại trừ file HTML khỏi precache
+        globIgnores: [
+          "**/index.html",
+          "**/version.json",
+        ],
+
         runtimeCaching: [
+          // ✅ version.json: LUÔN lấy từ network
+          {
+            urlPattern: /\/version\.json$/,
+            handler: "NetworkOnly",
+          },
+
+          // ✅ JS/CSS bundle: NetworkFirst để lấy bundle mới
+          {
+            urlPattern: /\/assets\/.*\.(js|css)$/,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "bundles",
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+            },
+          },
+
+          // Supabase API
           {
             urlPattern: /^https:\/\/rwglwovohbyqmbbzdvdj\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
@@ -46,28 +89,30 @@ export default defineConfig({
               expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 },
             },
           },
+
+          // Hình ảnh
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
             handler: "CacheFirst",
             options: {
               cacheName: "images",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
             },
           },
+
+          // Google Fonts
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: "CacheFirst",
             options: {
               cacheName: "google-fonts",
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-          {
-            urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "fonts",
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
             },
           },
         ],
@@ -77,19 +122,16 @@ export default defineConfig({
       },
     }),
   ],
-  // ✅ Tách chunk theo route — giúp load nhanh + update ngầm
   build: {
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Tách từng page thành chunk riêng
           if (id.includes("/pages/")) {
             const parts = id.split("/pages/");
             const fileName = parts[1].split(".")[0];
             const pageName = fileName.replace(/[^a-zA-Z0-9]/g, "-");
             return `page-${pageName}`;
           }
-          // Tách vendor
           if (id.includes("node_modules")) {
             if (id.includes("react-router")) return "react-vendor";
             if (id.includes("react-dom")) return "react-vendor";
