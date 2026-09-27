@@ -229,66 +229,62 @@ export default function Admin() {
           {/* ====== MAIN CONTENT ====== */}
           <main className="min-w-0 flex-1">
             {/* ----- MOBILE NAVIGATION ----- */}
-            <div className="mb-4 lg:hidden">
-              {/* Nhóm cấp 1 */}
-              <div className="-mx-3 overflow-x-auto px-3 pb-2">
-                <div className="flex gap-2">
-                  {MENU_GROUPS.map((group) => {
-                    const GroupIcon = group.icon;
-                    const hasActive = group.id === activeGroup?.id;
+<div className="mb-4 space-y-2 lg:hidden">
+  {/* Nhóm cấp 1 */}
+  <div className="overflow-x-auto rounded-xl border bg-white p-1.5 scrollbar-hide">
+    <div className="flex gap-1.5">
+      {MENU_GROUPS.map((group) => {
+        const GroupIcon = group.icon;
+        const hasActive = group.id === activeGroup?.id;
 
-                    return (
-                      <button
-                        key={group.id}
-                        onClick={() => {
-                          setOpenGroups((p) => ({
-                            ...p,
-                            [group.id]: true,
-                          }));
-                          handleSelectTab(group.items[0].id);
-                        }}
-                        className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                          hasActive
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "border bg-white text-slate-600"
-                        }`}
-                      >
-                        <GroupIcon size={16} />
-                        {group.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+        return (
+          <button
+            key={group.id}
+            onClick={() => {
+              setOpenGroups((p) => ({ ...p, [group.id]: true }));
+              handleSelectTab(group.items[0].id);
+            }}
+            className={`flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
+              hasActive
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            <GroupIcon size={15} />
+            {group.label}
+          </button>
+        );
+      })}
+    </div>
+  </div>
 
-              {/* Tab con của nhóm đang chọn */}
-              {activeGroup && (
-                <div className="-mx-3 overflow-x-auto px-3 pb-2">
-                  <div className="flex gap-2">
-                    {activeGroup.items.map((item) => {
-                      const ItemIcon = item.icon;
-                      const isActive = activeTab === item.id;
+  {/* Tab con của nhóm đang chọn */}
+  {activeGroup && activeGroup.items.length > 1 && (
+    <div className="overflow-x-auto rounded-xl border bg-slate-50 p-1.5 scrollbar-hide">
+      <div className="flex gap-1.5">
+        {activeGroup.items.map((item) => {
+          const ItemIcon = item.icon;
+          const isActive = activeTab === item.id;
 
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => handleSelectTab(item.id)}
-                          className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                            isActive
-                              ? "bg-slate-900 text-white"
-                              : "border bg-white text-slate-500"
-                          }`}
-                        >
-                          <ItemIcon size={14} />
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleSelectTab(item.id)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                isActive
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-white text-slate-500 border"
+              }`}
+            >
+              <ItemIcon size={13} />
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  )}
+</div>
             {/* ----- BREADCRUMB (DESKTOP) ----- */}
             <div className="mb-4 hidden items-center gap-2 text-sm text-slate-500 lg:flex">
               <span>Admin</span>
