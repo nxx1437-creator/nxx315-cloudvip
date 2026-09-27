@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom"; // 👈 Đã thêm useSearchParams
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   Loader2,
   AlertTriangle,
@@ -48,7 +48,7 @@ async function getFingerprint() {
 
 export default function Register() {
   const navigate = useNavigate();
-  
+
   // 👇 ĐỌC MÃ REF TỪ URL (Tự động điền vào form)
   const [searchParams] = useSearchParams();
   const refFromUrl = searchParams.get("ref") || "";
@@ -59,7 +59,7 @@ export default function Register() {
     password: "",
     referral: refFromUrl.toUpperCase(), // 👈 Tự động điền mã từ link ?ref=...
   });
-  
+
   const [error, setError] = useState("");
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
@@ -78,13 +78,22 @@ export default function Register() {
     setIpError(false);
 
     try {
+      // 1. Lấy IP
       const ip = await Promise.race([
         getClientIp(),
         new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
       ]);
 
-      if (!ip) {
-        console.warn("[checkIp] Không lấy được IP");
+      // 2. Lấy Fingerprint (song song)
+      let fp = null;
+      try {
+        fp = await getFingerprint();
+      } catch (e) {
+        console.warn("[checkIp] Không lấy được fingerprint:", e);
+      }
+
+      if (!ip && !fp) {
+        console.warn("[checkIp] Không lấy được IP và Fingerprint");
         setIpError(true);
         return;
       }
@@ -95,6 +104,7 @@ export default function Register() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+      // 3. Gửi CẢ IP và Fingerprint lên Edge Function
       const res = await fetch(
         `${SUPABASE_URL}/functions/v1/check-ip-registered`,
         {
@@ -103,7 +113,7 @@ export default function Register() {
             "Content-Type": "application/json",
             apikey: SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ ip }),
+          body: JSON.stringify({ ip, fingerprint: fp }),
           signal: controller.signal,
         }
       );
@@ -138,19 +148,19 @@ export default function Register() {
     e?.preventDefault();
 
     if (ipChecking) {
-      setError("Đang kiểm tra IP, vui lòng đợi...");
+      setError("Đang kiểm tra thiết bị, vui lòng đợi...");
       setErrorType("error");
       return;
     }
 
     if (ipError) {
-      setError("Không thể kiểm tra IP. Vui lòng thử lại.");
+      setError("Không thể kiểm tra thiết bị. Vui lòng thử lại.");
       setErrorType("ip_error");
       return;
     }
 
     if (ipBlocked) {
-      setError("IP của bạn đã có tài khoản.");
+      setError("Thiết bị này đã có tài khoản.");
       setErrorType("ip_blocked");
       return;
     }
@@ -212,7 +222,7 @@ export default function Register() {
           );
           setErrorType("email_exists");
         } else if (msg.includes("ip_already_registered")) {
-          setError("IP của bạn đã có tài khoản.");
+          setError("Thiết bị của bạn đã có tài khoản.");
           setErrorType("ip_blocked");
         } else if (msg.includes("invalid email")) {
           setError("Email không hợp lệ. Vui lòng kiểm tra lại.");
@@ -284,18 +294,18 @@ export default function Register() {
     }
 
     if (ipChecking) {
-      setError("Đang kiểm tra IP, vui lòng đợi...");
+      setError("Đang kiểm tra thiết bị, vui lòng đợi...");
       return;
     }
 
     if (ipError) {
-      setError("Không thể kiểm tra IP. Vui lòng thử lại.");
+      setError("Không thể kiểm tra thiết bị. Vui lòng thử lại.");
       setErrorType("ip_error");
       return;
     }
 
     if (ipBlocked) {
-      setError("IP của bạn đã có tài khoản.");
+      setError("Thiết bị này đã có tài khoản.");
       setErrorType("ip_blocked");
       return;
     }
@@ -309,7 +319,7 @@ export default function Register() {
 
   // ✅ Chỉ hiển thị 1 cảnh báo duy nhất theo ưu tiên
   const renderAlert = () => {
-    // Ưu tiên 1: Lỗi check IP
+    // Ưu tiên 1: Lỗi check IP/Fingerprint
     if (ipError) {
       return (
         <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -338,7 +348,7 @@ export default function Register() {
       );
     }
 
-    // Ưu tiên 2: IP trùng
+    // Ưu tiên 2: IP/Fingerprint trùng
     if (ipBlocked) {
       return (
         <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
@@ -515,4 +525,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-      }
+  }
