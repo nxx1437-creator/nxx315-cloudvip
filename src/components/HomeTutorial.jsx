@@ -27,12 +27,12 @@ export default function HomeTutorial() {
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
           </div>
           
-          {/* 👇 Đã thêm "group" vào đây */}
           <div className="group relative aspect-video w-full bg-slate-900 cursor-pointer" onClick={() => window.open(YOUTUBE_LINK, "_blank")}>
+            {/* 👇 ĐÃ SỬA: Bỏ opacity-90, thêm object-center */}
             <img 
               src={IMAGE_URL} 
               alt="Hướng dẫn làm nhiệm vụ" 
-              className="h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
               onError={(e) => { e.target.src = "https://placehold.co/600x400/1e293b/ffffff?text=Huong+Dan" }}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition hover:bg-black/30">
@@ -50,7 +50,6 @@ export default function HomeTutorial() {
         </div>
 
         <div className="relative mt-2 inline-block">
-          {/* 👇 Đã viết hoa chữ đầu và xóa dấu cách thừa */}
           <h3 className="font-display text-2xl font-black text-slate-900">
             Hướng dẫn làm nhiệm vụ
           </h3>
@@ -59,9 +58,8 @@ export default function HomeTutorial() {
           </svg>
         </div>
 
-        {/* 👇 Đã xóa dấu cách thừa */}
         <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
-          Đừng bỏ lỡ! Cách kiếm coin nhanh nhất cho người mới nhé
+          Đừng bỏ lỡ! Cách kiếm coin nhanh nhất cho người mới nhé! 
         </p>
 
         <button 
@@ -72,7 +70,6 @@ export default function HomeTutorial() {
           <ArrowUpRight size={14} />
         </button>
 
-        {/* 👇 Có thể xóa cụm dots này đi vì chỉ có 1 card */}
         <div className="mt-6 flex items-center justify-center gap-1.5">
           <span className="h-2 w-6 rounded-full bg-[#3478F6] transition-all duration-300"></span>
           <span className="h-2 w-2 rounded-full bg-slate-200"></span>
