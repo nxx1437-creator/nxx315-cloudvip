@@ -1,21 +1,21 @@
-
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import { registerSW } from "virtual:pwa-register";
 
-// ✅ Silent update — không hiện gì với user
-registerSW({
+// ✅ Auto update — tự động lấy bundle mới
+const updateSW = registerSW({
   onNeedRefresh() {
-    // Chunk mới sẽ tự load khi user chuyển trang
-    console.log("[PWA] Có bản mới, chunk sẽ load khi chuyển trang");
+    console.log("[PWA] Có bản mới, tự động update...");
+    // Tự động reload để lấy bundle mới
+    updateSW(true);
   },
   onOfflineReady() {
     console.log("[PWA] App sẵn sàng offline");
   },
   onRegisterError(error) {
-    console.error("[PWA] Lỗi đăng ký Service Worker:", error);
+    console.error("[PWA] Lỗi đăng ký SW:", error);
   },
   immediate: true,
 });
