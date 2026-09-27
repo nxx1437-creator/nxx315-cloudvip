@@ -49,7 +49,7 @@ async function getFingerprint() {
 export default function Register() {
   const navigate = useNavigate();
 
-  // 👇 ĐỌC MÃ REF TỪ URL (Tự động điền vào form)
+  // 👇 ĐỌC MÃ REF TỪ URL
   const [searchParams] = useSearchParams();
   const refFromUrl = searchParams.get("ref") || "";
 
@@ -70,7 +70,7 @@ export default function Register() {
   const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
-  // ✅ CHỈ GỬI FINGERPRINT — Server tự lấy IP từ header
+  // ✅ CHỈ GỬI FINGERPRINT — Server tự lấy IP
   const checkIp = async () => {
     if (ipChecking && ipChecked) return;
     if (ipChecked && !ipError) return;
@@ -79,7 +79,6 @@ export default function Register() {
     setIpError(false);
 
     try {
-      // Chỉ lấy fingerprint (không lấy IP nữa)
       let fp = null;
       try {
         fp = await getFingerprint();
@@ -99,7 +98,7 @@ export default function Register() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      // ✅ Body chỉ gửi fingerprint — KHÔNG gửi ip
+      // ✅ Chỉ gửi fingerprint, KHÔNG gửi ip
       const res = await fetch(
         `${SUPABASE_URL}/functions/v1/check-ip-registered`,
         {
@@ -183,7 +182,6 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Chỉ lấy fingerprint (không lấy IP nữa)
       const fp = await getFingerprint();
 
       const { data, error: authError } = await supabase.auth.signUp({
@@ -246,7 +244,7 @@ export default function Register() {
           return;
         }
 
-        // ✅ GỌI EDGE FUNCTION LƯU IP + FINGERPRINT (server tự lấy IP)
+        // ✅ GỌI EDGE FUNCTION LƯU IP + FINGERPRINT + DEVICE INFO
         try {
           const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
           const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -262,17 +260,22 @@ export default function Register() {
               body: JSON.stringify({
                 userId: data.user.id,
                 fingerprint: fp,
+                screen_resolution: `${window.screen.width}x${window.screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               }),
             }
           );
 
           if (saveRes.ok) {
-            console.log("✅ Đã lưu IP + fingerprint");
+            console.log(" Đã lưu IP + fingerprint + device info");
           } else {
-            console.warn("⚠️ save-registration trả về lỗi:", saveRes.status);
+            console.warn(
+              " save-registration trả về lỗi:",
+              saveRes.status
+            );
           }
         } catch (err) {
-          console.warn("⚠️ Không lưu được IP:", err);
+          console.warn(" Không lưu được IP:", err);
         }
 
         // Xử lý mã giới thiệu
@@ -340,13 +343,16 @@ export default function Register() {
     if (authError) setError(authError.message);
   };
 
-  // ✅ Chỉ hiển thị 1 cảnh báo duy nhất theo ưu tiên
+  // ✅ Chỉ hiển thị 1 cảnh báo duy nhất
   const renderAlert = () => {
     if (ipError) {
       return (
         <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600" />
+            <AlertTriangle
+              size={18}
+              className="mt-0.5 shrink-0 text-amber-600"
+            />
             <div className="flex-1">
               <p className="text-[13px] font-bold text-amber-800">
                 Không thể kiểm tra thiết bị
@@ -374,7 +380,10 @@ export default function Register() {
       return (
         <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start gap-3">
-            <ShieldAlert size={18} className="mt-0.5 shrink-0 text-rose-600" />
+            <ShieldAlert
+              size={18}
+              className="mt-0.5 shrink-0 text-rose-600"
+            />
             <div className="flex-1">
               <p className="text-[13px] font-bold text-rose-800">
                 Thiết bị này đã có tài khoản
@@ -538,10 +547,13 @@ export default function Register() {
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Đã có tài khoản?{" "}
-        <Link to="/login" className="font-semibold text-slate-900 hover:underline">
+        <Link
+          to="/login"
+          className="font-semibold text-slate-900 hover:underline"
+        >
           Đăng nhập
         </Link>
       </p>
     </AuthShell>
   );
-               }
+          }
