@@ -322,83 +322,8 @@ export default function Admin() {
       </div>
     </div>
   );
-                        }
-                return (
-                  <button
-                    key={group.id}
-                    onClick={() => {
-                      setOpenGroups((p) => ({ ...p, [group.id]: true }));
-                      handleSelectTab(group.items[0].id);
-                    }}
-                    className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${
-                      hasActive
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    <GroupIcon size={16} />
-                    {group.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-            {MENU_GROUPS.filter((g) =>
-              g.items.some((i) => i.id === activeTab)
-            )
-              .flatMap((g) => g.items)
-              .map((item) => {
-                const ItemIcon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectTab(item.id)}
-                    className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ${
-                      isActive
-                        ? "bg-slate-900 text-white"
-                        : "bg-white text-slate-500 border"
-                    }`}
-                  >
-                    <ItemIcon size={14} />
-                    {item.label}
-                  </button>
-                );
-              })}
-          </div>
-        </div>
-
-        {/* CONTENT */}
-        <main className="min-w-0 flex-1">
-          <div className="mb-4 hidden items-center gap-2 text-sm text-slate-500 lg:flex">
-            <span>Admin</span>
-            <ChevronRight size={14} />
-            <span className="font-semibold text-slate-800">
-              {activeItem?.label}
-            </span>
-          </div>
-
-          {activeTab === "orders" && <OrdersTab />}
-          {activeTab === "roblox-orders" && <RobloxOrdersTab />}
-          {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
-          {activeTab === "playtogether-orders" && <PlayTogetherOrdersTab />}
-          {activeTab === "pubg-orders" && <PubgOrdersTab />}
-          {activeTab === "freefire-orders" && <FreeFireOrdersTab />}
-          {activeTab === "tasks" && <TasksTab />}
-          {activeTab === "packages" && <PackagesTab />}
-          {activeTab === "users" && <UsersTab />}
-          {activeTab === "support" && <SupportTab />}
-          {activeTab === "affiliate" && <AffiliateTab />}
-          {activeTab === "posts" && <PostsTab />}
-          {activeTab === "notify" && <BroadcastForm />}
-          {activeTab === "withdrawals" && <WithdrawalsTab />}
-        </main>
-      </div>
-    </div>
-  );
-                          }
+}
+                    
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
