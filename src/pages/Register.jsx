@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
-import { supabase, getClientIp } from "../lib/supabaseClient.js";
+import { supabase } from "../lib/supabaseClient.js";
 
 const FP_CDN = "https://openfpcdn.io/fingerprintjs/v4/iife.min.js";
 const STORAGE_KEY = "nxx315_fingerprint";
@@ -70,6 +70,7 @@ export default function Register() {
   const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
+  // ✅ CHỈ GỬI FINGERPRINT — Server tự lấy IP từ header
   const checkIp = async () => {
     if (ipChecking && ipChecked) return;
     if (ipChecked && !ipError) return;
@@ -78,13 +79,7 @@ export default function Register() {
     setIpError(false);
 
     try {
-      // 1. Lấy IP
-      const ip = await Promise.race([
-        getClientIp(),
-        new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
-      ]);
-
-      // 2. Lấy Fingerprint
+      // Chỉ lấy fingerprint (không lấy IP nữa)
       let fp = null;
       try {
         fp = await getFingerprint();
@@ -92,8 +87,8 @@ export default function Register() {
         console.warn("[checkIp] Không lấy được fingerprint:", e);
       }
 
-      if (!ip && !fp) {
-        console.warn("[checkIp] Không lấy được IP và Fingerprint");
+      if (!fp) {
+        console.warn("[checkIp] Không lấy được fingerprint");
         setIpError(true);
         return;
       }
@@ -104,7 +99,7 @@ export default function Register() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      // 3. Gửi CẢ IP và Fingerprint lên Edge Function
+      // ✅ Body chỉ gửi fingerprint — KHÔNG gửi ip
       const res = await fetch(
         `${SUPABASE_URL}/functions/v1/check-ip-registered`,
         {
@@ -113,7 +108,7 @@ export default function Register() {
             "Content-Type": "application/json",
             apikey: SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ ip, fingerprint: fp }),
+          body: JSON.stringify({ fingerprint: fp }),
           signal: controller.signal,
         }
       );
@@ -188,7 +183,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const ip = await getClientIp();
+      // Chỉ lấy fingerprint (không lấy IP nữa)
       const fp = await getFingerprint();
 
       const { data, error: authError } = await supabase.auth.signUp({
@@ -197,7 +192,6 @@ export default function Register() {
         options: {
           data: {
             username: form.username || form.email.split("@")[0],
-            registration_ip: ip || null,
             device_fingerprint: fp || null,
           },
         },
@@ -252,18 +246,33 @@ export default function Register() {
           return;
         }
 
-        // 👇 GHI FINGERPRINT VÀO BẢNG PROFILES NGAY SAU KHI ĐĂNG KÝ
+        // ✅ GỌI EDGE FUNCTION LƯU IP + FINGERPRINT (server tự lấy IP)
         try {
-          await supabase
-            .from("profiles")
-            .update({ 
-              device_fingerprint: fp,
-              fingerprint: fp,
-            })
-            .eq("id", data.user.id);
-          console.log("✅ Đã ghi fingerprint vào DB");
+          const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+          const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+          const saveRes = await fetch(
+            `${SUPABASE_URL}/functions/v1/save-registration`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: SUPABASE_ANON_KEY,
+              },
+              body: JSON.stringify({
+                userId: data.user.id,
+                fingerprint: fp,
+              }),
+            }
+          );
+
+          if (saveRes.ok) {
+            console.log("✅ Đã lưu IP + fingerprint");
+          } else {
+            console.warn("⚠️ save-registration trả về lỗi:", saveRes.status);
+          }
         } catch (err) {
-          console.warn("⚠️ Không ghi được fingerprint:", err);
+          console.warn("⚠️ Không lưu được IP:", err);
         }
 
         // Xử lý mã giới thiệu
