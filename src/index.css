@@ -37,21 +37,14 @@ body {
 /* ============ PAGE TRANSITIONS ============ */
 
 @keyframes pageIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .page-transition {
   animation: pageIn 0.25s ease-out;
 }
 
-/* Nút bấm có hiệu ứng press */
 .btn-press {
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
 }
@@ -60,7 +53,6 @@ body {
   transform: scale(0.97);
 }
 
-/* Card hover nâng nhẹ */
 .card-hover {
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
 }
@@ -70,23 +62,15 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-/* Toast slide in */
 @keyframes toastIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -12px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  from { opacity: 0; transform: translate(-50%, -12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 .toast-in {
   animation: toastIn 0.3s ease-out;
 }
 
-/* Pulse cho badge HOT */
 @keyframes softPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -96,7 +80,6 @@ body {
   animation: softPulse 2s ease-in-out infinite;
 }
 
-/* Progress bar animate */
 @keyframes progressGrow {
   from { width: 0%; }
 }
@@ -105,7 +88,6 @@ body {
   animation: progressGrow 0.6s ease-out;
 }
 
-/* Số coin đếm lên */
 @keyframes numberPop {
   0% { transform: scale(1); }
   50% { transform: scale(1.15); }
@@ -117,34 +99,28 @@ body {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============ ẨN SCROLLBAR CHO TAB NGANG MOBILE ============ */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
