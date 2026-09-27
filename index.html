@@ -2,198 +2,215 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <meta
-      name="dmca-site-verification"
-      content="b3BlZVRCZm9DOFJDWUNFZllINTQ4eVNXMkU5Y1FybXNEa2RUVXNqQUVLST01"
-    />
-
-    <title>NXX315 Studio Rewards — Kiếm Coin, đổi Robux chính hãng</title>
-
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#3478F6" />
-
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#2563eb" />
+    <title>NXX315 Studio Rewards</title>
 
     <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: #f8fafc;
-      }
-
-      /* ===== SPLASH (nằm NGOÀI #root) ===== */
-      #app-splash {
+      /* ========== LOADING SCREEN ========== */
+      #initial-loader {
         position: fixed;
         inset: 0;
-        background: #f8fafc;
-        z-index: 9999;
-        padding: 20px 16px;
-        box-sizing: border-box;
-        opacity: 1;
-        transition: opacity 0.55s ease, transform 0.55s ease;
-        will-change: opacity, transform;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        transition: opacity 0.3s ease;
       }
 
-      #app-splash.app-splash--hide {
+      #initial-loader.hide {
         opacity: 0;
-        transform: scale(1.02);
         pointer-events: none;
       }
 
-      #app-splash .app-splash__inner {
-        max-width: 480px;
-        margin: 0 auto;
-        animation: app-splash-enter 0.4s ease both;
-      }
-
-      @keyframes app-splash-enter {
-        from { opacity: 0; transform: translateY(8px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-
-      /* ===== SKELETON + SHIMMER ===== */
-      .app-skel {
+      /* Vòng tròn xoay */
+      .loader-ring {
         position: relative;
-        overflow: hidden;
-        background: #e2e8f0;
-        border-radius: 12px;
-        animation: app-skel-pulse 1.6s ease-in-out infinite;
+        width: 110px;
+        height: 110px;
+        margin-bottom: 28px;
       }
 
-      .app-skel::after {
+      .loader-ring::before,
+      .loader-ring::after {
         content: "";
         position: absolute;
         inset: 0;
-        transform: translateX(-100%);
-        background: linear-gradient(
-          100deg,
-          rgba(255, 255, 255, 0) 20%,
-          rgba(255, 255, 255, 0.75) 50%,
-          rgba(255, 255, 255, 0) 80%
-        );
-        animation: app-skel-shimmer 1.6s infinite;
+        border-radius: 50%;
+        border: 3px solid transparent;
       }
 
-      @keyframes app-skel-pulse {
-        0%, 100% { opacity: 1; }
-        50%      { opacity: 0.55; }
+      .loader-ring::before {
+        border-top-color: #2563eb;
+        border-right-color: #2563eb;
+        animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
       }
 
-      @keyframes app-skel-shimmer {
-        100% { transform: translateX(100%); }
+      .loader-ring::after {
+        inset: 10px;
+        border-bottom-color: #6366f1;
+        border-left-color: #6366f1;
+        animation: spin 1.6s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
       }
 
-      .app-splash__brand {
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Logo ở giữa */
+      .loader-logo {
+        position: absolute;
+        inset: 0;
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 20px;
+        justify-content: center;
       }
 
-      .app-splash__logo {
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #3478F6, #7aa8ff);
-        box-shadow: 0 4px 14px rgba(52, 120, 246, 0.35);
-        flex: 0 0 auto;
+      .loader-logo-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 900;
+        font-size: 26px;
+        letter-spacing: -1px;
+        animation: pulse-logo 1.8s ease-in-out infinite;
       }
 
-      .app-splash__name {
-        height: 16px;
-        width: 120px;
-        border-radius: 8px;
-        background: #e2e8f0;
-        position: relative;
-        overflow: hidden;
-        animation: app-skel-pulse 1.6s ease-in-out infinite;
+      @keyframes pulse-logo {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
       }
 
-      .app-splash__name::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        transform: translateX(-100%);
-        background: linear-gradient(
-          100deg,
-          rgba(255, 255, 255, 0) 20%,
-          rgba(255, 255, 255, 0.75) 50%,
-          rgba(255, 255, 255, 0) 80%
-        );
-        animation: app-skel-shimmer 1.6s infinite;
+      /* Tên app */
+      .loader-title {
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        margin: 0 0 4px 0;
+        background: linear-gradient(90deg, #2563eb, #4f46e5);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
 
-      /* ===== #root: KHÔNG ẩn opacity nữa ===== */
-      /* Nếu muốn fade-in thì chỉ fade khi đã có nội dung thật */
-      #root {
-        min-height: 100vh;
+      .loader-subtitle {
+        font-size: 14px;
+        color: #475569;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+      }
+
+      .loader-hint {
+        font-size: 12.5px;
+        color: #94a3b8;
+        margin: 0;
+      }
+
+      /* 3 chấm nhảy */
+      .loader-dots {
+        display: flex;
+        gap: 6px;
+        margin-top: 22px;
+      }
+
+      .loader-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2563eb;
+        animation: bounce-dot 1.4s ease-in-out infinite;
+      }
+
+      .loader-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+        background: #3b82f6;
+      }
+
+      .loader-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+        background: #6366f1;
+      }
+
+      @keyframes bounce-dot {
+        0%, 80%, 100% {
+          transform: scale(0.6);
+          opacity: 0.5;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
     </style>
   </head>
 
   <body>
-    <!-- SPLASH: đặt NGOÀI #root, ngang cấp với nó -->
-    <div id="app-splash">
-      <div class="app-splash__inner">
-        <div class="app-splash__brand">
-          <div class="app-splash__logo"></div>
-          <div class="app-splash__name"></div>
-        </div>
+    <div id="root"></div>
 
-        <div class="app-skel" style="height:110px;border-radius:20px;margin-bottom:16px;"></div>
-        <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
-        <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
-        <div class="app-skel" style="height:90px;border-radius:16px;"></div>
+    <!-- ✅ Loading screen hiển thị ngay khi HTML load -->
+    <div id="initial-loader">
+      <div class="loader-ring">
+        <div class="loader-logo">
+          <div class="loader-logo-box">N</div>
+        </div>
+      </div>
+
+      <h1 class="loader-title">NXX315</h1>
+      <p class="loader-subtitle">Đang tải...</p>
+      <p class="loader-hint">Sẽ không mất nhiều thời gian đâu.</p>
+
+      <div class="loader-dots">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
     </div>
 
-    <!-- React root: rỗng, React sẽ render vào đây -->
-    <div id="root"></div>
-
     <script type="module" src="/src/main.jsx"></script>
 
+    <!-- ✅ Tự động ẩn loader khi React mount xong -->
     <script>
       (function () {
-        const splash = document.getElementById("app-splash");
-        const root = document.getElementById("root");
+        var loader = document.getElementById("initial-loader");
+        if (!loader) return;
 
-        const MIN_SPLASH_TIME = 700;
-        const MAX_SPLASH_TIME = 6000;
-        const start = Date.now();
-        let finished = false;
-
-        function hideSplash() {
-          if (finished) return;
-          finished = true;
-
-          const elapsed = Date.now() - start;
-          const wait = Math.max(0, MIN_SPLASH_TIME - elapsed);
-
-          setTimeout(() => {
-            splash.classList.add("app-splash--hide");
-            setTimeout(() => splash.remove(), 600);
-          }, wait);
-        }
-
-        // Khi React render xong => #root có con
-        const observer = new MutationObserver(() => {
-          if (root.children.length > 0) hideSplash();
+        // Cách 1: Ẩn khi root có con (React đã render)
+        var observer = new MutationObserver(function () {
+          var root = document.getElementById("root");
+          if (root && root.children.length > 0) {
+            loader.classList.add("hide");
+            setTimeout(function () {
+              loader.style.display = "none";
+            }, 350);
+            observer.disconnect();
+          }
         });
-        observer.observe(root, { childList: true });
 
-        // Fallback an toàn
-        setTimeout(hideSplash, MAX_SPLASH_TIME);
+        observer.observe(document.getElementById("root"), {
+          childList: true,
+          subtree: true,
+        });
+
+        // Cách 2: Fallback sau 5 giây (nếu React lỗi)
+        setTimeout(function () {
+          if (!loader.classList.contains("hide")) {
+            loader.classList.add("hide");
+            setTimeout(function () {
+              loader.style.display = "none";
+            }, 350);
+          }
+        }, 5000);
       })();
-
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch((err) => {
-            console.error("SW registration failed:", err);
-          });
-        });
-      }
     </script>
   </body>
 </html>
