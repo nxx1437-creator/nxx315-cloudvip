@@ -67,45 +67,11 @@ import BanGate from "./components/BanGate";
 import DeviceChecker from "./components/DeviceChecker.jsx";
 import VersionChecker from "./components/VersionChecker.jsx"; // ✅ MỚI
 
-// ✅ Fallback hiện khi đang tải trang (thay vì màn hình trắng)
-function RouteLoading() {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "#f8fafc",
-        zIndex: 9999,
-        padding: "20px 16px",
-        boxSizing: "border-box",
-      }}
-    >
-      <div style={{ maxWidth: 480, margin: "0 auto" }}>
-        <div className="app-skel" style={{ height: 24, width: 140, borderRadius: 8, marginBottom: 20 }} />
-        <div className="app-skel" style={{ height: 110, borderRadius: 20, marginBottom: 16 }} />
-        <div className="app-skel" style={{ height: 90, borderRadius: 16, marginBottom: 12 }} />
-        <div className="app-skel" style={{ height: 90, borderRadius: 16, marginBottom: 12 }} />
-        <div className="app-skel" style={{ height: 90, borderRadius: 16 }} />
-      </div>
-      <style>{`
-        .app-skel {
-          background: #e2e8f0;
-          animation: app-skel-pulse 1.4s ease-in-out infinite;
-        }
-        @keyframes app-skel-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.45; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <BanGate>
       <BrowserRouter>
-        <Suspense fallback={<RouteLoading />}>
+        <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<CloudVIPLanding />} />
             <Route path="/login" element={<Login />} />
@@ -178,5 +144,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-  }
-            
+      }
