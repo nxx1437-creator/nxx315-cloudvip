@@ -57,7 +57,7 @@ export default function Register() {
     username: "",
     email: "",
     password: "",
-    referral: refFromUrl.toUpperCase(), // 👈 Tự động điền mã từ link ?ref=...
+    referral: refFromUrl.toUpperCase(),
   });
 
   const [error, setError] = useState("");
@@ -84,7 +84,7 @@ export default function Register() {
         new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
       ]);
 
-      // 2. Lấy Fingerprint (song song)
+      // 2. Lấy Fingerprint
       let fp = null;
       try {
         fp = await getFingerprint();
@@ -252,6 +252,20 @@ export default function Register() {
           return;
         }
 
+        // 👇 GHI FINGERPRINT VÀO BẢNG PROFILES NGAY SAU KHI ĐĂNG KÝ
+        try {
+          await supabase
+            .from("profiles")
+            .update({ 
+              device_fingerprint: fp,
+              fingerprint: fp,
+            })
+            .eq("id", data.user.id);
+          console.log("✅ Đã ghi fingerprint vào DB");
+        } catch (err) {
+          console.warn("⚠️ Không ghi được fingerprint:", err);
+        }
+
         // Xử lý mã giới thiệu
         if (form.referral.trim() && data.user) {
           try {
@@ -319,7 +333,6 @@ export default function Register() {
 
   // ✅ Chỉ hiển thị 1 cảnh báo duy nhất theo ưu tiên
   const renderAlert = () => {
-    // Ưu tiên 1: Lỗi check IP/Fingerprint
     if (ipError) {
       return (
         <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -348,7 +361,6 @@ export default function Register() {
       );
     }
 
-    // Ưu tiên 2: IP/Fingerprint trùng
     if (ipBlocked) {
       return (
         <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
@@ -375,7 +387,6 @@ export default function Register() {
       );
     }
 
-    // Ưu tiên 3: Lưu ý chung (chỉ hiện khi không có lỗi)
     return (
       <div className="mb-4 rounded-2xl border border-sky-100 bg-sky-50/60 p-3.5">
         <div className="flex items-start gap-2.5">
@@ -398,7 +409,6 @@ export default function Register() {
       title="Tạo tài khoản"
       subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
     >
-      {/* ✅ Chỉ 1 cảnh báo duy nhất */}
       {renderAlert()}
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -525,4 +535,4 @@ export default function Register() {
       </p>
     </AuthShell>
   );
-  }
+    }
