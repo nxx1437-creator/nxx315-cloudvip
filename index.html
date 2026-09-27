@@ -12,7 +12,7 @@
     <title>NXX315 Studio Rewards — Kiếm Coin, đổi Robux chính hãng</title>
 
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" href="#3478F6" />
+    <meta name="theme-color" content="#3478F6" />
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
@@ -23,7 +23,7 @@
         background: #f8fafc;
       }
 
-      /* ===== SPLASH ===== */
+      /* ===== SPLASH (nằm NGOÀI #root) ===== */
       #app-splash {
         position: fixed;
         inset: 0;
@@ -36,7 +36,6 @@
         will-change: opacity, transform;
       }
 
-      /* Trạng thái ẩn – fade + scale nhẹ */
       #app-splash.app-splash--hide {
         opacity: 0;
         transform: scale(1.02);
@@ -46,7 +45,7 @@
       #app-splash .app-splash__inner {
         max-width: 480px;
         margin: 0 auto;
-        animation: app-splash-enter 0.5s ease both;
+        animation: app-splash-enter 0.4s ease both;
       }
 
       @keyframes app-splash-enter {
@@ -63,7 +62,6 @@
         animation: app-skel-pulse 1.6s ease-in-out infinite;
       }
 
-      /* Lớp chói sáng chạy ngang */
       .app-skel::after {
         content: "";
         position: absolute;
@@ -87,7 +85,6 @@
         100% { transform: translateX(100%); }
       }
 
-      /* Logo / tên app trên splash (tuỳ chọn) */
       .app-splash__brand {
         display: flex;
         align-items: center;
@@ -128,47 +125,42 @@
         animation: app-skel-shimmer 1.6s infinite;
       }
 
-      /* ===== NỘI DUNG APP fade-in khi sẵn sàng ===== */
+      /* ===== #root: KHÔNG ẩn opacity nữa ===== */
+      /* Nếu muốn fade-in thì chỉ fade khi đã có nội dung thật */
       #root {
-        opacity: 0;
-        transition: opacity 0.5s ease 0.15s;
-      }
-
-      #root.app-ready {
-        opacity: 1;
+        min-height: 100vh;
       }
     </style>
   </head>
 
   <body>
-    <div id="root">
-      <div id="app-splash">
-        <div class="app-splash__inner">
-          <div class="app-splash__brand">
-            <div class="app-splash__logo"></div>
-            <div class="app-splash__name"></div>
-          </div>
-
-          <div class="app-skel" style="height:110px;border-radius:20px;margin-bottom:16px;"></div>
-          <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
-          <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
-          <div class="app-skel" style="height:90px;border-radius:16px;"></div>
+    <!-- SPLASH: đặt NGOÀI #root, ngang cấp với nó -->
+    <div id="app-splash">
+      <div class="app-splash__inner">
+        <div class="app-splash__brand">
+          <div class="app-splash__logo"></div>
+          <div class="app-splash__name"></div>
         </div>
+
+        <div class="app-skel" style="height:110px;border-radius:20px;margin-bottom:16px;"></div>
+        <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
+        <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
+        <div class="app-skel" style="height:90px;border-radius:16px;"></div>
       </div>
     </div>
+
+    <!-- React root: rỗng, React sẽ render vào đây -->
+    <div id="root"></div>
 
     <script type="module" src="/src/main.jsx"></script>
 
     <script>
       (function () {
-        const root = document.getElementById("root");
         const splash = document.getElementById("app-splash");
+        const root = document.getElementById("root");
 
-        // Thời gian tối thiểu để splash hiển thị (tránh nháy quá nhanh)
-        const MIN_SPLASH_TIME = 900;
-        // Thời gian tối đa phòng trường hợp app load lâu
+        const MIN_SPLASH_TIME = 700;
         const MAX_SPLASH_TIME = 6000;
-
         const start = Date.now();
         let finished = false;
 
@@ -180,43 +172,21 @@
           const wait = Math.max(0, MIN_SPLASH_TIME - elapsed);
 
           setTimeout(() => {
-            // Fade nội dung app vào trước
-            root.classList.add("app-ready");
-
-            // Fade splash ra sau (hơi trễ để nội dung kịp hiện)
             splash.classList.add("app-splash--hide");
-
-            // Xoá hẳn splash khỏi DOM sau khi transition xong
-            setTimeout(() => {
-              splash.remove();
-            }, 600);
+            setTimeout(() => splash.remove(), 600);
           }, wait);
         }
 
-        // Khi React render xong (root có con) thì ẩn splash
+        // Khi React render xong => #root có con
         const observer = new MutationObserver(() => {
-          if (root.querySelector("#app-splash") === null && root.children.length > 0) {
-            hideSplash();
-          }
+          if (root.children.length > 0) hideSplash();
         });
+        observer.observe(root, { childList: true });
 
-        observer.observe(root, { childList: true, subtree: true });
-
-        // Phòng trường hợp app render rất nhanh – fallback
-        window.addEventListener("load", () => {
-          // Đợi một nhịp cho React mount
-          setTimeout(() => {
-            if (root.children.length > 1 || root.querySelector("#app-splash") === null) {
-              hideSplash();
-            }
-          }, 100);
-        });
-
-        // Fallback an toàn: nếu quá lâu vẫn không ẩn thì tự ẩn
+        // Fallback an toàn
         setTimeout(hideSplash, MAX_SPLASH_TIME);
       })();
 
-      // Đăng ký service worker (chỉ 1 lần)
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("/sw.js").catch((err) => {
