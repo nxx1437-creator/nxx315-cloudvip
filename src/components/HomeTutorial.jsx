@@ -8,17 +8,29 @@ const TUTORIALS = [
     tag: "Hướng dẫn",
     title: "Hướng dẫn làm nhiệm vụ",
     desc: "Đừng bỏ lỡ! Cách kiếm coin nhanh nhất cho người mới nhé",
+    // 👇 Ảnh tự làm của bạn (đã có)
+    image: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/huongdan.png",
   },
   {
     id: "-6gX4pcH4dk",
     tag: "Giới thiệu",
     title: "Giới thiệu về NXX315 Studio",
     desc: "Tổng quan về nền tảng, các tính năng và cách kiếm thưởng hiệu quả",
+    // 👇 Để trống -> tự động lấy ảnh từ YouTube
+    image: null,
   },
 ];
 
-// Tự động tạo link thumbnail chất lượng cao từ YouTube ID
-const getThumbnail = (id) => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+// Hàm lấy thumbnail: Nếu có ảnh riêng thì dùng, không thì lấy từ YouTube
+const getThumbnail = (video) => {
+  if (video.image) return video.image;
+  return `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`;
+};
+
+// Fallback nếu ảnh YouTube maxresdefault không có
+const getFallback = (video) => {
+  return `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
+};
 
 export default function HomeTutorial() {
   const [isVisible, setIsVisible] = useState(true);
@@ -83,11 +95,11 @@ export default function HomeTutorial() {
                       onClick={() => setActiveVideo(video.id)}
                     >
                       <img 
-                        src={getThumbnail(video.id)} 
+                        src={getThumbnail(video)} 
                         alt={video.title}
                         className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
                         onError={(e) => { 
-                          e.target.src = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`; 
+                          e.target.src = getFallback(video); 
                         }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -150,4 +162,4 @@ export default function HomeTutorial() {
       `}</style>
     </div>
   );
-}
+      }
