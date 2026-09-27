@@ -9,7 +9,7 @@ export default function VersionChecker() {
   const reloadingRef = useRef(false);
 
   useEffect(() => {
-    // ✅ Check 1: Nếu vừa reload trong 5 phút qua → BỎ QUA HOÀN TOÀN
+    // ✅ Nếu vừa reload trong 5 phút qua → BỎ QUA HOÀN TOÀN
     const lastReload = sessionStorage.getItem(RELOAD_KEY);
     if (lastReload) {
       const timeSince = Date.now() - parseInt(lastReload);
@@ -17,12 +17,11 @@ export default function VersionChecker() {
         console.log(
           `[VersionChecker] Vừa reload ${Math.floor(timeSince / 1000)}s trước, bỏ qua`
         );
-        return; // ⛔ Thoát luôn, không setup interval
+        return;
       }
     }
 
     const checkVersion = async () => {
-      // ✅ Nếu đang trong quá trình reload → bỏ qua
       if (reloadingRef.current) return;
 
       try {
@@ -37,30 +36,25 @@ export default function VersionChecker() {
 
         const localVersion = localStorage.getItem(STORAGE_KEY);
 
-        // ✅ Lần đầu vào → lưu version, không reload
+        // Lần đầu → lưu version, không reload
         if (!localVersion) {
           localStorage.setItem(STORAGE_KEY, serverVersion);
-          console.log(`[VersionChecker] Lần đầu: lưu version ${serverVersion}`);
           return;
         }
 
-        // ✅ Version giống nhau → không làm gì
+        // Version giống → không làm gì
         if (localVersion === serverVersion) return;
 
-        // ✅ Version khác → reload 1 lần duy nhất
+        // Version khác → reload 1 lần duy nhất
         console.log(
           `[VersionChecker] Version mới: ${serverVersion} (cũ: ${localVersion})`
         );
 
-        // ⚠️ QUAN TRỌNG: Set flag TRƯỚC để chặn double-reload
         reloadingRef.current = true;
-
-        // ⚠️ QUAN TRỌNG: Lưu localStorage TRƯỚC KHI reload
-        //    (để chắc chắn flush xong mới reload)
         localStorage.setItem(STORAGE_KEY, serverVersion);
         sessionStorage.setItem(RELOAD_KEY, Date.now().toString());
 
-        // ✅ Delay nhỏ để đảm bảo storage flush
+        // ✅ Delay 100ms để storage flush xong
         setTimeout(() => {
           window.location.reload();
         }, 100);
@@ -69,13 +63,13 @@ export default function VersionChecker() {
       }
     };
 
-    // ✅ Delay lần check đầu 3s cho app load xong
+    // Delay 3s cho app load xong
     const initialTimeout = setTimeout(checkVersion, 3000);
 
-    // ✅ Check định kỳ
+    // Check định kỳ
     const interval = setInterval(checkVersion, CHECK_INTERVAL);
 
-    // ✅ Check khi user quay lại tab (giới hạn 1 lần/10s)
+    // Check khi quay lại tab — giới hạn 1 lần/10s
     let lastVisibilityCheck = 0;
     const handleVisibility = () => {
       if (document.visibilityState !== "visible") return;
