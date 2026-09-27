@@ -1,62 +1,43 @@
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+// lib/pushNotifications.js
+const VAPID_PUBLIC_KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U"; // 👈 Thay key của bạn
 
 function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; i++) {
+  for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
 }
 
-export async function isPushSupported() {
-  return "serviceWorker" in navigator && "PushManager" in window;
+export function isPushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window;
 }
 
 export async function getPushPermissionState() {
-  if (!(await isPushSupported())) return "unsupported";
-
-  if (Notification.permission === "denied") return "denied";
-  if (Notification.permission !== "granted") return "default";
-
-  const registration = await navigator.serviceWorker.ready;
-  const subscription = await registration.pushManager.getSubscription();
-
-  return subscription ? "granted" : "default";
+  if (!isPushSupported()) return 'unsupported';
+  return Notification.permission;
 }
 
 export async function subscribeToPush() {
-  if (!(await isPushSupported())) {
-    throw new Error("Trình duyệt này không hỗ trợ thông báo đẩy.");
-  }
-
+  if (!isPushSupported()) throw new Error("Thiết bị không hỗ trợ thông báo đẩy");
+  
   const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    throw new Error("Bạn chưa cho phép nhận thông báo.");
-  }
+  if (permission !== 'granted') throw new Error("Bạn đã từ chối quyền thông báo");
 
   const registration = await navigator.serviceWorker.ready;
-
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-    });
-  }
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+  });
 
   return subscription.toJSON();
 }
 
 export async function unsubscribeFromPush() {
-  if (!(await isPushSupported())) return;
-
   const registration = await navigator.serviceWorker.ready;
   const subscription = await registration.pushManager.getSubscription();
-
-  if (subscription) {
-    await subscription.unsubscribe();
-  }
+  if (subscription) await subscription.unsubscribe();
 }
