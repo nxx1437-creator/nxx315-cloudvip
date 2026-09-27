@@ -8,7 +8,6 @@
     <title>NXX315 Studio Rewards</title>
 
     <style>
-      /* ========== LOADING SCREEN ========== */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -21,20 +20,16 @@
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         transition: opacity 0.3s ease;
       }
-
       #initial-loader.hide {
         opacity: 0;
         pointer-events: none;
       }
-
-      /* Vòng tròn xoay */
       .loader-ring {
         position: relative;
         width: 110px;
         height: 110px;
         margin-bottom: 28px;
       }
-
       .loader-ring::before,
       .loader-ring::after {
         content: "";
@@ -43,25 +38,20 @@
         border-radius: 50%;
         border: 3px solid transparent;
       }
-
       .loader-ring::before {
         border-top-color: #2563eb;
         border-right-color: #2563eb;
         animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
       }
-
       .loader-ring::after {
         inset: 10px;
         border-bottom-color: #6366f1;
         border-left-color: #6366f1;
         animation: spin 1.6s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
       }
-
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
-
-      /* Logo ở giữa */
       .loader-logo {
         position: absolute;
         inset: 0;
@@ -69,7 +59,6 @@
         align-items: center;
         justify-content: center;
       }
-
       .loader-logo-box {
         width: 56px;
         height: 56px;
@@ -82,47 +71,37 @@
         color: #fff;
         font-weight: 900;
         font-size: 26px;
-        letter-spacing: -1px;
         animation: pulse-logo 1.8s ease-in-out infinite;
       }
-
       @keyframes pulse-logo {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.05); }
       }
-
-      /* Tên app */
       .loader-title {
         font-size: 24px;
         font-weight: 900;
-        letter-spacing: -0.5px;
         margin: 0 0 4px 0;
         background: linear-gradient(90deg, #2563eb, #4f46e5);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
       }
-
       .loader-subtitle {
         font-size: 14px;
         color: #475569;
         font-weight: 600;
         margin: 0 0 4px 0;
       }
-
       .loader-hint {
         font-size: 12.5px;
         color: #94a3b8;
         margin: 0;
       }
-
-      /* 3 chấm nhảy */
       .loader-dots {
         display: flex;
         gap: 6px;
         margin-top: 22px;
       }
-
       .loader-dots span {
         width: 8px;
         height: 8px;
@@ -130,26 +109,17 @@
         background: #2563eb;
         animation: bounce-dot 1.4s ease-in-out infinite;
       }
-
       .loader-dots span:nth-child(2) {
         animation-delay: 0.15s;
         background: #3b82f6;
       }
-
       .loader-dots span:nth-child(3) {
         animation-delay: 0.3s;
         background: #6366f1;
       }
-
       @keyframes bounce-dot {
-        0%, 80%, 100% {
-          transform: scale(0.6);
-          opacity: 0.5;
-        }
-        40% {
-          transform: scale(1);
-          opacity: 1;
-        }
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
       }
     </style>
   </head>
@@ -157,18 +127,15 @@
   <body>
     <div id="root"></div>
 
-    <!-- ✅ Loading screen hiển thị ngay khi HTML load -->
     <div id="initial-loader">
       <div class="loader-ring">
         <div class="loader-logo">
           <div class="loader-logo-box">N</div>
         </div>
       </div>
-
       <h1 class="loader-title">NXX315</h1>
       <p class="loader-subtitle">Đang tải...</p>
       <p class="loader-hint">Sẽ không mất nhiều thời gian đâu.</p>
-
       <div class="loader-dots">
         <span></span>
         <span></span>
@@ -178,38 +145,38 @@
 
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- ✅ Tự động ẩn loader khi React mount xong -->
     <script>
       (function () {
         var loader = document.getElementById("initial-loader");
         if (!loader) return;
+        var hidden = false;
 
-        // Cách 1: Ẩn khi root có con (React đã render)
-        var observer = new MutationObserver(function () {
-          var root = document.getElementById("root");
-          if (root && root.children.length > 0) {
-            loader.classList.add("hide");
-            setTimeout(function () {
-              loader.style.display = "none";
-            }, 350);
-            observer.disconnect();
-          }
-        });
+        function hideLoader() {
+          if (hidden) return;
+          hidden = true;
+          loader.classList.add("hide");
+          setTimeout(function () {
+            loader.style.display = "none";
+          }, 350);
+          console.log("[Loader] Ẩn loading screen");
+        }
 
-        observer.observe(document.getElementById("root"), {
-          childList: true,
-          subtree: true,
-        });
+        // Ẩn khi React mount xong
+        var rootEl = document.getElementById("root");
+        if (rootEl) {
+          var observer = new MutationObserver(function () {
+            if (rootEl.children.length > 0) {
+              setTimeout(hideLoader, 300);
+              observer.disconnect();
+            }
+          });
+          observer.observe(rootEl, { childList: true, subtree: true });
+        }
 
-        // Cách 2: Fallback sau 5 giây (nếu React lỗi)
-        setTimeout(function () {
-          if (!loader.classList.contains("hide")) {
-            loader.classList.add("hide");
-            setTimeout(function () {
-              loader.style.display = "none";
-            }, 350);
-          }
-        }, 5000);
+        // ✅ FALLBACK: ẩn SAU 3s (dù React lỗi)
+        setTimeout(hideLoader, 3000);
+
+        console.log("[Loader] Setup OK, fallback 3s");
       })();
     </script>
   </body>
