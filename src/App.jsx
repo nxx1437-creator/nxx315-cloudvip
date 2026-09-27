@@ -74,24 +74,29 @@ function RouteLoading() {
       style={{
         position: "fixed",
         inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#f0f9ff",
+        background: "#f8fafc",
         zIndex: 9999,
+        padding: "20px 16px",
+        boxSizing: "border-box",
       }}
     >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          border: "3px solid #bae6fd",
-          borderTopColor: "#0284c7",
-          borderRadius: "50%",
-          animation: "app-splash-spin 0.8s linear infinite",
-        }}
-      />
-      <style>{`@keyframes app-splash-spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ maxWidth: 480, margin: "0 auto" }}>
+        <div className="app-skel" style={{ height: 24, width: 140, borderRadius: 8, marginBottom: 20 }} />
+        <div className="app-skel" style={{ height: 110, borderRadius: 20, marginBottom: 16 }} />
+        <div className="app-skel" style={{ height: 90, borderRadius: 16, marginBottom: 12 }} />
+        <div className="app-skel" style={{ height: 90, borderRadius: 16, marginBottom: 12 }} />
+        <div className="app-skel" style={{ height: 90, borderRadius: 16 }} />
+      </div>
+      <style>{`
+        .app-skel {
+          background: #e2e8f0;
+          animation: app-skel-pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes app-skel-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.45; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -173,5 +178,5 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-                                                              }
+  }
             
