@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { PlayCircle, X, ArrowUpRight } from "lucide-react";
 
 // 👇 THAY LINK YOUTUBE CỦA BẠN VÀO ĐÂY
-const YOUTUBE_LINK = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID";
+const YOUTUBE_LINK = "https://youtu.be/juVecn7DhWM?si=bMTU3LILnDXnFQMo";
 
 // 👇 THAY LINK ẢNH CHỤP MÀN HÌNH PAYWALL CỦA BẠN VÀO ĐÂY
-const IMAGE_URL = "https://your-image-host.com/paywall-demo.jpg"; 
+const IMAGE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/huongdan.png"; 
 
 export default function HomeTutorial() {
   const [isVisible, setIsVisible] = useState(true);
@@ -61,7 +61,7 @@ export default function HomeTutorial() {
         {/* Tiêu đề kèm gạch chân uốn lượn */}
         <div className="relative mt-2 inline-block">
           <h3 className="font-display text-2xl font-black text-slate-900">
-            Paywall Link
+            hướng dẫn làm nhiệm vụ 
           </h3>
           {/* SVG tạo gạch chân uốn lượn giống hình mẫu */}
           <svg className="absolute -bottom-1 left-0 w-full" height="8" viewBox="0 0 100 8" preserveAspectRatio="none">
@@ -71,7 +71,7 @@ export default function HomeTutorial() {
 
         {/* Mô tả */}
         <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
-          Bán quyền truy cập nội dung số của bạn. Chỉ cần chia sẻ link, người mua thanh toán, nội dung sẽ tự động mở khóa.
+          Đừng bỏ lỡ! Cách kiếm coin nhanh nhất cho người mới nhé 
         </p>
 
         {/* Nút Xem Video (CTA) */}
