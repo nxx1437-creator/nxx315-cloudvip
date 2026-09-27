@@ -9,49 +9,214 @@
       content="b3BlZVRCZm9DOFJDWUNFZllINTQ4eVNXMkU5Y1FybXNEa2RUVXNqQUVLST01"
     />
 
-<title>NXX315 Studio Rewards — Kiếm Coin, đổi Robux chính hãng</title>
+    <title>NXX315 Studio Rewards — Kiếm Coin, đổi Robux chính hãng</title>
 
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#3478F6" />
+    <meta name="theme-color" href="#3478F6" />
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #f8fafc;
+      }
+
+      /* ===== SPLASH ===== */
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        background: #f8fafc;
+        z-index: 9999;
+        padding: 20px 16px;
+        box-sizing: border-box;
+        opacity: 1;
+        transition: opacity 0.55s ease, transform 0.55s ease;
+        will-change: opacity, transform;
+      }
+
+      /* Trạng thái ẩn – fade + scale nhẹ */
+      #app-splash.app-splash--hide {
+        opacity: 0;
+        transform: scale(1.02);
+        pointer-events: none;
+      }
+
+      #app-splash .app-splash__inner {
+        max-width: 480px;
+        margin: 0 auto;
+        animation: app-splash-enter 0.5s ease both;
+      }
+
+      @keyframes app-splash-enter {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ===== SKELETON + SHIMMER ===== */
+      .app-skel {
+        position: relative;
+        overflow: hidden;
+        background: #e2e8f0;
+        border-radius: 12px;
+        animation: app-skel-pulse 1.6s ease-in-out infinite;
+      }
+
+      /* Lớp chói sáng chạy ngang */
+      .app-skel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          100deg,
+          rgba(255, 255, 255, 0) 20%,
+          rgba(255, 255, 255, 0.75) 50%,
+          rgba(255, 255, 255, 0) 80%
+        );
+        animation: app-skel-shimmer 1.6s infinite;
+      }
+
+      @keyframes app-skel-pulse {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: 0.55; }
+      }
+
+      @keyframes app-skel-shimmer {
+        100% { transform: translateX(100%); }
+      }
+
+      /* Logo / tên app trên splash (tuỳ chọn) */
+      .app-splash__brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .app-splash__logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #3478F6, #7aa8ff);
+        box-shadow: 0 4px 14px rgba(52, 120, 246, 0.35);
+        flex: 0 0 auto;
+      }
+
+      .app-splash__name {
+        height: 16px;
+        width: 120px;
+        border-radius: 8px;
+        background: #e2e8f0;
+        position: relative;
+        overflow: hidden;
+        animation: app-skel-pulse 1.6s ease-in-out infinite;
+      }
+
+      .app-splash__name::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          100deg,
+          rgba(255, 255, 255, 0) 20%,
+          rgba(255, 255, 255, 0.75) 50%,
+          rgba(255, 255, 255, 0) 80%
+        );
+        animation: app-skel-shimmer 1.6s infinite;
+      }
+
+      /* ===== NỘI DUNG APP fade-in khi sẵn sàng ===== */
+      #root {
+        opacity: 0;
+        transition: opacity 0.5s ease 0.15s;
+      }
+
+      #root.app-ready {
+        opacity: 1;
+      }
+    </style>
   </head>
 
   <body>
     <div id="root">
-      <div id="app-splash" style="position:fixed;inset:0;background:#f8fafc;z-index:9999;padding:20px 16px;box-sizing:border-box;">
-        <div style="max-width:480px;margin:0 auto;">
-          <div class="app-skel" style="height:24px;width:140px;border-radius:8px;margin-bottom:20px;"></div>
+      <div id="app-splash">
+        <div class="app-splash__inner">
+          <div class="app-splash__brand">
+            <div class="app-splash__logo"></div>
+            <div class="app-splash__name"></div>
+          </div>
+
           <div class="app-skel" style="height:110px;border-radius:20px;margin-bottom:16px;"></div>
           <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
           <div class="app-skel" style="height:90px;border-radius:16px;margin-bottom:12px;"></div>
           <div class="app-skel" style="height:90px;border-radius:16px;"></div>
         </div>
       </div>
-      <style>
-        .app-skel {
-          background: #e2e8f0;
-          animation: app-skel-pulse 1.4s ease-in-out infinite;
-        }
-        @keyframes app-skel-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.45; }
-        }
-      </style>
     </div>
 
-<script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
 
     <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch((err) => {
-            console.error("SW registration failed:", err);
-          });
+      (function () {
+        const root = document.getElementById("root");
+        const splash = document.getElementById("app-splash");
+
+        // Thời gian tối thiểu để splash hiển thị (tránh nháy quá nhanh)
+        const MIN_SPLASH_TIME = 900;
+        // Thời gian tối đa phòng trường hợp app load lâu
+        const MAX_SPLASH_TIME = 6000;
+
+        const start = Date.now();
+        let finished = false;
+
+        function hideSplash() {
+          if (finished) return;
+          finished = true;
+
+          const elapsed = Date.now() - start;
+          const wait = Math.max(0, MIN_SPLASH_TIME - elapsed);
+
+          setTimeout(() => {
+            // Fade nội dung app vào trước
+            root.classList.add("app-ready");
+
+            // Fade splash ra sau (hơi trễ để nội dung kịp hiện)
+            splash.classList.add("app-splash--hide");
+
+            // Xoá hẳn splash khỏi DOM sau khi transition xong
+            setTimeout(() => {
+              splash.remove();
+            }, 600);
+          }, wait);
+        }
+
+        // Khi React render xong (root có con) thì ẩn splash
+        const observer = new MutationObserver(() => {
+          if (root.querySelector("#app-splash") === null && root.children.length > 0) {
+            hideSplash();
+          }
         });
-      }
-    </script>
-        <script>
+
+        observer.observe(root, { childList: true, subtree: true });
+
+        // Phòng trường hợp app render rất nhanh – fallback
+        window.addEventListener("load", () => {
+          // Đợi một nhịp cho React mount
+          setTimeout(() => {
+            if (root.children.length > 1 || root.querySelector("#app-splash") === null) {
+              hideSplash();
+            }
+          }, 100);
+        });
+
+        // Fallback an toàn: nếu quá lâu vẫn không ẩn thì tự ẩn
+        setTimeout(hideSplash, MAX_SPLASH_TIME);
+      })();
+
+      // Đăng ký service worker (chỉ 1 lần)
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("/sw.js").catch((err) => {
