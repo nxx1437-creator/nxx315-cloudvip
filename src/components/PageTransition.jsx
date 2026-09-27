@@ -79,17 +79,14 @@ export default function PageTransition({ children }) {
 
   return (
     <PageReadyContext.Provider value={markReady}>
-      <div style={{ position: "relative", minHeight: "100vh" }}>
+      <div className="page-transition">
         {/* Trang cũ — chỉ hiện khi đang chờ trang mới */}
         {previous && (
           <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: phase === "crossfade" ? 0 : 1,
-              transition: `opacity ${FADE_MS}ms ease`,
-              pointerEvents: "none",
-            }}
+            className={
+              "page-transition__layer page-transition__layer--previous" +
+              (phase === "crossfade" ? " page-transition__layer--hidden" : "")
+            }
           >
             {previous.node}
           </div>
@@ -97,14 +94,16 @@ export default function PageTransition({ children }) {
 
         {/* Trang hiện tại — ẩn khi đang chờ, hiện khi crossfade */}
         <div
-          style={{
-            opacity: previous && phase === "waiting" ? 0 : 1,
-            transition: `opacity ${FADE_MS}ms ease`,
-          }}
+          className={
+            "page-transition__layer" +
+            (previous && phase === "waiting"
+              ? " page-transition__layer--waiting"
+              : "")
+          }
         >
           {current.node}
         </div>
       </div>
     </PageReadyContext.Provider>
   );
-              }
+}
