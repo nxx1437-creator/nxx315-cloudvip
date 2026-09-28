@@ -11,7 +11,6 @@
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
 
-      /* ========== LOADER ========== */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -30,94 +29,67 @@
         pointer-events: none;
       }
 
-      /* ==== LOGO TEXT ==== */
+      /* ==== LOGO ==== */
       .loader-logo {
-        font-size: 42px;
+        font-size: 44px;
         font-weight: 900;
         letter-spacing: -1.5px;
         margin-bottom: 40px;
         display: flex;
         align-items: baseline;
-        gap: 2px;
-        animation: logo-fade 2s ease-in-out infinite;
+        gap: 8px;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
 
-      @keyframes logo-fade {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.75; }
+      .loader-logo .part-dark {
+        color: #0f172a; /* Đen đậm */
       }
 
-      .loader-logo .part-1 {
-        color: #0068FF; /* Xanh dương */
+      .loader-logo .part-blue {
+        color: #38bdf8; /* Xanh sky blue */
       }
 
-      .loader-logo .part-2 {
-        color: #00D26A; /* Xanh lá */
-      }
-
-      /* ==== 2 CỤC DI CHUYỂN QUA LẠI ==== */
+      /* ==== 2 CỤC DI CHUYỂN ==== */
       .loader-balls {
         position: relative;
-        width: 90px;
+        width: 120px;
         height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
       }
 
       .ball {
+        position: absolute;
+        top: 50%;
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        position: absolute;
+        margin-top: -9px;
       }
 
       .ball-blue {
+        left: 0;
         background: #0068FF;
         box-shadow: 0 4px 16px rgba(0, 104, 255, 0.4);
-        animation: ball-left 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        animation: ball-blue-move 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
       }
 
       .ball-green {
-        background: #00D26A;
-        box-shadow: 0 4px 16px rgba(0, 210, 106, 0.4);
-        animation: ball-right 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        right: 0;
+        background: #38bdf8;
+        box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4);
+        animation: ball-green-move 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
       }
 
-      /* Cục xanh dương di chuyển từ trái → phải → trái */
-      @keyframes ball-left {
-        0% {
-          left: 0%;
-          transform: translateX(0);
-        }
-        50% {
-          left: 50%;
-          transform: translateX(-50%);
-        }
-        100% {
-          left: 100%;
-          transform: translateX(-100%);
-        }
+      @keyframes ball-blue-move {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(102px); }
       }
 
-      /* Cục xanh lá di chuyển ngược lại */
-      @keyframes ball-right {
-        0% {
-          left: 100%;
-          transform: translateX(-100%);
-        }
-        50% {
-          left: 50%;
-          transform: translateX(-50%);
-        }
-        100% {
-          left: 0%;
-          transform: translateX(0);
-        }
+      @keyframes ball-green-move {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(-102px); }
       }
 
-      /* ==== FALLBACK TEXT (nếu cần) ==== */
+      /* ==== TEXT ==== */
       .loader-hint {
         font-size: 12px;
         color: #94a3b8;
@@ -131,15 +103,14 @@
   <body>
     <div id="root"></div>
 
-    <!-- ========== LOADING SCREEN ========== -->
     <div id="initial-loader">
-      <!-- Logo text -->
+      <!-- Logo -->
       <div class="loader-logo">
-        <span class="part-1">NXX</span>
-        <span class="part-2">315</span>
+        <span class="part-dark">NXX315</span>
+        <span class="part-blue">Studio</span>
       </div>
 
-      <!-- 2 cục di chuyển -->
+      <!-- 2 cục -->
       <div class="loader-balls">
         <div class="ball ball-blue"></div>
         <div class="ball ball-green"></div>
