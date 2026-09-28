@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0369a1" />
+    <meta name="theme-color" content="#0068FF" />
     <title>NXX315 Studio Rewards</title>
 
     <style>
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
 
-      /* ========== OCEAN LOADER ========== */
+      /* ========== LOADER ========== */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -20,9 +20,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, #e0f2fe 0%, #7dd3fc 40%, #0ea5e9 100%);
+        background: #ffffff;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        overflow: hidden;
         transition: opacity 0.5s ease;
       }
 
@@ -31,152 +30,100 @@
         pointer-events: none;
       }
 
-      /* ==== SÓNG ==== */
-      .ocean-waves {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 45%;
-        min-height: 260px;
-        z-index: 1;
-      }
-
-      .ocean-waves svg {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 200%;
-        height: 100%;
-      }
-
-      .wave-1 {
-        animation: wave-move 14s linear infinite;
-        opacity: 0.35;
-      }
-
-      .wave-2 {
-        animation: wave-move 10s linear infinite reverse;
-        opacity: 0.5;
-      }
-
-      .wave-3 {
-        animation: wave-move 7s linear infinite;
-        opacity: 0.75;
-      }
-
-      @keyframes wave-move {
-        from { transform: translateX(0); }
-        to { transform: translateX(-50%); }
-      }
-
-      /* ==== BONG BÓNG ==== */
-      .bubbles {
-        position: absolute;
-        inset: 0;
-        overflow: hidden;
-        z-index: 2;
-        pointer-events: none;
-      }
-
-      .bubble {
-        position: absolute;
-        bottom: -50px;
-        border-radius: 50%;
-        background: radial-gradient(
-          circle at 30% 30%,
-          rgba(255, 255, 255, 0.9),
-          rgba(255, 255, 255, 0.3)
-        );
-        animation: bubble-up linear infinite;
-      }
-
-      @keyframes bubble-up {
-        from {
-          transform: translateY(0) scale(0.5);
-          opacity: 0;
-        }
-        20% { opacity: 1; }
-        to {
-          transform: translateY(-110vh) scale(1.2);
-          opacity: 0;
-        }
-      }
-
-      /* ==== TEXT ==== */
-      .ocean-title {
-        position: relative;
-        z-index: 10;
-        font-size: 34px;
+      /* ==== LOGO TEXT ==== */
+      .loader-logo {
+        font-size: 42px;
         font-weight: 900;
-        letter-spacing: -0.5px;
-        margin: 0 0 12px 0;
-        color: #fff;
-        text-shadow: 0 4px 24px rgba(2, 132, 199, 0.55);
-        text-align: center;
-        animation: title-glow 2.5s ease-in-out infinite;
+        letter-spacing: -1.5px;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
+        animation: logo-fade 2s ease-in-out infinite;
       }
 
-      @keyframes title-glow {
-        0%, 100% {
-          text-shadow: 0 4px 24px rgba(2, 132, 199, 0.55);
+      @keyframes logo-fade {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.75; }
+      }
+
+      .loader-logo .part-1 {
+        color: #0068FF; /* Xanh dương */
+      }
+
+      .loader-logo .part-2 {
+        color: #00D26A; /* Xanh lá */
+      }
+
+      /* ==== 2 CỤC DI CHUYỂN QUA LẠI ==== */
+      .loader-balls {
+        position: relative;
+        width: 90px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .ball {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        position: absolute;
+      }
+
+      .ball-blue {
+        background: #0068FF;
+        box-shadow: 0 4px 16px rgba(0, 104, 255, 0.4);
+        animation: ball-left 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+
+      .ball-green {
+        background: #00D26A;
+        box-shadow: 0 4px 16px rgba(0, 210, 106, 0.4);
+        animation: ball-right 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+
+      /* Cục xanh dương di chuyển từ trái → phải → trái */
+      @keyframes ball-left {
+        0% {
+          left: 0%;
+          transform: translateX(0);
         }
         50% {
-          text-shadow:
-            0 4px 32px rgba(2, 132, 199, 0.9),
-            0 0 20px rgba(255, 255, 255, 0.6);
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        100% {
+          left: 100%;
+          transform: translateX(-100%);
         }
       }
 
-      .ocean-subtitle {
-        position: relative;
-        z-index: 10;
-        font-size: 15px;
-        color: rgba(255, 255, 255, 0.95);
-        font-weight: 600;
-        margin: 0 0 6px 0;
-        text-align: center;
-      }
-
-      .ocean-hint {
-        position: relative;
-        z-index: 10;
-        font-size: 12.5px;
-        color: rgba(255, 255, 255, 0.8);
-        margin: 0;
-        text-align: center;
-      }
-
-      /* ==== 3 CHẤM NHẢY ==== */
-      .ocean-dots {
-        position: relative;
-        z-index: 10;
-        display: flex;
-        gap: 8px;
-        margin-top: 28px;
-      }
-
-      .ocean-dots span {
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: #fff;
-        box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
-        animation: dot-bounce 1.4s ease-in-out infinite;
-      }
-
-      .ocean-dots span:nth-child(2) { animation-delay: 0.2s; }
-      .ocean-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-      @keyframes dot-bounce {
-        0%, 80%, 100% {
-          transform: scale(0.5);
-          opacity: 0.4;
+      /* Cục xanh lá di chuyển ngược lại */
+      @keyframes ball-right {
+        0% {
+          left: 100%;
+          transform: translateX(-100%);
         }
-        40% {
-          transform: scale(1);
-          opacity: 1;
+        50% {
+          left: 50%;
+          transform: translateX(-50%);
         }
+        100% {
+          left: 0%;
+          transform: translateX(0);
+        }
+      }
+
+      /* ==== FALLBACK TEXT (nếu cần) ==== */
+      .loader-hint {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 32px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
       }
     </style>
   </head>
@@ -184,55 +131,21 @@
   <body>
     <div id="root"></div>
 
-    <!-- ========== OCEAN LOADING SCREEN ========== -->
+    <!-- ========== LOADING SCREEN ========== -->
     <div id="initial-loader">
-      <!-- Sóng SVG -->
-      <div class="ocean-waves">
-        <svg class="wave-1" viewBox="0 0 1440 320" preserveAspectRatio="none">
-          <path
-            fill="#bae6fd"
-            d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,154.7C672,149,768,171,864,181.3C960,192,1056,192,1152,176C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
-        </svg>
-
-        <svg class="wave-2" viewBox="0 0 1440 320" preserveAspectRatio="none">
-          <path
-            fill="#7dd3fc"
-            d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,213.3C672,224,768,224,864,208C960,192,1056,160,1152,160C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
-        </svg>
-
-        <svg class="wave-3" viewBox="0 0 1440 320" preserveAspectRatio="none">
-          <path
-            fill="#0ea5e9"
-            d="M0,256L48,240C96,224,192,192,288,192C384,192,480,224,576,234.7C672,245,768,235,864,213.3C960,192,1056,160,1152,165.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
-        </svg>
+      <!-- Logo text -->
+      <div class="loader-logo">
+        <span class="part-1">NXX</span>
+        <span class="part-2">315</span>
       </div>
 
-      <!-- Bong bóng -->
-      <div class="bubbles">
-        <div class="bubble" style="left: 10%; width: 12px; height: 12px; animation-duration: 8s; animation-delay: 0s;"></div>
-        <div class="bubble" style="left: 25%; width: 8px; height: 8px; animation-duration: 10s; animation-delay: 1s;"></div>
-        <div class="bubble" style="left: 40%; width: 16px; height: 16px; animation-duration: 12s; animation-delay: 2s;"></div>
-        <div class="bubble" style="left: 55%; width: 10px; height: 10px; animation-duration: 9s; animation-delay: 0.5s;"></div>
-        <div class="bubble" style="left: 70%; width: 14px; height: 14px; animation-duration: 11s; animation-delay: 1.5s;"></div>
-        <div class="bubble" style="left: 85%; width: 9px; height: 9px; animation-duration: 13s; animation-delay: 2.5s;"></div>
-        <div class="bubble" style="left: 15%; width: 6px; height: 6px; animation-duration: 7s; animation-delay: 3s;"></div>
-        <div class="bubble" style="left: 60%; width: 7px; height: 7px; animation-duration: 8.5s; animation-delay: 4s;"></div>
+      <!-- 2 cục di chuyển -->
+      <div class="loader-balls">
+        <div class="ball ball-blue"></div>
+        <div class="ball ball-green"></div>
       </div>
 
-      <!-- Text -->
-      <h1 class="ocean-title">NXX315 Studio</h1>
-      <p class="ocean-subtitle">Đang tải...</p>
-      <p class="ocean-hint">Sẽ không mất nhiều thời gian đâu.</p>
-
-      <!-- 3 chấm -->
-      <div class="ocean-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+      <p class="loader-hint">Đang tải...</p>
     </div>
 
     <script type="module" src="/src/main.jsx"></script>
