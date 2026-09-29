@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Loader2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Loader2, AlertTriangle, ShieldAlert, Lock } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+import useLoginRateLimit from "../hooks/useLoginRateLimit.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,7 +16,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showMfa, setShowMfa] = useState(false);
 
-  // ✅ Hiện thông báo nếu bị redirect từ check-user-ip
+  const {
+    isLocked,
+    attemptsLeft,
+    remainingSec,
+    recordFailure,
+    reset,
+    maxAttempts,
+  } = useLoginRateLimit(form.email);
+
+  // Hiện thông báo nếu bị redirect từ check-user-ip
   useEffect(() => {
     const errParam = searchParams.get("error");
     if (errParam === "ip_duplicate") {
@@ -28,6 +38,16 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
+    // ✅ Check locked trước khi login
+    if (isLocked) {
+      setError(
+        `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${remainingSec}s.`
+      );
+      setErrorType("locked");
+      return;
+    }
+
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
       setErrorType("error");
@@ -43,12 +63,26 @@ export default function Login() {
     });
 
     if (authError) {
-      setError("Email hoặc mật khẩu không đúng.");
+      // ✅ Ghi nhận lần sai
+      const result = recordFailure();
+
+      if (result.locked) {
+        setError(
+          `Bạn đã nhập sai ${maxAttempts} lần liên tiếp. Tài khoản bị khoá tạm thời trong 5 phút.`
+        );
+        setErrorType("locked");
+      } else {
+        setError(
+          `Email hoặc mật khẩu không đúng. Còn ${result.attemptsLeft} lần thử.`
+        );
+        setErrorType("wrong_password");
+      }
       setLoading(false);
       return;
     }
 
-    // ✅ BỎ CHECK IP — user cũ đăng nhập không bị chặn
+    // ✅ Login thành công → reset đếm
+    reset();
     setLoading(false);
 
     if (data.session) {
@@ -81,6 +115,13 @@ export default function Login() {
     if (authError) setError(authError.message);
   };
 
+  // Định dạng thời gian còn lại: 4:59
+  const formatTime = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   return (
     <AuthShell
       title="Chào mừng trở lại"
@@ -100,7 +141,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* ✅ Thông báo IP trùng (nếu bị redirect từ check-user-ip) */}
+      {/* Thông báo IP trùng */}
       {errorType === "ip_duplicate" && (
         <div className="mb-4 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start gap-2">
@@ -126,13 +167,36 @@ export default function Login() {
         </div>
       )}
 
+      {/* ✅ Cảnh báo bị khoá */}
+      {isLocked && (
+        <div className="mb-4 rounded-2xl border-2 border-red-300 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100">
+              <Lock size={18} className="text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-bold text-red-800">
+                Tài khoản bị khoá tạm thời
+              </p>
+              <p className="mt-1 text-[12px] leading-5 text-red-700">
+                Bạn đã nhập sai mật khẩu quá {maxAttempts} lần liên tiếp.
+              </p>
+              <p className="mt-2 rounded-lg bg-white px-3 py-1.5 text-center text-[14px] font-black tracking-widest text-red-600">
+                {formatTime(remainingSec)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           type="email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           placeholder="Email của bạn"
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+          disabled={isLocked}
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
         />
 
         <input
@@ -140,21 +204,35 @@ export default function Login() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           placeholder="Mật khẩu"
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
+          disabled={isLocked}
+          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
         />
 
-        {error && errorType !== "ip_duplicate" && (
-          <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+        {/* ✅ Cảnh báo số lần thử còn lại */}
+        {!isLocked && attemptsLeft < maxAttempts && attemptsLeft > 0 && (
+          <div className="rounded-full bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
+            ⚠️ Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {maxAttempts} lần,
+            tài khoản sẽ bị khoá 5 phút.
+          </div>
+        )}
+
+        {error && errorType !== "ip_duplicate" && errorType !== "locked" && (
+          <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
             {error}
           </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
+          disabled={loading || isLocked}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading ? (
+          {isLocked ? (
+            <>
+              <Lock size={16} />
+              Đã khoá {formatTime(remainingSec)}
+            </>
+          ) : loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Đang đăng nhập...
@@ -185,11 +263,16 @@ export default function Login() {
         </div>
       </div>
 
-      <SocialRow onSelect={handleSocial} />
+      <div className={isLocked ? "pointer-events-none opacity-50" : ""}>
+        <SocialRow onSelect={handleSocial} />
+      </div>
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Chưa có tài khoản?{" "}
-        <Link to="/register" className="font-semibold text-slate-900 hover:underline">
+        <Link
+          to="/register"
+          className="font-semibold text-slate-900 hover:underline"
+        >
           Đăng ký
         </Link>
       </p>
@@ -204,4 +287,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-      }
+          }
