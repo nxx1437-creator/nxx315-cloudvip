@@ -475,8 +475,7 @@ export default function Login() {
     const s = sec % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
-
-  return (
+    return (
     <AuthShell
       title="Chào mừng trở lại"
       subtitle="Đăng nhập vào NXX315 Studio Rewards để tiếp tục."
@@ -657,14 +656,20 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Cảnh báo số lần thử */}
+        {/* Cảnh báo số lần thử (chỉ hiện khi KHÔNG có error) */}
         {!isLocked &&
           !checkingLock &&
+          !error &&
           attemptsLeft < MAX_ATTEMPTS &&
           attemptsLeft > 0 && (
-            <div className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
-              ⚠️ Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
-              lần, tài khoản sẽ bị khoá tạm thời.
+            <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 px-3.5 py-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100 shadow-sm">
+                <IconWarning size={14} />
+              </div>
+              <span className="text-[12px] font-medium leading-5 text-amber-800">
+                Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
+                lần, tài khoản sẽ bị khoá tạm thời.
+              </span>
             </div>
           )}
 
@@ -752,4 +757,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-                                   }
+                      }
