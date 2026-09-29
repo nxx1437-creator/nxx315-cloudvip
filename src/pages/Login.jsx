@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Loader2, AlertTriangle, ShieldAlert, Lock, WifiOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
@@ -8,6 +8,66 @@ import { supabase } from "../lib/supabaseClient.js";
 
 const MAX_ATTEMPTS = 5;
 const LAST_EMAIL_KEY = "nxx315_last_login_email";
+
+// ============ CUSTOM ICONS ============
+const IconWarning = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="warnGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#f59e0b" />
+      </linearGradient>
+    </defs>
+    <path d="M12 3.5L2.5 20.5h19L12 3.5z" stroke="url(#warnGrad)" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+    <path d="M12 9.5v4" stroke="url(#warnGrad)" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="17" r="1.2" fill="url(#warnGrad)" />
+  </svg>
+);
+
+const IconShield = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#f43f5e" />
+        <stop offset="100%" stopColor="#e11d48" />
+      </linearGradient>
+    </defs>
+    <path d="M12 2.5l8 3v6.5c0 5-3.4 8.5-8 9.5-4.6-1-8-4.5-8-9.5V5.5l8-3z" stroke="url(#shieldGrad)" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+    <path d="M12 8v5" stroke="url(#shieldGrad)" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="16.5" r="1.2" fill="url(#shieldGrad)" />
+  </svg>
+);
+
+const IconLock = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="lockGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#b91c1c" />
+      </linearGradient>
+    </defs>
+    <rect x="4.5" y="10.5" width="15" height="11" rx="3" stroke="url(#lockGrad)" strokeWidth="1.8" fill="none" />
+    <path d="M8 10.5V7.5a4 4 0 018 0v3" stroke="url(#lockGrad)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    <circle cx="12" cy="15.5" r="1.5" fill="url(#lockGrad)" />
+    <path d="M12 17v2.5" stroke="url(#lockGrad)" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const IconWifiOff = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="wifiGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#fb923c" />
+        <stop offset="100%" stopColor="#ea580c" />
+      </linearGradient>
+    </defs>
+    <path d="M2.5 8.5C5.5 5.8 8.6 4.5 12 4.5c3.4 0 6.5 1.3 9.5 4" stroke="url(#wifiGrad)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    <path d="M6 12c1.7-1.5 3.7-2.3 6-2.3 2.3 0 4.3.8 6 2.3" stroke="url(#wifiGrad)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    <path d="M9.5 15.5c.7-.6 1.5-.9 2.5-.9 1 0 1.8.3 2.5.9" stroke="url(#wifiGrad)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    <circle cx="12" cy="18.5" r="1.3" fill="url(#wifiGrad)" />
+    <path d="M3 3l18 18" stroke="url(#wifiGrad)" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,27 +79,18 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showMfa, setShowMfa] = useState(false);
 
-  // Rate limit state
   const [isLocked, setIsLocked] = useState(false);
   const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
   const [remainingSec, setRemainingSec] = useState(0);
   const [checkingLock, setCheckingLock] = useState(true);
   const lockedUntilRef = useRef(0);
-
-  // IP mismatch info
   const [ipInfo, setIpInfo] = useState(null);
 
-  // Đếm ngược khi bị khoá
   useEffect(() => {
     if (!isLocked || remainingSec <= 0) return;
-
     const interval = setInterval(() => {
-      const left = Math.max(
-        0,
-        Math.ceil((lockedUntilRef.current - Date.now()) / 1000)
-      );
+      const left = Math.max(0, Math.ceil((lockedUntilRef.current - Date.now()) / 1000));
       setRemainingSec(left);
-
       if (left <= 0) {
         setIsLocked(false);
         setAttemptsLeft(MAX_ATTEMPTS);
@@ -48,11 +99,9 @@ export default function Login() {
         clearInterval(interval);
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isLocked, remainingSec]);
 
-  // Check lock khi mount
   useEffect(() => {
     const checkLockOnMount = async () => {
       const lastEmail = sessionStorage.getItem(LAST_EMAIL_KEY);
@@ -60,42 +109,24 @@ export default function Login() {
         setCheckingLock(false);
         return;
       }
-
       try {
         const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
         const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-        const res = await fetch(
-          `${SUPABASE_URL}/functions/v1/login-guard`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({
-              action: "check",
-              email: lastEmail,
-            }),
-          }
-        );
-
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/login-guard`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+          body: JSON.stringify({ action: "check", email: lastEmail }),
+        });
         const data = await res.json();
-
         setForm((prev) => ({ ...prev, email: lastEmail }));
-
         if (!data.allowed) {
           setIsLocked(true);
           setRemainingSec(data.wait_seconds || 60);
-          lockedUntilRef.current =
-            Date.now() + (data.wait_seconds || 60) * 1000;
+          lockedUntilRef.current = Date.now() + (data.wait_seconds || 60) * 1000;
           setError("Tài khoản đang bị khoá tạm thời. Vui lòng thử lại sau.");
           setErrorType("locked");
         } else {
-          const left = Math.max(
-            0,
-            (data.max || MAX_ATTEMPTS) - (data.ip_attempts || 0)
-          );
+          const left = Math.max(0, (data.max || MAX_ATTEMPTS) - (data.ip_attempts || 0));
           setAttemptsLeft(left);
         }
       } catch (err) {
@@ -104,17 +135,13 @@ export default function Login() {
         setCheckingLock(false);
       }
     };
-
     checkLockOnMount();
   }, []);
 
-  // Cảnh báo IP trùng
   useEffect(() => {
     const errParam = searchParams.get("error");
     if (errParam === "ip_duplicate") {
-      setError(
-        "IP của bạn đã có tài khoản khác. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
-      );
+      setError("IP của bạn đã có tài khoản khác. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988.");
       setErrorType("ip_duplicate");
     }
   }, [searchParams]);
@@ -122,16 +149,11 @@ export default function Login() {
   const callGuard = async (action, payload = {}) => {
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
     const res = await fetch(`${SUPABASE_URL}/functions/v1/login-guard`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-      },
+      headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
       body: JSON.stringify({ action, ...payload }),
     });
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   };
@@ -139,11 +161,8 @@ export default function Login() {
   const handleIpCheck = async (userId) => {
     try {
       const data = await callGuard("check-ip", { userId });
-
       if (!data.allowed) {
-        // ❌ IP không khớp + tài khoản mới → chặn
         await supabase.auth.signOut();
-
         setIpInfo({
           registeredIp: data.registered_ip,
           currentIp: data.current_ip,
@@ -153,71 +172,51 @@ export default function Login() {
         setErrorType("ip_mismatch");
         return false;
       }
-
       console.log("[Login] IP check OK:", data.reason);
       return true;
     } catch (err) {
       console.warn("[Login] IP check failed:", err);
-      // Fail-safe: lỗi → cho qua
       return true;
     }
   };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-
     if (isLocked) {
-      setError(
-        `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${formatTime(
-          remainingSec
-        )}.`
-      );
+      setError(`Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${formatTime(remainingSec)}.`);
       setErrorType("locked");
       return;
     }
-
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
       setErrorType("error");
       return;
     }
-
     setError("");
     setErrorType("error");
     setIpInfo(null);
     setLoading(true);
-
     sessionStorage.setItem(LAST_EMAIL_KEY, form.email.toLowerCase());
 
     try {
-      // 1. Check rate limit
       const checkData = await callGuard("check", { email: form.email });
-
       if (!checkData.allowed) {
         setIsLocked(true);
         setRemainingSec(checkData.wait_seconds || 60);
-        lockedUntilRef.current =
-          Date.now() + (checkData.wait_seconds || 60) * 1000;
-        setError(
-          `Bạn đã nhập sai ${checkData.max || MAX_ATTEMPTS} lần. Tài khoản bị khoá tạm thời.`
-        );
+        lockedUntilRef.current = Date.now() + (checkData.wait_seconds || 60) * 1000;
+        setError(`Bạn đã nhập sai ${checkData.max || MAX_ATTEMPTS} lần. Tài khoản bị khoá tạm thời.`);
         setErrorType("locked");
         setLoading(false);
         return;
       }
 
-      // 2. Login với Supabase
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
 
-      // 3. Record attempt
       try {
-        await callGuard("record", {
-          email: form.email,
-          success: !authError,
-        });
+        await callGuard("record", { email: form.email, success: !authError });
       } catch (logErr) {
         console.warn("[Login] Không ghi được log:", logErr);
       }
@@ -225,19 +224,14 @@ export default function Login() {
       if (authError) {
         try {
           const recheck = await callGuard("check", { email: form.email });
-
           if (!recheck.allowed) {
             setIsLocked(true);
             setRemainingSec(recheck.wait_seconds || 60);
-            lockedUntilRef.current =
-              Date.now() + (recheck.wait_seconds || 60) * 1000;
+            lockedUntilRef.current = Date.now() + (recheck.wait_seconds || 60) * 1000;
             setError("Bạn đã nhập sai quá nhiều lần. Tài khoản bị khoá tạm thời.");
             setErrorType("locked");
           } else {
-            const left = Math.max(
-              0,
-              (recheck.max || MAX_ATTEMPTS) - (recheck.ip_attempts || 0)
-            );
+            const left = Math.max(0, (recheck.max || MAX_ATTEMPTS) - (recheck.ip_attempts || 0));
             setAttemptsLeft(left);
             setError(`Email hoặc mật khẩu không đúng. Còn ${left} lần thử.`);
             setErrorType("wrong_password");
@@ -246,26 +240,20 @@ export default function Login() {
           setError("Email hoặc mật khẩu không đúng.");
           setErrorType("wrong_password");
         }
-
         setLoading(false);
         return;
       }
 
-      // 4. ✅ CHECK IP sau khi login thành công
       if (data.session && data.user) {
         const ipOk = await handleIpCheck(data.user.id);
-
         if (!ipOk) {
           setLoading(false);
-          return; // ← Dừng, không cho vào
+          return;
         }
-
         sessionStorage.removeItem(LAST_EMAIL_KEY);
         setLoading(false);
         setAttemptsLeft(MAX_ATTEMPTS);
-
-        const { data: aalData } =
-          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
           setShowMfa(true);
           return;
@@ -313,11 +301,13 @@ export default function Login() {
       subtitle="Đăng nhập vào NXX315 Studio Rewards để tiếp tục."
     >
       {/* Cảnh báo chung */}
-      <div className="mb-4 rounded-2xl border border-sky-200 bg-sky-50 p-3.5">
-        <div className="flex items-start gap-2">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-sky-600" />
+      <div className="mb-4 overflow-hidden rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 p-3.5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100">
+            <IconWarning size={18} />
+          </div>
           <div className="text-[12px] leading-5 text-sky-800">
-            <p className="font-bold">Lưu ý</p>
+            <p className="font-bold">Lưu ý quan trọng</p>
             <p className="mt-1">
               Nếu bạn đã từng tạo tài khoản trên thiết bị này, vui lòng đăng nhập
               lại tài khoản <b>cũ</b>. Mỗi thiết bị chỉ được dùng 1 tài khoản.
@@ -326,23 +316,20 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Cảnh báo IP trùng */}
+      {/* IP trùng */}
       {errorType === "ip_duplicate" && (
-        <div className="mb-4 rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
-          <div className="flex items-start gap-2">
-            <ShieldAlert size={18} className="mt-0.5 shrink-0 text-rose-600" />
-            <div>
+        <div className="mb-4 overflow-hidden rounded-2xl border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 shadow-sm">
+              <IconShield size={22} />
+            </div>
+            <div className="flex-1">
               <p className="text-[13px] font-bold text-rose-800">
-                IP của bạn đã có tài khoản khác
+                IP đã có tài khoản khác
               </p>
               <p className="mt-1 text-[12px] leading-5 text-rose-700">
                 Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo{" "}
-                <a
-                  href="https://zalo.me/0865245988"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold underline"
-                >
+                <a href="https://zalo.me/0865245988" target="_blank" rel="noopener noreferrer" className="font-bold underline">
                   0865245988
                 </a>{" "}
                 để được hỗ trợ.
@@ -352,12 +339,12 @@ export default function Login() {
         </div>
       )}
 
-      {/* Cảnh báo bị khoá */}
+      {/* Bị khoá */}
       {isLocked && (
-        <div className="mb-4 rounded-2xl border-2 border-red-300 bg-red-50 p-4">
+        <div className="mb-4 overflow-hidden rounded-2xl border-2 border-red-300 bg-gradient-to-br from-red-50 to-rose-50 p-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100">
-              <Lock size={18} className="text-red-600" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 shadow-sm">
+              <IconLock size={22} />
             </div>
             <div className="flex-1">
               <p className="text-[13px] font-bold text-red-800">
@@ -366,20 +353,25 @@ export default function Login() {
               <p className="mt-1 text-[12px] leading-5 text-red-700">
                 Bạn đã nhập sai mật khẩu quá {MAX_ATTEMPTS} lần liên tiếp.
               </p>
-              <p className="mt-2 rounded-lg bg-white px-3 py-1.5 text-center text-[14px] font-black tracking-widest text-red-600">
-                {formatTime(remainingSec)}
-              </p>
+              <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-white/80 backdrop-blur px-3 py-2 shadow-sm">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">
+                  Mở khoá sau
+                </span>
+                <span className="text-[16px] font-black tracking-widest text-red-600 tabular-nums">
+                  {formatTime(remainingSec)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ Cảnh báo IP không khớp */}
+      {/* IP không khớp */}
       {errorType === "ip_mismatch" && (
-        <div className="mb-4 rounded-2xl border-2 border-orange-300 bg-orange-50 p-4">
+        <div className="mb-4 overflow-hidden rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 p-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100">
-              <WifiOff size={18} className="text-orange-600" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 shadow-sm">
+              <IconWifiOff size={22} />
             </div>
             <div className="flex-1">
               <p className="text-[13px] font-bold text-orange-800">
@@ -390,27 +382,15 @@ export default function Login() {
                 đúng mạng đã đăng ký ban đầu để đăng nhập.
               </p>
               {ipInfo && (
-                <div className="mt-2 space-y-0.5 text-[11px] leading-5 text-orange-600">
-                  <p>
-                     IP đăng ký: <b>{ipInfo.registeredIp}</b>
-                  </p>
-                  <p>
-                     IP hiện tại: <b>{ipInfo.currentIp}</b>
-                  </p>
-                  <p>
-                     Sau <b>{ipInfo.trustDays} ngày</b> kể từ khi tạo tài
-                    khoản, bạn có thể đăng nhập từ mạng bất kỳ.
-                  </p>
+                <div className="mt-2.5 space-y-1 rounded-xl bg-white/60 p-2.5 text-[11px] leading-5 text-orange-700 backdrop-blur">
+                  <p>📍 IP đăng ký: <b>{ipInfo.registeredIp}</b></p>
+                  <p>🌐 IP hiện tại: <b>{ipInfo.currentIp}</b></p>
+                  <p>⏳ Sau <b>{ipInfo.trustDays} ngày</b> kể từ khi tạo tài khoản, bạn có thể đăng nhập từ mạng bất kỳ.</p>
                 </div>
               )}
               <p className="mt-2 text-[11px] leading-5 text-orange-700">
                 Cần hỗ trợ? Liên hệ Zalo{" "}
-                <a
-                  href="https://zalo.me/0865245988"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold underline"
-                >
+                <a href="https://zalo.me/0865245988" target="_blank" rel="noopener noreferrer" className="font-bold underline">
                   0865245988
                 </a>
               </p>
@@ -438,24 +418,17 @@ export default function Login() {
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
         />
 
-        {!isLocked &&
-          !checkingLock &&
-          attemptsLeft < MAX_ATTEMPTS &&
-          attemptsLeft > 0 && (
-            <div className="rounded-full bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
-              Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
-              lần, tài khoản sẽ bị khoá tạm thời.
-            </div>
-          )}
+        {!isLocked && !checkingLock && attemptsLeft < MAX_ATTEMPTS && attemptsLeft > 0 && (
+          <div className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
+            ⚠️ Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS} lần, tài khoản sẽ bị khoá tạm thời.
+          </div>
+        )}
 
-        {error &&
-          errorType !== "ip_duplicate" &&
-          errorType !== "locked" &&
-          errorType !== "ip_mismatch" && (
-            <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-              {error}
-            </p>
-          )}
+        {error && errorType !== "ip_duplicate" && errorType !== "locked" && errorType !== "ip_mismatch" && (
+          <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
@@ -469,7 +442,7 @@ export default function Login() {
             </>
           ) : isLocked ? (
             <>
-              <Lock size={16} />
+              <IconLock size={16} />
               Đã khoá {formatTime(remainingSec)}
             </>
           ) : loading ? (
@@ -484,10 +457,7 @@ export default function Login() {
       </form>
 
       <div className="mt-3 text-center">
-        <Link
-          to="/forgot-password"
-          className="text-xs text-slate-500 hover:text-slate-700 hover:underline"
-        >
+        <Link to="/forgot-password" className="text-xs text-slate-500 hover:text-slate-700 hover:underline">
           Quên mật khẩu?
         </Link>
       </div>
@@ -503,20 +473,13 @@ export default function Login() {
         </div>
       </div>
 
-      <div
-        className={
-          isLocked || checkingLock ? "pointer-events-none opacity-50" : ""
-        }
-      >
+      <div className={isLocked || checkingLock ? "pointer-events-none opacity-50" : ""}>
         <SocialRow onSelect={handleSocial} />
       </div>
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Chưa có tài khoản?{" "}
-        <Link
-          to="/register"
-          className="font-semibold text-slate-900 hover:underline"
-        >
+        <Link to="/register" className="font-semibold text-slate-900 hover:underline">
           Đăng ký
         </Link>
       </p>
@@ -531,4 +494,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-                                 }
+    }
