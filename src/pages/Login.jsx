@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
@@ -9,7 +8,10 @@ import { supabase } from "../lib/supabaseClient.js";
 const MAX_ATTEMPTS = 5;
 const LAST_EMAIL_KEY = "nxx315_last_login_email";
 
-// ============ CUSTOM ICONS ============
+// ==================================================
+// ICONS - CẢNH BÁO & TRẠNG THÁI
+// ==================================================
+
 const IconWarning = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <defs>
@@ -69,11 +71,111 @@ const IconWifiOff = ({ size = 20 }) => (
   </svg>
 );
 
+const IconClock = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="clockGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+    </defs>
+    <circle cx="12" cy="12" r="9" stroke="url(#clockGrad)" strokeWidth="1.8" fill="none" />
+    <path d="M12 7v5l3 2" stroke="url(#clockGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+// ==================================================
+// ICONS - CHO INPUT
+// ==================================================
+
+const IconEmail = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="emailGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </linearGradient>
+    </defs>
+    <rect x="3" y="5" width="18" height="14" rx="3" stroke="url(#emailGrad)" strokeWidth="1.8" fill="none" />
+    <path d="M3.5 7l7.4 5.2c.6.4 1.4.4 2 0L20.5 7" stroke="url(#emailGrad)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+  </svg>
+);
+
+const IconPassword = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="passGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#a78bfa" />
+        <stop offset="100%" stopColor="#7c3aed" />
+      </linearGradient>
+    </defs>
+    <rect x="4.5" y="10.5" width="15" height="10" rx="3" stroke="url(#passGrad)" strokeWidth="1.8" fill="none" />
+    <path d="M8 10.5V7.5a4 4 0 018 0v3" stroke="url(#passGrad)" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    <circle cx="12" cy="15.5" r="1.3" fill="url(#passGrad)" />
+  </svg>
+);
+
+const IconSpinner = ({ size = 18 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    style={{ animation: "spinCustom 0.8s linear infinite" }}
+  >
+    <defs>
+      <linearGradient id="spinGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+        <stop offset="100%" stopColor="currentColor" stopOpacity="0.15" />
+      </linearGradient>
+    </defs>
+    <circle
+      cx="12"
+      cy="12"
+      r="9"
+      stroke="url(#spinGrad)"
+      strokeWidth="2.5"
+      fill="none"
+      strokeLinecap="round"
+      strokeDasharray="56.55"
+      strokeDashoffset="14"
+    />
+    <style>{`@keyframes spinCustom { to { transform: rotate(360deg); } }`}</style>
+  </svg>
+);
+
+const IconEye = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="eyeGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="100%" stopColor="#64748b" />
+      </linearGradient>
+    </defs>
+    <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z" stroke="url(#eyeGrad)" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
+    <circle cx="12" cy="12" r="3" stroke="url(#eyeGrad)" strokeWidth="1.8" fill="none" />
+  </svg>
+);
+
+const IconEyeOff = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="eyeOffGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="100%" stopColor="#64748b" />
+      </linearGradient>
+    </defs>
+    <path d="M3 3l18 18" stroke="url(#eyeOffGrad)" strokeWidth="2" strokeLinecap="round" />
+    <path d="M10.6 6.2A9.9 9.9 0 0112 6c6 0 9.5 6 9.5 6a16.8 16.8 0 01-3.5 4.2M6.6 8.2A17 17 0 002.5 12s3.5 6 9.5 6c1.5 0 2.8-.3 4-.9" stroke="url(#eyeOffGrad)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9.9 9.9a3 3 0 104.2 4.2" stroke="url(#eyeOffGrad)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+  </svg>
+);
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
@@ -86,11 +188,17 @@ export default function Login() {
   const lockedUntilRef = useRef(0);
   const [ipInfo, setIpInfo] = useState(null);
 
+  // Đếm ngược khi bị khoá
   useEffect(() => {
     if (!isLocked || remainingSec <= 0) return;
+
     const interval = setInterval(() => {
-      const left = Math.max(0, Math.ceil((lockedUntilRef.current - Date.now()) / 1000));
+      const left = Math.max(
+        0,
+        Math.ceil((lockedUntilRef.current - Date.now()) / 1000)
+      );
       setRemainingSec(left);
+
       if (left <= 0) {
         setIsLocked(false);
         setAttemptsLeft(MAX_ATTEMPTS);
@@ -99,9 +207,11 @@ export default function Login() {
         clearInterval(interval);
       }
     }, 1000);
+
     return () => clearInterval(interval);
   }, [isLocked, remainingSec]);
 
+  // Check lock khi mount (F5 vẫn giữ)
   useEffect(() => {
     const checkLockOnMount = async () => {
       const lastEmail = sessionStorage.getItem(LAST_EMAIL_KEY);
@@ -109,24 +219,44 @@ export default function Login() {
         setCheckingLock(false);
         return;
       }
+
       try {
         const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
         const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/login-guard`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
-          body: JSON.stringify({ action: "check", email: lastEmail }),
-        });
+
+        const res = await fetch(
+          `${SUPABASE_URL}/functions/v1/login-guard`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              action: "check",
+              email: lastEmail,
+            }),
+          }
+        );
+
         const data = await res.json();
+
         setForm((prev) => ({ ...prev, email: lastEmail }));
+
         if (!data.allowed) {
           setIsLocked(true);
           setRemainingSec(data.wait_seconds || 60);
-          lockedUntilRef.current = Date.now() + (data.wait_seconds || 60) * 1000;
-          setError("Tài khoản đang bị khoá tạm thời. Vui lòng thử lại sau.");
+          lockedUntilRef.current =
+            Date.now() + (data.wait_seconds || 60) * 1000;
+          setError(
+            "Tài khoản đang bị khoá tạm thời. Vui lòng thử lại sau."
+          );
           setErrorType("locked");
         } else {
-          const left = Math.max(0, (data.max || MAX_ATTEMPTS) - (data.ip_attempts || 0));
+          const left = Math.max(
+            0,
+            (data.max || MAX_ATTEMPTS) - (data.ip_attempts || 0)
+          );
           setAttemptsLeft(left);
         }
       } catch (err) {
@@ -135,25 +265,40 @@ export default function Login() {
         setCheckingLock(false);
       }
     };
+
     checkLockOnMount();
   }, []);
 
+  // Xử lý query params
   useEffect(() => {
     const errParam = searchParams.get("error");
+
     if (errParam === "ip_duplicate") {
-      setError("IP của bạn đã có tài khoản khác. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988.");
+      setError(
+        "IP của bạn đã có tài khoản khác. Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo 0865245988."
+      );
       setErrorType("ip_duplicate");
+    } else if (errParam === "session_expired") {
+      setError(
+        "Phiên làm việc đã hết hạn do không hoạt động. Vui lòng đăng nhập lại."
+      );
+      setErrorType("session_expired");
     }
   }, [searchParams]);
 
   const callGuard = async (action, payload = {}) => {
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
     const res = await fetch(`${SUPABASE_URL}/functions/v1/login-guard`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+      },
       body: JSON.stringify({ action, ...payload }),
     });
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   };
@@ -161,8 +306,10 @@ export default function Login() {
   const handleIpCheck = async (userId) => {
     try {
       const data = await callGuard("check-ip", { userId });
+
       if (!data.allowed) {
         await supabase.auth.signOut();
+
         setIpInfo({
           registeredIp: data.registered_ip,
           currentIp: data.current_ip,
@@ -172,6 +319,7 @@ export default function Login() {
         setErrorType("ip_mismatch");
         return false;
       }
+
       console.log("[Login] IP check OK:", data.reason);
       return true;
     } catch (err) {
@@ -182,41 +330,57 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
     if (isLocked) {
-      setError(`Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${formatTime(remainingSec)}.`);
+      setError(
+        `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${formatTime(
+          remainingSec
+        )}.`
+      );
       setErrorType("locked");
       return;
     }
+
     if (!form.email || !form.password) {
       setError("Vui lòng điền đầy đủ thông tin.");
       setErrorType("error");
       return;
     }
+
     setError("");
     setErrorType("error");
     setIpInfo(null);
     setLoading(true);
+
     sessionStorage.setItem(LAST_EMAIL_KEY, form.email.toLowerCase());
 
     try {
       const checkData = await callGuard("check", { email: form.email });
+
       if (!checkData.allowed) {
         setIsLocked(true);
         setRemainingSec(checkData.wait_seconds || 60);
-        lockedUntilRef.current = Date.now() + (checkData.wait_seconds || 60) * 1000;
-        setError(`Bạn đã nhập sai ${checkData.max || MAX_ATTEMPTS} lần. Tài khoản bị khoá tạm thời.`);
+        lockedUntilRef.current =
+          Date.now() + (checkData.wait_seconds || 60) * 1000;
+        setError(
+          `Bạn đã nhập sai ${checkData.max || MAX_ATTEMPTS} lần. Tài khoản bị khoá tạm thời.`
+        );
         setErrorType("locked");
         setLoading(false);
         return;
       }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
-      });
+      const { data, error: authError } =
+        await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password,
+        });
 
       try {
-        await callGuard("record", { email: form.email, success: !authError });
+        await callGuard("record", {
+          email: form.email,
+          success: !authError,
+        });
       } catch (logErr) {
         console.warn("[Login] Không ghi được log:", logErr);
       }
@@ -224,37 +388,54 @@ export default function Login() {
       if (authError) {
         try {
           const recheck = await callGuard("check", { email: form.email });
+
           if (!recheck.allowed) {
             setIsLocked(true);
             setRemainingSec(recheck.wait_seconds || 60);
-            lockedUntilRef.current = Date.now() + (recheck.wait_seconds || 60) * 1000;
-            setError("Bạn đã nhập sai quá nhiều lần. Tài khoản bị khoá tạm thời.");
+            lockedUntilRef.current =
+              Date.now() + (recheck.wait_seconds || 60) * 1000;
+            setError(
+              "Bạn đã nhập sai quá nhiều lần. Tài khoản bị khoá tạm thời."
+            );
             setErrorType("locked");
           } else {
-            const left = Math.max(0, (recheck.max || MAX_ATTEMPTS) - (recheck.ip_attempts || 0));
+            const left = Math.max(
+              0,
+              (recheck.max || MAX_ATTEMPTS) - (recheck.ip_attempts || 0)
+            );
             setAttemptsLeft(left);
-            setError(`Email hoặc mật khẩu không đúng. Còn ${left} lần thử.`);
+            setError(
+              `Email hoặc mật khẩu không đúng. Còn ${left} lần thử.`
+            );
             setErrorType("wrong_password");
           }
         } catch (recheckErr) {
           setError("Email hoặc mật khẩu không đúng.");
           setErrorType("wrong_password");
         }
+
         setLoading(false);
         return;
       }
 
       if (data.session && data.user) {
         const ipOk = await handleIpCheck(data.user.id);
+
         if (!ipOk) {
           setLoading(false);
           return;
         }
+
         sessionStorage.removeItem(LAST_EMAIL_KEY);
         setLoading(false);
         setAttemptsLeft(MAX_ATTEMPTS);
-        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
+
+        const { data: aalData } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (
+          aalData?.nextLevel === "aal2" &&
+          aalData?.currentLevel !== "aal2"
+        ) {
           setShowMfa(true);
           return;
         }
@@ -316,6 +497,26 @@ export default function Login() {
         </div>
       </div>
 
+      {/* Phiên hết hạn */}
+      {errorType === "session_expired" && (
+        <div className="mb-4 overflow-hidden rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 shadow-sm">
+              <IconClock size={22} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-bold text-amber-800">
+                Phiên làm việc đã hết hạn
+              </p>
+              <p className="mt-1 text-[12px] leading-5 text-amber-700">
+                Bạn đã không hoạt động trong 30 phút. Vui lòng đăng nhập lại để
+                tiếp tục.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* IP trùng */}
       {errorType === "ip_duplicate" && (
         <div className="mb-4 overflow-hidden rounded-2xl border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 p-4">
@@ -329,7 +530,12 @@ export default function Login() {
               </p>
               <p className="mt-1 text-[12px] leading-5 text-rose-700">
                 Vui lòng đăng nhập tài khoản cũ hoặc liên hệ Zalo{" "}
-                <a href="https://zalo.me/0865245988" target="_blank" rel="noopener noreferrer" className="font-bold underline">
+                <a
+                  href="https://zalo.me/0865245988"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline"
+                >
                   0865245988
                 </a>{" "}
                 để được hỗ trợ.
@@ -353,11 +559,11 @@ export default function Login() {
               <p className="mt-1 text-[12px] leading-5 text-red-700">
                 Bạn đã nhập sai mật khẩu quá {MAX_ATTEMPTS} lần liên tiếp.
               </p>
-              <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-white/80 backdrop-blur px-3 py-2 shadow-sm">
+              <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-white/80 px-3 py-2 shadow-sm backdrop-blur">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">
                   Mở khoá sau
                 </span>
-                <span className="text-[16px] font-black tracking-widest text-red-600 tabular-nums">
+                <span className="text-[16px] font-black tabular-nums tracking-widest text-red-600">
                   {formatTime(remainingSec)}
                 </span>
               </div>
@@ -383,14 +589,26 @@ export default function Login() {
               </p>
               {ipInfo && (
                 <div className="mt-2.5 space-y-1 rounded-xl bg-white/60 p-2.5 text-[11px] leading-5 text-orange-700 backdrop-blur">
-                  <p>📍 IP đăng ký: <b>{ipInfo.registeredIp}</b></p>
-                  <p>🌐 IP hiện tại: <b>{ipInfo.currentIp}</b></p>
-                  <p>⏳ Sau <b>{ipInfo.trustDays} ngày</b> kể từ khi tạo tài khoản, bạn có thể đăng nhập từ mạng bất kỳ.</p>
+                  <p>
+                    📍 IP đăng ký: <b>{ipInfo.registeredIp}</b>
+                  </p>
+                  <p>
+                    🌐 IP hiện tại: <b>{ipInfo.currentIp}</b>
+                  </p>
+                  <p>
+                    ⏳ Sau <b>{ipInfo.trustDays} ngày</b> kể từ khi tạo tài
+                    khoản, bạn có thể đăng nhập từ mạng bất kỳ.
+                  </p>
                 </div>
               )}
               <p className="mt-2 text-[11px] leading-5 text-orange-700">
                 Cần hỗ trợ? Liên hệ Zalo{" "}
-                <a href="https://zalo.me/0865245988" target="_blank" rel="noopener noreferrer" className="font-bold underline">
+                <a
+                  href="https://zalo.me/0865245988"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline"
+                >
                   0865245988
                 </a>
               </p>
@@ -400,35 +618,65 @@ export default function Login() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <input
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          placeholder="Email của bạn"
-          disabled={isLocked || checkingLock}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
-        />
-
-        <input
-          type="password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          placeholder="Mật khẩu"
-          disabled={isLocked || checkingLock}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
-        />
-
-        {!isLocked && !checkingLock && attemptsLeft < MAX_ATTEMPTS && attemptsLeft > 0 && (
-          <div className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
-            ⚠️ Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS} lần, tài khoản sẽ bị khoá tạm thời.
+        {/* Email input */}
+        <div className="relative">
+          <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
+            <IconEmail size={18} />
           </div>
-        )}
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="Email của bạn"
+            disabled={isLocked || checkingLock}
+            className="w-full rounded-full border border-slate-300 bg-white py-3.5 pl-12 pr-5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 disabled:opacity-60"
+          />
+        </div>
 
-        {error && errorType !== "ip_duplicate" && errorType !== "locked" && errorType !== "ip_mismatch" && (
-          <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-            {error}
-          </p>
-        )}
+        {/* Password input */}
+        <div className="relative">
+          <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
+            <IconPassword size={18} />
+          </div>
+          <input
+            type={showPassword ? "text" : "password"}
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            placeholder="Mật khẩu"
+            disabled={isLocked || checkingLock}
+            className="w-full rounded-full border border-slate-300 bg-white py-3.5 pl-12 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 disabled:bg-slate-100 disabled:opacity-60"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={isLocked || checkingLock}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 transition hover:bg-slate-100 disabled:opacity-50"
+            tabIndex={-1}
+          >
+            {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+          </button>
+        </div>
+
+        {/* Cảnh báo số lần thử */}
+        {!isLocked &&
+          !checkingLock &&
+          attemptsLeft < MAX_ATTEMPTS &&
+          attemptsLeft > 0 && (
+            <div className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
+              ⚠️ Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
+              lần, tài khoản sẽ bị khoá tạm thời.
+            </div>
+          )}
+
+        {error &&
+          errorType !== "ip_duplicate" &&
+          errorType !== "locked" &&
+          errorType !== "ip_mismatch" &&
+          errorType !== "session_expired" && (
+            <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+              {error}
+            </p>
+          )}
 
         <button
           type="submit"
@@ -437,7 +685,7 @@ export default function Login() {
         >
           {checkingLock ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
+              <IconSpinner size={16} />
               Đang kiểm tra...
             </>
           ) : isLocked ? (
@@ -447,7 +695,7 @@ export default function Login() {
             </>
           ) : loading ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
+              <IconSpinner size={16} />
               Đang đăng nhập...
             </>
           ) : (
@@ -457,7 +705,10 @@ export default function Login() {
       </form>
 
       <div className="mt-3 text-center">
-        <Link to="/forgot-password" className="text-xs text-slate-500 hover:text-slate-700 hover:underline">
+        <Link
+          to="/forgot-password"
+          className="text-xs text-slate-500 hover:text-slate-700 hover:underline"
+        >
           Quên mật khẩu?
         </Link>
       </div>
@@ -473,13 +724,20 @@ export default function Login() {
         </div>
       </div>
 
-      <div className={isLocked || checkingLock ? "pointer-events-none opacity-50" : ""}>
+      <div
+        className={
+          isLocked || checkingLock ? "pointer-events-none opacity-50" : ""
+        }
+      >
         <SocialRow onSelect={handleSocial} />
       </div>
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Chưa có tài khoản?{" "}
-        <Link to="/register" className="font-semibold text-slate-900 hover:underline">
+        <Link
+          to="/register"
+          className="font-semibold text-slate-900 hover:underline"
+        >
           Đăng ký
         </Link>
       </p>
@@ -494,4 +752,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-    }
+                                   }
