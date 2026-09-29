@@ -65,8 +65,8 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
 import DeviceChecker from "./components/DeviceChecker.jsx";
-import VersionChecker from "./components/VersionChecker.jsx"; // ✅ MỚI
-import OAuthGuard from "./components/OAuthGuard.jsx"; // ✅ MỚI
+import VersionChecker from "./components/VersionChecker.jsx";
+import SessionGuard from "./components/SessionGuard.jsx"; // ✅ MỚI
 
 export default function App() {
   return (
@@ -141,10 +141,11 @@ export default function App() {
         {/* ✅ Auto reload khi có bản mới */}
         <VersionChecker />
 
-        {/* ✅ Chặn OAuth tạo account mới trên thiết bị đã có account */}
-        <OAuthGuard />
-
+        {/* ✅ Chặn thiết bị không hợp lệ */}
         <DeviceChecker />
+
+        {/* ✅ Tự động đăng xuất khi hết phiên */}
+        <SessionGuard />
       </BrowserRouter>
     </BanGate>
   );
