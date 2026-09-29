@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Loader2, AlertTriangle, ShieldAlert, Lock } from "lucide-react";
+import { Loader2, AlertTriangle, ShieldAlert, Lock, WifiOff } from "lucide-react";
 import AuthShell from "../components/AuthShell.jsx";
 import SocialRow from "../components/SocialRow.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
@@ -26,7 +26,10 @@ export default function Login() {
   const [checkingLock, setCheckingLock] = useState(true);
   const lockedUntilRef = useRef(0);
 
-  // ✅ Đếm ngược khi bị khoá
+  // IP mismatch info
+  const [ipInfo, setIpInfo] = useState(null);
+
+  // Đếm ngược khi bị khoá
   useEffect(() => {
     if (!isLocked || remainingSec <= 0) return;
 
@@ -49,7 +52,7 @@ export default function Login() {
     return () => clearInterval(interval);
   }, [isLocked, remainingSec]);
 
-  // ✅ Check trạng thái khoá từ server khi mount (FIX F5)
+  // Check lock khi mount
   useEffect(() => {
     const checkLockOnMount = async () => {
       const lastEmail = sessionStorage.getItem(LAST_EMAIL_KEY);
@@ -79,7 +82,6 @@ export default function Login() {
 
         const data = await res.json();
 
-        // Fill lại email cũ
         setForm((prev) => ({ ...prev, email: lastEmail }));
 
         if (!data.allowed) {
@@ -87,9 +89,7 @@ export default function Login() {
           setRemainingSec(data.wait_seconds || 60);
           lockedUntilRef.current =
             Date.now() + (data.wait_seconds || 60) * 1000;
-          setError(
-            "Tài khoản đang bị khoá tạm thời. Vui lòng thử lại sau."
-          );
+          setError("Tài khoản đang bị khoá tạm thời. Vui lòng thử lại sau.");
           setErrorType("locked");
         } else {
           const left = Math.max(
@@ -108,7 +108,7 @@ export default function Login() {
     checkLockOnMount();
   }, []);
 
-  // Nếu có cảnh báo IP trùng từ query
+  // Cảnh báo IP trùng
   useEffect(() => {
     const errParam = searchParams.get("error");
     if (errParam === "ip_duplicate") {
@@ -119,7 +119,6 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  // Gọi Edge Function login-guard
   const callGuard = async (action, payload = {}) => {
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -135,6 +134,33 @@ export default function Login() {
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  };
+
+  const handleIpCheck = async (userId) => {
+    try {
+      const data = await callGuard("check-ip", { userId });
+
+      if (!data.allowed) {
+        // ❌ IP không khớp + tài khoản mới → chặn
+        await supabase.auth.signOut();
+
+        setIpInfo({
+          registeredIp: data.registered_ip,
+          currentIp: data.current_ip,
+          ageDays: data.account_age_days,
+          trustDays: data.trust_after_days,
+        });
+        setErrorType("ip_mismatch");
+        return false;
+      }
+
+      console.log("[Login] IP check OK:", data.reason);
+      return true;
+    } catch (err) {
+      console.warn("[Login] IP check failed:", err);
+      // Fail-safe: lỗi → cho qua
+      return true;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -158,13 +184,13 @@ export default function Login() {
 
     setError("");
     setErrorType("error");
+    setIpInfo(null);
     setLoading(true);
 
-    // ✅ Lưu email để check khi F5
     sessionStorage.setItem(LAST_EMAIL_KEY, form.email.toLowerCase());
 
     try {
-      // ✅ 1. Check với server trước
+      // 1. Check rate limit
       const checkData = await callGuard("check", { email: form.email });
 
       if (!checkData.allowed) {
@@ -180,13 +206,13 @@ export default function Login() {
         return;
       }
 
-      // ✅ 2. Login với Supabase
+      // 2. Login với Supabase
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
 
-      // ✅ 3. Ghi log kết quả
+      // 3. Record attempt
       try {
         await callGuard("record", {
           email: form.email,
@@ -205,9 +231,7 @@ export default function Login() {
             setRemainingSec(recheck.wait_seconds || 60);
             lockedUntilRef.current =
               Date.now() + (recheck.wait_seconds || 60) * 1000;
-            setError(
-              "Bạn đã nhập sai quá nhiều lần. Tài khoản bị khoá tạm thời."
-            );
+            setError("Bạn đã nhập sai quá nhiều lần. Tài khoản bị khoá tạm thời.");
             setErrorType("locked");
           } else {
             const left = Math.max(
@@ -215,9 +239,7 @@ export default function Login() {
               (recheck.max || MAX_ATTEMPTS) - (recheck.ip_attempts || 0)
             );
             setAttemptsLeft(left);
-            setError(
-              `Email hoặc mật khẩu không đúng. Còn ${left} lần thử.`
-            );
+            setError(`Email hoặc mật khẩu không đúng. Còn ${left} lần thử.`);
             setErrorType("wrong_password");
           }
         } catch (recheckErr) {
@@ -229,12 +251,19 @@ export default function Login() {
         return;
       }
 
-      // ✅ Login thành công → xoá email lưu tạm
-      sessionStorage.removeItem(LAST_EMAIL_KEY);
-      setLoading(false);
-      setAttemptsLeft(MAX_ATTEMPTS);
+      // 4. ✅ CHECK IP sau khi login thành công
+      if (data.session && data.user) {
+        const ipOk = await handleIpCheck(data.user.id);
 
-      if (data.session) {
+        if (!ipOk) {
+          setLoading(false);
+          return; // ← Dừng, không cho vào
+        }
+
+        sessionStorage.removeItem(LAST_EMAIL_KEY);
+        setLoading(false);
+        setAttemptsLeft(MAX_ATTEMPTS);
+
         const { data: aalData } =
           await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalData?.nextLevel === "aal2" && aalData?.currentLevel !== "aal2") {
@@ -242,6 +271,8 @@ export default function Login() {
           return;
         }
         window.location.href = "/dashboard";
+      } else {
+        setLoading(false);
       }
     } catch (err) {
       console.error("[Login] Error:", err);
@@ -343,6 +374,51 @@ export default function Login() {
         </div>
       )}
 
+      {/* ✅ Cảnh báo IP không khớp */}
+      {errorType === "ip_mismatch" && (
+        <div className="mb-4 rounded-2xl border-2 border-orange-300 bg-orange-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100">
+              <WifiOff size={18} className="text-orange-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-bold text-orange-800">
+                Không đúng mạng WiFi
+              </p>
+              <p className="mt-1 text-[12px] leading-5 text-orange-700">
+                Tài khoản này được tạo từ một mạng WiFi khác. Vui lòng kết nối
+                đúng mạng đã đăng ký ban đầu để đăng nhập.
+              </p>
+              {ipInfo && (
+                <div className="mt-2 space-y-0.5 text-[11px] leading-5 text-orange-600">
+                  <p>
+                     IP đăng ký: <b>{ipInfo.registeredIp}</b>
+                  </p>
+                  <p>
+                     IP hiện tại: <b>{ipInfo.currentIp}</b>
+                  </p>
+                  <p>
+                     Sau <b>{ipInfo.trustDays} ngày</b> kể từ khi tạo tài
+                    khoản, bạn có thể đăng nhập từ mạng bất kỳ.
+                  </p>
+                </div>
+              )}
+              <p className="mt-2 text-[11px] leading-5 text-orange-700">
+                Cần hỗ trợ? Liên hệ Zalo{" "}
+                <a
+                  href="https://zalo.me/0865245988"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline"
+                >
+                  0865245988
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           type="email"
@@ -362,20 +438,20 @@ export default function Login() {
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
         />
 
-        {/* Cảnh báo số lần còn lại */}
         {!isLocked &&
           !checkingLock &&
           attemptsLeft < MAX_ATTEMPTS &&
           attemptsLeft > 0 && (
             <div className="rounded-full bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
-               Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
+              Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
               lần, tài khoản sẽ bị khoá tạm thời.
             </div>
           )}
 
         {error &&
           errorType !== "ip_duplicate" &&
-          errorType !== "locked" && (
+          errorType !== "locked" &&
+          errorType !== "ip_mismatch" && (
             <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
               {error}
             </p>
@@ -455,4 +531,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-    }
+                                 }
