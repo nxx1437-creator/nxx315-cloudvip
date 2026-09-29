@@ -3,7 +3,7 @@ import {
   User, ShieldCheck, Coins, Camera, ShieldAlert,
   KeyRound, Plus, ChevronRight, Copy, Bell, Palette,
   HelpCircle, FileText, Lock, Trash2, Sun, Moon, Monitor,
-  Flame, Star, Pencil, X, Loader2, AlertTriangle,
+  Flame, Star, Pencil, X, Loader2, AlertTriangle, Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
