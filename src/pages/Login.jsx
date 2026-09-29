@@ -7,6 +7,7 @@ import MfaChallenge from "../components/MfaChallenge.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
 const MAX_ATTEMPTS = 5;
+const LAST_EMAIL_KEY = "nxx315_last_login_email";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,9 +23,10 @@ export default function Login() {
   const [isLocked, setIsLocked] = useState(false);
   const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
   const [remainingSec, setRemainingSec] = useState(0);
+  const [checkingLock, setCheckingLock] = useState(true);
   const lockedUntilRef = useRef(0);
 
-  // Đếm ngược khi bị khoá
+  // ✅ Đếm ngược khi bị khoá
   useEffect(() => {
     if (!isLocked || remainingSec <= 0) return;
 
@@ -46,6 +48,65 @@ export default function Login() {
 
     return () => clearInterval(interval);
   }, [isLocked, remainingSec]);
+
+  // ✅ Check trạng thái khoá từ server khi mount (FIX F5)
+  useEffect(() => {
+    const checkLockOnMount = async () => {
+      const lastEmail = sessionStorage.getItem(LAST_EMAIL_KEY);
+      if (!lastEmail) {
+        setCheckingLock(false);
+        return;
+      }
+
+      try {
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        const res = await fetch(
+          `${SUPABASE_URL}/functions/v1/login-guard`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              action: "check",
+              email: lastEmail,
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        // Fill lại email cũ
+        setForm((prev) => ({ ...prev, email: lastEmail }));
+
+        if (!data.allowed) {
+          setIsLocked(true);
+          setRemainingSec(data.wait_seconds || 60);
+          lockedUntilRef.current =
+            Date.now() + (data.wait_seconds || 60) * 1000;
+          setError(
+            "Tài khoản đang bị khoá tạm thời. Vui lòng thử lại sau."
+          );
+          setErrorType("locked");
+        } else {
+          const left = Math.max(
+            0,
+            (data.max || MAX_ATTEMPTS) - (data.ip_attempts || 0)
+          );
+          setAttemptsLeft(left);
+        }
+      } catch (err) {
+        console.warn("[Login] Check mount error:", err);
+      } finally {
+        setCheckingLock(false);
+      }
+    };
+
+    checkLockOnMount();
+  }, []);
 
   // Nếu có cảnh báo IP trùng từ query
   useEffect(() => {
@@ -99,6 +160,9 @@ export default function Login() {
     setErrorType("error");
     setLoading(true);
 
+    // ✅ Lưu email để check khi F5
+    sessionStorage.setItem(LAST_EMAIL_KEY, form.email.toLowerCase());
+
     try {
       // ✅ 1. Check với server trước
       const checkData = await callGuard("check", { email: form.email });
@@ -106,7 +170,8 @@ export default function Login() {
       if (!checkData.allowed) {
         setIsLocked(true);
         setRemainingSec(checkData.wait_seconds || 60);
-        lockedUntilRef.current = Date.now() + (checkData.wait_seconds || 60) * 1000;
+        lockedUntilRef.current =
+          Date.now() + (checkData.wait_seconds || 60) * 1000;
         setError(
           `Bạn đã nhập sai ${checkData.max || MAX_ATTEMPTS} lần. Tài khoản bị khoá tạm thời.`
         );
@@ -132,7 +197,6 @@ export default function Login() {
       }
 
       if (authError) {
-        // Lấy lại số lần còn
         try {
           const recheck = await callGuard("check", { email: form.email });
 
@@ -165,7 +229,8 @@ export default function Login() {
         return;
       }
 
-      // ✅ Login thành công
+      // ✅ Login thành công → xoá email lưu tạm
+      sessionStorage.removeItem(LAST_EMAIL_KEY);
       setLoading(false);
       setAttemptsLeft(MAX_ATTEMPTS);
 
@@ -284,7 +349,7 @@ export default function Login() {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           placeholder="Email của bạn"
-          disabled={isLocked}
+          disabled={isLocked || checkingLock}
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
         />
 
@@ -293,17 +358,20 @@ export default function Login() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           placeholder="Mật khẩu"
-          disabled={isLocked}
+          disabled={isLocked || checkingLock}
           className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-100 disabled:opacity-60"
         />
 
         {/* Cảnh báo số lần còn lại */}
-        {!isLocked && attemptsLeft < MAX_ATTEMPTS && attemptsLeft > 0 && (
-          <div className="rounded-full bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
-            ⚠️ Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS} lần,
-            tài khoản sẽ bị khoá tạm thời.
-          </div>
-        )}
+        {!isLocked &&
+          !checkingLock &&
+          attemptsLeft < MAX_ATTEMPTS &&
+          attemptsLeft > 0 && (
+            <div className="rounded-full bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
+               Còn <b>{attemptsLeft}</b> lần thử. Nếu sai quá {MAX_ATTEMPTS}{" "}
+              lần, tài khoản sẽ bị khoá tạm thời.
+            </div>
+          )}
 
         {error &&
           errorType !== "ip_duplicate" &&
@@ -315,10 +383,15 @@ export default function Login() {
 
         <button
           type="submit"
-          disabled={loading || isLocked}
+          disabled={loading || isLocked || checkingLock}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isLocked ? (
+          {checkingLock ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Đang kiểm tra...
+            </>
+          ) : isLocked ? (
             <>
               <Lock size={16} />
               Đã khoá {formatTime(remainingSec)}
@@ -354,7 +427,11 @@ export default function Login() {
         </div>
       </div>
 
-      <div className={isLocked ? "pointer-events-none opacity-50" : ""}>
+      <div
+        className={
+          isLocked || checkingLock ? "pointer-events-none opacity-50" : ""
+        }
+      >
         <SocialRow onSelect={handleSocial} />
       </div>
 
@@ -378,4 +455,4 @@ export default function Login() {
       )}
     </AuthShell>
   );
-                            }
+    }
