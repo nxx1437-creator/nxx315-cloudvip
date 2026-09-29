@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
-  User, Mail, ShieldCheck, Coins, LogOut, Camera, ShieldAlert,
-  KeyRound, Plus, ChevronRight, Copy, Check, Bell, Palette,
+  User, ShieldCheck, Coins, Camera, ShieldAlert,
+  KeyRound, Plus, ChevronRight, Copy, Bell, Palette,
   HelpCircle, FileText, Lock, Trash2, Sun, Moon, Monitor,
   Flame, Star, Pencil, X, Loader2, AlertTriangle,
 } from "lucide-react";
@@ -20,6 +20,107 @@ import { LevelBadge, LevelCard } from "../components/LevelBadge.jsx";
 import { isPushSupported, getPushPermissionState, subscribeToPush, unsubscribeFromPush } from "../lib/pushNotifications.js";
 import { checkUsernameChangeAllowed } from "../lib/usernameUtils.js";
 
+// ==================================================
+// CUSTOM SVG ICONS — HIỆN ĐẠI
+// ==================================================
+
+const IconCheck = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="profCheckGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+    </defs>
+    <circle cx="12" cy="12" r="9" stroke="url(#profCheckGrad)" strokeWidth="1.8" fill="none" />
+    <path d="M8 12.5l2.5 2.5L16 9.5" stroke="url(#profCheckGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconBulb = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="bulbGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#fde047" />
+        <stop offset="100%" stopColor="#eab308" />
+      </linearGradient>
+    </defs>
+    <path d="M9 18h6v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" stroke="url(#bulbGrad)" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+    <path d="M9 18c-1.5-1.5-3-3.5-3-6a6 6 0 1112 0c0 2.5-1.5 4.5-3 6" stroke="url(#bulbGrad)" strokeWidth="1.8" fill="none" strokeLinejoin="round" />
+    <path d="M9.5 14h5" stroke="url(#bulbGrad)" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const IconWarning2 = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="warn2Grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#f59e0b" />
+      </linearGradient>
+    </defs>
+    <path d="M12 3.5L2.5 20.5h19L12 3.5z" stroke="url(#warn2Grad)" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+    <path d="M12 9.5v4" stroke="url(#warn2Grad)" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="17" r="1.2" fill="url(#warn2Grad)" />
+  </svg>
+);
+
+const IconSpinner2 = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    style={{ animation: "profSpin 0.8s linear infinite" }}
+  >
+    <defs>
+      <linearGradient id="profSpinGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+        <stop offset="100%" stopColor="currentColor" stopOpacity="0.15" />
+      </linearGradient>
+    </defs>
+    <circle
+      cx="12"
+      cy="12"
+      r="9"
+      stroke="url(#profSpinGrad)"
+      strokeWidth="2.5"
+      fill="none"
+      strokeLinecap="round"
+      strokeDasharray="56.55"
+      strokeDashoffset="14"
+    />
+    <style>{`@keyframes profSpin { to { transform: rotate(360deg); } }`}</style>
+  </svg>
+);
+
+const IconLogoutAll = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="logoutAllGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#f43f5e" />
+        <stop offset="100%" stopColor="#be123c" />
+      </linearGradient>
+    </defs>
+    <rect x="3" y="5" width="12" height="14" rx="2" stroke="url(#logoutAllGrad)" strokeWidth="1.8" fill="none" />
+    <path d="M8 9h4M8 12h3M8 15h2" stroke="url(#logoutAllGrad)" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M16 12h5M19 9l3 3-3 3" stroke="url(#logoutAllGrad)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconShieldCheck2 = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      <linearGradient id="shieldCheck2Grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+    </defs>
+    <path d="M12 2.5l8 3v6.5c0 5-3.4 8.5-8 9.5-4.6-1-8-4.5-8-9.5V5.5l8-3z" stroke="url(#shieldCheck2Grad)" strokeWidth="1.8" strokeLinejoin="round" fill="none" />
+    <path d="M9 12l2 2 4-4" stroke="url(#shieldCheck2Grad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const ACCENT_OPTIONS = [
   { key: "blue", label: "Xanh dương", dot: "bg-sky-500" },
   { key: "purple", label: "Tím", dot: "bg-purple-500" },
@@ -31,7 +132,6 @@ const THEME_OPTIONS = [
   { key: "dark", label: "Tối", icon: Moon },
   { key: "system", label: "Thiết bị", icon: Monitor },
 ];
-
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { session } = useSession();
@@ -45,6 +145,8 @@ export default function ProfilePage() {
   const [showLogout, setShowLogout] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
+  const [loadingForceLogout, setLoadingForceLogout] = useState(false);
+  const [forceLogoutSuccess, setForceLogoutSuccess] = useState(false);
 
   const [secret, setSecret] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
@@ -84,46 +186,45 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-  const loadProfile = async () => {
-    if (!session?.user?.id) return;
+    const loadProfile = async () => {
+      if (!session?.user?.id) return;
 
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*, last_username_change")
-        .eq("id", session.user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*, last_username_change")
+          .eq("id", session.user.id)
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      if (data) {
-        setProfile(data);
-        setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
+        if (data) {
+          setProfile(data);
+          setUsernameCooldown(checkUsernameChangeAllowed(data.last_username_change));
+        }
+      } catch (err) {
+        console.error("Load profile error:", err);
       }
-    } catch (err) {
-      console.error("Load profile error:", err);
-    }
-  };
+    };
 
-  loadProfile();
-}, [session?.user?.id]);
+    loadProfile();
+  }, [session?.user?.id]);
 
-// ✅ Load level khi user login
-useEffect(() => {
-  const loadLevel = async () => {
-    if (!session?.user?.id) return;
-    try {
-      const { data, error } = await supabase.rpc("get_user_level", {
-        p_user_id: session.user.id,
-      });
-      if (error) throw error;
-      if (data) setUserLevel(data);
-    } catch (err) {
-      console.error("Load level error:", err);
-    }
-  };
-  loadLevel();
-}, [session?.user?.id]);
+  useEffect(() => {
+    const loadLevel = async () => {
+      if (!session?.user?.id) return;
+      try {
+        const { data, error } = await supabase.rpc("get_user_level", {
+          p_user_id: session.user.id,
+        });
+        if (error) throw error;
+        if (data) setUserLevel(data);
+      } catch (err) {
+        console.error("Load level error:", err);
+      }
+    };
+    loadLevel();
+  }, [session?.user?.id]);
 
   const handleTogglePush = async () => {
     setPushError("");
@@ -162,8 +263,59 @@ useEffect(() => {
   };
 
   const handleLogoutAllDevices = async () => {
-    await supabase.auth.signOut({ scope: "global" });
-    navigate("/");
+    if (loadingForceLogout) return;
+
+    const confirmed = window.confirm(
+      "Đăng xuất khỏi TẤT CẢ thiết bị khác?\n\nBạn sẽ vẫn đăng nhập trên thiết bị này."
+    );
+    if (!confirmed) return;
+
+    setLoadingForceLogout(true);
+    setForceLogoutSuccess(false);
+
+    try {
+      const { data: { session: currentSession } } =
+        await supabase.auth.getSession();
+
+      if (!currentSession) {
+        setLoadingForceLogout(false);
+        return;
+      }
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/login-guard`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${currentSession.access_token}`,
+          },
+          body: JSON.stringify({ action: "force-logout-all" }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        sessionStorage.setItem(
+          "nxx315_token_issued_at",
+          Math.floor(Date.now() / 1000).toString()
+        );
+        setForceLogoutSuccess(true);
+        setTimeout(() => setForceLogoutSuccess(false), 5000);
+      } else {
+        alert("❌ Lỗi: " + (data.error || "Không rõ"));
+      }
+    } catch (err) {
+      console.error("[Profile] Force logout error:", err);
+      alert("❌ Có lỗi xảy ra, vui lòng thử lại");
+    } finally {
+      setLoadingForceLogout(false);
+    }
   };
 
   const handleCopySecret = () => {
@@ -251,317 +403,343 @@ useEffect(() => {
       await supabase.from("profiles").update({ [field]: value }).eq("id", profile.id);
     }
   };
-    return (
-    <div className="min-h-screen bg-[#FAFBFC] pb-24 font-[Be_Vietnam_Pro] dark:bg-slate-950">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-        .font-display { font-family: 'Baloo 2', sans-serif; }
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        .skeleton-shimmer {
-          background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite linear;
-        }
-        .dark .skeleton-shimmer {
-          background-image: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in {
-          animation: fadeIn 0.5s ease-out;
-        }
-      `}</style>
+  return (
+  <div className="min-h-screen bg-[#FAFBFC] pb-24 font-[Be_Vietnam_Pro] dark:bg-slate-950">
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+      .font-display { font-family: 'Baloo 2', sans-serif; }
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      .skeleton-shimmer {
+        background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite linear;
+      }
+      .dark .skeleton-shimmer {
+        background-image: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-out;
+      }
+    `}</style>
 
-      <TopHeader />
+    <TopHeader />
 
-      <main className="mx-auto max-w-md md:max-w-3xl space-y-5 px-4 py-6">
-        {profileHookLoading && !profile?.username ? (
-          <ProfileSkeleton />
-        ) : (
-          <div className="fade-in space-y-5">
-            <div>
-              <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Cài đặt
-              </h1>
-              <p className="mt-0.5 text-sm text-slate-500">
-                Quản lý tài khoản và tùy chỉnh trải nghiệm của bạn
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-col items-center p-6">
-                <AvatarUploader
-                  userId={session?.user?.id}
-                  currentUrl={profile?.avatar_url}
-                  initial={initial}
-                  onUploaded={(url) => {
-                    setProfile((prev) => ({ ...prev, avatar_url: url }));
-                  }}
-                />
-
-                <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
-                  {displayName}
-                </h2>
-                <p className="text-xs text-slate-500">Thành viên từ {memberSince}</p>
-
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    <Star size={11} className="text-amber-500" />
-                    Lv.{profile.level || 1}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/10">
-                    <Flame size={11} />
-                    {profile.streak_days || 0} ngày
-                  </span>
-                </div>
-
-                <div className="mt-4 w-full max-w-xs">
-                  <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
-                    <span>{profile.exp || 0} EXP</span>
-                    <span>{profile.exp_target || 100} EXP</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-accent-500 transition-all duration-500"
-                      style={{ width: `${expPercent}%` }}
-                    />
-                  </div>
-                </div>
-
-                    <button
-      onClick={() => setShowEditProfile(true)}
-      className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-    >
-      <Pencil size={12} />
-      Chỉnh sửa hồ sơ
-    </button>
-  </div>
-</div>
-
-
-    {/* ✅ Cấp độ */}
-{userLevel && (
-  <button
-    onClick={() => navigate("/level")}
-    className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:bg-slate-50"
-  >
-    {/* Vòng tròn level */}
-    <div
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white"
-      style={{ backgroundColor: userLevel.color || "#64748B" }}
-    >
-      <span className="text-lg font-bold">{userLevel.level}</span>
-    </div>
-
-    {/* Tên cấp + progress */}
-    <div className="min-w-0 flex-1">
-      <div className="flex items-center gap-2">
-        <p className="text-base font-bold text-slate-900">
-          {userLevel.label}
-        </p>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-          Lv.{userLevel.level}
-        </span>
-      </div>
-
-      {/* Progress bar lên cấp tiếp */}
-      {userLevel.next_level && (
-        <div className="mt-1.5">
-          <div className="flex items-center justify-between text-[10px] font-medium text-slate-500">
-            <span>
-              {(userLevel.lifetime_coins || 0).toLocaleString("vi-VN")} /{" "}
-              {(userLevel.next_level.coins_required || 0).toLocaleString("vi-VN")} coin
-            </span>
-            <span className="font-bold text-slate-700">
-              {Math.min(
-                100,
-                Math.round(
-                  ((userLevel.lifetime_coins || 0) /
-                    (userLevel.next_level.coins_required || 1)) *
-                    100
-                )
-              )}
-              %
-            </span>
+    <main className="mx-auto max-w-md md:max-w-3xl space-y-5 px-4 py-6">
+      {profileHookLoading && !profile?.username ? (
+        <ProfileSkeleton />
+      ) : (
+        <div className="fade-in space-y-5">
+          <div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Cài đặt
+            </h1>
+            <p className="mt-0.5 text-sm text-slate-500">
+              Quản lý tài khoản và tùy chỉnh trải nghiệm của bạn
+            </p>
           </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(
-                  100,
-                  Math.round(
-                    ((userLevel.lifetime_coins || 0) /
-                      (userLevel.next_level.coins_required || 1)) *
-                      100
-                  )
-                )}%`,
-                backgroundColor: userLevel.color || "#64748B",
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
 
-    <ChevronRight size={18} className="shrink-0 text-slate-400" />
-  </button>
-)}
+          {/* Card profile */}
+          <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col items-center p-6">
+              <AvatarUploader
+                userId={session?.user?.id}
+                currentUrl={profile?.avatar_url}
+                initial={initial}
+                onUploaded={(url) => {
+                  setProfile((prev) => ({ ...prev, avatar_url: url }));
+                }}
+              />
 
-            {profile?.multi_account_flag && !profile?.is_banned && (
+              <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+                {displayName}
+              </h2>
+              <p className="text-xs text-slate-500">Thành viên từ {memberSince}</p>
+
+              <div className="mt-3 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <Star size={11} className="text-amber-500" />
+                  Lv.{profile.level || 1}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-600 dark:bg-orange-500/10">
+                  <Flame size={11} />
+                  {profile.streak_days || 0} ngày
+                </span>
+              </div>
+
+              <div className="mt-4 w-full max-w-xs">
+                <div className="flex items-center justify-between text-[11px] font-medium text-slate-500">
+                  <span>{profile.exp || 0} EXP</span>
+                  <span>{profile.exp_target || 100} EXP</span>
+                </div>
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    className="h-full rounded-full bg-accent-500 transition-all duration-500"
+                    style={{ width: `${expPercent}%` }}
+                  />
+                </div>
+              </div>
+
               <button
-                type="button"
-                onClick={() => navigate("/account-review")}
-                className="w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10"
+                onClick={() => setShowEditProfile(true)}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
-                <div className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/20">
-                    <ShieldAlert size={16} />
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                      Tài khoản đang được xem xét
-                    </p>
-                    <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300/80">
-                      Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
-                    </p>
-                  </div>
-                </div>
+                <Pencil size={12} />
+                Chỉnh sửa hồ sơ
               </button>
-            )}
+            </div>
+          </div>
 
-            <SettingsGroup title="Tài khoản">
-              <SettingsRow icon={User} label="Hồ sơ cá nhân" sub="Tên, avatar, thông tin" onClick={() => setShowEditProfile(true)} />
-              <SettingsRow icon={Lock} label="Bảo mật" sub="Mật khẩu, 2FA, thiết bị" onClick={() => toggleSection("security")} active={activeSection === "security"} />
-              <SettingsRow icon={Mail} label="Email" sub={session?.user?.email} onClick={() => toggleSection("security")} last />
-            </SettingsGroup>
+          {/* Level card */}
+          {userLevel && (
+            <button
+              onClick={() => navigate("/level")}
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:bg-slate-50"
+            >
+              <div
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white"
+                style={{ backgroundColor: userLevel.color || "#64748B" }}
+              >
+                <span className="text-lg font-bold">{userLevel.level}</span>
+              </div>
 
-            {activeSection === "security" && (
-              <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
-                <div className="border-b border-slate-100 p-4 dark:border-slate-800">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    Thông tin tài khoản
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-base font-bold text-slate-900 dark:text-white">
+                    {userLevel.label}
                   </p>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    Lv.{userLevel.level}
+                  </span>
                 </div>
 
-                <div className="p-4">
-                  <div className="mb-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                    <button
-                      onClick={() => setShowEditProfile(true)}
-                      className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                    >
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Tên hiển thị</span>
-                      <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
-                        {profile.username || "Chưa đặt"}
-                        <ChevronRight size={14} className="text-slate-400" />
+                {userLevel.next_level && (
+                  <div className="mt-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-medium text-slate-500">
+                      <span>
+                        {(userLevel.lifetime_coins || 0).toLocaleString("vi-VN")} /{" "}
+                        {(userLevel.next_level.coins_required || 0).toLocaleString("vi-VN")} coin
                       </span>
-                    </button>
-
-                    <div className="flex w-full items-center justify-between px-4 py-3">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Email</span>
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                        {session?.user?.email}
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        {Math.min(
+                          100,
+                          Math.round(
+                            ((userLevel.lifetime_coins || 0) /
+                              (userLevel.next_level.coins_required || 1)) *
+                              100
+                          )
+                        )}
+                        %
                       </span>
                     </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(
+                              ((userLevel.lifetime_coins || 0) /
+                                (userLevel.next_level.coins_required || 1)) *
+                                100
+                            )
+                          )}%`,
+                          backgroundColor: userLevel.color || "#64748B",
+                        }}
+                      />
+                    </div>
                   </div>
+                )}
+              </div>
 
-                  <div className="space-y-2">
+              <ChevronRight size={18} className="shrink-0 text-slate-400" />
+            </button>
+          )}
+
+          {/* Multi-account flag */}
+          {profile?.multi_account_flag && !profile?.is_banned && (
+            <button
+              type="button"
+              onClick={() => navigate("/account-review")}
+              className="w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/20">
+                  <ShieldAlert size={16} />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                    Tài khoản đang được xem xét
+                  </p>
+                  <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300/80">
+                    Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
+                  </p>
+                </div>
+              </div>
+            </button>
+          )}
+         <SettingsGroup title="Tài khoản">
+  <SettingsRow icon={User} label="Hồ sơ cá nhân" sub="Tên, avatar, thông tin" onClick={() => setShowEditProfile(true)} />
+  <SettingsRow icon={Lock} label="Bảo mật" sub="Mật khẩu, 2FA, thiết bị" onClick={() => toggleSection("security")} active={activeSection === "security"} />
+  <SettingsRow icon={Mail} label="Email" sub={session?.user?.email} onClick={() => toggleSection("security")} last />
+</SettingsGroup>
+
+{activeSection === "security" && (
+  <div className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-slate-800 dark:bg-slate-900">
+    <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        Thông tin tài khoản
+      </p>
+    </div>
+
+    <div className="p-4">
+      <div className="mb-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <button
+          onClick={() => setShowEditProfile(true)}
+          className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+        >
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Tên hiển thị</span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
+            {profile.username || "Chưa đặt"}
+            <ChevronRight size={14} className="text-slate-400" />
+          </span>
+        </button>
+
+        <div className="flex w-full items-center justify-between px-4 py-3">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Email</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {session?.user?.email}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <button
+          onClick={() => setShowChangePassword(true)}
+          className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <KeyRound size={16} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Đổi mật khẩu</p>
+              <p className="text-xs text-slate-500">Cập nhật mật khẩu đăng nhập</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-slate-400" />
+        </button>
+
+        <button
+          onClick={handleStartMFA}
+          className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <ShieldAlert size={16} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Xác thực 2 bước</p>
+              <p className="text-xs text-slate-500">Google Authenticator</p>
+            </div>
+          </div>
+          <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${isMFAEnabled ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+            {isMFAEnabled ? "Đã bật" : "Chưa bật"}
+          </span>
+        </button>
+
+        <button
+          onClick={handleTogglePush}
+          disabled={pushLoading || pushState === "unsupported"}
+          className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <Bell size={16} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Thông báo đẩy</p>
+              <p className="text-xs text-slate-500">
+                {pushState === "unsupported" ? "Thiết bị không hỗ trợ" : "Nhận thông báo khi đóng app"}
+              </p>
+            </div>
+          </div>
+          {pushLoading ? (
+            <IconSpinner2 size={16} />
+          ) : (
+            <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${pushState === "granted" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+              {pushState === "granted" ? "Đã bật" : "Chưa bật"}
+            </span>
+          )}
+        </button>
+
+        {pushError && <p className="text-xs font-semibold text-rose-500">{pushError}</p>}
+
+        <button
+          onClick={generateRecoveryCodes}
+          className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <KeyRound size={16} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Mã dự phòng</p>
+              <p className="text-xs text-slate-500">Số mã: {recoveryCodes.length}/10</p>
+            </div>
+          </div>
+          <Plus size={16} className="text-slate-400" />
+        </button>
+
+         {/* ✅ Đăng xuất mọi thiết bị khác */}
                     <button
-                      onClick={() => setShowChangePassword(true)}
-                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                      onClick={handleLogoutAllDevices}
+                      disabled={loadingForceLogout}
+                      className="flex w-full items-center justify-between rounded-lg border border-rose-200 bg-rose-50/50 p-3.5 text-left transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/20"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                          <KeyRound size={16} />
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-500/20">
+                          {loadingForceLogout ? (
+                            <IconSpinner2 size={16} />
+                          ) : (
+                            <IconLogoutAll size={16} />
+                          )}
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Đổi mật khẩu</p>
-                          <p className="text-xs text-slate-500">Cập nhật mật khẩu đăng nhập</p>
-                        </div>
-                      </div>
-                      <ChevronRight size={16} className="text-slate-400" />
-                    </button>
-
-                    <button
-                      onClick={handleStartMFA}
-                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                          <ShieldAlert size={16} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Xác thực 2 bước</p>
-                          <p className="text-xs text-slate-500">Google Authenticator</p>
-                        </div>
-                      </div>
-                      <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${isMFAEnabled ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
-                        {isMFAEnabled ? "Đã bật" : "Chưa bật"}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={handleTogglePush}
-                      disabled={pushLoading || pushState === "unsupported"}
-                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                          <Bell size={16} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Thông báo đẩy</p>
-                          <p className="text-xs text-slate-500">
-                            {pushState === "unsupported" ? "Thiết bị không hỗ trợ" : "Nhận thông báo khi đóng app"}
+                          <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">
+                            {loadingForceLogout
+                              ? "Đang xử lý..."
+                              : "Đăng xuất mọi thiết bị khác"}
+                          </p>
+                          <p className="text-xs text-rose-500/80">
+                            Giữ thiết bị này, thoát các thiết bị còn lại
                           </p>
                         </div>
                       </div>
-                      {pushLoading ? (
-                        <Loader2 size={16} className="animate-spin text-slate-400" />
-                      ) : (
-                        <span className={`rounded-md px-2.5 py-1 text-[11px] font-bold ${pushState === "granted" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
-                          {pushState === "granted" ? "Đã bật" : "Chưa bật"}
-                        </span>
-                      )}
                     </button>
 
-                    {pushError && <p className="text-xs font-semibold text-rose-500">{pushError}</p>}
-
-                    <button
-                      onClick={generateRecoveryCodes}
-                      className="flex w-full items-center justify-between rounded-lg border border-slate-200 p-3.5 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                          <KeyRound size={16} />
+                    {/* ✅ Thông báo thành công */}
+                    {forceLogoutSuccess && (
+                      <div className="flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                          <IconCheck size={14} />
                         </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Mã dự phòng</p>
-                          <p className="text-xs text-slate-500">Số mã: {recoveryCodes.length}/10</p>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                            Đã đăng xuất tất cả thiết bị khác
+                          </p>
+                          <p className="mt-0.5 text-[11px] leading-5 text-emerald-600 dark:text-emerald-400/80">
+                            Các thiết bị khác sẽ tự động đăng xuất trong vòng 2 phút.
+                          </p>
                         </div>
                       </div>
-                      <Plus size={16} className="text-slate-400" />
-                    </button>
-
-                    <button
-                      onClick={handleLogoutAllDevices}
-                      className="flex w-full items-center justify-between rounded-lg border border-rose-200 bg-rose-50/50 p-3.5 text-left transition hover:bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-500 dark:bg-rose-500/20">
-                          <LogOut size={16} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">Đăng xuất mọi thiết bị</p>
-                          <p className="text-xs text-rose-500/80">Kết thúc tất cả phiên đăng nhập</p>
-                        </div>
-                      </div>
-                    </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -652,8 +830,7 @@ useEffect(() => {
           </div>
         )}
       </main>
-
-      {showEditProfile && (
+           {showEditProfile && (
         <EditProfileModal
           profile={profile}
           cooldown={usernameCooldown}
@@ -677,13 +854,14 @@ useEffect(() => {
         />
       )}
 
-         {showDeleteAccount && (
+      {showDeleteAccount && (
         <DeleteAccountModal
           onClose={() => setShowDeleteAccount(false)}
           isMFAEnabled={isMFAEnabled}
         />
       )}
 
+      {/* MFA modal */}
       {showMFA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
@@ -699,7 +877,7 @@ useEffect(() => {
                 onClick={handleCopySecret}
                 className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-600 text-white transition hover:opacity-90"
               >
-                {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                {isCopied ? <IconCheck size={16} /> : <Copy size={16} />}
               </button>
             </div>
 
@@ -728,6 +906,7 @@ useEffect(() => {
         </div>
       )}
 
+      {/* Recovery codes modal */}
       {showRecovery && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
@@ -760,11 +939,12 @@ useEffect(() => {
         </div>
       )}
 
+      {/* Logout modal */}
       {showLogout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-xl dark:bg-slate-900">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 dark:bg-rose-500/10">
-              <LogOut size={20} className="text-rose-500" />
+              <IconLogout size={20} />
             </div>
             <h3 className="mt-3 font-display text-lg font-bold text-slate-900 dark:text-white">Đăng xuất?</h3>
             <p className="mt-1 text-sm text-slate-500">Bạn sẽ cần đăng nhập lại để sử dụng dịch vụ.</p>
@@ -784,6 +964,11 @@ useEffect(() => {
     </div>
   );
 }
+
+// ==================================================
+// SUB-COMPONENTS
+// ==================================================
+
 function SettingsGroup({ title, children, danger }) {
   return (
     <div>
@@ -843,13 +1028,9 @@ function NotifToggle({ label, sub, checked, onChange, last }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3.5">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          {label}
-        </p>
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</p>
         {sub && (
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            {sub}
-          </p>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{sub}</p>
         )}
       </div>
       <button
@@ -869,6 +1050,7 @@ function NotifToggle({ label, sub, checked, onChange, last }) {
     </div>
   );
 }
+
 function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
   const [username, setUsername] = useState(profile.username || "");
   const [saving, setSaving] = useState(false);
@@ -881,22 +1063,18 @@ function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
       setError("Tên hiển thị không được để trống.");
       return;
     }
-
     if (username.trim().length < 3) {
       setError("Tên hiển thị phải có ít nhất 3 ký tự.");
       return;
     }
-
     if (username.trim().length > 20) {
       setError("Tên hiển thị không được quá 20 ký tự.");
       return;
     }
-
     if (!nameChanged) {
       onClose();
       return;
     }
-
     if (!cooldown.canChange) {
       setError(`Bạn chỉ có thể đổi tên sau ${cooldown.remainingText} nữa.`);
       return;
@@ -940,7 +1118,7 @@ function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
 
         {!cooldown.canChange && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-500" />
+            <IconWarning2 size={14} />
             <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
               Bạn có thể đổi tên sau <span className="font-bold">{cooldown.remainingText}</span> nữa.
             </p>
@@ -948,9 +1126,10 @@ function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
         )}
 
         {cooldown.canChange && (
-          <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-500/30 dark:bg-sky-500/10">
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-500/30 dark:bg-sky-500/10">
+            <IconBulb size={14} />
             <p className="text-xs text-sky-700 dark:text-sky-300">
-              💡 Bạn có thể đổi tên <span className="font-bold">1 lần mỗi 7 ngày</span>.
+              Bạn có thể đổi tên <span className="font-bold">1 lần mỗi 7 ngày</span>.
             </p>
           </div>
         )}
@@ -970,9 +1149,7 @@ function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
           {username.length}/20 ký tự · tối thiểu 3 ký tự
         </p>
 
-        {error && (
-          <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>
-        )}
+        {error && <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>}
 
         <div className="mt-5 flex gap-3">
           <button
@@ -986,7 +1163,7 @@ function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
             disabled={saving || !cooldown.canChange || !nameChanged}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-600 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
           >
-            {saving ? <Loader2 size={15} className="animate-spin" /> : "Lưu thay đổi"}
+            {saving ? <IconSpinner2 size={15} /> : "Lưu thay đổi"}
           </button>
         </div>
       </div>
@@ -1009,12 +1186,10 @@ function ChangePasswordModal({ onClose, isMFAEnabled }) {
       setError("Vui lòng nhập mật khẩu hiện tại.");
       return;
     }
-
     if (newPassword.length < 6) {
       setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setError("Mật khẩu xác nhận không khớp.");
       return;
@@ -1050,10 +1225,7 @@ function ChangePasswordModal({ onClose, isMFAEnabled }) {
 
   if (!mfaVerified) {
     return (
-      <MfaChallenge
-        onVerified={() => setMfaVerified(true)}
-        onCancel={onClose}
-      />
+      <MfaChallenge onVerified={() => setMfaVerified(true)} onCancel={onClose} />
     );
   }
 
@@ -1074,7 +1246,7 @@ function ChangePasswordModal({ onClose, isMFAEnabled }) {
 
         {success ? (
           <div className="mt-4 flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-            <Check size={18} className="shrink-0 text-emerald-500" />
+            <IconCheck size={18} />
             <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
               Đổi mật khẩu thành công!
             </p>
@@ -1122,9 +1294,7 @@ function ChangePasswordModal({ onClose, isMFAEnabled }) {
               </div>
             </div>
 
-            {error && (
-              <p className="mt-3 text-xs font-bold text-rose-500">{error}</p>
-            )}
+            {error && <p className="mt-3 text-xs font-bold text-rose-500">{error}</p>}
 
             <div className="mt-5 flex gap-3">
               <button
@@ -1138,7 +1308,7 @@ function ChangePasswordModal({ onClose, isMFAEnabled }) {
                 disabled={saving}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-600 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
               >
-                {saving ? <Loader2 size={15} className="animate-spin" /> : "Cập nhật"}
+                {saving ? <IconSpinner2 size={15} /> : "Cập nhật"}
               </button>
             </div>
           </>
@@ -1181,10 +1351,7 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
 
   if (!mfaVerified) {
     return (
-      <MfaChallenge
-        onVerified={() => setMfaVerified(true)}
-        onCancel={onClose}
-      />
+      <MfaChallenge onVerified={() => setMfaVerified(true)} onCancel={onClose} />
     );
   }
 
@@ -1216,9 +1383,7 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
           className="w-full rounded-lg border border-rose-200 bg-rose-50/50 px-4 py-3 text-sm font-bold uppercase outline-none transition focus:border-rose-400 focus:bg-white dark:border-rose-500/30 dark:bg-slate-800 dark:text-white"
         />
 
-        {error && (
-          <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>
-        )}
+        {error && <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>}
 
         <div className="mt-5 flex gap-3">
           <button
@@ -1232,10 +1397,10 @@ function DeleteAccountModal({ onClose, isMFAEnabled }) {
             disabled={!canDelete || deleting}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-rose-500 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-40"
           >
-            {deleting ? <Loader2 size={15} className="animate-spin" /> : "Xóa vĩnh viễn"}
+            {deleting ? <IconSpinner2 size={15} /> : "Xóa vĩnh viễn"}
           </button>
         </div>
       </div>
     </div>
   );
-        }
+}
