@@ -66,7 +66,8 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
 import DeviceChecker from "./components/DeviceChecker.jsx";
 import VersionChecker from "./components/VersionChecker.jsx";
-import SessionGuard from "./components/SessionGuard.jsx"; // ✅ MỚI
+import SessionGuard from "./components/SessionGuard.jsx";
+import SessionValidator from "./components/SessionValidator.jsx"; 
 
 export default function App() {
   return (
@@ -138,14 +139,10 @@ export default function App() {
           </Routes>
         </Suspense>
 
-        {/* ✅ Auto reload khi có bản mới */}
         <VersionChecker />
-
-        {/* ✅ Chặn thiết bị không hợp lệ */}
-        <DeviceChecker />
-
-        {/* ✅ Tự động đăng xuất khi hết phiên */}
-        <SessionGuard />
+       <DeviceChecker />
+      <SessionGuard />
+      <SessionValidator />
       </BrowserRouter>
     </BanGate>
   );
