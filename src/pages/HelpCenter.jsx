@@ -1,7 +1,7 @@
 // src/pages/HelpCenter.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase.js";
+import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import { Hero, SearchBar, ChatCard } from "./help/HelpHero.jsx";
 import { OrderStrip, CategoryGrid, FaqSection, FeedbackCard } from "./help/HelpSections.jsx";
