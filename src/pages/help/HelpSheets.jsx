@@ -1,6 +1,6 @@
 // src/pages/help/HelpSheets.jsx
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase.js";
+import { supabase } from "../../lib/supabaseClient.js";
 import Icon from "./HelpIcons.jsx";
 import { CATEGORIES, TICKET_STATUS, fmtDate, makeTicketCode } from "./helpData.js";
 
