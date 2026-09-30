@@ -2,26 +2,26 @@
 export const ZALO_URL = "https://zalo.me/0865245988";
 
 export const CATEGORIES = [
-  { key: "order", label: "Đơn hàng", icon: "box", grad: "from-pink-400 to-rose-500" },
-  { key: "payment", label: "Thanh toán", icon: "card", grad: "from-fuchsia-400 to-pink-500" },
-  { key: "account", label: "Tài khoản & bảo mật", icon: "shield", grad: "from-violet-400 to-fuchsia-500" },
-  { key: "bug", label: "Báo lỗi", icon: "bug", grad: "from-orange-400 to-rose-500" },
-  { key: "other", label: "Khác", icon: "help", grad: "from-sky-400 to-indigo-500" },
+  { key: "order", label: "Đơn hàng", icon: "box" },
+  { key: "payment", label: "Thanh toán", icon: "card" },
+  { key: "account", label: "Tài khoản & bảo mật", icon: "shield" },
+  { key: "bug", label: "Báo lỗi", icon: "bug" },
+  { key: "other", label: "Khác", icon: "help" },
 ];
 
 export const ORDER_STATUS = {
-  pending: { label: "Chờ xử lý", cls: "bg-amber-50 text-amber-600 dark:bg-amber-500/10" },
-  processing: { label: "Đang xử lý", cls: "bg-sky-50 text-sky-600 dark:bg-sky-500/10" },
-  delivered: { label: "Thành công", cls: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" },
-  rejected: { label: "Bị từ chối", cls: "bg-rose-50 text-rose-600 dark:bg-rose-500/10" },
-  cancelled: { label: "Đã huỷ", cls: "bg-slate-100 text-slate-500 dark:bg-slate-800" },
+  pending: { label: "Chờ xử lý", cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" },
+  processing: { label: "Đang xử lý", cls: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300" },
+  delivered: { label: "Thành công", cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
+  rejected: { label: "Bị từ chối", cls: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" },
+  cancelled: { label: "Đã huỷ", cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
 };
 
 export const TICKET_STATUS = {
-  open: { label: "Đã gửi", cls: "bg-amber-50 text-amber-600" },
-  in_progress: { label: "Đang xử lý", cls: "bg-sky-50 text-sky-600" },
-  resolved: { label: "Đã giải quyết", cls: "bg-emerald-50 text-emerald-600" },
-  closed: { label: "Đã giải quyết", cls: "bg-emerald-50 text-emerald-600" },
+  open: { label: "Đã gửi", cls: "bg-amber-50 text-amber-700" },
+  in_progress: { label: "Đang xử lý", cls: "bg-sky-50 text-sky-700" },
+  resolved: { label: "Đã giải quyết", cls: "bg-emerald-50 text-emerald-700" },
+  closed: { label: "Đã giải quyết", cls: "bg-emerald-50 text-emerald-700" },
 };
 
 export function fmtDate(iso) {
