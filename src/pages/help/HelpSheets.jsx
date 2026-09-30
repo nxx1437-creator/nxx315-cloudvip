@@ -25,13 +25,13 @@ function Sheet({ title, onClose, children }) {
         className={`absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] transition-opacity duration-200 ${show ? "opacity-100" : "opacity-0"}`}
       />
       <div
-        className={`relative flex max-h-[90vh] w-full max-w-md flex-col rounded-t-[28px] bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-slate-900 md:max-w-xl ${
+        className={`relative flex max-h-[90vh] w-full max-w-md flex-col rounded-t-2xl bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-slate-900 md:max-w-xl ${
           show ? "translate-y-0" : "translate-y-full"
         }`}
       >
         <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
         <div className="flex items-center justify-between px-5 pb-2 pt-3">
-          <h3 className="text-[17px] font-extrabold text-slate-800 dark:text-white">{title}</h3>
+          <h3 className="text-[17px] font-semibold text-slate-800 dark:text-white">{title}</h3>
           <button onClick={close} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800">
             <Icon name="x" size={16} />
           </button>
@@ -76,23 +76,23 @@ export function TicketSheet({ preset = {}, onClose, onHistory }) {
   };
 
   const input =
-    "w-full rounded-2xl border-0 bg-slate-50 px-4 py-3 text-sm text-slate-800 ring-1 ring-slate-200 outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-pink-300 dark:bg-slate-800 dark:text-white dark:ring-slate-700";
+    "w-full rounded-xl border-0 bg-slate-50 px-4 py-3 text-sm text-slate-800 ring-1 ring-slate-200 outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-sky-600/30 dark:bg-slate-800 dark:text-white dark:ring-slate-700";
 
   return (
     <Sheet title={doneCode ? "Đã gửi yêu cầu" : "Gửi yêu cầu hỗ trợ"} onClose={onClose}>
       {(close) =>
         doneCode ? (
           <div className="py-6 text-center">
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
               <Icon name="check" size={30} stroke={3} />
             </span>
-            <p className="mt-4 text-base font-extrabold text-slate-800 dark:text-white">NXX315 đã nhận yêu cầu của bạn</p>
+            <p className="mt-4 text-base font-semibold text-slate-800 dark:text-white">NXX315 đã nhận yêu cầu của bạn</p>
             <p className="mt-1 text-sm text-slate-500">
-              Mã yêu cầu: <span className="font-black text-pink-600">{doneCode}</span>
+              Mã yêu cầu: <span className="font-semibold text-sky-700">{doneCode}</span>
             </p>
             <p className="mt-1 text-xs text-slate-400">Bạn có thể theo dõi phản hồi trong mục Lịch sử.</p>
             <div className="mt-5 flex gap-3">
-              <button onClick={close} className="flex-1 rounded-2xl bg-slate-100 py-3 text-sm font-extrabold text-slate-600">
+              <button onClick={close} className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600">
                 Đóng
               </button>
               <button
@@ -100,7 +100,7 @@ export function TicketSheet({ preset = {}, onClose, onHistory }) {
                   close();
                   setTimeout(onHistory, 260);
                 }}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 py-3 text-sm font-extrabold text-white"
+                className="flex-1 rounded-xl bg-sky-700 hover:bg-sky-800 py-3 text-sm font-semibold text-white"
               >
                 Xem lịch sử
               </button>
@@ -109,14 +109,14 @@ export function TicketSheet({ preset = {}, onClose, onHistory }) {
         ) : (
           <div className="space-y-4 pt-2">
             <div>
-              <p className="mb-2 text-xs font-extrabold text-slate-500">Chủ đề</p>
+              <p className="mb-2 text-xs font-semibold text-slate-500">Chủ đề</p>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((c) => (
                   <button
                     key={c.key}
                     onClick={() => setCat(c.key)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-extrabold transition ${
-                      cat === c.key ? "bg-pink-500 text-white shadow" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      cat === c.key ? "bg-sky-700 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
                     {c.label}
@@ -125,12 +125,12 @@ export function TicketSheet({ preset = {}, onClose, onHistory }) {
               </div>
             </div>
             <div>
-              <p className="mb-2 text-xs font-extrabold text-slate-500">Tiêu đề</p>
+              <p className="mb-2 text-xs font-semibold text-slate-500">Tiêu đề</p>
               <input value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} placeholder="Ví dụ: Đơn chưa nhận được hàng" className={input} />
             </div>
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-extrabold text-slate-500">Mô tả chi tiết</p>
+                <p className="text-xs font-semibold text-slate-500">Mô tả chi tiết</p>
                 <span className="text-[11px] text-slate-400">{desc.length}/1000</span>
               </div>
               <textarea
@@ -142,11 +142,11 @@ export function TicketSheet({ preset = {}, onClose, onHistory }) {
                 className={`${input} resize-none`}
               />
             </div>
-            {err && <p className="rounded-2xl bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-600">{err}</p>}
+            {err && <p className="rounded-xl bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-600">{err}</p>}
             <button
               onClick={submit}
               disabled={busy}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-pink-500/30 transition active:scale-[0.98] disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-700 hover:bg-sky-800 py-3.5 text-sm font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
             >
               <Icon name="send" size={16} />
               {busy ? "Đang gửi..." : "Gửi yêu cầu"}
@@ -190,7 +190,7 @@ export function HistorySheet({ onClose, onNew }) {
                   close();
                   setTimeout(onNew, 260);
                 }}
-                className="mt-4 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 py-2.5 text-xs font-extrabold text-white"
+                className="mt-4 rounded-xl bg-sky-700 hover:bg-sky-800 px-5 py-2.5 text-xs font-semibold text-white"
               >
                 Gửi yêu cầu đầu tiên
               </button>
@@ -203,15 +203,15 @@ export function HistorySheet({ onClose, onNew }) {
               return (
                 <div key={t.id} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 dark:bg-slate-800/60 dark:ring-slate-700">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-[14px] font-extrabold leading-5 text-slate-800 dark:text-white">{t.title}</p>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${st.cls}`}>{st.label}</span>
+                    <p className="text-[14px] font-semibold leading-5 text-slate-800 dark:text-white">{t.title}</p>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${st.cls}`}>{st.label}</span>
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400">
                     {t.ticket_code} · {cat ? cat.label : t.category} · {fmtDate(t.created_at)}
                   </p>
                   {t.admin_reply && (
-                    <div className="mt-3 rounded-xl bg-pink-50 p-3 dark:bg-pink-500/10">
-                      <p className="text-[11px] font-extrabold text-pink-600">NXX315 phản hồi</p>
+                    <div className="mt-3 rounded-xl bg-sky-50 p-3 dark:bg-sky-500/10">
+                      <p className="text-[11px] font-semibold text-sky-700">NXX315 phản hồi</p>
                       <p className="mt-1 whitespace-pre-line text-[13px] leading-5 text-slate-600 dark:text-slate-300">{t.admin_reply}</p>
                     </div>
                   )}
@@ -222,4 +222,5 @@ export function HistorySheet({ onClose, onNew }) {
       )}
     </Sheet>
   );
-}
+              }
+                
