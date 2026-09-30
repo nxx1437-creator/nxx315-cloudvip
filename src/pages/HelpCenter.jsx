@@ -3,14 +3,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-import { Hero, SearchBar, ChatCard } from "./help/HelpHero.jsx";
-import { OrderStrip, CategoryGrid, FaqSection, FeedbackCard } from "./help/HelpSections.jsx";
+import TopHeader from "../components/TopHeader.jsx";
+import { Hero, SearchBar } from "./help/HelpHero.jsx";
+import { QuickActions, OrderList, CategoryGrid } from "./help/HelpSections.jsx";
+import { FaqSection, ContactCard } from "./help/HelpFaq.jsx";
 import { TicketSheet, HistorySheet } from "./help/HelpSheets.jsx";
 import { fold } from "./help/helpData.js";
 
 export default function HelpCenter() {
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState(null);
   const [faqs, setFaqs] = useState([]);
@@ -19,13 +20,6 @@ export default function HelpCenter() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [sheet, setSheet] = useState(null); // {type:"ticket", preset} | {type:"history"}
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -71,20 +65,30 @@ export default function HelpCenter() {
   const pickCategory = (key) => {
     setQuery("");
     setCat(key);
-    if (key) setTimeout(() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    if (key) {
+      setTimeout(() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    }
   };
 
   const openTicket = (preset = {}) => setSheet({ type: "ticket", preset });
+  const searching = !!query.trim();
 
   return (
-    <div className="relative min-h-screen bg-[#FBF8FB] pb-28 dark:bg-slate-950">
-      <Hero scrolled={scrolled} onBack={() => navigate(-1)} onHome={() => navigate("/")} />
+    <div className="min-h-screen bg-slate-50 pb-28 dark:bg-slate-950">
+      <TopHeader />
+      <Hero onBack={() => navigate(-1)} onHome={() => navigate("/")} />
 
-      <main className="relative mx-auto max-w-md space-y-6 px-4 pt-2 md:max-w-3xl">
-        <SearchBar value={query} onChange={setQuery} onHistory={() => setSheet({ type: "history" })} />
-        {!query.trim() && <ChatCard />}
-        {!query.trim() && (
-          <OrderStrip
+      <main className="relative z-10 mx-auto -mt-7 max-w-md space-y-7 px-4 md:max-w-3xl">
+        <SearchBar value={query} onChange={setQuery} />
+        {!searching && (
+          <QuickActions
+            onChat={() => navigate("/support")}
+            onTicket={() => openTicket()}
+            onHistory={() => setSheet({ type: "history" })}
+          />
+        )}
+        {!searching && (
+          <OrderList
             orders={orders}
             loading={ordersLoading}
             signedIn={signedIn}
@@ -92,21 +96,15 @@ export default function HelpCenter() {
             onAll={() => navigate("/history")}
           />
         )}
-        {!query.trim() && <CategoryGrid active={cat} onPick={pickCategory} onTicket={openTicket} />}
+        {!searching && <CategoryGrid active={cat} onPick={pickCategory} />}
         <FaqSection faqs={filtered} loading={faqLoading} cat={cat} setCat={setCat} query={query} onAsk={openTicket} />
-        {!query.trim() && <FeedbackCard onOpen={openTicket} />}
+        {!searching && <ContactCard onAsk={openTicket} />}
       </main>
 
       {sheet?.type === "ticket" && (
-        <TicketSheet
-          preset={sheet.preset}
-          onClose={() => setSheet(null)}
-          onHistory={() => setSheet({ type: "history" })}
-        />
+        <TicketSheet preset={sheet.preset} onClose={() => setSheet(null)} onHistory={() => setSheet({ type: "history" })} />
       )}
-      {sheet?.type === "history" && (
-        <HistorySheet onClose={() => setSheet(null)} onNew={() => openTicket()} />
-      )}
+      {sheet?.type === "history" && <HistorySheet onClose={() => setSheet(null)} onNew={() => openTicket()} />}
 
       <BottomNav />
     </div>
