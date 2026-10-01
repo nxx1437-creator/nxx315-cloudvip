@@ -12,9 +12,6 @@ import {
   ShoppingBag,
   ArrowLeftRight,
   Headphones,
-  BarChart3,
-  Loader2,
-  Check,
   ChevronRight,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
@@ -23,98 +20,22 @@ import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import Footer from "../components/Footer.jsx";
 import LeaderboardCard from "../components/LeaderboardCard.jsx";
-import HomeTutorial from "../components/HomeTutorial.jsx"; // 👈 ĐÃ THÊM
+import HomeTutorial from "../components/HomeTutorial.jsx";
+import CoinChart from "../components/CoinChart.jsx";
+import {
+  StatCard,
+  QuickAction,
+  MilestoneCard,
+  DashboardSkeleton,
+} from "../components/DashboardParts.jsx";
+import { useI18n } from "../i18n/index.js";
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 11) return "Chào buổi sáng";
-  if (h < 18) return "Chào buổi chiều";
-  return "Chào buổi tối";
-}
-
-function StatCard({ icon: Icon, iconBg, iconColor, value, label }) {
-  return (
-    <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
-      <div className="flex items-start justify-between">
-        <span className="text-2xl font-bold text-[#111827]">{value}</span>
-        <span className={`flex h-9 w-9 items-center justify-center rounded-full ${iconBg}`}>
-          <Icon size={16} className={iconColor} />
-        </span>
-      </div>
-      <p className="mt-1 text-xs text-[#667085]">{label}</p>
-    </div>
-  );
-}
-
-function QuickAction({ icon: Icon, iconBg, iconColor, label, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center transition hover:border-[#3478F6]/30"
-    >
-      <span className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}>
-        <Icon size={18} className={iconColor} />
-      </span>
-      <span className="text-xs font-semibold text-[#374151]">{label}</span>
-    </button>
-  );
-}
-
-function MilestoneCard({ milestone, reward, tasksDone, claimed, onClaim, claiming }) {
-  const reached = tasksDone >= milestone;
-  const progressPct = Math.min(100, Math.round((tasksDone / milestone) * 100));
-
-  return (
-    <button
-      onClick={() => reached && !claimed && onClaim(milestone)}
-      disabled={!reached || claimed || claiming}
-      className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition ${
-        claimed
-          ? "border-emerald-200 bg-emerald-50"
-          : reached
-          ? "border-[#F2A900]/40 bg-[#FFF8ED]"
-          : "border-[#E5E7EB] bg-white"
-      }`}
-    >
-      <span className="text-xs font-bold text-[#111827]">{milestone} nv</span>
-      <span className={`flex items-center gap-1 text-sm font-bold ${claimed ? "text-emerald-600" : "text-[#B87700]"}`}>
-        {claimed ? <Check size={13} /> : <Coins size={13} />}
-        +{reward}
-      </span>
-      <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-        <div
-          className={`h-full rounded-full ${claimed ? "bg-emerald-400" : "bg-[#F2A900]"}`}
-          style={{ width: `${progressPct}%` }}
-        />
-      </div>
-    </button>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-        <div className="h-5 w-48 rounded-full skeleton-shimmer" />
-        <div className="mt-3 h-7 w-40 rounded skeleton-shimmer" />
-        <div className="mt-2 h-4 w-56 rounded skeleton-shimmer" />
-        <div className="mt-4 flex gap-2.5">
-          <div className="h-10 w-40 rounded-xl skeleton-shimmer" />
-          <div className="h-10 w-28 rounded-xl skeleton-shimmer" />
-        </div>
-        <div className="mt-4 rounded-2xl bg-[#F5F7FB] p-4">
-          <div className="h-3 w-16 rounded skeleton-shimmer" />
-          <div className="mt-2 h-8 w-40 rounded skeleton-shimmer" />
-          <div className="mt-3 h-2 w-full rounded-full skeleton-shimmer" />
-        </div>
-      </div>
-    </div>
-  );
-}
 export default function Dashboard() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { session } = useSession();
   const user = session?.user;
+
   const [profile, setProfile] = useState({
     coins: 0,
     level: 0,
@@ -136,6 +57,14 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 11) return t("dash.greetMorning");
+    if (h < 18) return t("dash.greetAfternoon");
+    return t("dash.greetEvening");
+  };
+
+  // Lấy profile
   useEffect(() => {
     if (!user?.id) return;
     const skeletonTimer = setTimeout(() => {
@@ -162,6 +91,7 @@ export default function Dashboard() {
     return () => clearTimeout(skeletonTimer);
   }, [user]);
 
+  // Kiểm tra IP trùng
   useEffect(() => {
     if (!user?.id) return;
     const checkUserIp = async () => {
@@ -169,14 +99,17 @@ export default function Dashboard() {
         const sessionRes = await supabase.auth.getSession();
         const accessToken = sessionRes.data.session?.access_token;
         if (!accessToken) return;
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-user-ip`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-user-ip`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              "Content-Type": "application/json",
+            },
+          }
+        );
         const data = await res.json();
         if (data?.ok === false) {
           console.warn("[check-user-ip] User bị xóa vì IP trùng");
@@ -190,11 +123,14 @@ export default function Dashboard() {
     checkUserIp();
   }, [user?.id]);
 
+  // Biểu đồ Coin 7 ngày (lưu thứ trong tuần dạng số, dịch lúc hiển thị)
   useEffect(() => {
     const fetchChart = async () => {
-      if (!user?.id) { setChartLoading(false); return; }
+      if (!user?.id) {
+        setChartLoading(false);
+        return;
+      }
       try {
-        const WEEKDAY_LABELS = ["CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
         const days = [];
         for (let i = 6; i >= 0; i--) {
           const d = new Date();
@@ -214,7 +150,7 @@ export default function Dashboard() {
           sumByDate[key] = (sumByDate[key] || 0) + (r.coins_earned || 0);
         });
         const result = days.map((d) => ({
-          label: WEEKDAY_LABELS[d.getDay()],
+          dow: d.getDay(),
           value: sumByDate[d.toDateString()] || 0,
           isToday: d.toDateString() === new Date().toDateString(),
         }));
@@ -228,11 +164,21 @@ export default function Dashboard() {
     fetchChart();
   }, [user]);
 
-  const displayName = profile?.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "Bạn";
-  const expPct = Math.min(100, Math.round(((profile?.exp || 0) / (profile?.exp_target || 100)) * 100));
+  const displayName =
+    profile?.username ||
+    user?.user_metadata?.username ||
+    user?.email?.split("@")[0] ||
+    t("dash.fallbackName");
+  const expPct = Math.min(
+    100,
+    Math.round(((profile?.exp || 0) / (profile?.exp_target || 100)) * 100)
+  );
   const todayTasksDone = profile?.tasks_completed_today || 0;
   const todayTasksTotal = 3;
-  const todayTaskPct = Math.min(100, Math.round((todayTasksDone / todayTasksTotal) * 100));
+  const todayTaskPct = Math.min(
+    100,
+    Math.round((todayTasksDone / todayTasksTotal) * 100)
+  );
 
   const handleClaimMilestone = async (milestone) => {
     if (!user?.id) return;
@@ -242,191 +188,291 @@ export default function Dashboard() {
       p_milestone: milestone,
     });
     setClaimingMilestone(null);
-    if (error) { alert("Lỗi: " + error.message); return; }
-    if (!data?.success) { alert(data?.message || "Không thể nhận thưởng."); return; }
+    if (error) {
+      alert(t("dash.errPrefix") + error.message);
+      return;
+    }
+    if (!data?.success) {
+      alert(data?.message || t("dash.claimFail"));
+      return;
+    }
     const field = `milestone_${milestone}_claimed`;
-    setProfile((prev) => ({ ...prev, coins: (prev.coins || 0) + data.reward, [field]: true }));
+    setProfile((prev) => ({
+      ...prev,
+      coins: (prev.coins || 0) + data.reward,
+      [field]: true,
+    }));
   };
+
   return (
-  <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
-    <style>{`
-      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-      .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
-    `}</style>
+    <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
+      <style>{`
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
+      `}</style>
 
-    <TopHeader />
+      <TopHeader />
 
-    <main className="mx-auto max-w-md md:max-w-5xl space-y-4 px-4 py-5">
-      {showSkeleton && loading && <DashboardSkeleton />}
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
+        {showSkeleton && loading && <DashboardSkeleton />}
 
-      {!loading && (
-        <>
-          {/* Hero */}
-          <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
-            <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
-            <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
-              ✨ Hoàn thành nhiệm vụ hôm nay để nhận thưởng bonus
-            </span>
-            <h1 className="relative mt-3 text-2xl font-bold leading-tight text-[#111827]">
-              {getGreeting()},<br />
-              <span className="text-[#3478F6]">{displayName}</span> 👋
-            </h1>
-            <p className="relative mt-1.5 text-sm text-[#667085]">
-              Theo dõi tiến độ, gom Coin và leo top bảng xếp hạng.
-            </p>
-            <div className="relative mt-4 flex flex-wrap gap-2.5">
-              <button onClick={() => navigate("/tasks")} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#3478F6]/25 transition hover:brightness-105">
-                <Rocket size={15} /> Bắt đầu nhiệm vụ
-              </button>
-              <button onClick={() => navigate("/invite")} className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151]">
-                <Gift size={15} /> Mời bạn
-              </button>
-            </div>
-            <div className="relative mt-4 rounded-2xl bg-[#F5F7FB] p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-[#667085]">SỐ DƯ</span>
-                <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-semibold text-[#B87700]">
-                  <Crown size={12} /> LV{profile?.level || 0}
-                </span>
+        {!loading && (
+          <>
+            {/* Hero */}
+            <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
+              <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
+              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
+                {t("dash.badge")}
+              </span>
+              <h1 className="relative mt-3 text-2xl font-bold leading-tight text-[#111827]">
+                {getGreeting()},<br />
+                <span className="text-[#3478F6]">{displayName}</span> 👋
+              </h1>
+              <p className="relative mt-1.5 text-sm text-[#667085]">
+                {t("dash.heroSub")}
+              </p>
+              <div className="relative mt-4 flex flex-wrap gap-2.5">
+                <button
+                  onClick={() => navigate("/tasks")}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#3478F6]/25 transition hover:brightness-105"
+                >
+                  <Rocket size={15} /> {t("dash.startTasks")}
+                </button>
+                <button
+                  onClick={() => navigate("/invite")}
+                  className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151]"
+                >
+                  <Gift size={15} /> {t("dash.invite")}
+                </button>
               </div>
-              <div className="mt-1.5 flex items-center gap-2">
-                <Coins size={24} className="text-[#F2A900]" />
-                <span className="text-3xl font-bold text-[#111827]">{profile?.coins || 0}</span>
-                <span className="text-[#9CA3AF]">Coin</span>
-              </div>
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
-                  <span>EXP</span>
-                  <span>{profile?.exp || 0}/{profile?.exp_target || 100}</span>
+
+              <div className="relative mt-4 rounded-2xl bg-[#F5F7FB] p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-[#667085]">
+                    {t("dash.balance")}
+                  </span>
+                  <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-semibold text-[#B87700]">
+                    <Crown size={12} /> LV{profile?.level || 0}
+                  </span>
                 </div>
-                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                  <div className="h-full rounded-full bg-[#3478F6]" style={{ width: `${expPct}%` }} />
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Coins size={24} className="text-[#F2A900]" />
+                  <span className="text-3xl font-bold text-[#111827]">
+                    {profile?.coins || 0}
+                  </span>
+                  <span className="text-[#9CA3AF]">{t("dash.coin")}</span>
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
+                    <span>EXP</span>
+                    <span>
+                      {profile?.exp || 0}/{profile?.exp_target || 100}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+                    <div
+                      className="h-full rounded-full bg-[#3478F6]"
+                      style={{ width: `${expPct}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* 👇 HƯỚNG DẪN MỚI 👇 */}
-          <HomeTutorial />
+            <HomeTutorial />
 
-          {/* ✅ Top 3 tuần này */}
-          <LeaderboardCard />
+            {/* Top 3 tuần này */}
+            <LeaderboardCard />
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard icon={CheckSquare} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" value={0} label="Nhiệm vụ khả dụng" />
-            <StatCard icon={Trophy} iconBg="bg-emerald-50" iconColor="text-emerald-600" value={todayTasksDone} label="Hoàn thành hôm nay" />
-            <StatCard icon={Coins} iconBg="bg-[#FFF4DB]" iconColor="text-[#B87700]" value={profile?.coins_earned_today || 0} label="Coin kiếm hôm nay" />
-            <StatCard icon={Users} iconBg="bg-[#EAF2FE]" iconColor="text-[#0878C9]" value={profile?.referrals_count || 0} label="Bạn đã mời" />
-          </div>
-
-          {/* Streak */}
-          <div className="flex items-center gap-4 rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
-              <Flame size={22} className="text-[#FFB82E]" />
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <StatCard
+                icon={CheckSquare}
+                iconBg="bg-[#EAF2FE]"
+                iconColor="text-[#3478F6]"
+                value={0}
+                label={t("dash.statAvailable")}
+              />
+              <StatCard
+                icon={Trophy}
+                iconBg="bg-emerald-50"
+                iconColor="text-emerald-600"
+                value={todayTasksDone}
+                label={t("dash.statDoneToday")}
+              />
+              <StatCard
+                icon={Coins}
+                iconBg="bg-[#FFF4DB]"
+                iconColor="text-[#B87700]"
+                value={profile?.coins_earned_today || 0}
+                label={t("dash.statCoinToday")}
+              />
+              <StatCard
+                icon={Users}
+                iconBg="bg-[#EAF2FE]"
+                iconColor="text-[#0878C9]"
+                value={profile?.referrals_count || 0}
+                label={t("dash.statInvited")}
+              />
             </div>
-            <div>
-              <p className="text-xs font-medium text-[#9C7A3F]">GIỮ LỬA</p>
-              <p className="text-2xl font-bold text-[#111827]">{profile?.streak_days || 0} <span className="text-sm font-medium text-[#667085]">ngày</span></p>
-              <p className="text-xs text-[#9C7A3F]">Kỷ lục: <span className="font-semibold">{profile?.streak_record || 0}</span></p>
+
+            {/* Streak */}
+            <div className="flex items-center gap-4 rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
+                <Flame size={22} className="text-[#FFB82E]" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-[#9C7A3F]">
+                  {t("dash.streak")}
+                </p>
+                <p className="text-2xl font-bold text-[#111827]">
+                  {profile?.streak_days || 0}{" "}
+                  <span className="text-sm font-medium text-[#667085]">
+                    {t("dash.days")}
+                  </span>
+                </p>
+                <p className="text-xs text-[#9C7A3F]">
+                  {t("dash.record")}:{" "}
+                  <span className="font-semibold">
+                    {profile?.streak_record || 0}
+                  </span>
+                </p>
+              </div>
             </div>
-          </div>
-                      {/* Progress */}
+
+            {/* Tiến độ hôm nay */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center">
               <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-[#111827]">
-                <CheckSquare size={15} className="text-[#3478F6]" /> Tiến độ hôm nay
+                <CheckSquare size={15} className="text-[#3478F6]" />{" "}
+                {t("dash.progress")}
               </span>
-              <div className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full" style={{ background: `conic-gradient(#3478F6 ${todayTaskPct * 3.6}deg, #E5E7EB 0deg)` }}>
+              <div
+                className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full"
+                style={{
+                  background: `conic-gradient(#3478F6 ${
+                    todayTaskPct * 3.6
+                  }deg, #E5E7EB 0deg)`,
+                }}
+              >
                 <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white">
-                  <span className="text-2xl font-bold text-[#111827]">{todayTaskPct}%</span>
-                  <span className="text-xs text-[#9CA3AF]">{todayTasksDone}/{todayTasksTotal}</span>
+                  <span className="text-2xl font-bold text-[#111827]">
+                    {todayTaskPct}%
+                  </span>
+                  <span className="text-xs text-[#9CA3AF]">
+                    {todayTasksDone}/{todayTasksTotal}
+                  </span>
                 </div>
               </div>
-              <button onClick={() => navigate("/tasks")} className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl bg-[#F5F7FB] px-4 py-2 text-sm font-medium text-[#374151]">
-                Đi đến nhiệm vụ
+              <button
+                onClick={() => navigate("/tasks")}
+                className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl bg-[#F5F7FB] px-4 py-2 text-sm font-medium text-[#374151]"
+              >
+                {t("dash.goTasks")}
               </button>
             </div>
 
             {/* Mốc thưởng chuỗi nhiệm vụ */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-[#111827]">✨ Chuỗi nhiệm vụ hôm nay</p>
-                <span className="text-xs text-[#9CA3AF]">Đã làm: {todayTasksDone}</span>
+                <p className="text-sm font-bold text-[#111827]">
+                  {t("dash.milestoneTitle")}
+                </p>
+                <span className="text-xs text-[#9CA3AF]">
+                  {t("dash.done", { n: todayTasksDone })}
+                </span>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
-                <MilestoneCard milestone={1} reward={50} tasksDone={todayTasksDone} claimed={profile?.milestone_1_claimed} claiming={claimingMilestone === 1} onClaim={handleClaimMilestone} />
-                <MilestoneCard milestone={5} reward={200} tasksDone={todayTasksDone} claimed={profile?.milestone_5_claimed} claiming={claimingMilestone === 5} onClaim={handleClaimMilestone} />
-                <MilestoneCard milestone={10} reward={400} tasksDone={todayTasksDone} claimed={profile?.milestone_10_claimed} claiming={claimingMilestone === 10} onClaim={handleClaimMilestone} />
+                {[
+                  { m: 1, reward: 50 },
+                  { m: 5, reward: 200 },
+                  { m: 10, reward: 400 },
+                ].map(({ m, reward }) => (
+                  <MilestoneCard
+                    key={m}
+                    milestone={m}
+                    reward={reward}
+                    tasksDone={todayTasksDone}
+                    claimed={profile?.[`milestone_${m}_claimed`]}
+                    claiming={claimingMilestone === m}
+                    onClaim={handleClaimMilestone}
+                  />
+                ))}
               </div>
             </div>
 
             {/* Mini Game */}
-            <button onClick={() => navigate("/minigames")} className="w-full overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white text-left transition hover:border-sky-200">
+            <button
+              onClick={() => navigate("/minigames")}
+              className="w-full overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white text-left transition hover:border-sky-200"
+            >
               <div className="flex items-center justify-between px-4 pt-4">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🎮</span>
-                  <p className="text-sm font-bold text-[#111827]">Mini Game</p>
+                  <p className="text-sm font-bold text-[#111827]">
+                    {t("dash.minigame")}
+                  </p>
                 </div>
                 <span className="flex items-center gap-1 rounded-full bg-[#EAF2FE] px-2.5 py-1 text-xs font-semibold text-[#3478F6]">
-                  {profile?.game_tickets || 0} lượt <ChevronRight size={12} />
+                  {t("dash.turns", { n: profile?.game_tickets || 0 })}{" "}
+                  <ChevronRight size={12} />
                 </span>
               </div>
-              <p className="px-4 pb-3 pt-1 text-xs text-[#9CA3AF]">Quay, cào thẻ, lắc xúc xắc — nhận Coin miễn phí mỗi ngày</p>
+              <p className="px-4 pb-3 pt-1 text-xs text-[#9CA3AF]">
+                {t("dash.miniDesc")}
+              </p>
               <div className="grid grid-cols-3 gap-px bg-[#F3F4F6]">
-                <div className="bg-white px-3 py-3 text-center"><p className="text-lg">🎡</p><p className="mt-1 text-[10px] font-semibold text-[#6B7280]">Vòng quay</p></div>
-                <div className="bg-white px-3 py-3 text-center"><p className="text-lg">🎫</p><p className="mt-1 text-[10px] font-semibold text-[#6B7280]">Cào thẻ</p></div>
-                <div className="bg-white px-3 py-3 text-center"><p className="text-lg">🎲</p><p className="mt-1 text-[10px] font-semibold text-[#6B7280]">Xúc xắc</p></div>
+                {[
+                  ["🎡", "dash.wheel"],
+                  ["🎫", "dash.scratch"],
+                  ["🎲", "dash.dice"],
+                ].map(([emoji, key]) => (
+                  <div key={key} className="bg-white px-3 py-3 text-center">
+                    <p className="text-lg">{emoji}</p>
+                    <p className="mt-1 text-[10px] font-semibold text-[#6B7280]">
+                      {t(key)}
+                    </p>
+                  </div>
+                ))}
               </div>
             </button>
 
             {/* Coin 7 ngày qua */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <div className="flex items-center justify-between">
-                <p className="flex items-center gap-1.5 text-sm font-bold text-[#111827]">
-                  <BarChart3 size={15} className="text-[#3478F6]" /> Coin 7 ngày qua
-                </p>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                  +{chartData.find((d) => d.isToday)?.value || 0} hôm nay
-                </span>
-              </div>
-
-              {chartLoading ? (
-                <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-[#D1D5DB]" /></div>
-              ) : chartData.every((d) => d.value === 0) ? (
-                <div className="mt-5 flex flex-col items-center justify-center py-6 text-center">
-                  <BarChart3 size={28} className="text-[#D1D5DB]" />
-                  <p className="mt-2 text-sm font-medium text-[#9CA3AF]">Chưa có dữ liệu</p>
-                  <p className="mt-0.5 text-xs text-[#C4CAD2]">Hoàn thành nhiệm vụ để bắt đầu theo dõi thu nhập Coin</p>
-                </div>
-              ) : (
-                <div className="mt-5 flex items-end justify-between gap-2" style={{ height: "140px" }}>
-                  {chartData.map((d, i) => {
-                    const max = Math.max(...chartData.map((x) => x.value), 1);
-                    const heightPct = d.value === 0 ? 20 : Math.max(20, Math.round((d.value / max) * 100));
-                    return (
-                      <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
-                        <span className={`text-[10px] font-bold ${d.value > 0 ? "text-[#374151]" : "text-transparent"}`}>
-                          {d.value > 0 ? d.value : "0"}
-                        </span>
-                        <div className="flex w-full flex-1 items-end">
-                          <div className={`w-full rounded-t-md transition-all ${d.isToday ? "bg-gradient-to-t from-[#3478F6] to-[#5B9DF9]" : d.value > 0 ? "bg-[#D9E7FD]" : "bg-[#EEF2F7]"}`} style={{ height: `${heightPct}%`, minHeight: "6px" }} />
-                        </div>
-                        <span className={`text-[10px] ${d.isToday ? "font-bold text-[#3478F6]" : "text-[#9CA3AF]"}`}>{d.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <CoinChart chartData={chartData} chartLoading={chartLoading} />
 
             {/* Hành động nhanh */}
             <div>
-              <p className="mb-3 text-sm font-bold text-[#111827]">Hành động nhanh</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <QuickAction icon={CheckSquare} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" label="Nhiệm vụ" onClick={() => navigate("/tasks")} />
-                <QuickAction icon={ShoppingBag} iconBg="bg-[#EAF2FE]" iconColor="text-[#3478F6]" label="Cửa hàng" onClick={() => navigate("/store")} />
-                <QuickAction icon={ArrowLeftRight} iconBg="bg-[#FFF4DB]" iconColor="text-[#B87700]" label="Nạp / Rút" onClick={() => navigate("/shop-earn")} />
-                <QuickAction icon={Headphones} iconBg="bg-emerald-50" iconColor="text-emerald-600" label="Hỗ trợ" onClick={() => navigate("/contact")} />
+              <p className="mb-3 text-sm font-bold text-[#111827]">
+                {t("dash.quick")}
+              </p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <QuickAction
+                  icon={CheckSquare}
+                  iconBg="bg-[#EAF2FE]"
+                  iconColor="text-[#3478F6]"
+                  label={t("dash.qaTasks")}
+                  onClick={() => navigate("/tasks")}
+                />
+                <QuickAction
+                  icon={ShoppingBag}
+                  iconBg="bg-[#EAF2FE]"
+                  iconColor="text-[#3478F6]"
+                  label={t("dash.qaStore")}
+                  onClick={() => navigate("/store")}
+                />
+                <QuickAction
+                  icon={ArrowLeftRight}
+                  iconBg="bg-[#FFF4DB]"
+                  iconColor="text-[#B87700]"
+                  label={t("dash.qaTopup")}
+                  onClick={() => navigate("/shop-earn")}
+                />
+                <QuickAction
+                  icon={Headphones}
+                  iconBg="bg-emerald-50"
+                  iconColor="text-emerald-600"
+                  label={t("dash.qaSupport")}
+                  onClick={() => navigate("/contact")}
+                />
               </div>
             </div>
           </>
@@ -437,4 +483,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-}
+  }
