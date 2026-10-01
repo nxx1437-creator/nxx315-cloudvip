@@ -1,37 +1,50 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import AuthShell from "../components/AuthShell.jsx";
+import AuthLayout from "../components/AuthLayout.jsx";
+import AuthField from "../components/AuthField.jsx";
 import OtpInput from "../components/OtpInput.jsx";
 import MfaChallenge from "../components/MfaChallenge.jsx";
+import {
+  IconMail,
+  IconLock,
+  IconArrow,
+  IconSpinner,
+} from "../components/AuthIcons.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+import { useI18n } from "../i18n/index.js";
+
+const btnCls =
+  "flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white transition hover:bg-teal-700 active:scale-[0.99] disabled:cursor-wait disabled:opacity-60";
 
 export default function ForgotPassword() {
+  const { t } = useI18n();
   const navigate = useNavigate();
+
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  // error = { key } hoặc { raw } -> dịch lúc hiển thị
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [showMfaModal, setShowMfaModal] = useState(false);
+
+  const fail = (key) => setError({ key });
 
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     if (!email.trim()) {
-      setError("Vui lòng nhập email.");
+      fail("fp.err.email");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Email không hợp lệ.");
+      fail("fp.err.emailInvalid");
       return;
     }
-    setError("");
+    setError(null);
     setLoading(true);
 
-    // ✅ Dùng resetPasswordForEmail → gửi template "Reset Password"
+    // Dùng resetPasswordForEmail -> gửi template "Reset Password"
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email.trim()
     );
@@ -39,7 +52,9 @@ export default function ForgotPassword() {
     setLoading(false);
     if (resetError) {
       console.error("Send OTP error:", resetError);
-      setError(resetError.message || "Không thể gửi mã. Vui lòng thử lại.");
+      setError(
+        resetError.message ? { raw: resetError.message } : { key: "fp.err.sendFail" }
+      );
       return;
     }
 
@@ -49,18 +64,18 @@ export default function ForgotPassword() {
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     if (otp.length !== 6) {
-      setError("Vui lòng nhập đủ 6 số.");
+      fail("fp.err.otp6");
       return;
     }
     if (newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      fail("fp.err.pwShort");
       return;
     }
-    setError("");
+    setError(null);
     setLoading(true);
 
     try {
-      // ✅ Verify OTP cho Reset Password
+      // Verify OTP cho Reset Password
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token: otp,
@@ -70,7 +85,11 @@ export default function ForgotPassword() {
       if (verifyError) {
         console.error("Verify OTP error:", verifyError);
         setLoading(false);
-        setError(verifyError.message || "Mã OTP không đúng hoặc đã hết hạn.");
+        setError(
+          verifyError.message
+            ? { raw: verifyError.message }
+            : { key: "fp.err.otpWrong" }
+        );
         return;
       }
 
@@ -88,7 +107,7 @@ export default function ForgotPassword() {
     } catch (err) {
       console.error("Unexpected error:", err);
       setLoading(false);
-      setError(err.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      setError(err.message ? { raw: err.message } : { key: "err.generic" });
     }
   };
 
@@ -102,14 +121,16 @@ export default function ForgotPassword() {
 
     if (updateError) {
       console.error("Update password error:", updateError);
-      setError(updateError.message || "Không thể đổi mật khẩu. Vui lòng thử lại.");
+      setError(
+        updateError.message
+          ? { raw: updateError.message }
+          : { key: "fp.err.updateFail" }
+      );
       return;
     }
 
     await supabase.auth.signOut();
-    navigate("/login", {
-      state: { message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." },
-    });
+    navigate("/login", { state: { message: t("fp.success") } });
   };
 
   const handleMfaVerified = () => {
@@ -121,46 +142,61 @@ export default function ForgotPassword() {
     setStep("email");
     setOtp("");
     setNewPassword("");
-    setError("");
+    setError(null);
     setShowMfaModal(false);
   };
 
+  const errorBox = error && (
+    <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+      {error.raw ?? t(error.key)}
+    </p>
+  );
+
   return (
     <>
-      <AuthShell
-        title="Khôi phục mật khẩu"
+      <AuthLayout
+        title={t("fp.title")}
         subtitle={
           step === "email"
-            ? "Nhập email để nhận mã xác minh."
-            : `Nhập mã OTP đã gửi đến ${email}`
+            ? t("fp.subtitleEmail")
+            : t("fp.subtitleOtp", { email })
+        }
+        footer={
+          <>
+            {t("fp.remember")}{" "}
+            <Link
+              to="/login"
+              className="font-bold text-teal-700 hover:underline"
+            >
+              {t("reg.signIn")}
+            </Link>
+          </>
         }
       >
         {step === "email" && (
-          <form onSubmit={handleSendOtp} className="space-y-3">
-            <input
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <AuthField
+              id="fp-email"
+              label={t("login.email")}
+              icon={<IconMail size={18} />}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email của bạn"
+              placeholder={t("login.emailPh")}
+              autoComplete="email"
               autoFocus
-              className="h-14 w-full rounded-full border border-slate-300 bg-white px-5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
             />
 
-            {error && (
-              <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-                {error}
-              </p>
-            )}
+            {errorBox}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
-            >
+            <button type="submit" disabled={loading} className={btnCls}>
               {loading ? (
-                <Loader2 size={20} className="animate-spin" />
+                <IconSpinner size={20} />
               ) : (
-                "Gửi mã xác minh"
+                <>
+                  {t("fp.send")}
+                  <IconArrow size={18} />
+                </>
               )}
             </button>
           </form>
@@ -169,8 +205,8 @@ export default function ForgotPassword() {
         {step === "otp" && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Mã OTP
+              <label className="mb-2 block text-[12px] font-bold uppercase tracking-wider text-slate-700">
+                {t("fp.otp")}
               </label>
               <OtpInput
                 value={otp}
@@ -180,81 +216,54 @@ export default function ForgotPassword() {
               />
             </div>
 
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Mật khẩu mới
-              </label>
-              <div className="relative">
-                <Lock
-                  size={16}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Ít nhất 6 ký tự"
-                  className="h-14 w-full rounded-full border border-slate-300 bg-white pl-11 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <p className="rounded-full bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
+            <AuthField
+              id="fp-new-password"
+              label={t("fp.newPassword")}
+              icon={<IconLock size={18} />}
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder={t("reg.passwordPh")}
+              autoComplete="new-password"
               disabled={loading}
-              className="flex h-14 w-full items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-wait"
-            >
+            />
+
+            {errorBox}
+
+            <button type="submit" disabled={loading} className={btnCls}>
               {loading ? (
-                <Loader2 size={20} className="animate-spin" />
+                <IconSpinner size={20} />
               ) : (
-                "Xác nhận đổi mật khẩu"
+                <>
+                  {t("fp.confirm")}
+                  <IconArrow size={18} />
+                </>
               )}
             </button>
 
             <button
               type="button"
               onClick={handleBackToEmail}
-              className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-medium text-slate-500 transition hover:text-slate-700"
+              className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-semibold text-slate-500 transition hover:text-teal-700"
             >
-              <ArrowLeft size={12} />
-              Đổi email khác
+              <span className="rotate-180">
+                <IconArrow size={12} />
+              </span>
+              {t("fp.changeEmail")}
             </button>
           </form>
         )}
-
-        <p className="mt-6 text-center text-sm text-slate-500">
-          Nhớ mật khẩu rồi?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-slate-900 hover:underline"
-          >
-            Đăng nhập
-          </Link>
-        </p>
-      </AuthShell>
+      </AuthLayout>
 
       {showMfaModal && (
         <MfaChallenge
           onVerified={handleMfaVerified}
           onCancel={() => {
             setShowMfaModal(false);
-            setError("Bạn đã huỷ xác thực 2 lớp. Vui lòng thử lại.");
+            fail("fp.err.mfaCancel");
           }}
         />
       )}
     </>
   );
-  }
+            }
