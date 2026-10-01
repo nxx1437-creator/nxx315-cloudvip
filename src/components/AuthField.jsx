@@ -18,6 +18,7 @@ export default function AuthField({
   autoComplete,
   variant = "default",
   uppercase = false,
+  autoFocus = false,
 }) {
   const [show, setShow] = useState(false);
   const isPw = type === "password";
