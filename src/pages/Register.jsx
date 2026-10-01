@@ -1,55 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import AuthLayout from "../components/AuthLayout.jsx";
+import AuthField from "../components/AuthField.jsx";
 import {
-  Loader2,
-  AlertTriangle,
-  ShieldAlert,
-  LogIn,
-  Gift,
-} from "lucide-react";
-import AuthShell from "../components/AuthShell.jsx";
-import SocialRow from "../components/SocialRow.jsx";
+  IconUser,
+  IconMail,
+  IconLock,
+  IconGift,
+  IconArrow,
+  IconSpinner,
+  IconWarning,
+  IconShield,
+  IconGoogle,
+} from "../components/AuthIcons.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-
-const FP_CDN = "https://openfpcdn.io/fingerprintjs/v4/iife.min.js";
-const STORAGE_KEY = "nxx315_fingerprint";
-
-let fpPromise = null;
-function loadFingerprintJS() {
-  if (fpPromise) return fpPromise;
-  fpPromise = new Promise((resolve, reject) => {
-    if (window.FingerprintJS) {
-      resolve(window.FingerprintJS);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = FP_CDN;
-    script.async = true;
-    script.onload = () => {
-      if (window.FingerprintJS) resolve(window.FingerprintJS);
-      else reject(new Error("FingerprintJS không load được"));
-    };
-    script.onerror = () => reject(new Error("CDN load fail"));
-    document.head.appendChild(script);
-  });
-  return fpPromise;
-}
-
-async function getFingerprint() {
-  let fp = localStorage.getItem(STORAGE_KEY);
-  if (fp) return fp;
-  const FP = await loadFingerprintJS();
-  const fpInstance = await FP.load();
-  const result = await fpInstance.get();
-  fp = result.visitorId;
-  localStorage.setItem(STORAGE_KEY, fp);
-  return fp;
-}
+import { getFingerprint } from "../lib/fingerprint.js";
+import { useI18n } from "../i18n/index.js";
 
 export default function Register() {
+  const { t } = useI18n();
   const navigate = useNavigate();
 
-  // 👇 ĐỌC MÃ REF TỪ URL
+  // Đọc mã ref từ URL
   const [searchParams] = useSearchParams();
   const refFromUrl = searchParams.get("ref") || "";
 
@@ -60,7 +32,8 @@ export default function Register() {
     referral: refFromUrl.toUpperCase(),
   });
 
-  const [error, setError] = useState("");
+  // error = { key, vars } hoặc { raw } -> dịch lúc hiển thị
+  const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
 
@@ -70,7 +43,12 @@ export default function Register() {
   const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
-  // ✅ CHỈ GỬI FINGERPRINT — Server tự lấy IP
+  const fail = (key, vars, type = "error") => {
+    setError({ key, vars });
+    setErrorType(type);
+  };
+
+  // Chỉ gửi fingerprint — server tự lấy IP
   const checkIp = async () => {
     if (ipChecking && ipChecked) return;
     if (ipChecked && !ipError) return;
@@ -98,7 +76,6 @@ export default function Register() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      // ✅ Chỉ gửi fingerprint, KHÔNG gửi ip
       const res = await fetch(
         `${SUPABASE_URL}/functions/v1/check-ip-registered`,
         {
@@ -113,14 +90,13 @@ export default function Register() {
       );
 
       clearTimeout(timeoutId);
-
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
 
       if (data?.exists === true) {
         setIpBlocked(true);
-        setBlockedEmail(data.masked_email || "tài khoản trước");
+        setBlockedEmail(data.masked_email || null);
       } else {
         setIpBlocked(false);
       }
@@ -138,46 +114,45 @@ export default function Register() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Dùng chung cho submit + Google: trả true nếu bị chặn
+  const deviceGuard = () => {
+    if (ipChecking) {
+      fail("reg.err.waitCheck");
+      return true;
+    }
+    if (ipError) {
+      fail("reg.err.checkFail", null, "ip_error");
+      return true;
+    }
+    if (ipBlocked) {
+      fail("reg.err.deviceUsed", null, "ip_blocked");
+      return true;
+    }
+    return false;
+  };
+
+  const emailExists = () =>
+    fail("reg.err.emailExists", { email: form.email }, "email_exists");
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
 
-    if (ipChecking) {
-      setError("Đang kiểm tra thiết bị, vui lòng đợi...");
-      setErrorType("error");
-      return;
-    }
-
-    if (ipError) {
-      setError("Không thể kiểm tra thiết bị. Vui lòng thử lại.");
-      setErrorType("ip_error");
-      return;
-    }
-
-    if (ipBlocked) {
-      setError("Thiết bị này đã có tài khoản.");
-      setErrorType("ip_blocked");
-      return;
-    }
+    if (deviceGuard()) return;
 
     if (!form.email || !form.password) {
-      setError("Vui lòng điền đầy đủ thông tin.");
-      setErrorType("error");
+      fail("err.fill");
       return;
     }
     if (form.password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
-      setErrorType("error");
+      fail("reg.err.pwShort");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      fail("reg.err.email");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      setError("Email không hợp lệ. Vui lòng kiểm tra lại.");
-      setErrorType("error");
-      return;
-    }
-
-    setError("");
+    setError(null);
     setErrorType("error");
     setLoading(true);
 
@@ -206,24 +181,17 @@ export default function Register() {
           msg.includes("email address is already") ||
           msg.includes("email already exists")
         ) {
-          setError(
-            `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
-              `Vui lòng:\n` +
-              `• Đăng nhập nếu đây là tài khoản của bạn\n` +
-              `• Hoặc dùng email khác để đăng ký`
-          );
-          setErrorType("email_exists");
+          emailExists();
         } else if (msg.includes("ip_already_registered")) {
-          setError("Thiết bị của bạn đã có tài khoản.");
-          setErrorType("ip_blocked");
+          fail("reg.err.deviceUsed", null, "ip_blocked");
         } else if (msg.includes("invalid email")) {
-          setError("Email không hợp lệ. Vui lòng kiểm tra lại.");
+          fail("reg.err.email");
         } else if (msg.includes("password")) {
-          setError("Mật khẩu không hợp lệ. Vui lòng dùng mật khẩu mạnh hơn.");
+          fail("reg.err.weakPw");
         } else if (msg.includes("rate limit") || msg.includes("too many")) {
-          setError("Bạn thao tác quá nhanh. Vui lòng đợi 1 phút rồi thử lại.");
+          fail("reg.err.rate");
         } else {
-          setError(authError.message);
+          setError({ raw: authError.message });
         }
         return;
       }
@@ -234,17 +202,11 @@ export default function Register() {
 
         if (isExistingUser) {
           setLoading(false);
-          setError(
-            `Email "${form.email}" đã được đăng ký trước đó.\n\n` +
-              `Vui lòng:\n` +
-              `• Đăng nhập nếu đây là tài khoản của bạn\n` +
-              `• Hoặc dùng email khác để đăng ký`
-          );
-          setErrorType("email_exists");
+          emailExists();
           return;
         }
 
-        // ✅ GỌI EDGE FUNCTION LƯU IP + FINGERPRINT + DEVICE INFO
+        // Lưu IP + fingerprint + device info
         try {
           const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
           const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -267,19 +229,16 @@ export default function Register() {
           );
 
           if (saveRes.ok) {
-            console.log(" Đã lưu IP + fingerprint + device info");
+            console.log("Đã lưu IP + fingerprint + device info");
           } else {
-            console.warn(
-              " save-registration trả về lỗi:",
-              saveRes.status
-            );
+            console.warn("save-registration trả về lỗi:", saveRes.status);
           }
         } catch (err) {
-          console.warn(" Không lưu được IP:", err);
+          console.warn("Không lưu được IP:", err);
         }
 
         // Xử lý mã giới thiệu
-        if (form.referral.trim() && data.user) {
+        if (form.referral.trim()) {
           try {
             const { data: refResult, error: refError } = await supabase.rpc(
               "apply_referral_code",
@@ -303,64 +262,45 @@ export default function Register() {
         navigate("/onboarding", { replace: true });
       } else {
         setLoading(false);
-        setError("Không thể tạo tài khoản. Vui lòng thử lại.");
+        fail("reg.err.createFail");
       }
     } catch (err) {
       console.error("[register] error:", err);
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      fail("err.generic");
       setLoading(false);
     }
   };
 
-  const handleSocial = async (provider, supported) => {
-    setError("");
-    if (!supported) {
-      setError("Đăng nhập bằng " + provider + " sắp ra mắt.");
-      return;
-    }
-
-    if (ipChecking) {
-      setError("Đang kiểm tra thiết bị, vui lòng đợi...");
-      return;
-    }
-
-    if (ipError) {
-      setError("Không thể kiểm tra thiết bị. Vui lòng thử lại.");
-      setErrorType("ip_error");
-      return;
-    }
-
-    if (ipBlocked) {
-      setError("Thiết bị này đã có tài khoản.");
-      setErrorType("ip_blocked");
-      return;
-    }
+  const handleGoogle = async () => {
+    setError(null);
+    setErrorType("error");
+    if (deviceGuard()) return;
 
     const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: "google",
       options: { redirectTo: `${window.location.origin}/dashboard` },
     });
-    if (authError) setError(authError.message);
+    if (authError) setError({ raw: authError.message });
   };
 
-  // ✅ Chỉ hiển thị 1 cảnh báo duy nhất
+  // Chỉ hiển thị 1 cảnh báo duy nhất
   const renderAlert = () => {
     if (ipError) {
       return (
-        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle
-              size={18}
-              className="mt-0.5 shrink-0 text-amber-600"
-            />
+            <span className="mt-0.5 shrink-0 text-amber-600">
+              <IconWarning size={18} />
+            </span>
             <div className="flex-1">
               <p className="text-[13px] font-bold text-amber-800">
-                Không thể kiểm tra thiết bị
+                {t("reg.checkTitle")}
               </p>
               <p className="mt-1 text-[12px] leading-5 text-amber-700">
-                Vui lòng kiểm tra kết nối mạng và thử lại.
+                {t("reg.checkBody")}
               </p>
               <button
+                type="button"
                 onClick={() => {
                   setIpChecked(false);
                   setIpError(false);
@@ -368,7 +308,7 @@ export default function Register() {
                 }}
                 className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-[12px] font-bold text-white transition hover:bg-amber-600"
               >
-                Thử lại
+                {t("reg.retry")}
               </button>
             </div>
           </div>
@@ -378,26 +318,26 @@ export default function Register() {
 
     if (ipBlocked) {
       return (
-        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start gap-3">
-            <ShieldAlert
-              size={18}
-              className="mt-0.5 shrink-0 text-rose-600"
-            />
+            <span className="mt-0.5 shrink-0 text-rose-600">
+              <IconShield size={18} />
+            </span>
             <div className="flex-1">
               <p className="text-[13px] font-bold text-rose-800">
-                Thiết bị này đã có tài khoản
+                {t("reg.blockedTitle")}
               </p>
               <p className="mt-1 text-[12px] leading-5 text-rose-700">
-                Tài khoản: <b>{blockedEmail}</b>. Mỗi thiết bị chỉ được tạo 1
-                tài khoản.
+                {t("reg.blockedBody", {
+                  email: blockedEmail || t("reg.prevAccount"),
+                })}
               </p>
               <Link
                 to="/login"
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-rose-500 px-4 py-2 text-[12px] font-bold text-white transition hover:bg-rose-600"
               >
-                <LogIn size={13} />
-                Đăng nhập tài khoản cũ
+                {t("reg.loginOld")}
+                <IconArrow size={13} />
               </Link>
             </div>
           </div>
@@ -406,154 +346,177 @@ export default function Register() {
     }
 
     return (
-      <div className="mb-4 rounded-2xl border border-sky-100 bg-sky-50/60 p-3.5">
-        <div className="flex items-start gap-2.5">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100">
-            <span className="text-[11px] font-bold text-sky-600">i</span>
-          </div>
-          <p className="text-[12px] leading-5 text-sky-800">
-            Mỗi thiết bị chỉ được tạo <b>1 tài khoản</b>. Đã có tài khoản?{" "}
-            <Link to="/login" className="font-bold underline">
-              Đăng nhập
-            </Link>
-          </p>
-        </div>
-      </div>
+      <p className="mb-5 flex items-start gap-2 text-[12px] leading-5 text-slate-500">
+        <span className="mt-0.5 shrink-0">
+          <IconWarning size={14} />
+        </span>
+        <span>{t("reg.info")}</span>
+      </p>
     );
   };
 
+  const blocked = ipBlocked || ipError || ipChecking;
+
   return (
-    <AuthShell
-      title="Tạo tài khoản"
-      subtitle="Đăng ký NXX315 Studio Rewards — hoàn toàn miễn phí."
+    <AuthLayout
+      title={t("reg.title")}
+      subtitle={t("reg.subtitle")}
+      footer={
+        <>
+          {t("reg.haveAccount")}{" "}
+          <Link
+            to="/login"
+            className="font-bold text-teal-700 hover:underline"
+          >
+            {t("reg.signIn")}
+          </Link>
+        </>
+      }
     >
       {renderAlert()}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input
-          type="text"
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthField
+          id="reg-username"
+          label={t("reg.username")}
+          labelRight={
+            <span className="text-[11px] font-medium text-slate-400">
+              {t("common.optional")}
+            </span>
+          }
+          icon={<IconUser size={18} />}
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
-          placeholder="Tên hiển thị (tùy chọn)"
+          placeholder={t("reg.usernamePh")}
+          autoComplete="nickname"
           disabled={ipChecking}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
         />
 
-        <input
+        <AuthField
+          id="reg-email"
+          label={t("login.email")}
+          icon={<IconMail size={18} />}
           type="email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          placeholder="Email của bạn"
+          placeholder={t("login.emailPh")}
+          autoComplete="email"
           disabled={ipChecking}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
         />
 
-        <input
+        <AuthField
+          id="reg-password"
+          label={t("login.password")}
+          icon={<IconLock size={18} />}
           type="password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
-          placeholder="Mật khẩu (ít nhất 6 ký tự)"
+          placeholder={t("reg.passwordPh")}
+          autoComplete="new-password"
           disabled={ipChecking}
-          className="w-full rounded-full border border-slate-300 bg-white px-5 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 disabled:bg-slate-50 disabled:opacity-60"
         />
 
-        <div className="relative">
-          <Gift
-            size={16}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500"
-          />
-          <input
-            type="text"
-            value={form.referral}
-            onChange={(e) =>
-              setForm({ ...form, referral: e.target.value.toUpperCase() })
-            }
-            placeholder="Mã mời (tùy chọn) — nhận +200 xu"
-            maxLength={10}
-            disabled={ipChecking}
-            className="w-full rounded-full border border-amber-200 bg-amber-50/50 py-3.5 pl-11 pr-5 text-sm font-semibold tracking-wider text-amber-900 uppercase outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-amber-400 focus:border-amber-400 focus:bg-white disabled:opacity-60"
-          />
-        </div>
+        <AuthField
+          id="reg-referral"
+          label={t("reg.referral")}
+          labelRight={
+            <span className="text-[11px] font-medium text-slate-400">
+              {t("common.optional")}
+            </span>
+          }
+          icon={<IconGift size={18} />}
+          variant="gift"
+          uppercase
+          value={form.referral}
+          onChange={(e) =>
+            setForm({ ...form, referral: e.target.value.toUpperCase() })
+          }
+          placeholder={t("reg.referralPh")}
+          maxLength={10}
+          disabled={ipChecking}
+        />
 
+        {/* Lỗi */}
         {error && (
           <div
-            className={`rounded-2xl border px-4 py-3 text-xs font-medium whitespace-pre-line ${
+            className={`whitespace-pre-line rounded-xl border px-4 py-3 text-xs font-medium ${
               errorType === "email_exists"
                 ? "border-amber-200 bg-amber-50 text-amber-700"
                 : "border-rose-200 bg-rose-50 text-rose-600"
             }`}
           >
-            {errorType === "email_exists" ? (
-              <>
-                <p className="whitespace-pre-line">{error}</p>
-                <Link
-                  to="/login"
-                  className="mt-2 inline-block font-bold text-amber-800 underline"
-                >
-                  → Đăng nhập ngay
-                </Link>
-              </>
-            ) : (
-              error
+            {error.raw ?? t(error.key, error.vars)}
+            {errorType === "email_exists" && (
+              <Link
+                to="/login"
+                className="mt-2 block font-bold text-amber-800 underline"
+              >
+                {t("reg.err.emailExistsCta")}
+              </Link>
             )}
           </div>
         )}
 
         <button
           type="submit"
-          disabled={loading || ipBlocked || ipError || ipChecking}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={loading || blocked}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white transition hover:bg-teal-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
-              Đang tạo tài khoản...
+              <IconSpinner size={18} />
+              {t("reg.creating")}
             </>
           ) : ipChecking ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
-              Đang kiểm tra...
+              <IconSpinner size={18} />
+              {t("reg.checking")}
             </>
           ) : ipError ? (
-            "Không thể kiểm tra thiết bị"
+            t("reg.deviceError")
           ) : ipBlocked ? (
-            "Thiết bị đã có tài khoản"
+            t("reg.deviceUsed")
           ) : (
-            "Đăng ký"
+            <>
+              {t("reg.submit")}
+              <IconArrow size={18} />
+            </>
           )}
         </button>
+
+        <p className="text-center text-[12px] leading-5 text-slate-500">
+          {t("reg.agree")}
+          <Link
+            to="/terms"
+            className="font-semibold text-teal-700 underline decoration-teal-300 underline-offset-2"
+          >
+            {t("login.terms")}
+          </Link>
+        </p>
       </form>
 
-      <div className="relative my-7">
+      {/* Hoặc tiếp tục với */}
+      <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-xs font-medium uppercase tracking-wider text-slate-400">
-            Hoặc
+          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            {t("login.orContinue")}
           </span>
         </div>
       </div>
 
-      <div
-        className={
-          ipBlocked || ipError || ipChecking
-            ? "pointer-events-none opacity-50"
-            : ""
-        }
-      >
-        <SocialRow onSelect={handleSocial} />
-      </div>
-
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Đã có tài khoản?{" "}
-        <Link
-          to="/login"
-          className="font-semibold text-slate-900 hover:underline"
+      <div className={blocked ? "pointer-events-none opacity-50" : ""}>
+        <button
+          type="button"
+          onClick={handleGoogle}
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
         >
-          Đăng nhập
-        </Link>
-      </p>
-    </AuthShell>
+          <IconGoogle size={20} />
+          {t("reg.google")}
+        </button>
+      </div>
+    </AuthLayout>
   );
-          }
+}
