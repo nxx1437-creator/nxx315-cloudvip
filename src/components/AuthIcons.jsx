@@ -122,3 +122,17 @@ export const IconGoogle = ({ size = 20 }) => (
     />
   </svg>
 );
+export const IconUser = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6" />
+  </svg>
+);
+
+export const IconGift = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+    <rect x="3.5" y="8.5" width="17" height="4" rx="1" />
+    <path d="M5 12.5V20h14v-7.5M12 8.5V20" />
+    <path d="M12 8.5C10 8.5 8 7.5 8 5.8 8 4.5 9 4 10 4c1.6 0 2 2.4 2 4.5zM12 8.5c2 0 4-1 4-2.7 0-1.3-1-1.8-2-1.8-1.6 0-2 2.4-2 4.5z" />
+  </svg>
+);
