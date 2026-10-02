@@ -17,6 +17,10 @@ const DEFAULT_PROFILE = {
   is_admin: false,
 };
 
+// Bộ nhớ đệm dùng chung cho mọi component
+let cache = null; // { userId, profile }
+let inflight = null;
+
 function recordFingerprint(userId) {
   const sessionKey = `fp_recorded_${userId}`;
   try {
@@ -43,58 +47,68 @@ function recordFingerprint(userId) {
     .catch((err) => console.warn("[useProfile] fingerprint lỗi:", err));
 }
 
+async function loadProfile() {
+  if (inflight) return inflight;
+
+  inflight = (async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user;
+
+    if (!user) {
+      cache = null;
+      return null;
+    }
+
+    const [{ data: profileData }, { data: gameData }] = await Promise.all([
+      supabase
+        .from("user_profiles")
+        .select("id, email, full_name, avatar_url, role")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    ]);
+
+    const profile = {
+      ...DEFAULT_PROFILE,
+      ...(gameData || {}),
+      role: profileData?.role || "user",
+      is_admin:
+        profileData?.role === "admin" || profileData?.role === "support",
+      email: profileData?.email || gameData?.email || "",
+      full_name: profileData?.full_name || gameData?.full_name || "",
+    };
+
+    cache = { userId: user.id, profile };
+    recordFingerprint(user.id);
+    return cache;
+  })().finally(() => {
+    inflight = null;
+  });
+
+  return inflight;
+}
+
 export default function useProfile() {
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
-  const [loading, setLoading] = useState(true);
-  const [isAuthed, setIsAuthed] = useState(false);
+  const [profile, setProfile] = useState(cache?.profile || DEFAULT_PROFILE);
+  const [loading, setLoading] = useState(!cache);
+  const [isAuthed, setIsAuthed] = useState(!!cache);
 
   useEffect(() => {
     let alive = true;
 
-    const fetchProfile = async () => {
+    const run = async () => {
       try {
-        // getSession đọc từ máy (nhanh), không gọi mạng như getUser
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const user = session?.user;
-
+        const res = await loadProfile();
         if (!alive) return;
-
-        if (!user) {
+        if (!res) {
           setProfile(DEFAULT_PROFILE);
           setIsAuthed(false);
-          return;
+        } else {
+          setProfile(res.profile);
+          setIsAuthed(true);
         }
-        setIsAuthed(true);
-
-        // Đọc 2 bảng song song cho nhanh
-        const [{ data: profileData }, { data: gameData }] = await Promise.all([
-          supabase
-            .from("user_profiles")
-            .select("id, email, full_name, avatar_url, role")
-            .eq("id", user.id)
-            .maybeSingle(),
-          supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .maybeSingle(),
-        ]);
-
-        if (!alive) return;
-
-        setProfile({
-          ...DEFAULT_PROFILE,
-          ...(gameData || {}),
-          role: profileData?.role || "user",
-          is_admin:
-            profileData?.role === "admin" || profileData?.role === "support",
-          email: profileData?.email || gameData?.email || "",
-          full_name: profileData?.full_name || gameData?.full_name || "",
-        });
-
-        recordFingerprint(user.id);
       } catch (err) {
         console.warn("[useProfile] lỗi:", err);
       } finally {
@@ -102,16 +116,12 @@ export default function useProfile() {
       }
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event) => {
-        // Đã tải lúc mở trang; làm mới token không làm đổi hồ sơ
-        if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
-        // Không gọi Supabase trực tiếp trong callback này
-        setTimeout(fetchProfile, 0);
-      }
-    );
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+      setTimeout(run, 0);
+    });
 
-    fetchProfile();
+    run();
 
     return () => {
       alive = false;
@@ -119,5 +129,14 @@ export default function useProfile() {
     };
   }, []);
 
-  return { profile, loading, setProfile, isAuthed };
+  // Cập nhật hồ sơ (vd cộng coin) và nhớ luôn vào bộ nhớ đệm
+  const updateProfile = (updater) => {
+    setProfile((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      if (cache) cache = { ...cache, profile: next };
+      return next;
+    });
+  };
+
+  return { profile, loading, setProfile: updateProfile, isAuthed };
 }
