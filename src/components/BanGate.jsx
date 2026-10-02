@@ -1,57 +1,72 @@
 // src/components/BanGate.jsx
-//
-// Bọc component này quanh TOÀN BỘ app (trong App.jsx, bọc ngoài <Routes>/<Router>).
-// Nó kiểm tra is_banned trực tiếp từ Supabase mỗi khi app mở lên và mỗi 30 giây,
-// nên dù người dùng cố tình gõ thẳng URL vào trình duyệt để né trang login/chặn,
-// họ vẫn bị chặn ở MỌI trang vì check này nằm trên toàn bộ cây component.
-//
-// ⚠️ Sửa dòng import bên dưới cho đúng đường dẫn tới supabase client của bạn.
+// Bọc toàn bộ app. Kiểm tra is_banned từ Supabase khi mở app và mỗi 30 giây.
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient"; // <-- đổi lại đúng path bạn đang dùng
+import { supabase } from "../lib/supabaseClient";
+import PageLoader from "./PageLoader.jsx";
 
 const CHECK_INTERVAL_MS = 30 * 1000;
+const MAX_WAIT_MS = 4000;
 
 export default function BanGate({ children }) {
-  const [status, setStatus] = useState({ loading: true, banned: false, reason: "" });
+  const [status, setStatus] = useState({
+    loading: true,
+    banned: false,
+    reason: "",
+  });
 
   useEffect(() => {
     let cancelled = false;
-    let timer;
 
     async function check() {
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
+      try {
+        // getSession đọc từ máy (nhanh), không gọi mạng như getUser
+        const { data } = await supabase.auth.getSession();
+        const user = data?.session?.user;
 
-      if (!user) {
-        if (!cancelled) setStatus({ loading: false, banned: false, reason: "" });
-        return;
-      }
+        if (!user) {
+          if (!cancelled)
+            setStatus({ loading: false, banned: false, reason: "" });
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_banned, ban_reason")
-        .eq("id", user.id)
-        .single();
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("is_banned, ban_reason")
+          .eq("id", user.id)
+          .single();
 
-      if (!cancelled) {
-        setStatus({
-          loading: false,
-          banned: !!profile?.is_banned,
-          reason: profile?.ban_reason || "Tài khoản của bạn đã bị chặn.",
-        });
+        if (error) throw error;
+
+        if (!cancelled) {
+          setStatus({
+            loading: false,
+            banned: !!profile?.is_banned,
+            reason: profile?.ban_reason || "Tài khoản của bạn đã bị chặn.",
+          });
+        }
+      } catch (err) {
+        console.warn("[BanGate] check lỗi:", err);
+        // Lỗi mạng: không khoá cả web, giữ nguyên trạng thái ban trước đó
+        if (!cancelled) setStatus((prev) => ({ ...prev, loading: false }));
       }
     }
 
     check();
-    timer = setInterval(check, CHECK_INTERVAL_MS);
+    const timer = setInterval(check, CHECK_INTERVAL_MS);
+
+    // Chốt an toàn: tối đa chờ 4 giây rồi cho app hiện lên
+    const maxWait = setTimeout(() => {
+      if (!cancelled) setStatus((prev) => ({ ...prev, loading: false }));
+    }, MAX_WAIT_MS);
 
     return () => {
       cancelled = true;
       clearInterval(timer);
+      clearTimeout(maxWait);
     };
   }, []);
 
-  if (status.loading) return null; // hoặc màn hình loading của bạn
+  if (status.loading) return <PageLoader />;
 
   if (status.banned) {
     return (
@@ -82,4 +97,4 @@ export default function BanGate({ children }) {
   }
 
   return children;
-      }
+}
