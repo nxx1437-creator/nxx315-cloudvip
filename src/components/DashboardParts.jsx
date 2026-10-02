@@ -22,14 +22,16 @@ export function QuickAction({ icon: Icon, iconBg, iconColor, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center transition hover:border-[#3478F6]/30"
+      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] bg-white px-1 py-3 text-center transition hover:border-[#3478F6]/30"
     >
       <span
         className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}
       >
         <Icon size={18} className={iconColor} />
       </span>
-      <span className="text-xs font-semibold text-[#374151]">{label}</span>
+      <span className="w-full truncate text-[11px] font-semibold text-[#374151]">
+        {label}
+      </span>
     </button>
   );
 }
@@ -99,4 +101,4 @@ export function DashboardSkeleton() {
       </div>
     </div>
   );
-}
+          }
