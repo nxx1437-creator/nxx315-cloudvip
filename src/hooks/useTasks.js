@@ -9,8 +9,6 @@ export default function useTasks(userId) {
   const hasLoadedOnce = useRef(false);
 
   const reload = useCallback(async () => {
-    console.log("🔥 reload chạy, userId =", userId);
-
     const isFirstLoad = !hasLoadedOnce.current;
     if (isFirstLoad) setLoading(true);
 
@@ -21,13 +19,10 @@ export default function useTasks(userId) {
         .eq("active", true)
         .order("sort_order", { ascending: true });
 
-      console.log("📦 taskRows =", taskRows, "error =", taskErr);
-
       if (taskErr) throw taskErr;
 
       // Nếu DB chưa có nhiệm vụ nào, hiện dữ liệu mẫu
       if (!taskRows || taskRows.length === 0) {
-        console.log("⚠️ Không có task active, dùng data demo");
         setTasks([
           { id: "demo-1", title: "Làm 1 nhiệm vụ", provider: "Demo", reward_coins: 50, daily_limit: 1, completedToday: 1, remainingToday: 0 },
           { id: "demo-2", title: "Làm 5 nhiệm vụ", provider: "Demo", reward_coins: 200, daily_limit: 5, completedToday: 3, remainingToday: 2 },
@@ -41,7 +36,8 @@ export default function useTasks(userId) {
       let completed = 0;
 
       if (userId) {
-         const startOfDay = vnStartOfDay();
+        // 0:00 theo giờ Việt Nam (khớp với máy chủ)
+        const startOfDay = vnStartOfDay();
 
         // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
         const { data: allCompletions, error: allErr } = await supabase
@@ -50,7 +46,7 @@ export default function useTasks(userId) {
           .eq("user_id", userId)
           .order("completed_at", { ascending: false });
 
-        console.log("📜 allCompletions count =", allCompletions?.length, "error =", allErr);
+        if (allErr) console.error("allCompletions error:", allErr);
 
         // Tính số lượng hoàn thành hôm nay
         const todayCompletions = (allCompletions || []).filter(
@@ -78,8 +74,6 @@ export default function useTasks(userId) {
           currentDate.setDate(currentDate.getDate() - 1);
         }
 
-        console.log("🔥 streak =", streak);
-
         // Tự động cập nhật streak vào database (nếu có thay đổi)
         const { data: profileData } = await supabase
           .from("profiles")
@@ -106,7 +100,7 @@ export default function useTasks(userId) {
           .eq("user_id", userId)
           .gte("completed_at", startOfDay.toISOString());
 
-        console.log("✅ completions hôm nay =", completions, "error =", compErr);
+        if (compErr) console.error("completions error:", compErr);
 
         doneMap = (completions || []).reduce((acc, c) => {
           acc[c.task_id] = (acc[c.task_id] || 0) + 1;
@@ -120,14 +114,11 @@ export default function useTasks(userId) {
         remainingToday: Math.max(0, t.daily_limit - (doneMap[t.id] || 0)),
       }));
 
-      console.log("🎯 mapped tasks =", mapped);
-
       setTasks(mapped);
       setCompletedToday(completed);
     } catch (err) {
       console.error("❌ useTasks error:", err);
     } finally {
-      console.log("✅ finally chạy, isFirstLoad =", isFirstLoad);
       if (isFirstLoad) {
         setLoading(false);
         hasLoadedOnce.current = true;
@@ -135,21 +126,9 @@ export default function useTasks(userId) {
     }
   }, [userId]);
 
+  // Tải lần đầu. Việc tải lại khi quay về tab do trang Tasks.jsx lo (có giới hạn tần suất)
   useEffect(() => {
     reload();
-
-    const handleFocus = () => reload();
-    window.addEventListener("focus", handleFocus);
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") handleFocus();
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
   }, [reload]);
 
   return { tasks, loading, completedToday, reload };
