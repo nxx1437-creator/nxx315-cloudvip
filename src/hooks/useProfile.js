@@ -17,83 +17,107 @@ const DEFAULT_PROFILE = {
   is_admin: false,
 };
 
+function recordFingerprint(userId) {
+  const sessionKey = `fp_recorded_${userId}`;
+  try {
+    if (sessionStorage.getItem(sessionKey)) return;
+  } catch {}
+
+  getDeviceFingerprint()
+    .then((fingerprint) => {
+      if (!fingerprint) return;
+      return getPublicIp().then((ip) =>
+        supabase
+          .rpc("record_device_fingerprint", {
+            p_user_id: userId,
+            p_fingerprint: fingerprint,
+            p_ip: ip,
+          })
+          .then(() => {
+            try {
+              sessionStorage.setItem(sessionKey, "1");
+            } catch {}
+          })
+      );
+    })
+    .catch((err) => console.warn("[useProfile] fingerprint lỗi:", err));
+}
+
 export default function useProfile() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [loading, setLoading] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
+    let alive = true;
+
     const fetchProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setProfile(DEFAULT_PROFILE);
-        setLoading(false);
-        return;
-      }
+      try {
+        // getSession đọc từ máy (nhanh), không gọi mạng như getUser
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const user = session?.user;
 
-      // ✅ Đọc từ user_profiles (bảng có cột role)
-      const { data: profileData } = await supabase
-        .from("user_profiles")
-        .select("id, email, full_name, avatar_url, role")
-        .eq("id", user.id)
-        .maybeSingle();
+        if (!alive) return;
 
-      // Đọc thêm thông tin gamification từ bảng profiles (nếu có)
-      const { data: gameData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+        if (!user) {
+          setProfile(DEFAULT_PROFILE);
+          setIsAuthed(false);
+          return;
+        }
+        setIsAuthed(true);
 
-      const merged = {
-        ...DEFAULT_PROFILE,
-        ...(gameData || {}),
-        // Override is_admin từ user_profiles.role
-        role: profileData?.role || "user",
-        is_admin:
-          profileData?.role === "admin" ||
-          profileData?.role === "support",
-        email: profileData?.email || gameData?.email || "",
-        full_name:
-          profileData?.full_name || gameData?.full_name || "",
-      };
+        // Đọc 2 bảng song song cho nhanh
+        const [{ data: profileData }, { data: gameData }] = await Promise.all([
+          supabase
+            .from("user_profiles")
+            .select("id, email, full_name, avatar_url, role")
+            .eq("id", user.id)
+            .maybeSingle(),
+          supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .maybeSingle(),
+        ]);
 
-      setProfile(merged);
+        if (!alive) return;
 
-      const sessionKey = `fp_recorded_${user.id}`;
-      if (!sessionStorage.getItem(sessionKey)) {
-        getDeviceFingerprint().then((fingerprint) => {
-          if (!fingerprint) return;
-
-          getPublicIp().then((ip) => {
-            supabase
-              .rpc("record_device_fingerprint", {
-                p_user_id: user.id,
-                p_fingerprint: fingerprint,
-                p_ip: ip,
-              })
-              .then(() => {
-                sessionStorage.setItem(sessionKey, "1");
-              });
-          });
+        setProfile({
+          ...DEFAULT_PROFILE,
+          ...(gameData || {}),
+          role: profileData?.role || "user",
+          is_admin:
+            profileData?.role === "admin" || profileData?.role === "support",
+          email: profileData?.email || gameData?.email || "",
+          full_name: profileData?.full_name || gameData?.full_name || "",
         });
+
+        recordFingerprint(user.id);
+      } catch (err) {
+        console.warn("[useProfile] lỗi:", err);
+      } finally {
+        if (alive) setLoading(false);
       }
-      setLoading(false);
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, _session) => {
-        fetchProfile();
+      (event) => {
+        // Đã tải lúc mở trang; làm mới token không làm đổi hồ sơ
+        if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+        // Không gọi Supabase trực tiếp trong callback này
+        setTimeout(fetchProfile, 0);
       }
     );
 
     fetchProfile();
 
     return () => {
+      alive = false;
       authListener?.subscription?.unsubscribe();
     };
   }, []);
 
-  return { profile, loading, setProfile };
+  return { profile, loading, setProfile, isAuthed };
 }
