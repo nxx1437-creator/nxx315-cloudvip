@@ -72,7 +72,7 @@ export default function ProtectedRoute({ children }) {
   }, []);
 
   if (loading || !mfaChecked) {
-    return null;
+    return <PageLoader />;
   }
 
   if (isCurrentlyBanned(profile)) {
