@@ -179,64 +179,63 @@ export default function Dashboard() {
         {!loading && (
           <>
             {/* Hero */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm text-[#667085]">{getGreeting()},</p>
-                  <h1 className="mt-0.5 truncate text-2xl font-bold leading-tight text-[#111827]">
-                    {displayName} 👋
-                  </h1>
-                </div>
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-bold text-[#B87700]">
-                  <Crown size={12} /> LV{profile?.level || 0}
-                </span>
-              </div>
-              <p className="mt-1.5 text-sm text-[#667085]">
+            <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
+              <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
+              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
+                {t("dash.badge")}
+              </span>
+              <h1 className="relative mt-3 text-2xl font-bold leading-tight text-[#111827]">
+                {getGreeting()},<br />
+                <span className="text-[#3478F6]">{displayName}</span> 👋
+              </h1>
+              <p className="relative mt-1.5 text-sm text-[#667085]">
                 {t("dash.heroSub")}
               </p>
-
-              {/* Thẻ số dư */}
-              <div className="mt-4 rounded-lg bg-gradient-to-br from-[#3478F6] to-[#0878C9] p-4 text-white shadow-md shadow-[#3478F6]/20">
-                <div className="flex items-center justify-between text-xs font-semibold text-white/75">
-                  <span className="tracking-wide">{t("dash.balance")}</span>
-                  <span>
-                    EXP {profile?.exp || 0}/{profile?.exp_target || 100}
-                  </span>
-                </div>
-                <div className="mt-2.5 flex items-center gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white/20">
-                    <Coins size={26} className="text-[#FFD36B]" />
-                  </span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-bold leading-none">
-                      {profile?.coins || 0}
-                    </span>
-                    <span className="text-sm text-white/70">
-                      {t("dash.coin")}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-sm bg-white/25">
-                  <div
-                    className="h-full rounded-sm bg-white"
-                    style={{ width: `${expPct}%` }}
-                  />
-                </div>
-              </div>
-              {/* Hai nút chính */}
-              <div className="mt-3 grid grid-cols-2 gap-2.5">
+              <div className="relative mt-4 flex flex-wrap gap-2.5">
                 <button
                   onClick={() => navigate("/tasks")}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#111827] px-3 py-3 text-sm font-semibold text-white transition active:scale-[0.98]"
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#3478F6]/25 transition hover:brightness-105"
                 >
                   <Rocket size={15} /> {t("dash.startTasks")}
                 </button>
                 <button
                   onClick={() => navigate("/invite")}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-3 text-sm font-semibold text-[#374151] transition active:scale-[0.98]"
+                  className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151]"
                 >
                   <Gift size={15} /> {t("dash.invite")}
                 </button>
+              </div>
+
+              <div className="relative mt-4 rounded-2xl bg-[#F5F7FB] p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-[#667085]">
+                    {t("dash.balance")}
+                  </span>
+                  <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-semibold text-[#B87700]">
+                    <Crown size={12} /> LV{profile?.level || 0}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Coins size={24} className="text-[#F2A900]" />
+                  <span className="text-3xl font-bold text-[#111827]">
+                    {profile?.coins || 0}
+                  </span>
+                  <span className="text-[#9CA3AF]">{t("dash.coin")}</span>
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
+                    <span>EXP</span>
+                    <span>
+                      {profile?.exp || 0}/{profile?.exp_target || 100}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+                    <div
+                      className="h-full rounded-full bg-[#3478F6]"
+                      style={{ width: `${expPct}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -441,4 +440,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-    }
+                }
