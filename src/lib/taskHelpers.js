@@ -21,11 +21,18 @@ export const getProviderLogo = (task) => {
   return file ? getImageUrl(file) : null;
 };
 
+// 0:00 theo giờ Việt Nam (UTC+7, khớp với máy chủ)
+export function vnStartOfDay() {
+  const VN_OFFSET = 7 * 60 * 60 * 1000;
+  const vn = new Date(Date.now() + VN_OFFSET);
+  return new Date(
+    Date.UTC(vn.getUTCFullYear(), vn.getUTCMonth(), vn.getUTCDate()) - VN_OFFSET
+  );
+}
+
 export function hoursUntilMidnight() {
-  const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  return Math.max(1, Math.round((midnight - now) / 1000 / 60 / 60));
+  const next = vnStartOfDay().getTime() + 24 * 60 * 60 * 1000;
+  return Math.max(1, Math.round((next - Date.now()) / 1000 / 60 / 60));
 }
 
 export const DONE_STATUSES = ["completed", "success", "done", "verified"];
