@@ -5,6 +5,7 @@ import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import MfaChallenge from "./MfaChallenge.jsx";
 import { useLocation } from "react-router-dom";
+import PageLoader from "./PageLoader.jsx";
 
 function isCurrentlyBanned(profile) {
   if (!profile?.is_banned) return false;
@@ -48,17 +49,19 @@ export default function ProtectedRoute({ children }) {
     let active = true;
 
     const checkMfa = async () => {
-      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-      if (!active) return;
-
-      if (data?.nextLevel === "aal2" && data?.currentLevel !== "aal2") {
-        setNeedsMfa(true);
-      } else {
-        setNeedsMfa(false);
+      try {
+        const { data } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (!active) return;
+        setNeedsMfa(
+          data?.nextLevel === "aal2" && data?.currentLevel !== "aal2"
+        );
+      } catch (err) {
+        console.warn("[ProtectedRoute] checkMfa lỗi:", err);
+        if (active) setNeedsMfa(false);
+      } finally {
+        if (active) setMfaChecked(true);
       }
-
-      setMfaChecked(true);
     };
 
     checkMfa();
