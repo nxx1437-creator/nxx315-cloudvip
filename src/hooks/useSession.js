@@ -8,35 +8,43 @@ export default function useSession() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   console.log('useSession init'); // 👈 Thêm dòng này
+useEffect(() => {
+    let alive = true;
 
-  useEffect(() => {
-    console.log('useSession useEffect run'); // 👈 Thêm dòng này
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (!alive) return;
+        setSession(session);
+        if (session?.user) {
+          checkProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("getSession error:", err);
+        if (alive) setLoading(false);
+      });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('getSession result:', session); // 👈 Thêm dòng này
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
-        checkProfile(session.user.id);
+        // Không await ở đây: gọi Supabase ngay trong callback này có thể bị treo
+        setTimeout(() => checkProfile(session.user.id), 0);
       } else {
+        setNeedsTermsAcceptance(false);
+        setIsAdmin(false);
         setLoading(false);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log('onAuthStateChange:', _event, session); // 👈 Thêm dòng này
-        setSession(session);
-        if (session?.user) {
-          await checkProfile(session.user.id);
-        } else {
-          setNeedsTermsAcceptance(false);
-          setIsAdmin(false);
-          setLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    return () => {
+      alive = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const checkProfile = async (userId) => {
