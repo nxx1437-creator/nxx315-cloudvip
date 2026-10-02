@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import MfaChallenge from "./MfaChallenge.jsx";
-import { useLocation } from "react-router-dom";
 import PageLoader from "./PageLoader.jsx";
 
 function isCurrentlyBanned(profile) {
@@ -18,7 +17,7 @@ function isCurrentlyBanned(profile) {
 }
 
 export default function ProtectedRoute({ children }) {
-  const { profile, loading } = useProfile();
+  const { profile, loading, isAuthed } = useProfile();
   const location = useLocation();
 
   const [mfaChecked, setMfaChecked] = useState(false);
@@ -29,6 +28,7 @@ export default function ProtectedRoute({ children }) {
     profile?.banned_until &&
     new Date(profile.banned_until).getTime() <= Date.now();
 
+  // Hết hạn cấm -> tự gỡ cấm
   useEffect(() => {
     if (!banExpired || !profile?.id) return;
 
@@ -45,6 +45,7 @@ export default function ProtectedRoute({ children }) {
       .then(() => {});
   }, [banExpired, profile?.id]);
 
+  // Kiểm tra có cần xác thực 2 lớp (MFA) không
   useEffect(() => {
     let active = true;
 
@@ -71,19 +72,27 @@ export default function ProtectedRoute({ children }) {
     };
   }, []);
 
+  // Đang kiểm tra -> hiện màn hình chờ (không để trắng)
   if (loading || !mfaChecked) {
     return <PageLoader />;
+  }
+
+  // Chưa đăng nhập -> về trang đăng nhập
+  if (!isAuthed) {
+    return <Navigate to="/login" replace />;
   }
 
   if (isCurrentlyBanned(profile)) {
     return <Navigate to="/banned" replace />;
   }
-if (
+
+  if (
     profile?.onboarding_completed === false &&
     location.pathname !== "/onboarding"
   ) {
     return <Navigate to="/onboarding" replace />;
-}
+  }
+
   if (needsMfa) {
     return (
       <MfaChallenge
