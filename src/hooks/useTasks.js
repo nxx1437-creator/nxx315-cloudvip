@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabaseClient.js";
+import { vnStartOfDay } from "../lib/taskHelpers.js";
 
 export default function useTasks(userId) {
   const [tasks, setTasks] = useState([]);
@@ -40,8 +41,7 @@ export default function useTasks(userId) {
       let completed = 0;
 
       if (userId) {
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
+         const startOfDay = vnStartOfDay();
 
         // Lấy toàn bộ lịch sử hoàn thành nhiệm vụ (KHÔNG giới hạn ngày) để tính streak
         const { data: allCompletions, error: allErr } = await supabase
