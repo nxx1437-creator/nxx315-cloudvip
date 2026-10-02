@@ -196,28 +196,33 @@ export default function Dashboard() {
               </p>
 
               {/* Thẻ số dư */}
-              <div className="mt-4 rounded-2xl bg-gradient-to-br from-[#3478F6] to-[#0878C9] p-4 text-white shadow-md shadow-[#3478F6]/20">
+              <div className="mt-4 rounded-lg bg-gradient-to-br from-[#3478F6] to-[#0878C9] p-4 text-white shadow-md shadow-[#3478F6]/20">
                 <div className="flex items-center justify-between text-xs font-semibold text-white/75">
                   <span className="tracking-wide">{t("dash.balance")}</span>
                   <span>
                     EXP {profile?.exp || 0}/{profile?.exp_target || 100}
                   </span>
                 </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <Coins size={26} className="text-[#FFD36B]" />
-                  <span className="text-3xl font-bold">
-                    {profile?.coins || 0}
+                <div className="mt-2.5 flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-white/20">
+                    <Coins size={26} className="text-[#FFD36B]" />
                   </span>
-                  <span className="text-white/70">{t("dash.coin")}</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-bold leading-none">
+                      {profile?.coins || 0}
+                    </span>
+                    <span className="text-sm text-white/70">
+                      {t("dash.coin")}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+                <div className="mt-3.5 h-1.5 w-full overflow-hidden rounded-sm bg-white/25">
                   <div
-                    className="h-full rounded-full bg-white"
+                    className="h-full rounded-sm bg-white"
                     style={{ width: `${expPct}%` }}
                   />
                 </div>
               </div>
-
               {/* Hai nút chính */}
               <div className="mt-3 grid grid-cols-2 gap-2.5">
                 <button
