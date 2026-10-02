@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Coins,
@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
+import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
@@ -36,23 +37,8 @@ export default function Dashboard() {
   const { session } = useSession();
   const user = session?.user;
 
-  const [profile, setProfile] = useState({
-    coins: 0,
-    level: 0,
-    exp: 0,
-    exp_target: 100,
-    tasks_completed_today: 0,
-    coins_earned_today: 0,
-    referrals_count: 0,
-    streak_days: 0,
-    streak_record: 0,
-    username: "",
-    milestone_1_claimed: false,
-    milestone_5_claimed: false,
-    milestone_10_claimed: false,
-  });
-  const [loading, setLoading] = useState(true);
-  const [showSkeleton, setShowSkeleton] = useState(false);
+  const { profile, loading, setProfile } = useProfile();
+
   const [claimingMilestone, setClaimingMilestone] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
@@ -63,33 +49,6 @@ export default function Dashboard() {
     if (h < 18) return t("dash.greetAfternoon");
     return t("dash.greetEvening");
   };
-
-  // Lấy profile
-  useEffect(() => {
-    if (!user?.id) return;
-    const skeletonTimer = setTimeout(() => {
-      setShowSkeleton(true);
-    }, 300);
-
-    const fetchProfile = async () => {
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        if (data) setProfile(data);
-      } catch (err) {
-        console.error("fetchProfile error:", err);
-      } finally {
-        clearTimeout(skeletonTimer);
-        setLoading(false);
-        setShowSkeleton(false);
-      }
-    };
-    fetchProfile();
-    return () => clearTimeout(skeletonTimer);
-  }, [user]);
 
   // Kiểm tra IP trùng
   useEffect(() => {
@@ -149,12 +108,13 @@ export default function Dashboard() {
           const key = new Date(r.completed_at).toDateString();
           sumByDate[key] = (sumByDate[key] || 0) + (r.coins_earned || 0);
         });
-        const result = days.map((d) => ({
-          dow: d.getDay(),
-          value: sumByDate[d.toDateString()] || 0,
-          isToday: d.toDateString() === new Date().toDateString(),
-        }));
-        setChartData(result);
+        setChartData(
+          days.map((d) => ({
+            dow: d.getDay(),
+            value: sumByDate[d.toDateString()] || 0,
+            isToday: d.toDateString() === new Date().toDateString(),
+          }))
+        );
       } catch (err) {
         console.error("fetchChart error:", err);
       } finally {
@@ -214,68 +174,101 @@ export default function Dashboard() {
       <TopHeader />
 
       <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
-        {showSkeleton && loading && <DashboardSkeleton />}
+        {loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
             {/* Hero */}
-            <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
-              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
-                {t("dash.badge")}
-              </span>
-              <h1 className="relative mt-3 text-2xl font-bold leading-tight text-[#111827]">
-                {getGreeting()},<br />
-                <span className="text-[#3478F6]">{displayName}</span> 👋
-              </h1>
-              <p className="relative mt-1.5 text-sm text-[#667085]">
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-[#667085]">{getGreeting()},</p>
+                  <h1 className="mt-0.5 truncate text-2xl font-bold leading-tight text-[#111827]">
+                    {displayName} 👋
+                  </h1>
+                </div>
+                <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-bold text-[#B87700]">
+                  <Crown size={12} /> LV{profile?.level || 0}
+                </span>
+              </div>
+              <p className="mt-1.5 text-sm text-[#667085]">
                 {t("dash.heroSub")}
               </p>
-              <div className="relative mt-4 flex flex-wrap gap-2.5">
+
+              {/* Thẻ số dư */}
+              <div className="mt-4 rounded-2xl bg-gradient-to-br from-[#3478F6] to-[#0878C9] p-4 text-white shadow-md shadow-[#3478F6]/20">
+                <div className="flex items-center justify-between text-xs font-semibold text-white/75">
+                  <span className="tracking-wide">{t("dash.balance")}</span>
+                  <span>
+                    EXP {profile?.exp || 0}/{profile?.exp_target || 100}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Coins size={26} className="text-[#FFD36B]" />
+                  <span className="text-3xl font-bold">
+                    {profile?.coins || 0}
+                  </span>
+                  <span className="text-white/70">{t("dash.coin")}</span>
+                </div>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+                  <div
+                    className="h-full rounded-full bg-white"
+                    style={{ width: `${expPct}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Hai nút chính */}
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => navigate("/tasks")}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#3478F6]/25 transition hover:brightness-105"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#111827] px-3 py-3 text-sm font-semibold text-white transition active:scale-[0.98]"
                 >
                   <Rocket size={15} /> {t("dash.startTasks")}
                 </button>
                 <button
                   onClick={() => navigate("/invite")}
-                  className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151]"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-3 text-sm font-semibold text-[#374151] transition active:scale-[0.98]"
                 >
                   <Gift size={15} /> {t("dash.invite")}
                 </button>
               </div>
+            </div>
 
-              <div className="relative mt-4 rounded-2xl bg-[#F5F7FB] p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#667085]">
-                    {t("dash.balance")}
-                  </span>
-                  <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-semibold text-[#B87700]">
-                    <Crown size={12} /> LV{profile?.level || 0}
-                  </span>
-                </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <Coins size={24} className="text-[#F2A900]" />
-                  <span className="text-3xl font-bold text-[#111827]">
-                    {profile?.coins || 0}
-                  </span>
-                  <span className="text-[#9CA3AF]">{t("dash.coin")}</span>
-                </div>
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
-                    <span>EXP</span>
-                    <span>
-                      {profile?.exp || 0}/{profile?.exp_target || 100}
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                    <div
-                      className="h-full rounded-full bg-[#3478F6]"
-                      style={{ width: `${expPct}%` }}
-                    />
-                  </div>
-                </div>
+            {/* Hành động nhanh */}
+            <div>
+              <p className="mb-3 text-sm font-bold text-[#111827]">
+                {t("dash.quick")}
+              </p>
+              <div className="grid grid-cols-4 gap-2.5">
+                <QuickAction
+                  icon={CheckSquare}
+                  iconBg="bg-[#EAF2FE]"
+                  iconColor="text-[#3478F6]"
+                  label={t("dash.qaTasks")}
+                  onClick={() => navigate("/tasks")}
+                />
+                <QuickAction
+                  icon={ShoppingBag}
+                  iconBg="bg-[#EAF2FE]"
+                  iconColor="text-[#3478F6]"
+                  label={t("dash.qaStore")}
+                  onClick={() => navigate("/store")}
+                />
+                <QuickAction
+                  icon={ArrowLeftRight}
+                  iconBg="bg-[#FFF4DB]"
+                  iconColor="text-[#B87700]"
+                  label={t("dash.qaTopup")}
+                  onClick={() => navigate("/shop-earn")}
+                />
+                <QuickAction
+                  icon={Headphones}
+                  iconBg="bg-emerald-50"
+                  iconColor="text-emerald-600"
+                  label={t("dash.qaSupport")}
+                  onClick={() => navigate("/contact")}
+                />
               </div>
             </div>
 
@@ -316,58 +309,55 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Streak */}
-            <div className="flex items-center gap-4 rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
-                <Flame size={22} className="text-[#FFB82E]" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-[#9C7A3F]">
-                  {t("dash.streak")}
-                </p>
-                <p className="text-2xl font-bold text-[#111827]">
-                  {profile?.streak_days || 0}{" "}
-                  <span className="text-sm font-medium text-[#667085]">
-                    {t("dash.days")}
-                  </span>
-                </p>
-                <p className="text-xs text-[#9C7A3F]">
-                  {t("dash.record")}:{" "}
-                  <span className="font-semibold">
-                    {profile?.streak_record || 0}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            {/* Tiến độ hôm nay */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center">
-              <span className="flex items-center justify-center gap-1.5 text-sm font-semibold text-[#111827]">
-                <CheckSquare size={15} className="text-[#3478F6]" />{" "}
-                {t("dash.progress")}
-              </span>
-              <div
-                className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full"
-                style={{
-                  background: `conic-gradient(#3478F6 ${
-                    todayTaskPct * 3.6
-                  }deg, #E5E7EB 0deg)`,
-                }}
-              >
-                <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white">
-                  <span className="text-2xl font-bold text-[#111827]">
-                    {todayTaskPct}%
-                  </span>
-                  <span className="text-xs text-[#9CA3AF]">
-                    {todayTasksDone}/{todayTasksTotal}
-                  </span>
+            {/* Giữ lửa + Tiến độ hôm nay (2 cột) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col justify-between rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
+                  <Flame size={20} className="text-[#FFB82E]" />
+                </div>
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-[#9C7A3F]">
+                    {t("dash.streak")}
+                  </p>
+                  <p className="text-2xl font-bold text-[#111827]">
+                    {profile?.streak_days || 0}{" "}
+                    <span className="text-sm font-medium text-[#667085]">
+                      {t("dash.days")}
+                    </span>
+                  </p>
+                  <p className="text-xs text-[#9C7A3F]">
+                    {t("dash.record")}:{" "}
+                    <span className="font-semibold">
+                      {profile?.streak_record || 0}
+                    </span>
+                  </p>
                 </div>
               </div>
+
               <button
                 onClick={() => navigate("/tasks")}
-                className="mx-auto mt-4 flex items-center gap-1.5 rounded-xl bg-[#F5F7FB] px-4 py-2 text-sm font-medium text-[#374151]"
+                className="flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center"
               >
-                {t("dash.goTasks")}
+                <span className="text-xs font-semibold text-[#667085]">
+                  {t("dash.progress")}
+                </span>
+                <div
+                  className="mt-2.5 flex h-24 w-24 items-center justify-center rounded-full"
+                  style={{
+                    background: `conic-gradient(#3478F6 ${
+                      todayTaskPct * 3.6
+                    }deg, #E5E7EB 0deg)`,
+                  }}
+                >
+                  <div className="flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full bg-white">
+                    <span className="text-xl font-bold text-[#111827]">
+                      {todayTaskPct}%
+                    </span>
+                    <span className="text-[10px] text-[#9CA3AF]">
+                      {todayTasksDone}/{todayTasksTotal}
+                    </span>
+                  </div>
+                </div>
               </button>
             </div>
 
@@ -438,43 +428,6 @@ export default function Dashboard() {
 
             {/* Coin 7 ngày qua */}
             <CoinChart chartData={chartData} chartLoading={chartLoading} />
-
-            {/* Hành động nhanh */}
-            <div>
-              <p className="mb-3 text-sm font-bold text-[#111827]">
-                {t("dash.quick")}
-              </p>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <QuickAction
-                  icon={CheckSquare}
-                  iconBg="bg-[#EAF2FE]"
-                  iconColor="text-[#3478F6]"
-                  label={t("dash.qaTasks")}
-                  onClick={() => navigate("/tasks")}
-                />
-                <QuickAction
-                  icon={ShoppingBag}
-                  iconBg="bg-[#EAF2FE]"
-                  iconColor="text-[#3478F6]"
-                  label={t("dash.qaStore")}
-                  onClick={() => navigate("/store")}
-                />
-                <QuickAction
-                  icon={ArrowLeftRight}
-                  iconBg="bg-[#FFF4DB]"
-                  iconColor="text-[#B87700]"
-                  label={t("dash.qaTopup")}
-                  onClick={() => navigate("/shop-earn")}
-                />
-                <QuickAction
-                  icon={Headphones}
-                  iconBg="bg-emerald-50"
-                  iconColor="text-emerald-600"
-                  label={t("dash.qaSupport")}
-                  onClick={() => navigate("/contact")}
-                />
-              </div>
-            </div>
           </>
         )}
       </main>
@@ -483,4 +436,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-  }
+    }
