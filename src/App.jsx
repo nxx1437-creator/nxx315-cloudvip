@@ -68,12 +68,13 @@ import DeviceChecker from "./components/DeviceChecker.jsx";
 import VersionChecker from "./components/VersionChecker.jsx";
 import SessionGuard from "./components/SessionGuard.jsx";
 import SessionValidator from "./components/SessionValidator.jsx"; 
+import PageLoader from "./components/PageLoader.jsx";
 
 export default function App() {
   return (
     <BanGate>
       <BrowserRouter>
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<CloudVIPLanding />} />
             <Route path="/login" element={<Login />} />
