@@ -325,4 +325,26 @@ export default {
   "ld.redeem": "Redemption Policy",
   "ld.rights": "© {year} NXX315 Studio. All rights reserved.",
   "ld.made": "Made in Vietnam 🇻🇳",
+  // Landing (new design)
+  "ld.mockNote": "Illustrative preview",
+  "ld.mockBalance": "Balance",
+  "ld.mockStreak": "Day streak",
+  "ld.bentoTag": "Everything in one app",
+  "ld.bentoTitle": "All you need to earn and redeem",
+  "ld.bentoSub":
+    "From daily tasks and mini games to the reward store — all in one place.",
+  "ld.f7t": "Reward store",
+  "ld.f7d":
+    "Spend Coins on Robux, phone cards, gift cards and many other rewards.",
+  "ld.f8t": "Wallet & history",
+  "ld.f8d": "Track your Coin balance, task history and redemption orders.",
+  "ld.f9t": "Notifications",
+  "ld.f9d": "Get notified about new tasks (if you turn it on).",
+  "ld.f10t": "Install as an app",
+  "ld.f10d":
+    "Add it to your home screen and use it like an app, in Vietnamese or English.",
+  "ld.chipRobux": "Robux",
+  "ld.chipPhone": "Phone cards",
+  "ld.chipGift": "Gift cards",
+  "ld.storeNote": "The reward catalog may change over time.",
 };
