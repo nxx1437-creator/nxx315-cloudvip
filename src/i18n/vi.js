@@ -251,7 +251,7 @@ export default {
   "ld.h1a": "Kiếm Coin.",
   "ld.h1b": "Đổi thưởng dễ dàng.",
   "ld.heroSub":
-    "Hoàn thành nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, thẻ điện thoại, gift card cùng nhiều phần quà khác.",
+    "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, thẻ điện thoại, gift card và nhiều quà khác.",
   "ld.ctaStart": "Bắt đầu ngay",
   "ld.ctaHow": "Xem cách hoạt động",
   "ld.check1": "Không cần nạp tiền",
