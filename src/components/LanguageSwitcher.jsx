@@ -26,7 +26,11 @@ export default function LanguageSwitcher({ dark = false }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-3 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
+        className={`flex h-11 items-center gap-2 border px-3 text-sm font-semibold transition ${
+          dark
+            ? "rounded-sm border-white/15 bg-white/5 text-slate-200 hover:bg-white/10"
+            : "rounded-xl border-slate-200 bg-white/80 text-slate-700 shadow-sm backdrop-blur hover:bg-white"
+        }`}
       >
         <span className="text-lg leading-none">{current.flag}</span>
         <svg
