@@ -1,8 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, MessageCircle, Send, Mail, Facebook } from "lucide-react";
+import {
+  Menu,
+  X,
+  ArrowUp,
+  MessageCircle,
+  Send,
+  Mail,
+  Facebook,
+} from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher.jsx";
-import { BrandLogo } from "./LandingParts.jsx";
+import { BrandLogo, Corners } from "./LandingParts.jsx";
 import { useI18n } from "../i18n/index.js";
 
 export const NAV = [
@@ -40,76 +48,104 @@ export function LandingHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3">
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-          <BrandLogo />
-        </button>
-
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV.map(([id, key]) => (
-            <button
-              key={id}
-              onClick={() => go(id)}
-              className="text-sm font-medium text-slate-600 hover:text-slate-950"
-            >
-              {t(key)}
-            </button>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <LanguageSwitcher />
+    <header className="sticky top-0 z-50 px-3 pt-3">
+      <div className="relative border border-white/10 bg-[#070D1A]/90 backdrop-blur">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <button
-            onClick={() => navigate("/login")}
-            className="hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:block"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            {t("ld.login")}
+            <BrandLogo />
           </button>
-          <button
-            onClick={() => navigate("/register")}
-            className="hidden rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 sm:block"
-          >
-            {t("ld.register")}
-          </button>
-          <button
-            onClick={() => setMenu(!menu)}
-            aria-label="Menu"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-700 md:hidden"
-          >
-            {menu ? <X size={18} /> : <Menu size={18} />}
-          </button>
-        </div>
-      </div>
 
-      {menu && (
-        <div className="border-t border-slate-200 bg-white px-5 py-3 md:hidden">
-          {NAV.map(([id, key]) => (
-            <button
-              key={id}
-              onClick={() => go(id)}
-              className="block w-full px-2 py-3 text-left text-sm font-medium text-slate-700"
-            >
-              {t(key)}
-            </button>
-          ))}
-          <div className="mt-2 grid grid-cols-2 gap-2 pb-2">
+          <nav className="hidden items-center gap-8 md:flex">
+            {NAV.map(([id, key]) => (
+              <button
+                key={id}
+                onClick={() => go(id)}
+                className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-slate-400 transition hover:text-emerald-400"
+              >
+                {t(key)}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:block">
+              <LanguageSwitcher dark />
+            </div>
             <button
               onClick={() => navigate("/login")}
-              className="rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700"
+              className="hidden px-3 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-slate-300 transition hover:text-white lg:block"
             >
               {t("ld.login")}
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white"
+              className="relative bg-emerald-500 px-4 py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] text-slate-950 transition hover:bg-emerald-400"
             >
               {t("ld.register")}
+              <Corners className="border-slate-950/60" />
+            </button>
+            <button
+              onClick={() => setMenu(!menu)}
+              aria-label="Menu"
+              className="flex h-11 w-11 items-center justify-center text-white md:hidden"
+            >
+              {menu ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
-      )}
+
+        {menu && (
+          <div className="border-t border-white/10 px-4 py-3 md:hidden">
+            <div className="flex items-center justify-between py-2 sm:hidden">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                Language
+              </span>
+              <LanguageSwitcher dark />
+            </div>
+            {NAV.map(([id, key]) => (
+              <button
+                key={id}
+                onClick={() => go(id)}
+                className="block w-full py-3.5 text-left font-mono text-xs font-bold uppercase tracking-[0.2em] text-slate-300"
+              >
+                {t(key)}
+              </button>
+            ))}
+            <button
+              onClick={() => navigate("/login")}
+              className="mt-1 w-full border border-white/15 py-3.5 font-mono text-xs font-bold uppercase tracking-[0.2em] text-slate-200"
+            >
+              {t("ld.login")}
+            </button>
+          </div>
+        )}
+      </div>
     </header>
+  );
+}
+
+export function BackToTop() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 500);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Top"
+      className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center border border-emerald-500/30 bg-[#070D1A]/95 text-emerald-400 backdrop-blur transition hover:bg-emerald-500/10"
+    >
+      <ArrowUp size={22} />
+      <Corners />
+    </button>
   );
 }
 
@@ -118,9 +154,9 @@ export function LandingFooter() {
   const navigate = useNavigate();
 
   return (
-    <footer className="border-t border-slate-200 bg-slate-50">
+    <footer className="border-t border-white/10 bg-[#03070F]">
       <div className="mx-auto max-w-6xl px-5 py-12">
-        <div className="grid gap-8 md:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <BrandLogo />
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-500">
@@ -134,7 +170,7 @@ export function LandingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100"
+                  className="flex h-10 w-10 items-center justify-center border border-white/10 text-slate-400 transition hover:border-emerald-500/50 hover:text-emerald-400"
                 >
                   <Icon size={16} />
                 </a>
@@ -143,15 +179,15 @@ export function LandingFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-slate-900">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
               {t("ld.footAbout")}
             </p>
-            <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
+            <ul className="mt-4 space-y-3 text-sm text-slate-400">
               {NAV.map(([id, key]) => (
                 <li key={id}>
                   <button
                     onClick={() => scrollToId(id)}
-                    className="hover:text-slate-900"
+                    className="transition hover:text-white"
                   >
                     {t(key)}
                   </button>
@@ -161,15 +197,15 @@ export function LandingFooter() {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-slate-900">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
               {t("ld.footLegal")}
             </p>
-            <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
+            <ul className="mt-4 space-y-3 text-sm text-slate-400">
               {LEGAL.map(([path, key]) => (
                 <li key={path}>
                   <button
                     onClick={() => navigate(path)}
-                    className="hover:text-slate-900"
+                    className="transition hover:text-white"
                   >
                     {t(key)}
                   </button>
@@ -179,11 +215,11 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 font-mono text-[11px] uppercase tracking-wider text-slate-600 sm:flex-row">
           <p>{t("ld.rights", { year: new Date().getFullYear() })}</p>
           <p>{t("ld.made")}</p>
         </div>
       </div>
     </footer>
   );
-   }
+  }
