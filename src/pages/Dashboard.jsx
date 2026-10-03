@@ -14,7 +14,6 @@ import {
   Headphones,
   ChevronRight,
   Gamepad2,
-  TrendingUp,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -52,7 +51,7 @@ export default function Dashboard() {
     return t("dash.greetEvening");
   }, [t]);
 
-  // Kiểm tra IP trùng (Chỉ chạy 1 lần khi mount)
+  // Kiểm tra IP trùng
   useEffect(() => {
     if (!user?.id) return;
     let isMounted = true;
@@ -133,11 +132,30 @@ export default function Dashboard() {
     user?.user_metadata?.username ||
     user?.email?.split("@")[0] ||
     t("dash.fallbackName");
-    
+
+  // ===== XỬ LÝ LEVEL VÀ EXP CHUẨN =====
+  const rawLevel = profile?.level || 1;
+  const rawExp = profile?.exp || 0;
+  const rawExpTarget = profile?.exp_target || 100;
+
+  // Nếu EXP vượt quá target, tự động tính lại level và exp dư
+  let displayLevel = rawLevel;
+  let displayExp = rawExp;
+  let displayExpTarget = rawExpTarget;
+
+  // Vòng lặp xử lý level up (đề phòng EXP vượt quá nhiều lần)
+  while (displayExp >= displayExpTarget) {
+    displayExp -= displayExpTarget;
+    displayLevel += 1;
+    displayExpTarget = Math.floor(displayExpTarget * 1.5); // Mỗi level tăng 50% EXP cần
+  }
+
   const expPct = Math.min(
     100,
-    Math.round(((profile?.exp || 0) / (profile?.exp_target || 100)) * 100)
+    Math.round((displayExp / displayExpTarget) * 100)
   );
+  // =====================================
+
   const todayTasksDone = profile?.tasks_completed_today || 0;
   const todayTasksTotal = 3;
   const todayTaskPct = Math.min(
@@ -205,7 +223,7 @@ export default function Dashboard() {
                   {t("dash.balance")}
                 </span>
                 <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-3 py-1 text-xs font-bold text-[#B87700]">
-                  <Crown size={14} /> LV{profile?.level || 0}
+                  <Crown size={14} /> LV{displayLevel}
                 </span>
               </div>
               <div className="mt-2 flex items-baseline gap-2">
@@ -221,12 +239,12 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between text-xs font-medium text-[#9CA3AF]">
                   <span>EXP</span>
                   <span>
-                    {profile?.exp || 0}/{profile?.exp_target || 100}
+                    {displayExp}/{displayExpTarget}
                   </span>
                 </div>
                 <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#3478F6] to-[#0878C9]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#3478F6] to-[#0878C9] transition-all duration-500"
                     style={{ width: `${expPct}%` }}
                   />
                 </div>
@@ -304,7 +322,6 @@ export default function Dashboard() {
 
             {/* === 5. STREAK & PROGRESS === */}
             <div className="space-y-3">
-              {/* Streak - Dải ngang */}
               <div className="flex items-center justify-between rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
@@ -330,7 +347,6 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Progress - Full width */}
               <button
                 onClick={() => navigate("/tasks")}
                 className="flex w-full items-center justify-between rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left transition hover:border-sky-200"
@@ -389,7 +405,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* === 7. MINI GAME (Tách thành các thẻ riêng) === */}
+            {/* === 7. MINI GAME === */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -440,4 +456,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-    }
+            }
