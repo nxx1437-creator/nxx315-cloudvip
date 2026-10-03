@@ -347,4 +347,7 @@ export default {
   "ld.chipPhone": "Phone cards",
   "ld.chipGift": "Gift cards",
   "ld.storeNote": "The reward catalog may change over time.",
+  "ld.faq7q": "What do tasks involve?",
+  "ld.faq7a":
+    "Tasks usually mean opening a partner's link and following the steps shown on that page. Partner pages may contain ads. The Coins you will receive are shown on each task before you start.",
 };
