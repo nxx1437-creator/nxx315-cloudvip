@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useI18n, LANGS } from "../i18n/index.js";
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ dark = false }) {
   const { lang, setLang } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
