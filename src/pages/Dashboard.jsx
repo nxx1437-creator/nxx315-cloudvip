@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Coins,
@@ -13,6 +13,8 @@ import {
   ArrowLeftRight,
   Headphones,
   ChevronRight,
+  Gamepad2,
+  TrendingUp,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -43,16 +45,17 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
-  const getGreeting = () => {
+  const getGreeting = useCallback(() => {
     const h = new Date().getHours();
     if (h < 11) return t("dash.greetMorning");
     if (h < 18) return t("dash.greetAfternoon");
     return t("dash.greetEvening");
-  };
+  }, [t]);
 
-  // Kiểm tra IP trùng
+  // Kiểm tra IP trùng (Chỉ chạy 1 lần khi mount)
   useEffect(() => {
     if (!user?.id) return;
+    let isMounted = true;
     const checkUserIp = async () => {
       try {
         const sessionRes = await supabase.auth.getSession();
@@ -70,7 +73,7 @@ export default function Dashboard() {
           }
         );
         const data = await res.json();
-        if (data?.ok === false) {
+        if (data?.ok === false && isMounted) {
           console.warn("[check-user-ip] User bị xóa vì IP trùng");
           await supabase.auth.signOut();
           window.location.href = "/login?error=ip_duplicate";
@@ -80,9 +83,10 @@ export default function Dashboard() {
       }
     };
     checkUserIp();
+    return () => { isMounted = false; };
   }, [user?.id]);
 
-  // Biểu đồ Coin 7 ngày (lưu thứ trong tuần dạng số, dịch lúc hiển thị)
+  // Biểu đồ Coin 7 ngày
   useEffect(() => {
     const fetchChart = async () => {
       if (!user?.id) {
@@ -129,6 +133,7 @@ export default function Dashboard() {
     user?.user_metadata?.username ||
     user?.email?.split("@")[0] ||
     t("dash.fallbackName");
+    
   const expPct = Math.min(
     100,
     Math.round(((profile?.exp || 0) / (profile?.exp_target || 100)) * 100)
@@ -173,12 +178,12 @@ export default function Dashboard() {
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
+      <main className="mx-auto max-w-md space-y-5 px-4 py-5 md:max-w-5xl">
         {loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
-            {/* Hero */}
+            {/* === 1. LỜI CHÀO === */}
             <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
               <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
@@ -191,55 +196,44 @@ export default function Dashboard() {
               <p className="relative mt-1.5 text-sm text-[#667085]">
                 {t("dash.heroSub")}
               </p>
-              <div className="relative mt-4 flex flex-wrap gap-2.5">
-                <button
-                  onClick={() => navigate("/tasks")}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#3478F6] to-[#0878C9] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#3478F6]/25 transition hover:brightness-105"
-                >
-                  <Rocket size={15} /> {t("dash.startTasks")}
-                </button>
-                <button
-                  onClick={() => navigate("/invite")}
-                  className="flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151]"
-                >
-                  <Gift size={15} /> {t("dash.invite")}
-                </button>
-              </div>
+            </div>
 
-              <div className="relative mt-4 rounded-2xl bg-[#F5F7FB] p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#667085]">
-                    {t("dash.balance")}
-                  </span>
-                  <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-2.5 py-1 text-xs font-semibold text-[#B87700]">
-                    <Crown size={12} /> LV{profile?.level || 0}
+            {/* === 2. THẺ SỐ DƯ (BALANCE CARD) === */}
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-[#667085]">
+                  {t("dash.balance")}
+                </span>
+                <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-3 py-1 text-xs font-bold text-[#B87700]">
+                  <Crown size={14} /> LV{profile?.level || 0}
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <Coins size={28} className="text-[#F2A900]" />
+                <span className="text-4xl font-extrabold text-[#111827]">
+                  {profile?.coins || 0}
+                </span>
+                <span className="text-sm font-medium text-[#9CA3AF]">
+                  {t("dash.coin")}
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-xs font-medium text-[#9CA3AF]">
+                  <span>EXP</span>
+                  <span>
+                    {profile?.exp || 0}/{profile?.exp_target || 100}
                   </span>
                 </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <Coins size={24} className="text-[#F2A900]" />
-                  <span className="text-3xl font-bold text-[#111827]">
-                    {profile?.coins || 0}
-                  </span>
-                  <span className="text-[#9CA3AF]">{t("dash.coin")}</span>
-                </div>
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
-                    <span>EXP</span>
-                    <span>
-                      {profile?.exp || 0}/{profile?.exp_target || 100}
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                    <div
-                      className="h-full rounded-full bg-[#3478F6]"
-                      style={{ width: `${expPct}%` }}
-                    />
-                  </div>
+                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#3478F6] to-[#0878C9]"
+                    style={{ width: `${expPct}%` }}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Hành động nhanh */}
+            {/* === 3. HÀNH ĐỘNG NHANH === */}
             <div>
               <p className="mb-3 text-sm font-bold text-[#111827]">
                 {t("dash.quick")}
@@ -276,12 +270,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <HomeTutorial />
-
-            {/* Top 3 tuần này */}
-            <LeaderboardCard />
-
-            {/* Stats */}
+            {/* === 4. THỐNG KÊ (STATS) === */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <StatCard
                 icon={CheckSquare}
@@ -313,59 +302,65 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Giữ lửa + Tiến độ hôm nay (2 cột) */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col justify-between rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
-                  <Flame size={20} className="text-[#FFB82E]" />
+            {/* === 5. STREAK & PROGRESS === */}
+            <div className="space-y-3">
+              {/* Streak - Dải ngang */}
+              <div className="flex items-center justify-between rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
+                    <Flame size={24} className="text-[#FFB82E]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-[#9C7A3F]">
+                      {t("dash.streak")}
+                    </p>
+                    <p className="text-xl font-bold text-[#111827]">
+                      {profile?.streak_days || 0}{" "}
+                      <span className="text-sm font-medium text-[#667085]">
+                        {t("dash.days")}
+                      </span>
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-3">
-                  <p className="text-xs font-medium text-[#9C7A3F]">
-                    {t("dash.streak")}
-                  </p>
-                  <p className="text-2xl font-bold text-[#111827]">
-                    {profile?.streak_days || 0}{" "}
-                    <span className="text-sm font-medium text-[#667085]">
-                      {t("dash.days")}
-                    </span>
-                  </p>
-                  <p className="text-xs text-[#9C7A3F]">
-                    {t("dash.record")}:{" "}
-                    <span className="font-semibold">
-                      {profile?.streak_record || 0}
-                    </span>
+                <div className="text-right">
+                  <p className="text-xs text-[#9C7A3F]">{t("dash.record")}</p>
+                  <p className="text-lg font-bold text-[#111827]">
+                    {profile?.streak_record || 0}
                   </p>
                 </div>
               </div>
 
+              {/* Progress - Full width */}
               <button
                 onClick={() => navigate("/tasks")}
-                className="flex flex-col items-center rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center"
+                className="flex w-full items-center justify-between rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left transition hover:border-sky-200"
               >
-                <span className="text-xs font-semibold text-[#667085]">
-                  {t("dash.progress")}
-                </span>
+                <div>
+                  <p className="text-sm font-bold text-[#111827]">
+                    {t("dash.progress")}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#667085]">
+                    {todayTasksDone}/{todayTasksTotal} {t("dash.qaTasks")}
+                  </p>
+                </div>
                 <div
-                  className="mt-2.5 flex h-24 w-24 items-center justify-center rounded-full"
+                  className="flex h-16 w-16 items-center justify-center rounded-full"
                   style={{
                     background: `conic-gradient(#3478F6 ${
                       todayTaskPct * 3.6
                     }deg, #E5E7EB 0deg)`,
                   }}
                 >
-                  <div className="flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full bg-white">
-                    <span className="text-xl font-bold text-[#111827]">
+                  <div className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-white">
+                    <span className="text-sm font-bold text-[#111827]">
                       {todayTaskPct}%
-                    </span>
-                    <span className="text-[10px] text-[#9CA3AF]">
-                      {todayTasksDone}/{todayTasksTotal}
                     </span>
                   </div>
                 </div>
               </button>
             </div>
 
-            {/* Mốc thưởng chuỗi nhiệm vụ */}
+            {/* === 6. MỐC THƯỞNG CHUỖI NHIỆM VỤ === */}
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-[#111827]">
@@ -394,14 +389,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Mini Game */}
-            <button
-              onClick={() => navigate("/minigames")}
-              className="w-full overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white text-left transition hover:border-sky-200"
-            >
-              <div className="flex items-center justify-between px-4 pt-4">
+            {/* === 7. MINI GAME (Tách thành các thẻ riêng) === */}
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🎮</span>
+                  <Gamepad2 size={20} className="text-[#3478F6]" />
                   <p className="text-sm font-bold text-[#111827]">
                     {t("dash.minigame")}
                   </p>
@@ -411,26 +403,34 @@ export default function Dashboard() {
                   <ChevronRight size={12} />
                 </span>
               </div>
-              <p className="px-4 pb-3 pt-1 text-xs text-[#9CA3AF]">
-                {t("dash.miniDesc")}
-              </p>
-              <div className="grid grid-cols-3 gap-px bg-[#F3F4F6]">
+              <div className="grid grid-cols-3 gap-3">
                 {[
-                  ["🎡", "dash.wheel"],
-                  ["🎫", "dash.scratch"],
-                  ["🎲", "dash.dice"],
-                ].map(([emoji, key]) => (
-                  <div key={key} className="bg-white px-3 py-3 text-center">
-                    <p className="text-lg">{emoji}</p>
-                    <p className="mt-1 text-[10px] font-semibold text-[#6B7280]">
+                  { emoji: "🎡", key: "dash.wheel", path: "/minigames/wheel" },
+                  { emoji: "🎫", key: "dash.scratch", path: "/minigames/scratch" },
+                  { emoji: "🎲", key: "dash.dice", path: "/minigames/dice" },
+                ].map(({ emoji, key, path }) => (
+                  <button
+                    key={key}
+                    onClick={() => navigate(path)}
+                    className="flex flex-col items-center justify-center rounded-xl border border-[#F3F4F6] bg-[#FAFAFA] p-4 transition hover:border-[#3478F6] hover:bg-[#EAF2FE]"
+                  >
+                    <span className="text-2xl">{emoji}</span>
+                    <span className="mt-2 text-[11px] font-semibold text-[#6B7280]">
                       {t(key)}
-                    </p>
-                  </div>
+                    </span>
+                  </button>
                 ))}
               </div>
-            </button>
+              <p className="mt-3 text-center text-xs text-[#9CA3AF]">
+                {t("dash.miniDesc")}
+              </p>
+            </div>
 
-            {/* Coin 7 ngày qua */}
+            {/* === 8. BẢNG XẾP HẠNG & HƯỚNG DẪN === */}
+            <LeaderboardCard />
+            <HomeTutorial />
+
+            {/* === 9. BIỂU ĐỒ COIN 7 NGÀY === */}
             <CoinChart chartData={chartData} chartLoading={chartLoading} />
           </>
         )}
@@ -440,4 +440,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-                }
+    }
