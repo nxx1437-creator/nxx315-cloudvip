@@ -348,4 +348,7 @@ export default {
   "ld.chipPhone": "Thẻ điện thoại",
   "ld.chipGift": "Gift card",
   "ld.storeNote": "Danh mục quà có thể thay đổi theo thời điểm.",
+  "ld.faq7q": "Nhiệm vụ gồm những gì?",
+  "ld.faq7a":
+    "Nhiệm vụ thường là mở liên kết của đối tác và làm theo các bước hiển thị trên trang đó. Các trang đối tác có thể chứa quảng cáo. Số Coin nhận được hiển thị rõ trên từng nhiệm vụ trước khi bạn bắt đầu.",
 };
