@@ -1,4 +1,4 @@
- import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Coins,
@@ -44,6 +44,11 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
+  // ===== STATE CHO LEVEL TỪ RPC =====
+  const [userLevel, setUserLevel] = useState(null);
+  const [levelLoading, setLevelLoading] = useState(true);
+  // ==================================
+
   const getGreeting = useCallback(() => {
     const h = new Date().getHours();
     if (h < 11) return t("dash.greetMorning");
@@ -84,6 +89,29 @@ export default function Dashboard() {
     checkUserIp();
     return () => { isMounted = false; };
   }, [user?.id]);
+
+  // ===== LOAD LEVEL TỪ RPC (giống Profile) =====
+  useEffect(() => {
+    const loadLevel = async () => {
+      if (!user?.id) {
+        setLevelLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase.rpc("get_user_level", {
+          p_user_id: user.id,
+        });
+        if (error) throw error;
+        if (data) setUserLevel(data);
+      } catch (err) {
+        console.error("Load level error:", err);
+      } finally {
+        setLevelLoading(false);
+      }
+    };
+    loadLevel();
+  }, [user?.id]);
+  // =============================================
 
   // Biểu đồ Coin 7 ngày
   useEffect(() => {
@@ -133,18 +161,18 @@ export default function Dashboard() {
     user?.email?.split("@")[0] ||
     t("dash.fallbackName");
 
-  // ===== XỬ LÝ LEVEL VÀ EXP CHUẨN =====
-  // Lấy trực tiếp từ DB, KHÔNG tự ý tính lại level
-  const displayLevel = profile?.level || 1;
-  const displayExp = profile?.exp || 0;
-  const displayExpTarget = profile?.exp_target || 100;
-
-  // Nếu EXP đã đạt hoặc vượt mục tiêu, hiển thị MAX
-  const isMaxExp = displayExp >= displayExpTarget;
-  const expPct = isMaxExp
-    ? 100
-    : Math.min(100, Math.round((displayExp / displayExpTarget) * 100));
-  // =====================================
+  // ===== TÍNH TOÁN LEVEL & EXP TỪ RPC =====
+  const displayLevel = userLevel?.level || 1;
+  const displayLevelLabel = userLevel?.label || "";
+  const displayLevelColor = userLevel?.color || "#3478F6";
+  
+  // Tính phần trăm EXP dựa trên lifetime_coins và next_level
+  const lifetimeCoins = userLevel?.lifetime_coins || 0;
+  const nextLevelCoins = userLevel?.next_level?.coins_required || 0;
+  const expPct = nextLevelCoins > 0
+    ? Math.min(100, Math.round((lifetimeCoins / nextLevelCoins) * 100))
+    : 100;
+  // ==========================================
 
   const todayTasksDone = profile?.tasks_completed_today || 0;
   const todayTasksTotal = 3;
@@ -212,8 +240,14 @@ export default function Dashboard() {
                 <span className="text-sm font-medium text-[#667085]">
                   {t("dash.balance")}
                 </span>
-                <span className="flex items-center gap-1 rounded-full bg-[#FFF4DB] px-3 py-1 text-xs font-bold text-[#B87700]">
-                  <Crown size={14} /> LV{displayLevel}
+                <span
+                  className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold"
+                  style={{
+                    backgroundColor: `${displayLevelColor}20`,
+                    color: displayLevelColor,
+                  }}
+                >
+                  <Crown size={14} /> Lv.{displayLevel}
                 </span>
               </div>
               <div className="mt-2 flex items-baseline gap-2">
@@ -225,21 +259,39 @@ export default function Dashboard() {
                   {t("dash.coin")}
                 </span>
               </div>
+
+              {/* Thanh EXP dùng dữ liệu từ RPC get_user_level */}
               <div className="mt-4">
-                <div className="flex items-center justify-between text-xs font-medium text-[#9CA3AF]">
-                  <span>EXP</span>
-                  <span>
-                    {isMaxExp
-                      ? "MAX"
-                      : `${displayExp}/${displayExpTarget}`}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#3478F6] to-[#0878C9] transition-all duration-500"
-                    style={{ width: `${expPct}%` }}
-                  />
-                </div>
+                {levelLoading ? (
+                  <div className="h-8">
+                    <div className="skeleton-shimmer h-3 w-full rounded-full" />
+                  </div>
+                ) : userLevel?.next_level ? (
+                  <>
+                    <div className="flex items-center justify-between text-xs font-medium text-[#9CA3AF]">
+                      <span>
+                        {displayLevelLabel || "EXP"}
+                      </span>
+                      <span>
+                        {lifetimeCoins.toLocaleString("vi-VN")} /{" "}
+                        {nextLevelCoins.toLocaleString("vi-VN")} coin
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${expPct}%`,
+                          backgroundColor: displayLevelColor,
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs font-medium text-[#9CA3AF]">
+                    Đã đạt cấp tối đa
+                  </p>
+                )}
               </div>
             </div>
 
@@ -448,4 +500,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-               }
+           }
