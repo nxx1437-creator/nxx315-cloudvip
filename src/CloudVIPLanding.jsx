@@ -18,6 +18,10 @@ import {
   TrendingUp,
   Share2,
   Trophy,
+  ShoppingBag,
+  Wallet,
+  Bell,
+  Smartphone,
   MessageCircle,
   Send,
   Mail,
@@ -27,10 +31,12 @@ import LanguageSwitcher from "./components/LanguageSwitcher.jsx";
 import {
   BrandLogo,
   SectionHead,
-  FeatureCard,
+  BentoCard,
+  Chip,
   SafetyBadge,
   FAQItem,
-} from "./components/LandingParts.jsx";  
+  PhoneMock,
+} from "./components/LandingParts.jsx";
 import { useI18n } from "./i18n/index.js";
 
 const NAV = [
@@ -46,13 +52,37 @@ const STEPS = [
   { n: "03", icon: Gift, t: "ld.s3t", d: "ld.s3d" },
 ];
 
-const FEATURES = [
-  { icon: CalendarCheck, t: "ld.f1t", d: "ld.f1d" },
-  { icon: Flame, t: "ld.f2t", d: "ld.f2d" },
-  { icon: Gamepad2, t: "ld.f3t", d: "ld.f3d" },
-  { icon: TrendingUp, t: "ld.f4t", d: "ld.f4d" },
-  { icon: Share2, t: "ld.f5t", d: "ld.f5d" },
-  { icon: Trophy, t: "ld.f6t", d: "ld.f6d" },
+// 10 ô tính năng (2 ô lớn trên cùng)
+const BENTO = [
+  {
+    icon: ShoppingBag,
+    tint: "amber",
+    t: "ld.f7t",
+    d: "ld.f7d",
+    span: "sm:col-span-2 lg:col-span-2",
+    chips: ["ld.chipRobux", "ld.chipPhone", "ld.chipGift"],
+  },
+  {
+    icon: CalendarCheck,
+    tint: "teal",
+    t: "ld.f1t",
+    d: "ld.f1d",
+    span: "sm:col-span-2 lg:col-span-2",
+  },
+  { icon: Flame, tint: "rose", t: "ld.f2t", d: "ld.f2d" },
+  {
+    icon: Gamepad2,
+    tint: "violet",
+    t: "ld.f3t",
+    d: "ld.f3d",
+    chips: ["dash.wheel", "dash.scratch", "dash.dice"],
+  },
+  { icon: TrendingUp, tint: "emerald", t: "ld.f4t", d: "ld.f4d" },
+  { icon: Trophy, tint: "amber", t: "ld.f6t", d: "ld.f6d" },
+  { icon: Share2, tint: "sky", t: "ld.f5t", d: "ld.f5d" },
+  { icon: Wallet, tint: "teal", t: "ld.f8t", d: "ld.f8d" },
+  { icon: Bell, tint: "rose", t: "ld.f9t", d: "ld.f9d" },
+  { icon: Smartphone, tint: "violet", t: "ld.f10t", d: "ld.f10d" },
 ];
 
 const SAFETY = [
@@ -67,6 +97,13 @@ const SOCIAL_LINKS = [
   { icon: Send, label: "Telegram", href: "https://t.me/nxx315" },
   { icon: Mail, label: "Email", href: "mailto:nxx315hub@gmail.com" },
   { icon: Facebook, label: "Facebook", href: "https://facebook.com/nxx315" },
+];
+
+const LEGAL = [
+  ["/terms", "ld.terms"],
+  ["/privacy", "ld.privacy"],
+  ["/fraud", "ld.fraud"],
+  ["/redemption-policy", "ld.redeem"],
 ];
 
 const primaryBtn =
@@ -84,19 +121,14 @@ export default function CloudVIPLanding() {
     setMenu(false);
   };
 
-  const legal = [
-    ["/terms", "ld.terms"],
-    ["/privacy", "ld.privacy"],
-    ["/fraud", "ld.fraud"],
-    ["/redemption-policy", "ld.redeem"],
-  ];
-
   return (
     <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       {/* ============ NAVBAR ============ */}
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
             <BrandLogo />
           </button>
 
@@ -167,44 +199,54 @@ export default function CloudVIPLanding() {
 
       <main>
         {/* ============ HERO ============ */}
-        <section className="bg-gradient-to-b from-[#F1F8FA] to-white">
-          <div className="mx-auto max-w-3xl px-5 pb-16 pt-14 text-center sm:pb-24 sm:pt-20">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#CDE8EF] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#087EA4] shadow-sm">
-              <CheckCircle2 size={13} /> {t("ld.badge")}
-            </span>
+        <section className="overflow-hidden bg-gradient-to-b from-[#E6F3F7] via-[#F1F8FA] to-white">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-14 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
+            <div className="text-center lg:text-left">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#CDE8EF] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#087EA4] shadow-sm">
+                <CheckCircle2 size={13} /> {t("ld.badge")}
+              </span>
 
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-950 sm:text-6xl">
-              {t("ld.h1a")}
-              <br />
-              <span className="text-[#087EA4]">{t("ld.h1b")}</span>
-            </h1>
+              <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-950 sm:text-6xl">
+                {t("ld.h1a")}
+                <br />
+                <span className="text-[#087EA4]">{t("ld.h1b")}</span>
+              </h1>
 
-            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 sm:text-base">
-              {t("ld.heroSub")}
-            </p>
+              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 sm:text-base lg:mx-0">
+                {t("ld.heroSub")}
+              </p>
 
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <button onClick={() => navigate("/register")} className={primaryBtn}>
-                {t("ld.ctaStart")} <ArrowRight size={16} />
-              </button>
-              <button onClick={() => scrollTo("how")} className={ghostBtn}>
-                {t("ld.ctaHow")}
-              </button>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+                <button
+                  onClick={() => navigate("/register")}
+                  className={primaryBtn}
+                >
+                  {t("ld.ctaStart")} <ArrowRight size={16} />
+                </button>
+                <button onClick={() => scrollTo("how")} className={ghostBtn}>
+                  {t("ld.ctaHow")}
+                </button>
+              </div>
+
+              <div className="mt-8 flex flex-col items-center gap-2 text-xs font-medium text-slate-500 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-6 lg:justify-start">
+                {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
+                  <span key={k} className="flex items-center gap-1.5">
+                    <CheckCircle2 size={14} className="text-[#087EA4]" />
+                    {t(k)}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-500">
-              {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
-                <span key={k} className="flex items-center gap-1.5">
-                  <CheckCircle2 size={14} className="text-[#087EA4]" />
-                  {t(k)}
-                </span>
-              ))}
-            </div>
+            <PhoneMock />
           </div>
         </section>
 
         {/* ============ HOW IT WORKS ============ */}
-        <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-20">
+        <section
+          id="how"
+          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-20"
+        >
           <SectionHead tag={t("ld.howTag")} title={t("ld.howTitle")} />
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {STEPS.map(({ n, icon: Icon, t: tk, d }) => (
@@ -229,24 +271,45 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ FEATURES ============ */}
-        <section id="features" className="scroll-mt-20 border-y border-slate-200 bg-slate-50">
+        {/* ============ FEATURES (BENTO) ============ */}
+        <section
+          id="features"
+          className="scroll-mt-20 border-y border-slate-200 bg-slate-50"
+        >
           <div className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
             <SectionHead
               center
-              tag={t("ld.featTag")}
-              title={t("ld.featTitle")}
+              tag={t("ld.bentoTag")}
+              title={t("ld.bentoTitle")}
+              sub={t("ld.bentoSub")}
             />
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon, t: tk, d }) => (
-                <FeatureCard key={tk} icon={icon} title={t(tk)} desc={t(d)} />
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {BENTO.map(({ icon, tint, t: tk, d, span, chips }) => (
+                <BentoCard
+                  key={tk}
+                  icon={icon}
+                  tint={tint}
+                  title={t(tk)}
+                  desc={t(d)}
+                  className={span || ""}
+                >
+                  {chips?.map((c) => (
+                    <Chip key={c}>{t(c)}</Chip>
+                  ))}
+                </BentoCard>
               ))}
             </div>
+            <p className="mt-6 text-center text-xs text-slate-400">
+              {t("ld.storeNote")}
+            </p>
           </div>
         </section>
 
         {/* ============ SAFETY ============ */}
-        <section id="safety" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-20">
+        <section
+          id="safety"
+          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-20"
+        >
           <SectionHead
             center
             tag={t("ld.safeTag")}
@@ -261,7 +324,10 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* ============ FAQ ============ */}
-        <section id="faq" className="scroll-mt-20 border-t border-slate-200 bg-slate-50">
+        <section
+          id="faq"
+          className="scroll-mt-20 border-t border-slate-200 bg-slate-50"
+        >
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-20">
             <SectionHead center tag={t("ld.faqTag")} title={t("ld.faqTitle")} />
             <div className="mt-10 space-y-3">
@@ -274,7 +340,7 @@ export default function CloudVIPLanding() {
 
         {/* ============ CTA CUỐI ============ */}
         <section className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
-          <div className="rounded-3xl border border-[#CDE8EF] bg-[#F1F8FA] p-8 text-center sm:p-14">
+          <div className="rounded-3xl border border-[#CDE8EF] bg-gradient-to-br from-[#E6F3F7] to-white p-8 text-center sm:p-14">
             <h2 className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
               {t("ld.ctaTitle")}
             </h2>
@@ -282,7 +348,10 @@ export default function CloudVIPLanding() {
               {t("ld.ctaSub")}
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <button onClick={() => navigate("/register")} className={primaryBtn}>
+              <button
+                onClick={() => navigate("/register")}
+                className={primaryBtn}
+              >
                 {t("ld.ctaReg")} <ArrowRight size={16} />
               </button>
               <button onClick={() => navigate("/login")} className={ghostBtn}>
@@ -341,7 +410,7 @@ export default function CloudVIPLanding() {
                 {t("ld.footLegal")}
               </p>
               <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
-                {legal.map(([path, key]) => (
+                {LEGAL.map(([path, key]) => (
                   <li key={path}>
                     <button
                       onClick={() => navigate(path)}
@@ -363,4 +432,4 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-                }
+   }
