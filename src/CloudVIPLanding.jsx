@@ -130,12 +130,14 @@ export default function CloudVIPLanding() {
                 <Corners />
               </span>
 
-              <h1 className="mt-6 text-[34px] font-black uppercase leading-[1.18] tracking-[-0.02em] text-slate-950 sm:text-6xl">
-                <span className="block [text-wrap:balance]">{t("ld.h1a")}</span>
-                <span className="block text-emerald-600 [text-wrap:balance]">
+              {/* --- PHẦN CHỮ ĐÃ ĐƯỢC SỬA --- */}
+              <h1 className="mt-6 text-[34px] font-black uppercase leading-[1.25] tracking-[-0.02em] text-slate-950 sm:text-6xl">
+                <span className="[text-wrap:balance]">{t("ld.h1a")}</span>{" "}
+                <span className="text-emerald-600 [text-wrap:balance]">
                   {t("ld.h1b")}
                 </span>
               </h1>
+              {/* --------------------------- */}
 
               <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 lg:mx-0">
                 {t("ld.heroSub")}
@@ -306,4 +308,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-   }
+              }
