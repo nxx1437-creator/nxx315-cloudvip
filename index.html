@@ -31,7 +31,7 @@
 
       /* ==== LOGO — CHỮ BÉ ==== */
       .loader-logo {
-        font-size: 22px;        /* ← Giảm từ 44px → 22px */
+        font-size: 22px;
         font-weight: 800;
         letter-spacing: -0.5px;
         margin-bottom: 28px;
@@ -52,14 +52,14 @@
       /* ==== 2 CỤC DI CHUYỂN ==== */
       .loader-balls {
         position: relative;
-        width: 80px;            /* ← Thu nhỏ */
+        width: 80px;
         height: 14px;
       }
 
       .ball {
         position: absolute;
         top: 50%;
-        width: 12px;            /* ← Cục bé hơn */
+        width: 12px;
         height: 12px;
         border-radius: 50%;
         margin-top: -6px;
@@ -81,7 +81,7 @@
 
       @keyframes ball-blue-move {
         0%, 100% { transform: translateX(0); }
-        50% { transform: translateX(68px); }  /* 80 - 12 = 68 */
+        50% { transform: translateX(68px); }
       }
 
       @keyframes ball-green-move {
@@ -97,13 +97,15 @@
         font-weight: 500;
         letter-spacing: 0.3px;
       }
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
+    </style>
+
+    <!-- Phông chữ Be Vietnam Pro (phải nằm NGOÀI thẻ style) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;700;800;900&display=swap"
       rel="stylesheet"
     />
-    </style>
   </head>
 
   <body>
