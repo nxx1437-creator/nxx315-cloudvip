@@ -326,4 +326,26 @@ export default {
   "ld.redeem": "Chính sách đổi thưởng",
   "ld.rights": "© {year} NXX315 Studio. Bảo lưu mọi quyền.",
   "ld.made": "Made in Vietnam 🇻🇳",
+  // Trang giới thiệu (bản mới)
+  "ld.mockNote": "Giao diện minh hoạ",
+  "ld.mockBalance": "Số dư",
+  "ld.mockStreak": "Chuỗi ngày",
+  "ld.bentoTag": "Mọi thứ trong một ứng dụng",
+  "ld.bentoTitle": "Đủ công cụ để kiếm và đổi thưởng",
+  "ld.bentoSub":
+    "Từ nhiệm vụ hằng ngày, mini game đến cửa hàng đổi thưởng — tất cả nằm gọn trong một nơi.",
+  "ld.f7t": "Cửa hàng đổi thưởng",
+  "ld.f7d":
+    "Dùng Coin đổi Robux, thẻ điện thoại, gift card và nhiều phần quà khác.",
+  "ld.f8t": "Ví & lịch sử",
+  "ld.f8d": "Theo dõi số dư Coin, lịch sử nhiệm vụ và các đơn đổi thưởng.",
+  "ld.f9t": "Thông báo",
+  "ld.f9d": "Nhận thông báo khi có nhiệm vụ mới (nếu bạn bật).",
+  "ld.f10t": "Cài như ứng dụng",
+  "ld.f10d":
+    "Thêm vào màn hình chính để dùng như một ứng dụng, hỗ trợ tiếng Việt và English.",
+  "ld.chipRobux": "Robux",
+  "ld.chipPhone": "Thẻ điện thoại",
+  "ld.chipGift": "Gift card",
+  "ld.storeNote": "Danh mục quà có thể thay đổi theo thời điểm.",
 };
