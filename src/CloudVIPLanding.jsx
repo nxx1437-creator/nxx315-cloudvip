@@ -104,7 +104,7 @@ const SAFETY = [
 
 const GRID_BG = {
   backgroundImage:
-    "linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px)",
+    "linear-gradient(rgba(5,150,105,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(5,150,105,0.06) 1px, transparent 1px)",
   backgroundSize: "44px 44px",
 };
 
@@ -113,28 +113,30 @@ export default function CloudVIPLanding() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#050A14] font-['Be_Vietnam_Pro',sans-serif] text-white">
+    <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <LandingHeader />
 
       <main>
         {/* ============ HERO ============ */}
-        <section className="relative overflow-hidden" style={GRID_BG}>
-          <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[34rem] -translate-x-1/2 bg-emerald-500/10 blur-3xl" />
+        <section
+          className="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 to-white"
+          style={GRID_BG}
+        >
           <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-12 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
             <div className="text-center lg:text-left">
-              <span className="relative inline-flex items-center gap-2.5 border border-emerald-500/30 bg-[#070D1A] px-3.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400 sm:text-[11px]">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+              <span className="relative inline-flex items-center gap-2.5 border border-emerald-600/25 bg-white px-3.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 sm:text-[11px]">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                 {t("ld.badge")}
                 <Corners />
               </span>
 
-              <h1 className="mt-6 text-[38px] font-black italic uppercase leading-[1.06] tracking-[-0.03em] text-white sm:text-6xl">
+              <h1 className="mt-6 text-[36px] font-black uppercase leading-[1.08] tracking-[-0.03em] text-slate-950 sm:text-6xl">
                 {t("ld.h1a")}
                 <br />
-                <span className="text-emerald-400">{t("ld.h1b")}</span>
+                <span className="text-emerald-600">{t("ld.h1b")}</span>
               </h1>
 
-              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-400 lg:mx-0">
+              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 lg:mx-0">
                 {t("ld.heroSub")}
               </p>
 
@@ -159,11 +161,11 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* ============ DẢI TIN CẬY ============ */}
-        <div className="border-y border-white/10 bg-black/30">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2.5 px-5 py-5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+        <div className="border-y border-slate-200 bg-slate-50">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2.5 px-5 py-5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
             {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
               <span key={k} className="flex items-center gap-2.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 {t(k)}
               </span>
             ))}
@@ -201,7 +203,7 @@ export default function CloudVIPLanding() {
         {/* ============ 002 TÍNH NĂNG ============ */}
         <section
           id="features"
-          className="scroll-mt-24 border-t border-white/10 bg-[#070D1A]"
+          className="scroll-mt-24 border-t border-slate-200 bg-slate-50"
           style={GRID_BG}
         >
           <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
@@ -227,7 +229,7 @@ export default function CloudVIPLanding() {
                 </BentoCard>
               ))}
             </div>
-            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-600">
+            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
               {t("ld.storeNote")}
             </p>
           </div>
@@ -254,7 +256,7 @@ export default function CloudVIPLanding() {
         {/* ============ 004 FAQ ============ */}
         <section
           id="faq"
-          className="scroll-mt-24 border-t border-white/10 bg-[#070D1A]"
+          className="scroll-mt-24 border-t border-slate-200 bg-slate-50"
         >
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
             <SectionHead
@@ -264,7 +266,7 @@ export default function CloudVIPLanding() {
               sub={t("ld.faqTag")}
             />
             <div className="mt-10 space-y-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+              {[1, 2, 7, 3, 4, 5, 6].map((i) => (
                 <FAQItem key={i} q={t(`ld.faq${i}q`)} a={t(`ld.faq${i}a`)} />
               ))}
             </div>
@@ -273,28 +275,28 @@ export default function CloudVIPLanding() {
 
         {/* ============ CTA CUỐI ============ */}
         <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-          <div className="relative border border-emerald-500/40 bg-[#0A1020] p-8 text-center shadow-[0_0_80px_-20px_rgba(16,185,129,0.45)] sm:p-14">
-            <h2 className="text-[30px] font-black italic uppercase leading-[1.08] tracking-[-0.02em] text-white sm:text-5xl">
+          <div className="relative bg-emerald-600 p-8 text-center text-white shadow-xl shadow-emerald-600/20 sm:p-14">
+            <h2 className="text-[28px] font-black uppercase leading-[1.1] tracking-[-0.02em] sm:text-5xl">
               {t("ld.ctaTitle")}
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-slate-400">
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-emerald-50">
               {t("ld.ctaSub")}
             </p>
             <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
               <button
                 onClick={() => navigate("/register")}
-                className={`${primaryBtn} w-full sm:w-auto`}
+                className="inline-flex w-full items-center justify-center gap-2 bg-white px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
               >
                 {t("ld.ctaReg")} <ArrowRight size={16} />
               </button>
               <button
                 onClick={() => navigate("/login")}
-                className={`${ghostBtn} w-full sm:w-auto`}
+                className="inline-flex w-full items-center justify-center border-2 border-white/60 px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 sm:w-auto"
               >
                 {t("ld.login")}
               </button>
             </div>
-            <Corners />
+            <Corners className="border-white" />
           </div>
         </section>
       </main>
@@ -303,4 +305,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-              }
+                }
