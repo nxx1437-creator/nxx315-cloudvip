@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  CheckCircle2,
   UserPlus,
   Zap,
   Gift,
@@ -26,54 +25,74 @@ import {
   BentoCard,
   Chip,
   SafetyBadge,
+  StepCard,
   FAQItem,
-  HeroPreview,
+  HeroConsole,
+  Corners,
   primaryBtn,
   ghostBtn,
 } from "./components/LandingParts.jsx";
 import {
   LandingHeader,
   LandingFooter,
+  BackToTop,
   scrollToId,
 } from "./components/LandingChrome.jsx";
 import { useI18n } from "./i18n/index.js";
 
 const STEPS = [
-  { n: "01", icon: UserPlus, t: "ld.s1t", d: "ld.s1d" },
-  { n: "02", icon: Zap, t: "ld.s2t", d: "ld.s2d" },
-  { n: "03", icon: Gift, t: "ld.s3t", d: "ld.s3d" },
+  {
+    n: "01",
+    icon: UserPlus,
+    t: "ld.s1t",
+    d: "ld.s1d",
+    chips: [{ raw: "Email" }, { raw: "Google" }],
+  },
+  {
+    n: "02",
+    icon: Zap,
+    t: "ld.s2t",
+    d: "ld.s2d",
+    chips: [{ k: "dash.qaTasks" }, { k: "dash.minigame" }, { k: "ld.f5t" }],
+  },
+  {
+    n: "03",
+    icon: Gift,
+    t: "ld.s3t",
+    d: "ld.s3d",
+    chips: [{ k: "ld.chipRobux" }, { k: "ld.chipPhone" }, { k: "ld.chipGift" }],
+  },
 ];
 
 const BENTO = [
   {
     icon: ShoppingBag,
-    tint: "amber",
     t: "ld.f7t",
     d: "ld.f7d",
-    span: "sm:col-span-2 lg:col-span-2",
+    featured: true,
+    span: "sm:col-span-2",
     chips: ["ld.chipRobux", "ld.chipPhone", "ld.chipGift"],
   },
   {
     icon: CalendarCheck,
-    tint: "teal",
     t: "ld.f1t",
     d: "ld.f1d",
-    span: "sm:col-span-2 lg:col-span-2",
+    featured: true,
+    span: "sm:col-span-2",
   },
-  { icon: Flame, tint: "rose", t: "ld.f2t", d: "ld.f2d" },
+  { icon: Flame, t: "ld.f2t", d: "ld.f2d" },
   {
     icon: Gamepad2,
-    tint: "violet",
     t: "ld.f3t",
     d: "ld.f3d",
     chips: ["dash.wheel", "dash.scratch", "dash.dice"],
   },
-  { icon: TrendingUp, tint: "emerald", t: "ld.f4t", d: "ld.f4d" },
-  { icon: Trophy, tint: "amber", t: "ld.f6t", d: "ld.f6d" },
-  { icon: Share2, tint: "sky", t: "ld.f5t", d: "ld.f5d" },
-  { icon: Wallet, tint: "teal", t: "ld.f8t", d: "ld.f8d" },
-  { icon: Bell, tint: "rose", t: "ld.f9t", d: "ld.f9d" },
-  { icon: Smartphone, tint: "violet", t: "ld.f10t", d: "ld.f10d" },
+  { icon: TrendingUp, t: "ld.f4t", d: "ld.f4d" },
+  { icon: Trophy, t: "ld.f6t", d: "ld.f6d" },
+  { icon: Share2, t: "ld.f5t", d: "ld.f5d" },
+  { icon: Wallet, t: "ld.f8t", d: "ld.f8d" },
+  { icon: Bell, t: "ld.f9t", d: "ld.f9d" },
+  { icon: Smartphone, t: "ld.f10t", d: "ld.f10d" },
 ];
 
 const SAFETY = [
@@ -83,113 +102,123 @@ const SAFETY = [
   { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
 ];
 
+const GRID_BG = {
+  backgroundImage:
+    "linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px)",
+  backgroundSize: "44px 44px",
+};
+
 export default function CloudVIPLanding() {
   const { t } = useI18n();
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
+    <div className="min-h-screen bg-[#050A14] font-['Be_Vietnam_Pro',sans-serif] text-white">
       <LandingHeader />
 
       <main>
         {/* ============ HERO ============ */}
-        <section className="overflow-hidden bg-gradient-to-b from-teal-50 via-white to-white">
-          <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-12 pt-8 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
+        <section className="relative overflow-hidden" style={GRID_BG}>
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[34rem] -translate-x-1/2 bg-emerald-500/10 blur-3xl" />
+          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-12 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
             <div className="text-center lg:text-left">
-              <span className="inline-flex items-center gap-2 rounded-full border border-teal-100 bg-white px-3.5 py-1.5 text-xs font-semibold text-teal-700 shadow-sm">
-                <CheckCircle2 size={13} /> {t("ld.badge")}
+              <span className="relative inline-flex items-center gap-2.5 border border-emerald-500/30 bg-[#070D1A] px-3.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400 sm:text-[11px]">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                {t("ld.badge")}
+                <Corners />
               </span>
 
-              <h1 className="mt-5 text-[34px] font-extrabold leading-[1.12] tracking-tight text-slate-950 sm:text-6xl">
+              <h1 className="mt-6 text-[38px] font-black italic uppercase leading-[1.06] tracking-[-0.03em] text-white sm:text-6xl">
                 {t("ld.h1a")}
                 <br />
-                <span className="bg-gradient-to-r from-teal-600 to-emerald-500 bg-clip-text text-transparent">
-                  {t("ld.h1b")}
-                </span>
+                <span className="text-emerald-400">{t("ld.h1b")}</span>
               </h1>
 
-              <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-slate-500 sm:text-base lg:mx-0">
+              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-400 lg:mx-0">
                 {t("ld.heroSub")}
               </p>
 
-              <div className="mt-6 grid grid-cols-2 gap-2.5 sm:flex sm:justify-center lg:justify-start">
+              <div className="mx-auto mt-7 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center lg:justify-start">
                 <button
                   onClick={() => navigate("/register")}
-                  className={`${primaryBtn} px-3 text-[13px] sm:px-6 sm:text-sm`}
+                  className={`${primaryBtn} w-full sm:w-auto`}
                 >
-                  {t("ld.ctaStart")} <ArrowRight size={15} />
+                  {t("ld.ctaStart")} <ArrowRight size={16} />
                 </button>
                 <button
                   onClick={() => scrollToId("how")}
-                  className={`${ghostBtn} px-3 text-[13px] sm:px-6 sm:text-sm`}
+                  className={`${ghostBtn} w-full sm:w-auto`}
                 >
-                  {t("ld.nav.how")}
+                  {t("ld.ctaHow")}
                 </button>
-              </div>
-
-              <div className="mt-7 hidden flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-slate-500 sm:flex sm:justify-center lg:justify-start">
-                {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
-                  <span key={k} className="flex items-center gap-1.5">
-                    <CheckCircle2 size={14} className="text-teal-600" />
-                    {t(k)}
-                  </span>
-                ))}
               </div>
             </div>
 
-            <HeroPreview />
+            <HeroConsole />
           </div>
         </section>
 
-        {/* ============ HOW IT WORKS ============ */}
+        {/* ============ DẢI TIN CẬY ============ */}
+        <div className="border-y border-white/10 bg-black/30">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2.5 px-5 py-5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
+              <span key={k} className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                {t(k)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ============ 001 CÁCH HOẠT ĐỘNG ============ */}
         <section
           id="how"
-          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:py-20"
+          className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:py-24"
         >
-          <SectionHead tag={t("ld.howTag")} title={t("ld.howTitle")} />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {STEPS.map(({ n, icon: Icon, t: tk, d }) => (
-              <div
+          <SectionHead
+            index="001"
+            tag={t("ld.nav.how")}
+            title={t("ld.howTitle")}
+            sub={t("ld.howTag")}
+          />
+          <div className="mt-12 grid gap-12 md:grid-cols-3 md:gap-8">
+            {STEPS.map(({ n, icon, t: tk, d, chips }) => (
+              <StepCard
                 key={n}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                n={n}
+                icon={icon}
+                title={t(tk)}
+                desc={t(d)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white">
-                    <Icon size={18} />
-                  </div>
-                  <span className="text-2xl font-extrabold text-slate-200">
-                    {n}
-                  </span>
-                </div>
-                <h3 className="mt-5 text-base font-bold text-slate-950">
-                  {t(tk)}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{t(d)}</p>
-              </div>
+                {chips.map((c) => (
+                  <Chip key={c.k || c.raw}>{c.raw ?? t(c.k)}</Chip>
+                ))}
+              </StepCard>
             ))}
           </div>
         </section>
 
-        {/* ============ FEATURES ============ */}
+        {/* ============ 002 TÍNH NĂNG ============ */}
         <section
           id="features"
-          className="scroll-mt-20 border-y border-slate-200 bg-slate-50"
+          className="scroll-mt-24 border-t border-white/10 bg-[#070D1A]"
+          style={GRID_BG}
         >
-          <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
             <SectionHead
-              center
-              tag={t("ld.bentoTag")}
+              index="002"
+              tag={t("ld.nav.features")}
               title={t("ld.bentoTitle")}
               sub={t("ld.bentoSub")}
             />
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {BENTO.map(({ icon, tint, t: tk, d, span, chips }) => (
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {BENTO.map(({ icon, t: tk, d, span, featured, chips }) => (
                 <BentoCard
                   key={tk}
                   icon={icon}
-                  tint={tint}
                   title={t(tk)}
                   desc={t(d)}
+                  featured={featured}
                   className={span || ""}
                 >
                   {chips?.map((c) => (
@@ -198,38 +227,43 @@ export default function CloudVIPLanding() {
                 </BentoCard>
               ))}
             </div>
-            <p className="mt-6 text-center text-xs text-slate-400">
+            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-600">
               {t("ld.storeNote")}
             </p>
           </div>
         </section>
 
-        {/* ============ SAFETY ============ */}
+        {/* ============ 003 AN TOÀN ============ */}
         <section
           id="safety"
-          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:py-20"
+          className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:py-24"
         >
           <SectionHead
-            center
-            tag={t("ld.safeTag")}
+            index="003"
+            tag={t("ld.nav.safety")}
             title={t("ld.safeTitle")}
             sub={t("ld.safeSub")}
           />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2">
             {SAFETY.map(({ icon, t: tk, d }) => (
               <SafetyBadge key={tk} icon={icon} title={t(tk)} desc={t(d)} />
             ))}
           </div>
         </section>
 
-        {/* ============ FAQ ============ */}
+        {/* ============ 004 FAQ ============ */}
         <section
           id="faq"
-          className="scroll-mt-20 border-t border-slate-200 bg-slate-50"
+          className="scroll-mt-24 border-t border-white/10 bg-[#070D1A]"
         >
-          <div className="mx-auto max-w-3xl px-5 py-14 sm:py-20">
-            <SectionHead center tag={t("ld.faqTag")} title={t("ld.faqTitle")} />
-            <div className="mt-8 space-y-3">
+          <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
+            <SectionHead
+              index="004"
+              tag={t("ld.nav.faq")}
+              title={t("ld.faqTitle")}
+              sub={t("ld.faqTag")}
+            />
+            <div className="mt-10 space-y-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <FAQItem key={i} q={t(`ld.faq${i}q`)} a={t(`ld.faq${i}a`)} />
               ))}
@@ -238,33 +272,35 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* ============ CTA CUỐI ============ */}
-        <section className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
-          <div className="rounded-3xl bg-gradient-to-br from-teal-600 to-emerald-500 p-8 text-center text-white shadow-xl shadow-teal-600/20 sm:p-14">
-            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+        <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
+          <div className="relative border border-emerald-500/40 bg-[#0A1020] p-8 text-center shadow-[0_0_80px_-20px_rgba(16,185,129,0.45)] sm:p-14">
+            <h2 className="text-[30px] font-black italic uppercase leading-[1.08] tracking-[-0.02em] text-white sm:text-5xl">
               {t("ld.ctaTitle")}
             </h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/85 sm:text-base">
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-slate-400">
               {t("ld.ctaSub")}
             </p>
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
               <button
                 onClick={() => navigate("/register")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-teal-700 shadow-md transition hover:bg-teal-50 active:scale-[0.99]"
+                className={`${primaryBtn} w-full sm:w-auto`}
               >
                 {t("ld.ctaReg")} <ArrowRight size={16} />
               </button>
               <button
                 onClick={() => navigate("/login")}
-                className="inline-flex items-center justify-center rounded-xl border border-white/40 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                className={`${ghostBtn} w-full sm:w-auto`}
               >
                 {t("ld.login")}
               </button>
             </div>
+            <Corners />
           </div>
         </section>
       </main>
 
       <LandingFooter />
+      <BackToTop />
     </div>
   );
-    }
+              }
