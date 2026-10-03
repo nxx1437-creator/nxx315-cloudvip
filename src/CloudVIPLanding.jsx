@@ -123,7 +123,7 @@ export default function CloudVIPLanding() {
           style={GRID_BG}
         >
           <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-12 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
-            {/* Đã đổi từ text-center thành text-left để sát tường bên trái */}
+            {/* Căn trái để sát tường */}
             <div className="text-left">
               <span className="relative inline-flex items-center gap-2.5 border border-emerald-600/25 bg-white px-3.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 sm:text-[11px]">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
@@ -131,19 +131,17 @@ export default function CloudVIPLanding() {
                 <Corners />
               </span>
 
-              {/* --- PHẦN CHỮ CHIA 3 DÒNG DỌC --- */}
+              {/* --- CHỈ 2 DÒNG DUY NHẤT --- */}
               <h1 className="mt-6 text-[34px] font-black uppercase leading-[1.25] tracking-[-0.02em] text-slate-950 sm:text-6xl">
                 <span className="block text-slate-950">{t("ld.h1a")}</span>
                 <span className="block text-emerald-600">{t("ld.h1b")}</span>
-                <span className="block text-emerald-600">{t("ld.h1c")}</span>
               </h1>
-              {/* --------------------------------- */}
+              {/* -------------------------- */}
 
               <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 lg:mx-0">
                 {t("ld.heroSub")}
               </p>
 
-              {/* Đã bỏ mx-auto để nút không bị căn giữa */}
               <div className="mt-7 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
                 <button
                   onClick={() => navigate("/register")}
@@ -309,4 +307,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-              }
+                                   }
