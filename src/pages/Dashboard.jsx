@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Coins,
@@ -134,26 +134,16 @@ export default function Dashboard() {
     t("dash.fallbackName");
 
   // ===== XỬ LÝ LEVEL VÀ EXP CHUẨN =====
-  const rawLevel = profile?.level || 1;
-  const rawExp = profile?.exp || 0;
-  const rawExpTarget = profile?.exp_target || 100;
+  // Lấy trực tiếp từ DB, KHÔNG tự ý tính lại level
+  const displayLevel = profile?.level || 1;
+  const displayExp = profile?.exp || 0;
+  const displayExpTarget = profile?.exp_target || 100;
 
-  // Nếu EXP vượt quá target, tự động tính lại level và exp dư
-  let displayLevel = rawLevel;
-  let displayExp = rawExp;
-  let displayExpTarget = rawExpTarget;
-
-  // Vòng lặp xử lý level up (đề phòng EXP vượt quá nhiều lần)
-  while (displayExp >= displayExpTarget) {
-    displayExp -= displayExpTarget;
-    displayLevel += 1;
-    displayExpTarget = Math.floor(displayExpTarget * 1.5); // Mỗi level tăng 50% EXP cần
-  }
-
-  const expPct = Math.min(
-    100,
-    Math.round((displayExp / displayExpTarget) * 100)
-  );
+  // Nếu EXP đã đạt hoặc vượt mục tiêu, hiển thị MAX
+  const isMaxExp = displayExp >= displayExpTarget;
+  const expPct = isMaxExp
+    ? 100
+    : Math.min(100, Math.round((displayExp / displayExpTarget) * 100));
   // =====================================
 
   const todayTasksDone = profile?.tasks_completed_today || 0;
@@ -239,7 +229,9 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between text-xs font-medium text-[#9CA3AF]">
                   <span>EXP</span>
                   <span>
-                    {displayExp}/{displayExpTarget}
+                    {isMaxExp
+                      ? "MAX"
+                      : `${displayExp}/${displayExpTarget}`}
                   </span>
                 </div>
                 <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
@@ -456,4 +448,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-            }
+               }
