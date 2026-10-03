@@ -23,15 +23,15 @@ import {
   Mail,
   Facebook,
 } from "lucide-react";
-import LanguageSwitcher from "../components/LanguageSwitcher.jsx";
+import LanguageSwitcher from "./components/LanguageSwitcher.jsx";
 import {
   BrandLogo,
   SectionHead,
   FeatureCard,
   SafetyBadge,
   FAQItem,
-} from "../components/LandingParts.jsx";
-import { useI18n } from "../i18n/index.js";
+} from "./components/LandingParts.jsx";  
+import { useI18n } from "./i18n/index.js";
 
 const NAV = [
   ["how", "ld.nav.how"],
