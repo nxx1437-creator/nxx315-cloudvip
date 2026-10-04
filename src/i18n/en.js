@@ -400,4 +400,5 @@ export default {
   "nav.wallet": "Wallet",
   "nav.settings": "Settings",
   "nav.review": "Account review",
+  "nav.profile": "Profile",
 };
