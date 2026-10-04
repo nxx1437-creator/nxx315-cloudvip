@@ -81,39 +81,6 @@ export default function Store() {
       <TopHeader />
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
-        {/* Số dư Coin + nút kiếm thêm */}
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-600 to-teal-500 p-4 text-white shadow-md shadow-emerald-600/20">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
-              <Coins size={22} className="text-amber-200" />
-            </span>
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-white/75">
-                {t("st.balance")}
-              </p>
-              <p className="truncate text-2xl font-black leading-tight">
-                {Number(profile?.coins || 0).toLocaleString(locale(lang))}
-                <span className="ml-1.5 font-mono text-xs font-medium uppercase tracking-widest text-white/75">
-                  {t("dash.coin")}
-                </span>
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate("/tasks")}
-            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2.5 font-mono text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-50 active:scale-[0.98]"
-          >
-            <Plus size={14} /> {t("st.earnMore")}
-          </button>
-        </div>
-
-        <StoreSearch
-          search={search}
-          setSearch={setSearch}
-          onSelect={handleGameClick}
-        />
-
-        <BannerSlideshow navigate={navigate} />
 
         {/* Dành cho bạn */}
         {recommended.length > 0 && !search && (
