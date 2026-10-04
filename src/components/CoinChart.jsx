@@ -12,7 +12,7 @@ export default function CoinChart({ chartData, chartLoading }) {
     <div>
       <SectionLabel
         right={
-          <span className="border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[11px] font-bold text-emerald-700">
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
             +{todayValue} {t("dash.today")}
           </span>
         }
@@ -27,8 +27,10 @@ export default function CoinChart({ chartData, chartLoading }) {
           </div>
         ) : chartData.every((d) => d.value === 0) ? (
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <BarChart3 size={28} className="text-slate-300" />
-            <p className="mt-2 text-sm font-bold text-slate-500">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-50">
+              <BarChart3 size={26} className="text-slate-300" />
+            </span>
+            <p className="mt-3 text-sm font-bold text-slate-600">
               {t("dash.noData")}
             </p>
             <p className="mt-0.5 text-xs text-slate-400">
@@ -51,7 +53,7 @@ export default function CoinChart({ chartData, chartLoading }) {
                   className="flex flex-1 flex-col items-center justify-end gap-1.5"
                 >
                   <span
-                    className={`font-mono text-[10px] font-bold ${
+                    className={`text-[10px] font-bold ${
                       d.value > 0 ? "text-slate-700" : "text-transparent"
                     }`}
                   >
@@ -59,7 +61,7 @@ export default function CoinChart({ chartData, chartLoading }) {
                   </span>
                   <div className="flex w-full flex-1 items-end">
                     <div
-                      className={`w-full transition-all ${
+                      className={`w-full rounded-t-xl transition-all ${
                         d.isToday
                           ? "bg-gradient-to-t from-emerald-600 to-emerald-400"
                           : d.value > 0
@@ -70,10 +72,10 @@ export default function CoinChart({ chartData, chartLoading }) {
                     />
                   </div>
                   <span
-                    className={`font-mono text-[10px] uppercase ${
+                    className={`text-[11px] ${
                       d.isToday
                         ? "font-bold text-emerald-700"
-                        : "text-slate-400"
+                        : "font-medium text-slate-400"
                     }`}
                   >
                     {t(`day.${d.dow}`)}
@@ -87,3 +89,4 @@ export default function CoinChart({ chartData, chartLoading }) {
     </div>
   );
 }
+
