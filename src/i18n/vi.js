@@ -387,4 +387,18 @@ export default {
   "dash2.agoHour": "{n} giờ trước",
   "dash2.agoDay": "{n} ngày trước",
   "dash2.todayTitle": "Hôm nay",
+  // Thanh trên
+  "hd.searchPh": "Tìm kiếm...",
+  "hd.noResult": "Không tìm thấy kết quả.",
+  "hd.notif": "Thông báo",
+  "hd.markAll": "Tất cả đã đọc",
+  "hd.notifEmpty": "Chưa có thông báo nào",
+  "hd.viewAll": "Xem tất cả thông báo →",
+  "nav.home": "Trang chủ",
+  "nav.tasks": "Nhiệm vụ",
+  "nav.store": "Cửa hàng",
+  "nav.shopEarn": "Mua hàng kiếm sao",
+  "nav.wallet": "Ví",
+  "nav.settings": "Cài đặt",
+  "nav.review": "Kiểm tra tài khoản",
 };
