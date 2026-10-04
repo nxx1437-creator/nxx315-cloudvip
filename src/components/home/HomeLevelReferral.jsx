@@ -5,9 +5,10 @@ import { Panel, SectionLabel } from "./HomeSections.jsx";
 import { useI18n } from "../../i18n/index.js";
 
 // ===== Cấp độ & thưởng cấp tiếp theo =====
-export function LevelCard({ userId }) {
+export function LevelCard({ userId, state }) {
   const { t, lang } = useI18n();
-  const { loading, data } = useLevelProgress(userId);
+  const own = useLevelProgress(state ? null : userId);
+  const { loading, data } = state || own;
   const fmt = (n) => Number(n || 0).toLocaleString(lang === "en" ? "en-US" : "vi-VN");
 
   if (loading) {
