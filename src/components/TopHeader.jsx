@@ -15,23 +15,29 @@ import {
 
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
+import useLevelProgress from "../hooks/useLevelProgress.js";
 import { supabase } from "../lib/supabaseClient.js";
 import Sidebar from "./Sidebar.jsx";
+import LanguageSwitcher from "./LanguageSwitcher.jsx";
+import { useI18n } from "../i18n/index.js";
 
+// label: khoá dịch; keywords: từ khoá tìm kiếm (không dấu + tiếng Anh)
 const SEARCH_INDEX = [
-  { label: "Trang chủ", path: "/dashboard", icon: Coins, keywords: "dashboard trang chu home" },
-  { label: "Nhiệm vụ", path: "/tasks", icon: ListChecks, keywords: "nhiem vu task kiem coin" },
-  { label: "Cửa hàng", path: "/store", icon: ShoppingBag, keywords: "cua hang store doi thuong robux" },
-  { label: "Mua hàng kiếm sao", path: "/shop-earn", icon: Coins, keywords: "mua hang kiem sao affiliate hoan tien" },
-  { label: "Ví", path: "/wallet", icon: Wallet, keywords: "vi wallet coin" },
-  { label: "Cài đặt", path: "/profile", icon: User, keywords: "cai dat settings tai khoan profile" },
-  { label: "Kiểm tra tài khoản", path: "/account-review", icon: ShieldCheck, keywords: "flag nghi ngo da tai khoan" },
+  { labelKey: "nav.home", path: "/dashboard", icon: Coins, keywords: "dashboard trang chu home" },
+  { labelKey: "nav.tasks", path: "/tasks", icon: ListChecks, keywords: "nhiem vu task tasks kiem coin earn" },
+  { labelKey: "nav.store", path: "/store", icon: ShoppingBag, keywords: "cua hang store shop doi thuong redeem robux" },
+  { labelKey: "nav.shopEarn", path: "/shop-earn", icon: Coins, keywords: "mua hang kiem sao affiliate hoan tien cashback stars" },
+  { labelKey: "nav.wallet", path: "/wallet", icon: Wallet, keywords: "vi wallet coin" },
+  { labelKey: "nav.settings", path: "/profile", icon: User, keywords: "cai dat settings tai khoan profile account" },
+  { labelKey: "nav.review", path: "/account-review", icon: ShieldCheck, keywords: "flag nghi ngo da tai khoan review" },
 ];
 
 export default function TopHeader() {
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { session } = useSession();
   const { profile } = useProfile();
+  const { data: lv } = useLevelProgress(session?.user?.id);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -47,14 +53,13 @@ export default function TopHeader() {
     profile?.username ||
     session?.user?.user_metadata?.username ||
     session?.user?.email?.split("@")[0] ||
-    "Bạn";
+    t("dash.fallbackName");
   const initial = displayName.charAt(0).toUpperCase();
 
-  const matches = query.trim()
+  const q = query.trim().toLowerCase();
+  const matches = q
     ? SEARCH_INDEX.filter((item) =>
-        (item.label + " " + item.keywords)
-          .toLowerCase()
-          .includes(query.trim().toLowerCase())
+        (t(item.labelKey) + " " + item.keywords).toLowerCase().includes(q)
       )
     : [];
 
@@ -122,10 +127,6 @@ export default function TopHeader() {
     navigate(path);
   };
 
-  const handleOpenNotif = () => {
-    setNotifOpen((prev) => !prev);
-  };
-
   const handleMarkAllAsRead = async () => {
     if (!session?.user?.id) return;
     await supabase
@@ -155,46 +156,49 @@ export default function TopHeader() {
 
   const formatTime = (dateStr) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-    if (diff < 60) return "vừa xong";
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return new Date(dateStr).toLocaleDateString("vi-VN");
+    if (diff < 60) return t("dash2.agoNow");
+    if (diff < 3600) return t("dash2.agoMin", { n: Math.floor(diff / 60) });
+    if (diff < 86400) return t("dash2.agoHour", { n: Math.floor(diff / 3600) });
+    if (diff < 604800) return t("dash2.agoDay", { n: Math.floor(diff / 86400) });
+    return new Date(dateStr).toLocaleDateString(lang === "en" ? "en-US" : "vi-VN");
   };
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex max-w-md md:max-w-5xl items-center gap-2 px-4 py-3">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-md items-center gap-2 px-3 py-2.5 md:max-w-5xl">
           <button
             onClick={() => navigate("/dashboard")}
-            className="shrink-0 font-[Baloo_2] text-base font-extrabold tracking-tight text-slate-900"
+            className="shrink-0 text-[15px] font-black leading-none tracking-tight text-slate-900"
           >
-            NXX315 <span className="text-sky-500">Studio</span>
+            Nxx315 <span className="text-emerald-600">Studio</span>
           </button>
 
           <div ref={searchRef} className="relative min-w-0 flex-1">
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-sm">
+            <div className="flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400 transition focus-within:border-emerald-500">
               <Search size={15} className="shrink-0" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
-                placeholder="Tìm trang, tính năng..."
-                className="w-full min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+                placeholder={t("hd.searchPh")}
+                className="w-full min-w-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
               />
               {query && (
-                <button onClick={() => setQuery("")} className="shrink-0 text-slate-300">
+                <button
+                  onClick={() => setQuery("")}
+                  className="shrink-0 text-slate-300"
+                >
                   <X size={13} />
                 </button>
               )}
             </div>
 
             {searchOpen && query.trim() && (
-              <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
+              <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto border border-slate-200 bg-white p-1.5 shadow-xl">
                 {matches.length === 0 ? (
                   <p className="px-3 py-4 text-center text-xs text-slate-400">
-                    Không tìm thấy kết quả.
+                    {t("hd.noResult")}
                   </p>
                 ) : (
                   matches.map((item) => {
@@ -203,13 +207,13 @@ export default function TopHeader() {
                       <button
                         key={item.path}
                         onClick={() => handleSelectResult(item.path)}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-sky-50"
+                        className="flex w-full items-center gap-3 px-2.5 py-2.5 text-left transition hover:bg-emerald-50"
                       >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-500">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-emerald-50 text-emerald-600">
                           <Icon size={15} />
                         </span>
                         <span className="text-sm font-semibold text-slate-700">
-                          {item.label}
+                          {t(item.labelKey)}
                         </span>
                       </button>
                     );
@@ -222,44 +226,42 @@ export default function TopHeader() {
           {/* Nút chuông */}
           <div ref={notifRef} className="relative shrink-0">
             <button
-              onClick={handleOpenNotif}
-              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
+              onClick={() => setNotifOpen((prev) => !prev)}
+              className="relative flex h-9 w-9 items-center justify-center border border-slate-200 bg-white transition hover:border-emerald-500"
             >
               <Bell size={16} className="text-slate-600" />
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center bg-rose-500 px-1 text-[9px] font-bold text-white">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
             </button>
 
             {notifOpen && (
-              <div className="fixed left-3 right-3 top-[68px] z-50 mx-auto max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
-                {/* Header xanh nhạt */}
-                <div className="flex items-center justify-between bg-sky-50/80 px-4 py-3">
+              <div className="fixed left-3 right-3 top-[60px] z-50 mx-auto max-w-sm overflow-hidden border border-slate-200 bg-white shadow-xl">
+                <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50 px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Bell size={15} className="text-sky-600" />
-                    <h3 className="text-[13.5px] font-bold text-slate-900">
-                      Thông báo
+                    <Bell size={15} className="text-emerald-700" />
+                    <h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.15em] text-slate-900">
+                      {t("hd.notif")}
                     </h3>
                   </div>
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllAsRead}
-                      className="text-[11px] font-semibold text-sky-600 hover:text-sky-700"
+                      className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
                     >
-                      Tất cả đã đọc
+                      {t("hd.markAll")}
                     </button>
                   )}
                 </div>
 
-                {/* ✅ List gọn — không có icon tròn bên trái */}
                 <div className="max-h-[360px] overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="p-8 text-center">
                       <Bell size={26} className="mx-auto mb-2 text-slate-300" />
                       <p className="text-xs font-semibold text-slate-500">
-                        Chưa có thông báo nào
+                        {t("hd.notifEmpty")}
                       </p>
                     </div>
                   ) : (
@@ -269,7 +271,7 @@ export default function TopHeader() {
                         onClick={() => handleClickNotif(n)}
                         className={`flex w-full items-start justify-between gap-3 border-b border-slate-100 px-4 py-3.5 text-left transition last:border-0 ${
                           !n.is_read
-                            ? "bg-sky-50/40 hover:bg-sky-50"
+                            ? "bg-emerald-50/50 hover:bg-emerald-50"
                             : "bg-white hover:bg-slate-50"
                         }`}
                       >
@@ -289,7 +291,7 @@ export default function TopHeader() {
                             </p>
                           )}
                         </div>
-                        <span className="shrink-0 pt-0.5 text-[10.5px] text-slate-400">
+                        <span className="shrink-0 pt-0.5 font-mono text-[10px] text-slate-400">
                           {formatTime(n.created_at)}
                         </span>
                       </button>
@@ -297,25 +299,29 @@ export default function TopHeader() {
                   )}
                 </div>
 
-                {/* Nút xem tất cả */}
                 <button
                   onClick={() => {
                     setNotifOpen(false);
                     navigate("/notifications");
                   }}
-                  className="flex w-full items-center justify-center border-t border-slate-100 bg-white px-4 py-3 text-[12.5px] font-bold text-sky-600 transition hover:bg-sky-50"
+                  className="flex w-full items-center justify-center border-t border-slate-100 bg-white px-4 py-3 text-[12.5px] font-bold text-emerald-700 transition hover:bg-emerald-50"
                 >
-                  Xem tất cả thông báo →
+                  {t("hd.viewAll")}
                 </button>
               </div>
             )}
           </div>
 
+          {/* Đổi ngôn ngữ (gọn) */}
+          <div className="shrink-0">
+            <LanguageSwitcher compact />
+          </div>
+
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-white hover:shadow-sm"
+            className="flex h-9 w-9 shrink-0 items-center justify-center text-slate-600 transition hover:bg-slate-50"
           >
-            <Menu size={19} />
+            <Menu size={20} />
           </button>
         </div>
       </header>
@@ -326,8 +332,8 @@ export default function TopHeader() {
         displayName={displayName}
         initial={initial}
         coins={profile?.coins}
-        level={profile?.level}
+        level={lv?.level ?? profile?.level}
       />
     </>
   );
-          }
+}
