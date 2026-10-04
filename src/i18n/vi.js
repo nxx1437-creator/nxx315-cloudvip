@@ -416,7 +416,7 @@ export default {
   "st.tabHot": "Hot",
   "st.tabMobile": "Mobile",
   "st.tabPc": "PC",
-  "st.topUp": "Nạp ngay",
+  "st.topUp": "Đổi ngay",
   "st.cat.pc": "PC",
   "st.cat.mobile": "Mobile",
   "st.slide": "Banner {n}",
