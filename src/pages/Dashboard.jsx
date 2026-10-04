@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Coins,
@@ -13,10 +13,11 @@ import {
   ArrowLeftRight,
   Headphones,
   ChevronRight,
-  Gamepad2,
+  TrendingUp,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
+import useLevelProgress from "../hooks/useLevelProgress.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
@@ -30,36 +31,41 @@ import {
   MilestoneCard,
   DashboardSkeleton,
 } from "../components/DashboardParts.jsx";
+import {
+  Panel,
+  SectionLabel,
+  AnnouncementsCard,
+  ActivityCard,
+} from "../components/home/HomeSections.jsx";
+import { LevelCard, ReferralCard } from "../components/home/HomeLevelReferral.jsx";
 import { useI18n } from "../i18n/index.js";
 
 export default function Dashboard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { session } = useSession();
   const user = session?.user;
 
   const { profile, loading, setProfile } = useProfile();
+  const { loading: lvLoading, data: lv } = useLevelProgress(user?.id);
 
   const [claimingMilestone, setClaimingMilestone] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(true);
 
-  // ===== STATE CHO LEVEL TỪ RPC =====
-  const [userLevel, setUserLevel] = useState(null);
-  const [levelLoading, setLevelLoading] = useState(true);
-  // ==================================
+  const fmt = (n) =>
+    Number(n || 0).toLocaleString(lang === "en" ? "en-US" : "vi-VN");
 
-  const getGreeting = useCallback(() => {
+  const getGreeting = () => {
     const h = new Date().getHours();
     if (h < 11) return t("dash.greetMorning");
     if (h < 18) return t("dash.greetAfternoon");
     return t("dash.greetEvening");
-  }, [t]);
+  };
 
   // Kiểm tra IP trùng
   useEffect(() => {
     if (!user?.id) return;
-    let isMounted = true;
     const checkUserIp = async () => {
       try {
         const sessionRes = await supabase.auth.getSession();
@@ -77,7 +83,7 @@ export default function Dashboard() {
           }
         );
         const data = await res.json();
-        if (data?.ok === false && isMounted) {
+        if (data?.ok === false) {
           console.warn("[check-user-ip] User bị xóa vì IP trùng");
           await supabase.auth.signOut();
           window.location.href = "/login?error=ip_duplicate";
@@ -87,33 +93,9 @@ export default function Dashboard() {
       }
     };
     checkUserIp();
-    return () => { isMounted = false; };
   }, [user?.id]);
 
-  // ===== LOAD LEVEL TỪ RPC (giống Profile) =====
-  useEffect(() => {
-    const loadLevel = async () => {
-      if (!user?.id) {
-        setLevelLoading(false);
-        return;
-      }
-      try {
-        const { data, error } = await supabase.rpc("get_user_level", {
-          p_user_id: user.id,
-        });
-        if (error) throw error;
-        if (data) setUserLevel(data);
-      } catch (err) {
-        console.error("Load level error:", err);
-      } finally {
-        setLevelLoading(false);
-      }
-    };
-    loadLevel();
-  }, [user?.id]);
-  // =============================================
-
-  // Biểu đồ Coin 7 ngày
+  // Biểu đồ Coin 7 ngày (lưu thứ trong tuần dạng số, dịch lúc hiển thị)
   useEffect(() => {
     const fetchChart = async () => {
       if (!user?.id) {
@@ -160,20 +142,6 @@ export default function Dashboard() {
     user?.user_metadata?.username ||
     user?.email?.split("@")[0] ||
     t("dash.fallbackName");
-
-  // ===== TÍNH TOÁN LEVEL & EXP TỪ RPC =====
-  const displayLevel = userLevel?.level || 1;
-  const displayLevelLabel = userLevel?.label || "";
-  const displayLevelColor = userLevel?.color || "#3478F6";
-  
-  // Tính phần trăm EXP dựa trên lifetime_coins và next_level
-  const lifetimeCoins = userLevel?.lifetime_coins || 0;
-  const nextLevelCoins = userLevel?.next_level?.coins_required || 0;
-  const expPct = nextLevelCoins > 0
-    ? Math.min(100, Math.round((lifetimeCoins / nextLevelCoins) * 100))
-    : 100;
-  // ==========================================
-
   const todayTasksDone = profile?.tasks_completed_today || 0;
   const todayTasksTotal = 3;
   const todayTaskPct = Math.min(
@@ -206,7 +174,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] pb-24 text-[#111827]">
+    <div className="min-h-screen bg-slate-50 pb-24 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <style>{`
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
@@ -214,223 +182,207 @@ export default function Dashboard() {
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-5 px-4 py-5 md:max-w-5xl">
+      <main className="mx-auto max-w-md space-y-6 px-4 py-5 md:max-w-5xl">
         {loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
-            {/* === 1. LỜI CHÀO === */}
-            <div className="relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <div className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-gradient-to-br from-[#3478F6]/15 to-transparent blur-2xl" />
-              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#EAF2FE] px-3 py-1 text-xs font-semibold text-[#0878C9]">
-                {t("dash.badge")}
-              </span>
-              <h1 className="relative mt-3 text-2xl font-bold leading-tight text-[#111827]">
-                {getGreeting()},<br />
-                <span className="text-[#3478F6]">{displayName}</span> 👋
-              </h1>
-              <p className="relative mt-1.5 text-sm text-[#667085]">
-                {t("dash.heroSub")}
-              </p>
-            </div>
-
-            {/* === 2. THẺ SỐ DƯ (BALANCE CARD) === */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-[#667085]">
-                  {t("dash.balance")}
-                </span>
-                <span
-                  className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold"
-                  style={{
-                    backgroundColor: `${displayLevelColor}20`,
-                    color: displayLevelColor,
-                  }}
-                >
-                  <Crown size={14} /> Lv.{displayLevel}
-                </span>
-              </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <Coins size={28} className="text-[#F2A900]" />
-                <span className="text-4xl font-extrabold text-[#111827]">
-                  {profile?.coins || 0}
-                </span>
-                <span className="text-sm font-medium text-[#9CA3AF]">
-                  {t("dash.coin")}
-                </span>
-              </div>
-
-              {/* Thanh EXP dùng dữ liệu từ RPC get_user_level */}
-              <div className="mt-4">
-                {levelLoading ? (
-                  <div className="h-8">
-                    <div className="skeleton-shimmer h-3 w-full rounded-full" />
-                  </div>
-                ) : userLevel?.next_level ? (
-                  <>
-                    <div className="flex items-center justify-between text-xs font-medium text-[#9CA3AF]">
-                      <span>
-                        {displayLevelLabel || "EXP"}
-                      </span>
-                      <span>
-                        {lifetimeCoins.toLocaleString("vi-VN")} /{" "}
-                        {nextLevelCoins.toLocaleString("vi-VN")} coin
-                      </span>
-                    </div>
-                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${expPct}%`,
-                          backgroundColor: displayLevelColor,
-                        }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-xs font-medium text-[#9CA3AF]">
-                    Đã đạt cấp tối đa
+            {/* ===== HERO ===== */}
+            <Panel className="relative p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+                    {getGreeting()}
                   </p>
+                  <h1 className="mt-1 truncate text-[26px] font-black leading-tight tracking-[-0.02em] text-slate-950">
+                    {displayName} 👋
+                  </h1>
+                </div>
+                {lv && (
+                  <span className="flex shrink-0 items-center gap-1.5 border border-amber-200 bg-amber-50 px-2.5 py-1.5 font-mono text-[11px] font-bold text-amber-700">
+                    <Crown size={12} />
+                    {t("dash2.lvNow", { level: lv.level })}
+                  </span>
                 )}
               </div>
-            </div>
-
-            {/* === 3. HÀNH ĐỘNG NHANH === */}
-            <div>
-              <p className="mb-3 text-sm font-bold text-[#111827]">
-                {t("dash.quick")}
+              <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
+                {t("dash.heroSub")}
               </p>
+
+              {/* Thẻ số dư */}
+              <div className="mt-4 bg-gradient-to-br from-emerald-600 to-teal-500 p-4 text-white shadow-lg shadow-emerald-600/20">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-white/75">
+                  {t("dash.balance")}
+                </p>
+                <div className="mt-2.5 flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center bg-white/20">
+                    <Coins size={26} className="text-amber-200" />
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black leading-none tracking-[-0.03em]">
+                      {fmt(profile?.coins)}
+                    </span>
+                    <span className="font-mono text-xs uppercase tracking-widest text-white/75">
+                      {t("dash.coin")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={() => navigate("/tasks")}
+                  className="flex items-center justify-center gap-2 bg-slate-950 px-3 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white transition active:scale-[0.98]"
+                >
+                  <Rocket size={14} /> {t("dash.startTasks")}
+                </button>
+                <button
+                  onClick={() => navigate("/invite")}
+                  className="flex items-center justify-center gap-2 border-2 border-slate-200 bg-white px-3 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-700 transition hover:border-emerald-500 active:scale-[0.98]"
+                >
+                  <Gift size={14} /> {t("dash.invite")}
+                </button>
+              </div>
+            </Panel>
+
+            {/* ===== HÀNH ĐỘNG NHANH ===== */}
+            <div>
+              <SectionLabel>{t("dash.quick")}</SectionLabel>
               <div className="grid grid-cols-4 gap-2.5">
                 <QuickAction
                   icon={CheckSquare}
-                  iconBg="bg-[#EAF2FE]"
-                  iconColor="text-[#3478F6]"
+                  iconBg="bg-emerald-50"
+                  iconColor="text-emerald-600"
                   label={t("dash.qaTasks")}
                   onClick={() => navigate("/tasks")}
                 />
                 <QuickAction
                   icon={ShoppingBag}
-                  iconBg="bg-[#EAF2FE]"
-                  iconColor="text-[#3478F6]"
+                  iconBg="bg-teal-50"
+                  iconColor="text-teal-600"
                   label={t("dash.qaStore")}
                   onClick={() => navigate("/store")}
                 />
                 <QuickAction
                   icon={ArrowLeftRight}
-                  iconBg="bg-[#FFF4DB]"
-                  iconColor="text-[#B87700]"
+                  iconBg="bg-amber-50"
+                  iconColor="text-amber-600"
                   label={t("dash.qaTopup")}
                   onClick={() => navigate("/shop-earn")}
                 />
                 <QuickAction
                   icon={Headphones}
-                  iconBg="bg-emerald-50"
-                  iconColor="text-emerald-600"
+                  iconBg="bg-sky-50"
+                  iconColor="text-sky-600"
                   label={t("dash.qaSupport")}
                   onClick={() => navigate("/contact")}
                 />
               </div>
             </div>
 
-            {/* === 4. THỐNG KÊ (STATS) === */}
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <StatCard
-                icon={CheckSquare}
-                iconBg="bg-[#EAF2FE]"
-                iconColor="text-[#3478F6]"
-                value={0}
-                label={t("dash.statAvailable")}
-              />
-              <StatCard
-                icon={Trophy}
-                iconBg="bg-emerald-50"
-                iconColor="text-emerald-600"
-                value={todayTasksDone}
-                label={t("dash.statDoneToday")}
-              />
-              <StatCard
-                icon={Coins}
-                iconBg="bg-[#FFF4DB]"
-                iconColor="text-[#B87700]"
-                value={profile?.coins_earned_today || 0}
-                label={t("dash.statCoinToday")}
-              />
-              <StatCard
-                icon={Users}
-                iconBg="bg-[#EAF2FE]"
-                iconColor="text-[#0878C9]"
-                value={profile?.referrals_count || 0}
-                label={t("dash.statInvited")}
-              />
-            </div>
+            {/* ===== MỤC MỚI: THÔNG BÁO TỪ ADMIN ===== */}
+            <AnnouncementsCard />
 
-            {/* === 5. STREAK & PROGRESS === */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-2xl border border-[#F3E4CC] bg-[#FFF8ED] p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
-                    <Flame size={24} className="text-[#FFB82E]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-[#9C7A3F]">
+            <HomeTutorial />
+
+            {/* ===== MỤC MỚI: CẤP ĐỘ ===== */}
+            <LevelCard state={{ loading: lvLoading, data: lv }} />
+
+            {/* ===== HÔM NAY ===== */}
+            <div>
+              <SectionLabel>{t("dash2.todayTitle")}</SectionLabel>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <StatCard
+                  icon={TrendingUp}
+                  iconBg="bg-emerald-50"
+                  iconColor="text-emerald-600"
+                  value={fmt(lv?.lifetime)}
+                  label={t("dash2.lvLifetime")}
+                />
+                <StatCard
+                  icon={Trophy}
+                  iconBg="bg-teal-50"
+                  iconColor="text-teal-600"
+                  value={todayTasksDone}
+                  label={t("dash.statDoneToday")}
+                />
+                <StatCard
+                  icon={Coins}
+                  iconBg="bg-amber-50"
+                  iconColor="text-amber-600"
+                  value={fmt(profile?.coins_earned_today)}
+                  label={t("dash.statCoinToday")}
+                />
+                <StatCard
+                  icon={Users}
+                  iconBg="bg-sky-50"
+                  iconColor="text-sky-600"
+                  value={profile?.referrals_count || 0}
+                  label={t("dash.statInvited")}
+                />
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="flex flex-col justify-between border border-amber-200 bg-amber-50 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center bg-white">
+                    <Flame size={20} className="text-amber-500" />
+                  </span>
+                  <div className="mt-3">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700">
                       {t("dash.streak")}
                     </p>
-                    <p className="text-xl font-bold text-[#111827]">
+                    <p className="text-2xl font-black text-slate-950">
                       {profile?.streak_days || 0}{" "}
-                      <span className="text-sm font-medium text-[#667085]">
+                      <span className="font-mono text-xs font-medium uppercase text-slate-500">
                         {t("dash.days")}
                       </span>
                     </p>
+                    <p className="font-mono text-[10px] uppercase text-amber-700">
+                      {t("dash.record")}: {profile?.streak_record || 0}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-[#9C7A3F]">{t("dash.record")}</p>
-                  <p className="text-lg font-bold text-[#111827]">
-                    {profile?.streak_record || 0}
-                  </p>
-                </div>
-              </div>
 
-              <button
-                onClick={() => navigate("/tasks")}
-                className="flex w-full items-center justify-between rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left transition hover:border-sky-200"
-              >
-                <div>
-                  <p className="text-sm font-bold text-[#111827]">
-                    {t("dash.progress")}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#667085]">
-                    {todayTasksDone}/{todayTasksTotal} {t("dash.qaTasks")}
-                  </p>
-                </div>
-                <div
-                  className="flex h-16 w-16 items-center justify-center rounded-full"
-                  style={{
-                    background: `conic-gradient(#3478F6 ${
-                      todayTaskPct * 3.6
-                    }deg, #E5E7EB 0deg)`,
-                  }}
+                <button
+                  onClick={() => navigate("/tasks")}
+                  className="flex flex-col items-center border border-slate-200 bg-white p-4 text-center shadow-sm"
                 >
-                  <div className="flex h-[48px] w-[48px] items-center justify-center rounded-full bg-white">
-                    <span className="text-sm font-bold text-[#111827]">
-                      {todayTaskPct}%
-                    </span>
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
+                    {t("dash.progress")}
+                  </span>
+                  <div
+                    className="mt-2.5 flex h-24 w-24 items-center justify-center rounded-full"
+                    style={{
+                      background: `conic-gradient(#059669 ${
+                        todayTaskPct * 3.6
+                      }deg, #E2E8F0 0deg)`,
+                    }}
+                  >
+                    <div className="flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full bg-white">
+                      <span className="text-xl font-black text-slate-950">
+                        {todayTaskPct}%
+                      </span>
+                      <span className="font-mono text-[10px] text-slate-400">
+                        {todayTasksDone}/{todayTasksTotal}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
             </div>
 
-            {/* === 6. MỐC THƯỞNG CHUỖI NHIỆM VỤ === */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-[#111827]">
-                  {t("dash.milestoneTitle")}
-                </p>
-                <span className="text-xs text-[#9CA3AF]">
-                  {t("dash.done", { n: todayTasksDone })}
-                </span>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
+            {/* ===== MỐC THƯỞNG ===== */}
+            <div>
+              <SectionLabel
+                right={
+                  <span className="font-mono text-[11px] text-slate-400">
+                    {t("dash.done", { n: todayTasksDone })}
+                  </span>
+                }
+              >
+                {t("dash.milestoneTitle")}
+              </SectionLabel>
+              <div className="grid grid-cols-3 gap-2.5">
                 {[
                   { m: 1, reward: 50 },
                   { m: 5, reward: 200 },
@@ -449,48 +401,50 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* === 7. MINI GAME === */}
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
-              <div className="flex items-center justify-between mb-4">
+            {/* ===== MINI GAME ===== */}
+            <button
+              onClick={() => navigate("/minigames")}
+              className="w-full overflow-hidden border border-slate-200 bg-white text-left shadow-sm transition hover:border-emerald-500/60"
+            >
+              <div className="flex items-center justify-between px-4 pt-4">
                 <div className="flex items-center gap-2">
-                  <Gamepad2 size={20} className="text-[#3478F6]" />
-                  <p className="text-sm font-bold text-[#111827]">
+                  <span className="text-lg">🎮</span>
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-slate-800">
                     {t("dash.minigame")}
                   </p>
                 </div>
-                <span className="flex items-center gap-1 rounded-full bg-[#EAF2FE] px-2.5 py-1 text-xs font-semibold text-[#3478F6]">
+                <span className="flex items-center gap-1 border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[11px] font-bold text-emerald-700">
                   {t("dash.turns", { n: profile?.game_tickets || 0 })}{" "}
                   <ChevronRight size={12} />
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { emoji: "🎡", key: "dash.wheel", path: "/minigames/wheel" },
-                  { emoji: "🎫", key: "dash.scratch", path: "/minigames/scratch" },
-                  { emoji: "🎲", key: "dash.dice", path: "/minigames/dice" },
-                ].map(({ emoji, key, path }) => (
-                  <button
-                    key={key}
-                    onClick={() => navigate(path)}
-                    className="flex flex-col items-center justify-center rounded-xl border border-[#F3F4F6] bg-[#FAFAFA] p-4 transition hover:border-[#3478F6] hover:bg-[#EAF2FE]"
-                  >
-                    <span className="text-2xl">{emoji}</span>
-                    <span className="mt-2 text-[11px] font-semibold text-[#6B7280]">
-                      {t(key)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <p className="mt-3 text-center text-xs text-[#9CA3AF]">
+              <p className="px-4 pb-3 pt-1.5 text-xs text-slate-500">
                 {t("dash.miniDesc")}
               </p>
-            </div>
+              <div className="grid grid-cols-3 gap-px bg-slate-100">
+                {[
+                  ["🎡", "dash.wheel"],
+                  ["🎫", "dash.scratch"],
+                  ["🎲", "dash.dice"],
+                ].map(([emoji, key]) => (
+                  <div key={key} className="bg-white px-3 py-3 text-center">
+                    <p className="text-lg">{emoji}</p>
+                    <p className="mt-1 font-mono text-[10px] font-bold uppercase text-slate-500">
+                      {t(key)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </button>
 
-            {/* === 8. BẢNG XẾP HẠNG & HƯỚNG DẪN === */}
+            {/* ===== MỤC MỚI: HOẠT ĐỘNG GẦN ĐÂY ===== */}
+            <ActivityCard userId={user?.id} />
+
+            {/* ===== MỤC MỚI: MỜI BẠN BÈ ===== */}
+            <ReferralCard profile={profile} />
+
+            {/* ===== BẢNG XẾP HẠNG + BIỂU ĐỒ ===== */}
             <LeaderboardCard />
-            <HomeTutorial />
-
-            {/* === 9. BIỂU ĐỒ COIN 7 NGÀY === */}
             <CoinChart chartData={chartData} chartLoading={chartLoading} />
           </>
         )}
@@ -500,4 +454,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-           }
+                  }
