@@ -53,6 +53,9 @@ export const PACKAGES = [
 export const formatPrice = (value) =>
   new Intl.NumberFormat("vi-VN").format(value) + "đ";
 
+// Hiển thị giá theo Coin (tránh nhầm với tiền đồng)
+export const formatCoin = (value) =>
+  new Intl.NumberFormat("vi-VN").format(value) + " Coin";
+
 export const DRAFT_KEY = "nxx315_roblox_draft";
 export const LAST_USERNAME_KEY = "nxx315_roblox_username";
-    
