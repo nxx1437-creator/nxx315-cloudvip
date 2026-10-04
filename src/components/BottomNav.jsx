@@ -1,40 +1,44 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, ListChecks, Gift, Wallet, User } from "lucide-react";
+import { useI18n } from "../i18n/index.js";
 
 const tabs = [
-  { path: "/dashboard", label: "Trang chủ", icon: Home },
-  { path: "/tasks", label: "Nhiệm vụ", icon: ListChecks },
-  { path: "/store", label: "Cửa hàng", icon: Gift },
-  { path: "/wallet", label: "Ví", icon: Wallet },
-  { path: "/profile", label: "Cá nhân", icon: User },
+  { path: "/dashboard", labelKey: "nav.home", icon: Home },
+  { path: "/tasks", labelKey: "nav.tasks", icon: ListChecks },
+  { path: "/store", labelKey: "nav.store", icon: Gift },
+  { path: "/wallet", labelKey: "nav.wallet", icon: Wallet },
+  { path: "/profile", labelKey: "nav.profile", icon: User },
 ];
 
 export default function BottomNav() {
+  const { t } = useI18n();
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed inset-x-0 bottom-4 z-30 px-4">
-      <div className="mx-auto flex max-w-md md:max-w-2xl items-center justify-between rounded-3xl border border-slate-100 bg-white p-2 shadow-lg shadow-slate-200/70">
-        {tabs.map(({ path, label, icon: Icon }) => {
-          const active = pathname === path;
+    <nav className="fixed inset-x-0 bottom-3 z-30 px-3">
+      <div className="mx-auto flex max-w-md items-center justify-between gap-1 border border-slate-200 bg-white/95 p-1.5 shadow-xl shadow-slate-900/10 backdrop-blur md:max-w-2xl">
+        {tabs.map(({ path, labelKey, icon: Icon }) => {
+          const active = pathname === path || pathname.startsWith(path + "/");
           return (
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-2xl py-2.5 text-[11px] font-semibold transition-all duration-200 ${
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 transition-all duration-200 ${
                 active
-                  ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-sky-500/30"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
               }`}
             >
-              <Icon size={20} />
-              {label}
+              <Icon size={19} />
+              <span className="font-mono text-[9.5px] font-bold uppercase tracking-wider">
+                {t(labelKey)}
+              </span>
             </button>
           );
         })}
       </div>
     </nav>
   );
-}
+    }
