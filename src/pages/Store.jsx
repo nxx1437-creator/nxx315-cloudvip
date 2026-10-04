@@ -81,6 +81,13 @@ export default function Store() {
       <TopHeader />
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
+        <StoreSearch
+          search={search}
+          setSearch={setSearch}
+          onSelect={handleGameClick}
+        />
+
+        <BannerSlideshow navigate={navigate} />
 
         {/* Dành cho bạn */}
         {recommended.length > 0 && !search && (
