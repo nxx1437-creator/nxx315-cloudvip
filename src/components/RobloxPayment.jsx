@@ -11,7 +11,7 @@ import {
 
 import { supabase } from "../lib/supabaseClient.js";
 import BankTransfer from "./BankTransfer.jsx";
-import { formatPrice } from "../lib/robloxData.js";
+import { formatPrice, formatCoin } from "../lib/robloxData.js";
 
 // Bước 3: Thanh toán (Coin / chuyển khoản / thẻ cào).
 // Logic giữ nguyên từ bản cũ, chỉ tách ra file riêng.
@@ -458,7 +458,10 @@ export default function PaymentSection({ order, onBack, onPaid }) {
         <div className="border-b border-gray-100 bg-gray-50 p-4">
           <p className="text-xs text-gray-500">Tổng thanh toán</p>
           <p className="mt-1 text-2xl font-bold text-gray-900">
-            {formatPrice(order.amount)}
+            {formatCoin(order.amount)}
+          </p>
+          <p className="mt-0.5 text-[11px] text-gray-500">
+            Nếu chuyển khoản: {formatPrice(order.amount)}
           </p>
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-200">
             Mã đơn: <span className="font-mono">{order.order_code}</span>
@@ -863,4 +866,5 @@ function BankRow({ label, value, copy = false, copyValue }) {
       </div>
     </div>
   );
-}
+                    }
+                  
