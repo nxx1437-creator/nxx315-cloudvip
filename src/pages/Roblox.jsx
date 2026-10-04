@@ -16,8 +16,6 @@ import { useI18n } from "../i18n/index.js";
 import {
   PACKAGES,
   GAME_INFO,
-  ROBLOX_BANNER_URL,
-  ROBLOX_BANNER_FALLBACK,
   DRAFT_KEY,
   LAST_USERNAME_KEY,
 } from "../lib/robloxData.js";
@@ -208,21 +206,6 @@ export default function Roblox() {
           <Stepper step={step} onJump={goStep} />
         </div>
 
-        {/* Ảnh banner chỉ hiện ở bước 1 cho đỡ phải cuộn ở các bước sau */}
-        {step === "package" && (
-          <div className="mb-4 aspect-[16/6] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-            <img
-              src={ROBLOX_BANNER_URL}
-              alt="Roblox"
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = ROBLOX_BANNER_FALLBACK;
-              }}
-            />
-          </div>
-        )}
-
         {step === "package" && (
           <PackageStep
             selected={selectedPackage}
@@ -265,5 +248,6 @@ export default function Roblox() {
       <BottomNav />
     </div>
   );
-}
+                                           }
+    
   
