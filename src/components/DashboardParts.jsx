@@ -4,18 +4,16 @@ import { useI18n } from "../i18n/index.js";
 
 export function StatCard({ icon: Icon, iconBg, iconColor, value, label }) {
   return (
-    <div className="border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between">
-        <span className="text-2xl font-black leading-none text-slate-950">
-          {value}
-        </span>
-        <span
-          className={`flex h-9 w-9 items-center justify-center ${iconBg}`}
-        >
-          <Icon size={16} className={iconColor} />
-        </span>
-      </div>
-      <p className="mt-2 font-mono text-[10px] uppercase leading-4 tracking-wider text-slate-500">
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_4px_20px_-10px_rgba(15,23,42,0.15)]">
+      <span
+        className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}
+      >
+        <Icon size={18} className={iconColor} />
+      </span>
+      <p className="mt-3 text-[22px] font-extrabold leading-none tracking-tight text-slate-900">
+        {value}
+      </p>
+      <p className="mt-1.5 text-xs font-medium leading-4 text-slate-500">
         {label}
       </p>
     </div>
@@ -26,14 +24,14 @@ export function QuickAction({ icon: Icon, iconBg, iconColor, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex h-[92px] flex-col items-center justify-center gap-2 border border-slate-200 bg-white px-1 shadow-sm transition hover:border-emerald-500/60 active:scale-[0.97]"
+      className="group flex flex-col items-center gap-2 rounded-2xl py-1 transition active:scale-95"
     >
       <span
-        className={`flex h-10 w-10 items-center justify-center ${iconBg}`}
+        className={`flex h-14 w-14 items-center justify-center rounded-2xl transition group-hover:scale-105 ${iconBg}`}
       >
-        <Icon size={18} className={iconColor} />
+        <Icon size={24} className={iconColor} />
       </span>
-      <span className="w-full truncate text-center font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600">
+      <span className="w-full truncate text-center text-[12px] font-semibold text-slate-700">
         {label}
       </span>
     </button>
@@ -56,27 +54,29 @@ export function MilestoneCard({
     <button
       onClick={() => reached && !claimed && onClaim(milestone)}
       disabled={!reached || claimed || claiming}
-      className={`flex flex-col items-center gap-1.5 border p-3 text-center transition ${
+      className={`flex flex-col items-center gap-2 rounded-2xl border p-3.5 text-center transition active:scale-[0.97] ${
         claimed
-          ? "border-emerald-300 bg-emerald-50"
+          ? "border-emerald-200 bg-emerald-50"
           : reached
-          ? "border-amber-300 bg-amber-50 shadow-sm"
-          : "border-slate-200 bg-white"
+          ? "border-amber-300 bg-gradient-to-b from-amber-50 to-white shadow-md shadow-amber-200/40"
+          : "border-slate-100 bg-white shadow-[0_4px_20px_-10px_rgba(15,23,42,0.15)]"
       }`}
     >
-      <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-slate-700">
+      <span className="text-xs font-bold text-slate-600">
         {t("dash.msShort", { n: milestone })}
       </span>
       <span
-        className={`flex items-center gap-1 text-sm font-black ${
+        className={`flex items-center gap-1 text-base font-extrabold ${
           claimed ? "text-emerald-600" : "text-amber-600"
         }`}
       >
-        {claimed ? <Check size={13} /> : <Coins size={13} />}+{reward}
+        {claimed ? <Check size={15} /> : <Coins size={15} />}+{reward}
       </span>
-      <div className="mt-0.5 h-1.5 w-full bg-slate-200">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
-          className={`h-full ${claimed ? "bg-emerald-500" : "bg-amber-400"}`}
+          className={`h-full rounded-full ${
+            claimed ? "bg-emerald-500" : "bg-amber-400"
+          }`}
           style={{ width: `${progressPct}%` }}
         />
       </div>
@@ -87,16 +87,17 @@ export function MilestoneCard({
 export function DashboardSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="border border-slate-200 bg-white p-5">
-        <div className="h-4 w-32 skeleton-shimmer" />
-        <div className="mt-3 h-7 w-44 skeleton-shimmer" />
-        <div className="mt-2 h-4 w-56 skeleton-shimmer" />
-        <div className="mt-4 h-28 w-full skeleton-shimmer" />
+      <div className="rounded-[28px] bg-white p-5 shadow-sm">
+        <div className="h-4 w-32 rounded-full skeleton-shimmer" />
+        <div className="mt-3 h-7 w-44 rounded-full skeleton-shimmer" />
+        <div className="mt-4 h-24 w-full rounded-2xl skeleton-shimmer" />
         <div className="mt-3 grid grid-cols-2 gap-2.5">
-          <div className="h-11 skeleton-shimmer" />
-          <div className="h-11 skeleton-shimmer" />
+          <div className="h-12 rounded-2xl skeleton-shimmer" />
+          <div className="h-12 rounded-2xl skeleton-shimmer" />
         </div>
       </div>
+      <div className="h-24 rounded-3xl skeleton-shimmer" />
     </div>
   );
 }
+
