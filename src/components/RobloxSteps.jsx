@@ -21,7 +21,7 @@ import {
   PACKAGES,
   ROBLOX_GUIDE_URL,
   LAST_USERNAME_KEY,
-  formatPrice,
+  formatCoin,
 } from "../lib/robloxData.js";
 
 const fmt = (n) => new Intl.NumberFormat("vi-VN").format(n);
@@ -143,10 +143,10 @@ function PackageRow({ pkg, active, onSelect, coins }) {
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-2">
           <span className="text-base font-extrabold text-emerald-700">
-            {formatPrice(pkg.price)}
+            {formatCoin(pkg.price)}
           </span>
           <span className="text-xs text-slate-400 line-through">
-            {formatPrice(pkg.originalPrice)}
+            {formatCoin(pkg.originalPrice)}
           </span>
           <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600">
             -{pkg.discount}%
@@ -259,7 +259,7 @@ export function PackageStep({ selected, onSelect, onNext, coins }) {
               </p>
             </div>
             <p className="text-base font-extrabold text-emerald-700">
-              {formatPrice(selected.price)}
+              {formatCoin(selected.price)}
             </p>
           </div>
         ) : (
@@ -539,7 +539,7 @@ export function AccountStep({
             </div>
             <div className="text-right">
               <p className="text-base font-extrabold text-emerald-700">
-                {formatPrice(pkg.price)}
+                {formatCoin(pkg.price)}
               </p>
               <button
                 type="button"
@@ -568,7 +568,7 @@ export function AccountStep({
             onClick={onBack}
             className="h-12 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            {t("rb.back")}
+                {t("rb.back")}
           </button>
           <button
             type="button"
@@ -596,3 +596,4 @@ export function AccountStep({
     </div>
   );
 }
+
