@@ -386,4 +386,18 @@ export default {
   "dash2.agoHour": "{n}h ago",
   "dash2.agoDay": "{n}d ago",
   "dash2.todayTitle": "Today",
+  // Header
+  "hd.searchPh": "Search...",
+  "hd.noResult": "No results found.",
+  "hd.notif": "Notifications",
+  "hd.markAll": "Mark all as read",
+  "hd.notifEmpty": "No notifications yet",
+  "hd.viewAll": "View all notifications →",
+  "nav.home": "Home",
+  "nav.tasks": "Tasks",
+  "nav.store": "Store",
+  "nav.shopEarn": "Shop & earn stars",
+  "nav.wallet": "Wallet",
+  "nav.settings": "Settings",
+  "nav.review": "Account review",
 };
