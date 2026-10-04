@@ -401,4 +401,5 @@ export default {
   "nav.wallet": "Ví",
   "nav.settings": "Cài đặt",
   "nav.review": "Kiểm tra tài khoản",
+  "nav.profile": "Cá nhân",
 };
