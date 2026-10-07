@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, LogIn } from "lucide-react";
 import { shouldShowLoginButton } from "./helpers.js";
+import MarkdownText from "./MarkdownText.jsx";
 
 export default function MessageBubble({
   message,
@@ -124,15 +125,15 @@ export default function MessageBubble({
 
             {/* ============ TEXT ============ */}
             {displayText && (
-              <div className="px-4 py-3">
-                <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
-                  {displayText}
-                  {isStreaming && (
-                    <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
-                  )}
-                </p>
-              </div>
-            )}
+  <div className="px-4 py-3">
+    <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+      {displayText}
+      {isStreaming && (
+        <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+      )}
+    </p>
+  </div>
+)}
 
             {/* ============ ACTION BUTTONS ============ */}
             {hasActions && !isStreaming && (
