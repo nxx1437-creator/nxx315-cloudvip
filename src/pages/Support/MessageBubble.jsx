@@ -14,11 +14,16 @@ export default function MessageBubble({
   onHideSuggestions,
 }) {
   const navigate = useNavigate();
-  const [imageError, setImageError] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
 
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
   const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
+
+  const hasMedia = message.image_url && !mediaError;
+  const isVideo =
+    message.media_type === "video" ||
+    message.image_url?.match(/\.(mp4|webm|mov|m3u8)$/i);
 
   // ==================================================
   // USER BUBBLE
@@ -28,17 +33,17 @@ export default function MessageBubble({
       <div className="flex justify-end">
         <div className="relative max-w-[78%]">
           <div className="absolute -right-[5px] top-0 h-3 w-3 bg-[#FFE5EC] [clip-path:polygon(0_0,100%_0,0_100%)]" />
-          <div className="rounded-[20px] rounded-tr-[6px] bg-[#FFE5EC] px-4 py-2.5 shadow-[0_2px_8px_rgba(254,44,85,0.08)]">
-            {message.image_url && (
+          <div className="overflow-hidden rounded-[20px] rounded-tr-[6px] bg-[#FFE5EC] shadow-[0_2px_8px_rgba(254,44,85,0.08)]">
+            {hasMedia && (
               <img
                 src={message.image_url}
                 alt="User upload"
-                className="mb-2 max-h-72 w-full rounded-[14px] object-cover"
+                className="max-h-72 w-full object-cover"
                 loading="lazy"
               />
             )}
             {message.message && (
-              <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+              <p className="whitespace-pre-wrap break-words px-4 py-2.5 text-[14px] leading-6 text-[#161823]">
                 {message.message}
               </p>
             )}
@@ -90,34 +95,46 @@ export default function MessageBubble({
           <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
 
           <div className="overflow-hidden rounded-[20px] rounded-tl-[6px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            {/* Nội dung chính */}
-            <div className="px-4 py-3">
-              {/* Ảnh AI gửi — FIX nền caro */}
-              {message.image_url && !imageError && (
-                <div className="mb-2.5 overflow-hidden rounded-[14px] border border-slate-200 bg-white">
+            {/* ============ MEDIA (Ảnh/Video) ============ */}
+            {hasMedia && (
+              <div className="bg-white">
+                {isVideo ? (
+                  <video
+                    src={message.image_url}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="block max-h-96 w-full bg-black object-contain"
+                    onError={() => setMediaError(true)}
+                  />
+                ) : (
                   <img
                     src={message.image_url}
                     alt="Hướng dẫn"
-                    className="max-h-96 w-full cursor-pointer object-contain transition hover:opacity-95"
+                    className="block max-h-96 w-full cursor-pointer object-contain"
                     loading="lazy"
                     onClick={() =>
                       window.open(message.image_url, "_blank")
                     }
-                    onError={() => setImageError(true)}
+                    onError={() => setMediaError(true)}
                   />
-                </div>
-              )}
-
-              {/* Text */}
-              <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
-                {displayText}
-                {isStreaming && (
-                  <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
                 )}
-              </p>
-            </div>
+              </div>
+            )}
 
-            {/* ACTION BUTTONS */}
+            {/* ============ TEXT ============ */}
+            {displayText && (
+              <div className="px-4 py-3">
+                <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+                  {displayText}
+                  {isStreaming && (
+                    <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* ============ ACTION BUTTONS ============ */}
             {hasActions && !isStreaming && (
               <div className="border-t border-slate-100 px-3 py-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -151,7 +168,7 @@ export default function MessageBubble({
               </div>
             )}
 
-            {/* SUGGESTIONS */}
+            {/* ============ SUGGESTIONS ============ */}
             {hasSuggestions && (
               <div className="border-t border-slate-100">
                 {message.suggestions.map((reply, idx) => (
@@ -211,4 +228,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-    }
+          }
