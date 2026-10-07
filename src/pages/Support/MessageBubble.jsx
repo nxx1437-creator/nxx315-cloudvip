@@ -89,17 +89,16 @@ export default function MessageBubble({
         <div className="relative">
           <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
 
-          {/* KHUNG CHAT AI */}
           <div className="overflow-hidden rounded-[20px] rounded-tl-[6px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             {/* Nội dung chính */}
             <div className="px-4 py-3">
-              {/* Ảnh AI gửi */}
+              {/* Ảnh AI gửi — FIX nền caro */}
               {message.image_url && !imageError && (
-                <div className="mb-2.5 overflow-hidden rounded-[14px] border border-slate-200 bg-slate-50">
+                <div className="mb-2.5 overflow-hidden rounded-[14px] border border-slate-200 bg-white">
                   <img
                     src={message.image_url}
                     alt="Hướng dẫn"
-                    className="max-h-80 w-full cursor-pointer object-cover transition hover:opacity-95"
+                    className="max-h-96 w-full cursor-pointer object-contain transition hover:opacity-95"
                     loading="lazy"
                     onClick={() =>
                       window.open(message.image_url, "_blank")
@@ -118,7 +117,7 @@ export default function MessageBubble({
               </p>
             </div>
 
-            {/* ACTION BUTTONS — nằm trong khung */}
+            {/* ACTION BUTTONS */}
             {hasActions && !isStreaming && (
               <div className="border-t border-slate-100 px-3 py-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -152,7 +151,7 @@ export default function MessageBubble({
               </div>
             )}
 
-            {/* SUGGESTIONS — nằm trong khung */}
+            {/* SUGGESTIONS */}
             {hasSuggestions && (
               <div className="border-t border-slate-100">
                 {message.suggestions.map((reply, idx) => (
@@ -202,7 +201,7 @@ export default function MessageBubble({
           </div>
         </div>
 
-        {/* Label AI — nằm ngoài khung */}
+        {/* Label AI */}
         {!isStreaming && isAI && (
           <div className="mt-1.5 flex items-center gap-1 px-2">
             <Sparkles size={11} className="text-slate-400" strokeWidth={2.4} />
@@ -212,4 +211,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-                        }
+    }
