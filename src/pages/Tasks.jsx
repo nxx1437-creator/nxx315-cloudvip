@@ -474,14 +474,6 @@ export default function Tasks() {
               valueColor="text-amber-700"
               iconColor="text-amber-500"
             />
-            <StatPill
-              value={`${hoursUntilMidnight()}h`}
-              label={t("tk.stLeft")}
-              icon={Clock}
-              bg="bg-sky-100/70"
-              valueColor="text-sky-700"
-              iconColor="text-sky-500"
-            />
           </div>
         </div>
 
