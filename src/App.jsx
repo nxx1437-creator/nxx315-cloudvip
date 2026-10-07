@@ -49,7 +49,7 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail.jsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
 const Contact = lazy(() => import("./pages/Contact.jsx"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter.jsx"));
-const Support = lazy(() => import("./pages/Support.jsx"));
+const Support = lazy(() => import("./pages/Support/index.jsx"));
 const Community = lazy(() => import("./pages/Community.jsx"));
 const Terms = lazy(() => import("./pages/Terms.jsx"));
 const Privacy = lazy(() => import("./pages/Privacy.jsx"));
