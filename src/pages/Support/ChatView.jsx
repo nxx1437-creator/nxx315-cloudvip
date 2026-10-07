@@ -335,9 +335,18 @@ export default function ChatView({
         </button>
 
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#FF6B9D] text-[13px] font-black text-white">
-            N
-          </div>
+          <img
+  src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png"
+  alt="NXX"
+  className="h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover"
+  onError={(e) => {
+    e.target.style.display = "none";
+    e.target.nextElementSibling.style.display = "flex";
+  }}
+/>
+<div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#FF6B9D] text-[13px] font-black text-white">
+  N
+</div>
           <div className="text-left">
             <h1 className="truncate text-[14px] font-bold tracking-[-0.01em] text-[#161823]">
               Trợ lý NXX315
