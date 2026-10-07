@@ -192,7 +192,7 @@ export default {
   "tk.reward": "Phần thưởng",
   "tk.perPlay": "/lượt",
   "tk.left": "{n} còn",
-  "tk.today": "24 giờ qua"
+  "tk.today": "24 giờ qua",
   "tk.start": "Làm nhiệm vụ",
   "tk.opening": "Đang mở...",
   "tk.cardBlocked": "Tài khoản bị khóa",
