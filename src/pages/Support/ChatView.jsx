@@ -326,65 +326,47 @@ export default function ChatView({
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-white">
       {/* HEADER */}
-      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-3 backdrop-blur-xl">
-        <button
-          onClick={onBack}
-          className="flex h-8 w-8 shrink-0 items-center justify-center text-[#161823]"
-        >
-          <ArrowLeft size={22} strokeWidth={2.2} />
-        </button>
+<div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-2.5 backdrop-blur-xl">
+  {/* Back button */}
+  <button
+    onClick={onBack}
+    className="flex h-9 w-9 shrink-0 items-center justify-center text-[#161823]"
+  >
+    <ArrowLeft size={22} strokeWidth={2.2} />
+  </button>
 
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <img
-  src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png"
-  alt="NXX"
-  className="h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover"
-  onError={(e) => {
-    e.target.style.display = "none";
-    e.target.nextElementSibling.style.display = "flex";
-  }}
-/>
-<div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FE2C55] to-[#FF6B9D] text-[13px] font-black text-white">
-  N
+  {/* Avatar + Title căn giữa */}
+  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+    <img
+      src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png"
+      alt="NXX"
+      className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-pink-100"
+      onError={(e) => {
+        e.currentTarget.src = `https://ui-avatars.com/api/?name=NXX&background=FE2C55&color=fff&bold=true&size=80`;
+      }}
+    />
+    <h1 className="truncate text-[17px] font-bold tracking-[-0.01em] text-[#161823]">
+      Chăm sóc khách hàng
+    </h1>
+  </div>
+
+  {/* Right icons */}
+  <button
+    onClick={() => setShowHistoryDrawer(true)}
+    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+  >
+    <History size={20} strokeWidth={2} />
+  </button>
+
+  <a
+    href={SUPPORT.zaloUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
+  >
+    <Headphones size={20} strokeWidth={2} />
+  </a>
 </div>
-          <div className="text-left">
-            <h1 className="truncate text-[14px] font-bold tracking-[-0.01em] text-[#161823]">
-              Trợ lý NXX315
-            </h1>
-            <p className="flex items-center gap-1 text-[10.5px] font-medium text-emerald-500">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Đang hoạt động
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setShowHistoryDrawer(true)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
-        >
-          <History size={20} strokeWidth={2} />
-        </button>
-
-        <a
-          href={SUPPORT.zaloUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
-        >
-          <Headphones size={19} strokeWidth={2} />
-        </a>
-      </div>
-
-      <BannerNotice />
-
-      <HistoryDrawer
-        open={showHistoryDrawer}
-        onClose={() => setShowHistoryDrawer(false)}
-        userId={user?.id}
-        currentConvId={conv.id}
-        onOpenConversation={onOpenConversation}
-        onNewChat={onNewChat}
-      />
 
       {/* MESSAGES */}
       <div
