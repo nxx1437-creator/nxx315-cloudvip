@@ -126,12 +126,10 @@ export default function MessageBubble({
             {/* ============ TEXT ============ */}
             {displayText && (
   <div className="px-4 py-3">
-    <p className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
-      {displayText}
-      {isStreaming && (
-        <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
-      )}
-    </p>
+    <MarkdownText text={displayText} />
+    {isStreaming && (
+      <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+    )}
   </div>
 )}
 
