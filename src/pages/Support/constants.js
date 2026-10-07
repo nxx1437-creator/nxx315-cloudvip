@@ -12,9 +12,9 @@ export const AI_ENDPOINT =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/ai-support-reply";
 
 export const SYSTEM_BANNER = {
-  enabled: true,
-  text: "Bảo trì hệ thống lúc 2h sáng mai. Nạp game vẫn hoạt động bình thường.",
-  page: "1/1",
+  enabled: false,  
+  text: "",
+  page: "",
 };
 
 export const QUICK_ACTIONS = [
