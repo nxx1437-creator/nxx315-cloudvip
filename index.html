@@ -4,13 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0068FF" />
+    <meta name="theme-color" content="#4aa8f0" />
     <title>NXX315 Studio Rewards</title>
 
     <style>
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
 
+      /* =====================================================
+         FRUTIGER AERO LOADER
+         ===================================================== */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -19,9 +22,53 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: #ffffff;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-family: "Frutiger", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
         transition: opacity 0.5s ease;
+        overflow: hidden;
+
+        /* Bầu trời → cỏ */
+        background:
+          radial-gradient(ellipse at 50% 100%,
+            #b8e986 0%,
+            #6cc24a 16%,
+            #e6f6ff 42%,
+            #a8dcff 62%,
+            #4aa8f0 82%,
+            #1e6fd9 100%);
+      }
+
+      /* Tia nắng + bokeh */
+      #initial-loader::before {
+        content: "";
+        position: absolute; inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 78% 20%,
+            rgba(255,255,255,0.95) 0%,
+            rgba(255,245,200,0.55) 10%,
+            rgba(255,255,255,0) 34%),
+          linear-gradient(115deg,
+            transparent 42%,
+            rgba(255,255,255,0.35) 50%,
+            transparent 58%);
+      }
+
+      /* Bong bóng trôi */
+      #initial-loader::after {
+        content: "";
+        position: absolute; inset: 0;
+        pointer-events: none;
+        background-image:
+          radial-gradient(circle at 14% 82%, rgba(255,255,255,0.85) 0 4px, transparent 6px),
+          radial-gradient(circle at 34% 66%, rgba(255,255,255,0.65) 0 8px, transparent 12px),
+          radial-gradient(circle at 62% 88%, rgba(255,255,255,0.75) 0 6px, transparent 9px),
+          radial-gradient(circle at 84% 72%, rgba(255,255,255,0.55) 0 10px, transparent 15px);
+        animation: aero-drift 22s ease-in-out infinite alternate;
+      }
+
+      @keyframes aero-drift {
+        from { transform: translate3d(0, 0, 0); }
+        to   { transform: translate3d(-30px, -50px, 0); }
       }
 
       #initial-loader.hide {
@@ -29,8 +76,10 @@
         pointer-events: none;
       }
 
-      /* ==== LOGO — CHỮ BÉ ==== */
+      /* ==== LOGO — chữ nhỏ ==== */
       .loader-logo {
+        position: relative;
+        z-index: 2;
         font-size: 22px;
         font-weight: 800;
         letter-spacing: -0.5px;
@@ -38,64 +87,122 @@
         display: flex;
         align-items: baseline;
         gap: 6px;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        padding: 14px 26px;
+        border-radius: 22px;
+        background: linear-gradient(180deg,
+          rgba(255,255,255,0.9) 0%,
+          rgba(255,255,255,0.6) 45%,
+          rgba(200,235,255,0.55) 100%);
+        border: 1px solid rgba(255,255,255,0.85);
+        backdrop-filter: blur(14px) saturate(150%);
+        -webkit-backdrop-filter: blur(14px) saturate(150%);
+        box-shadow:
+          0 10px 30px rgba(12,60,110,0.18),
+          inset 0 1px 0 rgba(255,255,255,0.85),
+          inset 0 -10px 20px rgba(120,190,255,0.25);
+      }
+
+      /* Specular cap trên đỉnh logo panel */
+      .loader-logo::before {
+        content: "";
+        position: absolute;
+        inset: 5px 14px auto 14px;
+        height: 40%;
+        border-radius: 18px 18px 60% 60% / 18px 18px 100% 100%;
+        background: linear-gradient(180deg,
+          rgba(255,255,255,0.95),
+          rgba(255,255,255,0) 100%);
+        pointer-events: none;
       }
 
       .loader-logo .part-dark {
-        color: #0f172a;
+        color: #0b2b4a;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.7);
       }
 
       .loader-logo .part-blue {
-        color: #38bdf8;
+        color: #1e6fd9;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.7);
       }
 
-      /* ==== 2 CỤC DI CHUYỂN ==== */
+      /* ==== 2 cục di chuyển — aqua balls ==== */
       .loader-balls {
         position: relative;
+        z-index: 2;
         width: 80px;
-        height: 14px;
+        height: 16px;
       }
 
       .ball {
         position: absolute;
         top: 50%;
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
-        margin-top: -6px;
+        margin-top: -7px;
+        border: 1px solid rgba(255,255,255,0.9);
+        /* Aqua gloss: highlight trên, shadow dưới */
+        background-image:
+          linear-gradient(180deg,
+            rgba(255,255,255,0.95) 0%,
+            rgba(255,255,255,0.25) 42%,
+            rgba(255,255,255,0) 55%,
+            rgba(255,255,255,0.4) 100%);
       }
 
       .ball-blue {
         left: 0;
-        background: #0068FF;
-        box-shadow: 0 3px 10px rgba(0, 104, 255, 0.35);
+        background-color: #1e6fd9;
+        box-shadow:
+          0 6px 14px rgba(20,80,150,0.4),
+          inset 0 -4px 8px rgba(0,40,90,0.4);
         animation: ball-blue-move 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
       }
 
       .ball-green {
         right: 0;
-        background: #38bdf8;
-        box-shadow: 0 3px 10px rgba(56, 189, 248, 0.35);
+        background-color: #6cc24a;
+        box-shadow:
+          0 6px 14px rgba(40,110,50,0.4),
+          inset 0 -4px 8px rgba(20,70,30,0.4);
         animation: ball-green-move 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
       }
 
       @keyframes ball-blue-move {
         0%, 100% { transform: translateX(0); }
-        50% { transform: translateX(68px); }
+        50% { transform: translateX(66px); }
       }
 
       @keyframes ball-green-move {
         0%, 100% { transform: translateX(0); }
-        50% { transform: translateX(-68px); }
+        50% { transform: translateX(-66px); }
       }
 
-      /* ==== TEXT ==== */
+      /* ==== Text hint ==== */
       .loader-hint {
-        font-size: 11px;
-        color: #94a3b8;
-        margin-top: 24px;
-        font-weight: 500;
+        position: relative;
+        z-index: 2;
+        font-size: 12px;
+        color: #0b2b4a;
+        margin-top: 26px;
+        font-weight: 600;
         letter-spacing: 0.3px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.8);
+        text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+      }
+
+      /* Reduced motion: tắt bong bóng + di chuyển bóng */
+      @media (prefers-reduced-motion: reduce) {
+        #initial-loader::after { animation: none; }
+        .ball-blue, .ball-green { animation: none; }
+        /* Cho 2 bóng đứng yên ở vị trí hai đầu, vẫn thấy được */
+        .ball-blue { transform: translateX(0); }
+        .ball-green { transform: translateX(0); }
       }
     </style>
   </head>
