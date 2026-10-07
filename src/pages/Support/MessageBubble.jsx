@@ -1,10 +1,6 @@
-// src/pages/Support/MessageBubble.jsx
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowRight, Sparkles, LogIn, Loader2,
-} from "lucide-react";
+import { Sparkles, LogIn } from "lucide-react";
 import { shouldShowLoginButton } from "./helpers.js";
 
 export default function MessageBubble({
@@ -24,7 +20,9 @@ export default function MessageBubble({
   const isAI = message.sender_type === "ai";
   const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
 
+  // ==================================================
   // USER BUBBLE
+  // ==================================================
   if (isUser) {
     return (
       <div className="flex justify-end">
@@ -50,7 +48,9 @@ export default function MessageBubble({
     );
   }
 
+  // ==================================================
   // AI BUBBLE
+  // ==================================================
   const displayText =
     streamingText !== null ? streamingText : message.message;
   const isStreaming = streamingText !== null;
@@ -130,22 +130,32 @@ export default function MessageBubble({
               <button
                 key={idx}
                 onClick={() => handleActionClick(action)}
-                className="group flex items-center justify-between gap-2 rounded-[14px] border border-[#FE2C55]/20 bg-gradient-to-br from-[#FE2C55]/[0.04] to-[#FE2C55]/[0.02] px-3.5 py-3 text-left transition hover:border-[#FE2C55]/40 hover:from-[#FE2C55]/[0.08] active:scale-[0.97]"
+                className="group flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]"
               >
-                <span className="line-clamp-2 text-[12.5px] font-bold leading-tight text-[#161823]">
+                <span className="line-clamp-2 text-[12.5px] font-semibold leading-tight text-slate-700">
                   {action.label}
                 </span>
-                <ArrowRight
-                  size={14}
-                  className="shrink-0 text-[#FE2C55]"
-                  strokeWidth={2.6}
-                />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="shrink-0 text-slate-400"
+                >
+                  <path
+                    d="M9 6l6 6-6 6"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             ))}
           </div>
         )}
 
-        {/* Suggestion chips */}
+        {/* Suggestion chips — giống Shopee */}
         {hasSuggestions && (
           <div className="mt-3 space-y-2">
             {message.suggestions.map((reply, idx) => (
@@ -153,23 +163,18 @@ export default function MessageBubble({
                 key={idx}
                 onClick={() => handleSuggestionClick(reply)}
                 disabled={sending}
-                className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-black/[0.06] bg-white px-4 py-3.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition hover:border-black/[0.10] hover:bg-[#fafafa] active:scale-[0.99] disabled:opacity-50"
+                className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] disabled:opacity-50"
               >
-                <span className="text-[14px] font-medium text-slate-700">
+                <span className="text-[14.5px] font-medium leading-5 text-slate-700">
                   {reply}
                 </span>
-                <ArrowRight
-                  size={16}
-                  className="shrink-0 text-slate-400"
-                  strokeWidth={2.2}
-                />
               </button>
             ))}
 
             {showLoginButton && (
               <button
                 onClick={onShowLogin}
-                className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-[#FE2C55] px-4 py-3 text-sm font-extrabold text-white shadow-[0_5px_15px_rgba(254,44,85,0.15)] transition hover:brightness-110 active:scale-[0.99]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FE2C55] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.99]"
               >
                 <LogIn size={16} strokeWidth={2.4} />
                 Đăng nhập
@@ -180,4 +185,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-    }
+}
