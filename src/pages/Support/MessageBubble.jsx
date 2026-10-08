@@ -69,6 +69,75 @@ export default function MessageBubble({
     message.actions &&
     Array.isArray(message.actions) &&
     message.actions.length > 0;
+  // ✅ FALLBACK: Parse nút từ text nếu AI không gọi tool
+const parsedActions = (() => {
+  // Chỉ parse khi không có actions từ backend
+  if (hasActions) return [];
+
+  const text = message.message || "";
+  const lines = text.split("\n");
+  const found = [];
+
+  const PATH_REGEX =
+    /^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const match = trimmed.match(PATH_REGEX);
+    if (match) {
+      const label = match[1].trim();
+      const path = match[2].trim();
+
+      // Validate path
+      const VALID_PREFIXES = [
+        "/store",
+        "/tasks",
+        "/shop-earn",
+        "/community",
+        "/wallet",
+        "/history",
+        "/profile",
+        "/help",
+        "/contact",
+        "https://zalo.me/",
+      ];
+
+      const isValid = VALID_PREFIXES.some(
+        (prefix) => path.startsWith(prefix) || path === prefix
+      );
+
+      if (isValid && label.length < 50) {
+        found.push({
+          label: label.slice(0, 30),
+          path,
+          icon: getIconForPath(path),
+        });
+      }
+    }
+  }
+
+  return found.slice(0, 4);
+})();
+
+// ✅ Helper — chọn icon theo path
+function getIconForPath(path) {
+  const ICON_BASE =
+    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
+
+  if (path.startsWith("/store")) return `${ICON_BASE}/icon-rocket.png`;
+  if (path.startsWith("/tasks") || path.startsWith("/shop-earn"))
+    return `${ICON_BASE}/icon-task.png`;
+  if (path.startsWith("/wallet")) return `${ICON_BASE}/icon-coin.png`;
+  if (path.startsWith("/history") || path.startsWith("/profile"))
+    return `${ICON_BASE}/icon-link.png`;
+  if (path.startsWith("/help") || path.startsWith("/contact"))
+    return `${ICON_BASE}/icon-chat.png`;
+  if (path.startsWith("https://zalo.me/"))
+    return `${ICON_BASE}/icon-chat.png`;
+  return `${ICON_BASE}/icon-rocket.png`;
+}
   const showLoginButton =
     isLastAIMessage &&
     !isStreaming &&
@@ -134,10 +203,10 @@ export default function MessageBubble({
             )}
 
             {/* ============ ACTION BUTTONS với icon 3D ============ */}
-            {hasActions && !isStreaming && (
-              <div className="border-t border-slate-100 px-3 py-3">
-                <div className="space-y-2">
-                  {message.actions.map((action, idx) => (
+            {(hasActions || parsedActions.length > 0) && !isStreaming && (
+  <div className="border-t border-slate-100 px-3 py-3">
+    <div className="space-y-2">
+      {(hasActions ? message.actions : parsedActions).map((action, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleActionClick(action)}
