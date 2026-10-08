@@ -16,7 +16,20 @@ import React from "react";
 export default function MarkdownText({ text }) {
   if (!text) return null;
 
-  const lines = text.split("\n");
+  // ✅ Ẩn các dòng chứa path nút bấm (đã parse thành nút)
+  const cleanText = text
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      // Bỏ dòng dạng "Label → /path"
+      if (/^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i.test(trimmed)) {
+        return false;
+      }
+      return true;
+    })
+    .join("\n");
+
+  const lines = cleanText.split("\n");
   const blocks = [];
   let currentQuote = [];
   let currentList = null; // { type: 'bullet'|'number', items: [] }
