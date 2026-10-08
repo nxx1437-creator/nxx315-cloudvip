@@ -4,6 +4,94 @@ import { Sparkles, LogIn } from "lucide-react";
 import MarkdownText from "./MarkdownText.jsx";
 import { shouldShowLoginButton } from "./helpers.js";
 
+const ICON_BASE =
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
+
+function getIconForPath(path) {
+  if (path.startsWith("/store")) return `${ICON_BASE}/icon-rocket.png`;
+  if (path.startsWith("/tasks") || path.startsWith("/shop-earn"))
+    return `${ICON_BASE}/icon-task.png`;
+  if (path.startsWith("/wallet")) return `${ICON_BASE}/icon-coin.png`;
+  if (
+    path.startsWith("/history") ||
+    path.startsWith("/profile") ||
+    path.startsWith("/community")
+  )
+    return `${ICON_BASE}/icon-link.png`;
+  if (path.startsWith("/help") || path.startsWith("/contact"))
+    return `${ICON_BASE}/icon-chat.png`;
+  if (path.startsWith("https://zalo.me/"))
+    return `${ICON_BASE}/icon-chat.png`;
+  return `${ICON_BASE}/icon-rocket.png`;
+}
+
+const LABEL_MAP = {
+  "/store": "Xem cửa hàng",
+  "/store/roblox": "Đổi Robux",
+  "/store/lien-quan": "Đổi Liên Quân",
+  "/store/pubg-mobile": "Đổi PUBG",
+  "/store/free-fire": "Đổi Free Fire",
+  "/store/fc-mobile": "Đổi FC Mobile",
+  "/store/valorant": "Đổi Valorant",
+  "/store/play-together": "Đổi Play Together",
+  "/tasks": "Làm nhiệm vụ",
+  "/shop-earn": "Kiếm Coin",
+  "/community": "Cộng đồng",
+  "/wallet": "Xem ví",
+  "/history": "Lịch sử đơn",
+  "/profile": "Trang cá nhân",
+  "/help": "Trung tâm trợ giúp",
+  "/contact": "Liên hệ hỗ trợ",
+  "https://zalo.me/0865245988": "Chat Zalo",
+};
+
+// ✅ Parse path từ text AI
+function parseActionsFromText(text) {
+  if (!text) return [];
+
+  const found = [];
+  const seen = new Set();
+  const pathRegex =
+    /(?:\/[a-z0-9\-]+(?:\/[a-z0-9\-]+)*|https:\/\/zalo\.me\/\d+)/gi;
+
+  const VALID = [
+    "/store",
+    "/tasks",
+    "/shop-earn",
+    "/community",
+    "/wallet",
+    "/history",
+    "/profile",
+    "/help",
+    "/contact",
+  ];
+
+  let match;
+  while ((match = pathRegex.exec(text)) !== null) {
+    const path = match[0];
+    if (seen.has(path)) continue;
+    seen.add(path);
+
+    const isValid =
+      VALID.some((p) => path === p || path.startsWith(p + "/")) ||
+      path.startsWith("https://zalo.me/");
+
+    if (!isValid) continue;
+
+    found.push({
+      label:
+        LABEL_MAP[path] ||
+        path.replace(/^\/store\//, "Đổi ").replace(/^\//, ""),
+      path,
+      icon: getIconForPath(path),
+    });
+
+    if (found.length >= 4) break;
+  }
+
+  return found;
+}
+
 export default function MessageBubble({
   message,
   streamingText,
@@ -60,84 +148,31 @@ export default function MessageBubble({
   const displayText =
     streamingText !== null ? streamingText : message.message;
   const isStreaming = streamingText !== null;
+
+  // ✅ Actions từ backend
+  const backendActions =
+    message.actions &&
+    Array.isArray(message.actions) &&
+    message.actions.length > 0
+      ? message.actions
+      : [];
+
+  // ✅ Fallback: parse từ text
+  const parsedActions =
+    backendActions.length === 0 && !isStreaming
+      ? parseActionsFromText(message.message || "")
+      : [];
+
+  const finalActions =
+    backendActions.length > 0 ? backendActions : parsedActions;
+
+  const hasActions = finalActions.length > 0;
+
   const hasSuggestions =
     isLastAIMessage &&
     message.suggestions?.length > 0 &&
     !isStreaming &&
     !isSuggestionHidden;
-  const hasActions =
-    message.actions &&
-    Array.isArray(message.actions) &&
-    message.actions.length > 0;
-  // ✅ FALLBACK: Parse nút từ text nếu AI không gọi tool
-const parsedActions = (() => {
-  // Chỉ parse khi không có actions từ backend
-  if (hasActions) return [];
-
-  const text = message.message || "";
-  const lines = text.split("\n");
-  const found = [];
-
-  const PATH_REGEX =
-    /^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    const match = trimmed.match(PATH_REGEX);
-    if (match) {
-      const label = match[1].trim();
-      const path = match[2].trim();
-
-      // Validate path
-      const VALID_PREFIXES = [
-        "/store",
-        "/tasks",
-        "/shop-earn",
-        "/community",
-        "/wallet",
-        "/history",
-        "/profile",
-        "/help",
-        "/contact",
-        "https://zalo.me/",
-      ];
-
-      const isValid = VALID_PREFIXES.some(
-        (prefix) => path.startsWith(prefix) || path === prefix
-      );
-
-      if (isValid && label.length < 50) {
-        found.push({
-          label: label.slice(0, 30),
-          path,
-          icon: getIconForPath(path),
-        });
-      }
-    }
-  }
-
-  return found.slice(0, 4);
-})();
-
-// ✅ Helper — chọn icon theo path
-function getIconForPath(path) {
-  const ICON_BASE =
-    "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
-
-  if (path.startsWith("/store")) return `${ICON_BASE}/icon-rocket.png`;
-  if (path.startsWith("/tasks") || path.startsWith("/shop-earn"))
-    return `${ICON_BASE}/icon-task.png`;
-  if (path.startsWith("/wallet")) return `${ICON_BASE}/icon-coin.png`;
-  if (path.startsWith("/history") || path.startsWith("/profile"))
-    return `${ICON_BASE}/icon-link.png`;
-  if (path.startsWith("/help") || path.startsWith("/contact"))
-    return `${ICON_BASE}/icon-chat.png`;
-  if (path.startsWith("https://zalo.me/"))
-    return `${ICON_BASE}/icon-chat.png`;
-  return `${ICON_BASE}/icon-rocket.png`;
-}
   const showLoginButton =
     isLastAIMessage &&
     !isStreaming &&
@@ -165,7 +200,7 @@ function getIconForPath(path) {
           <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
 
           <div className="overflow-hidden rounded-[20px] rounded-tl-[6px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            {/* ============ MEDIA (Ảnh/Video) ============ */}
+            {/* MEDIA */}
             {hasMedia && (
               <div className="bg-white">
                 {isVideo ? (
@@ -192,7 +227,7 @@ function getIconForPath(path) {
               </div>
             )}
 
-            {/* ============ TEXT với Markdown ============ */}
+            {/* TEXT */}
             {displayText && (
               <div className="px-4 py-3">
                 <MarkdownText text={displayText} />
@@ -202,17 +237,16 @@ function getIconForPath(path) {
               </div>
             )}
 
-            {/* ============ ACTION BUTTONS với icon 3D ============ */}
-            {(hasActions || parsedActions.length > 0) && !isStreaming && (
-  <div className="border-t border-slate-100 px-3 py-3">
-    <div className="space-y-2">
-      {(hasActions ? message.actions : parsedActions).map((action, idx) => (
+            {/* ACTION BUTTONS */}
+            {hasActions && !isStreaming && (
+              <div className="border-t border-slate-100 px-3 py-3">
+                <div className="space-y-2">
+                  {finalActions.map((action, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleActionClick(action)}
                       className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
                     >
-                      {/* Icon 3D */}
                       {action.icon ? (
                         <img
                           src={action.icon}
@@ -253,7 +287,7 @@ function getIconForPath(path) {
               </div>
             )}
 
-            {/* ============ SUGGESTIONS ============ */}
+            {/* SUGGESTIONS */}
             {hasSuggestions && (
               <div className="border-t border-slate-100">
                 {message.suggestions.map((reply, idx) => (
@@ -303,7 +337,6 @@ function getIconForPath(path) {
           </div>
         </div>
 
-        {/* Label AI */}
         {!isStreaming && isAI && (
           <div className="mt-1.5 flex items-center gap-1 px-2">
             <Sparkles size={11} className="text-slate-400" strokeWidth={2.4} />
@@ -313,4 +346,4 @@ function getIconForPath(path) {
       </div>
     </div>
   );
-                          }
+                }
