@@ -88,7 +88,7 @@ export function WithdrawBanner({ navigate }) {
           </div>
 
           <Thumb
-            src={getImageUrl("withdraw-banner-icon.png")}
+            src={getImageUrl("withdraw-banner-icon.jpg")}
             className="h-20 w-20 shrink-0 object-contain"
             fallback={
               <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-sm">
