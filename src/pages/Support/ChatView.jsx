@@ -351,12 +351,15 @@ export default function ChatView({
   </div>
 
   {/* Right icons */}
-  <button
-    onClick={() => setShowHistoryDrawer(true)}
-    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
-  >
-    <History size={20} strokeWidth={2} />
-  </button>
+<button
+  onClick={() => {
+    console.log("[History] Opening. userId:", user?.id);
+    setShowHistoryDrawer(true);
+  }}
+  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+>
+  <History size={20} strokeWidth={2} />
+</button>
 
   <a
     href={SUPPORT.zaloUrl}
