@@ -1,5 +1,3 @@
-// src/pages/Support/ChatView.jsx
-
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -97,10 +95,14 @@ export default function ChatView({
   };
 
   useEffect(() => {
-    loadMessages();
-  }, [conversation.id]);
+    if (conversation?.id) {
+      loadMessages();
+    }
+  }, [conversation?.id]);
 
   useEffect(() => {
+    if (!conversation?.id) return;
+
     const channel = supabase
       .channel(`conv-${conversation.id}`)
       .on(
@@ -159,7 +161,7 @@ export default function ChatView({
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [conversation.id]);
+  }, [conversation?.id]);
 
   const callAI = async (imageUrl, messageText) => {
     const {
@@ -322,60 +324,80 @@ export default function ChatView({
   };
 
   const hasInput = input.trim() || pendingImage;
-
-  return (
+    return (
     <div className="fixed inset-0 z-30 flex flex-col bg-white">
+      {/* ============================================ */}
       {/* HEADER */}
-<div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-2.5 backdrop-blur-xl">
-  {/* Back button */}
-  <button
-    onClick={onBack}
-    className="flex h-9 w-9 shrink-0 items-center justify-center text-[#161823]"
-  >
-    <ArrowLeft size={22} strokeWidth={2.2} />
-  </button>
+      {/* ============================================ */}
+      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-2.5 backdrop-blur-xl">
+        <button
+          onClick={onBack}
+          className="flex h-9 w-9 shrink-0 items-center justify-center text-[#161823]"
+        >
+          <ArrowLeft size={22} strokeWidth={2.2} />
+        </button>
 
-  {/* Avatar + Title căn giữa */}
-  <div className="flex min-w-0 flex-1 items-center gap-2.5">
-    <img
-      src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png"
-      alt="NXX"
-      className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-pink-100"
-      onError={(e) => {
-        e.currentTarget.src = `https://ui-avatars.com/api/?name=NXX&background=FE2C55&color=fff&bold=true&size=80`;
-      }}
-    />
-    <h1 className="truncate text-[17px] font-bold tracking-[-0.01em] text-[#161823]">
-      Chăm sóc khách hàng
-    </h1>
-  </div>
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <img
+            src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png"
+            alt="NXX"
+            className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-pink-100"
+            onError={(e) => {
+              e.currentTarget.src = `https://ui-avatars.com/api/?name=NXX&background=FE2C55&color=fff&bold=true&size=80`;
+            }}
+          />
+          <h1 className="truncate text-[17px] font-bold tracking-[-0.01em] text-[#161823]">
+            Chăm sóc khách hàng
+          </h1>
+        </div>
 
-  {/* Right icons */}
-<button
-  onClick={() => {
-    console.log("[History] Opening. userId:", user?.id);
-    setShowHistoryDrawer(true);
-  }}
-  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
->
-  <History size={20} strokeWidth={2} />
-</button>
+        <button
+          onClick={() => {
+            console.log("[History] Opening. userId:", user?.id);
+            setShowHistoryDrawer(true);
+          }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#161823] transition hover:bg-slate-50"
+        >
+          <History size={20} strokeWidth={2} />
+        </button>
 
-  <a
-    href={SUPPORT.zaloUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
-  >
-    <Headphones size={20} strokeWidth={2} />
-  </a>
-</div>
+        <a
+          href={SUPPORT.zaloUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#0068FF] transition hover:bg-[#0068FF]/[0.08]"
+        >
+          <Headphones size={20} strokeWidth={2} />
+        </a>
+      </div>
 
+      {/* ============================================ */}
+      {/* BANNER */}
+      {/* ============================================ */}
+      <BannerNotice />
+
+      {/* ============================================ */}
+      {/* HISTORY DRAWER */}
+      {/* ============================================ */}
+      <HistoryDrawer
+        open={showHistoryDrawer}
+        onClose={() => setShowHistoryDrawer(false)}
+        userId={user?.id || conversation?.user_id}
+        currentConvId={conv.id}
+        onOpenConversation={onOpenConversation}
+        onNewChat={onNewChat}
+      />
+
+      {/* ============================================ */}
       {/* MESSAGES */}
+      {/* ============================================ */}
       <div
         ref={scrollRef}
         className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
-        style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}
+        style={{
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
         {loading ? (
           <div className="flex h-full items-center justify-center">
@@ -386,11 +408,13 @@ export default function ChatView({
             {messages.map((msg, idx) => {
               if (msg.sender_type === "status")
                 return <StatusBubble key={msg.id} message={msg} />;
+
               const isLastAIMessage =
                 idx === messages.length - 1 &&
                 msg.sender_type === "ai" &&
                 !streamingMsgId &&
                 !aiTyping;
+
               return (
                 <MessageBubble
                   key={msg.id}
@@ -410,6 +434,7 @@ export default function ChatView({
                 />
               );
             })}
+
             {aiTyping &&
               !streamingMsgId &&
               !messages.some((m) => m.sender_type === "status") && (
@@ -436,7 +461,9 @@ export default function ChatView({
         )}
       </div>
 
+      {/* ============================================ */}
       {/* QUICK ACTIONS */}
+      {/* ============================================ */}
       <div
         className="scrollbar-hide flex gap-2 overflow-x-auto border-t border-black/[0.05] bg-white px-3.5 pb-1 pt-2.5"
         style={{ scrollbarWidth: "none" }}
@@ -454,7 +481,9 @@ export default function ChatView({
         ))}
       </div>
 
+      {/* ============================================ */}
       {/* INPUT BAR */}
+      {/* ============================================ */}
       <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
         {pendingImage && (
           <div className="mb-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
@@ -557,7 +586,9 @@ export default function ChatView({
           }}
         />
 
-        {/* BOTTOM SHEET */}
+        {/* ============================================ */}
+        {/* BOTTOM SHEET - FILE MENU */}
+        {/* ============================================ */}
         {showFileMenu && (
           <>
             <div
@@ -579,7 +610,7 @@ export default function ChatView({
                     className="text-sm font-semibold text-blue-500"
                   >
                     Tất cả ảnh
-                           </button>
+                  </button>
                 </div>
                 <div className="mt-6 grid grid-cols-3 gap-4">
                   <button
@@ -629,6 +660,9 @@ export default function ChatView({
           </>
         )}
 
+        {/* ============================================ */}
+        {/* EMOJI PICKER */}
+        {/* ============================================ */}
         {showEmoji && (
           <>
             <div
@@ -650,4 +684,4 @@ export default function ChatView({
       </div>
     </div>
   );
-}
+      }
