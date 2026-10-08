@@ -1,6 +1,8 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Guide from "./pages/Guide/Guide.jsx";
+import GuidePage from "./pages/Guide/GuidePage.jsx";
 // ✅ Page public — load ngay
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
@@ -76,6 +78,8 @@ export default function App() {
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            <Route path="/guide" element={<Guide />} />
+            <Route path="/guide/:id" element={<GuidePage />} />
             <Route path="/" element={<CloudVIPLanding />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
