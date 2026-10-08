@@ -244,4 +244,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-}
+                          }
