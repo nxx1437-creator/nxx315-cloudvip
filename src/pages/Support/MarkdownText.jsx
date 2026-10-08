@@ -1,26 +1,19 @@
 import React from "react";
 
 /**
- * Markdown parser đầy đủ + filter code tool
- * Hỗ trợ:
- * - **bold**, *italic*, `code`
- * - > quote (khối xanh)
- * - - bullet, 1. numbered
- * - [text](url) link
- * - --- hr
- * - TỰ ĐỘNG XOÁ: suggest_action({...}), lookup_order({...}),
- *   list_recent_orders({...}), send_guide_image({...})
- *   và các dòng dạng "Label → /path"
+ * Markdown parser + filter code tool
+ * - Xoá suggest_action({...}), lookup_order({...}) v.v.
+ * - Parse markdown đầy đủ
+ * - GIỮ LẠI text path "/store/roblox" để MessageBubble parse thành nút
  */
 export default function MarkdownText({ text }) {
   if (!text) return null;
 
   // ==================================================
-  // BƯỚC 1: LÀM SẠCH TEXT — XOÁ CODE TOOL
+  // BƯỚC 1: XOÁ CODE TOOL (không xoá path)
   // ==================================================
   let cleaned = text;
 
-  // Xoá các đoạn gọi tool: suggest_action({...}) v.v.
   const TOOL_NAMES = [
     "suggest_action",
     "lookup_order",
@@ -29,54 +22,29 @@ export default function MarkdownText({ text }) {
   ];
 
   for (const toolName of TOOL_NAMES) {
-    // Match toolName({ ... }) — có thể nhiều dòng
     const regex = new RegExp(
-      `${toolName}\\s*\\(\\s*\\{[\\s\\S]*?\\}\\s*\\)`,
+      `${toolName}\\s*\\([\\s\\S]*?\\)\\s*(?=\\n|$)`,
       "gi"
     );
     cleaned = cleaned.replace(regex, "");
   }
 
-  // Xoá các dòng dạng "Label → /path" hoặc "Label -> /path"
+  // Xoá dòng chứa tên tool
   cleaned = cleaned
     .split("\n")
     .filter((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return true; // giữ dòng trống
-
-      // Dòng "Label → /path"
-      if (
-        /^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i.test(
-          trimmed
-        )
-      ) {
-        return false;
-      }
-
-      // Dòng chỉ có path
-      if (/^\/[a-z0-9\-\/]+$/i.test(trimmed)) {
-        return false;
-      }
-
-      // Dòng chỉ có URL Zalo
-      if (/^https?:\/\/[^\s]+$/i.test(trimmed)) {
-        return false;
-      }
-
-      // Dòng chứa tên tool
       if (
         /suggest_action|lookup_order|list_recent_orders|send_guide_image/i.test(
-          trimmed
+          line
         )
       ) {
         return false;
       }
-
       return true;
     })
     .join("\n");
 
-  // Xoá dòng trống liên tiếp (3+ dòng)
+  // Xoá dòng trống liên tiếp
   cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
 
   if (!cleaned) return null;
@@ -87,7 +55,7 @@ export default function MarkdownText({ text }) {
   const lines = cleaned.split("\n");
   const blocks = [];
   let currentQuote = [];
-  let currentList = null; // { type: 'bullet'|'number', items: [] }
+  let currentList = null;
 
   const flushQuote = () => {
     if (currentQuote.length > 0) {
@@ -111,21 +79,18 @@ export default function MarkdownText({ text }) {
   lines.forEach((line) => {
     const trimmed = line.trim();
 
-    // --- Đường kẻ ngang
     if (/^-{3,}$/.test(trimmed)) {
       flushAll();
       blocks.push({ type: "hr" });
       return;
     }
 
-    // --- Quote (>)
     if (trimmed.startsWith(">")) {
       flushList();
       currentQuote.push(trimmed.replace(/^>\s?/, ""));
       return;
     }
 
-    // --- Bullet list (- hoặc *)
     if (/^[-*]\s+/.test(trimmed)) {
       flushQuote();
       const content = trimmed.replace(/^[-*]\s+/, "");
@@ -137,7 +102,6 @@ export default function MarkdownText({ text }) {
       return;
     }
 
-    // --- Numbered list (1. 2. 3.)
     if (/^\d+\.\s+/.test(trimmed)) {
       flushQuote();
       const content = trimmed.replace(/^\d+\.\s+/, "");
@@ -149,7 +113,6 @@ export default function MarkdownText({ text }) {
       return;
     }
 
-    // --- Dòng bình thường
     flushAll();
 
     if (trimmed === "") {
@@ -162,17 +125,15 @@ export default function MarkdownText({ text }) {
   flushAll();
 
   // ==================================================
-  // BƯỚC 3: RENDER BLOCKS
+  // BƯỚC 3: RENDER
   // ==================================================
   return (
     <div className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
       {blocks.map((block, idx) => {
-        // BR
         if (block.type === "br") {
           return <div key={idx} className="h-1.5" />;
         }
 
-        // HR
         if (block.type === "hr") {
           return (
             <hr
@@ -182,7 +143,6 @@ export default function MarkdownText({ text }) {
           );
         }
 
-        // QUOTE
         if (block.type === "quote") {
           return (
             <div
@@ -201,7 +161,6 @@ export default function MarkdownText({ text }) {
           );
         }
 
-        // BULLET LIST
         if (block.type === "bullet") {
           return (
             <ul key={idx} className="my-2 space-y-1.5">
@@ -218,7 +177,6 @@ export default function MarkdownText({ text }) {
           );
         }
 
-        // NUMBERED LIST
         if (block.type === "number") {
           return (
             <ol key={idx} className="my-2 space-y-1.5">
@@ -237,7 +195,6 @@ export default function MarkdownText({ text }) {
           );
         }
 
-        // TEXT thường
         return <div key={idx}>{renderInline(block.content)}</div>;
       })}
     </div>
@@ -246,12 +203,29 @@ export default function MarkdownText({ text }) {
 
 // ==================================================
 // INLINE PARSER
-// Hỗ trợ: **bold**, *italic*, `code`, [text](url)
 // ==================================================
 function renderInline(text) {
   if (!text) return null;
 
-  // Regex bắt: **bold** | `code` | *italic* | [text](url)
+  // ✅ Ẩn dòng dạng "Label → /path" (vì MessageBubble sẽ render thành nút)
+  const pathOnlyRegex =
+    /^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i;
+  const pathMatch = text.trim().match(pathOnlyRegex);
+  if (pathMatch) {
+    // Chỉ trả về label, ẩn path
+    return <span>{pathMatch[1].trim()}</span>;
+  }
+
+  // Nếu dòng chỉ có path đơn lẻ → ẩn hoàn toàn
+  if (/^\/[a-z0-9\-\/]+$/i.test(text.trim())) {
+    return null;
+  }
+
+  // Nếu dòng chỉ có URL Zalo → ẩn
+  if (/^https?:\/\/zalo\.me\/\d+$/i.test(text.trim())) {
+    return null;
+  }
+
   const regex =
     /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
 
@@ -260,7 +234,6 @@ function renderInline(text) {
   let match;
 
   while ((match = regex.exec(text)) !== null) {
-    // Text trước match
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
@@ -268,16 +241,13 @@ function renderInline(text) {
     const token = match[0];
     const key = `inline-${parts.length}`;
 
-    // **bold**
     if (token.startsWith("**") && token.endsWith("**")) {
       parts.push(
         <strong key={key} className="font-bold text-[#161823]">
           {token.slice(2, -2)}
         </strong>
       );
-    }
-    // `code`
-    else if (token.startsWith("`") && token.endsWith("`")) {
+    } else if (token.startsWith("`") && token.endsWith("`")) {
       parts.push(
         <code
           key={key}
@@ -286,17 +256,13 @@ function renderInline(text) {
           {token.slice(1, -1)}
         </code>
       );
-    }
-    // *italic*
-    else if (token.startsWith("*") && token.endsWith("*")) {
+    } else if (token.startsWith("*") && token.endsWith("*")) {
       parts.push(
         <em key={key} className="italic text-slate-700">
           {token.slice(1, -1)}
         </em>
       );
-    }
-    // [text](url)
-    else if (token.startsWith("[") && token.includes("](")) {
+    } else if (token.startsWith("[") && token.includes("](")) {
       const matchLink = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (matchLink) {
         const [, label, url] = matchLink;
@@ -319,10 +285,9 @@ function renderInline(text) {
     lastIndex = regex.lastIndex;
   }
 
-  // Text còn lại
   if (lastIndex < text.length) {
     parts.push(text.slice(lastIndex));
   }
 
   return parts.length > 0 ? parts : text;
-  }
+        }
