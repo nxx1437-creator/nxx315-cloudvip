@@ -1,5 +1,3 @@
-// src/pages/Support/HistoryDrawer.jsx
-
 import React, { useEffect, useState } from "react";
 import { Loader2, Plus, X, History, FileText } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -17,10 +15,15 @@ export default function HistoryDrawer({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open && userId) loadConversations();
+    if (open && userId) {
+      loadConversations();
+    } else if (open && !userId) {
+      console.warn("[HistoryDrawer] Mở drawer nhưng userId rỗng");
+    }
   }, [open, userId]);
 
   const loadConversations = async () => {
+    console.log("[HistoryDrawer] Loading for userId:", userId);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -28,10 +31,13 @@ export default function HistoryDrawer({
         .select("id, title, category, created_at, updated_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
+
+      console.log("[HistoryDrawer] Result:", { data, error });
+
       if (error) throw error;
       setConversations(data || []);
     } catch (err) {
-      console.error("Load conversations error:", err);
+      console.error("[HistoryDrawer] Error:", err);
     } finally {
       setLoading(false);
     }
@@ -151,4 +157,4 @@ export default function HistoryDrawer({
       </div>
     </>
   );
-      }
+            }
