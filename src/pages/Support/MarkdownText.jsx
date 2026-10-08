@@ -1,46 +1,120 @@
 import React from "react";
 
 /**
- * Parser markdown đơn giản — không cần thư viện
+ * Markdown parser đầy đủ — không cần thư viện
  * Hỗ trợ:
  * - **bold** → chữ đậm
- * - `code` → chữ trong nền xám
- * - > text → khối thông tin viền xanh
- * - * italic *
+ * - *italic* → chữ nghiêng
+ * - `code` → nền xám
+ * - > quote → khối viền xanh
+ * - - item → bullet list
+ * - 1. item → số thứ tự
+ * - [text](url) → link
+ * - --- → đường kẻ ngang
  * - Xuống dòng
  */
 export default function MarkdownText({ text }) {
   if (!text) return null;
 
-  // Tách theo dòng để xử lý khối > quote
   const lines = text.split("\n");
   const blocks = [];
   let currentQuote = [];
+  let currentList = null; // { type: 'bullet'|'number', items: [] }
 
-  lines.forEach((line, idx) => {
+  const flushQuote = () => {
+    if (currentQuote.length > 0) {
+      blocks.push({ type: "quote", lines: [...currentQuote] });
+      currentQuote = [];
+    }
+  };
+
+  const flushList = () => {
+    if (currentList) {
+      blocks.push({ type: "list", ...currentList });
+      currentList = null;
+    }
+  };
+
+  const flushAll = () => {
+    flushQuote();
+    flushList();
+  };
+
+  lines.forEach((line) => {
     const trimmed = line.trim();
 
-    // Nếu dòng bắt đầu bằng > → thuộc khối quote
+    // --- Đường kẻ ngang
+    if (/^-{3,}$/.test(trimmed)) {
+      flushAll();
+      blocks.push({ type: "hr" });
+      return;
+    }
+
+    // --- Quote (>)
     if (trimmed.startsWith(">")) {
+      flushList();
       currentQuote.push(trimmed.replace(/^>\s?/, ""));
-    } else {
-      // Nếu đang có quote → đóng quote trước
-      if (currentQuote.length > 0) {
-        blocks.push({ type: "quote", lines: [...currentQuote] });
-        currentQuote = [];
+      return;
+    }
+
+    // --- Bullet list (- hoặc *)
+    if (/^[-*]\s+/.test(trimmed)) {
+      flushQuote();
+      const content = trimmed.replace(/^[-*]\s+/, "");
+      if (!currentList || currentList.type !== "bullet") {
+        flushList();
+        currentList = { type: "bullet", items: [] };
       }
+      currentList.items.push(content);
+      return;
+    }
+
+    // --- Numbered list (1. 2. 3.)
+    if (/^\d+\.\s+/.test(trimmed)) {
+      flushQuote();
+      const content = trimmed.replace(/^\d+\.\s+/, "");
+      if (!currentList || currentList.type !== "number") {
+        flushList();
+        currentList = { type: "number", items: [] };
+      }
+      currentList.items.push(content);
+      return;
+    }
+
+    // --- Dòng bình thường
+    flushAll();
+
+    if (trimmed === "") {
+      blocks.push({ type: "br" });
+    } else {
       blocks.push({ type: "text", content: line });
     }
   });
 
-  // Đóng quote cuối cùng nếu còn
-  if (currentQuote.length > 0) {
-    blocks.push({ type: "quote", lines: currentQuote });
-  }
+  flushAll();
 
+  // ==================================================
+  // RENDER BLOCKS
+  // ==================================================
   return (
     <div className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
       {blocks.map((block, idx) => {
+        // BR
+        if (block.type === "br") {
+          return <div key={idx} className="h-1.5" />;
+        }
+
+        // HR
+        if (block.type === "hr") {
+          return (
+            <hr
+              key={idx}
+              className="my-3 border-0 border-t border-slate-200"
+            />
+          );
+        }
+
+        // QUOTE
         if (block.type === "quote") {
           return (
             <div
@@ -58,28 +132,61 @@ export default function MarkdownText({ text }) {
             </div>
           );
         }
-        // Dòng text bình thường
-        if (block.content === "") {
-          return <div key={idx} className="h-2" />;
+
+        // BULLET LIST
+        if (block.type === "bullet") {
+          return (
+            <ul key={idx} className="my-2 space-y-1.5">
+              {block.items.map((item, i) => (
+                <li
+                  key={i}
+                  className="flex gap-2.5 text-[14px] leading-6 text-[#161823]"
+                >
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                  <span className="flex-1">{renderInline(item)}</span>
+                </li>
+              ))}
+            </ul>
+          );
         }
-        return (
-          <div key={idx}>
-            {renderInline(block.content)}
-          </div>
-        );
+
+        // NUMBERED LIST
+        if (block.type === "number") {
+          return (
+            <ol key={idx} className="my-2 space-y-1.5">
+              {block.items.map((item, i) => (
+                <li
+                  key={i}
+                  className="flex gap-2.5 text-[14px] leading-6 text-[#161823]"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600">
+                    {i + 1}
+                  </span>
+                  <span className="flex-1">{renderInline(item)}</span>
+                </li>
+              ))}
+            </ol>
+          );
+        }
+
+        // TEXT thường
+        return <div key={idx}>{renderInline(block.content)}</div>;
       })}
     </div>
   );
 }
 
-/**
- * Render inline: **bold**, `code`, *italic*
- */
+// ==================================================
+// INLINE PARSER
+// Hỗ trợ: **bold**, *italic*, `code`, [text](url)
+// ==================================================
 function renderInline(text) {
   if (!text) return null;
 
-  // Regex bắt: **bold**, `code`, *italic*
-  const regex = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g;
+  // Regex bắt: **bold** | `code` | *italic* | [text](url)
+  const regex =
+    /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+
   const parts = [];
   let lastIndex = 0;
   let match;
@@ -91,11 +198,12 @@ function renderInline(text) {
     }
 
     const token = match[0];
+    const key = `inline-${parts.length}`;
 
     // **bold**
     if (token.startsWith("**") && token.endsWith("**")) {
       parts.push(
-        <strong key={parts.length} className="font-bold text-[#161823]">
+        <strong key={key} className="font-bold text-[#161823]">
           {token.slice(2, -2)}
         </strong>
       );
@@ -104,8 +212,8 @@ function renderInline(text) {
     else if (token.startsWith("`") && token.endsWith("`")) {
       parts.push(
         <code
-          key={parts.length}
-          className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-slate-800"
+          key={key}
+          className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-rose-600"
         >
           {token.slice(1, -1)}
         </code>
@@ -114,19 +222,39 @@ function renderInline(text) {
     // *italic*
     else if (token.startsWith("*") && token.endsWith("*")) {
       parts.push(
-        <em key={parts.length} className="italic text-slate-700">
+        <em key={key} className="italic text-slate-700">
           {token.slice(1, -1)}
         </em>
       );
+    }
+    // [text](url)
+    else if (token.startsWith("[") && token.includes("](")) {
+      const matchLink = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (matchLink) {
+        const [, label, url] = matchLink;
+        parts.push(
+          <a
+            key={key}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[#0068FF] underline decoration-[#0068FF]/40 underline-offset-2 hover:decoration-[#0068FF]"
+          >
+            {label}
+          </a>
+        );
+      } else {
+        parts.push(token);
+      }
     }
 
     lastIndex = regex.lastIndex;
   }
 
-  // Text còn lại sau match cuối
+  // Text còn lại
   if (lastIndex < text.length) {
     parts.push(text.slice(lastIndex));
   }
 
   return parts.length > 0 ? parts : text;
-                   }
+            }
