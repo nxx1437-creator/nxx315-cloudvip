@@ -31,6 +31,18 @@ export default function ChatView({
   const [showEmoji, setShowEmoji] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [conv, setConv] = useState(conversation);
+
+// ✅ Sync conv khi prop conversation đổi
+useEffect(() => {
+  if (conversation?.id && conversation.id !== conv?.id) {
+    console.log("[ChatView] Switching conversation:", conversation.id);
+    setConv(conversation);
+    setMessages([]);
+    setLoading(true);
+    sentIds.current = new Set();
+    setHiddenSuggestionIds([]);
+  }
+}, [conversation?.id]);
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
@@ -95,10 +107,36 @@ export default function ChatView({
   };
 
   useEffect(() => {
-    if (conversation?.id) {
-      loadMessages();
-    }
-  }, [conversation?.id]);
+  if (!conversation?.id) return;
+
+  console.log("[ChatView] Loading messages for:", conversation.id);
+  setMessages([]);
+  setLoading(true);
+  sentIds.current = new Set();
+  setHiddenSuggestionIds([]);
+  setPendingImage(null);
+
+  loadMessages();
+}, [conversation?.id]);
+
+  useEffect(() => {
+  if (!conversation?.id) return;
+
+  console.log("[ChatView] Loading messages for:", conversation.id);
+  
+  // Reset tất cả state
+  setMessages([]);
+  setLoading(true);
+  setStreamingMsgId(null);
+  setStreamingText("");
+  setAiTyping(false);
+  setSending(false);
+  setPendingImage(null);
+  sentIds.current = new Set();
+  setHiddenSuggestionIds([]);
+
+  loadMessages();
+}, [conversation?.id]);
 
   useEffect(() => {
     if (!conversation?.id) return;
