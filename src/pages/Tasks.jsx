@@ -20,6 +20,7 @@ import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import IpBlockedScreen from "../components/tasks/IpBlockedScreen.jsx";
 import CaptchaModal from "../components/tasks/CaptchaModal.jsx";
+import ExternalLinkWarning from "../components/tasks/ExternalLinkWarning.jsx";
 import {
   StatPill,
   TaskCard,
@@ -79,6 +80,7 @@ export default function Tasks() {
   const [checkingIp, setCheckingIp] = useState(true);
   const [userLevel, setUserLevel] = useState(null);
   const [captchaTask, setCaptchaTask] = useState(null);
+  const [warnTask, setWarnTask] = useState(null);
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -279,7 +281,7 @@ export default function Tasks() {
       showToast(t("tk.t.restricted"), "error");
       return;
     }
-    setCaptchaTask(task);
+    setWarnTask(task);
   };
 
   const startTaskApi = async (task) => {
@@ -360,6 +362,17 @@ export default function Tasks() {
           )}
           <p className="text-sm font-semibold">{toast.message}</p>
         </div>
+      )}
+      {warnTask && (
+        <ExternalLinkWarning
+          lang={lang}
+          onCancel={() => setWarnTask(null)}
+          onConfirm={() => {
+            const task = warnTask;
+            setWarnTask(null);
+            setCaptchaTask(task);
+          }}
+        />
       )}
 
       {captchaTask && (
