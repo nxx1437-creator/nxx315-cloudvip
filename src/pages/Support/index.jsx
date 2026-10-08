@@ -75,7 +75,7 @@ export default function Support() {
   const openConversation = (conv) => {
     console.log("[Support] Opening conversation:", conv.id);
     setSelectedCategory(conv.category || null);
-    setConversation({ ...conv }); // ✅ Tạo object mới để trigger re-render
+    setConversation({ ...conv });
     setView("chat");
   };
 
@@ -93,7 +93,7 @@ export default function Support() {
         )}
         {view === "chat" && conversation && (
           <ChatView
-            key={conversation.id}  {/* ✅ QUAN TRỌNG: force remount */}
+            key={conversation.id}
             conversation={conversation}
             user={user}
             onBack={() => setView("help")}
@@ -104,4 +104,4 @@ export default function Support() {
       </main>
     </div>
   );
-            }
+}
