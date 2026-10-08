@@ -38,6 +38,25 @@ import {
 } from "../lib/taskHelpers.js";
 import { useI18n } from "../i18n/index.js";
 
+const WARN_KEY = "ext_link_warn_count";
+const WARN_MAX = 3;
+
+const getWarnCount = () => {
+  try {
+    return parseInt(localStorage.getItem(WARN_KEY) || "0", 10) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+const bumpWarnCount = () => {
+  try {
+    localStorage.setItem(WARN_KEY, String(getWarnCount() + 1));
+  } catch {
+    /* bỏ qua */
+  }
+};
+
 function Chip({ active, onClick, icon: Icon, children, count }) {
   return (
     <button
@@ -185,7 +204,6 @@ export default function Tasks() {
       window.removeEventListener("focus", handleVisibility);
     };
   }, [reload]);
-
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
 
@@ -281,6 +299,10 @@ export default function Tasks() {
       showToast(t("tk.t.restricted"), "error");
       return;
     }
+    if (getWarnCount() >= WARN_MAX) {
+      setCaptchaTask(task);
+      return;
+    }
     setWarnTask(task);
   };
 
@@ -342,7 +364,6 @@ export default function Tasks() {
       setIsLoading(false);
     }
   };
-
   if (ipBlocked) return <IpBlockedScreen reason={ipBlocked.reason} />;
 
   return (
@@ -363,11 +384,13 @@ export default function Tasks() {
           <p className="text-sm font-semibold">{toast.message}</p>
         </div>
       )}
+
       {warnTask && (
         <ExternalLinkWarning
           lang={lang}
           onCancel={() => setWarnTask(null)}
           onConfirm={() => {
+            bumpWarnCount();
             const task = warnTask;
             setWarnTask(null);
             setCaptchaTask(task);
@@ -604,4 +627,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-      }
+          }
