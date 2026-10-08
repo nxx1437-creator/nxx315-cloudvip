@@ -1,5 +1,3 @@
-// src/pages/Support/index.jsx
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import TopHeader from "../../components/TopHeader.jsx";
@@ -75,8 +73,9 @@ export default function Support() {
   };
 
   const openConversation = (conv) => {
+    console.log("[Support] Opening conversation:", conv.id);
     setSelectedCategory(conv.category || null);
-    setConversation(conv);
+    setConversation({ ...conv }); // ✅ Tạo object mới để trigger re-render
     setView("chat");
   };
 
@@ -94,6 +93,7 @@ export default function Support() {
         )}
         {view === "chat" && conversation && (
           <ChatView
+            key={conversation.id}  {/* ✅ QUAN TRỌNG: force remount */}
             conversation={conversation}
             user={user}
             onBack={() => setView("help")}
@@ -104,4 +104,4 @@ export default function Support() {
       </main>
     </div>
   );
-}
+            }
