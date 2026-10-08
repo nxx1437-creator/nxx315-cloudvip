@@ -31,18 +31,6 @@ export default function ChatView({
   const [showEmoji, setShowEmoji] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [conv, setConv] = useState(conversation);
-
-// ✅ Sync conv khi prop conversation đổi
-useEffect(() => {
-  if (conversation?.id && conversation.id !== conv?.id) {
-    console.log("[ChatView] Switching conversation:", conversation.id);
-    setConv(conversation);
-    setMessages([]);
-    setLoading(true);
-    sentIds.current = new Set();
-    setHiddenSuggestionIds([]);
-  }
-}, [conversation?.id]);
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
@@ -51,6 +39,28 @@ useEffect(() => {
   const sentIds = useRef(new Set());
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+
+  // ✅ Sync conv khi prop conversation đổi (fix quan trọng)
+  useEffect(() => {
+    if (conversation?.id && conversation.id !== conv?.id) {
+      console.log(
+        "[ChatView] Switching conv:",
+        conv?.id,
+        "→",
+        conversation.id
+      );
+      setConv(conversation);
+      setMessages([]);
+      setLoading(true);
+      setStreamingMsgId(null);
+      setStreamingText("");
+      setAiTyping(false);
+      setSending(false);
+      sentIds.current = new Set();
+      setHiddenSuggestionIds([]);
+      setPendingImage(null);
+    }
+  }, [conversation?.id]);
 
   const scrollToBottom = (smooth = false) => {
     requestAnimationFrame(() => {
@@ -107,36 +117,10 @@ useEffect(() => {
   };
 
   useEffect(() => {
-  if (!conversation?.id) return;
-
-  console.log("[ChatView] Loading messages for:", conversation.id);
-  setMessages([]);
-  setLoading(true);
-  sentIds.current = new Set();
-  setHiddenSuggestionIds([]);
-  setPendingImage(null);
-
-  loadMessages();
-}, [conversation?.id]);
-
-  useEffect(() => {
-  if (!conversation?.id) return;
-
-  console.log("[ChatView] Loading messages for:", conversation.id);
-  
-  // Reset tất cả state
-  setMessages([]);
-  setLoading(true);
-  setStreamingMsgId(null);
-  setStreamingText("");
-  setAiTyping(false);
-  setSending(false);
-  setPendingImage(null);
-  sentIds.current = new Set();
-  setHiddenSuggestionIds([]);
-
-  loadMessages();
-}, [conversation?.id]);
+    if (conversation?.id) {
+      loadMessages();
+    }
+  }, [conversation?.id]);
 
   useEffect(() => {
     if (!conversation?.id) return;
@@ -211,7 +195,8 @@ useEffect(() => {
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const bodyPayload = {
-      conversation_id: conv.id,
+      // ✅ DÙNG PROP thay vì state conv.id
+      conversation_id: conversation.id,
       user_message: imageUrl
         ? "Phân tích ảnh này giúp mình"
         : messageText,
@@ -272,7 +257,8 @@ useEffect(() => {
       const { data: userMsg, error } = await supabase
         .from("support_messages")
         .insert({
-          conversation_id: conv.id,
+          // ✅ DÙNG PROP
+          conversation_id: conversation.id,
           user_id: user.id,
           message: content || "",
           sender_type: "user",
@@ -302,6 +288,11 @@ useEffect(() => {
           console.log(
             `[Support AI] Provider: ${data.provider} (${data.model})`
           );
+
+          // ✅ FALLBACK: Reload messages sau 2s để đảm bảo có reply
+          setTimeout(() => {
+            loadMessages();
+          }, 2000);
         } catch (err) {
           console.error("AI error:", err);
           setMessages((prev) =>
@@ -310,7 +301,8 @@ useEffect(() => {
           const { data: errMsg } = await supabase
             .from("support_messages")
             .insert({
-              conversation_id: conv.id,
+              // ✅ DÙNG PROP
+              conversation_id: conversation.id,
               user_id: user.id,
               message:
                 "Xin lỗi bạn, mình đang gặp sự cố kỹ thuật. Bạn thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ trực tiếp nha 🌸",
@@ -362,11 +354,9 @@ useEffect(() => {
   };
 
   const hasInput = input.trim() || pendingImage;
-    return (
+      return (
     <div className="fixed inset-0 z-30 flex flex-col bg-white">
-      {/* ============================================ */}
       {/* HEADER */}
-      {/* ============================================ */}
       <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-2.5 backdrop-blur-xl">
         <button
           onClick={onBack}
@@ -409,14 +399,8 @@ useEffect(() => {
         </a>
       </div>
 
-      {/* ============================================ */}
-      {/* BANNER */}
-      {/* ============================================ */}
       <BannerNotice />
 
-      {/* ============================================ */}
-      {/* HISTORY DRAWER */}
-      {/* ============================================ */}
       <HistoryDrawer
         open={showHistoryDrawer}
         onClose={() => setShowHistoryDrawer(false)}
@@ -426,9 +410,7 @@ useEffect(() => {
         onNewChat={onNewChat}
       />
 
-      {/* ============================================ */}
       {/* MESSAGES */}
-      {/* ============================================ */}
       <div
         ref={scrollRef}
         className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-4 sm:px-4"
@@ -499,9 +481,7 @@ useEffect(() => {
         )}
       </div>
 
-      {/* ============================================ */}
       {/* QUICK ACTIONS */}
-      {/* ============================================ */}
       <div
         className="scrollbar-hide flex gap-2 overflow-x-auto border-t border-black/[0.05] bg-white px-3.5 pb-1 pt-2.5"
         style={{ scrollbarWidth: "none" }}
@@ -519,9 +499,7 @@ useEffect(() => {
         ))}
       </div>
 
-      {/* ============================================ */}
       {/* INPUT BAR */}
-      {/* ============================================ */}
       <div className="relative border-t border-black/[0.05] bg-white px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:px-4">
         {pendingImage && (
           <div className="mb-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
@@ -624,9 +602,7 @@ useEffect(() => {
           }}
         />
 
-        {/* ============================================ */}
-        {/* BOTTOM SHEET - FILE MENU */}
-        {/* ============================================ */}
+        {/* FILE MENU */}
         {showFileMenu && (
           <>
             <div
@@ -698,9 +674,7 @@ useEffect(() => {
           </>
         )}
 
-        {/* ============================================ */}
         {/* EMOJI PICKER */}
-        {/* ============================================ */}
         {showEmoji && (
           <>
             <div
@@ -722,4 +696,4 @@ useEffect(() => {
       </div>
     </div>
   );
-      }
+            }
