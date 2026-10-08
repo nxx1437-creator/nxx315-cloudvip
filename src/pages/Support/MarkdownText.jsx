@@ -1,35 +1,90 @@
 import React from "react";
 
 /**
- * Markdown parser đầy đủ — không cần thư viện
+ * Markdown parser đầy đủ + filter code tool
  * Hỗ trợ:
- * - **bold** → chữ đậm
- * - *italic* → chữ nghiêng
- * - `code` → nền xám
- * - > quote → khối viền xanh
- * - - item → bullet list
- * - 1. item → số thứ tự
- * - [text](url) → link
- * - --- → đường kẻ ngang
- * - Xuống dòng
+ * - **bold**, *italic*, `code`
+ * - > quote (khối xanh)
+ * - - bullet, 1. numbered
+ * - [text](url) link
+ * - --- hr
+ * - TỰ ĐỘNG XOÁ: suggest_action({...}), lookup_order({...}),
+ *   list_recent_orders({...}), send_guide_image({...})
+ *   và các dòng dạng "Label → /path"
  */
 export default function MarkdownText({ text }) {
   if (!text) return null;
 
-  // ✅ Ẩn các dòng chứa path nút bấm (đã parse thành nút)
-  const cleanText = text
+  // ==================================================
+  // BƯỚC 1: LÀM SẠCH TEXT — XOÁ CODE TOOL
+  // ==================================================
+  let cleaned = text;
+
+  // Xoá các đoạn gọi tool: suggest_action({...}) v.v.
+  const TOOL_NAMES = [
+    "suggest_action",
+    "lookup_order",
+    "list_recent_orders",
+    "send_guide_image",
+  ];
+
+  for (const toolName of TOOL_NAMES) {
+    // Match toolName({ ... }) — có thể nhiều dòng
+    const regex = new RegExp(
+      `${toolName}\\s*\\(\\s*\\{[\\s\\S]*?\\}\\s*\\)`,
+      "gi"
+    );
+    cleaned = cleaned.replace(regex, "");
+  }
+
+  // Xoá các dòng dạng "Label → /path" hoặc "Label -> /path"
+  cleaned = cleaned
     .split("\n")
     .filter((line) => {
       const trimmed = line.trim();
-      // Bỏ dòng dạng "Label → /path"
-      if (/^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i.test(trimmed)) {
+      if (!trimmed) return true; // giữ dòng trống
+
+      // Dòng "Label → /path"
+      if (
+        /^(.*?)\s*(?:→|->|>)\s*(\/[a-z0-9\-\/]+|https?:\/\/[^\s]+)$/i.test(
+          trimmed
+        )
+      ) {
         return false;
       }
+
+      // Dòng chỉ có path
+      if (/^\/[a-z0-9\-\/]+$/i.test(trimmed)) {
+        return false;
+      }
+
+      // Dòng chỉ có URL Zalo
+      if (/^https?:\/\/[^\s]+$/i.test(trimmed)) {
+        return false;
+      }
+
+      // Dòng chứa tên tool
+      if (
+        /suggest_action|lookup_order|list_recent_orders|send_guide_image/i.test(
+          trimmed
+        )
+      ) {
+        return false;
+      }
+
       return true;
     })
     .join("\n");
 
-  const lines = cleanText.split("\n");
+  // Xoá dòng trống liên tiếp (3+ dòng)
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
+
+  if (!cleaned) return null;
+
+  // ==================================================
+  // BƯỚC 2: PARSE MARKDOWN
+  // ==================================================
+  const lines = cleaned.split("\n");
   const blocks = [];
   let currentQuote = [];
   let currentList = null; // { type: 'bullet'|'number', items: [] }
@@ -107,7 +162,7 @@ export default function MarkdownText({ text }) {
   flushAll();
 
   // ==================================================
-  // RENDER BLOCKS
+  // BƯỚC 3: RENDER BLOCKS
   // ==================================================
   return (
     <div className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
@@ -270,4 +325,4 @@ function renderInline(text) {
   }
 
   return parts.length > 0 ? parts : text;
-            }
+  }
