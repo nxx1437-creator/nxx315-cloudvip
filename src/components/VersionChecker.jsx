@@ -8,25 +8,13 @@ const GUARD_KEY = "last_update_reload";
 // Không bao giờ reload ở các trang này (đang có captcha/đếm giờ)
 const isBusyPath = (path) => path.startsWith("/task/callback");
 
-const collectAssets = (root) => {
-  const found = [];
-  root
-    .querySelectorAll('script[src], link[rel="stylesheet"]')
-    .forEach((el) => {
-      const url = el.getAttribute("src") || el.getAttribute("href") || "";
-      if (url.includes("/assets/")) found.push(url.split("?")[0]);
-    });
-  return found.sort().join("|");
-};
-
-async function fetchLatestBuildId() {
-  const res = await fetch(`/index.html?_=${Date.now()}`, {
+async function fetchVersion() {
+  const res = await fetch(`/version.json?_=${Date.now()}`, {
     cache: "no-store",
   });
   if (!res.ok) return null;
-  const html = await res.text();
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return collectAssets(doc);
+  const data = await res.json();
+  return data?.version ? String(data.version) : null;
 }
 
 export default function VersionChecker() {
@@ -55,16 +43,21 @@ export default function VersionChecker() {
 
   // Kiểm tra bản mới: chỉ đánh dấu, KHÔNG reload ngay
   useEffect(() => {
-    currentRef.current = collectAssets(document);
-    if (!currentRef.current) return; // dev mode / không phải bản build
-
     let stopped = false;
 
     const check = async () => {
       if (stopped || pendingRef.current) return;
       try {
-        const latest = await fetchLatestBuildId();
-        if (latest && latest !== currentRef.current) {
+        const latest = await fetchVersion();
+        if (!latest) return;
+
+        // Lần đầu: ghi nhớ phiên bản đang chạy
+        if (currentRef.current === null) {
+          currentRef.current = latest;
+          return;
+        }
+
+        if (latest !== currentRef.current) {
           pendingRef.current = true;
         }
       } catch {
@@ -99,4 +92,4 @@ export default function VersionChecker() {
   }, [location.pathname]);
 
   return null;
-    }
+}
