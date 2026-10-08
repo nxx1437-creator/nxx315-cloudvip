@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, LogIn } from "lucide-react";
-import { shouldShowLoginButton } from "./helpers.js";
 import MarkdownText from "./MarkdownText.jsx";
+import { shouldShowLoginButton } from "./helpers.js";
 
 export default function MessageBubble({
   message,
@@ -123,32 +123,49 @@ export default function MessageBubble({
               </div>
             )}
 
-            {/* ============ TEXT ============ */}
+            {/* ============ TEXT với Markdown ============ */}
             {displayText && (
-  <div className="px-4 py-3">
-    <MarkdownText text={displayText} />
-    {isStreaming && (
-      <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
-    )}
-  </div>
-)}
+              <div className="px-4 py-3">
+                <MarkdownText text={displayText} />
+                {isStreaming && (
+                  <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
+                )}
+              </div>
+            )}
 
-            {/* ============ ACTION BUTTONS ============ */}
+            {/* ============ ACTION BUTTONS với icon 3D ============ */}
             {hasActions && !isStreaming && (
               <div className="border-t border-slate-100 px-3 py-3">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
                   {message.actions.map((action, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleActionClick(action)}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-white active:scale-[0.97]"
+                      className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
                     >
-                      <span className="line-clamp-2 text-[12.5px] font-semibold leading-tight text-slate-700">
+                      {/* Icon 3D */}
+                      {action.icon ? (
+                        <img
+                          src={action.icon}
+                          alt=""
+                          className="h-8 w-8 shrink-0 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                          <span className="text-base">🔗</span>
+                        </div>
+                      )}
+
+                      <span className="flex-1 text-[13.5px] font-semibold leading-tight text-slate-700">
                         {action.label}
                       </span>
+
                       <svg
-                        width="14"
-                        height="14"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
                         className="shrink-0 text-slate-400"
@@ -227,4 +244,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-          }
+}
