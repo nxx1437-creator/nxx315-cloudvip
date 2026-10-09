@@ -37,7 +37,14 @@ export default function GuideLayout({ children }) {
             }`}
             onClick={() => setMobileOpen(false)}
           >
-            <span className="text-base leading-none">{item.icon}</span>
+            <img
+  src={item.icon}
+  alt=""
+  className="h-5 w-5 object-contain"
+  onError={(e) => {
+    e.currentTarget.style.display = "none";
+  }}
+/>
             {item.label}
           </Link>
         );
