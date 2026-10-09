@@ -8,17 +8,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-/**
- * Inline Alert — thông báo trong luồng nội dung
- *
- * @param {string} severity - "warning" | "info" | "success" | "error"
- * @param {string} message - Nội dung thông báo
- * @param {boolean} marquee - Chữ chạy ngang (default: false)
- * @param {boolean} dismissible - Cho phép đóng (default: false)
- * @param {object} action - { label, onClick, href }
- * @param {boolean} live - Có dùng role="alert"/"status" không (default: false)
- * @param {function} onDismiss - Callback khi đóng
- */
 export default function InlineAlert({
   severity = "warning",
   message,
@@ -32,7 +21,6 @@ export default function InlineAlert({
 
   if (dismissed) return null;
 
-  // Config theo severity
   const CONFIG = {
     warning: {
       icon: AlertTriangle,
@@ -79,8 +67,11 @@ export default function InlineAlert({
   const cfg = CONFIG[severity] || CONFIG.warning;
   const Icon = cfg.icon;
 
-  // Live region role — chỉ dùng khi message dynamic + được chỉ định
-  const liveRole = live ? (severity === "error" ? "alert" : "status") : undefined;
+  const liveRole = live
+    ? severity === "error"
+      ? "alert"
+      : "status"
+    : undefined;
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -90,23 +81,27 @@ export default function InlineAlert({
   return (
     <div
       role={liveRole}
-      aria-live={live ? (severity === "error" ? "assertive" : "polite") : undefined}
+      aria-live={
+        live
+          ? severity === "error"
+            ? "assertive"
+            : "polite"
+          : undefined
+      }
       className={`relative overflow-hidden rounded-xl border ${cfg.border} ${cfg.surface} ${cfg.text} shadow-sm`}
       style={{
         borderInlineStartWidth: "4px",
         borderInlineStartColor: cfg.accent,
       }}
     >
-      <div className="flex items-start gap-3 px-4 py-3">
-        {/* Icon */}
+      <div className="flex items-center gap-3 px-4 py-3">
         <div
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
         >
           <Icon size={15} className={cfg.iconColor} strokeWidth={2.4} />
         </div>
 
-        {/* Message */}
-        <div className="min-w-0 flex-1 pt-0.5">
+        <div className="min-w-0 flex-1">
           {marquee ? (
             <div className="relative overflow-hidden">
               <div className="marquee-content">
@@ -120,9 +115,8 @@ export default function InlineAlert({
           )}
         </div>
 
-        {/* Action */}
         {action && (
-          <div className="shrink-0 pt-0.5">
+          <div className="shrink-0">
             {action.href ? (
               <a
                 href={action.href}
@@ -145,7 +139,6 @@ export default function InlineAlert({
           </div>
         )}
 
-        {/* Dismiss button */}
         {dismissible && (
           <button
             onClick={handleDismiss}
@@ -157,21 +150,16 @@ export default function InlineAlert({
         )}
       </div>
 
-      {/* CSS cho marquee */}
       {marquee && (
         <style>{`
           @keyframes marqueeScroll {
-            0% {
-              transform: translateX(100%);
-            }
-            100% {
-              transform: translateX(-100%);
-            }
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
           }
           .marquee-content {
             display: flex;
             white-space: nowrap;
-            animation: marqueeScroll 20s linear infinite;
+            animation: marqueeScroll 25s linear infinite;
           }
           .marquee-text {
             display: inline-block;
