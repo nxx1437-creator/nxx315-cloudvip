@@ -4,7 +4,7 @@ import useSession from "../hooks/useSession.js";
 import { useI18n } from "../i18n/index.js";
 
 // Ảnh bạn tự tải lên: để file trong thư mục public/ với đúng tên này
-const IMAGE_SRC = "/guide-welcome.jpg";
+const IMAGE_SRC = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons/guide-welcome.png";
 const NEW_ACCOUNT_DAYS = 7; // chỉ hiện cho tài khoản tạo trong 7 ngày gần đây
 const DELAY_MS = 800;
 const KEY = (id) => `guide_welcome_seen_v1_${id}`;
