@@ -154,7 +154,7 @@ Nhớ cho phép **cửa sổ pop-up** với trang NXX315, vì nhiệm vụ mở 
 3. Nếu có **mã mời**, điền vào để nhận +200 xu
 4. Bấm **Đăng ký** → kiểm tra email xác nhận
 
-⚠️ Mỗi thiết bị chỉ được tạo 1 tài khoản.`,
+ Mỗi thiết bị chỉ được tạo 1 tài khoản.`,
       },
       {
         heading: "Không nhận được email xác minh?",
@@ -790,3 +790,5 @@ Nếu bạn thấy:
     ],
   },
 };
+import { applyGuideFix } from "./guideFix.js";
+applyGuideFix(GUIDE_CONTENT);
