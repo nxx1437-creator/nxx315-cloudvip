@@ -130,8 +130,6 @@ export const EXTRA_3 = [
             "**Vì sao nhiệm vụ báo hết lượt?**",
             "Mỗi nhiệm vụ có giới hạn số lượt mỗi ngày. Sang ngày mới lượt được làm mới.",
             "",
-            "**Xu có hết hạn không?**",
-            "Hãy xem thông báo và điều khoản hiện hành. Cách tốt nhất là dùng xu đều đặn để đổi quà.",
           ].join("\n"),
         },
         {
