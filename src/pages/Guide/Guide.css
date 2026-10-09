@@ -1,0 +1,92 @@
+/* ================================================== */
+/* GUIDE PAGE — Custom styles */
+/* ================================================== */
+
+/* Fade in animation */
+@keyframes guideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.guide-fade-in {
+  animation: guideFadeIn 0.4s ease-out;
+}
+
+/* Gradient text */
+.guide-gradient-text {
+  background: linear-gradient(135deg, #087EA4, #0ea5e9, #38bdf8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hero blob */
+@keyframes blobFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -20px) scale(1.05);
+  }
+  66% {
+    transform: translate(-15px, 15px) scale(0.95);
+  }
+}
+
+.guide-blob {
+  animation: blobFloat 8s ease-in-out infinite;
+}
+
+/* Card hover */
+.guide-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guide-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -8px rgba(8, 126, 164, 0.25);
+}
+
+/* Icon bounce */
+@keyframes iconBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.guide-card:hover .guide-icon {
+  animation: iconBounce 0.6s ease-in-out;
+}
+
+/* Hide scrollbar */
+.guide-scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.guide-scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Smooth scroll */
+.guide-smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Sidebar active gradient */
+.guide-sidebar-active {
+  background: linear-gradient(90deg, #087EA4 0%, #0ea5e9 100%);
+  color: white !important;
+  box-shadow: 0 4px 12px -4px rgba(8, 126, 164, 0.5);
+}
