@@ -22,6 +22,7 @@ import {
   locale,
 } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
+import InlineAlert from "../components/InlineAlert.jsx";
 
 export default function Store() {
   const { t, lang } = useI18n();
@@ -82,13 +83,21 @@ export default function Store() {
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
         <StoreSearch
-          search={search}
-          setSearch={setSearch}
-          onSelect={handleGameClick}
-        />
+  search={search}
+  setSearch={setSearch}
+  onSelect={handleGameClick}
+/>
 
-        <BannerSlideshow navigate={navigate} />
+{/* ✅ ALERT BẢO TRÌ */}
+<InlineAlert
+  severity="warning"
+  marquee={true}
+  dismissible={true}
+  message=" Hệ thống bảo trì từ 9h-11h. Các đơn hàng đặt trong khung giờ này sẽ được xử lý sau 11h. Xin lỗi vì sự bất tiện!"
+/>
 
+<BannerSlideshow navigate={navigate} />
+        
         {/* Dành cho bạn */}
         {recommended.length > 0 && !search && (
           <section>
