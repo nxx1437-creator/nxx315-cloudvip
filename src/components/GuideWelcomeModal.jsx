@@ -17,16 +17,16 @@ const HIDE_PREFIX = ["/guide", "/admin"];
 
 const TEXT = {
   vi: {
-    title: "An toàn của bạn rất quan trọng", // Đổi tiêu đề giống ảnh 2
-    body: "Bạn sắp rời khỏi NXX315 và mở liên kết bên ngoài. Hãy đảm bảo đó là liên kết của một nguồn đáng tin cậy và tránh chia sẻ thông tin cá nhân.",
-    later: "Hủy",
-    go: "Tiếp tục",
+    title: "chào mừng bạn đến với nxx315 studio", // Đổi tiêu đề giống ảnh 2
+    body: "Xem nhanh hướng dẫn để biết cách kiếm xu, đổi quà và giữ tài khoản luôn an toàn nhé!",
+    later: "để sau",
+    go: "xem hướng dẫn",
   },
   en: {
-    title: "Your safety is important",
-    body: "You are about to leave NXX315 and open an external link. Make sure it's from a trusted source and avoid sharing personal information.",
-    later: "Cancel",
-    go: "Continue",
+    title: "Welcome to nxx315 studio", // Change title to match image 2
+    body: "Quick guide to learn how to earn coins, redeem gifts, and keep your account safe!",
+    later: "Later",
+    go: "See instructions"
   },
 };
 
