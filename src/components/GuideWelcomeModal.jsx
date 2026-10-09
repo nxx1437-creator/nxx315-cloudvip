@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import { useI18n } from "../i18n/index.js";
 
-// Ảnh bạn tự tải lên: để file trong thư mục public/ với đúng tên này
-const IMAGE_SRC = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons/guide-welcome.png";
 const NEW_ACCOUNT_DAYS = 7;
 const DELAY_MS = 800;
 const KEY = (id) => `guide_welcome_seen_v1_${id}`;
@@ -17,16 +15,16 @@ const HIDE_PREFIX = ["/guide", "/admin"];
 
 const TEXT = {
   vi: {
-    title: "chào mừng bạn đến với NXX315 STUDIO", // Đổi tiêu đề giống ảnh 2
-    body: "Xem nhanh hướng dẫn để biết cách kiếm xu, đổi quà và giữ tài khoản luôn an toàn nhé!",
+    title: "Chào mừng đến NXX315 STUDIO",
+    body: "Hướng dẫn nhanh để kiếm xu, đổi quà và giữ tài khoản của bạn an toàn!",
     later: "Để sau",
     go: "Xem hướng dẫn",
   },
   en: {
-    title: "Welcome to NXX315 STUDIO", // Change title to match image 2
+    title: "Welcome to NXX315 STUDIO",
     body: "Quick guide to learn how to earn coins, redeem gifts, and keep your account safe!",
     later: "Later",
-    go: "See instructions"
+    go: "See Instructions",
   },
 };
 
@@ -38,7 +36,6 @@ export default function GuideWelcomeModal() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
-  const [imgOk, setImgOk] = useState(true);
 
   const tx = TEXT[lang] || TEXT.vi;
   const hidden = HIDE_PATHS.includes(pathname) || HIDE_PREFIX.some((p) => pathname.startsWith(p));
@@ -65,48 +62,51 @@ export default function GuideWelcomeModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center font-sans"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans"
       onClick={close}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl bg-white px-6 pb-8 pt-8 text-center shadow-2xl sm:rounded-3xl"
+        className="w-full max-w-[340px] rounded-2xl bg-white px-6 pb-6 pt-8 text-center shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* --- ICON / ẢNH --- */}
-        {/* Nếu muốn giống ảnh 2 (chỉ có icon), bạn có thể thay bằng thẻ svg hoặc img icon nhỏ.
-            Còn nếu vẫn muốn giữ ảnh minh họa, mình để nó ở đây với kích thước gọn hơn */}
-        {imgOk && (
-          <img
-            src={IMAGE_SRC}
-            alt=""
-            className="mx-auto mb-5 max-h-32 w-auto object-contain"
-            onError={() => setImgOk(false)}
-          />
-        )}
+        {/* --- ICON KHIÊN BẢO VỆ --- */}
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fe2c55"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-7 w-7"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+        </div>
 
         {/* --- TIÊU ĐỀ --- */}
-        {/* Font cực đậm (font-extrabold), chữ đen, xuống dòng tự nhiên */}
-        <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-[#161823]">
+        <h2 className="text-[20px] font-extrabold leading-tight tracking-tight text-[#161823]">
           {tx.title}
         </h2>
 
         {/* --- NỘI DUNG --- */}
-        <p className="mt-4 text-[15px] leading-relaxed text-slate-600 px-2">
+        <p className="mt-3 text-[14px] leading-relaxed text-slate-600">
           {tx.body}
         </p>
 
         {/* --- NÚT BẤM --- */}
-        {/* Bố cục giống TikTok: nút Hủy bên trái (xám), nút Tiếp tục bên phải (đỏ/hồng) */}
-        <div className="mt-8 flex gap-3">
+        <div className="mt-6 flex gap-3">
           <button
             onClick={close}
-            className="flex-1 rounded-full bg-slate-100 py-3.5 font-bold text-[#161823] transition active:scale-95"
+            className="flex-1 rounded-full bg-slate-100 py-3 text-[14px] font-bold text-[#161823] transition active:scale-95"
           >
             {tx.later}
           </button>
           <button
             onClick={goGuide}
-            className="flex-1 rounded-full bg-[#fe2c55] py-3.5 font-bold text-white shadow-md shadow-rose-500/30 transition active:scale-95"
+            className="flex-1 rounded-full bg-[#fe2c55] py-3 text-[14px] font-bold text-white shadow-md shadow-rose-500/30 transition active:scale-95"
           >
             {tx.go}
           </button>
@@ -114,4 +114,4 @@ export default function GuideWelcomeModal() {
       </div>
     </div>
   );
-}
+    }
