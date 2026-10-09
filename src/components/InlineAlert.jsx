@@ -88,33 +88,51 @@ export default function InlineAlert({
             : "polite"
           : undefined
       }
-      className={`relative overflow-hidden rounded-xl border ${cfg.border} ${cfg.surface} ${cfg.text} shadow-sm`}
-      style={{
-        borderInlineStartWidth: "4px",
-        borderInlineStartColor: cfg.accent,
-      }}
+      className={`group relative overflow-hidden rounded-2xl ${cfg.surface} ${cfg.text}`}
     >
-      <div className="flex items-center gap-3 px-4 py-3">
+      {/* Viền trái gradient */}
+      <div
+        className="absolute inset-y-0 left-0 w-1"
+        style={{
+          background: `linear-gradient(180deg, ${cfg.accent}, ${cfg.accent}dd)`,
+        }}
+      />
+
+      <div className="flex items-center gap-3.5 py-3.5 pl-5 pr-3.5">
+        {/* Icon + chấm nhấp nháy */}
         <div
-          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
+          className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${cfg.iconBg} shadow-sm`}
         >
-          <Icon size={15} className={cfg.iconColor} strokeWidth={2.4} />
+          <Icon size={17} className={cfg.iconColor} strokeWidth={2.4} />
+          <span
+            className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white"
+            style={{ backgroundColor: cfg.accent }}
+          >
+            <span
+              className="absolute inset-0 animate-ping rounded-full"
+              style={{ backgroundColor: cfg.accent }}
+            />
+          </span>
         </div>
 
+        {/* Message */}
         <div className="min-w-0 flex-1">
           {marquee ? (
             <div className="relative overflow-hidden">
               <div className="marquee-content">
-                <span className="marquee-text text-[13px] font-medium leading-5">
+                <span className="marquee-text text-[13.5px] font-semibold leading-5 tracking-tight">
                   {message}
                 </span>
               </div>
             </div>
           ) : (
-            <p className="text-[13px] font-medium leading-5">{message}</p>
+            <p className="text-[13.5px] font-semibold leading-5 tracking-tight">
+              {message}
+            </p>
           )}
         </div>
 
+        {/* Action */}
         {action && (
           <div className="shrink-0">
             {action.href ? (
@@ -122,34 +140,42 @@ export default function InlineAlert({
                 href={action.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] font-bold transition ${cfg.actionColor}`}
+                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-bold transition ${cfg.actionColor}`}
               >
                 {action.label}
-                <ArrowRight size={12} />
+                <ArrowRight
+                  size={12}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
               </a>
             ) : (
               <button
                 onClick={action.onClick}
-                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[12px] font-bold transition ${cfg.actionColor}`}
+                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-bold transition ${cfg.actionColor}`}
               >
                 {action.label}
-                <ArrowRight size={12} />
+                <ArrowRight
+                  size={12}
+                  className="transition-transform group-hover:translate-x-0.5"
+                />
               </button>
             )}
           </div>
         )}
 
+        {/* Dismiss */}
         {dismissible && (
           <button
             onClick={handleDismiss}
             aria-label="Đóng thông báo"
-            className={`shrink-0 rounded-lg p-1.5 transition hover:bg-black/5 ${cfg.text}`}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition hover:bg-black/5"
           >
             <X size={14} strokeWidth={2.4} />
           </button>
         )}
       </div>
 
+      {/* CSS marquee — nhanh hơn */}
       {marquee && (
         <style>{`
           @keyframes marqueeScroll {
@@ -159,7 +185,7 @@ export default function InlineAlert({
           .marquee-content {
             display: flex;
             white-space: nowrap;
-            animation: marqueeScroll 25s linear infinite;
+            animation: marqueeScroll 12s linear infinite;
           }
           .marquee-text {
             display: inline-block;
@@ -172,4 +198,4 @@ export default function InlineAlert({
       )}
     </div>
   );
-}
+      }
