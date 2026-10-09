@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -19,19 +19,31 @@ import {
   Wallet,
   Bell,
   Smartphone,
+  Check,
 } from "lucide-react";
 import {
   SectionHead,
-  BentoCard,
   Chip,
-  SafetyBadge,
-  StepCard,
+  PreviewCard,
+  SafetyCard,
   FAQItem,
-  HeroConsole,
-  Corners,
+  DOT_BG,
   primaryBtn,
   ghostBtn,
-} from "./components/LandingParts.jsx";
+} from "./components/LandingKit.jsx";
+import {
+  PvStore,
+  PvCheckin,
+  PvStreak,
+  PvGames,
+  PvLevel,
+  PvRank,
+  PvRefer,
+  PvWallet,
+  PvNotify,
+  PvPhone,
+  HeroShowcase,
+} from "./components/LandingPreviews.jsx";
 import {
   LandingHeader,
   LandingFooter,
@@ -64,37 +76,6 @@ const STEPS = [
   },
 ];
 
-const BENTO = [
-  {
-    icon: ShoppingBag,
-    t: "ld.f7t",
-    d: "ld.f7d",
-    featured: true,
-    span: "sm:col-span-2",
-    chips: ["ld.chipRobux", "ld.chipPhone", "ld.chipGift"],
-  },
-  {
-    icon: CalendarCheck,
-    t: "ld.f1t",
-    d: "ld.f1d",
-    featured: true,
-    span: "sm:col-span-2",
-  },
-  { icon: Flame, t: "ld.f2t", d: "ld.f2d" },
-  {
-    icon: Gamepad2,
-    t: "ld.f3t",
-    d: "ld.f3d",
-    chips: ["dash.wheel", "dash.scratch", "dash.dice"],
-  },
-  { icon: TrendingUp, t: "ld.f4t", d: "ld.f4d" },
-  { icon: Trophy, t: "ld.f6t", d: "ld.f6d" },
-  { icon: Share2, t: "ld.f5t", d: "ld.f5d" },
-  { icon: Wallet, t: "ld.f8t", d: "ld.f8d" },
-  { icon: Bell, t: "ld.f9t", d: "ld.f9d" },
-  { icon: Smartphone, t: "ld.f10t", d: "ld.f10d" },
-];
-
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
   { icon: ShieldCheck, t: "ld.b2t", d: "ld.b2d" },
@@ -102,15 +83,42 @@ const SAFETY = [
   { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
 ];
 
-const GRID_BG = {
-  backgroundImage:
-    "linear-gradient(rgba(5,150,105,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(5,150,105,0.06) 1px, transparent 1px)",
-  backgroundSize: "44px 44px",
-};
+const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 
 export default function CloudVIPLanding() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [openFaq, setOpenFaq] = useState(0);
+
+  const bento = [
+    {
+      k: "f7",
+      icon: ShoppingBag,
+      span: "sm:col-span-2",
+      pv: (
+        <PvStore
+          labels={[t("ld.chipRobux"), t("ld.chipPhone"), t("ld.chipGift")]}
+        />
+      ),
+    },
+    { k: "f1", icon: CalendarCheck, span: "sm:col-span-2", pv: <PvCheckin /> },
+    { k: "f2", icon: Flame, pv: <PvStreak /> },
+    {
+      k: "f3",
+      icon: Gamepad2,
+      pv: (
+        <PvGames
+          labels={[t("dash.wheel"), t("dash.scratch"), t("dash.dice")]}
+        />
+      ),
+    },
+    { k: "f4", icon: TrendingUp, pv: <PvLevel /> },
+    { k: "f6", icon: Trophy, pv: <PvRank /> },
+    { k: "f5", icon: Share2, pv: <PvRefer /> },
+    { k: "f8", icon: Wallet, pv: <PvWallet /> },
+    { k: "f9", icon: Bell, pv: <PvNotify /> },
+    { k: "f10", icon: Smartphone, pv: <PvPhone /> },
+  ];
 
   return (
     <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
@@ -118,31 +126,41 @@ export default function CloudVIPLanding() {
 
       <main>
         {/* ============ HERO ============ */}
-        <section
-          className="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 to-white"
-          style={GRID_BG}
-        >
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-12 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
-            {/* Căn trái để sát tường */}
+        <section className="relative overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              ...DOT_BG,
+              WebkitMaskImage:
+                "radial-gradient(ellipse at 50% 20%, black, transparent 70%)",
+              maskImage:
+                "radial-gradient(ellipse at 50% 20%, black, transparent 70%)",
+            }}
+          />
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-200/40 blur-3xl" />
+
+          <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pb-16 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-24 lg:pt-16">
             <div className="text-left">
-              <span className="relative inline-flex items-center gap-2.5 border border-emerald-600/25 bg-white px-3.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 sm:text-[11px]">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+              <span className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm sm:text-[11px]">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                </span>
                 {t("ld.badge")}
-                <Corners />
               </span>
 
-              {/* --- CHỈ 2 DÒNG DUY NHẤT --- */}
-              <h1 className="mt-6 text-[34px] font-black uppercase leading-[1.25] tracking-[-0.02em] text-slate-950 sm:text-6xl">
-                <span className="block text-slate-950">{t("ld.h1a")}</span>
-                <span className="block text-emerald-600">{t("ld.h1b")}</span>
+              <h1 className="mt-6 text-[36px] font-extrabold leading-[1.12] tracking-tight text-slate-900 sm:text-6xl">
+                <span className="block">{t("ld.h1a")}</span>
+                <span className="block bg-gradient-to-r from-sky-500 to-blue-700 bg-clip-text text-transparent">
+                  {t("ld.h1b")}
+                </span>
               </h1>
-              {/* -------------------------- */}
 
-              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 lg:mx-0">
+              <p className="mt-5 max-w-xl text-[15px] leading-7 text-slate-500 sm:text-base">
                 {t("ld.heroSub")}
               </p>
 
-              <div className="mt-7 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
+              <div className="mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
                 <button
                   onClick={() => navigate("/register")}
                   className={`${primaryBtn} w-full sm:w-auto`}
@@ -156,23 +174,23 @@ export default function CloudVIPLanding() {
                   {t("ld.ctaHow")}
                 </button>
               </div>
+
+              <div className="mt-7 flex flex-wrap gap-2">
+                {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
+                  <span
+                    key={k}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-600"
+                  >
+                    <Check size={13} className="text-emerald-500" />
+                    {t(k)}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <HeroConsole />
+            <HeroShowcase chip={t("ld.chipRobux")} />
           </div>
         </section>
-
-        {/* ============ DẢI TIN CẬY ============ */}
-        <div className="border-y border-slate-200 bg-slate-50">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2.5 px-5 py-5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-            {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
-              <span key={k} className="flex items-center gap-2.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                {t(k)}
-              </span>
-            ))}
-          </div>
-        </div>
 
         {/* ============ 001 CÁCH HOẠT ĐỘNG ============ */}
         <section
@@ -185,28 +203,45 @@ export default function CloudVIPLanding() {
             title={t("ld.howTitle")}
             sub={t("ld.howTag")}
           />
-          <div className="mt-12 grid gap-12 md:grid-cols-3 md:gap-8">
-            {STEPS.map(({ n, icon, t: tk, d, chips }) => (
-              <StepCard
+
+          <div className="relative mt-14 grid gap-8 md:grid-cols-3 md:gap-6">
+            {/* đường nối: dọc ở điện thoại, ngang ở máy tính */}
+            <div className="pointer-events-none absolute bottom-6 left-5 top-6 w-px bg-gradient-to-b from-blue-200 via-blue-400 to-blue-200 md:hidden" />
+            <div className="pointer-events-none absolute left-[16%] right-[16%] top-5 hidden h-px bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 md:block" />
+
+            {STEPS.map(({ n, icon: Icon, t: tk, d, chips }) => (
+              <div
                 key={n}
-                n={n}
-                icon={icon}
-                title={t(tk)}
-                desc={t(d)}
+                className="relative flex gap-4 md:flex-col md:items-center"
               >
-                {chips.map((c) => (
-                  <Chip key={c.k || c.raw}>{c.raw ?? t(c.k)}</Chip>
-                ))}
-              </StepCard>
+                <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 font-mono text-sm font-bold text-white shadow-lg shadow-blue-500/30 ring-4 ring-white">
+                  {n}
+                </span>
+                <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/10 md:w-full">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon size={19} />
+                  </span>
+                  <h3 className="mt-4 text-[17px] font-bold tracking-tight text-slate-900">
+                    {t(tk)}
+                  </h3>
+                  <p className="mt-2 text-[13.5px] leading-6 text-slate-500">
+                    {t(d)}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {chips.map((c) => (
+                      <Chip key={c.k || c.raw}>{c.raw ?? t(c.k)}</Chip>
+                    ))}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </section>
 
-        {/* ============ 002 TÍNH NĂNG ============ */}
+        {/* ============ 002 TÍNH NĂNG (BENTO) ============ */}
         <section
           id="features"
-          className="scroll-mt-24 border-t border-slate-200 bg-slate-50"
-          style={GRID_BG}
+          className="scroll-mt-24 border-y border-slate-200 bg-slate-50/70"
         >
           <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
             <SectionHead
@@ -216,19 +251,16 @@ export default function CloudVIPLanding() {
               sub={t("ld.bentoSub")}
             />
             <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {BENTO.map(({ icon, t: tk, d, span, featured, chips }) => (
-                <BentoCard
-                  key={tk}
+              {bento.map(({ k, icon, span, pv }, i) => (
+                <PreviewCard
+                  key={k}
                   icon={icon}
-                  title={t(tk)}
-                  desc={t(d)}
-                  featured={featured}
+                  title={t(`ld.${k}t`)}
+                  desc={t(`ld.${k}d`)}
+                  index={String(i + 1).padStart(2, "0")}
+                  preview={pv}
                   className={span || ""}
-                >
-                  {chips?.map((c) => (
-                    <Chip key={c}>{t(c)}</Chip>
-                  ))}
-                </BentoCard>
+                />
               ))}
             </div>
             <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
@@ -250,7 +282,7 @@ export default function CloudVIPLanding() {
           />
           <div className="mt-12 grid gap-4 sm:grid-cols-2">
             {SAFETY.map(({ icon, t: tk, d }) => (
-              <SafetyBadge key={tk} icon={icon} title={t(tk)} desc={t(d)} />
+              <SafetyCard key={tk} icon={icon} title={t(tk)} desc={t(d)} />
             ))}
           </div>
         </section>
@@ -258,7 +290,7 @@ export default function CloudVIPLanding() {
         {/* ============ 004 FAQ ============ */}
         <section
           id="faq"
-          className="scroll-mt-24 border-t border-slate-200 bg-slate-50"
+          className="scroll-mt-24 border-t border-slate-200 bg-slate-50/70"
         >
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
             <SectionHead
@@ -268,8 +300,14 @@ export default function CloudVIPLanding() {
               sub={t("ld.faqTag")}
             />
             <div className="mt-10 space-y-3">
-              {[1, 2, 7, 3, 4, 5, 6].map((i) => (
-                <FAQItem key={i} q={t(`ld.faq${i}q`)} a={t(`ld.faq${i}a`)} />
+              {FAQ_ORDER.map((i, idx) => (
+                <FAQItem
+                  key={i}
+                  q={t(`ld.faq${i}q`)}
+                  a={t(`ld.faq${i}a`)}
+                  open={openFaq === idx}
+                  onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
+                />
               ))}
             </div>
           </div>
@@ -277,28 +315,37 @@ export default function CloudVIPLanding() {
 
         {/* ============ CTA CUỐI ============ */}
         <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-          <div className="relative bg-emerald-600 p-8 text-center text-white shadow-xl shadow-emerald-600/20 sm:p-14">
-            <h2 className="text-[28px] font-black uppercase leading-[1.1] tracking-[-0.02em] sm:text-5xl">
-              {t("ld.ctaTitle")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-emerald-50">
-              {t("ld.ctaSub")}
-            </p>
-            <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex w-full items-center justify-center gap-2 bg-white px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
-              >
-                {t("ld.ctaReg")} <ArrowRight size={16} />
-              </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="inline-flex w-full items-center justify-center border-2 border-white/60 px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 sm:w-auto"
-              >
-                {t("ld.login")}
-              </button>
+          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 p-8 text-center text-white shadow-2xl shadow-blue-600/25 sm:p-14">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-30"
+              style={{
+                backgroundImage:
+                  "radial-gradient(rgba(255,255,255,0.55) 1px, transparent 1px)",
+                backgroundSize: "18px 18px",
+              }}
+            />
+            <div className="relative">
+              <h2 className="text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-5xl">
+                {t("ld.ctaTitle")}
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-sky-50">
+                {t("ld.ctaSub")}
+              </p>
+              <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+                <button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-7 py-4 text-[14px] font-bold text-blue-700 shadow-lg transition hover:bg-sky-50 active:scale-[0.98] sm:w-auto"
+                >
+                  {t("ld.ctaReg")} <ArrowRight size={16} />
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="inline-flex w-full items-center justify-center rounded-full border border-white/50 px-7 py-4 text-[14px] font-bold text-white transition hover:bg-white/10 active:scale-[0.98] sm:w-auto"
+                >
+                  {t("ld.login")}
+                </button>
+              </div>
             </div>
-            <Corners className="border-white" />
           </div>
         </section>
       </main>
@@ -307,4 +354,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-                                   }
+    }
