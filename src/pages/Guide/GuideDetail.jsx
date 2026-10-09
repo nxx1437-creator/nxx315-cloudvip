@@ -4,15 +4,16 @@ import {
   Menu,
   X,
   ArrowLeft,
-  Book,
   ChevronRight,
   MessageCircle,
   Phone,
-  Home,
 } from "lucide-react";
 import { GUIDE_MENU, GUIDE_CONTENT } from "./guideData.js";
 import Sidebar from "./Sidebar.jsx";
 import "./Guide.css";
+
+const LINK_CLS =
+  "font-semibold text-blue-400 underline decoration-blue-400/30 underline-offset-2 hover:decoration-blue-400";
 
 // Parser markdown inline
 function renderInline(text) {
@@ -33,7 +34,7 @@ function renderInline(text) {
 
     if (token.startsWith("**") && token.endsWith("**")) {
       parts.push(
-        <strong key={key} className="font-bold text-slate-900">
+        <strong key={key} className="font-bold text-zinc-50">
           {token.slice(2, -2)}
         </strong>
       );
@@ -49,18 +50,14 @@ function renderInline(text) {
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-[#087EA4] underline decoration-[#087EA4]/30 underline-offset-2 hover:decoration-[#087EA4]"
+              className={LINK_CLS}
             >
               {label}
             </a>
           );
         } else {
           parts.push(
-            <Link
-              key={key}
-              to={url}
-              className="font-semibold text-[#087EA4] underline decoration-[#087EA4]/30 underline-offset-2 hover:decoration-[#087EA4]"
-            >
+            <Link key={key} to={url} className={LINK_CLS}>
               {label}
             </Link>
           );
@@ -138,9 +135,9 @@ function renderBody(body) {
           {block.items.map((item, i) => (
             <li
               key={i}
-              className="flex gap-3 text-[14.5px] leading-7 text-slate-700"
+              className="flex gap-3 text-[14.5px] leading-7 text-zinc-300"
             >
-              <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br from-[#087EA4] to-[#0ea5e9]" />
+              <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
               <span className="flex-1">{renderInline(item)}</span>
             </li>
           ))}
@@ -154,9 +151,9 @@ function renderBody(body) {
           {block.items.map((item, i) => (
             <li
               key={i}
-              className="flex gap-3 text-[14.5px] leading-7 text-slate-700"
+              className="flex gap-3 text-[14.5px] leading-7 text-zinc-300"
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#087EA4] to-[#0ea5e9] text-[12px] font-bold text-white shadow-sm">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500/40 bg-blue-500/15 font-mono text-[12px] font-bold text-blue-400">
                 {i + 1}
               </span>
               <span className="flex-1">{renderInline(item)}</span>
@@ -169,14 +166,13 @@ function renderBody(body) {
     return (
       <p
         key={idx}
-        className="my-2 whitespace-pre-wrap text-[14.5px] leading-7 text-slate-700"
+        className="my-2 whitespace-pre-wrap text-[14.5px] leading-7 text-zinc-300"
       >
         {renderInline(block.content)}
       </p>
     );
   });
-}
-
+      }
 export default function GuideDetail() {
   const { id } = useParams();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -184,7 +180,7 @@ export default function GuideDetail() {
   const content = GUIDE_CONTENT[id];
   const menu = GUIDE_MENU.find((m) => m.id === id);
 
-  // Auto scroll to top when id changes
+  // Tự cuộn lên đầu khi đổi mục
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
@@ -197,36 +193,31 @@ export default function GuideDetail() {
     currentIdx < GUIDE_MENU.length - 1 ? GUIDE_MENU[currentIdx + 1] : null;
 
   return (
-    <div className="guide-smooth-scroll min-h-screen bg-gradient-to-b from-slate-50 via-white to-white">
+    <div className="guide-dark guide-smooth-scroll min-h-screen bg-[#0b0d10] text-zinc-100">
       {/* HEADER */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b0d10]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-400 hover:bg-white/5 lg:hidden"
             >
               <Menu size={20} />
             </button>
 
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#087EA4] to-[#0ea5e9] text-white shadow-lg shadow-sky-500/30">
-                <Book size={18} />
+            <Link to="/" className="leading-none">
+              <div className="text-[16px] font-bold tracking-tight text-zinc-50">
+                NXX315 <span className="text-blue-500">Studio</span>
               </div>
-              <div className="leading-none">
-                <div className="text-[15px] font-black tracking-tight text-slate-900">
-                  NXX315 <span className="text-[#087EA4]">Studio</span>
-                </div>
-                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Hướng dẫn
-                </div>
+              <div className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-500">
+                Hướng dẫn
               </div>
             </Link>
           </div>
 
           <Link
             to="/"
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50"
+            className="flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-[13px] font-semibold text-zinc-300 transition hover:bg-white/5"
           >
             <ArrowLeft size={14} />
             <span className="hidden sm:inline">Về trang chủ</span>
@@ -238,8 +229,8 @@ export default function GuideDetail() {
       <div className="mx-auto flex max-w-7xl gap-8 px-4 py-6 lg:py-10">
         {/* SIDEBAR DESKTOP */}
         <aside className="hidden w-64 shrink-0 lg:block">
-          <div className="sticky top-24 rounded-2xl border border-slate-200/70 bg-white/90 p-3 shadow-sm backdrop-blur">
-            <p className="mb-2 px-3 text-[10.5px] font-black uppercase tracking-widest text-slate-400">
+          <div className="sticky top-24 rounded-2xl border border-white/10 bg-[#101318] p-3">
+            <p className="mb-2 px-3 font-mono text-[10.5px] font-semibold uppercase tracking-[0.25em] text-zinc-500">
               Mục lục
             </p>
             <Sidebar />
@@ -250,15 +241,17 @@ export default function GuideDetail() {
         {mobileOpen && (
           <>
             <div
-              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
-            <aside className="fixed left-0 top-0 z-50 h-full w-[82%] max-w-xs overflow-y-auto bg-white p-4 shadow-2xl lg:hidden">
+            <aside className="fixed left-0 top-0 z-50 h-full w-[82%] max-w-xs overflow-y-auto border-r border-white/10 bg-[#0b0d10] p-4 shadow-2xl lg:hidden">
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-black text-slate-900">Mục lục</p>
+                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-zinc-500">
+                  Mục lục
+                </p>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/5"
                 >
                   <X size={18} />
                 </button>
@@ -269,32 +262,27 @@ export default function GuideDetail() {
         )}
 
         {/* MAIN */}
-        <main
-          key={id}
-          className="guide-fade-in min-w-0 flex-1"
-        >
+        <main key={id} className="guide-fade-in min-w-0 flex-1">
           {/* BREADCRUMB */}
-          <div className="mb-5 flex items-center gap-1.5 text-[12.5px] text-slate-500">
-            <Link to="/guide" className="hover:text-[#087EA4]">
+          <div className="mb-5 flex items-center gap-1.5 font-mono text-[11.5px] uppercase tracking-wider text-zinc-500">
+            <Link to="/guide" className="hover:text-blue-400">
               Hướng dẫn
             </Link>
             <ChevronRight size={13} />
-            <span className="font-semibold text-slate-700">
-              {menu?.label}
-            </span>
+            <span className="font-semibold text-zinc-300">{menu?.label}</span>
           </div>
 
           {/* HEADER MỤC */}
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#101318] p-6 sm:p-8">
             <div
               className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl"
-              style={{ backgroundColor: `${menu?.color}25` }}
+              style={{ backgroundColor: `${menu?.color}30` }}
             />
 
             <div className="relative flex items-start gap-4">
               <div
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl shadow-sm"
-                style={{ backgroundColor: `${menu?.color}15` }}
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: `${menu?.color}22` }}
               >
                 <img
                   src={menu?.icon}
@@ -307,10 +295,10 @@ export default function GuideDetail() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
+                <h1 className="text-2xl font-bold leading-tight tracking-tight text-zinc-50 sm:text-3xl">
                   {content.title}
                 </h1>
-                <p className="mt-2 text-[14px] leading-6 text-slate-500">
+                <p className="mt-2 text-[14px] leading-6 text-zinc-400">
                   {content.description}
                 </p>
               </div>
@@ -318,21 +306,21 @@ export default function GuideDetail() {
           </div>
 
           {/* SECTIONS */}
-          <div className="mt-8 space-y-8">
+          <div className="mt-8 space-y-6">
             {content.sections.map((sec, idx) => (
               <section
                 key={idx}
                 id={`sec-${idx}`}
-                className="rounded-2xl border border-slate-200/70 bg-white p-5 sm:p-6"
+                className="rounded-2xl border border-white/10 bg-[#101318] p-5 sm:p-6"
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[12px] font-black text-white shadow-sm"
+                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-[12px] font-bold text-white"
                     style={{ backgroundColor: menu?.color }}
                   >
                     {idx + 1}
                   </div>
-                  <h2 className="flex-1 text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                  <h2 className="flex-1 text-lg font-bold tracking-tight text-zinc-50 sm:text-xl">
                     {sec.heading}
                   </h2>
                 </div>
@@ -346,14 +334,14 @@ export default function GuideDetail() {
             {prevItem ? (
               <Link
                 to={`/guide/${prevItem.id}`}
-                className="guide-card group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4"
+                className="guide-card group flex items-center gap-3 rounded-2xl border border-white/10 bg-[#101318] p-4"
               >
                 <ChevronRight
                   size={18}
-                  className="shrink-0 rotate-180 text-slate-300 group-hover:text-[#087EA4]"
+                  className="shrink-0 rotate-180 text-zinc-600 group-hover:text-blue-400"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10.5px] font-black uppercase tracking-widest text-slate-400">
+                  <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
                     Trước
                   </p>
                   <div className="mt-1 flex items-center gap-2">
@@ -365,7 +353,7 @@ export default function GuideDetail() {
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <span className="truncate text-[13.5px] font-bold text-slate-800">
+                    <span className="truncate text-[13.5px] font-bold text-zinc-100">
                       {prevItem.label}
                     </span>
                   </div>
@@ -378,14 +366,14 @@ export default function GuideDetail() {
             {nextItem ? (
               <Link
                 to={`/guide/${nextItem.id}`}
-                className="guide-card group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row-reverse sm:text-right"
+                className="guide-card group flex items-center gap-3 rounded-2xl border border-white/10 bg-[#101318] p-4 sm:flex-row-reverse sm:text-right"
               >
                 <ChevronRight
                   size={18}
-                  className="shrink-0 text-slate-300 group-hover:text-[#087EA4]"
+                  className="shrink-0 text-zinc-600 group-hover:text-blue-400"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10.5px] font-black uppercase tracking-widest text-slate-400">
+                  <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
                     Tiếp theo
                   </p>
                   <div className="mt-1 flex items-center gap-2 sm:justify-end">
@@ -397,7 +385,7 @@ export default function GuideDetail() {
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <span className="truncate text-[13.5px] font-bold text-slate-800">
+                    <span className="truncate text-[13.5px] font-bold text-zinc-100">
                       {nextItem.label}
                     </span>
                   </div>
@@ -409,35 +397,38 @@ export default function GuideDetail() {
           </div>
 
           {/* CTA cuối */}
-          <div className="relative mt-10 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 sm:p-8">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="mt-10 rounded-2xl border border-white/10 bg-[#101318] p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/5">
+                <MessageCircle size={20} className="text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold tracking-tight text-zinc-100">
+                  Cần hỗ trợ thêm?
+                </h3>
+                <p className="mt-1 max-w-lg text-[13.5px] leading-6 text-zinc-400">
+                  Không tìm thấy câu trả lời? Đội ngũ hỗ trợ sẵn sàng giúp bạn
+                  24/7.
+                </p>
 
-            <div className="relative">
-              <h3 className="text-lg font-black tracking-tight text-slate-900">
-                💬 Cần hỗ trợ thêm?
-              </h3>
-              <p className="mt-2 max-w-lg text-[13.5px] leading-6 text-slate-600">
-                Không tìm thấy câu trả lời? Đội ngũ hỗ trợ sẵn sàng giúp bạn
-                24/7.
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link
-                  to="/support"
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#087EA4] to-[#0ea5e9] px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-sky-500/30 transition hover:brightness-110"
-                >
-                  <MessageCircle size={14} />
-                  Chat AI hỗ trợ
-                </Link>
-                <a
-                  href="https://zalo.me/0865245988"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-[13px] font-bold text-amber-700 transition hover:bg-amber-50"
-                >
-                  <Phone size={14} />
-                  Zalo 0865245988
-                </a>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  <Link
+                    to="/support"
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-[13px] font-bold text-white transition hover:bg-blue-500"
+                  >
+                    <MessageCircle size={14} />
+                    Chat AI hỗ trợ
+                  </Link>
+                  <a
+                    href="https://zalo.me/0865245988"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-[13px] font-bold text-zinc-200 transition hover:bg-white/5"
+                  >
+                    <Phone size={14} />
+                    Zalo 0865245988
+                  </a>
+                </div>
               </div>
             </div>
           </div>

@@ -16,29 +16,23 @@ export default function Sidebar({ onNavigate }) {
         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-all ${
           !currentId
             ? "guide-sidebar-active"
-            : "text-slate-600 hover:bg-slate-100"
+            : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
         }`}
       >
         <div
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-            !currentId
-              ? "bg-white/20"
-              : "bg-gradient-to-br from-sky-100 to-blue-100"
+            !currentId ? "bg-blue-500/20" : "bg-white/5"
           }`}
         >
-          <Book
-            size={14}
-            className={!currentId ? "text-white" : "text-sky-600"}
-            strokeWidth={2.4}
-          />
+          <Book size={14} className="text-blue-400" strokeWidth={2.4} />
         </div>
         <span className="flex-1">Tổng quan</span>
-        {!currentId && <ChevronRight size={14} className="text-white/80" />}
+        {!currentId && <ChevronRight size={14} className="text-blue-400" />}
       </Link>
 
       {/* Divider */}
       <div className="px-3 py-2">
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+        <div className="h-px bg-white/10" />
       </div>
 
       {/* Danh sách mục */}
@@ -53,13 +47,12 @@ export default function Sidebar({ onNavigate }) {
             className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-all ${
               active
                 ? "guide-sidebar-active"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
             }`}
           >
-            {/* Icon 3D */}
             <div
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition ${
-                active ? "bg-white/20" : "bg-slate-50 group-hover:bg-white"
+                active ? "bg-blue-500/20" : "bg-white/5 group-hover:bg-white/10"
               }`}
             >
               <img
@@ -78,8 +71,8 @@ export default function Sidebar({ onNavigate }) {
               size={14}
               className={`shrink-0 transition ${
                 active
-                  ? "text-white/80"
-                  : "text-slate-300 group-hover:text-slate-500"
+                  ? "text-blue-400"
+                  : "text-zinc-600 group-hover:text-zinc-400"
               }`}
             />
           </Link>
@@ -87,4 +80,4 @@ export default function Sidebar({ onNavigate }) {
       })}
     </nav>
   );
-}
+                    }
