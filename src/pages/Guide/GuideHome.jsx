@@ -5,13 +5,9 @@ import {
   X,
   ArrowLeft,
   Book,
-  Sparkles,
   MessageCircle,
   Phone,
   ChevronRight,
-  Zap,
-  Shield,
-  Gift,
 } from "lucide-react";
 import { GUIDE_MENU } from "./guideData.js";
 import Sidebar from "./Sidebar.jsx";
