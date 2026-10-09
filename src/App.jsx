@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import GuideWelcomeModal from "./components/GuideWelcomeModal.jsx";
 import GuideHome from "./pages/Guide/GuideHome.jsx";
 import GuideDetail from "./pages/Guide/GuideDetail.jsx";
 import Guide from "./pages/Guide/Guide.jsx";
@@ -149,6 +150,8 @@ export default function App() {
         </Suspense>
 
         <VersionChecker />
+        <VersionChecker />
+        <GuideWelcomeModal />
        <DeviceChecker />
       <SessionGuard />
       <SessionValidator />
