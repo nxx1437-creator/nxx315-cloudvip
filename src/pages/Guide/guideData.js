@@ -6,15 +6,15 @@ const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
 export const GUIDE_MENU = [
-  { id: "bat-dau", label: "Bắt đầu", icon: `${ICON_BASE}/icon-rocket.png` },
-  { id: "tai-khoan", label: "Tài khoản", icon: `${ICON_BASE}/icon-link.png` },
-  { id: "kiem-coin", label: "Kiếm Coin", icon: `${ICON_BASE}/icon-task.png` },
-  { id: "doi-thuong", label: "Đổi thưởng", icon: `${ICON_BASE}/icon-rocket.png` },
-  { id: "rut-tien", label: "Rút tiền", icon: `${ICON_BASE}/icon-coin.png` },
-  { id: "moi-ban", label: "Mời bạn bè", icon: `${ICON_BASE}/icon-brain.png` },
-  { id: "bao-mat", label: "Bảo mật", icon: `${ICON_BASE}/icon-brain.png` },
-  { id: "faq", label: "FAQ", icon: `${ICON_BASE}/icon-chat.png` },
-  { id: "lien-he", label: "Liên hệ", icon: `${ICON_BASE}/icon-chat.png` },
+  { id: "bat-dau", label: "Bắt đầu", icon: `${ICON_BASE}/icon-rocket.png`, color: "#087EA4" },
+  { id: "tai-khoan", label: "Tài khoản", icon: `${ICON_BASE}/icon-link.png`, color: "#0ea5e9" },
+  { id: "kiem-coin", label: "Kiếm Coin", icon: `${ICON_BASE}/icon-task.png`, color: "#f59e0b" },
+  { id: "doi-thuong", label: "Đổi thưởng", icon: `${ICON_BASE}/icon-rocket.png`, color: "#ec4899" },
+  { id: "rut-tien", label: "Rút tiền", icon: `${ICON_BASE}/icon-coin.png`, color: "#10b981" },
+  { id: "moi-ban", label: "Mời bạn bè", icon: `${ICON_BASE}/icon-brain.png`, color: "#8b5cf6" },
+  { id: "bao-mat", label: "Bảo mật", icon: `${ICON_BASE}/icon-brain.png`, color: "#6366f1" },
+  { id: "faq", label: "FAQ", icon: `${ICON_BASE}/icon-chat.png`, color: "#f97316" },
+  { id: "lien-he", label: "Liên hệ", icon: `${ICON_BASE}/icon-chat.png`, color: "#06b6d4" },
 ];
 
 export const GUIDE_CONTENT = {
