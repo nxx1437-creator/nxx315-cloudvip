@@ -6,10 +6,11 @@ import { useI18n } from "../i18n/index.js";
 const IMAGE_SRC =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons/guide-welcome.png";
 
-const NEW_ACCOUNT_DAYS = 7; 
+const NEW_ACCOUNT_DAYS = 7; // chỉ hiện cho tài khoản tạo trong 7 ngày gần đây
 const DELAY_MS = 800;
 const KEY = (id) => `guide_welcome_seen_v1_${id}`;
 
+// Không hiện ở các trang này
 const HIDE_PATHS = [
   "/",
   "/login",
@@ -52,7 +53,7 @@ export default function GuideWelcomeModal() {
   const hidden =
     HIDE_PATHS.includes(pathname) ||
     HIDE_PREFIX.some((p) => pathname.startsWith(p));
-  // Thêm ?showguide=1 vào địa chỉ để xem thử
+  // Thêm ?showguide=1 vào địa chỉ để xem thử (chỉ dùng khi test)
   const forced = new URLSearchParams(search).get("showguide") === "1";
 
   useEffect(() => {
@@ -74,25 +75,24 @@ export default function GuideWelcomeModal() {
 
     if (!forced && (seen || !isNew)) return;
 
-    const timer = setTimeout(() => setOpen(true), DELAY_MS);
+    const timer = setTimeout(() => {
+      setOpen(true);
+      // Tính là đã xem ngay khi popup hiện ra
+      try {
+        localStorage.setItem(KEY(user.id), "1");
+      } catch {
+        /* bỏ qua */
+      }
+      // Xóa ?showguide=1 khỏi địa chỉ để quay lại không bị hiện lặp
+      if (forced) navigate(pathname, { replace: true });
+    }, DELAY_MS);
+
     return () => clearTimeout(timer);
-  }, [user?.id, user?.created_at, hidden, forced]);
+  }, [user?.id, user?.created_at, hidden, forced, pathname, navigate]);
 
-  const markSeen = () => {
-    try {
-      if (user?.id) localStorage.setItem(KEY(user.id), "1");
-    } catch {
-      /* bỏ qua */
-    }
-  };
-
-  const close = () => {
-    markSeen();
-    setOpen(false);
-  };
+  const close = () => setOpen(false);
 
   const goGuide = () => {
-    markSeen();
     setOpen(false);
     navigate("/guide");
   };
@@ -150,4 +150,4 @@ export default function GuideWelcomeModal() {
       </div>
     </div>
   );
-}
+    }
