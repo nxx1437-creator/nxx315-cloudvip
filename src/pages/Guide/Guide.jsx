@@ -36,9 +36,16 @@ export default function Guide() {
             to={`/guide/${item.id}`}
             className="group flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-sky-300 hover:shadow-md"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-xl">
-              {item.icon}
-            </div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50">
+  <img
+    src={item.icon}
+    alt=""
+    className="h-8 w-8 object-contain"
+    onError={(e) => {
+      e.currentTarget.style.display = "none";
+    }}
+  />
+</div>
             <div className="min-w-0 flex-1">
               <p className="text-[14.5px] font-bold text-slate-900 group-hover:text-sky-700">
                 {item.label}
