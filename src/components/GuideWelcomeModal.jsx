@@ -25,13 +25,15 @@ const HIDE_PREFIX = ["/guide", "/admin"];
 
 const TEXT = {
   vi: {
-    title: "Chào mừng bạn đến NXX315!",
+    titlePrefix: "Chào mừng bạn đến",
+    titleBrand: "NXX315!",
     body: "Xem nhanh hướng dẫn để biết cách kiếm xu, đổi thưởng và giữ tài khoản an toàn.",
     later: "Để sau",
     go: "Xem hướng dẫn",
   },
   en: {
-    title: "Welcome to NXX315!",
+    titlePrefix: "Welcome to",
+    titleBrand: "NXX315!",
     body: "Take a quick look at the guide to learn how to earn coins, redeem rewards and keep your account safe.",
     later: "Later",
     go: "View guide",
@@ -101,7 +103,7 @@ export default function GuideWelcomeModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center font-sans"
       onClick={close}
     >
       <div
@@ -112,26 +114,34 @@ export default function GuideWelcomeModal() {
           <img
             src={IMAGE_SRC}
             alt=""
-            className="mb-5 max-h-56 w-full rounded-2xl object-cover"
+            // Sửa: object-contain để không cắt ảnh, bỏ max-h-56, thêm bg nhẹ
+            className="mb-6 w-full rounded-2xl object-contain bg-slate-50/50"
             onError={() => setImgOk(false)}
           />
         )}
 
-        <h2 className="text-2xl font-extrabold text-slate-900">{tx.title}</h2>
-        <p className="mt-3 text-[15px] leading-relaxed text-slate-600">
+        {/* Sửa phần tiêu đề: Tách dòng, giảm độ đậm, thêm tracking */}
+        <h2 className="text-2xl font-bold tracking-tight text-slate-800">
+          {tx.titlePrefix}{" "}
+          <span className="block bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+            {tx.titleBrand}
+          </span>
+        </h2>
+
+        <p className="mt-3 text-[15px] leading-relaxed text-slate-500">
           {tx.body}
         </p>
 
         <div className="mt-7 grid grid-cols-2 gap-3">
           <button
             onClick={close}
-            className="rounded-full bg-slate-100 py-3.5 font-bold text-slate-800 active:scale-95"
+            className="rounded-full bg-slate-100 py-3.5 font-bold text-slate-700 transition active:scale-95"
           >
             {tx.later}
           </button>
           <button
             onClick={goGuide}
-            className="rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 font-bold text-white shadow-md shadow-sky-500/30 active:scale-95"
+            className="rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 font-bold text-white shadow-md shadow-sky-500/30 transition active:scale-95"
           >
             {tx.go}
           </button>
