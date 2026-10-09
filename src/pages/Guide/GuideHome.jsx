@@ -95,56 +95,55 @@ export default function GuideHome() {
         {/* ============ MAIN ============ */}
         <main className="guide-fade-in min-w-0 flex-1">
           {/* HERO */}
-          <div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-[#087EA4] via-[#0ea5e9] to-[#38bdf8] p-6 sm:p-10">
-            {/* Blob trang trí */}
-            <div className="guide-blob pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
-            <div
-              className="guide-blob pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-cyan-200/30 blur-3xl"
-              style={{ animationDelay: "2s" }}
-            />
+<div className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-[#087EA4] via-[#0ea5e9] to-[#38bdf8] p-6 sm:p-10">
+  {/* Blob trang trí */}
+  <div className="guide-blob pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
+  <div
+    className="guide-blob pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-cyan-200/30 blur-3xl"
+    style={{ animationDelay: "2s" }}
+  />
 
-            {/* Nội dung hero */}
-            <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur">
-                <Sparkles size={12} />
-                Trung tâm hướng dẫn
-              </div>
+  {/* Nội dung hero */}
+  <div className="relative">
+    <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur">
+      <Sparkles size={12} />
+      Trung tâm hướng dẫn
+    </div>
 
-              <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
-                Hướng dẫn sử dụng
-                <br />
-                NXX315 Studio 🌸
-              </h1>
+    <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
+      Hướng dẫn sử dụng
+      <br />
+      NXX315 Studio 🌸
+    </h1>
 
-              <p className="mt-4 max-w-xl text-[14.5px] leading-7 text-white/90">
-                Tất cả những gì bạn cần biết để bắt đầu kiếm Coin, đổi thưởng
-                và tận dụng tối đa NXX315. Đọc trong 5 phút — dùng cả đời.
-              </p>
+    <p className="mt-4 max-w-xl text-[14.5px] leading-7 text-white/90">
+      Tất cả những gì bạn cần biết để bắt đầu kiếm Coin, đổi thưởng
+      và tận dụng tối đa NXX315. Đọc trong 5 phút — dùng cả đời.
+    </p>
 
-              {/* Stats nhỏ */}
-              <div className="mt-6 flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 backdrop-blur">
-                  <Zap size={14} className="text-yellow-300" />
-                  <span className="text-[12.5px] font-bold text-white">
-                    4 cách kiếm Coin
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 backdrop-blur">
-                  <Shield size={14} className="text-emerald-300" />
-                  <span className="text-[12.5px] font-bold text-white">
-                    Bảo mật 100%
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 backdrop-blur">
-                  <Gift size={14} className="text-pink-300" />
-                  <span className="text-[12.5px] font-bold text-white">
-                    Rút tiền 24h
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
+    {/* Stats nhỏ */}
+    <div className="mt-6 flex flex-wrap gap-4">
+      <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 backdrop-blur">
+        <Zap size={14} className="text-yellow-300" />
+        <span className="text-[12.5px] font-bold text-white">
+          4 cách kiếm Coin
+        </span>
+      </div>
+      <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 backdrop-blur">
+        <Shield size={14} className="text-emerald-300" />
+        <span className="text-[12.5px] font-bold text-white">
+          Bảo mật 100%
+        </span>
+      </div>
+      <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 backdrop-blur">
+        <Gift size={14} className="text-pink-300" />
+        <span className="text-[12.5px] font-bold text-white">
+          Rút tiền 24h
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
           {/* TIÊU ĐỀ MỤC */}
           <div className="mt-8 flex items-end justify-between">
             <div>
