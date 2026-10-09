@@ -25,7 +25,6 @@ export default function InlineAlert({
     warning: {
       icon: AlertTriangle,
       surface: "bg-amber-50",
-      border: "border-amber-200",
       accent: "#f59e0b",
       text: "text-amber-900",
       iconBg: "bg-amber-100",
@@ -35,7 +34,6 @@ export default function InlineAlert({
     info: {
       icon: Info,
       surface: "bg-sky-50",
-      border: "border-sky-200",
       accent: "#0ea5e9",
       text: "text-sky-900",
       iconBg: "bg-sky-100",
@@ -45,7 +43,6 @@ export default function InlineAlert({
     success: {
       icon: CheckCircle2,
       surface: "bg-emerald-50",
-      border: "border-emerald-200",
       accent: "#10b981",
       text: "text-emerald-900",
       iconBg: "bg-emerald-100",
@@ -55,7 +52,6 @@ export default function InlineAlert({
     error: {
       icon: XCircle,
       surface: "bg-rose-50",
-      border: "border-rose-200",
       accent: "#ef4444",
       text: "text-rose-900",
       iconBg: "bg-rose-100",
@@ -88,45 +84,40 @@ export default function InlineAlert({
             : "polite"
           : undefined
       }
-      className={`group relative overflow-hidden rounded-2xl ${cfg.surface} ${cfg.text}`}
+      className={`group relative overflow-hidden rounded-xl ${cfg.surface} ${cfg.text}`}
     >
       {/* Viền trái gradient */}
       <div
-        className="absolute inset-y-0 left-0 w-1"
+        className="absolute inset-y-0 left-0 w-0.5"
         style={{
           background: `linear-gradient(180deg, ${cfg.accent}, ${cfg.accent}dd)`,
         }}
       />
 
-      <div className="flex items-center gap-3.5 py-3.5 pl-5 pr-3.5">
-        {/* Icon + chấm nhấp nháy */}
+      {/* Content — thu gọn */}
+      <div className="flex items-center gap-2.5 py-2 pl-3 pr-2">
+        {/* Icon nhỏ gọn */}
         <div
-          className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${cfg.iconBg} shadow-sm`}
+          className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${cfg.iconBg}`}
         >
-          <Icon size={17} className={cfg.iconColor} strokeWidth={2.4} />
-          <span
-            className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white"
-            style={{ backgroundColor: cfg.accent }}
-          >
-            <span
-              className="absolute inset-0 animate-ping rounded-full"
-              style={{ backgroundColor: cfg.accent }}
-            />
-          </span>
+          <Icon size={13} className={cfg.iconColor} strokeWidth={2.6} />
         </div>
 
-        {/* Message */}
+        {/* Message — text nhỏ hơn */}
         <div className="min-w-0 flex-1">
           {marquee ? (
             <div className="relative overflow-hidden">
-              <div className="marquee-content">
-                <span className="marquee-text text-[13.5px] font-semibold leading-5 tracking-tight">
+              <div className="marquee-track">
+                <span className="marquee-item text-[12px] font-medium leading-4">
+                  {message}
+                </span>
+                <span className="marquee-item text-[12px] font-medium leading-4" aria-hidden="true">
                   {message}
                 </span>
               </div>
             </div>
           ) : (
-            <p className="text-[13.5px] font-semibold leading-5 tracking-tight">
+            <p className="truncate text-[12px] font-medium leading-4">
               {message}
             </p>
           )}
@@ -140,62 +131,56 @@ export default function InlineAlert({
                 href={action.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-bold transition ${cfg.actionColor}`}
+                className={`inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-[11px] font-bold transition ${cfg.actionColor}`}
               >
                 {action.label}
-                <ArrowRight
-                  size={12}
-                  className="transition-transform group-hover:translate-x-0.5"
-                />
+                <ArrowRight size={11} />
               </a>
             ) : (
               <button
                 onClick={action.onClick}
-                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-bold transition ${cfg.actionColor}`}
+                className={`inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-[11px] font-bold transition ${cfg.actionColor}`}
               >
                 {action.label}
-                <ArrowRight
-                  size={12}
-                  className="transition-transform group-hover:translate-x-0.5"
-                />
+                <ArrowRight size={11} />
               </button>
             )}
           </div>
         )}
 
-        {/* Dismiss */}
+        {/* Dismiss — nhỏ hơn */}
         {dismissible && (
           <button
             onClick={handleDismiss}
             aria-label="Đóng thông báo"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition hover:bg-black/5"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition hover:bg-black/5"
           >
-            <X size={14} strokeWidth={2.4} />
+            <X size={13} strokeWidth={2.6} />
           </button>
         )}
       </div>
 
-      {/* CSS marquee — nhanh hơn */}
+      {/* CSS marquee — chạy liên tục, không giật */}
       {marquee && (
         <style>{`
           @keyframes marqueeScroll {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
           }
-          .marquee-content {
-            display: flex;
+          .marquee-track {
+            display: inline-flex;
             white-space: nowrap;
-            animation: marqueeScroll 12s linear infinite;
+            animation: marqueeScroll 15s linear infinite;
           }
-          .marquee-text {
+          .marquee-item {
             display: inline-block;
-            padding-right: 100%;
+            padding-right: 60px;
           }
-          .marquee-content:hover {
+          .marquee-track:hover {
             animation-play-state: paused;
           }
         `}</style>
       )}
     </div>
   );
-      }
+        }
