@@ -1,0 +1,90 @@
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Book, ChevronRight } from "lucide-react";
+import { GUIDE_MENU } from "./guideData.js";
+
+export default function Sidebar({ onNavigate }) {
+  const location = useLocation();
+  const currentId = location.pathname.split("/guide/")[1] || "";
+
+  return (
+    <nav className="space-y-1">
+      {/* Link về trang chủ Guide */}
+      <Link
+        to="/guide"
+        onClick={onNavigate}
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-all ${
+          !currentId
+            ? "guide-sidebar-active"
+            : "text-slate-600 hover:bg-slate-100"
+        }`}
+      >
+        <div
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+            !currentId
+              ? "bg-white/20"
+              : "bg-gradient-to-br from-sky-100 to-blue-100"
+          }`}
+        >
+          <Book
+            size={14}
+            className={!currentId ? "text-white" : "text-sky-600"}
+            strokeWidth={2.4}
+          />
+        </div>
+        <span className="flex-1">Tổng quan</span>
+        {!currentId && <ChevronRight size={14} className="text-white/80" />}
+      </Link>
+
+      {/* Divider */}
+      <div className="px-3 py-2">
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+      </div>
+
+      {/* Danh sách mục */}
+      {GUIDE_MENU.map((item) => {
+        const active = currentId === item.id;
+
+        return (
+          <Link
+            key={item.id}
+            to={`/guide/${item.id}`}
+            onClick={onNavigate}
+            className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-all ${
+              active
+                ? "guide-sidebar-active"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            {/* Icon 3D */}
+            <div
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition ${
+                active ? "bg-white/20" : "bg-slate-50 group-hover:bg-white"
+              }`}
+            >
+              <img
+                src={item.icon}
+                alt=""
+                className="h-5 w-5 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+
+            <span className="flex-1 truncate">{item.label}</span>
+
+            <ChevronRight
+              size={14}
+              className={`shrink-0 transition ${
+                active
+                  ? "text-white/80"
+                  : "text-slate-300 group-hover:text-slate-500"
+              }`}
+            />
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
