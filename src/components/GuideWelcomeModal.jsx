@@ -17,13 +17,13 @@ const HIDE_PREFIX = ["/guide", "/admin"];
 
 const TEXT = {
   vi: {
-    title: "chào mừng bạn đến với nxx315 studio", // Đổi tiêu đề giống ảnh 2
+    title: "chào mừng bạn đến với NXX315 STUDIO", // Đổi tiêu đề giống ảnh 2
     body: "Xem nhanh hướng dẫn để biết cách kiếm xu, đổi quà và giữ tài khoản luôn an toàn nhé!",
-    later: "để sau",
-    go: "xem hướng dẫn",
+    later: "Để sau",
+    go: "Xem hướng dẫn",
   },
   en: {
-    title: "Welcome to nxx315 studio", // Change title to match image 2
+    title: "Welcome to NXX315 STUDIO", // Change title to match image 2
     body: "Quick guide to learn how to earn coins, redeem gifts, and keep your account safe!",
     later: "Later",
     go: "See instructions"
