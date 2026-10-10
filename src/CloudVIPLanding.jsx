@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Bot,
   KeyRound,
+  Gift,
 } from "lucide-react";
 import { BackToTop, scrollToId } from "./components/LandingChrome.jsx";
 import { LandingHeader, LandingFooter } from "./components/LandingNav.jsx";
@@ -96,15 +97,15 @@ function HeroArt() {
 const COPY = {
   vi: {
     h1a: "Kiếm Coin mỗi ngày.",
-h1b: "Đổi quà bạn thích.",
-heroSub:
-  "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn.",
+    h1b: "Đổi quà bạn thích ",
+    heroSub:
+      "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn.",
     how: "Cách hoạt động",
     facts: [
-      ["1 Coin = 1đ", "Giá Coin bằng giá tiền"],
-      ["10.000đ", "Mức rút tối thiểu"],
-      ["7 ngày", "Chuỗi điểm danh, ngày cuối thưởng 1.000 xu"],
-      ["15%", "Hoa hồng khi bạn bè làm nhiệm vụ"],
+      ["1 Coin = 1đ", "Giá Coin bằng giá tiền. Coin"],
+      ["10.000đ", "Mức rút tối thiểu. Coin"],
+      ["7 ngày", "Chuỗi điểm danh, ngày cuối thưởng 1.000 xu. Coin"],
+      ["15%", "Hoa hồng khi bạn bè làm nhiệm vụ. Coin"],
     ],
     featTitle: "Bạn làm được gì trên NXX315",
     guide: "Xem hướng dẫn",
@@ -136,15 +137,15 @@ heroSub:
   },
   en: {
     h1a: "Earn Coins every day.",
-h1b: "Exchange for gifts you like.",
-heroSub:
-"Complete missions, accumulate Coins and exchange them for Robux, in-game diamonds and many other attractive gifts.",
+    h1b: "Exchange for gifts you like",
+    heroSub:
+      "Complete missions, accumulate Coins and exchange them for Robux, in-game diamonds and many other attractive gifts.",
     how: "How it works",
     facts: [
-      ["1 Coin = 1 VND", "Coin price equals cash price"],
-      ["10,000 VND", "Minimum withdrawal"],
-      ["7 days", "Check-in streak, 1,000 coins on the last day"],
-      ["15%", "Commission when friends complete tasks"],
+      ["1 Coin = 1 VND", "Coin price equals cash price. Coin"],
+      ["10,000 VND", "Minimum withdrawal. Coin"],
+      ["7 days", "Check-in streak, 1,000 coins on the last day. Coin"],
+      ["15%", "Commission when friends complete tasks. Coin"],
     ],
     featTitle: "What you can do on NXX315",
     guide: "Read the guide",
@@ -209,7 +210,15 @@ export default function CloudVIPLanding() {
               {t("ld.badge")}
             </p>
             <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
-              <span className="text-blue-600">{c.h1a}</span> {c.h1b}
+              <span className="text-blue-600">{c.h1a}</span>{" "}
+              <span className="inline-flex items-baseline gap-2">
+                {c.h1b}
+                <Img3D
+                  name="icon-gift"
+                  Fallback={Gift}
+                  size="h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12"
+                />
+              </span>
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
               {c.heroSub}
@@ -401,4 +410,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-            }
+  }
