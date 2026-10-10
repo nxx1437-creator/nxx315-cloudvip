@@ -246,7 +246,7 @@ export default {
   "ld.nav.faq": "FAQ",
   "ld.login": "Sign in",
   "ld.register": "Sign up",
-  "ld.badge": "100% free · No deposit needed",
+  "ld.badge": "✦ FREE TO PARTICIPATE · FLEXIBLE REWARDS",
   "ld.h1a": "Earn rewards easily.",
   "ld.h1b": "Exchange gifts to your heart's content.",
   "ld.heroSub":
