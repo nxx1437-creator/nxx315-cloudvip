@@ -97,7 +97,7 @@ function HeroArt() {
 const COPY = {
   vi: {
     h1a: "Kiếm Coin mỗi ngày.",
-    h1b: "Đổi quà bạn thích.",
+    h1b: "Đổi quà bạn thích",
     heroSub:
       "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn.",
     how: "Cách hoạt động",
@@ -137,7 +137,7 @@ const COPY = {
   },
   en: {
     h1a: "Earn Coins every day.",
-    h1b: "Exchange for gifts you like.",
+    h1b: "Exchange for gifts you like",
     heroSub:
       "Complete missions, accumulate Coins and exchange them for Robux, in-game diamonds and many other attractive gifts.",
     how: "How it works",
