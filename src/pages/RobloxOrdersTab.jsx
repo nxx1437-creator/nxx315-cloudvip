@@ -11,35 +11,64 @@ import {
   Copy,
   Mail,
   MessageCircle,
+  Coins,
+  Landmark,
+  BadgeCheck,
 } from "lucide-react";
 
-const statusInfo = {
-  pending: {
-    label: "Chờ thanh toán",
-    className: "bg-yellow-100 text-yellow-700",
-    icon: Clock3,
-  },
-  paid: {
-    label: "Chờ kiểm tra",
-    className: "bg-blue-100 text-blue-700",
-    icon: Clock3,
-  },
-  processing: {
-    label: "Đang xử lý",
-    className: "bg-orange-100 text-orange-700",
-    icon: PackageCheck,
-  },
-  delivered: {
-    label: "Đã giao",
-    className: "bg-green-100 text-green-700",
-    icon: CheckCircle2,
-  },
-  rejected: {
-    label: "Đã từ chối",
-    className: "bg-red-100 text-red-700",
-    icon: XCircle,
-  },
-};
+// statusInfo giờ là function, nhận status + payment_method
+function getStatusInfo(status, paymentMethod) {
+  const isBank = paymentMethod === "bank" || paymentMethod === "banking";
+
+  if (status === "pending") {
+    return {
+      label: isBank ? "Chờ chuyển khoản" : "Chờ thanh toán",
+      className: "bg-yellow-100 text-yellow-700",
+      icon: Clock3,
+    };
+  }
+
+  if (status === "paid") {
+    // Điểm khác biệt chính:
+    return {
+      label: isBank ? "Chờ xác nhận CK" : "Chờ duyệt (Coin)",
+      className: isBank
+        ? "bg-amber-100 text-amber-700"
+        : "bg-blue-100 text-blue-700",
+      icon: isBank ? Landmark : Coins,
+    };
+  }
+
+  if (status === "processing") {
+    return {
+      label: "Đang xử lý",
+      className: "bg-orange-100 text-orange-700",
+      icon: PackageCheck,
+    };
+  }
+
+  if (status === "delivered") {
+    return {
+      label: "Đã giao",
+      className: "bg-green-100 text-green-700",
+      icon: CheckCircle2,
+    };
+  }
+
+  if (status === "rejected") {
+    return {
+      label: "Đã từ chối",
+      className: "bg-red-100 text-red-700",
+      icon: XCircle,
+    };
+  }
+
+  return {
+    label: status || "Không rõ",
+    className: "bg-gray-100 text-gray-700",
+    icon: AlertCircle,
+  };
+}
 
 function formatMoney(value) {
   return new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + "đ";
@@ -67,6 +96,35 @@ function ReceiveMethodBadge({ method }) {
       <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
         <Mail className="h-3 w-3" />
         Email
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+      {method}
+    </span>
+  );
+}
+
+// Badge phương thức thanh toán
+function PaymentMethodBadge({ method }) {
+  if (!method) return null;
+
+  if (method === "coin") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-semibold text-yellow-700">
+        <Coins className="h-3 w-3" />
+        Trả bằng Coin
+      </span>
+    );
+  }
+
+  if (method === "bank" || method === "banking") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+        <Landmark className="h-3 w-3" />
+        Chuyển khoản
       </span>
     );
   }
@@ -258,6 +316,7 @@ export default function RobloxOrdersTab() {
     }
   };
 
+  // Duyệt đơn — dùng cho cả coin và bank, nhưng nhãn nút khác nhau
   const approveOrder = (order) => {
     if (order.status !== "paid") return;
     return updateOrderStatus(order, "paid", "processing");
@@ -311,6 +370,7 @@ export default function RobloxOrdersTab() {
         String(order.robux || ""),
         order.contact_value,
         order.receive_method,
+        order.payment_method,
       ]
         .filter(Boolean)
         .some((value) =>
@@ -322,7 +382,14 @@ export default function RobloxOrdersTab() {
   const stats = useMemo(
     () => ({
       total: orders.length,
-      waiting: orders.filter((o) => o.status === "paid").length,
+      waitingBank: orders.filter(
+        (o) =>
+          o.status === "paid" &&
+          (o.payment_method === "bank" || o.payment_method === "banking")
+      ).length,
+      waitingCoin: orders.filter(
+        (o) => o.status === "paid" && o.payment_method === "coin"
+      ).length,
       processing: orders.filter((o) => o.status === "processing").length,
       delivered: orders.filter((o) => o.status === "delivered").length,
       rejected: orders.filter((o) => o.status === "rejected").length,
@@ -337,285 +404,310 @@ export default function RobloxOrdersTab() {
         <span className="ml-2">Đang tải đơn hàng...</span>
       </div>
     );
-        }
-    return (
-  <div className="space-y-5">
-    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 className="text-xl font-bold">Đơn Robux</h2>
-        <p className="text-sm text-gray-500">
-          Quản lý đơn hàng Roblox và trạng thái giao hàng.
-        </p>
-      </div>
+  }
 
-      <button
-        type="button"
-        onClick={() => fetchOrders(true)}
-        disabled={refreshing}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
-      >
-        <RefreshCw
-          className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-        />
-        Làm mới
-      </button>
-    </div>
-
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-      <StatCard title="Tất cả" value={stats.total} />
-      <StatCard title="Chờ kiểm tra" value={stats.waiting} />
-      <StatCard title="Đang xử lý" value={stats.processing} />
-      <StatCard title="Đã giao" value={stats.delivered} />
-      <StatCard title="Đã từ chối" value={stats.rejected} />
-    </div>
-
-    {error && (
-      <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-        <span>{error}</span>
-      </div>
-    )}
-
-    <div className="flex flex-col gap-3 md:flex-row">
-      <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm mã đơn, username, Roblox ID, SĐT, Email..."
-          className="w-full rounded-xl border py-2.5 pl-10 pr-3 outline-none focus:border-blue-500"
-        />
-      </div>
-
-      <select
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        className="rounded-xl border px-3 py-2.5 outline-none focus:border-blue-500"
-      >
-        <option value="all">Tất cả trạng thái</option>
-        <option value="pending">Chờ thanh toán</option>
-        <option value="paid">Chờ kiểm tra</option>
-        <option value="processing">Đang xử lý</option>
-        <option value="delivered">Đã giao</option>
-        <option value="rejected">Đã từ chối</option>
-      </select>
-    </div>
-    {filteredOrders.length === 0 ? (
-  <div className="rounded-2xl border bg-white py-16 text-center text-gray-500">
-    Không có đơn hàng phù hợp.
-  </div>
-) : (
-  <div className="space-y-3">
-    {filteredOrders.map((order) => {
-      const info =
-        statusInfo[order.status] || {
-          label: order.status || "Không rõ",
-          className: "bg-gray-100 text-gray-700",
-          icon: AlertCircle,
-        };
-
-      const Icon = info.icon;
-      const updating = updatingId === order.id;
-      const copyKey = `contact-${order.id}`;
-      const isCopied = copiedKey === copyKey;
-
-      return (
-        <div
-          key={order.id}
-          className="rounded-2xl border bg-white p-4 shadow-sm"
-        >
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0 flex-1 space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-bold">
-                  {order.order_code || `#${order.id}`}
-                </span>
-
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${info.className}`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {info.label}
-                </span>
-
-                <ReceiveMethodBadge method={order.receive_method} />
-              </div>
-
-              <div className="grid gap-x-8 gap-y-1 text-sm text-gray-600 md:grid-cols-2">
-                <div>
-                  Roblox:{" "}
-                  <span className="font-medium text-gray-900">
-                    {order.roblox_username || "—"}
-                  </span>
-                </div>
-
-                <div>
-                  Roblox ID:{" "}
-                  <span className="font-medium text-gray-900">
-                    {order.roblox_user_id || "—"}
-                  </span>
-                </div>
-
-                <div>
-                  Robux:{" "}
-                  <span className="font-semibold text-gray-900">
-                    {Number(order.robux || 0).toLocaleString("vi-VN")} R$
-                  </span>
-                </div>
-
-                <div>
-                  Số tiền:{" "}
-                  <span className="font-semibold text-gray-900">
-                    {formatMoney(order.amount)}
-                  </span>
-                </div>
-              </div>
-
-              {order.contact_value ? (
-                <div className="mt-1 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-blue-200 bg-blue-50/50 p-2.5">
-                  <span className="text-xs font-semibold text-gray-600">
-                    Nhận code qua:
-                  </span>
-
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-gray-900">
-                    {order.receive_method === "zalo" && (
-                      <MessageCircle className="h-4 w-4 text-blue-600" />
-                    )}
-                    {order.receive_method === "email" && (
-                      <Mail className="h-4 w-4 text-purple-600" />
-                    )}
-                    {order.contact_value}
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCopy(order.contact_value, copyKey)
-                    }
-                    className="inline-flex items-center gap-1 rounded-lg border bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    <Copy className="h-3 w-3" />
-                    {isCopied ? "Đã copy!" : "Copy"}
-                  </button>
-
-                  {order.receive_method === "zalo" && (
-                    <a
-                      href={`https://zalo.me/${String(
-                        order.contact_value
-                      ).replace(/[^0-9]/g, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700"
-                    >
-                      <MessageCircle className="h-3 w-3" />
-                      Mở Zalo
-                    </a>
-                  )}
-
-                  {order.receive_method === "email" && (
-                    <a
-                      href={`mailto:${order.contact_value}?subject=Mã Robux đơn ${
-                        order.order_code || `#${order.id}`
-                      }`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-purple-600 px-2 py-1 text-xs font-semibold text-white hover:bg-purple-700"
-                    >
-                      <Mail className="h-3 w-3" />
-                      Gửi Email
-                    </a>
-                  )}
-                </div>
-              ) : (
-                <div className="mt-1 flex items-center gap-2 rounded-xl border border-dashed border-red-200 bg-red-50/50 p-2.5 text-xs text-red-600">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  Đơn này chưa có thông tin nhận code.
-                </div>
-              )}
-
-              <div className="text-xs text-gray-400">
-                Tạo: {formatDate(order.created_at)}
-                {order.updated_at &&
-                  order.updated_at !== order.created_at && (
-                    <> · Cập nhật: {formatDate(order.updated_at)}</>
-                  )}
-              </div>
-
-              {order.note && (
-                <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
-                  <span className="font-semibold">Ghi chú:</span>{" "}
-                  {order.note}
-                </div>
-              )}
-            </div>
-
-            <div className="flex shrink-0 flex-wrap gap-2">
-              {order.status === "paid" && (
-                <>
-                  <button
-                    type="button"
-                    disabled={updating}
-                    onClick={() => approveOrder(order)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Duyệt đơn
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={updating}
-                    onClick={() => {
-                      setError("");
-                      setRejectOrder(order);
-                      setRejectReason("");
-                    }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    Từ chối
-                  </button>
-                </>
-              )}
-
-              {order.status === "processing" && (
-                <button
-                  type="button"
-                  disabled={updating}
-                  onClick={() => deliverOrder(order)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
-                >
-                  <PackageCheck className="h-4 w-4" />
-                  Đã giao Robux
-                </button>
-              )}
-
-              {order.status === "delivered" && (
-                <span className="inline-flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Đã giao thành công
-                </span>
-              )}
-
-              {order.status === "rejected" && (
-                <span className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
-                  <XCircle className="h-4 w-4" />
-                  Đã từ chối
-                </span>
-              )}
-
-              {updating && (
-                <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-500">
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  Đang cập nhật...
-                </span>
-              )}
-            </div>
-          </div>
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-bold">Đơn Robux</h2>
+          <p className="text-sm text-gray-500">
+            Quản lý đơn hàng Roblox và trạng thái giao hàng.
+          </p>
         </div>
-      );
-    })}
-  </div>
-)}
-          {rejectOrder && (
+
+        <button
+          type="button"
+          onClick={() => fetchOrders(true)}
+          disabled={refreshing}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+          />
+          Làm mới
+        </button>
+      </div>
+
+      {/* Stats — tách riêng chờ CK và chờ duyệt Coin */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+        <StatCard title="Tất cả" value={stats.total} />
+        <StatCard
+          title="Chờ xác nhận CK"
+          value={stats.waitingBank}
+          accent="amber"
+        />
+        <StatCard
+          title="Chờ duyệt (Coin)"
+          value={stats.waitingCoin}
+          accent="blue"
+        />
+        <StatCard title="Đang xử lý" value={stats.processing} />
+        <StatCard title="Đã giao" value={stats.delivered} />
+        <StatCard title="Đã từ chối" value={stats.rejected} />
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 md:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm mã đơn, username, Roblox ID, SĐT, Email..."
+            className="w-full rounded-xl border py-2.5 pl-10 pr-3 outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="rounded-xl border px-3 py-2.5 outline-none focus:border-blue-500"
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="pending">Chờ thanh toán</option>
+          <option value="paid">Chờ xử lý</option>
+          <option value="processing">Đang xử lý</option>
+          <option value="delivered">Đã giao</option>
+          <option value="rejected">Đã từ chối</option>
+        </select>
+      </div>
+
+      {filteredOrders.length === 0 ? (
+        <div className="rounded-2xl border bg-white py-16 text-center text-gray-500">
+          Không có đơn hàng phù hợp.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredOrders.map((order) => {
+            const info = getStatusInfo(order.status, order.payment_method);
+            const Icon = info.icon;
+            const updating = updatingId === order.id;
+            const copyKey = `contact-${order.id}`;
+            const isCopied = copiedKey === copyKey;
+            const isBank =
+              order.payment_method === "bank" ||
+              order.payment_method === "banking";
+
+            return (
+              <div
+                key={order.id}
+                className="rounded-2xl border bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold">
+                        {order.order_code || `#${order.id}`}
+                      </span>
+
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${info.className}`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {info.label}
+                      </span>
+
+                      <PaymentMethodBadge method={order.payment_method} />
+                      <ReceiveMethodBadge method={order.receive_method} />
+                    </div>
+
+                    <div className="grid gap-x-8 gap-y-1 text-sm text-gray-600 md:grid-cols-2">
+                      <div>
+                        Roblox:{" "}
+                        <span className="font-medium text-gray-900">
+                          {order.roblox_username || "—"}
+                        </span>
+                      </div>
+
+                      <div>
+                        Roblox ID:{" "}
+                        <span className="font-medium text-gray-900">
+                          {order.roblox_user_id || "—"}
+                        </span>
+                      </div>
+
+                      <div>
+                        Robux:{" "}
+                        <span className="font-semibold text-gray-900">
+                          {Number(order.robux || 0).toLocaleString("vi-VN")} R$
+                        </span>
+                      </div>
+
+                      <div>
+                        Số tiền:{" "}
+                        <span className="font-semibold text-gray-900">
+                          {formatMoney(order.amount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {order.contact_value ? (
+                      <div className="mt-1 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-blue-200 bg-blue-50/50 p-2.5">
+                        <span className="text-xs font-semibold text-gray-600">
+                          Nhận code qua:
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-gray-900">
+                          {order.receive_method === "zalo" && (
+                            <MessageCircle className="h-4 w-4 text-blue-600" />
+                          )}
+                          {order.receive_method === "email" && (
+                            <Mail className="h-4 w-4 text-purple-600" />
+                          )}
+                          {order.contact_value}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopy(order.contact_value, copyKey)
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg border bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          <Copy className="h-3 w-3" />
+                          {isCopied ? "Đã copy!" : "Copy"}
+                        </button>
+
+                        {order.receive_method === "zalo" && (
+                          <a
+                            href={`https://zalo.me/${String(
+                              order.contact_value
+                            ).replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            Mở Zalo
+                          </a>
+                        )}
+
+                        {order.receive_method === "email" && (
+                          <a
+                            href={`mailto:${order.contact_value}?subject=Mã Robux đơn ${
+                              order.order_code || `#${order.id}`
+                            }`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-purple-600 px-2 py-1 text-xs font-semibold text-white hover:bg-purple-700"
+                          >
+                            <Mail className="h-3 w-3" />
+                            Gửi Email
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex items-center gap-2 rounded-xl border border-dashed border-red-200 bg-red-50/50 p-2.5 text-xs text-red-600">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        Đơn này chưa có thông tin nhận code.
+                      </div>
+                    )}
+
+                    <div className="text-xs text-gray-400">
+                      Tạo: {formatDate(order.created_at)}
+                      {order.updated_at &&
+                        order.updated_at !== order.created_at && (
+                          <> · Cập nhật: {formatDate(order.updated_at)}</>
+                        )}
+                    </div>
+
+                    {order.note && (
+                      <div className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
+                        <span className="font-semibold">Ghi chú:</span>{" "}
+                        {order.note}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    {order.status === "paid" && (
+                      <>
+                                  {/* Nút duyệt — nhãn khác nhau tùy phương thức */}
+                        <button
+                          type="button"
+                          disabled={updating}
+                          onClick={() => approveOrder(order)}
+                          className={
+                            isBank
+                              ? "inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                              : "inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                          }
+                        >
+                          {isBank ? (
+                            <>
+                              <BadgeCheck className="h-4 w-4" />
+                              Đã nhận tiền
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="h-4 w-4" />
+                              Duyệt đơn
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={updating}
+                          onClick={() => {
+                            setError("");
+                            setRejectOrder(order);
+                            setRejectReason("");
+                          }}
+                          className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Từ chối
+                        </button>
+                      </>
+                    )}
+
+                    {order.status === "processing" && (
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() => deliverOrder(order)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+                      >
+                        <PackageCheck className="h-4 w-4" />
+                        Đã giao Robux
+                      </button>
+                    )}
+
+                    {order.status === "delivered" && (
+                      <span className="inline-flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Đã giao thành công
+                      </span>
+                    )}
+
+                    {order.status === "rejected" && (
+                      <span className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
+                        <XCircle className="h-4 w-4" />
+                        Đã từ chối
+                      </span>
+                    )}
+
+                    {updating && (
+                      <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-500">
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Đang cập nhật...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {rejectOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
             <h3 className="text-lg font-bold">Từ chối đơn hàng</h3>
@@ -668,11 +760,18 @@ export default function RobloxOrdersTab() {
   );
 }
 
-function StatCard({ title, value }) {
+function StatCard({ title, value, accent }) {
+  const accentClass =
+    accent === "amber"
+      ? "text-amber-600"
+      : accent === "blue"
+      ? "text-blue-600"
+      : "text-gray-900";
+
   return (
     <div className="rounded-2xl border bg-white p-4 shadow-sm">
       <div className="text-xs text-gray-500">{title}</div>
-      <div className="mt-1 text-2xl font-bold">{value}</div>
+      <div className={`mt-1 text-2xl font-bold ${accentClass}`}>{value}</div>
     </div>
   );
-}                
+}
