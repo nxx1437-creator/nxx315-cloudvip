@@ -90,10 +90,11 @@ export default function Store() {
 
 {/* ✅ ALERT BẢO TRÌ */}
 <InlineAlert
-  severity="warning"
+  severity="success"
   marquee={true}
   dismissible={true}
-  message=" Hệ thống bảo trì từ 9h-11h. Các đơn hàng đặt trong khung giờ này sẽ được xử lý sau 11h. Xin lỗi vì sự bất tiện!"
+  message="💰 Rút tiền chỉ 2-24h! Tối thiểu 50,000 Coin là rút được."
+  action={{ label: "Rút ngay", href: "/withdraw" }}
 />
 
 <BannerSlideshow navigate={navigate} />
