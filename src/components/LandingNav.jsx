@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowUp } from "lucide-react";
 import { useI18n } from "../i18n/index.js";
-import { scrollToId } from "./LandingChrome.jsx";
+
+export const scrollToId = (id) =>
+  document
+    .getElementById(id)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 
 const NAV = [
   ["how", "ld.nav.how"],
@@ -11,8 +15,10 @@ const NAV = [
   ["faq", "ld.nav.faq"],
 ];
 
+const SHORT = { vi: "Đăng ký", en: "Sign up" };
+
 const Logo = () => (
-  <span className="text-[19px] font-extrabold tracking-tight text-slate-900">
+  <span className="shrink-0 whitespace-nowrap text-[18px] font-extrabold tracking-tight text-slate-900 sm:text-[19px]">
     Nxx315 <span className="text-blue-600">Studio</span>
   </span>
 );
@@ -27,24 +33,13 @@ export function LandingHeader() {
     scrollToId(id);
   };
 
-  const langBtn = (
-    <button
-      onClick={() => setLang(lang === "vi" ? "en" : "vi")}
-      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100"
-    >
-      <span className="text-[15px] leading-none">
-        {lang === "vi" ? "🇻🇳" : "🇺🇸"}
-      </span>
-      {lang === "vi" ? "VI" : "EN"}
-    </button>
-  );
-
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-5">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:px-5">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="Nxx315 Studio"
+          className="shrink-0"
         >
           <Logo />
         </button>
@@ -54,27 +49,42 @@ export function LandingHeader() {
             <button
               key={id}
               onClick={() => go(id)}
-              className="text-[14px] font-medium text-slate-600 transition hover:text-slate-900"
+              className="whitespace-nowrap text-[14px] font-medium text-slate-600 transition hover:text-slate-900"
             >
               {t(k)}
             </button>
           ))}
         </nav>
 
-        <div className="flex items-center gap-1.5">
-          {langBtn}
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={() => setLang(lang === "vi" ? "en" : "vi")}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100"
+            aria-label="Language"
+          >
+            <span className="text-[16px] leading-none">
+              {lang === "vi" ? "🇻🇳" : "🇺🇸"}
+            </span>
+            <span className="hidden sm:inline">
+              {lang === "vi" ? "VI" : "EN"}
+            </span>
+          </button>
+
           <button
             onClick={() => navigate("/login")}
-            className="hidden px-3 py-2 text-[14px] font-semibold text-slate-700 transition hover:text-blue-600 md:inline-flex"
+            className="hidden whitespace-nowrap px-3 py-2 text-[14px] font-semibold text-slate-700 transition hover:text-blue-600 md:inline-flex"
           >
             {t("ld.login")}
           </button>
+
           <button
             onClick={() => navigate("/register")}
-            className="rounded-xl bg-blue-600 px-4 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-blue-700 active:scale-95"
+            className="whitespace-nowrap rounded-xl bg-blue-600 px-3.5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-blue-700 active:scale-95 sm:px-4"
           >
-            {t("ld.ctaReg")}
+            <span className="sm:hidden">{SHORT[lang] || SHORT.vi}</span>
+            <span className="hidden sm:inline">{t("ld.ctaReg")}</span>
           </button>
+
           <button
             onClick={() => setOpen(!open)}
             aria-label="Menu"
@@ -125,6 +135,7 @@ const FOOT = {
     fraud: "Chống gian lận",
     redeem: "Chính sách đổi thưởng",
     rights: "Mọi quyền được bảo lưu.",
+    top: "Lên đầu trang",
   },
   en: {
     product: "Product",
@@ -139,6 +150,7 @@ const FOOT = {
     fraud: "Anti-fraud",
     redeem: "Redemption policy",
     rights: "All rights reserved.",
+    top: "Back to top",
   },
 };
 
@@ -233,3 +245,27 @@ export function LandingFooter() {
     </footer>
   );
 }
+
+export function BackToTop() {
+  const { lang } = useI18n();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const on = () => setShow(window.scrollY > 700);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label={(FOOT[lang] || FOOT.vi).top}
+      className={`fixed bottom-5 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md transition hover:text-blue-600 sm:right-6 ${
+        show ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
+    >
+      <ArrowUp size={18} />
+    </button>
+  );
+              }
