@@ -97,7 +97,7 @@ function HeroArt() {
 const COPY = {
   vi: {
     h1a: "Kiếm Coin mỗi ngày.",
-    h1b: "Đổi quà bạn thích ",
+    h1b: "Đổi quà bạn thích.",
     heroSub:
       "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn.",
     how: "Cách hoạt động",
@@ -137,7 +137,7 @@ const COPY = {
   },
   en: {
     h1a: "Earn Coins every day.",
-    h1b: "Exchange for gifts you like",
+    h1b: "Exchange for gifts you like.",
     heroSub:
       "Complete missions, accumulate Coins and exchange them for Robux, in-game diamonds and many other attractive gifts.",
     how: "How it works",
@@ -211,14 +211,12 @@ export default function CloudVIPLanding() {
             </p>
             <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
               <span className="text-blue-600">{c.h1a}</span>{" "}
-              <span className="inline-flex items-baseline gap-2">
-                {c.h1b}
-                <Img3D
-                  name="icon-gift"
-                  Fallback={Gift}
-                  size="h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12"
-                />
-              </span>
+              {c.h1b}
+              <Img3D
+                name="icon-gift"
+                Fallback={Gift}
+                size="ml-1 inline-block h-9 w-9 align-[-0.15em] sm:h-11 sm:w-11 lg:h-14 lg:w-14"
+              />
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
               {c.heroSub}
@@ -410,4 +408,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-  }
+      }
