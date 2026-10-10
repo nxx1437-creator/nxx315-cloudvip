@@ -247,10 +247,10 @@ export default {
   "ld.login": "Sign in",
   "ld.register": "Sign up",
   "ld.badge": "100% free · No deposit needed",
-  "ld.h1a": "Earn Coins.",
-  "ld.h1b": "Redeem rewards easily.",
+  "ld.h1a": "Earn rewards easily.",
+  "ld.h1b": "Exchange gifts to your heart's content.",
   "ld.heroSub":
-    "Complete simple tasks, earn Coins and redeem them for Robux, phone cards, gift cards and more.",
+    "Complete missions, accumulate Coins, and exchange them for Robux, in-game diamonds, and many other attractive rewards!",
   "ld.ctaStart": "Get started",
   "ld.ctaHow": "See how it works",
   "ld.check1": "No deposit needed",
