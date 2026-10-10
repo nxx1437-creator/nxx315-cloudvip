@@ -248,10 +248,10 @@ export default {
   "ld.login": "Đăng nhập",
   "ld.register": "Đăng ký",
   "ld.badge": "Miễn phí 100% · Không cần nạp tiền",
-  "ld.h1a": "KIẾM COIN. ",
-  "ld.h1b": "ĐỔI THƯỞNG DỄ DÀNG.",
+  "ld.h1a": "kiếm coin dễ dàng. ",
+  "ld.h1b": "Đổi quà thỏa thích.",
   "ld.heroSub":
-    "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, thẻ điện thoại, gift card và nhiều quà khác.",
+    "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn!",
   "ld.ctaStart": "Bắt đầu ngay",
   "ld.ctaHow": "Xem cách hoạt động",
   "ld.check1": "Không cần nạp tiền",
