@@ -21,7 +21,7 @@ const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
 // Icon 3D trên Supabase, lỗi ảnh thì dùng icon dự phòng
-function Img3D({ name, Fallback, size = "h-24 w-24" }) {
+function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
   const [ok, setOk] = useState(true);
   if (!ok) return <Fallback className="h-10 w-10 text-blue-600" />;
   return (
@@ -29,7 +29,7 @@ function Img3D({ name, Fallback, size = "h-24 w-24" }) {
       src={`${ICON_BASE}/${name}.png`}
       alt=""
       loading="lazy"
-      className={`${size} object-contain drop-shadow-md`}
+      className={`${size} object-contain ${shadow ? "drop-shadow-md" : ""}`}
       onError={() => setOk(false)}
     />
   );
@@ -96,7 +96,7 @@ function HeroArt() {
 // Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
 const COPY = {
   vi: {
-    h1a: "Kiếm Coin mỗi ngày.",
+    h1a: "Kiếm Coin mỗi ngày",
     h1b: "Đổi quà bạn thích",
     heroSub:
       "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn.",
@@ -136,7 +136,7 @@ const COPY = {
     ctaTitle: "Bắt đầu kiếm Coin hôm nay.",
   },
   en: {
-    h1a: "Earn Coins every day.",
+    h1a: "Earn Coins every day",
     h1b: "Exchange for gifts you like",
     heroSub:
       "Complete missions, accumulate Coins and exchange them for Robux, in-game diamonds and many other attractive gifts.",
@@ -215,7 +215,8 @@ export default function CloudVIPLanding() {
               <Img3D
                 name="icon-gift"
                 Fallback={Gift}
-                size="ml-1 inline-block h-9 w-9 align-[-0.15em] sm:h-11 sm:w-11 lg:h-14 lg:w-14"
+                shadow={false}
+                size="ml-1.5 inline-block h-10 w-10 align-[-0.15em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
               />
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
@@ -408,4 +409,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-      }
+   }
