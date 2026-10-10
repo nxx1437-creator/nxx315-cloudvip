@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
+  Sparkles,
+  Check,
+  ListChecks,
+  Coins,
+  Link2,
   UserPlus,
   Zap,
   Gift,
@@ -9,41 +14,33 @@ import {
   ShieldCheck,
   Bot,
   KeyRound,
-  CalendarCheck,
-  Flame,
-  Gamepad2,
-  TrendingUp,
-  Share2,
-  Trophy,
-  ShoppingBag,
-  Wallet,
-  Bell,
-  Smartphone,
-  Check,
 } from "lucide-react";
 import {
-  SectionHead,
-  Chip,
-  PreviewCard,
   SafetyCard,
   FAQItem,
   DOT_BG,
   primaryBtn,
-  ghostBtn,
 } from "./components/LandingKit.jsx";
 import {
   PvStore,
   PvCheckin,
-  PvStreak,
   PvGames,
-  PvLevel,
-  PvRank,
   PvRefer,
-  PvWallet,
-  PvNotify,
-  PvPhone,
-  HeroShowcase,
 } from "./components/LandingPreviews.jsx";
+import {
+  Reveal,
+  Eyebrow,
+  TwoTone,
+  IconTile,
+  PhoneMock,
+  FeatureCard,
+  PvTasks,
+  PvWeek,
+  ProgressBar,
+  StepCard,
+  Connector,
+  StickyCta,
+} from "./components/LandingAstra.jsx";
 import {
   LandingHeader,
   LandingFooter,
@@ -52,30 +49,68 @@ import {
 } from "./components/LandingChrome.jsx";
 import { useI18n } from "./i18n/index.js";
 
-const STEPS = [
-  {
-    n: "01",
-    icon: UserPlus,
-    t: "ld.s1t",
-    d: "ld.s1d",
-    chips: [{ raw: "Email" }, { raw: "Google" }],
+const COPY = {
+  vi: {
+    phoneCap: "Làm nhiệm vụ. Nhận xu. Đổi quà.",
+    tiles: ["Nhiệm vụ mỗi ngày", "Xu & điểm danh", "Mời bạn bè"],
+    featEyebrow: "Tính năng",
+    featDim: "Mọi thứ bạn cần",
+    featStrong: "để kiếm xu mỗi ngày.",
+    cards: [
+      ["Làm nhiệm vụ mỗi ngày,", "nhận xu nhanh gọn."],
+      ["Đổi xu lấy quà game,", "không cần nạp tiền."],
+      ["Điểm danh 7 ngày,", "xu tăng dần mỗi ngày."],
+      ["Nghỉ giải lao với", "minigame may mắn."],
+      ["Thấy xu của bạn", "tăng qua từng ngày."],
+      ["Mời bạn bè,", "nhận hoa hồng 15%."],
+    ],
+    store: ["Robux", "Quân Huy", "Kim cương"],
+    week: {
+      title: "Xu kiếm được",
+      range: "7 ngày qua",
+      days: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+    },
+    howEyebrow: "Cách hoạt động",
+    howDim: "Từ đăng ký đến",
+    howStrong: "nhận quà chỉ 3 bước.",
+    step: "Bước",
+    progress: "Hoàn thành 100%",
+    safeEyebrow: "An toàn",
+    ctaDim: "Sẵn sàng kiếm xu?",
+    ctaStrong: "Bắt đầu miễn phí.",
   },
-  {
-    n: "02",
-    icon: Zap,
-    t: "ld.s2t",
-    d: "ld.s2d",
-    chips: [{ k: "dash.qaTasks" }, { k: "dash.minigame" }, { k: "ld.f5t" }],
+  en: {
+    phoneCap: "Do tasks. Earn coins. Redeem rewards.",
+    tiles: ["Daily tasks", "Coins & check-in", "Invite friends"],
+    featEyebrow: "Features",
+    featDim: "Everything you need",
+    featStrong: "to earn coins every day.",
+    cards: [
+      ["Do tasks every day,", "earn coins fast."],
+      ["Redeem coins for game gifts,", "no top-up needed."],
+      ["Check in for 7 days,", "rewards grow daily."],
+      ["Take a break with", "lucky minigames."],
+      ["Watch your coins", "grow day by day."],
+      ["Invite friends,", "earn 15% commission."],
+    ],
+    store: ["Robux", "Quân Huy", "Diamonds"],
+    week: {
+      title: "Coins earned",
+      range: "Last 7 days",
+      days: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+    },
+    howEyebrow: "How it works",
+    howDim: "From sign-up to",
+    howStrong: "rewards in 3 steps.",
+    step: "Step",
+    progress: "Complete 100%",
+    safeEyebrow: "Safety",
+    ctaDim: "Ready to earn coins?",
+    ctaStrong: "Start for free.",
   },
-  {
-    n: "03",
-    icon: Gift,
-    t: "ld.s3t",
-    d: "ld.s3d",
-    chips: [{ k: "ld.chipRobux" }, { k: "ld.chipPhone" }, { k: "ld.chipGift" }],
-  },
-];
+};
 
+const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
   { icon: ShieldCheck, t: "ld.b2t", d: "ld.b2d" },
@@ -83,222 +118,201 @@ const SAFETY = [
   { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
 ];
 
-const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
-
 export default function CloudVIPLanding() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const c = COPY[lang] || COPY.vi;
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(0);
 
-  const bento = [
-    {
-      k: "f7",
-      icon: ShoppingBag,
-      span: "sm:col-span-2",
-      pv: (
-        <PvStore
-          labels={[t("ld.chipRobux"), t("ld.chipPhone"), t("ld.chipGift")]}
-        />
-      ),
-    },
-    { k: "f1", icon: CalendarCheck, span: "sm:col-span-2", pv: <PvCheckin /> },
-    { k: "f2", icon: Flame, pv: <PvStreak /> },
-    {
-      k: "f3",
-      icon: Gamepad2,
-      pv: (
-        <PvGames
-          labels={[t("dash.wheel"), t("dash.scratch"), t("dash.dice")]}
-        />
-      ),
-    },
-    { k: "f4", icon: TrendingUp, pv: <PvLevel /> },
-    { k: "f6", icon: Trophy, pv: <PvRank /> },
-    { k: "f5", icon: Share2, pv: <PvRefer /> },
-    { k: "f8", icon: Wallet, pv: <PvWallet /> },
-    { k: "f9", icon: Bell, pv: <PvNotify /> },
-    { k: "f10", icon: Smartphone, pv: <PvPhone /> },
+  const cards = [
+    { v: <PvTasks />, d: t("ld.s2d") },
+    { v: <PvStore labels={c.store} />, d: t("ld.f7d") },
+    { v: <PvCheckin />, d: t("ld.f1d") },
+    { v: <PvGames labels={[t("dash.wheel"), t("dash.scratch"), t("dash.dice")]} />, d: t("ld.f3d") },
+    { v: <PvWeek {...c.week} />, d: t("ld.f4d") },
+    { v: <PvRefer />, d: t("ld.f5d") },
+  ];
+
+  const steps = [
+    { icon: UserPlus, k: "ld.s1t" },
+    { icon: Zap, k: "ld.s2t" },
+    { icon: Gift, k: "ld.s3t" },
   ];
 
   return (
-    <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
+    <div className="min-h-screen bg-white pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900 md:pb-0">
       <LandingHeader />
 
       <main>
         {/* ============ HERO ============ */}
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden px-5 pb-6 pt-10 text-center sm:pt-16">
           <div
             className="pointer-events-none absolute inset-0"
             style={{
               ...DOT_BG,
               WebkitMaskImage:
-                "radial-gradient(ellipse at 50% 20%, black, transparent 70%)",
+                "radial-gradient(ellipse at 50% 25%, black, transparent 70%)",
               maskImage:
-                "radial-gradient(ellipse at 50% 20%, black, transparent 70%)",
+                "radial-gradient(ellipse at 50% 25%, black, transparent 70%)",
             }}
           />
           <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-sky-200/40 blur-3xl" />
 
-          <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pb-16 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-24 lg:pt-16">
-            <div className="text-left">
-              <span className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm sm:text-[11px]">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                </span>
-                {t("ld.badge")}
+          <div className="relative mx-auto max-w-3xl">
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-sm sm:text-[11px]">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
               </span>
+              {t("ld.badge")}
+            </span>
 
-              <h1 className="mt-6 text-[36px] font-extrabold leading-[1.12] tracking-tight text-slate-900 sm:text-6xl">
-                <span className="block">{t("ld.h1a")}</span>
-                <span className="block bg-gradient-to-r from-sky-500 to-blue-700 bg-clip-text text-transparent">
-                  {t("ld.h1b")}
-                </span>
-              </h1>
+            <h1 className="mt-6 text-[38px] font-extrabold leading-[1.1] tracking-tight sm:text-6xl">
+              <span className="block text-slate-400">{t("ld.h1a")}</span>
+              <span className="block text-slate-900">{t("ld.h1b")}</span>
+            </h1>
 
-              <p className="mt-5 max-w-xl text-[15px] leading-7 text-slate-500 sm:text-base">
-                {t("ld.heroSub")}
-              </p>
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 sm:text-base">
+              {t("ld.heroSub")}
+            </p>
 
-              <div className="mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
-                <button
-                  onClick={() => navigate("/register")}
-                  className={`${primaryBtn} w-full sm:w-auto`}
-                >
-                  {t("ld.ctaStart")} <ArrowRight size={16} />
-                </button>
-                <button
-                  onClick={() => scrollToId("how")}
-                  className={`${ghostBtn} w-full sm:w-auto`}
-                >
-                  {t("ld.ctaHow")}
-                </button>
-              </div>
-
-              <div className="mt-7 flex flex-wrap gap-2">
-                {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
-                  <span
-                    key={k}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-600"
-                  >
-                    <Check size={13} className="text-emerald-500" />
-                    {t(k)}
-                  </span>
-                ))}
-              </div>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => navigate("/register")}
+                className={primaryBtn}
+              >
+                {t("ld.ctaStart")} <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => scrollToId("how")}
+                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-blue-500 bg-white px-7 py-3.5 text-[14px] font-bold text-slate-900 transition hover:bg-blue-50 active:scale-[0.98]"
+              >
+                {t("ld.ctaHow")}
+                <Sparkles size={15} className="text-amber-500" />
+              </button>
             </div>
 
-            <HeroShowcase chip={t("ld.chipRobux")} />
-          </div>
-        </section>
-
-        {/* ============ 001 CÁCH HOẠT ĐỘNG ============ */}
-        <section
-          id="how"
-          className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:py-24"
-        >
-          <SectionHead
-            index="001"
-            tag={t("ld.nav.how")}
-            title={t("ld.howTitle")}
-            sub={t("ld.howTag")}
-          />
-
-          <div className="relative mt-14 grid gap-8 md:grid-cols-3 md:gap-6">
-            {/* đường nối: dọc ở điện thoại, ngang ở máy tính */}
-            <div className="pointer-events-none absolute bottom-6 left-5 top-6 w-px bg-gradient-to-b from-blue-200 via-blue-400 to-blue-200 md:hidden" />
-            <div className="pointer-events-none absolute left-[16%] right-[16%] top-5 hidden h-px bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 md:block" />
-
-            {STEPS.map(({ n, icon: Icon, t: tk, d, chips }) => (
-              <div
-                key={n}
-                className="relative flex gap-4 md:flex-col md:items-center"
-              >
-                <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 font-mono text-sm font-bold text-white shadow-lg shadow-blue-500/30 ring-4 ring-white">
-                  {n}
-                </span>
-                <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/10 md:w-full">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <Icon size={19} />
-                  </span>
-                  <h3 className="mt-4 text-[17px] font-bold tracking-tight text-slate-900">
-                    {t(tk)}
-                  </h3>
-                  <p className="mt-2 text-[13.5px] leading-6 text-slate-500">
-                    {t(d)}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {chips.map((c) => (
-                      <Chip key={c.k || c.raw}>{c.raw ?? t(c.k)}</Chip>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ============ 002 TÍNH NĂNG (BENTO) ============ */}
-        <section
-          id="features"
-          className="scroll-mt-24 border-y border-slate-200 bg-slate-50/70"
-        >
-          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-            <SectionHead
-              index="002"
-              tag={t("ld.nav.features")}
-              title={t("ld.bentoTitle")}
-              sub={t("ld.bentoSub")}
-            />
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {bento.map(({ k, icon, span, pv }, i) => (
-                <PreviewCard
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
+                <span
                   key={k}
-                  icon={icon}
-                  title={t(`ld.${k}t`)}
-                  desc={t(`ld.${k}d`)}
-                  index={String(i + 1).padStart(2, "0")}
-                  preview={pv}
-                  className={span || ""}
-                />
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-600"
+                >
+                  <Check size={13} className="text-emerald-500" />
+                  {t(k)}
+                </span>
               ))}
             </div>
-            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
-              {t("ld.storeNote")}
-            </p>
           </div>
+
+          <PhoneMock caption={c.phoneCap} />
         </section>
 
-        {/* ============ 003 AN TOÀN ============ */}
+        {/* 3 ô icon 3D (ảnh trên Supabase) */}
+        <div className="relative z-10 mx-auto -mt-14 grid max-w-md grid-cols-3 gap-4 px-5">
+          <IconTile name="icon-task" Fallback={ListChecks} label={c.tiles[0]} />
+          <IconTile name="icon-coin" Fallback={Coins} label={c.tiles[1]} />
+          <IconTile name="icon-link" Fallback={Link2} label={c.tiles[2]} />
+        </div>
+
+        <div className="mx-auto mt-10 h-16 w-px bg-gradient-to-b from-slate-300 to-transparent" />
+
+        {/* ============ TÍNH NĂNG ============ */}
         <section
-          id="safety"
-          className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:py-24"
+          id="features"
+          className="mx-auto max-w-5xl scroll-mt-24 px-5 py-14 sm:py-20"
         >
-          <SectionHead
-            index="003"
-            tag={t("ld.nav.safety")}
-            title={t("ld.safeTitle")}
-            sub={t("ld.safeSub")}
-          />
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
-            {SAFETY.map(({ icon, t: tk, d }) => (
-              <SafetyCard key={tk} icon={icon} title={t(tk)} desc={t(d)} />
+          <Reveal>
+            <Eyebrow>{c.featEyebrow}</Eyebrow>
+            <TwoTone
+              dim={c.featDim}
+              strong={c.featStrong}
+              className="mx-auto mt-4 max-w-2xl"
+            />
+          </Reveal>
+
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
+            {cards.map((card, i) => (
+              <FeatureCard
+                key={i}
+                dim={c.cards[i][0]}
+                strong={c.cards[i][1]}
+                desc={card.d}
+              >
+                {card.v}
+              </FeatureCard>
             ))}
           </div>
         </section>
 
-        {/* ============ 004 FAQ ============ */}
+        {/* ============ CÁCH HOẠT ĐỘNG ============ */}
+        <section
+          id="how"
+          className="scroll-mt-24 border-y border-slate-200 bg-slate-50/70"
+        >
+          <div className="mx-auto max-w-xl px-5 py-16 sm:py-24">
+            <Reveal>
+              <Eyebrow>{c.howEyebrow}</Eyebrow>
+              <TwoTone
+                dim={c.howDim}
+                strong={c.howStrong}
+                className="mt-4"
+              />
+            </Reveal>
+
+            <div className="mt-12">
+              <ProgressBar label={c.progress} />
+              <Connector />
+              {steps.map(({ icon, k }, i) => (
+                <div key={k}>
+                  <StepCard
+                    n={String(i + 1).padStart(2, "0")}
+                    label={c.step}
+                    title={t(k)}
+                    Icon={icon}
+                  />
+                  {i < steps.length - 1 && <Connector />}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ AN TOÀN ============ */}
+        <section
+          id="safety"
+          className="mx-auto max-w-5xl scroll-mt-24 px-5 py-16 sm:py-24"
+        >
+          <Reveal>
+            <Eyebrow>{c.safeEyebrow}</Eyebrow>
+            <h2 className="mx-auto mt-4 max-w-2xl text-center text-[30px] font-extrabold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl">
+              {t("ld.safeTitle")}
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-center text-[15px] leading-7 text-slate-500">
+              {t("ld.safeSub")}
+            </p>
+          </Reveal>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2">
+            {SAFETY.map(({ icon, t: tk, d }) => (
+              <Reveal key={tk}>
+                <SafetyCard icon={icon} title={t(tk)} desc={t(d)} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ FAQ ============ */}
         <section
           id="faq"
           className="scroll-mt-24 border-t border-slate-200 bg-slate-50/70"
         >
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
-            <SectionHead
-              index="004"
-              tag={t("ld.nav.faq")}
-              title={t("ld.faqTitle")}
-              sub={t("ld.faqTag")}
-            />
+            <Reveal>
+              <Eyebrow>{t("ld.nav.faq")}</Eyebrow>
+              <h2 className="mx-auto mt-4 max-w-2xl text-center text-[30px] font-extrabold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl">
+                {t("ld.faqTitle")}
+              </h2>
+            </Reveal>
             <div className="mt-10 space-y-3">
               {FAQ_ORDER.map((i, idx) => (
                 <FAQItem
@@ -314,44 +328,49 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* ============ CTA CUỐI ============ */}
-        <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 p-8 text-center text-white shadow-2xl shadow-blue-600/25 sm:p-14">
-            <div
-              className="pointer-events-none absolute inset-0 opacity-30"
-              style={{
-                backgroundImage:
-                  "radial-gradient(rgba(255,255,255,0.55) 1px, transparent 1px)",
-                backgroundSize: "18px 18px",
-              }}
-            />
-            <div className="relative">
-              <h2 className="text-[28px] font-extrabold leading-[1.15] tracking-tight sm:text-5xl">
-                {t("ld.ctaTitle")}
-              </h2>
-              <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-sky-50">
-                {t("ld.ctaSub")}
-              </p>
-              <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-                <button
-                  onClick={() => navigate("/register")}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-7 py-4 text-[14px] font-bold text-blue-700 shadow-lg transition hover:bg-sky-50 active:scale-[0.98] sm:w-auto"
-                >
-                  {t("ld.ctaReg")} <ArrowRight size={16} />
-                </button>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="inline-flex w-full items-center justify-center rounded-full border border-white/50 px-7 py-4 text-[14px] font-bold text-white transition hover:bg-white/10 active:scale-[0.98] sm:w-auto"
-                >
-                  {t("ld.login")}
-                </button>
+        <section className="mx-auto max-w-4xl px-5 py-16 sm:py-24">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 bg-gradient-to-b from-white to-slate-50 px-6 py-14 text-center">
+              <div className="pointer-events-none absolute -bottom-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-blue-400/30 blur-3xl" />
+              <div className="relative">
+                <TwoTone dim={c.ctaDim} strong={c.ctaStrong} />
+                <p className="mx-auto mt-4 max-w-md text-[15px] leading-7 text-slate-500">
+                  {t("ld.ctaSub")}
+                </p>
+                <div className="mt-8 flex flex-wrap justify-center gap-3">
+                  <button
+                    onClick={() => navigate("/register")}
+                    className={primaryBtn}
+                  >
+                    {t("ld.ctaReg")} <ArrowRight size={16} />
+                  </button>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-blue-500 bg-white px-7 py-3.5 text-[14px] font-bold text-slate-900 transition hover:bg-blue-50 active:scale-[0.98]"
+                  >
+                    {t("ld.login")}
+                    <Sparkles size={15} className="text-amber-500" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 
       <LandingFooter />
-      <BackToTop />
+
+      {/* nút "lên đầu trang" chỉ hiện trên máy tính để không đè thanh nút đáy */}
+      <div className="hidden md:block">
+        <BackToTop />
+      </div>
+
+      <StickyCta
+        primary={t("ld.ctaReg")}
+        secondary={t("ld.login")}
+        onPrimary={() => navigate("/register")}
+        onSecondary={() => navigate("/login")}
+      />
     </div>
   );
-    }
+      }
