@@ -247,7 +247,7 @@ export default {
   "ld.nav.faq": "FAQ",
   "ld.login": "Đăng nhập",
   "ld.register": "Đăng ký",
-  "ld.badge": "Miễn phí 100% · Không cần nạp tiền",
+  "ld.badge": "✦ MIỄN PHÍ THAM GIA · LINH HOẠT ĐỔI THƯỞNG",
   "ld.h1a": "kiếm coin dễ dàng. ",
   "ld.h1b": "Đổi quà thỏa thích.",
   "ld.heroSub":
