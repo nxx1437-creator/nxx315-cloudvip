@@ -88,7 +88,7 @@ export default function Store() {
   onSelect={handleGameClick}
 />
 
-{/* ✅ ALERT BẢO TRÌ */}
+{/* Tạm tắt alert
 <InlineAlert
   severity="success"
   marquee={true}
@@ -96,6 +96,7 @@ export default function Store() {
   message="💰 Rút tiền chỉ 2-24h! Tối thiểu 50,000 Coin là rút được."
   action={{ label: "Rút ngay", href: "/withdraw" }}
 />
+*/}
 
 <BannerSlideshow navigate={navigate} />
         
