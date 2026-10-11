@@ -101,8 +101,8 @@ function HeroArt() {
 // Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
 const COPY = {
   vi: {
-    h1a: "Kiếm Coin.",
-    h1b: "Đổi thưởng dễ dàng.",
+    h1a: "Kiếm Coin",
+    h1b: "Đổi thưởng dễ dàng",
     heroSub:
       "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
@@ -154,8 +154,8 @@ const COPY = {
     whoLegal: "Pháp lý & chính sách",
   },
   en: {
-    h1a: "Earn Coins.",
-    h1b: "Redeem with ease.",
+    h1a: "Earn Coins",
+    h1b: "Redeem with ease",
     heroSub:
       "Complete simple tasks, earn Coins and redeem Robux, in-game diamonds and more rewards.",
     how: "How it works",
