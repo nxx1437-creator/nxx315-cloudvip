@@ -1,82 +1,111 @@
 import React from "react";
 import { Check } from "lucide-react";
 
+const TONES = {
+  white: "bg-white border-[#EDE6DA]",
+  orange: "bg-[#FFF1EA] border-[#F9DCCF]",
+  sand: "bg-[#FBF3E4] border-[#F0E3C8]",
+  sage: "bg-[#EEF4EA] border-[#DCE8D4]",
+  sky: "bg-[#EAF2F8] border-[#D5E5F0]",
+};
+
 export function Card({
   title,
   right,
+  tone = "white",
   className = "",
-  bodyClass = "p-4",
+  bodyClass = "",
   children,
 }) {
   return (
     <section
-      className={`overflow-hidden rounded-lg border border-slate-200 bg-white ${className}`}
+      className={`overflow-hidden rounded-[22px] border ${TONES[tone]} ${className}`}
     >
       {title && (
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-2.5">
-          <h2 className="text-[13px] font-medium text-slate-900">{title}</h2>
+        <div className="flex items-center justify-between gap-3 px-5 pt-4">
+          <h2 className="text-[15px] font-bold tracking-tight text-[#1F1B16]">
+            {title}
+          </h2>
           {right}
         </div>
       )}
-      <div className={bodyClass}>{children}</div>
+      <div className={bodyClass || (title ? "px-5 pb-5 pt-3" : "p-5")}>
+        {children}
+      </div>
     </section>
   );
 }
 
-const TAG_TONES = {
-  green: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-700",
-  slate: "border-slate-200 bg-slate-50 text-slate-600",
+const TAG = {
+  orange: "bg-[#FFE4D9] text-[#C2410C]",
+  green: "bg-[#FFE4D9] text-[#C2410C]",
+  amber: "bg-[#FBEBC8] text-[#92600A]",
+  slate: "bg-[#F3EEE6] text-[#6B6358]",
 };
 
 export function Tag({ tone = "slate", children }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${TAG_TONES[tone]}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${TAG[tone]}`}
     >
       {children}
     </span>
   );
 }
 
-export function Shortcut({ icon: Icon, label, onClick }) {
+export function Shortcut({ icon: Icon, label, tone = "orange", onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-lg border border-slate-200 bg-white px-1 py-3 transition hover:border-emerald-500 active:bg-slate-50"
+      className="flex flex-col items-center gap-2 rounded-[18px] border border-[#EDE6DA] bg-white px-1 py-3 transition active:scale-95"
     >
-      <Icon size={18} strokeWidth={1.75} className="text-slate-500" />
-      <span className="text-center text-[11.5px] font-medium leading-tight text-slate-800">
+      <span
+        className={`flex h-10 w-10 items-center justify-center rounded-xl border ${TONES[tone]}`}
+      >
+        <Icon size={19} strokeWidth={1.9} className="text-[#1F1B16]" />
+      </span>
+      <span className="text-center text-[11.5px] font-semibold leading-tight text-[#3A342C]">
         {label}
       </span>
     </button>
   );
 }
 
-export function StatRow({ items }) {
-  return (
-    <div className="grid grid-cols-3 divide-x divide-slate-200">
-      {items.map(({ icon: Icon, value, label }) => (
-        <div key={label} className="min-w-0 px-3 py-3 first:pl-4 last:pr-4">
-          <div className="flex items-center gap-1.5 text-slate-500">
-            <Icon size={13} strokeWidth={1.75} />
-            <span className="truncate text-[11px]">{label}</span>
-          </div>
-          <p className="mt-1.5 truncate text-lg font-semibold tabular-nums text-slate-900">
-            {value}
-          </p>
-        </div>
-      ))}
-    </div>
+export function StatTile({ icon: Icon, tone = "sand", value, label, onClick }) {
+  const cls = `flex min-h-[116px] flex-col justify-between rounded-[22px] border p-4 text-left ${TONES[tone]}`;
+  const inner = (
+    <>
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80">
+        <Icon size={18} strokeWidth={1.9} className="text-[#1F1B16]" />
+      </span>
+      <div className="mt-4 min-w-0">
+        <p className="truncate text-2xl font-extrabold leading-none tracking-tight tabular-nums text-[#1F1B16]">
+          {value}
+        </p>
+        <p className="mt-1.5 truncate text-xs text-[#7A7164]">{label}</p>
+      </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${cls} transition active:scale-[0.98]`}
+      >
+        {inner}
+      </button>
+    );
+  }
+  return <div className={cls}>{inner}</div>;
 }
 
 export function ProgressBar({ pct }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+    <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#F1EADF]">
       <div
-        className="h-full rounded-full bg-[#3ECF8E] transition-all duration-500"
+        className="h-full rounded-full bg-[#F25533] transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -98,27 +127,27 @@ export function MilestoneRow({
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
           claimed || reached
-            ? "border-emerald-500 bg-emerald-50 text-emerald-600"
-            : "border-slate-300 text-slate-300"
+            ? "bg-[#F25533] text-white"
+            : "bg-[#F1EADF] text-[#B8AE9E]"
         }`}
       >
-        <Check size={13} strokeWidth={2.5} />
+        <Check size={14} strokeWidth={3} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium text-slate-900">
+        <p className="text-[13px] font-semibold text-[#1F1B16]">
           {milestone} {en ? "tasks" : "nhiệm vụ"}
         </p>
-        <p className="text-[11px] tabular-nums text-slate-500">
+        <p className="text-[11px] tabular-nums text-[#8A8173]">
           {Math.min(tasksDone, milestone)}/{milestone}
         </p>
       </div>
-      <span className="text-[13px] font-semibold tabular-nums text-amber-600">
+      <span className="text-[13px] font-bold tabular-nums text-[#C2410C]">
         +{reward}
       </span>
       {claimed ? (
-        <span className="w-16 text-right text-[11px] text-slate-400">
+        <span className="w-16 text-right text-[11px] text-[#A39A8A]">
           {en ? "Claimed" : "Đã nhận"}
         </span>
       ) : (
@@ -126,11 +155,11 @@ export function MilestoneRow({
           type="button"
           disabled={!reached || claiming}
           onClick={() => onClaim(milestone)}
-          className="w-16 rounded-md border border-emerald-600 bg-[#3ECF8E] py-1.5 text-xs font-medium text-slate-900 transition active:scale-95 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
+          className="w-16 rounded-full bg-[#F25533] py-1.5 text-xs font-bold text-white transition active:scale-95 disabled:bg-[#F1EADF] disabled:text-[#B8AE9E]"
         >
           {claiming ? "…" : en ? "Claim" : "Nhận"}
         </button>
       )}
     </div>
   );
-}
+      }
