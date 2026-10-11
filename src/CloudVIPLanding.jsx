@@ -6,19 +6,13 @@ import {
   ListChecks,
   Coins,
   Wallet,
-  Gift,
+  Gift,         
   Users,
   Lock,
   ShieldCheck,
   Bot,
   KeyRound,
 } from "lucide-react";
-import {
-  LandingHeader,
-  LandingFooter,
-  BackToTop,
-  scrollToId,
-} from "./components/LandingNav.jsx";
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
 
@@ -101,8 +95,8 @@ function HeroArt() {
 // Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
 const COPY = {
   vi: {
-    h1a: "Kiếm Coin.",
-    h1b: "Đổi thưởng dễ dàng.",
+    h1a: "Kiếm Coin",
+    h1b: "Đổi thưởng dễ dàng",
     heroSub:
       "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
@@ -154,8 +148,8 @@ const COPY = {
     whoLegal: "Pháp lý & chính sách",
   },
   en: {
-    h1a: "Earn Coins.",
-    h1b: "Redeem with ease.",
+    h1a: "Earn Coins",
+    h1b: "Redeem with ease",
     heroSub:
       "Complete simple tasks, earn Coins and redeem Robux, in-game diamonds and more rewards.",
     how: "How it works",
@@ -244,8 +238,14 @@ export default function CloudVIPLanding() {
               {t("ld.badge")}
             </p>
             <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
-              <span className="text-blue-600">{c.h1a}</span> {c.h1b}
-            </h1>
+  <span className="text-blue-600">{c.h1a}</span> {c.h1b}
+  <Img3D
+    name="icon-gift"
+    Fallback={Gift}
+    shadow={false}
+    size="ml-1.5 inline-block h-10 w-10 align-[-0.15em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
+  />
+</h1>
             <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
               {c.heroSub}
             </p>
