@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   ArrowLeftRight,
   Headphones,
+  Gamepad2,
   ChevronRight,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
@@ -36,7 +37,7 @@ import {
   Card,
   Tag,
   Shortcut,
-  StatRow,
+  StatTile,
   ProgressBar,
   MilestoneRow,
 } from "../components/home/HomeUI.jsx";
@@ -83,66 +84,71 @@ export default function Dashboard() {
   const earnedToday = profile?.coins_earned_today || 0;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
+    <div className="min-h-screen bg-[#FBF8F3] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-[#1F1B16]">
       <style>{`
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
+        .skeleton-shimmer { background-image: linear-gradient(90deg, #f6f1e8 0%, #ebe3d5 50%, #f6f1e8 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
       `}</style>
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-3xl">
+      <main className="mx-auto max-w-md space-y-3.5 px-4 py-5 md:max-w-3xl">
         {loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
-            {/* ===== TIÊU ĐỀ ===== */}
-            <div className="flex items-center justify-between gap-3">
+            {/* ===== LỜI CHÀO ===== */}
+            <div className="flex items-center justify-between gap-3 px-1 pb-1">
               <div className="min-w-0">
-                <p className="text-xs text-slate-500">{getGreeting()}</p>
-                <h1 className="truncate text-xl font-semibold tracking-tight">
+                <p className="text-[13px] text-[#8A8173]">{getGreeting()}</p>
+                <h1 className="truncate text-[26px] font-extrabold leading-tight tracking-tight">
                   {displayName}
                 </h1>
               </div>
               {lv && (
-                <Tag tone="amber">
-                  <Crown size={11} />
+                <Tag tone="orange">
+                  <Crown size={12} />
                   {t("dash2.lvNow", { level: lv.level })}
                 </Tag>
               )}
             </div>
 
             {/* ===== SỐ DƯ ===== */}
-            <Card>
-              <p className="text-xs text-slate-500">{t("dash.balance")}</p>
-              <div className="mt-1.5 flex items-center gap-2.5">
-                <Coins size={26} strokeWidth={1.75} className="text-amber-500" />
-                <span className="text-4xl font-semibold tabular-nums tracking-tight">
+            <Card tone="orange" className="relative">
+              <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#F25533]/10" />
+              <p className="relative text-[13px] font-medium text-[#9A5B42]">
+                {t("dash.balance")}
+              </p>
+              <div className="relative mt-2 flex items-center gap-3">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
+                  <Coins size={24} strokeWidth={1.9} className="text-[#F25533]" />
+                </span>
+                <span className="text-[44px] font-extrabold leading-none tracking-tight tabular-nums">
                   {fmt(profile?.coins)}
                 </span>
-                <span className="mt-2 text-xs text-slate-500">
+                <span className="mt-3 text-xs text-[#9A5B42]">
                   {t("dash.coin")}
                 </span>
               </div>
               {earnedToday > 0 && (
-                <p className="mt-1.5 text-xs tabular-nums text-emerald-600">
+                <span className="relative mt-3 inline-block rounded-full bg-white px-3 py-1 text-xs font-semibold tabular-nums text-[#C2410C]">
                   +{fmt(earnedToday)} · {t("dash.statCoinToday")}
-                </p>
+                </span>
               )}
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="relative mt-4 grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => navigate("/tasks")}
-                  className="flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-600 bg-[#3ECF8E] text-[13px] font-medium text-slate-900 transition active:scale-[0.98]"
+                  className="flex h-11 items-center justify-center gap-2 rounded-full bg-[#F25533] text-sm font-bold text-white transition active:scale-[0.97]"
                 >
-                  <Rocket size={15} /> {t("dash.startTasks")}
+                  <Rocket size={16} /> {t("dash.startTasks")}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate("/invite")}
-                  className="flex h-10 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white text-[13px] font-medium text-slate-800 transition hover:border-slate-400 active:scale-[0.98]"
+                  className="flex h-11 items-center justify-center gap-2 rounded-full border border-[#F2CDBD] bg-white text-sm font-bold text-[#1F1B16] transition active:scale-[0.97]"
                 >
-                  <Gift size={15} /> {t("dash.invite")}
+                  <Gift size={16} /> {t("dash.invite")}
                 </button>
               </div>
             </Card>
@@ -151,21 +157,25 @@ export default function Dashboard() {
             <div className="grid grid-cols-4 gap-2.5">
               <Shortcut
                 icon={CheckSquare}
+                tone="orange"
                 label={t("dash.qaTasks")}
                 onClick={() => navigate("/tasks")}
               />
               <Shortcut
                 icon={ShoppingBag}
+                tone="sage"
                 label={t("dash.qaStore")}
                 onClick={() => navigate("/store")}
               />
               <Shortcut
                 icon={ArrowLeftRight}
+                tone="sand"
                 label={t("dash.qaTopup")}
                 onClick={() => navigate("/shop-earn")}
               />
               <Shortcut
                 icon={Headphones}
+                tone="sky"
                 label={t("dash.qaSupport")}
                 onClick={() => navigate("/contact")}
               />
@@ -177,50 +187,56 @@ export default function Dashboard() {
             {/* ===== HÔM NAY ===== */}
             <Card
               title={t("dash2.todayTitle")}
-              bodyClass=""
               right={
                 <button
                   type="button"
                   onClick={() => navigate("/tasks")}
-                  className="flex items-center text-xs font-medium tabular-nums text-emerald-600"
+                  className="flex items-center text-[13px] font-bold tabular-nums text-[#C2410C]"
                 >
                   {todayTasksDone}/{todayTasksTotal}
-                  <ChevronRight size={14} />
+                  <ChevronRight size={15} />
                 </button>
               }
             >
-              <div className="px-4 pt-4">
-                <ProgressBar pct={todayTaskPct} />
-              </div>
-              <div className="mt-2 border-t border-slate-200">
-                <StatRow
-                  items={[
-                    {
-                      icon: Coins,
-                      value: fmt(earnedToday),
-                      label: t("dash.statCoinToday"),
-                    },
-                    {
-                      icon: Flame,
-                      value: `${profile?.streak_days || 0} ${t("dash.days")}`,
-                      label: t("dash.streak"),
-                    },
-                    {
-                      icon: Users,
-                      value: profile?.referrals_count || 0,
-                      label: t("dash.statInvited"),
-                    },
-                  ]}
-                />
-              </div>
+              <ProgressBar pct={todayTaskPct} />
             </Card>
+
+            {/* ===== BENTO 2 CỘT ===== */}
+            <div className="grid grid-cols-2 gap-3.5">
+              <StatTile
+                icon={Flame}
+                tone="orange"
+                value={`${profile?.streak_days || 0} ${t("dash.days")}`}
+                label={t("dash.streak")}
+              />
+              <StatTile
+                icon={Coins}
+                tone="sand"
+                value={fmt(earnedToday)}
+                label={t("dash.statCoinToday")}
+              />
+              <StatTile
+                icon={Users}
+                tone="sage"
+                value={profile?.referrals_count || 0}
+                label={t("dash.statInvited")}
+                onClick={() => navigate("/invite")}
+              />
+              <StatTile
+                icon={Gamepad2}
+                tone="sky"
+                value={profile?.game_tickets || 0}
+                label={t("dash.minigame")}
+                onClick={() => navigate("/minigames")}
+              />
+            </div>
 
             {/* ===== MỐC THƯỞNG ===== */}
             <Card
               title={t("dash.milestoneTitle")}
-              bodyClass="divide-y divide-slate-200"
+              bodyClass="px-1 pb-2 pt-2 divide-y divide-[#F1EADF]"
               right={
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-[#A39A8A]">
                   {t("dash.done", { n: todayTasksDone })}
                 </span>
               }
@@ -240,41 +256,6 @@ export default function Dashboard() {
             </Card>
 
             <LevelCard state={{ loading: lvLoading, data: lv }} />
-
-            {/* ===== MINI GAME ===== */}
-            <button
-              type="button"
-              onClick={() => navigate("/minigames")}
-              className="w-full rounded-lg border border-slate-200 bg-white p-4 text-left transition hover:border-emerald-500 active:bg-slate-50"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-xl">
-                  🎮
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium">{t("dash.minigame")}</p>
-                  <p className="truncate text-xs text-slate-500">
-                    {t("dash.miniDesc")}
-                  </p>
-                </div>
-                <Tag tone="green">
-                  {t("dash.turns", { n: profile?.game_tickets || 0 })}
-                  <ChevronRight size={11} />
-                </Tag>
-              </div>
-              <div className="mt-3 flex gap-1.5">
-                {[
-                  ["🎡", "dash.wheel"],
-                  ["🎫", "dash.scratch"],
-                  ["🎲", "dash.dice"],
-                ].map(([emoji, key]) => (
-                  <Tag key={key}>
-                    {emoji} {t(key)}
-                  </Tag>
-                ))}
-              </div>
-            </button>
-
             <LeaderboardCard />
             <ActivityCard userId={user?.id} />
             <ReferralCard profile={profile} />
@@ -287,5 +268,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-                  }
-          
+    }
