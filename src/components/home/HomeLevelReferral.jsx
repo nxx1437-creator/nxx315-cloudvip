@@ -15,7 +15,7 @@ export function LevelCard({ userId, state }) {
   if (loading) {
     return (
       <Card title={t("dash2.lvTitle")}>
-        <div className="h-24 animate-pulse rounded-md bg-slate-100" />
+        <div className="skeleton-shimmer h-24 rounded-2xl" />
       </Card>
     );
   }
@@ -24,19 +24,17 @@ export function LevelCard({ userId, state }) {
   return (
     <Card
       title={t("dash2.lvTitle")}
-      right={
-        <Tag tone="green">{t("dash2.lvBonus", { pct: data.bonus })}</Tag>
-      }
+      right={<Tag tone="orange">{t("dash2.lvBonus", { pct: data.bonus })}</Tag>}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-600">
-          <Crown size={19} strokeWidth={1.75} />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FBEBC8] text-[#92600A]">
+          <Crown size={21} strokeWidth={1.9} />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-[#8A8173]">
             {t("dash2.lvNow", { level: data.level })}
           </p>
-          <p className="truncate text-base font-semibold leading-tight text-slate-900">
+          <p className="truncate text-lg font-extrabold leading-tight text-[#1F1B16]">
             {data.label}
           </p>
         </div>
@@ -48,22 +46,22 @@ export function LevelCard({ userId, state }) {
             <ProgressBar pct={data.pct} />
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px]">
-            <span className="tabular-nums text-slate-500">
+            <span className="tabular-nums text-[#8A8173]">
               {fmt(data.lifetime)} / {fmt(data.nextCoins)}
             </span>
-            <span className="font-medium tabular-nums text-emerald-600">
+            <span className="font-bold tabular-nums text-[#C2410C]">
               {t("dash2.lvRemain", { n: fmt(data.remain) })}
             </span>
           </div>
-          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs leading-5 text-slate-600">
-            <p className="font-medium text-slate-900">
+          <div className="mt-3 rounded-2xl bg-[#FBF8F3] px-3.5 py-3 text-xs leading-5 text-[#6B6358]">
+            <p className="font-bold text-[#1F1B16]">
               {t("dash2.lvNext", { label: data.next.label })}
             </p>
             <p>{t("dash2.lvNextBonus", { pct: data.next.task_bonus })}</p>
           </div>
         </>
       ) : (
-        <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-medium text-emerald-700">
+        <p className="mt-3 rounded-2xl bg-[#FFF1EA] px-3.5 py-3 text-xs font-bold text-[#C2410C]">
           {t("dash2.lvMax")}
         </p>
       )}
@@ -123,24 +121,22 @@ export function ReferralCard({ profile }) {
   };
 
   return (
-    <Card title={t("dash2.refTitle")}>
-      <p className="text-xs leading-5 text-slate-500">{t("dash2.refSub")}</p>
+    <Card title={t("dash2.refTitle")} tone="sage">
+      <p className="text-xs leading-5 text-[#6B6358]">{t("dash2.refSub")}</p>
 
       {code ? (
         <>
           <div className="mt-3 flex items-stretch gap-2">
-            <div className="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-[11px] text-slate-500">
-                {t("dash2.refCode")}
-              </p>
-              <p className="truncate font-mono text-lg font-semibold tracking-widest text-slate-900">
+            <div className="min-w-0 flex-1 rounded-2xl bg-white px-3.5 py-2.5">
+              <p className="text-[11px] text-[#8A8173]">{t("dash2.refCode")}</p>
+              <p className="truncate font-mono text-lg font-bold tracking-widest text-[#1F1B16]">
                 {code}
               </p>
             </div>
             <button
               type="button"
               onClick={handleCopy}
-              className="flex w-16 flex-col items-center justify-center gap-1 rounded-md border border-slate-300 bg-white text-[11px] font-medium text-slate-700 transition hover:border-emerald-500 active:scale-95"
+              className="flex w-16 flex-col items-center justify-center gap-1 rounded-2xl bg-white text-[11px] font-semibold text-[#3A342C] transition active:scale-95"
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}
               {copied ? t("dash2.refCopied") : t("dash2.refCopy")}
@@ -148,22 +144,22 @@ export function ReferralCard({ profile }) {
           </div>
 
           <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="flex items-center gap-1.5 text-xs text-slate-500">
-              <Users size={14} strokeWidth={1.75} />
+            <span className="flex items-center gap-1.5 text-xs text-[#6B6358]">
+              <Users size={14} strokeWidth={1.9} />
               {t("dash2.refCount", { n: profile?.referrals_count || 0 })}
             </span>
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex h-9 items-center gap-2 rounded-md border border-emerald-600 bg-[#3ECF8E] px-4 text-[13px] font-medium text-slate-900 transition active:scale-95"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-[#F25533] px-5 text-[13px] font-bold text-white transition active:scale-95"
             >
               <Share2 size={14} /> {t("dash2.refShare")}
             </button>
           </div>
         </>
       ) : (
-        <p className="mt-3 text-sm text-slate-400">{t("dash2.refNoCode")}</p>
+        <p className="mt-3 text-sm text-[#A39A8A]">{t("dash2.refNoCode")}</p>
       )}
     </Card>
   );
-          }
+}
