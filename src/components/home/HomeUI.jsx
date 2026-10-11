@@ -1,114 +1,91 @@
 import React from "react";
-import { Check } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 
-const TONES = {
-  white: "bg-white border-[#EDE6DA]",
-  orange: "bg-[#FFF1EA] border-[#F9DCCF]",
-  sand: "bg-[#FBF3E4] border-[#F0E3C8]",
-  sage: "bg-[#EEF4EA] border-[#DCE8D4]",
-  sky: "bg-[#EAF2F8] border-[#D5E5F0]",
-};
-
-export function Card({
-  title,
-  right,
-  tone = "white",
-  className = "",
-  bodyClass = "",
-  children,
-}) {
+export function Section({ title, right, className = "", children }) {
   return (
     <section
-      className={`overflow-hidden rounded-[22px] border ${TONES[tone]} ${className}`}
+      className={`border-t border-slate-100 px-5 py-5 first:border-t-0 ${className}`}
     >
       {title && (
-        <div className="flex items-center justify-between gap-3 px-5 pt-4">
-          <h2 className="text-[15px] font-bold tracking-tight text-[#1F1B16]">
-            {title}
-          </h2>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-[13px] font-semibold text-slate-500">{title}</h2>
           {right}
         </div>
       )}
-      <div className={bodyClass || (title ? "px-5 pb-5 pt-3" : "p-5")}>
-        {children}
-      </div>
+      {children}
     </section>
   );
 }
 
 const TAG = {
-  orange: "bg-[#FFE4D9] text-[#C2410C]",
-  green: "bg-[#FFE4D9] text-[#C2410C]",
-  amber: "bg-[#FBEBC8] text-[#92600A]",
-  slate: "bg-[#F3EEE6] text-[#6B6358]",
+  green: "bg-emerald-50 text-emerald-700",
+  amber: "bg-amber-50 text-amber-700",
+  slate: "bg-slate-100 text-slate-600",
 };
 
 export function Tag({ tone = "slate", children }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${TAG[tone]}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium ${TAG[tone]}`}
     >
       {children}
     </span>
   );
 }
 
-export function Shortcut({ icon: Icon, label, tone = "orange", onClick }) {
+export function Shortcut({ icon: Icon, label, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-[18px] border border-[#EDE6DA] bg-white px-1 py-3 transition active:scale-95"
+      className="flex flex-col items-center gap-1.5 transition active:opacity-60"
     >
-      <span
-        className={`flex h-10 w-10 items-center justify-center rounded-xl border ${TONES[tone]}`}
-      >
-        <Icon size={19} strokeWidth={1.9} className="text-[#1F1B16]" />
+      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50">
+        <Icon size={21} strokeWidth={1.75} className="text-slate-700" />
       </span>
-      <span className="text-center text-[11.5px] font-semibold leading-tight text-[#3A342C]">
+      <span className="text-center text-xs font-medium text-slate-600">
         {label}
       </span>
     </button>
   );
 }
 
-export function StatTile({ icon: Icon, tone = "sand", value, label, onClick }) {
-  const cls = `flex min-h-[116px] flex-col justify-between rounded-[22px] border p-4 text-left ${TONES[tone]}`;
-  const inner = (
-    <>
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80">
-        <Icon size={18} strokeWidth={1.9} className="text-[#1F1B16]" />
-      </span>
-      <div className="mt-4 min-w-0">
-        <p className="truncate text-2xl font-extrabold leading-none tracking-tight tabular-nums text-[#1F1B16]">
-          {value}
-        </p>
-        <p className="mt-1.5 truncate text-xs text-[#7A7164]">{label}</p>
-      </div>
-    </>
+export function Stat({ value, label }) {
+  return (
+    <div className="min-w-0 pl-4 first:pl-0">
+      <p className="truncate text-lg font-semibold tabular-nums text-slate-900">
+        {value}
+      </p>
+      <p className="truncate text-xs text-slate-500">{label}</p>
+    </div>
   );
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`${cls} transition active:scale-[0.98]`}
-      >
-        {inner}
-      </button>
-    );
-  }
-  return <div className={cls}>{inner}</div>;
 }
 
 export function ProgressBar({ pct }) {
   return (
-    <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#F1EADF]">
+    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
       <div
-        className="h-full rounded-full bg-[#F25533] transition-all duration-500"
+        className="h-full rounded-full bg-emerald-600 transition-all duration-500"
         style={{ width: `${pct}%` }}
       />
     </div>
+  );
+}
+
+export function LinkRow({ icon: Icon, title, value, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 py-1 text-left transition active:opacity-60"
+    >
+      <Icon size={19} strokeWidth={1.75} className="text-slate-400" />
+      <span className="flex-1 text-sm font-medium text-slate-900">
+        {title}
+      </span>
+      <span className="text-sm tabular-nums text-slate-500">{value}</span>
+      <ChevronRight size={16} className="text-slate-300" />
+    </button>
   );
 }
 
@@ -125,41 +102,42 @@ export function MilestoneRow({
   const reached = tasksDone >= milestone;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
       <span
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
           claimed || reached
-            ? "bg-[#F25533] text-white"
-            : "bg-[#F1EADF] text-[#B8AE9E]"
+            ? "border-emerald-600 bg-emerald-600 text-white"
+            : "border-slate-300 text-transparent"
         }`}
       >
-        <Check size={14} strokeWidth={3} />
+        <Check size={12} strokeWidth={3} />
       </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-[#1F1B16]">
-          {milestone} {en ? "tasks" : "nhiệm vụ"}
-        </p>
-        <p className="text-[11px] tabular-nums text-[#8A8173]">
-          {Math.min(tasksDone, milestone)}/{milestone}
-        </p>
-      </div>
-      <span className="text-[13px] font-bold tabular-nums text-[#C2410C]">
+      <span className="flex-1 text-sm text-slate-900">
+        {milestone} {en ? "tasks" : "nhiệm vụ"}
+      </span>
+      <span className="text-sm font-medium tabular-nums text-slate-900">
         +{reward}
       </span>
-      {claimed ? (
-        <span className="w-16 text-right text-[11px] text-[#A39A8A]">
-          {en ? "Claimed" : "Đã nhận"}
-        </span>
-      ) : (
-        <button
-          type="button"
-          disabled={!reached || claiming}
-          onClick={() => onClaim(milestone)}
-          className="w-16 rounded-full bg-[#F25533] py-1.5 text-xs font-bold text-white transition active:scale-95 disabled:bg-[#F1EADF] disabled:text-[#B8AE9E]"
-        >
-          {claiming ? "…" : en ? "Claim" : "Nhận"}
-        </button>
-      )}
+      <div className="flex w-16 justify-end">
+        {claimed ? (
+          <span className="text-xs text-slate-400">
+            {en ? "Claimed" : "Đã nhận"}
+          </span>
+        ) : reached ? (
+          <button
+            type="button"
+            disabled={claiming}
+            onClick={() => onClaim(milestone)}
+            className="h-7 rounded-md bg-emerald-600 px-3 text-xs font-medium text-white transition active:scale-95 disabled:opacity-60"
+          >
+            {claiming ? "…" : en ? "Claim" : "Nhận"}
+          </button>
+        ) : (
+          <span className="text-xs tabular-nums text-slate-400">
+            {Math.min(tasksDone, milestone)}/{milestone}
+          </span>
+        )}
+      </div>
     </div>
   );
-      }
+        }
