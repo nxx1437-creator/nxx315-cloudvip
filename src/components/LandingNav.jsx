@@ -30,14 +30,20 @@ export function LandingHeader() {
 
   const go = (id) => {
     setOpen(false);
-    scrollToId(id);
+    // ở trang khác (ví dụ /about) thì về trang chủ trước
+    if (document.getElementById(id)) scrollToId(id);
+    else navigate("/");
   };
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:px-5">
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => {
+            if (window.location.pathname === "/")
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            else navigate("/");
+          }}
           aria-label="Nxx315 Studio"
           className="shrink-0"
         >
@@ -127,6 +133,7 @@ const FOOT = {
     support: "Hỗ trợ",
     legal: "Pháp lý",
     guide: "Hướng dẫn",
+    about: "Về chúng tôi",
     help: "Trung tâm trợ giúp",
     contact: "Liên hệ",
     chat: "Chat hỗ trợ",
@@ -142,6 +149,7 @@ const FOOT = {
     support: "Support",
     legal: "Legal",
     guide: "Guide",
+    about: "About us",
     help: "Help center",
     contact: "Contact",
     chat: "Support chat",
@@ -165,7 +173,13 @@ const FLink = ({ to, children }) => (
 
 export function LandingFooter() {
   const { t, lang } = useI18n();
+  const navigate = useNavigate();
   const f = FOOT[lang] || FOOT.vi;
+
+  const go = (id) => {
+    if (document.getElementById(id)) scrollToId(id);
+    else navigate("/");
+  };
 
   return (
     <footer className="border-t border-slate-200 bg-white">
@@ -186,7 +200,7 @@ export function LandingFooter() {
               {NAV.map(([id, k]) => (
                 <button
                   key={id}
-                  onClick={() => scrollToId(id)}
+                  onClick={() => go(id)}
                   className="block py-1.5 text-left text-[14px] text-slate-500 transition hover:text-blue-600"
                 >
                   {t(k)}
@@ -200,6 +214,7 @@ export function LandingFooter() {
               {f.support}
             </p>
             <div className="mt-2">
+              <FLink to="/about">{f.about}</FLink>
               <FLink to="/guide">{f.guide}</FLink>
               <FLink to="/help">{f.help}</FLink>
               <FLink to="/support">{f.chat}</FLink>
@@ -268,4 +283,4 @@ export function BackToTop() {
       <ArrowUp size={18} />
     </button>
   );
-              }
+    }
