@@ -5,16 +5,21 @@ import {
   ChevronDown,
   ListChecks,
   Coins,
-  Link2,
   Wallet,
+  Gift,
+  Users,
   Lock,
   ShieldCheck,
   Bot,
   KeyRound,
-  Gift,
 } from "lucide-react";
-import { BackToTop, scrollToId } from "./components/LandingChrome.jsx";
-import { LandingHeader, LandingFooter } from "./components/LandingNav.jsx";
+import {
+  LandingHeader,
+  LandingFooter,
+  BackToTop,
+  scrollToId,
+} from "./components/LandingNav.jsx";
+import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
 
 const ICON_BASE =
@@ -96,16 +101,17 @@ function HeroArt() {
 // Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
 const COPY = {
   vi: {
-    h1a: "Kiếm Coin mỗi ngày",
-    h1b: "Đổi quà bạn thích",
+    h1a: "Kiếm Coin.",
+    h1b: "Đổi thưởng dễ dàng.",
     heroSub:
-      "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn.",
+      "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
+    note: "Kiếm xu hoàn toàn miễn phí. Chuyển khoản chỉ dùng khi bạn muốn mua quà trực tiếp.",
     facts: [
-      ["1 Coin = 1đ", "Giá Coin bằng giá tiền. Coin"],
-      ["10.000đ", "Mức rút tối thiểu. Coin"],
-      ["7 ngày", "Chuỗi điểm danh, ngày cuối thưởng 1.000 xu. Coin"],
-      ["15%", "Hoa hồng khi bạn bè làm nhiệm vụ. Coin"],
+      ["1 Coin = 1đ", "Giá Coin bằng giá tiền"],
+      ["10.000đ", "Mức rút tối thiểu"],
+      ["7 ngày", "Chuỗi điểm danh, ngày cuối thưởng 1.000 xu"],
+      ["15%", "Hoa hồng khi bạn bè làm nhiệm vụ"],
     ],
     featTitle: "Bạn làm được gì trên NXX315",
     guide: "Xem hướng dẫn",
@@ -134,18 +140,31 @@ const COPY = {
     more: "Ngoài ra còn có điểm danh hằng ngày, minigame, cấp độ và bảng xếp hạng.",
     howTitle: "Bắt đầu chỉ với 3 bước",
     ctaTitle: "Bắt đầu kiếm Coin hôm nay.",
+    whoTitle: "Ai đứng sau NXX315",
+    whoBody:
+      "NXX315 do một cá nhân vận hành và mới hoạt động từ tháng 8/2026. Chúng tôi công khai cách hoạt động và kênh liên hệ chính thức để bạn tự kiểm tra.",
+    whoPoints: [
+      "Kiếm xu miễn phí, không cần nạp tiền để rút.",
+      "Chuyển khoản chỉ dùng khi bạn mua quà trực tiếp.",
+      "Hoa hồng giới thiệu không phải cam kết thu nhập.",
+    ],
+    whoMore: "Đọc trang Về chúng tôi",
+    whoOperator: "Người vận hành",
+    whoSince: "Hoạt động từ",
+    whoLegal: "Pháp lý & chính sách",
   },
   en: {
-    h1a: "Earn Coins every day",
-    h1b: "Exchange for gifts you like",
+    h1a: "Earn Coins.",
+    h1b: "Redeem with ease.",
     heroSub:
-      "Complete missions, accumulate Coins and exchange them for Robux, in-game diamonds and many other attractive gifts.",
+      "Complete simple tasks, earn Coins and redeem Robux, in-game diamonds and more rewards.",
     how: "How it works",
+    note: "Earning coins is completely free. Bank transfer is only for buying gifts directly.",
     facts: [
-      ["1 Coin = 1 VND", "Coin price equals cash price. Coin"],
-      ["10,000 VND", "Minimum withdrawal. Coin"],
-      ["7 days", "Check-in streak, 1,000 coins on the last day. Coin"],
-      ["15%", "Commission when friends complete tasks. Coin"],
+      ["1 Coin = 1 VND", "Coin price equals cash price"],
+      ["10,000 VND", "Minimum withdrawal"],
+      ["7 days", "Check-in streak, 1,000 coins on the last day"],
+      ["15%", "Commission when friends complete tasks"],
     ],
     featTitle: "What you can do on NXX315",
     guide: "Read the guide",
@@ -174,21 +193,30 @@ const COPY = {
     more: "There is also daily check-in, minigames, levels and a leaderboard.",
     howTitle: "Get started in 3 steps",
     ctaTitle: "Start earning Coins today.",
+    whoTitle: "Who is behind NXX315",
+    whoBody:
+      "NXX315 is run by an individual and has only been running since August 2026. We publish how it works and our official contacts so you can check for yourself.",
+    whoPoints: [
+      "Earning is free, no deposit needed to withdraw.",
+      "Bank transfer is only for buying gifts directly.",
+      "Referral commission is not an income guarantee.",
+    ],
+    whoMore: "Read the About page",
+    whoOperator: "Operator",
+    whoSince: "Running since",
+    whoLegal: "Legal & policies",
   },
 };
 
-const FEATURE_ART = [
-  { img: "icon-task", fb: ListChecks },
-  { img: "icon-coin", fb: Coins },
-  { img: "icon-money", fb: Wallet },
-  { img: "icon-link", fb: Link2 },
-];
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
   { icon: ShieldCheck, t: "ld.b2t", d: "ld.b2d" },
   { icon: Bot, t: "ld.b3t", d: "ld.b3d" },
   { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
 ];
+
+// Icon Lucide cho 4 feature, có fallback nếu features > 4
+const FEATURE_ICONS = [ListChecks, Gift, Wallet, Users];
 
 const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 
@@ -197,6 +225,12 @@ export default function CloudVIPLanding() {
   const c = COPY[lang] || COPY.vi;
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(0);
+
+  // Xử lý an toàn cho launched (string hoặc object)
+  const launchedText =
+    typeof SITE.launched === "object"
+      ? SITE.launched[lang] || SITE.launched.vi
+      : SITE.launched;
 
   return (
     <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
@@ -210,14 +244,7 @@ export default function CloudVIPLanding() {
               {t("ld.badge")}
             </p>
             <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
-              <span className="text-blue-600">{c.h1a}</span>{" "}
-              {c.h1b}
-              <Img3D
-                name="icon-gift"
-                Fallback={Gift}
-                shadow={false}
-                size="ml-1.5 inline-block h-10 w-10 align-[-0.15em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
-              />
+              <span className="text-blue-600">{c.h1a}</span> {c.h1b}
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
               {c.heroSub}
@@ -236,6 +263,9 @@ export default function CloudVIPLanding() {
                 {c.how} <ChevronDown size={16} />
               </button>
             </div>
+            <p className="mt-4 max-w-md text-[13.5px] leading-6 text-slate-500">
+              {c.note}
+            </p>
           </div>
           <HeroArt />
         </section>
@@ -269,34 +299,33 @@ export default function CloudVIPLanding() {
           </h2>
 
           <div className="mt-12 divide-y divide-slate-200 border-y border-slate-200">
-            {c.features.map((f, i) => (
-              <div
-                key={f.to}
-                className="grid items-center gap-6 py-10 md:grid-cols-[220px_1fr] md:gap-12"
-              >
-                <div className="flex h-40 items-center justify-center rounded-2xl bg-slate-50 md:h-44">
-                  <Img3D
-                    name={FEATURE_ART[i].img}
-                    Fallback={FEATURE_ART[i].fb}
-                    size="h-24 w-24 md:h-28 md:w-28"
-                  />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">
-                    {f.title}
-                  </h3>
-                  <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-600">
-                    {f.body}
-                  </p>
+            {c.features.map((f, i) => {
+              const Icon = FEATURE_ICONS[i] || ListChecks;
+              return (
+                <div
+                  key={f.to}
+                  className="grid gap-4 py-8 md:grid-cols-[48px_1fr_auto] md:items-start md:gap-8"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon size={22} />
+                  </span>
+                  <div>
+                    <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                      {f.title}
+                    </h3>
+                    <p className="mt-2 max-w-xl text-[16px] leading-7 text-slate-600">
+                      {f.body}
+                    </p>
+                  </div>
                   <Link
                     to={f.to}
-                    className="mt-4 inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline"
+                    className="inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline md:mt-1.5"
                   >
                     {c.guide} <ArrowRight size={15} />
                   </Link>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <p className="mt-8 text-[15px] text-slate-500">{c.more}</p>
@@ -355,10 +384,138 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
+        {/* ============ AI ĐỨNG SAU ============ */}
+        <section className="border-t border-slate-200 bg-slate-50">
+          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-2 md:gap-16">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                {c.whoTitle}
+              </h2>
+              <p className="mt-4 max-w-md text-[16px] leading-7 text-slate-600">
+                {c.whoBody}
+              </p>
+              <ul className="mt-5 space-y-2 text-[15px] text-slate-700">
+                {c.whoPoints.map((p) => (
+                  <li key={p} className="flex gap-3">
+                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/about"
+                className="mt-6 inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline"
+              >
+                {c.whoMore} <ArrowRight size={15} />
+              </Link>
+
+              {/* Pháp lý & chính sách */}
+              <div className="mt-8 border-t border-slate-200 pt-5">
+                <p className="text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+                  {c.whoLegal}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
+                  <Link
+                    to="/terms"
+                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
+                  >
+                    {lang === "en" ? "Terms of Service" : "Điều khoản sử dụng"}
+                  </Link>
+                  <Link
+                    to="/privacy"
+                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
+                  >
+                    {lang === "en" ? "Privacy Policy" : "Chính sách bảo mật"}
+                  </Link>
+                  <Link
+                    to="/refund"
+                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
+                  >
+                    {lang === "en" ? "Refund Policy" : "Chính sách hoàn tiền"}
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <dl className="divide-y divide-slate-200 border-y border-slate-200 text-[15px]">
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">{c.whoOperator}</dt>
+                <dd className="font-semibold text-slate-900">{SITE.operator}</dd>
+              </div>
+
+              {SITE.address && (
+                <div className="flex justify-between gap-4 py-3.5">
+                  <dt className="text-slate-500">
+                    {lang === "en" ? "Address" : "Địa chỉ"}
+                  </dt>
+                  <dd className="text-right font-semibold text-slate-900">
+                    {SITE.address}
+                  </dd>
+                </div>
+              )}
+
+              {SITE.taxId && (
+                <div className="flex justify-between gap-4 py-3.5">
+                  <dt className="text-slate-500">
+                    {lang === "en" ? "Tax ID" : "MST"}
+                  </dt>
+                  <dd className="font-semibold text-slate-900">
+                    {SITE.taxId}
+                  </dd>
+                </div>
+              )}
+
+              {SITE.youtube && (
+                <div className="flex justify-between gap-4 py-3.5">
+                  <dt className="text-slate-500">YouTube</dt>
+                  <dd>
+                    <a
+                      href={SITE.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-blue-600 hover:underline"
+                    >
+                      {SITE.youtube.replace("https://www.youtube.com/", "")}
+                    </a>
+                  </dd>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">Zalo</dt>
+                <dd>
+                  <a
+                    href={SITE.zaloUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-blue-600 hover:underline"
+                  >
+                    {SITE.zalo}
+                  </a>
+                </dd>
+              </div>
+
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">Email</dt>
+                <dd className="break-all text-right font-semibold text-slate-900">
+                  {SITE.email}
+                </dd>
+              </div>
+
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">{c.whoSince}</dt>
+                <dd className="font-semibold text-slate-900">
+                  {launchedText}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
         {/* ============ FAQ ============ */}
         <section
           id="faq"
-          className="scroll-mt-20 border-t border-slate-200 bg-slate-50"
+          className="scroll-mt-20 border-t border-slate-200 bg-white"
         >
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -409,4 +566,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-   }
+}
