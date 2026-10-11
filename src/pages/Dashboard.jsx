@@ -1,18 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Coins,
-  Gift,
-  Users,
-  Flame,
   CheckSquare,
-  Rocket,
-  Crown,
   ShoppingBag,
   ArrowLeftRight,
   Headphones,
   Gamepad2,
-  ChevronRight,
+  Crown,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -34,11 +28,12 @@ import {
   ReferralCard,
 } from "../components/home/HomeLevelReferral.jsx";
 import {
-  Card,
+  Section,
   Tag,
   Shortcut,
-  StatTile,
+  Stat,
   ProgressBar,
+  LinkRow,
   MilestoneRow,
 } from "../components/home/HomeUI.jsx";
 import { useI18n } from "../i18n/index.js";
@@ -48,6 +43,11 @@ const MILESTONES = [
   { m: 5, reward: 200 },
   { m: 10, reward: 400 },
 ];
+
+// Bọc các thẻ cũ cho khớp bố cục mới (sẽ thay dần)
+function Legacy({ children }) {
+  return <div className="border-t border-slate-100 px-5 py-5">{children}</div>;
+}
 
 export default function Dashboard() {
   const { t, lang } = useI18n();
@@ -84,159 +84,137 @@ export default function Dashboard() {
   const earnedToday = profile?.coins_earned_today || 0;
 
   return (
-    <div className="min-h-screen bg-[#FBF8F3] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-[#1F1B16]">
+    <div className="min-h-screen bg-white pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <style>{`
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .skeleton-shimmer { background-image: linear-gradient(90deg, #f6f1e8 0%, #ebe3d5 50%, #f6f1e8 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
+        .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
       `}</style>
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-3.5 px-4 py-5 md:max-w-3xl">
-        {loading && <DashboardSkeleton />}
+      <main className="mx-auto max-w-md md:max-w-3xl">
+        {loading && (
+          <div className="px-5 py-5">
+            <DashboardSkeleton />
+          </div>
+        )}
 
         {!loading && (
           <>
-            {/* ===== LỜI CHÀO ===== */}
-            <div className="flex items-center justify-between gap-3 px-1 pb-1">
-              <div className="min-w-0">
-                <p className="text-[13px] text-[#8A8173]">{getGreeting()}</p>
-                <h1 className="truncate text-[26px] font-extrabold leading-tight tracking-tight">
-                  {displayName}
-                </h1>
-              </div>
-              {lv && (
-                <Tag tone="orange">
-                  <Crown size={12} />
-                  {t("dash2.lvNow", { level: lv.level })}
-                </Tag>
-              )}
-            </div>
-
             {/* ===== SỐ DƯ ===== */}
-            <Card tone="orange" className="relative">
-              <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#F25533]/10" />
-              <p className="relative text-[13px] font-medium text-[#9A5B42]">
+            <Section className="pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="truncate text-sm text-slate-500">
+                  {getGreeting()},{" "}
+                  <span className="font-medium text-slate-900">
+                    {displayName}
+                  </span>
+                </p>
+                {lv && (
+                  <Tag tone="amber">
+                    <Crown size={11} />
+                    {t("dash2.lvNow", { level: lv.level })}
+                  </Tag>
+                )}
+              </div>
+
+              <p className="mt-6 text-[13px] text-slate-500 lowercase first-letter:uppercase">
                 {t("dash.balance")}
               </p>
-              <div className="relative mt-2 flex items-center gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
-                  <Coins size={24} strokeWidth={1.9} className="text-[#F25533]" />
-                </span>
-                <span className="text-[44px] font-extrabold leading-none tracking-tight tabular-nums">
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums">
                   {fmt(profile?.coins)}
                 </span>
-                <span className="mt-3 text-xs text-[#9A5B42]">
-                  {t("dash.coin")}
-                </span>
+                <span className="text-sm text-slate-400">{t("dash.coin")}</span>
               </div>
               {earnedToday > 0 && (
-                <span className="relative mt-3 inline-block rounded-full bg-white px-3 py-1 text-xs font-semibold tabular-nums text-[#C2410C]">
-                  +{fmt(earnedToday)} · {t("dash.statCoinToday")}
-                </span>
+                <p className="mt-2 text-[13px] tabular-nums text-emerald-600">
+                  +{fmt(earnedToday)} {t("dash.statCoinToday")}
+                </p>
               )}
-              <div className="relative mt-4 grid grid-cols-2 gap-2.5">
+
+              <div className="mt-5 grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => navigate("/tasks")}
-                  className="flex h-11 items-center justify-center gap-2 rounded-full bg-[#F25533] text-sm font-bold text-white transition active:scale-[0.97]"
+                  className="h-11 rounded-lg bg-emerald-600 text-sm font-medium text-white transition active:scale-[0.98]"
                 >
-                  <Rocket size={16} /> {t("dash.startTasks")}
+                  {t("dash.startTasks")}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate("/invite")}
-                  className="flex h-11 items-center justify-center gap-2 rounded-full border border-[#F2CDBD] bg-white text-sm font-bold text-[#1F1B16] transition active:scale-[0.97]"
+                  className="h-11 rounded-lg border border-slate-200 text-sm font-medium text-slate-800 transition active:bg-slate-50"
                 >
-                  <Gift size={16} /> {t("dash.invite")}
+                  {t("dash.invite")}
                 </button>
               </div>
-            </Card>
+            </Section>
 
             {/* ===== LỐI TẮT ===== */}
-            <div className="grid grid-cols-4 gap-2.5">
-              <Shortcut
-                icon={CheckSquare}
-                tone="orange"
-                label={t("dash.qaTasks")}
-                onClick={() => navigate("/tasks")}
-              />
-              <Shortcut
-                icon={ShoppingBag}
-                tone="sage"
-                label={t("dash.qaStore")}
-                onClick={() => navigate("/store")}
-              />
-              <Shortcut
-                icon={ArrowLeftRight}
-                tone="sand"
-                label={t("dash.qaTopup")}
-                onClick={() => navigate("/shop-earn")}
-              />
-              <Shortcut
-                icon={Headphones}
-                tone="sky"
-                label={t("dash.qaSupport")}
-                onClick={() => navigate("/contact")}
-              />
-            </div>
+            <Section>
+              <div className="grid grid-cols-4 gap-2">
+                <Shortcut
+                  icon={CheckSquare}
+                  label={t("dash.qaTasks")}
+                  onClick={() => navigate("/tasks")}
+                />
+                <Shortcut
+                  icon={ShoppingBag}
+                  label={t("dash.qaStore")}
+                  onClick={() => navigate("/store")}
+                />
+                <Shortcut
+                  icon={ArrowLeftRight}
+                  label={t("dash.qaTopup")}
+                  onClick={() => navigate("/shop-earn")}
+                />
+                <Shortcut
+                  icon={Headphones}
+                  label={t("dash.qaSupport")}
+                  onClick={() => navigate("/contact")}
+                />
+              </div>
+            </Section>
 
-            <AnnouncementsCard />
-            <HomeTutorial />
+            <Legacy>
+              <AnnouncementsCard />
+            </Legacy>
+            <Legacy>
+              <HomeTutorial />
+            </Legacy>
 
             {/* ===== HÔM NAY ===== */}
-            <Card
+            <Section
               title={t("dash2.todayTitle")}
               right={
-                <button
-                  type="button"
-                  onClick={() => navigate("/tasks")}
-                  className="flex items-center text-[13px] font-bold tabular-nums text-[#C2410C]"
-                >
+                <span className="text-[13px] tabular-nums text-slate-500">
                   {todayTasksDone}/{todayTasksTotal}
-                  <ChevronRight size={15} />
-                </button>
+                </span>
               }
             >
               <ProgressBar pct={todayTaskPct} />
-            </Card>
-
-            {/* ===== BENTO 2 CỘT ===== */}
-            <div className="grid grid-cols-2 gap-3.5">
-              <StatTile
-                icon={Flame}
-                tone="orange"
-                value={`${profile?.streak_days || 0} ${t("dash.days")}`}
-                label={t("dash.streak")}
-              />
-              <StatTile
-                icon={Coins}
-                tone="sand"
-                value={fmt(earnedToday)}
-                label={t("dash.statCoinToday")}
-              />
-              <StatTile
-                icon={Users}
-                tone="sage"
-                value={profile?.referrals_count || 0}
-                label={t("dash.statInvited")}
-                onClick={() => navigate("/invite")}
-              />
-              <StatTile
-                icon={Gamepad2}
-                tone="sky"
-                value={profile?.game_tickets || 0}
-                label={t("dash.minigame")}
-                onClick={() => navigate("/minigames")}
-              />
-            </div>
+              <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100">
+                <Stat
+                  value={`${profile?.streak_days || 0} ${t("dash.days")}`}
+                  label={t("dash.streak")}
+                />
+                <Stat
+                  value={fmt(earnedToday)}
+                  label={t("dash.statCoinToday")}
+                />
+                <Stat
+                  value={profile?.referrals_count || 0}
+                  label={t("dash.statInvited")}
+                />
+              </div>
+            </Section>
 
             {/* ===== MỐC THƯỞNG ===== */}
-            <Card
+            <Section
               title={t("dash.milestoneTitle")}
-              bodyClass="px-1 pb-2 pt-2 divide-y divide-[#F1EADF]"
               right={
-                <span className="text-[11px] text-[#A39A8A]">
+                <span className="text-xs text-slate-400">
                   {t("dash.done", { n: todayTasksDone })}
                 </span>
               }
@@ -253,13 +231,32 @@ export default function Dashboard() {
                   lang={lang}
                 />
               ))}
-            </Card>
+            </Section>
+
+            {/* ===== MINI GAME ===== */}
+            <Section>
+              <LinkRow
+                icon={Gamepad2}
+                title={t("dash.minigame")}
+                value={t("dash.turns", { n: profile?.game_tickets || 0 })}
+                onClick={() => navigate("/minigames")}
+              />
+            </Section>
 
             <LevelCard state={{ loading: lvLoading, data: lv }} />
-            <LeaderboardCard />
-            <ActivityCard userId={user?.id} />
+
+            <Legacy>
+              <LeaderboardCard />
+            </Legacy>
+            <Legacy>
+              <ActivityCard userId={user?.id} />
+            </Legacy>
+
             <ReferralCard profile={profile} />
-            <CoinChart chartData={chartData} chartLoading={chartLoading} />
+
+            <Legacy>
+              <CoinChart chartData={chartData} chartLoading={chartLoading} />
+            </Legacy>
           </>
         )}
       </main>
@@ -268,4 +265,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-    }
+}
