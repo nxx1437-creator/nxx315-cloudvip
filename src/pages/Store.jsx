@@ -4,11 +4,11 @@ import { Search } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-import { SectionLabel } from "../components/home/HomeSections.jsx";
 import {
-  GameCard,
-  FeaturedCarousel,
-} from "../components/store/StoreParts.jsx";
+  SectionTitle,
+  FeaturedRow,
+  CoverGrid,
+} from "../components/store/StoreCards.jsx";
 import {
   WithdrawBanner,
   StoreHistoryPreview,
@@ -17,7 +17,8 @@ import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
 export default function Store() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const en = lang === "en";
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
 
@@ -60,21 +61,21 @@ export default function Store() {
     <div className="min-h-screen bg-slate-50 pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <TopHeader />
 
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
-        <FeaturedCarousel navigate={navigate} />
+      <main className="mx-auto max-w-5xl space-y-7 px-4 py-4">
+        <FeaturedRow navigate={navigate} />
 
         <section>
-          <SectionLabel
+          <SectionTitle
+            accent={en ? "Game" : "Danh sách"}
+            rest={en ? "categories" : "game"}
             right={
-              <span className="font-mono text-[11px] text-slate-400">
+              <span className="pb-0.5 font-mono text-[11px] text-slate-400">
                 {t("st.count", { n: filteredGames.length })}
               </span>
             }
-          >
-            {t("st.list")}
-          </SectionLabel>
+          />
 
-          <div className="mb-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mb-4 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -97,11 +98,7 @@ export default function Store() {
           </div>
 
           {filteredGames.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredGames.map((game) => (
-                <GameCard key={game.id} game={game} onClick={handleGameClick} />
-              ))}
-            </div>
+            <CoverGrid games={filteredGames} onSelect={handleGameClick} />
           ) : (
             <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center">
               <Search size={30} className="mx-auto mb-2 text-slate-300" />
@@ -118,4 +115,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-}
+                    }
