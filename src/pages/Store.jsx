@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 
+// ĐÃ SỬA: Lùi 1 cấp (../) để thoát khỏi thư mục pages
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import {
@@ -12,6 +13,7 @@ import {
   WithdrawBanner,
   StoreHistoryPreview,
 } from "../components/store/StoreExtras.jsx";
+// ĐÃ SỬA: Lùi 1 cấp (../) để tìm tới thư mục lib và i18n
 import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
@@ -116,7 +118,6 @@ export default function Store() {
           )}
         </section>
 
-        {/* Bây giờ 2 component này đã được import nên sẽ không lỗi nữa */}
         <WithdrawBanner navigate={navigate} />
         <StoreHistoryPreview />
       </main>
