@@ -45,15 +45,6 @@ const MILESTONES = [
   { m: 10, reward: 400 },
 ];
 
-// Các thẻ cũ vẫn nền sáng, đặt trong khung sáng để chữ còn đọc được
-function Legacy({ children }) {
-  return (
-    <div className="rounded-lg border border-[#2E2E2E] bg-slate-50 p-3">
-      {children}
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
@@ -89,10 +80,10 @@ export default function Dashboard() {
   const earnedToday = profile?.coins_earned_today || 0;
 
   return (
-    <div className="min-h-screen bg-[#171717] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-[#EDEDED]">
+    <div className="min-h-screen bg-[#FAFAFA] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-[#171717]">
       <style>{`
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .skeleton-shimmer { background-image: linear-gradient(90deg, #262626 0%, #333333 50%, #262626 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
+        .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f1f1 0%, #e6e6e6 50%, #f1f1f1 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
       `}</style>
 
       <TopHeader />
@@ -105,8 +96,8 @@ export default function Dashboard() {
             {/* ===== TIÊU ĐỀ ===== */}
             <div className="flex items-center justify-between gap-3 pb-1">
               <div className="min-w-0">
-                <p className="text-xs text-[#898989]">{getGreeting()}</p>
-                <h1 className="truncate text-xl font-medium tracking-tight text-white">
+                <p className="text-xs text-[#6F6F6F]">{getGreeting()}</p>
+                <h1 className="truncate text-xl font-medium tracking-tight">
                   {displayName}
                 </h1>
               </div>
@@ -120,20 +111,20 @@ export default function Dashboard() {
 
             {/* ===== SỐ DƯ ===== */}
             <Panel>
-              <p className="text-xs text-[#898989] lowercase first-letter:uppercase">
+              <p className="text-xs text-[#6F6F6F] lowercase first-letter:uppercase">
                 {t("dash.balance")}
               </p>
               <div className="mt-1.5 flex items-center gap-2.5">
-                <Coins size={24} strokeWidth={1.75} className="text-amber-300" />
-                <span className="text-4xl font-medium leading-none tracking-tight tabular-nums text-white">
+                <Coins size={24} strokeWidth={1.75} className="text-amber-500" />
+                <span className="text-4xl font-medium leading-none tracking-tight tabular-nums">
                   {fmt(profile?.coins)}
                 </span>
-                <span className="mt-2 text-xs text-[#898989]">
+                <span className="mt-2 text-xs text-[#9A9A9A]">
                   {t("dash.coin")}
                 </span>
               </div>
               {earnedToday > 0 && (
-                <p className="mt-2 text-xs tabular-nums text-[#3ECF8E]">
+                <p className="mt-2 text-xs tabular-nums text-[#0F7A4D]">
                   +{fmt(earnedToday)} {t("dash.statCoinToday")}
                 </p>
               )}
@@ -141,14 +132,14 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => navigate("/tasks")}
-                  className="h-10 rounded-md border border-[#3ECF8E]/50 bg-[#006239] text-[13px] font-medium text-white transition active:scale-[0.98]"
+                  className="h-10 rounded-md border border-[#24B47E] bg-[#3ECF8E] text-[13px] font-medium text-[#0B1F17] transition active:scale-[0.98]"
                 >
                   {t("dash.startTasks")}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate("/invite")}
-                  className="h-10 rounded-md border border-[#3A3A3A] bg-[#2A2A2A] text-[13px] font-medium text-[#EDEDED] transition active:scale-[0.98]"
+                  className="h-10 rounded-md border border-[#D4D4D4] bg-white text-[13px] font-medium text-[#171717] transition active:bg-[#F4F4F4]"
                 >
                   {t("dash.invite")}
                 </button>
@@ -179,24 +170,20 @@ export default function Dashboard() {
               />
             </div>
 
-            <Legacy>
-              <AnnouncementsCard />
-            </Legacy>
-            <Legacy>
-              <HomeTutorial />
-            </Legacy>
+            <AnnouncementsCard />
+            <HomeTutorial />
 
             {/* ===== HÔM NAY ===== */}
             <Panel
               title={t("dash2.todayTitle")}
               right={
-                <span className="text-xs tabular-nums text-[#898989]">
+                <span className="text-xs tabular-nums text-[#6F6F6F]">
                   {todayTasksDone}/{todayTasksTotal}
                 </span>
               }
             >
               <ProgressBar pct={todayTaskPct} />
-              <div className="mt-4 grid grid-cols-3 divide-x divide-[#2E2E2E]">
+              <div className="mt-4 grid grid-cols-3 divide-x divide-[#E6E6E6]">
                 <Stat
                   value={`${profile?.streak_days || 0} ${t("dash.days")}`}
                   label={t("dash.streak")}
@@ -215,9 +202,9 @@ export default function Dashboard() {
             {/* ===== MỐC THƯỞNG ===== */}
             <Panel
               title={t("dash.milestoneTitle")}
-              bodyClass="divide-y divide-[#2E2E2E]"
+              bodyClass="divide-y divide-[#E6E6E6]"
               right={
-                <span className="text-[11px] text-[#6B6B6B]">
+                <span className="text-[11px] text-[#9A9A9A]">
                   {t("dash.done", { n: todayTasksDone })}
                 </span>
               }
@@ -247,19 +234,10 @@ export default function Dashboard() {
             </Panel>
 
             <LevelCard state={{ loading: lvLoading, data: lv }} />
-
-            <Legacy>
-              <LeaderboardCard />
-            </Legacy>
-            <Legacy>
-              <ActivityCard userId={user?.id} />
-            </Legacy>
-
+            <LeaderboardCard />
+            <ActivityCard userId={user?.id} />
             <ReferralCard profile={profile} />
-
-            <Legacy>
-              <CoinChart chartData={chartData} chartLoading={chartLoading} />
-            </Legacy>
+            <CoinChart chartData={chartData} chartLoading={chartLoading} />
           </>
         )}
       </main>
@@ -268,4 +246,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-                         }
+                            }
