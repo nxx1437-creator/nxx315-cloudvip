@@ -4,7 +4,6 @@ import { Search } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-// ĐÃ SỬA: Dùng FeaturedRow thay vì FeaturedCarousel
 import {
   FeaturedRow,
   GameCard,
@@ -61,8 +60,8 @@ export default function Store() {
     <div className="min-h-screen bg-slate-50 pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <TopHeader />
 
+      {/* ĐÃ SỬA: pb-24 để giống ảnh 19:16 (thanh BottomNav sẽ che mất một phần thẻ game bên dưới) */}
       <main className="mx-auto max-w-5xl space-y-7 px-4 py-4 pb-24">
-        {/* ĐÃ SỬA: Dùng FeaturedRow thay vì FeaturedCarousel */}
         <FeaturedRow
           navigate={navigate}
           onTitleClick={() =>
@@ -132,4 +131,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-}
+      }
