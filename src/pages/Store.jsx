@@ -4,17 +4,14 @@ import { Search } from "lucide-react";
 
 import TopHeader from "./components/TopHeader.jsx";
 import BottomNav from "./components/BottomNav.jsx";
-// ĐÃ SỬA: Import đúng các component có trong StoreParts.jsx
 import {
   FeaturedCarousel,
   GameCard,
 } from "./components/store/StoreParts.jsx";
-// ĐÃ SỬA: Thêm import 2 component bị thiếu
 import {
   WithdrawBanner,
   StoreHistoryPreview,
 } from "./components/store/StoreExtras.jsx";
-// ĐÃ SỬA: Lùi 1 cấp thay vì 2 cấp
 import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
