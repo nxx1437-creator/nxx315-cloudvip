@@ -57,7 +57,9 @@ function FeaturedCard({ item, onClick }) {
     <button
       type="button"
       onClick={() => onClick(item)}
-      className="relative aspect-[4/3] w-[88%] max-w-[440px] shrink-0 snap-start overflow-hidden rounded-2xl bg-[#14161a] text-left shadow-sm transition active:scale-[0.99]"
+      // ĐÃ SỬA: Đổi aspect-[4/3] thành aspect-square (1:1) để thẻ vuông vức hơn
+      // Đồng thời tăng chiều rộng lên w-[92%] để thẻ to hơn, chiếm trọn không gian hơn
+      className="relative aspect-square w-[92%] max-w-[400px] shrink-0 snap-start overflow-hidden rounded-2xl bg-[#14161a] text-left shadow-sm transition active:scale-[0.99]"
     >
       {!failed && (
         <img
@@ -201,4 +203,4 @@ export function CoverGrid({ games, onSelect }) {
       ))}
     </div>
   );
-                           }
+}
