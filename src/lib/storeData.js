@@ -8,13 +8,47 @@ export const locale = (lang) => (lang === "en" ? "en-US" : "vi-VN");
 
 // ============= BANNER =============
 export const BANNERS = [
-  { image: "store-banner-1.png", path: "/store/free-fire" },
-  { image: "store-banner-2.png", path: "/store/play-together" },
-  { image: "store-banner-3.png", path: "/store/lien-quan" },
-  { image: "store-banner-4.png", path: "/store/roblox" },
-  { image: "store-banner-5.png", path: "/store/pubg-mobile" },
+  {
+    image: "store-banner-1.png",
+    path: "/store/free-fire",
+    desc: {
+      vi: "Nạp Kim Cương Free Fire nhanh chóng, giao thẳng vào tài khoản.",
+      en: "Top up Free Fire Diamonds fast, delivered straight to your account.",
+    },
+  },
+  {
+    image: "store-banner-2.png",
+    path: "/store/play-together",
+    desc: {
+      vi: "Nạp Thỏi Vàng Play Together VNG bằng Coin tích lũy.",
+      en: "Get Play Together VNG Gold Bars with your saved Coins.",
+    },
+  },
+  {
+    image: "store-banner-3.png",
+    path: "/store/lien-quan",
+    desc: {
+      vi: "Nạp Quân Huy Liên Quân Mobile an toàn, nhận nhanh.",
+      en: "Safe and fast Arena of Valor Quân Huy top-ups.",
+    },
+  },
+  {
+    image: "store-banner-4.png",
+    path: "/store/roblox",
+    desc: {
+      vi: "Đổi Robux và thẻ Roblox, giao qua Discord hoặc Zalo.",
+      en: "Redeem Robux and Roblox cards, delivered via Discord or Zalo.",
+    },
+  },
+  {
+    image: "store-banner-5.png",
+    path: "/store/pubg-mobile",
+    desc: {
+      vi: "Nạp UC PUBG Mobile VN giá tốt, nhận thêm thưởng.",
+      en: "Top up PUBG Mobile VN UC at great prices with bonus rewards.",
+    },
+  },
 ];
-
 export const BANNER_INTERVAL = 5000;
 
 // ============= GAMES =============
