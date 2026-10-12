@@ -10,11 +10,11 @@ export function Panel({
 }) {
   return (
     <section
-      className={`overflow-hidden rounded-lg border border-[#2E2E2E] bg-[#1F1F1F] ${className}`}
+      className={`overflow-hidden rounded-lg border border-[#E6E6E6] bg-white ${className}`}
     >
       {title && (
-        <div className="flex items-center justify-between gap-3 border-b border-[#2E2E2E] px-4 py-2.5">
-          <h2 className="text-[13px] font-medium text-[#EDEDED]">{title}</h2>
+        <div className="flex items-center justify-between gap-3 border-b border-[#E6E6E6] px-4 py-2.5">
+          <h2 className="text-[13px] font-medium text-[#171717]">{title}</h2>
           {right}
         </div>
       )}
@@ -24,9 +24,9 @@ export function Panel({
 }
 
 const TAG = {
-  green: "border-[#3ECF8E]/30 bg-[#3ECF8E]/10 text-[#3ECF8E]",
-  amber: "border-amber-400/30 bg-amber-400/10 text-amber-300",
-  slate: "border-[#3A3A3A] bg-[#262626] text-[#A0A0A0]",
+  green: "border-[#BDEBD5] bg-[#E8F8F0] text-[#0F7A4D]",
+  amber: "border-[#F3DFA0] bg-[#FFF7E0] text-[#8A5A00]",
+  slate: "border-[#E6E6E6] bg-[#F4F4F4] text-[#6F6F6F]",
 };
 
 export function Tag({ tone = "slate", children }) {
@@ -44,10 +44,10 @@ export function Shortcut({ icon: Icon, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-lg border border-[#2E2E2E] bg-[#1F1F1F] px-1 py-3 transition hover:border-[#3ECF8E]/50 active:bg-[#262626]"
+      className="flex flex-col items-center gap-2 rounded-lg border border-[#E6E6E6] bg-white px-1 py-3 transition hover:border-[#3ECF8E] active:bg-[#F4F4F4]"
     >
-      <Icon size={18} strokeWidth={1.75} className="text-[#A0A0A0]" />
-      <span className="text-center text-[11.5px] font-medium leading-tight text-[#EDEDED]">
+      <Icon size={18} strokeWidth={1.75} className="text-[#6F6F6F]" />
+      <span className="text-center text-[11.5px] font-medium leading-tight text-[#171717]">
         {label}
       </span>
     </button>
@@ -57,17 +57,17 @@ export function Shortcut({ icon: Icon, label, onClick }) {
 export function Stat({ value, label }) {
   return (
     <div className="min-w-0 pl-4 first:pl-0">
-      <p className="truncate text-lg font-medium tabular-nums text-white">
+      <p className="truncate text-lg font-medium tabular-nums text-[#171717]">
         {value}
       </p>
-      <p className="truncate text-xs text-[#898989]">{label}</p>
+      <p className="truncate text-xs text-[#6F6F6F]">{label}</p>
     </div>
   );
 }
 
 export function ProgressBar({ pct }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#2E2E2E]">
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDEDED]">
       <div
         className="h-full rounded-full bg-[#3ECF8E] transition-all duration-500"
         style={{ width: `${pct}%` }}
@@ -81,14 +81,14 @@ export function LinkRow({ icon: Icon, title, value, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-[#262626]"
+      className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-[#F4F4F4]"
     >
-      <Icon size={18} strokeWidth={1.75} className="text-[#898989]" />
-      <span className="flex-1 text-[13px] font-medium text-[#EDEDED]">
+      <Icon size={18} strokeWidth={1.75} className="text-[#9A9A9A]" />
+      <span className="flex-1 text-[13px] font-medium text-[#171717]">
         {title}
       </span>
-      <span className="text-[13px] tabular-nums text-[#898989]">{value}</span>
-      <ChevronRight size={15} className="text-[#5A5A5A]" />
+      <span className="text-[13px] tabular-nums text-[#6F6F6F]">{value}</span>
+      <ChevronRight size={15} className="text-[#C4C4C4]" />
     </button>
   );
 }
@@ -110,21 +110,21 @@ export function MilestoneRow({
       <span
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
           claimed || reached
-            ? "border-[#3ECF8E] bg-[#3ECF8E] text-[#0B1F17]"
-            : "border-[#3A3A3A] text-transparent"
+            ? "border-[#24B47E] bg-[#3ECF8E] text-[#0B1F17]"
+            : "border-[#D4D4D4] text-transparent"
         }`}
       >
         <Check size={12} strokeWidth={3} />
       </span>
-      <span className="flex-1 text-[13px] text-[#EDEDED]">
+      <span className="flex-1 text-[13px] text-[#171717]">
         {milestone} {en ? "tasks" : "nhiệm vụ"}
       </span>
-      <span className="text-[13px] font-medium tabular-nums text-amber-300">
+      <span className="text-[13px] font-medium tabular-nums text-amber-600">
         +{reward}
       </span>
       <div className="flex w-16 justify-end">
         {claimed ? (
-          <span className="text-xs text-[#6B6B6B]">
+          <span className="text-xs text-[#9A9A9A]">
             {en ? "Claimed" : "Đã nhận"}
           </span>
         ) : reached ? (
@@ -132,12 +132,12 @@ export function MilestoneRow({
             type="button"
             disabled={claiming}
             onClick={() => onClaim(milestone)}
-            className="h-7 rounded-md border border-[#3ECF8E]/50 bg-[#006239] px-3 text-xs font-medium text-white transition active:scale-95 disabled:opacity-60"
+            className="h-7 rounded-md border border-[#24B47E] bg-[#3ECF8E] px-3 text-xs font-medium text-[#0B1F17] transition active:scale-95 disabled:opacity-60"
           >
             {claiming ? "…" : en ? "Claim" : "Nhận"}
           </button>
         ) : (
-          <span className="text-xs tabular-nums text-[#6B6B6B]">
+          <span className="text-xs tabular-nums text-[#9A9A9A]">
             {Math.min(tasksDone, milestone)}/{milestone}
           </span>
         )}
