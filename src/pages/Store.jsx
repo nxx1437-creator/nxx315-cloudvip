@@ -4,14 +4,13 @@ import { Search } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-// ĐÃ SỬA: Import đúng các component có trong StoreParts.jsx
 import {
   FeaturedCarousel,
   GameCard,
 } from "../components/store/StoreParts.jsx";
-// ĐÃ SỬA: Import đúng đường dẫn và các hàm cần thiết
-import { GAMES, trackGameView } from "../../lib/storeData.js";
-import { useI18n } from "../../i18n/index.js";
+// ĐÃ SỬA: Lùi 1 cấp thay vì 2 cấp
+import { GAMES, trackGameView } from "../lib/storeData.js";
+import { useI18n } from "../i18n/index.js";
 
 export default function Store() {
   const { t, lang } = useI18n();
@@ -58,13 +57,10 @@ export default function Store() {
     <div className="min-h-screen bg-slate-50 pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <TopHeader />
 
-      {/* ĐÃ SỬA: Thêm pb-24 để nội dung không bị thanh BottomNav che mất */}
       <main className="mx-auto max-w-5xl space-y-7 px-4 py-4 pb-24">
-        {/* ĐÃ SỬA: Dùng FeaturedCarousel thay vì FeaturedRow */}
         <FeaturedCarousel navigate={navigate} />
 
         <section id="store-list">
-          {/* ĐÃ SỬA: Dùng tiêu đề tùy chỉnh vì không còn SectionTitle từ file cũ */}
           <div className="mb-3 flex items-end justify-between gap-3">
             <h2 className="text-xl font-extrabold leading-tight text-slate-900">
               <span className="text-emerald-600">
@@ -100,7 +96,6 @@ export default function Store() {
           </div>
 
           {filteredGames.length > 0 ? (
-            // ĐÃ SỬA: Dùng Grid trực tiếp thay vì CoverGrid
             <div className="grid grid-cols-3 gap-x-3 gap-y-4 sm:grid-cols-4 lg:grid-cols-6">
               {filteredGames.map((game) => (
                 <GameCard
@@ -125,4 +120,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-}
+    }
