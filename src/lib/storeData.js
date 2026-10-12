@@ -49,6 +49,7 @@ export const BANNERS = [
     },
   },
 ];
+
 export const BANNER_INTERVAL = 5000;
 
 // ============= GAMES =============
@@ -221,4 +222,4 @@ export function getHistoryImage(order) {
   if (id.startsWith("vp-") || id.includes("valorant")) return getImageUrl("valorant.png");
 
   return getImageUrl("store-cute.png");
-    }
+        }
