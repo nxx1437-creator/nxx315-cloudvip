@@ -1,0 +1,83 @@
+/* Hiệu ứng hover — chỉ bật trên thiết bị có chuột/hover thật */
+@media (hover: hover) {
+  .hv-card,
+  .hv-row,
+  .hv-btn {
+    transition:
+      transform 200ms ease-out,
+      box-shadow 200ms ease-out,
+      background-color 150ms ease-out,
+      border-color 150ms ease-out;
+  }
+
+  /* Nút & hàng: nền nhạt 150ms */
+  .hv-row:hover,
+  .hv-btn-ghost:hover {
+    background-color: #f4f4f4;
+  }
+  .hv-btn-brand:hover:not(:disabled) {
+    background-color: #5bd9a0;
+  }
+
+  /* Thẻ: nhấc lên 4px + bóng lớn, mềm hơn (200ms) */
+  .hv-card {
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .hv-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.16);
+    z-index: 1;
+  }
+
+  /* Thẻ tối: đốm sáng theo con trỏ + viền sáng lên gần con trỏ */
+  .hv-spot {
+    position: relative;
+    --x: 50%;
+    --y: 50%;
+  }
+  .hv-spot > * {
+    position: relative;
+    z-index: 1;
+  }
+  .hv-spot::before,
+  .hv-spot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+  .hv-spot::before {
+    background: radial-gradient(
+      circle at var(--x) var(--y),
+      rgba(62, 207, 142, 0.16),
+      transparent 55%
+    );
+  }
+  .hv-spot::after {
+    padding: 1px;
+    background: radial-gradient(
+      circle at var(--x) var(--y),
+      rgba(62, 207, 142, 0.95),
+      transparent 45%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .hv-spot:hover::before,
+  .hv-spot:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Người dùng bật "giảm chuyển động": bỏ hiệu ứng nhấc thẻ */
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  .hv-card:hover {
+    transform: none;
+  }
+    }

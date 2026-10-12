@@ -14,7 +14,7 @@ export function LevelCard({ userId, state }) {
 
   if (loading) {
     return (
-      <Panel title={t("dash2.lvTitle")}>
+      <Panel title={t("dash2.lvTitle")} lift={false}>
         <div className="skeleton-shimmer h-16 rounded-md" />
       </Panel>
     );
@@ -126,7 +126,7 @@ export function ReferralCard({ profile }) {
           <button
             type="button"
             onClick={handleCopy}
-            className="mt-3 flex w-full items-center justify-between rounded-md border border-[#E6E6E6] bg-[#FAFAFA] px-3 py-2.5 text-left transition active:bg-[#F4F4F4]"
+            className="hv-btn hv-btn-ghost mt-3 flex w-full items-center justify-between rounded-md border border-[#E6E6E6] bg-[#FAFAFA] px-3 py-2.5 text-left active:bg-[#F4F4F4]"
           >
             <span className="min-w-0">
               <span className="block text-[11px] text-[#9A9A9A]">
@@ -150,7 +150,7 @@ export function ReferralCard({ profile }) {
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex h-8 items-center gap-2 rounded-md border border-[#24B47E] bg-[#3ECF8E] px-3.5 text-xs font-medium text-[#0B1F17] transition active:scale-95"
+              className="hv-btn hv-btn-brand inline-flex h-8 items-center gap-2 rounded-md border border-[#24B47E] bg-[#3ECF8E] px-3.5 text-xs font-medium text-[#0B1F17] active:scale-95"
             >
               <Share2 size={13} /> {t("dash2.refShare")}
             </button>
@@ -161,4 +161,4 @@ export function ReferralCard({ profile }) {
       )}
     </Panel>
   );
-      }
+          }
