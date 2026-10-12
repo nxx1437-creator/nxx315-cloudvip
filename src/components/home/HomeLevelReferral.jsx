@@ -27,9 +27,11 @@ export function LevelCard({ userId, state }) {
       right={<Tag tone="green">{t("dash2.lvBonus", { pct: data.bonus })}</Tag>}
     >
       <div className="flex items-center gap-2">
-        <Crown size={16} strokeWidth={1.75} className="text-amber-300" />
-        <p className="truncate text-sm font-medium text-white">{data.label}</p>
-        <span className="text-xs text-[#898989]">
+        <Crown size={16} strokeWidth={1.75} className="text-amber-500" />
+        <p className="truncate text-sm font-medium text-[#171717]">
+          {data.label}
+        </p>
+        <span className="text-xs text-[#9A9A9A]">
           {t("dash2.lvNow", { level: data.level })}
         </span>
       </div>
@@ -40,15 +42,15 @@ export function LevelCard({ userId, state }) {
             <ProgressBar pct={data.pct} />
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="tabular-nums text-[#898989]">
+            <span className="tabular-nums text-[#6F6F6F]">
               {fmt(data.lifetime)} / {fmt(data.nextCoins)}
             </span>
-            <span className="font-medium tabular-nums text-[#3ECF8E]">
+            <span className="font-medium tabular-nums text-[#0F7A4D]">
               {t("dash2.lvRemain", { n: fmt(data.remain) })}
             </span>
           </div>
-          <p className="mt-3 text-xs leading-5 text-[#898989]">
-            <span className="font-medium text-[#EDEDED]">
+          <p className="mt-3 text-xs leading-5 text-[#6F6F6F]">
+            <span className="font-medium text-[#171717]">
               {t("dash2.lvNext", { label: data.next.label })}
             </span>
             {" · "}
@@ -56,7 +58,7 @@ export function LevelCard({ userId, state }) {
           </p>
         </>
       ) : (
-        <p className="mt-3 text-xs font-medium text-[#3ECF8E]">
+        <p className="mt-3 text-xs font-medium text-[#0F7A4D]">
           {t("dash2.lvMax")}
         </p>
       )}
@@ -117,46 +119,46 @@ export function ReferralCard({ profile }) {
 
   return (
     <Panel title={t("dash2.refTitle")}>
-      <p className="text-xs leading-5 text-[#898989]">{t("dash2.refSub")}</p>
+      <p className="text-xs leading-5 text-[#6F6F6F]">{t("dash2.refSub")}</p>
 
       {code ? (
         <>
           <button
             type="button"
             onClick={handleCopy}
-            className="mt-3 flex w-full items-center justify-between rounded-md border border-[#2E2E2E] bg-[#171717] px-3 py-2.5 text-left transition active:bg-[#262626]"
+            className="mt-3 flex w-full items-center justify-between rounded-md border border-[#E6E6E6] bg-[#FAFAFA] px-3 py-2.5 text-left transition active:bg-[#F4F4F4]"
           >
             <span className="min-w-0">
-              <span className="block text-[11px] text-[#6B6B6B]">
+              <span className="block text-[11px] text-[#9A9A9A]">
                 {t("dash2.refCode")}
               </span>
-              <span className="block truncate font-mono text-[15px] font-medium tracking-wider text-white">
+              <span className="block truncate font-mono text-[15px] font-medium tracking-wider text-[#171717]">
                 {code}
               </span>
             </span>
-            <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#A0A0A0]">
+            <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#6F6F6F]">
               {copied ? <Check size={14} /> : <Copy size={14} />}
               {copied ? t("dash2.refCopied") : t("dash2.refCopy")}
             </span>
           </button>
 
           <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="flex items-center gap-1.5 text-xs text-[#898989]">
+            <span className="flex items-center gap-1.5 text-xs text-[#6F6F6F]">
               <Users size={14} strokeWidth={1.75} />
               {t("dash2.refCount", { n: profile?.referrals_count || 0 })}
             </span>
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex h-8 items-center gap-2 rounded-md border border-[#3ECF8E]/50 bg-[#006239] px-3.5 text-xs font-medium text-white transition active:scale-95"
+              className="inline-flex h-8 items-center gap-2 rounded-md border border-[#24B47E] bg-[#3ECF8E] px-3.5 text-xs font-medium text-[#0B1F17] transition active:scale-95"
             >
               <Share2 size={13} /> {t("dash2.refShare")}
             </button>
           </div>
         </>
       ) : (
-        <p className="mt-3 text-sm text-[#6B6B6B]">{t("dash2.refNoCode")}</p>
+        <p className="mt-3 text-sm text-[#9A9A9A]">{t("dash2.refNoCode")}</p>
       )}
     </Panel>
   );
-}
+      }
