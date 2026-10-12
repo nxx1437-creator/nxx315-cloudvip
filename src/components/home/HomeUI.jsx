@@ -1,20 +1,48 @@
+
 import React from "react";
 import { Check, ChevronRight } from "lucide-react";
+import "./hover.css";
+
+// Cập nhật --x/--y cho đốm sáng (chỉ theo chuột)
+function trackPointer(e) {
+  if (e.pointerType !== "mouse") return;
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
+}
 
 export function Panel({
   title,
   right,
   className = "",
   bodyClass = "p-4",
+  lift = true,
+  dark = false,
   children,
 }) {
+  const tone = dark
+    ? "border-[#2E2E2E] bg-[#1F1F1F]"
+    : "border-[#E6E6E6] bg-white";
   return (
     <section
-      className={`overflow-hidden rounded-lg border border-[#E6E6E6] bg-white ${className}`}
+      onPointerMove={dark ? trackPointer : undefined}
+      className={`overflow-hidden rounded-lg border ${tone} ${
+        lift ? "hv-card" : ""
+      } ${dark ? "hv-spot" : ""} ${className}`}
     >
       {title && (
-        <div className="flex items-center justify-between gap-3 border-b border-[#E6E6E6] px-4 py-2.5">
-          <h2 className="text-[13px] font-medium text-[#171717]">{title}</h2>
+        <div
+          className={`flex items-center justify-between gap-3 border-b px-4 py-2.5 ${
+            dark ? "border-[#2E2E2E]" : "border-[#E6E6E6]"
+          }`}
+        >
+          <h2
+            className={`text-[13px] font-medium ${
+              dark ? "text-[#EDEDED]" : "text-[#171717]"
+            }`}
+          >
+            {title}
+          </h2>
           {right}
         </div>
       )}
@@ -44,7 +72,7 @@ export function Shortcut({ icon: Icon, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-lg border border-[#E6E6E6] bg-white px-1 py-3 transition hover:border-[#3ECF8E] active:bg-[#F4F4F4]"
+      className="hv-card hv-btn-ghost flex flex-col items-center gap-2 rounded-lg border border-[#E6E6E6] bg-white px-1 py-3 active:bg-[#F4F4F4]"
     >
       <Icon size={18} strokeWidth={1.75} className="text-[#6F6F6F]" />
       <span className="text-center text-[11.5px] font-medium leading-tight text-[#171717]">
@@ -81,7 +109,7 @@ export function LinkRow({ icon: Icon, title, value, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-[#F4F4F4]"
+      className="hv-row flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[#F4F4F4]"
     >
       <Icon size={18} strokeWidth={1.75} className="text-[#9A9A9A]" />
       <span className="flex-1 text-[13px] font-medium text-[#171717]">
@@ -106,7 +134,7 @@ export function MilestoneRow({
   const reached = tasksDone >= milestone;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="hv-row flex items-center gap-3 px-4 py-3">
       <span
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
           claimed || reached
@@ -132,7 +160,7 @@ export function MilestoneRow({
             type="button"
             disabled={claiming}
             onClick={() => onClaim(milestone)}
-            className="h-7 rounded-md border border-[#24B47E] bg-[#3ECF8E] px-3 text-xs font-medium text-[#0B1F17] transition active:scale-95 disabled:opacity-60"
+            className="hv-btn hv-btn-brand h-7 rounded-md border border-[#24B47E] bg-[#3ECF8E] px-3 text-xs font-medium text-[#0B1F17] active:scale-95 disabled:opacity-60"
           >
             {claiming ? "…" : en ? "Claim" : "Nhận"}
           </button>
@@ -144,4 +172,4 @@ export function MilestoneRow({
       </div>
     </div>
   );
-}
+  }
