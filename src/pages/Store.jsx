@@ -22,6 +22,7 @@ import {
   locale,
 } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
+import InlineAlert from "../components/InlineAlert.jsx";
 
 export default function Store() {
   const { t, lang } = useI18n();
@@ -82,13 +83,23 @@ export default function Store() {
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
         <StoreSearch
-          search={search}
-          setSearch={setSearch}
-          onSelect={handleGameClick}
-        />
+  search={search}
+  setSearch={setSearch}
+  onSelect={handleGameClick}
+/>
 
-        <BannerSlideshow navigate={navigate} />
+{/* Tạm tắt alert
+<InlineAlert
+  severity="success"
+  marquee={true}
+  dismissible={true}
+  message="💰 Rút tiền chỉ 2-24h! Tối thiểu 50,000 Coin là rút được."
+  action={{ label: "Rút ngay", href: "/withdraw" }}
+/>
+*/}
 
+<BannerSlideshow navigate={navigate} />
+        
         {/* Dành cho bạn */}
         {recommended.length > 0 && !search && (
           <section>

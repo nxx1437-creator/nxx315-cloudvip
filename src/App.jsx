@@ -1,10 +1,8 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import GuideHome from "./pages/Guide/GuideHome.jsx";
-import GuideDetail from "./pages/Guide/GuideDetail.jsx";
-import Guide from "./pages/Guide/Guide.jsx";
-import GuidePage from "./pages/Guide/GuidePage.jsx";
+import GuideWelcomeModal from "./components/GuideWelcomeModal.jsx";
+
 // ✅ Page public — load ngay
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
@@ -31,6 +29,11 @@ const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
+
+// Hướng dẫn + Về chúng tôi
+const GuideHome = lazy(() => import("./pages/Guide/GuideHome.jsx"));
+const GuideDetail = lazy(() => import("./pages/Guide/GuideDetail.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
 
 // Store games
 const Roblox = lazy(() => import("./pages/Roblox.jsx"));
@@ -71,7 +74,7 @@ import BanGate from "./components/BanGate";
 import DeviceChecker from "./components/DeviceChecker.jsx";
 import VersionChecker from "./components/VersionChecker.jsx";
 import SessionGuard from "./components/SessionGuard.jsx";
-import SessionValidator from "./components/SessionValidator.jsx"; 
+import SessionValidator from "./components/SessionValidator.jsx";
 import PageLoader from "./components/PageLoader.jsx";
 
 export default function App() {
@@ -80,11 +83,11 @@ export default function App() {
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            <Route path="/" element={<CloudVIPLanding />} />
+            <Route path="/about" element={<About />} />
             <Route path="/guide" element={<GuideHome />} />
             <Route path="/guide/:id" element={<GuideDetail />} />
-            <Route path="/guide" element={<Guide />} />
-            <Route path="/guide/:id" element={<GuidePage />} />
-            <Route path="/" element={<CloudVIPLanding />} />
+
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
@@ -149,10 +152,11 @@ export default function App() {
         </Suspense>
 
         <VersionChecker />
-       <DeviceChecker />
-      <SessionGuard />
-      <SessionValidator />
+        <GuideWelcomeModal />
+        <DeviceChecker />
+        <SessionGuard />
+        <SessionValidator />
       </BrowserRouter>
     </BanGate>
   );
-  }
+}

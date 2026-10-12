@@ -1,99 +1,212 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  UserPlus,
-  Zap,
+  ChevronDown,
+  ListChecks,
+  Coins,
+  Wallet,
   Gift,
+  Users,
   Lock,
   ShieldCheck,
   Bot,
   KeyRound,
-  CalendarCheck,
-  Flame,
-  Gamepad2,
-  TrendingUp,
-  Share2,
-  Trophy,
-  ShoppingBag,
-  Wallet,
-  Bell,
-  Smartphone,
 } from "lucide-react";
-import {
-  SectionHead,
-  BentoCard,
-  Chip,
-  SafetyBadge,
-  StepCard,
-  FAQItem,
-  HeroConsole,
-  Corners,
-  primaryBtn,
-  ghostBtn,
-} from "./components/LandingParts.jsx";
 import {
   LandingHeader,
   LandingFooter,
   BackToTop,
   scrollToId,
-} from "./components/LandingChrome.jsx";
+} from "./components/LandingNav.jsx";
+import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
 
-const STEPS = [
-  {
-    n: "01",
-    icon: UserPlus,
-    t: "ld.s1t",
-    d: "ld.s1d",
-    chips: [{ raw: "Email" }, { raw: "Google" }],
-  },
-  {
-    n: "02",
-    icon: Zap,
-    t: "ld.s2t",
-    d: "ld.s2d",
-    chips: [{ k: "dash.qaTasks" }, { k: "dash.minigame" }, { k: "ld.f5t" }],
-  },
-  {
-    n: "03",
-    icon: Gift,
-    t: "ld.s3t",
-    d: "ld.s3d",
-    chips: [{ k: "ld.chipRobux" }, { k: "ld.chipPhone" }, { k: "ld.chipGift" }],
-  },
-];
+const ICON_BASE =
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
-const BENTO = [
-  {
-    icon: ShoppingBag,
-    t: "ld.f7t",
-    d: "ld.f7d",
-    featured: true,
-    span: "sm:col-span-2",
-    chips: ["ld.chipRobux", "ld.chipPhone", "ld.chipGift"],
+// Icon 3D trên Supabase, lỗi ảnh thì dùng icon dự phòng
+function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return <Fallback className="h-10 w-10 text-blue-600" />;
+  return (
+    <img
+      src={`${ICON_BASE}/${name}.png`}
+      alt=""
+      loading="lazy"
+      className={`${size} object-contain ${shadow ? "drop-shadow-md" : ""}`}
+      onError={() => setOk(false)}
+    />
+  );
+}
+
+function FaqRow({ q, a, open, onToggle }) {
+  return (
+    <div className="border-b border-slate-200">
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 py-5 text-left"
+      >
+        <span className="text-[16px] font-semibold text-slate-900">{q}</span>
+        <ChevronDown
+          size={18}
+          className={`shrink-0 text-slate-400 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-200 ${
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <p className="pb-5 text-[15px] leading-7 text-slate-600">{a}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Ba hình 3D xếp lệch bên phải phần đầu trang
+function HeroArt() {
+  return (
+    <div className="relative mx-auto h-[280px] w-full max-w-[420px] rounded-3xl border border-slate-200 bg-slate-50 sm:h-[360px]">
+      <div className="absolute left-[8%] top-[10%] -rotate-6">
+        <Img3D
+          name="icon-task"
+          Fallback={ListChecks}
+          size="h-28 w-28 sm:h-36 sm:w-36"
+        />
+      </div>
+      <div className="absolute right-[8%] top-[28%] rotate-6">
+        <Img3D
+          name="icon-coin"
+          Fallback={Coins}
+          size="h-32 w-32 sm:h-44 sm:w-44"
+        />
+      </div>
+      <div className="absolute bottom-[6%] left-[22%] -rotate-3">
+        <Img3D
+          name="icon-money"
+          Fallback={Wallet}
+          size="h-24 w-24 sm:h-32 sm:w-32"
+        />
+      </div>
+    </div>
+  );
+}
+
+// Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
+const COPY = {
+  vi: {
+    h1a: "Kiếm Coin",
+    h1b: "Đổi thưởng dễ dàng",
+    heroSub:
+      "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
+    how: "Cách hoạt động",
+    note: "Kiếm xu hoàn toàn miễn phí. Chuyển khoản chỉ dùng khi bạn muốn mua quà trực tiếp.",
+    facts: [
+      ["1 Coin = 1đ", "Giá Coin bằng giá tiền"],
+      ["10.000đ", "Mức rút tối thiểu"],
+      ["7 ngày", "Chuỗi điểm danh, ngày cuối thưởng 1.000 xu"],
+      ["15%", "Hoa hồng khi bạn bè làm nhiệm vụ"],
+    ],
+    featTitle: "Bạn làm được gì trên NXX315",
+    guide: "Xem hướng dẫn",
+    features: [
+      {
+        to: "/guide/lam-nhiem-vu",
+        title: "Làm nhiệm vụ, nhận xu trong ngày",
+        body: "Mở liên kết của đối tác, làm theo các bước rồi quay lại xác nhận là xu vào ví. Mỗi nhiệm vụ có số lượt riêng mỗi ngày.",
+      },
+      {
+        to: "/guide/doi-thuong",
+        title: "Đổi xu lấy quà game",
+        body: "Robux, Quân Huy, kim cương Free Fire và nhiều gói khác. Trả bằng Coin hoặc chuyển khoản, đơn nào cũng theo dõi được trong Lịch sử.",
+      },
+      {
+        to: "/guide/rut-tien",
+        title: "Rút về khi bạn cần",
+        body: "Rút từ 10.000đ về ngân hàng, MoMo hoặc ZaloPay. Phí 1.000 Coin mỗi lần, yêu cầu được xem xét thủ công.",
+      },
+      {
+        to: "/guide/moi-ban",
+        title: "Mời bạn bè, nhận hoa hồng",
+        body: "Bạn bè nhập mã của bạn nhận 200 xu. Bạn nhận 15% số xu họ kiếm từ nhiệm vụ, thêm thưởng khi đủ 3, 5, 10 và 20 người.",
+      },
+    ],
+    more: "Ngoài ra còn có điểm danh hằng ngày, minigame, cấp độ và bảng xếp hạng.",
+    howTitle: "Bắt đầu chỉ với 3 bước",
+    ctaTitle: "Bắt đầu kiếm Coin hôm nay.",
+    whoTitle: "Ai đứng sau NXX315",
+    whoBody:
+      "NXX315 do một cá nhân vận hành và mới hoạt động từ tháng 8/2026. Chúng tôi công khai cách hoạt động và kênh liên hệ chính thức để bạn tự kiểm tra.",
+    whoPoints: [
+      "Kiếm xu miễn phí, không cần nạp tiền để rút.",
+      "Chuyển khoản chỉ dùng khi bạn mua quà trực tiếp.",
+      "Hoa hồng giới thiệu không phải cam kết thu nhập.",
+    ],
+    whoMore: "Đọc trang Về chúng tôi",
+    whoOperator: "Người vận hành",
+    whoSince: "Hoạt động từ",
+    whoLegal: "Pháp lý & chính sách",
   },
-  {
-    icon: CalendarCheck,
-    t: "ld.f1t",
-    d: "ld.f1d",
-    featured: true,
-    span: "sm:col-span-2",
+  en: {
+    h1a: "Earn Coins",
+    h1b: "Redeem with ease",
+    heroSub:
+      "Complete simple tasks, earn Coins and redeem Robux, in-game diamonds and more rewards.",
+    how: "How it works",
+    note: "Earning coins is completely free. Bank transfer is only for buying gifts directly.",
+    facts: [
+      ["1 Coin = 1 VND", "Coin price equals cash price"],
+      ["10,000 VND", "Minimum withdrawal"],
+      ["7 days", "Check-in streak, 1,000 coins on the last day"],
+      ["15%", "Commission when friends complete tasks"],
+    ],
+    featTitle: "What you can do on NXX315",
+    guide: "Read the guide",
+    features: [
+      {
+        to: "/guide/lam-nhiem-vu",
+        title: "Do tasks, get coins the same day",
+        body: "Open a partner link, follow the steps, then come back to confirm and the coins land in your wallet. Each task has its own daily limit.",
+      },
+      {
+        to: "/guide/doi-thuong",
+        title: "Redeem coins for game gifts",
+        body: "Robux, Quân Huy, Free Fire diamonds and more. Pay with Coins or bank transfer and track every order in History.",
+      },
+      {
+        to: "/guide/rut-tien",
+        title: "Withdraw when you need to",
+        body: "Withdraw from 10,000 VND to a bank, MoMo or ZaloPay. The fee is 1,000 Coins per request and requests are reviewed manually.",
+      },
+      {
+        to: "/guide/moi-ban",
+        title: "Invite friends, earn commission",
+        body: "Friends who enter your code get 200 coins. You get 15% of the coins they earn from tasks, plus bonuses at 3, 5, 10 and 20 invites.",
+      },
+    ],
+    more: "There is also daily check-in, minigames, levels and a leaderboard.",
+    howTitle: "Get started in 3 steps",
+    ctaTitle: "Start earning Coins today.",
+    whoTitle: "Who is behind NXX315",
+    whoBody:
+      "NXX315 is run by an individual and has only been running since August 2026. We publish how it works and our official contacts so you can check for yourself.",
+    whoPoints: [
+      "Earning is free, no deposit needed to withdraw.",
+      "Bank transfer is only for buying gifts directly.",
+      "Referral commission is not an income guarantee.",
+    ],
+    whoMore: "Read the About page",
+    whoOperator: "Operator",
+    whoSince: "Running since",
+    whoLegal: "Legal & policies",
   },
-  { icon: Flame, t: "ld.f2t", d: "ld.f2d" },
-  {
-    icon: Gamepad2,
-    t: "ld.f3t",
-    d: "ld.f3d",
-    chips: ["dash.wheel", "dash.scratch", "dash.dice"],
-  },
-  { icon: TrendingUp, t: "ld.f4t", d: "ld.f4d" },
-  { icon: Trophy, t: "ld.f6t", d: "ld.f6d" },
-  { icon: Share2, t: "ld.f5t", d: "ld.f5d" },
-  { icon: Wallet, t: "ld.f8t", d: "ld.f8d" },
-  { icon: Bell, t: "ld.f9t", d: "ld.f9d" },
-  { icon: Smartphone, t: "ld.f10t", d: "ld.f10d" },
-];
+};
 
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
@@ -102,203 +215,355 @@ const SAFETY = [
   { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
 ];
 
-const GRID_BG = {
-  backgroundImage:
-    "linear-gradient(rgba(5,150,105,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(5,150,105,0.06) 1px, transparent 1px)",
-  backgroundSize: "44px 44px",
-};
+// Icon Lucide cho 4 feature, có fallback nếu features > 4
+const FEATURE_ICONS = [ListChecks, Gift, Wallet, Users];
+
+const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 
 export default function CloudVIPLanding() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const c = COPY[lang] || COPY.vi;
   const navigate = useNavigate();
+  const [openFaq, setOpenFaq] = useState(0);
+
+  // Xử lý an toàn cho launched (string hoặc object)
+  const launchedText =
+    typeof SITE.launched === "object"
+      ? SITE.launched[lang] || SITE.launched.vi
+      : SITE.launched;
 
   return (
     <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <LandingHeader />
 
       <main>
-        {/* ============ HERO ============ */}
+        {/* ============ ĐẦU TRANG ============ */}
+        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-14 pt-10 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:pb-24 lg:pt-20">
+          <div>
+            <p className="text-[14px] font-medium text-slate-500">
+              {t("ld.badge")}
+            </p>
+            <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
+              <span className="text-blue-600">{c.h1a}</span> {c.h1b}
+              <Img3D
+                name="icon-gift"
+                Fallback={Gift}
+                shadow={false}
+                size="ml-1.5 inline-block h-10 w-10 align-[-0.15em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
+              />
+            </h1>
+            <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
+              {c.heroSub}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <button
+                onClick={() => navigate("/register")}
+                className="inline-flex h-12 items-center gap-2 rounded-xl bg-blue-600 px-6 text-[15px] font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+              >
+                {t("ld.ctaStart")} <ArrowRight size={17} />
+              </button>
+              <button
+                onClick={() => scrollToId("how")}
+                className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-slate-700 transition hover:text-blue-600"
+              >
+                {c.how} <ChevronDown size={16} />
+              </button>
+            </div>
+            <p className="mt-4 max-w-md text-[13.5px] leading-6 text-slate-500">
+              {c.note}
+            </p>
+          </div>
+          <HeroArt />
+        </section>
+
+        {/* ============ SỐ LIỆU ============ */}
+        <section className="border-y border-slate-200 bg-slate-50">
+          <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-5 py-10 lg:grid-cols-4 lg:gap-x-0">
+            {c.facts.map(([v, l], i) => (
+              <div
+                key={i}
+                className={i > 0 ? "lg:border-l lg:border-slate-200 lg:pl-8" : ""}
+              >
+                <dt className="text-[26px] font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+                  {v}
+                </dt>
+                <dd className="mt-1 max-w-[220px] text-[13.5px] leading-5 text-slate-500">
+                  {l}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        {/* ============ TÍNH NĂNG ============ */}
         <section
-          className="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 to-white"
-          style={GRID_BG}
+          id="features"
+          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-24"
         >
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-12 pt-10 lg:grid-cols-[1.05fr_.95fr] lg:pb-20 lg:pt-16">
-            {/* Căn trái để sát tường */}
-            <div className="text-left">
-              <span className="relative inline-flex items-center gap-2.5 border border-emerald-600/25 bg-white px-3.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700 sm:text-[11px]">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                {t("ld.badge")}
-                <Corners />
-              </span>
+          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            {c.featTitle}
+          </h2>
 
-              {/* --- CHỈ 2 DÒNG DUY NHẤT --- */}
-              <h1 className="mt-6 text-[34px] font-black uppercase leading-[1.25] tracking-[-0.02em] text-slate-950 sm:text-6xl">
-                <span className="block text-slate-950">{t("ld.h1a")}</span>
-                <span className="block text-emerald-600">{t("ld.h1b")}</span>
-              </h1>
-              {/* -------------------------- */}
+          <div className="mt-12 divide-y divide-slate-200 border-y border-slate-200">
+            {c.features.map((f, i) => {
+              const Icon = FEATURE_ICONS[i] || ListChecks;
+              return (
+                <div
+                  key={f.to}
+                  className="grid gap-4 py-8 md:grid-cols-[48px_1fr_auto] md:items-start md:gap-8"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon size={22} />
+                  </span>
+                  <div>
+                    <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                      {f.title}
+                    </h3>
+                    <p className="mt-2 max-w-xl text-[16px] leading-7 text-slate-600">
+                      {f.body}
+                    </p>
+                  </div>
+                  <Link
+                    to={f.to}
+                    className="inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline md:mt-1.5"
+                  >
+                    {c.guide} <ArrowRight size={15} />
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
 
-              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-slate-500 lg:mx-0">
-                {t("ld.heroSub")}
+          <p className="mt-8 text-[15px] text-slate-500">{c.more}</p>
+        </section>
+
+        {/* ============ CÁCH HOẠT ĐỘNG ============ */}
+        <section
+          id="how"
+          className="scroll-mt-20 border-y border-slate-200 bg-slate-50"
+        >
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
+            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              {c.howTitle}
+            </h2>
+            <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+              {[1, 2, 3].map((n) => (
+                <li key={n} className="border-t-2 border-slate-900 pt-5">
+                  <span className="text-[14px] font-semibold text-slate-400">
+                    0{n}
+                  </span>
+                  <h3 className="mt-2 text-xl font-bold text-slate-900">
+                    {t(`ld.s${n}t`)}
+                  </h3>
+                  <p className="mt-2 text-[15px] leading-7 text-slate-600">
+                    {t(`ld.s${n}d`)}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ============ AN TOÀN ============ */}
+        <section
+          id="safety"
+          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-24"
+        >
+          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            {t("ld.safeTitle")}
+          </h2>
+          <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-600">
+            {t("ld.safeSub")}
+          </p>
+          <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+            {SAFETY.map(({ icon: Icon, t: tk, d }) => (
+              <div key={tk} className="flex gap-4">
+                <Icon className="mt-1 h-5 w-5 shrink-0 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-slate-900">{t(tk)}</h3>
+                  <p className="mt-1.5 text-[15px] leading-7 text-slate-600">
+                    {t(d)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ AI ĐỨNG SAU ============ */}
+        <section className="border-t border-slate-200 bg-slate-50">
+          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-2 md:gap-16">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                {c.whoTitle}
+              </h2>
+              <p className="mt-4 max-w-md text-[16px] leading-7 text-slate-600">
+                {c.whoBody}
               </p>
+              <ul className="mt-5 space-y-2 text-[15px] text-slate-700">
+                {c.whoPoints.map((p) => (
+                  <li key={p} className="flex gap-3">
+                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/about"
+                className="mt-6 inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline"
+              >
+                {c.whoMore} <ArrowRight size={15} />
+              </Link>
 
-              <div className="mt-7 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
-                <button
-                  onClick={() => navigate("/register")}
-                  className={`${primaryBtn} w-full sm:w-auto`}
-                >
-                  {t("ld.ctaStart")} <ArrowRight size={16} />
-                </button>
-                <button
-                  onClick={() => scrollToId("how")}
-                  className={`${ghostBtn} w-full sm:w-auto`}
-                >
-                  {t("ld.ctaHow")}
-                </button>
+              {/* Pháp lý & chính sách */}
+              <div className="mt-8 border-t border-slate-200 pt-5">
+                <p className="text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+                  {c.whoLegal}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
+                  <Link
+                    to="/terms"
+                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
+                  >
+                    {lang === "en" ? "Terms of Service" : "Điều khoản sử dụng"}
+                  </Link>
+                  <Link
+                    to="/privacy"
+                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
+                  >
+                    {lang === "en" ? "Privacy Policy" : "Chính sách bảo mật"}
+                  </Link>
+                  <Link
+                    to="/refund"
+                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
+                  >
+                    {lang === "en" ? "Refund Policy" : "Chính sách hoàn tiền"}
+                  </Link>
+                </div>
               </div>
             </div>
 
-            <HeroConsole />
+            <dl className="divide-y divide-slate-200 border-y border-slate-200 text-[15px]">
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">{c.whoOperator}</dt>
+                <dd className="font-semibold text-slate-900">{SITE.operator}</dd>
+              </div>
+
+              {SITE.address && (
+                <div className="flex justify-between gap-4 py-3.5">
+                  <dt className="text-slate-500">
+                    {lang === "en" ? "Address" : "Địa chỉ"}
+                  </dt>
+                  <dd className="text-right font-semibold text-slate-900">
+                    {SITE.address}
+                  </dd>
+                </div>
+              )}
+
+              {SITE.business && (
+                <div className="flex justify-between gap-4 py-3.5">
+                  <dt className="text-slate-500">
+                    {lang === "en" ? "Business" : "Kinh doanh"}
+                  </dt>
+                  <dd className="text-right font-semibold text-slate-900">
+                    {SITE.business}
+                  </dd>
+                </div>
+              )}
+
+              {SITE.youtube && (
+                <div className="flex justify-between gap-4 py-3.5">
+                  <dt className="text-slate-500">YouTube</dt>
+                  <dd>
+                    <a
+                      href={SITE.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-blue-600 hover:underline"
+                    >
+                      {SITE.youtube.replace("https://www.youtube.com/", "")}
+                    </a>
+                  </dd>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">Zalo</dt>
+                <dd>
+                  <a
+                    href={SITE.zaloUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-blue-600 hover:underline"
+                  >
+                    {SITE.zalo}
+                  </a>
+                </dd>
+              </div>
+
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">Email</dt>
+                <dd className="break-all text-right font-semibold text-slate-900">
+                  {SITE.email}
+                </dd>
+              </div>
+
+              <div className="flex justify-between gap-4 py-3.5">
+                <dt className="text-slate-500">{c.whoSince}</dt>
+                <dd className="font-semibold text-slate-900">
+                  {launchedText}
+                </dd>
+              </div>
+            </dl>
           </div>
         </section>
 
-        {/* ============ DẢI TIN CẬY ============ */}
-        <div className="border-y border-slate-200 bg-slate-50">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-2.5 px-5 py-5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-            {["ld.check1", "ld.check2", "ld.check3"].map((k) => (
-              <span key={k} className="flex items-center gap-2.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                {t(k)}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* ============ 001 CÁCH HOẠT ĐỘNG ============ */}
-        <section
-          id="how"
-          className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:py-24"
-        >
-          <SectionHead
-            index="001"
-            tag={t("ld.nav.how")}
-            title={t("ld.howTitle")}
-            sub={t("ld.howTag")}
-          />
-          <div className="mt-12 grid gap-12 md:grid-cols-3 md:gap-8">
-            {STEPS.map(({ n, icon, t: tk, d, chips }) => (
-              <StepCard
-                key={n}
-                n={n}
-                icon={icon}
-                title={t(tk)}
-                desc={t(d)}
-              >
-                {chips.map((c) => (
-                  <Chip key={c.k || c.raw}>{c.raw ?? t(c.k)}</Chip>
-                ))}
-              </StepCard>
-            ))}
-          </div>
-        </section>
-
-        {/* ============ 002 TÍNH NĂNG ============ */}
-        <section
-          id="features"
-          className="scroll-mt-24 border-t border-slate-200 bg-slate-50"
-          style={GRID_BG}
-        >
-          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-            <SectionHead
-              index="002"
-              tag={t("ld.nav.features")}
-              title={t("ld.bentoTitle")}
-              sub={t("ld.bentoSub")}
-            />
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {BENTO.map(({ icon, t: tk, d, span, featured, chips }) => (
-                <BentoCard
-                  key={tk}
-                  icon={icon}
-                  title={t(tk)}
-                  desc={t(d)}
-                  featured={featured}
-                  className={span || ""}
-                >
-                  {chips?.map((c) => (
-                    <Chip key={c}>{t(c)}</Chip>
-                  ))}
-                </BentoCard>
-              ))}
-            </div>
-            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
-              {t("ld.storeNote")}
-            </p>
-          </div>
-        </section>
-
-        {/* ============ 003 AN TOÀN ============ */}
-        <section
-          id="safety"
-          className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:py-24"
-        >
-          <SectionHead
-            index="003"
-            tag={t("ld.nav.safety")}
-            title={t("ld.safeTitle")}
-            sub={t("ld.safeSub")}
-          />
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
-            {SAFETY.map(({ icon, t: tk, d }) => (
-              <SafetyBadge key={tk} icon={icon} title={t(tk)} desc={t(d)} />
-            ))}
-          </div>
-        </section>
-
-        {/* ============ 004 FAQ ============ */}
+                {/* ============ FAQ ============ */}
         <section
           id="faq"
-          className="scroll-mt-24 border-t border-slate-200 bg-slate-50"
+          className="scroll-mt-20 border-t border-slate-200 bg-white"
         >
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
-            <SectionHead
-              index="004"
-              tag={t("ld.nav.faq")}
-              title={t("ld.faqTitle")}
-              sub={t("ld.faqTag")}
-            />
-            <div className="mt-10 space-y-3">
-              {[1, 2, 7, 3, 4, 5, 6].map((i) => (
-                <FAQItem key={i} q={t(`ld.faq${i}q`)} a={t(`ld.faq${i}a`)} />
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              {t("ld.faqTitle")}
+            </h2>
+            <div className="mt-8 border-t border-slate-200">
+              {FAQ_ORDER.map((i, idx) => (
+                <FaqRow
+                  key={i}
+                  q={t(`ld.faq${i}q`)}
+                  a={t(`ld.faq${i}a`)}
+                  open={openFaq === idx}
+                  onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
+                />
               ))}
             </div>
           </div>
         </section>
 
-        {/* ============ CTA CUỐI ============ */}
+        {/* ============ KÊU GỌI CUỐI ============ */}
         <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-          <div className="relative bg-emerald-600 p-8 text-center text-white shadow-xl shadow-emerald-600/20 sm:p-14">
-            <h2 className="text-[28px] font-black uppercase leading-[1.1] tracking-[-0.02em] sm:text-5xl">
-              {t("ld.ctaTitle")}
+          <div className="rounded-3xl bg-blue-600 px-6 py-12 sm:px-12 sm:py-16">
+            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {c.ctaTitle}
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-emerald-50">
+            <p className="mt-3 max-w-lg text-[16px] leading-7 text-blue-100">
               {t("ld.ctaSub")}
             </p>
-            <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
               <button
                 onClick={() => navigate("/register")}
-                className="inline-flex w-full items-center justify-center gap-2 bg-white px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-emerald-700 transition hover:bg-emerald-50 sm:w-auto"
+                className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-[15px] font-semibold text-blue-700 transition hover:bg-blue-50 active:scale-[0.98]"
               >
-                {t("ld.ctaReg")} <ArrowRight size={16} />
+                {t("ld.ctaReg")} <ArrowRight size={17} />
               </button>
               <button
                 onClick={() => navigate("/login")}
-                className="inline-flex w-full items-center justify-center border-2 border-white/60 px-6 py-4 text-[13px] font-extrabold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 sm:w-auto"
+                className="text-[15px] font-semibold text-white underline-offset-4 hover:underline"
               >
                 {t("ld.login")}
               </button>
             </div>
-            <Corners className="border-white" />
           </div>
         </section>
       </main>
@@ -307,4 +572,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-                                   }
+}
