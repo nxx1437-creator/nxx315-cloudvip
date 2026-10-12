@@ -62,9 +62,16 @@ export default function Store() {
       <TopHeader />
 
       <main className="mx-auto max-w-5xl space-y-7 px-4 py-4">
-        <FeaturedRow navigate={navigate} />
+        <FeaturedRow
+          navigate={navigate}
+          onTitleClick={() =>
+            document
+              .getElementById("store-list")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+        />
 
-        <section>
+        <section id="store-list">
           <SectionTitle
             accent={en ? "Game" : "Danh sách"}
             rest={en ? "categories" : "game"}
