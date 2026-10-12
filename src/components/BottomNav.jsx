@@ -21,8 +21,7 @@ export default function BottomNav() {
       className="fixed inset-x-0 bottom-3 z-30 px-3"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {/* Nền trắng, có chữ, giống Ảnh 1 */}
-      <div className="mx-auto flex max-w-md items-center justify-between rounded-[28px] border border-slate-100 bg-white/95 p-2 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.3)] backdrop-blur md:max-w-2xl">
+      <div className="mx-auto flex max-w-md items-stretch justify-between rounded-[28px] border border-slate-100 bg-white/95 p-1.5 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.3)] backdrop-blur md:max-w-2xl">
         {tabs.map(({ path, labelKey, icon: Icon }) => {
           const active = pathname === path || pathname.startsWith(path + "/");
           return (
@@ -32,7 +31,7 @@ export default function BottomNav() {
               className="group flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 transition active:scale-95"
             >
               <span
-                className={`flex h-9 w-12 items-center justify-center rounded-full transition-all duration-200 ${
+                className={`flex h-9 w-14 items-center justify-center rounded-full transition-all duration-200 ${
                   active
                     ? "bg-emerald-100 text-emerald-700"
                     : "text-slate-400 group-hover:bg-slate-50 group-hover:text-slate-600"
@@ -41,7 +40,7 @@ export default function BottomNav() {
                 <Icon size={21} strokeWidth={active ? 2.4 : 2} />
               </span>
               <span
-                className={`text-[10px] leading-tight transition ${
+                className={`text-[11px] leading-tight transition ${
                   active
                     ? "font-bold text-emerald-700"
                     : "font-medium text-slate-500"
@@ -55,5 +54,6 @@ export default function BottomNav() {
       </div>
     </nav>
   );
-}
+                }
+                
                 
