@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Coins, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -9,7 +9,8 @@ import { SectionLabel } from "../components/home/HomeSections.jsx";
 import {
   GameCard,
   StoreSearch,
-  BannerSlideshow,
+  FeaturedCarousel,
+  GameRow,
 } from "../components/store/StoreParts.jsx";
 import {
   WithdrawBanner,
@@ -19,13 +20,11 @@ import {
   GAMES,
   getRecommendedGames,
   trackGameView,
-  locale,
 } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
-import InlineAlert from "../components/InlineAlert.jsx";
 
 export default function Store() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { profile } = useProfile();
 
@@ -83,41 +82,31 @@ export default function Store() {
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
         <StoreSearch
-  search={search}
-  setSearch={setSearch}
-  onSelect={handleGameClick}
-/>
+          search={search}
+          setSearch={setSearch}
+          onSelect={handleGameClick}
+        />
 
-{/* Tạm tắt alert
-<InlineAlert
-  severity="success"
-  marquee={true}
-  dismissible={true}
-  message="💰 Rút tiền chỉ 2-24h! Tối thiểu 50,000 Coin là rút được."
-  action={{ label: "Rút ngay", href: "/withdraw" }}
-/>
-*/}
+        <FeaturedCarousel navigate={navigate} />
 
-<BannerSlideshow navigate={navigate} />
-        
         {/* Dành cho bạn */}
         {recommended.length > 0 && !search && (
-          <section>
-            <SectionLabel>{t("st.forYou")}</SectionLabel>
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {recommended.map((game) => (
-                <div key={game.id} className="w-[150px] shrink-0 sm:w-[170px]">
-                  <GameCard game={game} onClick={handleGameClick} />
-                </div>
-              ))}
-            </div>
-          </section>
+          <GameRow
+            title={t("st.forYou")}
+            games={recommended}
+            onSelect={handleGameClick}
+            onTitleClick={() =>
+              document
+                .getElementById("store-list")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          />
         )}
 
         <WithdrawBanner navigate={navigate} />
 
         {/* Danh sách game */}
-        <section>
+        <section id="store-list">
           <SectionLabel
             right={
               <span className="font-mono text-[11px] text-slate-400">
@@ -181,4 +170,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-                }
+              }
