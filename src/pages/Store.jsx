@@ -2,18 +2,17 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 
-// ĐÃ SỬA: Lùi 1 cấp (../) để thoát khỏi thư mục pages
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+// ĐÃ SỬA: Dùng FeaturedRow thay vì FeaturedCarousel
 import {
-  FeaturedCarousel,
+  FeaturedRow,
   GameCard,
 } from "../components/store/StoreParts.jsx";
 import {
   WithdrawBanner,
   StoreHistoryPreview,
 } from "../components/store/StoreExtras.jsx";
-// ĐÃ SỬA: Lùi 1 cấp (../) để tìm tới thư mục lib và i18n
 import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
@@ -63,7 +62,15 @@ export default function Store() {
       <TopHeader />
 
       <main className="mx-auto max-w-5xl space-y-7 px-4 py-4 pb-24">
-        <FeaturedCarousel navigate={navigate} />
+        {/* ĐÃ SỬA: Dùng FeaturedRow thay vì FeaturedCarousel */}
+        <FeaturedRow
+          navigate={navigate}
+          onTitleClick={() =>
+            document
+              .getElementById("store-list")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+        />
 
         <section id="store-list">
           <div className="mb-3 flex items-end justify-between gap-3">
