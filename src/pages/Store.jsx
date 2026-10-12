@@ -2,16 +2,16 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 
-import TopHeader from "./components/TopHeader.jsx";
-import BottomNav from "./components/BottomNav.jsx";
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 import {
   FeaturedCarousel,
   GameCard,
-} from "./components/store/StoreParts.jsx";
+} from "../components/store/StoreParts.jsx";
 import {
   WithdrawBanner,
   StoreHistoryPreview,
-} from "./components/store/StoreExtras.jsx";
+} from "../components/store/StoreExtras.jsx";
 import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
