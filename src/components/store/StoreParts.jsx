@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Search, Flame, ChevronRight, ChevronLeft, X } from "lucide-react";
+import { Search, Flame, ChevronRight, X, ArrowRight } from "lucide-react";
 import { useI18n } from "../../i18n/index.js";
 import { BANNERS, BANNER_INTERVAL, GAMES, getImageUrl } from "../../lib/storeData.js";
 
@@ -54,7 +54,8 @@ export const GameCard = React.memo(function GameCard({ game, onClick }) {
           </div>
         )}
 
-        <span className="absolute bottom-2 left-2 rounded-md border border-slate-200 bg-white/90 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-slate-500">
+        <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2 py-1 font-mono text-[9px] font-bold uppercase text-white backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           {t(`st.cat.${game.category}`)}
         </span>
       </div>
@@ -157,136 +158,193 @@ export function StoreSearch({ search, setSearch, onSelect }) {
     </div>
   );
 }
-
-// ===== Banner (tự chạy, có mũi tên, vuốt trái/phải được) =====
-export function BannerSlideshow({ navigate }) {
-  const { t } = useI18n();
-  const [pos, setPos] = useState(0);
-  const [imageErrors, setImageErrors] = useState({});
-  const [isPaused, setIsPaused] = useState(false);
+// ===== Carousel "Nổi bật" (thẻ lớn, tự chạy, vuốt được) =====
+export function FeaturedCarousel({ navigate }) {
+  const { t, lang } = useI18n();
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [failed, setFailed] = useState({});
   const touch = useRef({ x: 0, swiped: false });
 
-  const valid = BANNERS.map((_, i) => i).filter((i) => !imageErrors[i]);
-  const total = valid.length;
-  const current = total ? valid[pos % total] : -1;
+  const items = BANNERS.map((b, i) => ({
+    ...b,
+    i,
+    game: GAMES.find((g) => g.path === b.path),
+  })).filter((b) => !failed[b.i]);
 
-  // Tạm dừng khi đang cuộn trang
-  useEffect(() => {
-    let timer;
-    const onScroll = () => {
-      setIsPaused(true);
-      clearTimeout(timer);
-      timer = setTimeout(() => setIsPaused(false), 300);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      clearTimeout(timer);
-    };
-  }, []);
+  const total = items.length;
+  const cur = total ? index % total : 0;
 
-  // Tự chuyển (đổi pos thì đếm lại từ đầu)
   useEffect(() => {
-    if (total < 2 || isPaused) return;
-    const id = setInterval(() => setPos((p) => p + 1), BANNER_INTERVAL);
+    if (total < 2 || paused) return;
+    const id = setInterval(() => setIndex((p) => p + 1), BANNER_INTERVAL);
     return () => clearInterval(id);
-  }, [total, isPaused, pos]);
+  }, [total, paused, index]);
 
-  const next = () => setPos((p) => (p + 1) % total);
-  const prev = () => setPos((p) => (p - 1 + total) % total);
+  const next = () => setIndex((p) => (p + 1) % total);
+  const prev = () => setIndex((p) => (p - 1 + total) % total);
 
-  const handleClick = () => {
+  const go = (item) => {
     if (touch.current.swiped) {
       touch.current.swiped = false;
       return;
     }
-    const banner = BANNERS[current];
-    if (banner?.path) navigate(banner.path);
+    if (item.path) navigate(item.path);
   };
 
   if (total === 0) return null;
 
   return (
-    <div
-      onClick={handleClick}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={(e) => {
-        touch.current = { x: e.touches[0].clientX, swiped: false };
-        setIsPaused(true);
-      }}
-      onTouchEnd={(e) => {
-        const dx = e.changedTouches[0].clientX - touch.current.x;
-        if (Math.abs(dx) > 40 && total > 1) {
-          touch.current.swiped = true;
-          dx < 0 ? next() : prev();
-        }
-        setIsPaused(false);
-      }}
-      className="relative aspect-[2/1] w-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm"
-    >
-      {BANNERS.map((banner, index) => {
-        if (imageErrors[index]) return null;
-        return (
-          <img
-            key={banner.image}
-            src={getImageUrl(banner.image)}
-            alt={t("st.slide", { n: index + 1 })}
-            loading={index === 0 ? "eager" : "lazy"}
-            draggable={false}
-            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out ${
-              index === current ? "z-10 opacity-100" : "z-0 opacity-0"
-            }`}
-            onError={() => setImageErrors((prev) => ({ ...prev, [index]: true }))}
-          />
-        );
-      })}
+    <section>
+      <div
+        className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onTouchStart={(e) => {
+          touch.current = { x: e.touches[0].clientX, swiped: false };
+          setPaused(true);
+        }}
+        onTouchEnd={(e) => {
+          const dx = e.changedTouches[0].clientX - touch.current.x;
+          if (Math.abs(dx) > 40 && total > 1) {
+            touch.current.swiped = true;
+            dx < 0 ? next() : prev();
+          }
+          setPaused(false);
+        }}
+      >
+        <div
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${cur * 100}%)` }}
+        >
+          {items.map((item) => {
+            const game = item.game;
+            return (
+              <div
+                key={item.image}
+                onClick={() => go(item)}
+                className="w-full shrink-0 cursor-pointer"
+              >
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                  <img
+                    src={getImageUrl(item.image)}
+                    alt={game?.name || ""}
+                    draggable={false}
+                    className="pointer-events-none h-full w-full object-cover"
+                    onError={() =>
+                      setFailed((prev) => ({ ...prev, [item.i]: true }))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-3 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {game && (
+                      <span className="rounded-full border border-slate-200 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                        {t(`st.cat.${game.category}`)}
+                      </span>
+                    )}
+                    {game?.hot && (
+                      <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-3 py-1 font-mono text-[10px] font-black uppercase tracking-wider text-white">
+                        <Flame size={11} className="fill-yellow-200 text-yellow-200" />
+                        HOT
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="text-xl font-extrabold leading-tight text-slate-900">
+                    {game?.name}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-slate-500">
+                    {item.desc?.[lang === "en" ? "en" : "vi"]}
+                  </p>
+
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white">
+                    {t("st.topUp")}
+                    <ArrowRight size={16} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {total > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              prev();
-            }}
-            className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
-            aria-label="Previous"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              next();
-            }}
-            className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
-            aria-label="Next"
-          >
-            <ChevronRight size={18} />
-          </button>
-
-          <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
-            {valid.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPos(i);
-                }}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === pos % total
-                    ? "w-6 bg-emerald-400"
-                    : "w-1.5 bg-white/70 hover:bg-white"
-                }`}
-                aria-label={t("st.slide", { n: i + 1 })}
-              />
-            ))}
-          </div>
-        </>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          {items.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setIndex(i)}
+              aria-label={t("st.slide", { n: i + 1 })}
+              className={`h-2 rounded-full transition-all ${
+                i === cur ? "w-6 bg-emerald-600" : "w-2 bg-slate-300"
+              }`}
+            />
+          ))}
+        </div>
       )}
-    </div>
+    </section>
   );
-        }
+}
+
+// ===== Hàng thẻ cuộn ngang có tiêu đề "Tên >" =====
+export function GameRow({ title, games, onSelect, onTitleClick }) {
+  const { t } = useI18n();
+
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={onTitleClick}
+        disabled={!onTitleClick}
+        className="mb-3 flex items-center gap-1 text-left text-lg font-extrabold text-slate-900 disabled:cursor-default"
+      >
+        {title}
+        {onTitleClick && <ChevronRight size={20} className="text-slate-400" />}
+      </button>
+
+      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {games.map((game) => (
+          <button
+            key={game.id}
+            type="button"
+            onClick={() => onSelect(game)}
+            className="group w-[210px] shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition active:scale-[0.98]"
+          >
+            <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50/60">
+              <img
+                src={getImageUrl(game.logo)}
+                alt={game.name}
+                loading="lazy"
+                draggable={false}
+                className="h-full w-full object-contain p-4 transition duration-300 group-hover:scale-105"
+              />
+              <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2 py-1 font-mono text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                {t(`st.cat.${game.category}`)}
+              </span>
+              {game.hot && (
+                <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-1">
+                  <Flame size={10} className="fill-yellow-200 text-yellow-200" />
+                  <span className="font-mono text-[9px] font-black text-white">
+                    HOT
+                  </span>
+                </span>
+              )}
+            </div>
+            <div className="p-3">
+              <p className="truncate text-sm font-bold text-slate-900">
+                {game.name}
+              </p>
+              <p className="mt-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                {t("st.topUp")}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
