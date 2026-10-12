@@ -54,14 +54,14 @@ export const BANNER_INTERVAL = 5000;
 
 // ============= GAMES =============
 export const GAMES = [
-  { id: 1, name: "Roblox", category: "pc", logo: "roblox.png", path: "/store/roblox", hot: true },
-  { id: 2, name: "Play Together VNG", category: "mobile", logo: "play-together-vng.png", path: "/store/play-together", hot: true },
-  { id: 3, name: "Liên Quân Mobile", category: "mobile", logo: "lien-quan-mobile.png", path: "/store/lien-quan", hot: true },
-  { id: 4, name: "Free Fire", category: "mobile", logo: "free-fire.png", path: "/store/free-fire", hot: true },
-  { id: 5, name: "PUBG Mobile VN", category: "mobile", logo: "pubg-mobile-vn.png", path: "/store/pubg-mobile", hot: true },
-  { id: 6, name: "VALORANT", category: "pc", logo: "valorant.png", path: "/store/valorant" },
-  { id: 8, name: "Delta Force", category: "mobile", logo: "Delta.png", path: "/store/Delta-Force", hot: true },
-  { id: 10, name: "FC Mobile VN", category: "mobile", logo: "fc-mobile.png", path: "/store/fc-mobile" },
+  { id: 1, name: "Roblox", category: "pc", logo: "roblox.png", cover: "cover-roblox.png", path: "/store/roblox", hot: true },
+  { id: 2, name: "Play Together VNG", category: "mobile", logo: "play-together-vng.png", cover: "cover-play-together.png", path: "/store/play-together", hot: true },
+  { id: 3, name: "Liên Quân Mobile", category: "mobile", logo: "lien-quan-mobile.png", cover: "cover-lien-quan.png", path: "/store/lien-quan", hot: true },
+  { id: 4, name: "Free Fire", category: "mobile", logo: "free-fire.png", cover: "cover-free-fire.png", path: "/store/free-fire", hot: true },
+  { id: 5, name: "PUBG Mobile VN", category: "mobile", logo: "pubg-mobile-vn.png", cover: "cover-pubg-mobile.png", path: "/store/pubg-mobile", hot: true },
+  { id: 6, name: "VALORANT", category: "pc", logo: "valorant.png", cover: "cover-valorant.png", path: "/store/valorant" },
+  { id: 8, name: "Delta Force", category: "mobile", logo: "Delta.png", cover: "cover-delta-force.png", path: "/store/Delta-Force", hot: true },
+  { id: 10, name: "FC Mobile VN", category: "mobile", logo: "fc-mobile.png", cover: "cover-fc-mobile.png", path: "/store/fc-mobile" },
 ];
 
 // ============= TRACKING (gợi ý "Dành cho bạn") =============
