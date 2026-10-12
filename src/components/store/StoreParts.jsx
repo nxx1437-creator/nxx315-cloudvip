@@ -278,7 +278,7 @@ export function StoreSearch({ search, setSearch, onSelect }) {
   );
 }
 
-// ===== Carousel "Nổi bật" (dự phòng, nếu cần dùng) =====
+// ===== Carousel "Nổi bật" (dự phòng) =====
 export function FeaturedCarousel({ navigate }) {
   const { t, lang } = useI18n();
   const [index, setIndex] = useState(0);
@@ -467,4 +467,4 @@ export function GameRow({ title, games, onSelect, onTitleClick }) {
       </div>
     </section>
   );
-            }
+                    }
