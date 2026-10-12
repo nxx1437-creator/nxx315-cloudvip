@@ -17,7 +17,7 @@ export function GameImage({ src, alt }) {
   );
 }
 
-// ===== Thẻ game =====
+// ===== Thẻ game (gọn) =====
 export const GameCard = React.memo(function GameCard({ game, onClick }) {
   const { t } = useI18n();
   const [imageError, setImageError] = useState(false);
@@ -27,16 +27,16 @@ export const GameCard = React.memo(function GameCard({ game, onClick }) {
     <button
       type="button"
       onClick={() => onClick(game)}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition hover:border-emerald-400 hover:shadow-md active:scale-[0.99]"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition hover:border-emerald-400 active:scale-[0.98]"
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50/50">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50/50">
         {!imageError ? (
           <img
             src={imageUrl}
             alt={game.name}
             loading="lazy"
             decoding="async"
-            className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
+            className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
         ) : (
@@ -46,32 +46,27 @@ export const GameCard = React.memo(function GameCard({ game, onClick }) {
         )}
 
         {game.hot && (
-          <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-1 shadow-md">
+          <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 px-2 py-1 shadow">
             <Flame size={10} className="fill-yellow-200 text-yellow-200" />
-            <span className="font-mono text-[9px] font-black uppercase tracking-wide text-white">
-              HOT
-            </span>
-          </div>
+            <span className="font-mono text-[9px] font-black text-white">HOT</span>
+          </span>
         )}
 
-        <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2 py-1 font-mono text-[9px] font-bold uppercase text-white backdrop-blur-sm">
+        <span className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2 py-1 font-mono text-[9px] font-bold uppercase text-white backdrop-blur-sm">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           {t(`st.cat.${game.category}`)}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-3">
-        <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-tight text-slate-900">
+      <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+        <h3 className="truncate text-sm font-bold text-slate-900">
           {game.name}
         </h3>
-        <div className="mt-auto flex w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white py-2.5 font-mono text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 transition group-hover:bg-emerald-600 group-hover:text-white">
-          {t("st.topUp")}
-        </div>
+        <ChevronRight size={16} className="shrink-0 text-emerald-600" />
       </div>
     </button>
   );
 });
-
 // ===== Tìm kiếm có nút xoá =====
 export function StoreSearch({ search, setSearch, onSelect }) {
   const { t } = useI18n();
