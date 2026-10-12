@@ -17,7 +17,130 @@ export function GameImage({ src, alt }) {
   );
 }
 
-// ===== Thẻ game (gọn) =====
+// ===== Nhãn nhỏ: chấm xanh + chữ =====
+function DotPill({ children, small }) {
+  return (
+    <span
+      className={`flex items-center rounded-lg bg-slate-900/80 font-mono font-bold uppercase text-white backdrop-blur-sm ${
+        small ? "gap-1 px-1.5 py-0.5 text-[9px]" : "gap-1.5 px-2 py-1 text-[10px]"
+      }`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+      {children}
+    </span>
+  );
+}
+
+// ===== Chấm lửa HOT =====
+function HotDot() {
+  return (
+    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-rose-500 shadow">
+      <Flame size={11} className="fill-yellow-200 text-yellow-200" />
+    </span>
+  );
+}
+
+// ===== Thẻ Nổi bật dạng đứng (kiểu ảnh 19:16) =====
+function FeaturedCard({ item, onClick }) {
+  const { t, lang } = useI18n();
+  const [failed, setFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const { game } = item;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(item)}
+      className="relative aspect-[4/3] w-[85%] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl bg-[#14161a] text-left shadow-sm transition active:scale-[0.99]"
+    >
+      {!failed && (
+        <img
+          src={getImageUrl(item.image)}
+          alt={game.name}
+          draggable={false}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      )}
+
+      <div className="absolute left-3 top-3 flex items-center gap-1.5">
+        <DotPill>{t(`st.cat.${game.category}`)}</DotPill>
+        {game.hot && <HotDot />}
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-[#14161a] via-[#14161a]/90 to-transparent px-3 pb-3.5 pt-24">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+          {!logoFailed ? (
+            <img
+              src={getImageUrl(game.logo)}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <span className="text-xl">🎮</span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-lg font-extrabold leading-tight text-white">
+              {game.name}
+            </p>
+            <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-white/90">
+              {t("st.topUp")}
+            </span>
+          </div>
+          <p className="mt-0.5 truncate text-sm text-slate-400">
+            {item.desc?.[lang === "en" ? "en" : "vi"]}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ===== Hàng "Nổi bật" cuộn ngang (kiểu ảnh 19:16) =====
+export function FeaturedRow({ navigate, onTitleClick }) {
+  const { lang } = useI18n();
+  const en = lang === "en";
+
+  const items = BANNERS.map((b) => ({
+    ...b,
+    game: GAMES.find((g) => g.path === b.path),
+  })).filter((b) => b.game);
+
+  if (items.length === 0) return null;
+
+  return (
+    <section>
+      <button
+        type="button"
+        onClick={onTitleClick}
+        className="mb-3 flex items-center gap-1 text-left"
+      >
+        <h2 className="text-xl font-extrabold leading-tight text-slate-900">
+          <span className="text-emerald-600">
+            {en ? "Featured" : "Nổi bật"}
+          </span>{" "}
+          {en ? "for you" : "dành cho bạn"}
+        </h2>
+        <ChevronRight size={22} className="text-slate-400" />
+      </button>
+      <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {items.map((item) => (
+          <FeaturedCard
+            key={item.image}
+            item={item}
+            onClick={(it) => navigate(it.path)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ===== Thẻ game (lưới vuông) =====
 export const GameCard = React.memo(function GameCard({ game, onClick }) {
   const { t } = useI18n();
   const [imageError, setImageError] = useState(false);
@@ -29,7 +152,6 @@ export const GameCard = React.memo(function GameCard({ game, onClick }) {
       onClick={() => onClick(game)}
       className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition hover:border-emerald-400 active:scale-[0.98]"
     >
-      {/* ĐÃ SỬA: Đổi aspect-[4/3] thành aspect-square để thẻ vuông vức hơn */}
       <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50/50">
         {!imageError ? (
           <img
@@ -37,7 +159,6 @@ export const GameCard = React.memo(function GameCard({ game, onClick }) {
             alt={game.name}
             loading="lazy"
             decoding="async"
-            // ĐÃ SỬA: Giảm padding từ p-3 xuống p-2 để ảnh to hơn
             className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
@@ -157,7 +278,7 @@ export function StoreSearch({ search, setSearch, onSelect }) {
   );
 }
 
-// ===== Carousel "Nổi bật" (thẻ lớn, tự chạy, vuốt được) =====
+// ===== Carousel "Nổi bật" (dự phòng, nếu cần dùng) =====
 export function FeaturedCarousel({ navigate }) {
   const { t, lang } = useI18n();
   const [index, setIndex] = useState(0);
@@ -310,17 +431,14 @@ export function GameRow({ title, games, onSelect, onTitleClick }) {
             key={game.id}
             type="button"
             onClick={() => onSelect(game)}
-            // ĐÃ SỬA: Giảm chiều rộng từ 210px xuống 160px để cuộn thấy nhiều game hơn
             className="group w-[160px] shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition active:scale-[0.98]"
           >
-            {/* ĐÃ SỬA: Đổi aspect-[16/10] thành aspect-square cho vuông vức */}
             <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-slate-50 to-emerald-50/60">
               <img
                 src={getImageUrl(game.logo)}
                 alt={game.name}
                 loading="lazy"
                 draggable={false}
-                // ĐÃ SỬA: Giảm padding từ p-4 xuống p-3
                 className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
               />
               <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-lg bg-slate-900/80 px-2 py-1 font-mono text-[10px] font-bold uppercase text-white backdrop-blur-sm">
@@ -349,4 +467,4 @@ export function GameRow({ title, games, onSelect, onTitleClick }) {
       </div>
     </section>
   );
-                      }
+            }
