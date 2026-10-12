@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Crown, Copy, Check, Share2, Users } from "lucide-react";
 import useLevelProgress from "../../hooks/useLevelProgress.js";
-import { Section, Tag, ProgressBar } from "./HomeUI.jsx";
+import { Panel, Tag, ProgressBar } from "./HomeUI.jsx";
 import { useI18n } from "../../i18n/index.js";
 
 // ===== Cấp độ =====
@@ -14,24 +14,22 @@ export function LevelCard({ userId, state }) {
 
   if (loading) {
     return (
-      <Section title={t("dash2.lvTitle")}>
-        <div className="skeleton-shimmer h-16 rounded-lg" />
-      </Section>
+      <Panel title={t("dash2.lvTitle")}>
+        <div className="skeleton-shimmer h-16 rounded-md" />
+      </Panel>
     );
   }
   if (!data) return null;
 
   return (
-    <Section
+    <Panel
       title={t("dash2.lvTitle")}
       right={<Tag tone="green">{t("dash2.lvBonus", { pct: data.bonus })}</Tag>}
     >
       <div className="flex items-center gap-2">
-        <Crown size={17} strokeWidth={1.75} className="text-amber-500" />
-        <p className="truncate text-base font-semibold text-slate-900">
-          {data.label}
-        </p>
-        <span className="text-xs text-slate-400">
+        <Crown size={16} strokeWidth={1.75} className="text-amber-300" />
+        <p className="truncate text-sm font-medium text-white">{data.label}</p>
+        <span className="text-xs text-[#898989]">
           {t("dash2.lvNow", { level: data.level })}
         </span>
       </div>
@@ -42,15 +40,15 @@ export function LevelCard({ userId, state }) {
             <ProgressBar pct={data.pct} />
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="tabular-nums text-slate-500">
+            <span className="tabular-nums text-[#898989]">
               {fmt(data.lifetime)} / {fmt(data.nextCoins)}
             </span>
-            <span className="font-medium tabular-nums text-emerald-700">
+            <span className="font-medium tabular-nums text-[#3ECF8E]">
               {t("dash2.lvRemain", { n: fmt(data.remain) })}
             </span>
           </div>
-          <p className="mt-3 text-[13px] leading-5 text-slate-500">
-            <span className="font-medium text-slate-800">
+          <p className="mt-3 text-xs leading-5 text-[#898989]">
+            <span className="font-medium text-[#EDEDED]">
               {t("dash2.lvNext", { label: data.next.label })}
             </span>
             {" · "}
@@ -58,11 +56,11 @@ export function LevelCard({ userId, state }) {
           </p>
         </>
       ) : (
-        <p className="mt-3 text-[13px] font-medium text-emerald-700">
+        <p className="mt-3 text-xs font-medium text-[#3ECF8E]">
           {t("dash2.lvMax")}
         </p>
       )}
-    </Section>
+    </Panel>
   );
 }
 
@@ -118,49 +116,47 @@ export function ReferralCard({ profile }) {
   };
 
   return (
-    <Section title={t("dash2.refTitle")}>
-      <p className="text-[13px] leading-5 text-slate-500">
-        {t("dash2.refSub")}
-      </p>
+    <Panel title={t("dash2.refTitle")}>
+      <p className="text-xs leading-5 text-[#898989]">{t("dash2.refSub")}</p>
 
       {code ? (
         <>
           <button
             type="button"
             onClick={handleCopy}
-            className="mt-3 flex w-full items-center justify-between rounded-lg border border-slate-200 px-3.5 py-2.5 text-left transition active:bg-slate-50"
+            className="mt-3 flex w-full items-center justify-between rounded-md border border-[#2E2E2E] bg-[#171717] px-3 py-2.5 text-left transition active:bg-[#262626]"
           >
             <span className="min-w-0">
-              <span className="block text-[11px] text-slate-400">
+              <span className="block text-[11px] text-[#6B6B6B]">
                 {t("dash2.refCode")}
               </span>
-              <span className="block truncate font-mono text-base font-semibold tracking-wider text-slate-900">
+              <span className="block truncate font-mono text-[15px] font-medium tracking-wider text-white">
                 {code}
               </span>
             </span>
-            <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-slate-500">
-              {copied ? <Check size={15} /> : <Copy size={15} />}
+            <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#A0A0A0]">
+              {copied ? <Check size={14} /> : <Copy size={14} />}
               {copied ? t("dash2.refCopied") : t("dash2.refCopy")}
             </span>
           </button>
 
           <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="flex items-center gap-1.5 text-xs text-slate-500">
+            <span className="flex items-center gap-1.5 text-xs text-[#898989]">
               <Users size={14} strokeWidth={1.75} />
               {t("dash2.refCount", { n: profile?.referrals_count || 0 })}
             </span>
             <button
               type="button"
               onClick={handleShare}
-              className="inline-flex h-9 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-[13px] font-medium text-white transition active:scale-95"
+              className="inline-flex h-8 items-center gap-2 rounded-md border border-[#3ECF8E]/50 bg-[#006239] px-3.5 text-xs font-medium text-white transition active:scale-95"
             >
-              <Share2 size={14} /> {t("dash2.refShare")}
+              <Share2 size={13} /> {t("dash2.refShare")}
             </button>
           </div>
         </>
       ) : (
-        <p className="mt-3 text-sm text-slate-400">{t("dash2.refNoCode")}</p>
+        <p className="mt-3 text-sm text-[#6B6B6B]">{t("dash2.refNoCode")}</p>
       )}
-    </Section>
+    </Panel>
   );
 }
