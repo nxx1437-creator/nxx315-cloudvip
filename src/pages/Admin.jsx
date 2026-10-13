@@ -31,6 +31,7 @@ import {
   Gamepad2,
   Crosshair,
   Flame,
+  Menu,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient";
@@ -114,179 +115,109 @@ const MENU_GROUPS = [
     ],
   },
 ];
-export default function Admin() {
+ export default function Admin() {
   const [activeTab, setActiveTab] = useState("orders");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState(() => {
     const all = {};
     MENU_GROUPS.forEach((g) => {
-      all[g.id] = g.items.some((i) => i.id === "orders");
+      all[g.id] = true;
     });
     return all;
   });
-
-  const toggleGroup = (id) => {
-    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleSelectTab = (tabId) => {
-    setActiveTab(tabId);
-  };
 
   const activeItem = MENU_GROUPS.flatMap((g) => g.items).find(
     (i) => i.id === activeTab
   );
 
-  // Nhóm đang chứa tab active (dùng cho mobile)
-  const activeGroup = MENU_GROUPS.find((g) =>
-    g.items.some((i) => i.id === activeTab)
-  );
+  const handleSelectTab = (tabId) => {
+    setActiveTab(tabId);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       {/* ==== HEADER ==== */}
-      <div className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white sm:h-11 sm:w-11">
-              <ShieldCheck size={22} />
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-white">
+              <ShieldCheck size={20} />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl">
-                Admin Dashboard
+              <h1 className="truncate text-lg font-semibold leading-tight text-slate-900">
+                Admin
               </h1>
-              <p className="truncate text-xs text-slate-500 sm:text-sm">
+              <p className="truncate text-xs text-slate-500">
                 Quản lý CloudVIP
               </p>
             </div>
           </div>
+
+          <button
+            onClick={() => setMenuOpen(true)}
+            aria-label="Mở menu"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50 lg:hidden"
+          >
+            <Menu size={20} />
+          </button>
         </div>
-      </div>
+      </header>
+
+      {/* ==== MENU TRƯỢT (MOBILE) ==== */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3.5">
+              <span className="text-base font-semibold text-slate-900">
+                Menu
+              </span>
+              <button
+                onClick={() => setMenuOpen(false)}
+                aria-label="Đóng menu"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <NavList
+                activeTab={activeTab}
+                onSelect={handleSelectTab}
+                openGroups={openGroups}
+                setOpenGroups={setOpenGroups}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==== BODY ==== */}
-      <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 sm:py-5">
-        <div className="flex gap-5">
-          {/* ====== SIDEBAR (CHỈ HIỆN DESKTOP) ====== */}
+      <div className="mx-auto w-full max-w-6xl px-4 py-5">
+        <div className="flex gap-6">
+          {/* SIDEBAR (DESKTOP) */}
           <aside className="hidden w-64 shrink-0 lg:block">
-            <div className="sticky top-24 space-y-2 rounded-2xl border bg-white p-3">
-              {MENU_GROUPS.map((group) => {
-                const GroupIcon = group.icon;
-                const isOpen = openGroups[group.id];
-                const hasActive = group.items.some(
-                  (i) => i.id === activeTab
-                );
-
-                return (
-                  <div key={group.id}>
-                    <button
-                      onClick={() => toggleGroup(group.id)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                        hasActive
-                          ? `${group.bg} ${group.color}`
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <GroupIcon size={18} />
-                        {group.label}
-                      </span>
-                      <ChevronRight
-                        size={16}
-                        className={`transition-transform ${
-                          isOpen ? "rotate-90" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {isOpen && (
-                      <div className="ml-3 mt-1 space-y-1 border-l-2 border-slate-100 pl-2">
-                        {group.items.map((item) => {
-                          const ItemIcon = item.icon;
-                          const isActive = activeTab === item.id;
-
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => handleSelectTab(item.id)}
-                              className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                                isActive
-                                  ? "bg-blue-600 text-white shadow-sm"
-                                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                              }`}
-                            >
-                              <ItemIcon size={15} />
-                              {item.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="sticky top-24 rounded-xl border border-slate-200 bg-white p-3">
+              <NavList
+                activeTab={activeTab}
+                onSelect={handleSelectTab}
+                openGroups={openGroups}
+                setOpenGroups={setOpenGroups}
+              />
             </div>
           </aside>
 
-          {/* ====== MAIN CONTENT ====== */}
-          <main className="min-w-0 flex-1">
-            {/* ----- MOBILE NAVIGATION ----- */}
-<div className="mb-4 space-y-2 lg:hidden">
-  {/* Nhóm cấp 1 */}
-  <div className="overflow-x-auto rounded-xl border bg-white p-1.5 scrollbar-hide">
-    <div className="flex gap-1.5">
-      {MENU_GROUPS.map((group) => {
-        const GroupIcon = group.icon;
-        const hasActive = group.id === activeGroup?.id;
+          {/* NỘI DUNG */}
+          <main className="min-w-0 flex-1 space-y-5">
+            <StatusBanner refreshKey={activeTab} />
 
-        return (
-          <button
-            key={group.id}
-            onClick={() => {
-              setOpenGroups((p) => ({ ...p, [group.id]: true }));
-              handleSelectTab(group.items[0].id);
-            }}
-            className={`flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
-              hasActive
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <GroupIcon size={15} />
-            {group.label}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-
-  {/* Tab con của nhóm đang chọn */}
-  {activeGroup && activeGroup.items.length > 1 && (
-    <div className="overflow-x-auto rounded-xl border bg-slate-50 p-1.5 scrollbar-hide">
-      <div className="flex gap-1.5">
-        {activeGroup.items.map((item) => {
-          const ItemIcon = item.icon;
-          const isActive = activeTab === item.id;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleSelectTab(item.id)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                isActive
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "bg-white text-slate-500 border"
-              }`}
-            >
-              <ItemIcon size={13} />
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  )}
-</div>
-            {/* ----- BREADCRUMB (DESKTOP) ----- */}
-            <div className="mb-4 hidden items-center gap-2 text-sm text-slate-500 lg:flex">
+            {/* Tên mục đang xem */}
+            <div className="flex items-center gap-2 text-sm text-slate-500">
               <span>Admin</span>
               <ChevronRight size={14} />
               <span className="font-semibold text-slate-800">
@@ -294,8 +225,7 @@ export default function Admin() {
               </span>
             </div>
 
-            {/* ----- NỘI DUNG TAB ----- */}
-            <div className="w-full overflow-hidden">
+            <div className="w-full">
               {activeTab === "orders" && <OrdersTab />}
               {activeTab === "roblox-orders" && <RobloxOrdersTab />}
               {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
@@ -319,6 +249,141 @@ export default function Admin() {
     </div>
   );
 }
+
+// ===== Banner trạng thái (kiểu trang status của Supabase) =====
+function StatusBanner({ refreshKey }) {
+  const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const [gameOrders, redeemOrders] = await Promise.all([
+          supabase
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "paid"),
+          supabase
+            .from("redemption_orders")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "pending"),
+        ]);
+
+        if (cancelled) return;
+        if (gameOrders.error || redeemOrders.error) {
+          setCount(null);
+          return;
+        }
+        setCount((gameOrders.count || 0) + (redeemOrders.count || 0));
+      } catch {
+        if (!cancelled) setCount(null);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  if (count === null) return null;
+
+  const ok = count === 0;
+
+  return (
+    <div
+      className={`overflow-hidden rounded-xl border ${
+        ok ? "border-emerald-400" : "border-amber-400"
+      }`}
+    >
+      <div
+        className={`flex items-center gap-3 px-4 py-3.5 ${
+          ok ? "bg-emerald-50" : "bg-amber-50"
+        }`}
+      >
+        {ok ? (
+          <CheckCircle size={22} className="shrink-0 text-emerald-500" />
+        ) : (
+          <Clock size={22} className="shrink-0 text-amber-500" />
+        )}
+        <span className="text-base font-semibold text-slate-900">
+          {ok ? "Không có đơn nào cần xử lý" : `Có ${count} đơn cần xử lý`}
+        </span>
+      </div>
+      <div className="bg-white px-4 py-3 text-sm text-slate-600">
+        {ok
+          ? "Tất cả đơn hàng đã được xử lý."
+          : "Đơn đã thanh toán đang chờ admin kiểm tra và giao."}
+      </div>
+    </div>
+  );
+}
+
+// ===== Danh sách menu dạng hàng (dùng chung desktop + mobile) =====
+function NavList({ activeTab, onSelect, openGroups, setOpenGroups }) {
+  return (
+    <div className="space-y-4">
+      {MENU_GROUPS.map((group) => {
+        const isOpen = openGroups[group.id];
+
+        return (
+          <div key={group.id}>
+            <button
+              onClick={() =>
+                setOpenGroups((prev) => ({
+                  ...prev,
+                  [group.id]: !prev[group.id],
+                }))
+              }
+              className="flex w-full items-center justify-between px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400"
+            >
+              {group.label}
+              <ChevronRight
+                size={14}
+                className={`transition-transform ${isOpen ? "rotate-90" : ""}`}
+              />
+            </button>
+
+            {isOpen && (
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                {group.items.map((item, index) => {
+                  const ItemIcon = item.icon;
+                  const isActive = activeTab === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onSelect(item.id)}
+                      className={`flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm font-medium transition ${
+                        index > 0 ? "border-t border-slate-100" : ""
+                      } ${
+                        isActive
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <ItemIcon
+                        size={17}
+                        className={isActive ? "text-emerald-600" : "text-slate-400"}
+                      />
+                      <span className="flex-1">{item.label}</span>
+                      <ChevronRight
+                        size={15}
+                        className={isActive ? "text-emerald-500" : "text-slate-300"}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+                          
                     
 function OrdersTab() {
   const [orders, setOrders] = useState([]);
@@ -445,7 +510,7 @@ function OrdersTab() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <SectionHeader
         title="Đơn hàng"
         description="Quản lý đơn hàng đổi thưởng"
@@ -453,20 +518,18 @@ function OrdersTab() {
         loading={loading}
       />
 
-      <div className="rounded-2xl border bg-white p-4">
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
+      <div className="relative">
+        <Search
+          size={18}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+        />
 
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm mã đơn, Roblox ID, username..."
-            className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none transition focus:border-blue-500"
-          />
-        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Tìm mã đơn, Roblox ID, username..."
+          className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+        />
       </div>
 
       {loading ? (
@@ -474,69 +537,48 @@ function OrdersTab() {
       ) : filteredOrders.length === 0 ? (
         <EmptyState text="Không có đơn hàng nào" />
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-sm">
-              <thead className="border-b bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-left">Đơn</th>
-                  <th className="px-4 py-3 text-left">Roblox</th>
-                  <th className="px-4 py-3 text-left">Gói</th>
-                  <th className="px-4 py-3 text-left">Số tiền</th>
-                  <th className="px-4 py-3 text-left">Trạng thái</th>
-                  <th className="px-4 py-3 text-left">Thời gian</th>
-                  <th className="px-4 py-3 text-right">Thao tác</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y">
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-4 font-semibold">
-                      #{order.order_code || order.id}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-slate-900">
-                        {order.roblox_username || "-"}
-                      </div>
-
-                      <div className="text-xs text-slate-500">
-                        {order.roblox_user_id || "-"}
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      {order.package_id || "-"}
-                    </td>
-
-                    <td className="px-4 py-4 font-semibold">
-                      {Number(order.amount || 0).toLocaleString("vi-VN")}đ
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={order.status} />
-                    </td>
-
-                    <td className="px-4 py-4 text-slate-500">
-                      {order.created_at
-                        ? new Date(order.created_at).toLocaleString("vi-VN")
-                        : "-"}
-                    </td>
-
-                    <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => setDetailOrder(order)}
-                        className="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
-                      >
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+            <span className="text-sm font-semibold text-slate-900">
+              Danh sách đơn
+            </span>
+            <span className="text-xs text-slate-400">
+              {filteredOrders.length} đơn
+            </span>
           </div>
+
+          {filteredOrders.map((order, index) => (
+            <button
+              key={order.id}
+              onClick={() => setDetailOrder(order)}
+              className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50 ${
+                index > 0 ? "border-t border-slate-100" : ""
+              }`}
+            >
+              <StatusIcon status={order.status} />
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  #{order.order_code || order.id} · {order.roblox_username || "-"}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-slate-500">
+                  {order.package_id || "-"} ·{" "}
+                  {Number(order.amount || 0).toLocaleString("vi-VN")}đ ·{" "}
+                  {order.created_at
+                    ? new Date(order.created_at).toLocaleString("vi-VN", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "-"}
+                </p>
+              </div>
+
+              <StatusBadge status={order.status} />
+              <ChevronRight size={16} className="shrink-0 text-slate-300" />
+            </button>
+          ))}
         </div>
       )}
 
@@ -1258,23 +1300,26 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900">
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold text-slate-900">
           {title}
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
-          {description}
-        </p>
+        {description && (
+          <p className="mt-0.5 text-sm text-slate-500">
+            {description}
+          </p>
+        )}
       </div>
 
       <button
         onClick={onRefresh}
         disabled={loading}
-        className="rounded-xl border bg-white p-2.5 text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+        aria-label="Làm mới"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
       >
         <RefreshCw
-          size={18}
+          size={17}
           className={loading ? "animate-spin" : ""}
         />
       </button>
@@ -1284,15 +1329,20 @@ function SectionHeader({
 
 function Loading() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3, 4, 5, 6].map((item) => (
+    <div className="animate-pulse overflow-hidden rounded-xl border border-slate-200 bg-white">
+      {[1, 2, 3, 4, 5].map((item, index) => (
         <div
           key={item}
-          className="animate-pulse rounded-2xl border bg-white p-5"
+          className={`flex items-center gap-3 px-4 py-3.5 ${
+            index > 0 ? "border-t border-slate-100" : ""
+          }`}
         >
-          <div className="mb-4 h-5 w-32 rounded bg-slate-200" />
-          <div className="mb-2 h-4 w-full rounded bg-slate-200" />
-          <div className="h-4 w-2/3 rounded bg-slate-200" />
+          <div className="h-9 w-9 shrink-0 rounded-full bg-slate-100" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3.5 w-1/2 rounded bg-slate-100" />
+            <div className="h-3 w-3/4 rounded bg-slate-100" />
+          </div>
+          <div className="h-5 w-16 rounded-full bg-slate-100" />
         </div>
       ))}
     </div>
@@ -1301,7 +1351,7 @@ function Loading() {
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border bg-white px-6 py-14 text-center">
+    <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center">
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
         <Package size={22} />
       </div>
@@ -1313,51 +1363,83 @@ function EmptyState({ text }) {
   );
 }
 
+// Biểu tượng tròn theo trạng thái (dùng cho hàng danh sách)
+function StatusIcon({ status }) {
+  const s = String(status || "").toLowerCase();
+  const done = ["delivered", "completed", "answered", "success"].includes(s);
+  const bad = ["rejected", "cancelled", "canceled", "failed"].includes(s);
+
+  const Icon = done ? CheckCircle : bad ? XCircle : Clock;
+  const cls = done
+    ? "bg-emerald-50 text-emerald-500"
+    : bad
+    ? "bg-red-50 text-red-500"
+    : "bg-amber-50 text-amber-500";
+
+  return (
+    <div
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${cls}`}
+    >
+      <Icon size={18} />
+    </div>
+  );
+}
+
 function StatusBadge({ status }) {
   const config = {
     pending: {
       text: "Đang chờ",
-      className: "bg-yellow-100 text-yellow-700",
+      className: "border-amber-200 bg-amber-50 text-amber-700",
+      dot: "bg-amber-500",
     },
     paid: {
       text: "Đang kiểm tra",
-      className: "bg-blue-100 text-blue-700",
+      className: "border-sky-200 bg-sky-50 text-sky-700",
+      dot: "bg-sky-500",
     },
     processing: {
       text: "Đang xử lý",
-      className: "bg-blue-100 text-blue-700",
+      className: "border-sky-200 bg-sky-50 text-sky-700",
+      dot: "bg-sky-500",
     },
     delivered: {
       text: "Đã giao",
-      className: "bg-green-100 text-green-700",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      dot: "bg-emerald-500",
     },
     completed: {
       text: "Hoàn thành",
-      className: "bg-green-100 text-green-700",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      dot: "bg-emerald-500",
     },
     rejected: {
       text: "Từ chối",
-      className: "bg-red-100 text-red-700",
+      className: "border-red-200 bg-red-50 text-red-700",
+      dot: "bg-red-500",
     },
     cancelled: {
       text: "Đã hủy",
-      className: "bg-slate-100 text-slate-600",
+      className: "border-slate-200 bg-slate-50 text-slate-600",
+      dot: "bg-slate-400",
     },
     answered: {
       text: "Đã trả lời",
-      className: "bg-green-100 text-green-700",
+      className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      dot: "bg-emerald-500",
     },
   };
 
   const item = config[status] || {
     text: status || "Không rõ",
-    className: "bg-slate-100 text-slate-600",
+    className: "border-slate-200 bg-slate-50 text-slate-600",
+    dot: "bg-slate-400",
   };
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${item.className}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${item.className}`}
     >
+      <span className={`h-1.5 w-1.5 rounded-full ${item.dot}`} />
       {item.text}
     </span>
   );
@@ -1365,29 +1447,36 @@ function StatusBadge({ status }) {
 
 function InfoBox({ label, value }) {
   return (
-    <div className="rounded-xl border bg-slate-50 p-3">
-      <div className="mb-1 text-xs font-semibold uppercase text-slate-400">
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white px-3.5 py-3">
+      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
         {label}
-      </div>
+      </span>
 
-      <div className="text-sm font-medium text-slate-800">
+      <span className="min-w-0 break-words text-right text-sm font-medium text-slate-800">
         {value}
-      </div>
+      </span>
     </div>
   );
 }
 
 function Modal({ title, children, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b px-5 py-4">
-          <h3 className="font-bold text-slate-900">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white shadow-xl sm:rounded-2xl"
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h3 className="font-semibold text-slate-900">
             {title}
           </h3>
 
           <button
             onClick={onClose}
+            aria-label="Đóng"
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
             <X size={18} />
@@ -1398,7 +1487,8 @@ function Modal({ title, children, onClose }) {
       </div>
     </div>
   );
-      }
+              }
+
 function AffiliateTab() {
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
