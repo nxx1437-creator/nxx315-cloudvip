@@ -108,8 +108,9 @@ const formatPrice = (value) =>
 
 function copyText(text) {
   navigator.clipboard?.writeText(text);
-  }
-    export default function FreeFire() {
+}
+
+export default function FreeFire() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState("package");
@@ -130,6 +131,7 @@ function copyText(text) {
   const [cardResult, setCardResult] = useState(null);
   const [cardChecking, setCardChecking] = useState(false);
   const resultRef = useRef(null);
+  const payingRef = useRef(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
 
   useEffect(() => {
@@ -229,6 +231,7 @@ function copyText(text) {
   };
 
   const handleCoinPayment = async () => {
+    if (payingRef.current) return;
     if (!order?.id) return alert("Không tìm thấy đơn hàng.");
     if (order.status !== "pending")
       return alert("Đơn hàng này không còn ở trạng thái chờ thanh toán.");
@@ -243,6 +246,8 @@ function copyText(text) {
         )} Coin\nBạn có: ${coinBalance.toLocaleString("vi-VN")} Coin`
       );
     }
+
+    payingRef.current = true;
 
     try {
       const { data: paymentResult, error: paymentError } = await supabase.rpc(
@@ -270,6 +275,8 @@ function copyText(text) {
       navigate(`/history/order/${order.id}`);
     } catch (error) {
       alert(error?.message || "Không thể thanh toán bằng Coin.");
+    } finally {
+      payingRef.current = false;
     }
   };
 
@@ -287,7 +294,6 @@ function copyText(text) {
         .update({ status: "paid", payment_method: "bank" })
         .eq("id", order.id)
         .eq("status", "pending");
-
       if (error) throw error;
 
       alert("✅ Đã ghi nhận. Admin sẽ kiểm tra và duyệt đơn.");
@@ -467,14 +473,14 @@ function copyText(text) {
         <div className="mt-5" />
 
         {step === "package" && (
-  <PackageStep
-    selectedPackage={selectedPackage}
-    setSelectedPackage={setSelectedPackage}
-    onContinue={() => setStep("uid")}
-    agreedTerms={agreedTerms}
-    setAgreedTerms={setAgreedTerms}
-  />
-)}
+          <PackageStep
+            selectedPackage={selectedPackage}
+            setSelectedPackage={setSelectedPackage}
+            onContinue={() => setStep("uid")}
+            agreedTerms={agreedTerms}
+            setAgreedTerms={setAgreedTerms}
+          />
+        )}
 
         {step === "uid" && (
           <UidStep
@@ -514,8 +520,9 @@ function copyText(text) {
       <BottomNav />
     </div>
   );
-    }
-     function HeroBanner({ onBack }) {
+}
+
+function HeroBanner({ onBack }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-red-100 bg-white shadow-sm">
       {/* Banner image — cao hơn */}
@@ -582,7 +589,7 @@ function copyText(text) {
             <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
               Nạp Kim Cương tự động 24/7
             </p>
-          </div>
+            </div>
         </div>
 
         {/* Stats */}
@@ -611,6 +618,7 @@ function StatPill({ icon: Icon, label, color }) {
     </div>
   );
 }
+
 function PackageStep({ selectedPackage, setSelectedPackage, onContinue, agreedTerms, setAgreedTerms }) {
   return (
     <div className="space-y-4">
@@ -665,19 +673,19 @@ function PackageStep({ selectedPackage, setSelectedPackage, onContinue, agreedTe
       {/* Continue */}
       <div className="pt-2">
         <TermsCheckbox
-  checked={agreedTerms}
-  onChange={setAgreedTerms}
-  accentColor="orange"
-/>
+          checked={agreedTerms}
+          onChange={setAgreedTerms}
+          accentColor="orange"
+        />
 
-<button
-  onClick={onContinue}
-  disabled={!selectedPackage || !agreedTerms}
-  className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-40"
->
-  Tiếp tục
-  <ChevronRight size={18} />
-</button>
+        <button
+          onClick={onContinue}
+          disabled={!selectedPackage || !agreedTerms}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-400 to-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Tiếp tục
+          <ChevronRight size={18} />
+        </button>
         {!selectedPackage && (
           <p className="mt-2 text-center text-xs text-slate-400">
             Chọn một gói để tiếp tục
@@ -736,6 +744,7 @@ function PackageCard({ pkg, active, onSelect }) {
     </button>
   );
 }
+
 function UidStep({
   uid,
   setUid,
@@ -877,7 +886,7 @@ function UidStep({
             )}
           </button>
         </div>
-      </div>
+        </div>
 
       {showGuide && (
         <GuideModal
@@ -955,6 +964,7 @@ function GuideModal({ onClose, steps }) {
     </div>
   );
 }
+
 function PaymentStep({
   method,
   setMethod,
@@ -1122,12 +1132,12 @@ function PaymentStep({
 
           {/* BANK */}
           {method === "bank" && (
-  <div className="space-y-3">
-    <BankTransfer
-      amount={order.amount}
-      transferContent={transferContent}
-      accentColor="orange"
-    />
+            <div className="space-y-3">
+              <BankTransfer
+                amount={order.amount}
+                transferContent={transferContent}
+                accentColor="orange"
+              />
               {order.status === "paid" ? (
                 <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                   <CheckCircle2 size={22} className="text-emerald-500" />
@@ -1151,7 +1161,8 @@ function PaymentStep({
               )}
             </div>
           )}
-                    {/* CARD */}
+
+          {/* CARD */}
           {method === "card" && (
             <div className="space-y-3">
               <div>
@@ -1430,8 +1441,9 @@ function PaymentStep({
       </div>
     </div>
   );
-                              }
-      function BankRow({ label, value, copy = false, copyValue }) {
+}
+
+function BankRow({ label, value, copy = false, copyValue }) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard?.writeText(copyValue || value);
@@ -1461,4 +1473,4 @@ function PaymentStep({
       </div>
     </div>
   );
-      }            
+      }
