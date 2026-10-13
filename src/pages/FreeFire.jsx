@@ -198,7 +198,24 @@ function copyText(text) {
         }
       );
 
-      if (error) throw new Error(error.message || "Không thể tạo đơn hàng.");
+      if (error) {
+        let errorMessage = "Không thể tạo đơn hàng.";
+
+        try {
+          if (error.context && typeof error.context.json === "function") {
+            const errorBody = await error.context.json();
+            if (errorBody?.error) {
+              errorMessage = errorBody.error;
+            }
+          } else if (error.message && !error.message.includes("non-2xx")) {
+            errorMessage = error.message;
+          }
+        } catch (parseErr) {
+          console.warn("Cannot parse error body:", parseErr);
+        }
+
+        throw new Error(errorMessage);
+      }
       if (!data?.order) throw new Error("Không nhận được đơn hàng.");
 
       setOrder(data.order);
