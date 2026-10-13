@@ -130,6 +130,7 @@ export default function FcMobile() {
   const [cardResult, setCardResult] = useState(null);
   const [cardChecking, setCardChecking] = useState(false);
   const resultRef = useRef(null);
+  const payingRef = useRef(false);
 
   const [showGuide, setShowGuide] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
@@ -289,27 +290,53 @@ export default function FcMobile() {
     }
   };
 
-  const handleConfirmTransfer = async () => {
-    if (!order?.id || order.status !== "pending") return;
+  const handleCoinPayment = async () => {
+    if (payingRef.current) return;
+    if (!order?.id) return alert("Không tìm thấy đơn hàng.");
+    if (order.status !== "pending")
+      return alert("Đơn hàng này không còn ở trạng thái chờ thanh toán.");
 
-    const ok = window.confirm(
-      "Bạn đã chuyển đúng số tiền và đúng nội dung chuyển khoản chưa?"
-    );
-    if (!ok) return;
+    const requiredCoins = Number(order.amount || 0);
+    const coinBalance = Number(profile?.coins || 0);
+
+    if (coinBalance < requiredCoins) {
+      return alert(
+        `Không đủ Coin.\n\nCần: ${requiredCoins.toLocaleString(
+          "vi-VN"
+        )} Coin\nBạn có: ${coinBalance.toLocaleString("vi-VN")} Coin`
+      );
+    }
+
+    payingRef.current = true;
 
     try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: "paid", payment_method: "bank" })
-        .eq("id", order.id)
-        .eq("status", "pending");
+      const { data: paymentResult, error: paymentError } = await supabase.rpc(
+        "pay_freefire_order_with_coins",
+        { p_order_id: order.id }
+      );
 
-      if (error) throw error;
+      if (paymentError) throw new Error(paymentError.message);
 
-      alert("✅ Đã ghi nhận. Admin sẽ kiểm tra và duyệt đơn.");
+      if (!paymentResult?.success) {
+        const err = paymentResult?.error || "";
+        if (err === "INSUFFICIENT_COINS") throw new Error("Không đủ Coin để thanh toán.");
+        if (err === "ORDER_NOT_FOUND") throw new Error("Không tìm thấy đơn hàng.");
+        if (err === "NOT_YOUR_ORDER") throw new Error("Bạn không có quyền thanh toán đơn này.");
+        if (err === "ORDER_NOT_PENDING") throw new Error("Đơn hàng đã được thanh toán.");
+        throw new Error("Thanh toán thất bại: " + err);
+      }
+
+      alert(
+        `🎉 Thanh toán thành công!\n\n` +
+          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
+          `Coin còn lại: ${Number(paymentResult.remaining_coins).toLocaleString("vi-VN")} Coin`
+      );
+
       navigate(`/history/order/${order.id}`);
     } catch (error) {
-      alert("Không thể xác nhận đơn hàng.\n\n" + (error?.message || ""));
+      alert(error?.message || "Không thể thanh toán bằng Coin.");
+    } finally {
+      payingRef.current = false;
     }
   };
 
