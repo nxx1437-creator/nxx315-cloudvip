@@ -28,14 +28,14 @@ const TEXT = {
   vi: {
     hello: "Chào mừng bạn đến với",
     body: "Xem nhanh hướng dẫn để biết cách kiếm xu, đổi quà và giữ tài khoản luôn an toàn nhé!",
-    start: "Bắt đầu",
+    later: "Để sau",
     go: "Xem hướng dẫn",
   },
   en: {
     hello: "Welcome to",
     body: "Quick guide to learn how to earn coins, redeem gifts, and keep your account safe!",
-    start: "Get started",
-    go: "View guide",
+    later: "Later",
+    go: "See Instructions",
   },
 };
 
@@ -90,16 +90,6 @@ export default function GuideWelcomeModal() {
     return () => clearTimeout(timer);
   }, [user?.id, user?.created_at, hidden, forced, pathname, navigate]);
 
-  // Bấm Esc để đóng
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
   const close = () => setOpen(false);
 
   const goGuide = () => {
@@ -111,62 +101,53 @@ export default function GuideWelcomeModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
       onClick={close}
     >
-      <style>{`
-        @keyframes welcomeIn {
-          from { opacity: 0; transform: translateY(14px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .welcome-card { animation: welcomeIn 0.28s ease-out both; }
-        @media (prefers-reduced-motion: reduce) {
-          .welcome-card { animation: none; }
-        }
-      `}</style>
-
       <div
-        role="dialog"
-        aria-modal="true"
-        className="welcome-card max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-[#18191b] p-5 text-left shadow-2xl sm:p-6"
+        className="w-full max-w-md rounded-t-3xl bg-white px-6 pb-8 pt-6 text-center shadow-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="px-1 pb-4 pt-1 text-[26px] font-medium leading-tight text-white">
-          {tx.hello}{" "}
-          <span className="whitespace-nowrap">NXX315 Studio </span>
-        </h2>
-
         {imgOk && (
-          <div className="overflow-hidden rounded-2xl bg-black">
-            <img
-              src={IMAGE_SRC}
-              alt=""
-              className="aspect-[16/9] w-full object-cover"
-              onError={() => setImgOk(false)}
-            />
-          </div>
+          <img
+            src={IMAGE_SRC}
+            alt=""
+            className="mb-5 max-h-56 w-full rounded-2xl object-cover"
+            onError={() => setImgOk(false)}
+          />
         )}
 
-        <p className="px-1 pb-2 pt-5 text-[16px] leading-relaxed text-zinc-300">
+        <h2 className="leading-tight">
+          <span className="block text-base font-semibold text-slate-500">
+            {tx.hello}
+          </span>
+          <span className="mt-1 block bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-3xl font-extrabold text-transparent">
+            NXX315 STUDIO
+          </span>
+        </h2>
+
+        <p
+          className="mx-auto mt-3 max-w-xs text-[15px] leading-relaxed text-slate-600"
+          style={{ textWrap: "balance" }}
+        >
           {tx.body}
         </p>
 
-        <div className="mt-6 flex items-center justify-between gap-3 px-1">
-          <button
-            onClick={goGuide}
-            className="text-left text-[15px] font-semibold text-white transition hover:text-zinc-300"
-          >
-            {tx.go}
-          </button>
-
+        <div className="mt-7 grid grid-cols-2 gap-3">
           <button
             onClick={close}
-            className="shrink-0 rounded-xl bg-zinc-800 px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-zinc-700 active:scale-95"
+            className="rounded-full bg-slate-100 py-3.5 font-bold text-slate-800 active:scale-95"
           >
-            {tx.start}
+            {tx.later}
+          </button>
+          <button
+            onClick={goGuide}
+            className="rounded-full bg-gradient-to-r from-sky-400 to-blue-600 py-3.5 font-bold text-white shadow-md shadow-sky-500/30 active:scale-95"
+          >
+            {tx.go}
           </button>
         </div>
       </div>
     </div>
   );
-             }
+                              }
