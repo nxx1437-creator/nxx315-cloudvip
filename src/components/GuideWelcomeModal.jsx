@@ -133,7 +133,7 @@ export default function GuideWelcomeModal() {
       >
         <h2 className="px-1 pb-4 pt-1 text-[26px] font-medium leading-tight text-white">
           {tx.hello}{" "}
-          <span className="whitespace-nowrap">NXX315 Studio 🎁</span>
+          <span className="whitespace-nowrap">NXX315 Studio </span>
         </h2>
 
         {imgOk && (
