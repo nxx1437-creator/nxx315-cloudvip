@@ -37,6 +37,7 @@ import {
   LinkRow,
   MilestoneRow,
 } from "../components/home/HomeUI.jsx";
+import CheckinCard from "../components/home/CheckinCard.jsx";
 import { useI18n } from "../i18n/index.js";
 
 const MILESTONES = [
@@ -170,6 +171,14 @@ export default function Dashboard() {
               />
             </div>
 
+            {/* ===== ĐIỂM DANH ===== */}
+            <CheckinCard
+              userId={user?.id}
+              onClaimed={(r) =>
+                setProfile((p) => ({ ...p, coins: (p?.coins || 0) + r }))
+              }
+            />
+
             <AnnouncementsCard />
             <HomeTutorial />
 
@@ -246,4 +255,4 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-                            }
+              }
