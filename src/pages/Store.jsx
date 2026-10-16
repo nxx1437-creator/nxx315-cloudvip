@@ -13,6 +13,8 @@ import {
   WithdrawBanner,
   StoreHistoryPreview,
 } from "../components/store/StoreExtras.jsx";
+import ForYouPackages from "../components/store/ForYouPackages.jsx";
+import useProfile from "../hooks/useProfile.js";
 import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
@@ -20,6 +22,7 @@ export default function Store() {
   const { t, lang } = useI18n();
   const en = lang === "en";
   const navigate = useNavigate();
+  const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState("all");
 
   const tabs = useMemo(
@@ -69,6 +72,12 @@ export default function Store() {
               .getElementById("store-list")
               ?.scrollIntoView({ behavior: "smooth" })
           }
+        />
+
+        <ForYouPackages
+          coins={profile?.coins}
+          games={GAMES}
+          navigate={navigate}
         />
 
         <section id="store-list">
@@ -122,4 +131,4 @@ export default function Store() {
       <BottomNav />
     </div>
   );
-  }
+}
