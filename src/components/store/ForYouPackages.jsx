@@ -5,18 +5,9 @@ import { useI18n } from "../../i18n/index.js";
 import { SectionTitle } from "./StoreCards.jsx";
 
 const CATEGORY_LABEL = { quanhuy: "Quân Huy", robux: "Robux" };
+const REDEEM_PATH = "/shop-earn";
 
-// Tìm trang game tương ứng với loại gói trong danh sách GAMES
-const pathFor = (category, games) => {
-  const re =
-    category === "quanhuy" ? /li[eê]n\s*qu[aâ]n/i : /roblox|robux/i;
-  const g = games.find((x) =>
-    re.test(`${x.id} ${x.path} ${x.name || ""} ${x.title || ""}`)
-  );
-  return g?.path || "/store";
-};
-
-export default function ForYouPackages({ coins, games, navigate }) {
+export default function ForYouPackages({ coins, navigate }) {
   const { lang } = useI18n();
   const en = lang === "en";
   const [pkgs, setPkgs] = useState(null);
@@ -41,12 +32,10 @@ export default function ForYouPackages({ coins, games, navigate }) {
   const fmt = (n) => Number(n).toLocaleString(en ? "en-US" : "vi-VN");
   const unit = en ? "coins" : "xu";
 
-  // Các gói đổi được ngay (đắt nhất lên trước, tối đa 3)
   const affordable = pkgs
     .filter((p) => p.coin_cost <= coins)
     .sort((a, b) => b.coin_cost - a.coin_cost)
     .slice(0, 3);
-  // Gói rẻ nhất còn thiếu xu
   const next = pkgs.find((p) => p.coin_cost > coins);
 
   if (affordable.length === 0 && !next) return null;
@@ -68,7 +57,7 @@ export default function ForYouPackages({ coins, games, navigate }) {
           <button
             key={p.id}
             type="button"
-            onClick={() => navigate(pathFor(p.category, games))}
+            onClick={() => navigate(REDEEM_PATH)}
             className="flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-left shadow-sm transition active:scale-[0.99]"
           >
             <div className="min-w-0">
