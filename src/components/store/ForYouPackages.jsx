@@ -1,44 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ChevronRight } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient.js";
 import { useI18n } from "../../i18n/index.js";
 import { SectionTitle } from "./StoreCards.jsx";
+import { PACKAGES, DRAFT_KEY, formatCoin } from "../../lib/robloxData.js";
 
-const CATEGORY_LABEL = { quanhuy: "Quân Huy", robux: "Robux" };
-const REDEEM_PATH = "/shop-earn";
+const ROBLOX_PATH = "/store/roblox";
 
 export default function ForYouPackages({ coins, navigate }) {
   const { lang } = useI18n();
   const en = lang === "en";
-  const [pkgs, setPkgs] = useState(null);
 
-  useEffect(() => {
-    let alive = true;
-    supabase
-      .from("redemption_packages")
-      .select("id, name, category, coin_cost, version")
-      .eq("active", true)
-      .order("coin_cost", { ascending: true })
-      .then(({ data }) => {
-        if (alive) setPkgs(data || []);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  if (coins == null) return null;
+  const balance = Number(coins) || 0;
 
-  if (!pkgs || pkgs.length === 0 || typeof coins !== "number") return null;
-
-  const fmt = (n) => Number(n).toLocaleString(en ? "en-US" : "vi-VN");
-  const unit = en ? "coins" : "xu";
-
-  const affordable = pkgs
-    .filter((p) => p.coin_cost <= coins)
-    .sort((a, b) => b.coin_cost - a.coin_cost)
-    .slice(0, 3);
-  const next = pkgs.find((p) => p.coin_cost > coins);
+  const sorted = [...PACKAGES].sort((a, b) => a.price - b.price);
+  // Gói đổi được ngay: đắt nhất lên trước, tối đa 3
+  const affordable = sorted.filter((p) => p.price <= balance).reverse().slice(0, 3);
+  // Gói rẻ nhất còn thiếu Coin
+  const next = sorted.find((p) => p.price > balance);
 
   if (affordable.length === 0 && !next) return null;
+
+  const pick = (p) => {
+    try {
+      const old = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "{}");
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ ...old, packageId: p.id }));
+    } catch {}
+    navigate(ROBLOX_PATH);
+  };
 
   return (
     <section>
@@ -47,7 +36,7 @@ export default function ForYouPackages({ coins, navigate }) {
         rest={en ? "for you" : "dành cho bạn"}
         right={
           <span className="pb-0.5 font-mono text-[11px] text-slate-400">
-            {fmt(coins)} {unit}
+            {formatCoin(balance)}
           </span>
         }
       />
@@ -57,21 +46,28 @@ export default function ForYouPackages({ coins, navigate }) {
           <button
             key={p.id}
             type="button"
-            onClick={() => navigate(REDEEM_PATH)}
-            className="flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-left shadow-sm transition active:scale-[0.99]"
+            onClick={() => pick(p)}
+            className="flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-white px-3 py-3 text-left shadow-sm transition active:scale-[0.99]"
           >
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-slate-900">
-                {p.name}
-              </p>
-              <p className="mt-0.5 text-[11px] text-slate-400">
-                {CATEGORY_LABEL[p.category] || p.category}
-                {p.version ? ` · ${p.version}` : ""}
-              </p>
+            <div className="flex min-w-0 items-center gap-3">
+              <img
+                src={p.image}
+                alt=""
+                className="h-11 w-11 shrink-0 rounded-xl object-cover"
+                loading="lazy"
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-900">
+                  {p.robux} Robux
+                </p>
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  Roblox · {p.method}
+                </p>
+              </div>
             </div>
             <div className="ml-3 flex shrink-0 items-center gap-2">
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-mono text-[11px] font-extrabold text-emerald-700">
-                {fmt(p.coin_cost)} {unit}
+                {formatCoin(p.price)}
               </span>
               <ChevronRight size={16} className="text-slate-300" />
             </div>
@@ -83,10 +79,12 @@ export default function ForYouPackages({ coins, navigate }) {
             <p className="text-sm text-slate-700">
               {en ? "Need " : "Còn thiếu "}
               <span className="font-bold text-slate-900">
-                {fmt(next.coin_cost - coins)} {unit}
+                {formatCoin(next.price - balance)}
               </span>
               {en ? " more to redeem " : " nữa để đổi "}
-              <span className="font-bold text-slate-900">{next.name}</span>
+              <span className="font-bold text-slate-900">
+                {next.robux} Robux
+              </span>
             </p>
             <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
               <div
@@ -94,7 +92,7 @@ export default function ForYouPackages({ coins, navigate }) {
                 style={{
                   width: `${Math.min(
                     100,
-                    Math.floor((coins / next.coin_cost) * 100)
+                    Math.floor((balance / next.price) * 100)
                   )}%`,
                 }}
               />
