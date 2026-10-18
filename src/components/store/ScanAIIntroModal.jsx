@@ -4,12 +4,11 @@ import { X } from "lucide-react";
 export default function ScanAIIntroModal({ 
   isOpen, 
   onClose, 
-  title, // Đã bỏ mặc định để có thể ẩn đi
-  description = "Nxx315 Studio chính thức ra mắt giao diện Store mới. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực.",
-  imageSrc = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/store-preview.png", 
+  description, 
+  imageSrc = "", 
   buttonText = "Đã hiểu"
 }) {
-  // State để kiểm tra xem ảnh có bị lỗi không
+  // State để kiểm tra xem ảnh có bị lỗi không (tự động ẩn nếu link ảnh chết)
   const [imageError, setImageError] = useState(false);
 
   if (!isOpen) return null;
@@ -22,41 +21,34 @@ export default function ScanAIIntroModal({
       {/* Nội dung Modal */}
       <div className="relative z-10 w-full max-w-md animate-slide-up overflow-hidden rounded-3xl bg-white shadow-2xl sm:animate-fade-in max-h-[90vh] overflow-y-auto">
         
-        {/* Header: Chỉ hiển thị nút X nếu không có title */}
-        <div className="flex items-start justify-between px-5 pt-4 pb-2">
-          {title ? (
-            <h2 className="pr-6 text-xl font-bold leading-snug text-slate-900 mt-1">
-              {title}
-            </h2>
-          ) : (
-            <div></div> // Khoảng trống để đẩy nút X sang phải
-          )}
+        {/* Nút X đóng (Góc trên phải) */}
+        <div className="flex justify-end px-4 pt-3 pb-0">
           <button 
             onClick={onClose}
             className="shrink-0 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
         </div>
 
         {/* Hình ảnh minh họa - Tự động ẩn nếu ảnh bị lỗi */}
         {imageSrc && !imageError && (
-          <div className="mt-2 px-5">
+          <div className="px-5 pt-2">
             <img 
               src={imageSrc} 
               alt="Store Preview" 
-              onError={() => setImageError(true)} // Bắt lỗi nếu link ảnh chết
+              onError={() => setImageError(true)} 
               className="w-full rounded-2xl bg-slate-50 object-contain max-h-[320px]" 
             />
           </div>
         )}
 
-        {/* Nội dung text (Đã bỏ icon 😎) */}
+        {/* Nội dung text */}
         <div className="px-5 pb-4 pt-6 text-center">
-          <h3 className="mb-3 text-lg font-bold text-slate-900">
+          <h3 className="mb-3 text-xl font-bold text-slate-900">
             Khám phá mọi thứ trong tích tắc
           </h3>
-          <p className="text-sm leading-relaxed text-slate-600">
+          <p className="text-[15px] leading-relaxed text-slate-600">
             {description}
           </p>
         </div>
@@ -73,4 +65,4 @@ export default function ScanAIIntroModal({
       </div>
     </div>
   );
-        }
+}
