@@ -8,17 +8,20 @@ export default function ScanAIIntroModal({
   imageSrc = "", 
   buttonText = "Đã hiểu"
 }) {
+  // State để kiểm tra xem ảnh có bị lỗi không (tự động ẩn nếu link ảnh chết)
   const [imageError, setImageError] = useState(false);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center">
+      {/* Lớp nền mờ - Bấm ra ngoài để đóng */}
       <div className="absolute inset-0" onClick={onClose} />
 
+      {/* Nội dung Modal */}
       <div className="relative z-10 w-full max-w-md animate-slide-up overflow-hidden rounded-3xl bg-white shadow-2xl sm:animate-fade-in max-h-[90vh] overflow-y-auto">
         
-        {/* Nút X */}
+        {/* Nút X đóng (Góc trên phải) */}
         <div className="flex justify-end px-4 pt-3 pb-0">
           <button 
             onClick={onClose}
@@ -28,19 +31,15 @@ export default function ScanAIIntroModal({
           </button>
         </div>
 
-        {/* Hình ảnh minh họa - ĐÃ CẮT BỚT PHẦN TRÊN */}
+        {/* Hình ảnh minh họa - Tự động ẩn nếu ảnh bị lỗi */}
         {imageSrc && !imageError && (
           <div className="px-5 pt-2">
-            <div className="relative w-full overflow-hidden rounded-2xl bg-slate-50 max-h-[280px] flex justify-center items-end">
-              <img 
-                src={imageSrc} 
-                alt="Store Preview" 
-                onError={() => setImageError(true)} 
-                // scale-110 giúp phóng to ảnh lên 10%
-                // object-bottom giúp neo ảnh ở dưới đáy, tự động cắt phần trên
-                className="w-full h-auto object-contain scale-110 origin-bottom object-bottom" 
-              />
-            </div>
+            <img 
+              src={imageSrc} 
+              alt="Store Preview" 
+              onError={() => setImageError(true)} 
+              className="w-full rounded-2xl bg-slate-50 object-contain max-h-[320px]" 
+            />
           </div>
         )}
 
