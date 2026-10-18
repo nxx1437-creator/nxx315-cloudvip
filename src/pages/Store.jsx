@@ -17,7 +17,6 @@ import ForYouPackages from "../components/store/ForYouPackages.jsx";
 import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx"; 
 
 import useProfile from "../hooks/useProfile.js";
-// Đã thêm getImageUrl vào đây
 import { GAMES, trackGameView, getImageUrl } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
@@ -30,14 +29,19 @@ export default function Store() {
   
   const [showScanAI, setShowScanAI] = useState(false);
 
-  // Tự động hiện sau 1 giây
+  // Chỉ hiển thị Modal 1 lần duy nhất
   useEffect(() => {
-    const timer = setTimeout(() => setShowScanAI(true), 1000);
-    return () => clearTimeout(timer);
+    const hasSeenScanAI = localStorage.getItem("hasSeenScanAI");
+    if (!hasSeenScanAI) {
+      const timer = setTimeout(() => setShowScanAI(true), 1000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleCloseScanAI = () => {
     setShowScanAI(false);
+    // Lưu trạng thái đã xem vào trình duyệt
+    localStorage.setItem("hasSeenScanAI", "true"); 
   };
 
   const tabs = useMemo(
@@ -149,12 +153,10 @@ export default function Store() {
       <ScanAIIntroModal
         isOpen={showScanAI}
         onClose={handleCloseScanAI}
-        // Nội dung chính xác 100% theo yêu cầu
         description="Nxx315 Studio chính thức ra mắt giao diện Store mới. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực." 
-        // Sử dụng hàm getImageUrl để lấy ảnh (đảm bảo file store-preview.png đã có trên Supabase)
         imageSrc={getImageUrl("store-preview.png")} 
         buttonText="Đã hiểu"
       />
     </div>
   );
-        }
+    }
