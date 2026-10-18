@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { useI18n } from "../../i18n/index.js";
@@ -13,22 +14,24 @@ const vnDate = (offsetDays = 0) =>
   });
 
 export default function CheckinCard({ userId, onClaimed }) {
+  const navigate = useNavigate();
   const { lang } = useI18n();
   const en = lang === "en";
   const [info, setInfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [needTask, setNeedTask] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
     let alive = true;
     supabase
-      .from("profiles")
-      .select("checkin_streak, last_checkin_date")
-      .eq("id", userId)
-      .single()
+      .from("coin_checkins")
+      .select("streak, last_date")
+      .eq("user_id", userId)
+      .maybeSingle()
       .then(({ data }) => {
-        if (alive && data) setInfo(data);
+        if (alive) setInfo(data || { streak: 0, last_date: null });
       });
     return () => {
       alive = false;
@@ -38,10 +41,10 @@ export default function CheckinCard({ userId, onClaimed }) {
   if (!userId || !info) return null;
 
   const today = vnDate(0);
-  const doneToday = info.last_checkin_date === today;
-  const alive = doneToday || info.last_checkin_date === vnDate(-1);
-  const streak = alive ? info.checkin_streak || 0 : 0;
-  // Đã đủ 7 ngày mà chưa điểm danh hôm nay -> bắt đầu chuỗi mới
+  const doneToday = info.last_date === today;
+  const alive = doneToday || info.last_date === vnDate(-1);
+  const streak = alive ? info.streak || 0 : 0;
+  // Đủ 7 ngày mà chưa điểm danh hôm nay -> bắt đầu chuỗi mới
   const filled = !doneToday && streak >= 7 ? 0 : streak;
   const nextReward = REWARDS[filled % 7];
 
@@ -49,13 +52,21 @@ export default function CheckinCard({ userId, onClaimed }) {
     if (busy || doneToday) return;
     setBusy(true);
     setMsg("");
+    setNeedTask(false);
     try {
       const { data, error } = await supabase.rpc("claim_daily_checkin");
       if (error) throw error;
       if (data?.success) {
-        setInfo({ checkin_streak: data.streak, last_checkin_date: today });
+        setInfo({ streak: data.streak, last_date: today });
         setMsg(`+${data.reward} ${en ? "coins" : "xu"}`);
         if (onClaimed) onClaimed(data.reward);
+      } else if (data?.need_task) {
+        setNeedTask(true);
+        setMsg(
+          en
+            ? "Complete at least 1 task today to check in."
+            : "Hoàn thành ít nhất 1 nhiệm vụ hôm nay để điểm danh."
+        );
       } else {
         setMsg(data?.message || (en ? "Could not check in" : "Chưa điểm danh được"));
       }
@@ -69,11 +80,7 @@ export default function CheckinCard({ userId, onClaimed }) {
   return (
     <Panel
       title={en ? "Daily check-in" : "Điểm danh hằng ngày"}
-      right={
-        <span className="text-xs tabular-nums text-[#6F6F6F]">
-          {filled}/7
-        </span>
-      }
+      right={<span className="text-xs tabular-nums text-[#6F6F6F]">{filled}/7</span>}
     >
       <div className="grid grid-cols-7 gap-1.5">
         {REWARDS.map((r, i) => {
@@ -117,8 +124,24 @@ export default function CheckinCard({ userId, onClaimed }) {
       </button>
 
       {msg && (
-        <p className="mt-2 text-center text-xs text-[#0F7A4D]">{msg}</p>
+        <p
+          className={`mt-2 text-center text-xs ${
+            needTask ? "text-amber-700" : "text-[#0F7A4D]"
+          }`}
+        >
+          {msg}
+        </p>
+      )}
+
+      {needTask && (
+        <button
+          type="button"
+          onClick={() => navigate("/tasks")}
+          className="mt-2 flex h-9 w-full items-center justify-center rounded-md border border-[#D4D4D4] bg-white text-[13px] font-medium text-[#171717] transition active:bg-[#F4F4F4]"
+        >
+          {en ? "Go to tasks" : "Đi làm nhiệm vụ"}
+        </button>
       )}
     </Panel>
   );
-}
+        }
