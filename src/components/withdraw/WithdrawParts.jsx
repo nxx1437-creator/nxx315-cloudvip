@@ -39,41 +39,35 @@ export function Logo({ file, fallback, size = 44, color = "#0A2540" }) {
   );
 }
 
-export function BalanceHero({ balance, today }) {
-  const pct = Math.min(100, Math.round((today.amount / MAX_PER_DAY) * 100));
+function BalanceRow({ label, value }) {
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-600 p-5 text-white shadow-sm">
-      <p className="text-[12px] font-medium text-emerald-100">Số dư khả dụng</p>
-      <p className="mt-1 text-[32px] font-extrabold leading-none tracking-tight tabular-nums">
-        {formatMoney(balance)}
-      </p>
+    <div className="flex items-center justify-between px-4 py-2.5">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="font-medium tabular-nums text-slate-900">{value}</dd>
+    </div>
+  );
+}
 
-      <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold">
-        <span className="rounded-full bg-white/15 px-2.5 py-1">
-          Phí {formatMoney(FEE)}/lần
-        </span>
-        <span className="rounded-full bg-white/15 px-2.5 py-1">
-          Tối đa {formatMoney(MAX_AMOUNT)}/lần
-        </span>
-      </div>
-
-      <div className="mt-4 border-t border-white/15 pt-3">
-        <div className="flex items-center justify-between text-[11px] text-emerald-50">
-          <span>Hôm nay đã rút</span>
-          <span className="tabular-nums">
-            {today.count}/{MAX_TIMES_PER_DAY} lần · {formatMoney(today.amount)}
-          </span>
-        </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/20">
-          <div
-            className="h-full rounded-full bg-white transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <p className="mt-1.5 text-[10.5px] text-emerald-100/90">
-          Giới hạn làm mới lúc 7:00 sáng mỗi ngày
+export function BalanceHero({ balance, today }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white">
+      <div className="p-4">
+        <p className="text-[12px] text-slate-500">Số dư khả dụng</p>
+        <p className="mt-1.5 text-[34px] font-medium leading-none tracking-tight tabular-nums text-slate-900">
+          {formatMoney(balance)}
         </p>
       </div>
+      <dl className="divide-y divide-slate-100 border-t border-slate-100 text-[13px]">
+        <BalanceRow label="Phí mỗi lần rút" value={formatMoney(FEE)} />
+        <BalanceRow label="Tối đa mỗi lần" value={formatMoney(MAX_AMOUNT)} />
+        <BalanceRow
+          label="Đã rút hôm nay"
+          value={`${today.count}/${MAX_TIMES_PER_DAY} lần · ${formatMoney(today.amount)}`}
+        />
+      </dl>
+      <p className="border-t border-slate-100 px-4 py-2.5 text-[11px] text-slate-400">
+        Giới hạn làm mới lúc 7:00 sáng mỗi ngày
+      </p>
     </div>
   );
 }
@@ -206,4 +200,4 @@ export function Notes() {
       </ul>
     </div>
   );
-      }
+            }
