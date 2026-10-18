@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react"; // Thêm useEffect
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 
@@ -14,6 +14,9 @@ import {
   StoreHistoryPreview,
 } from "../components/store/StoreExtras.jsx";
 import ForYouPackages from "../components/store/ForYouPackages.jsx";
+// Import component mới
+import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx"; 
+
 import useProfile from "../hooks/useProfile.js";
 import { GAMES, trackGameView } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
@@ -24,6 +27,24 @@ export default function Store() {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState("all");
+  
+  // State quản lý Modal ScanAI
+  const [showScanAI, setShowScanAI] = useState(false);
+
+  // Logic hiển thị modal (Ví dụ: Chỉ hiện 1 lần cho user mới)
+  useEffect(() => {
+    const hasSeenScanAI = localStorage.getItem("hasSeenScanAI");
+    if (!hasSeenScanAI) {
+      // Delay một chút để trang load xong mượt mà
+      const timer = setTimeout(() => setShowScanAI(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseScanAI = () => {
+    setShowScanAI(false);
+    localStorage.setItem("hasSeenScanAI", "true"); // Đánh dấu đã xem
+  };
 
   const tabs = useMemo(
     () => [
@@ -65,6 +86,7 @@ export default function Store() {
       <TopHeader />
 
       <main className="mx-auto max-w-5xl space-y-7 px-4 py-4">
+        {/* ... Các phần cũ giữ nguyên ... */}
         <FeaturedRow
           navigate={navigate}
           onTitleClick={() =>
@@ -81,6 +103,7 @@ export default function Store() {
         />
 
         <section id="store-list">
+          {/* ... Phần Danh sách game giữ nguyên ... */}
           <SectionTitle
             accent={en ? "Game" : "Danh sách"}
             rest={en ? "categories" : "game"}
@@ -129,6 +152,14 @@ export default function Store() {
       </main>
 
       <BottomNav />
+
+      {/* Component Modal Giới thiệu ScanAI */}
+      <ScanAIIntroModal
+        isOpen={showScanAI}
+        onClose={handleCloseScanAI}
+        // Bạn có thể truyền text/ảnh tuỳ chỉnh ở đây nếu muốn
+        imageSrc="/your-scan-ai-image.png" 
+      />
     </div>
   );
-}
+            }
