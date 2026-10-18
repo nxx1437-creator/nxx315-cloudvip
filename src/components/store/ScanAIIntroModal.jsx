@@ -6,7 +6,7 @@ export default function ScanAIIntroModal({
   onClose, 
   title = "NÂNG CẤP TRẢI NGHIỆM CỬA HÀNG: ĐỒNG BỘ - NHANH CHÓNG - AN TOÀN",
   description = "Nxx315 Studio chính thức ra mắt giao diện Store mới 😎. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực.",
-  imageSrc = "/path-to-your-image.png"
+  imageSrc = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/store-preview.png"
   buttonText = "Trải nghiệm ngay"
 }) {
   if (!isOpen) return null;
@@ -31,14 +31,14 @@ export default function ScanAIIntroModal({
         </div>
 
         {/* Hình ảnh minh họa */}
-        <div className="px-5">
-          <img 
-            src={imageSrc} 
-            alt="ScanAI Illustration" 
-            className="w-full rounded-2xl object-cover"
-          />
-        </div>
-
+<div className="px-5 mt-2">
+  <img 
+    src={imageSrc} 
+    alt="Store Preview" 
+    // Class này giúp ảnh cao tối đa 200px, tự động cắt bớt phần dưới (nếu thừa) mà không bị méo
+    className="h-[200px] w-full rounded-2xl object-cover object-top" 
+  />
+</div>
         {/* Nội dung text */}
         <div className="px-5 pt-6 pb-4 text-center">
           <h3 className="mb-2 text-lg font-bold text-slate-900 flex items-center justify-center gap-2">
