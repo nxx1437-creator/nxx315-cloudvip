@@ -38,6 +38,7 @@ import {
   MilestoneRow,
 } from "../components/home/HomeUI.jsx";
 import CheckinCard from "../components/home/CheckinCard.jsx";
+import EnablePushCard from "../components/home/EnablePushCard.jsx";
 import { useI18n } from "../i18n/index.js";
 
 const MILESTONES = [
@@ -178,6 +179,8 @@ export default function Dashboard() {
                 setProfile((p) => ({ ...p, coins: (p?.coins || 0) + r }))
               }
             />
+            
+            <EnablePushCard userId={user?.id} />
 
             <AnnouncementsCard />
             <HomeTutorial />
