@@ -6,7 +6,7 @@ export default function ScanAIIntroModal({
   onClose, 
   title = "NÂNG CẤP TRẢI NGHIỆM CỬA HÀNG: ĐỒNG BỘ - NHANH CHÓNG - AN TOÀN",
   description = "Nxx315 Studio chính thức ra mắt giao diện Store mới 😎. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực.",
-  imageSrc = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/store-preview.png"
+  imageSrc = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/store-preview.png",
   buttonText = "Trải nghiệm ngay"
 }) {
   if (!isOpen) return null;
