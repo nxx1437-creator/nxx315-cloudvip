@@ -8,6 +8,7 @@ import {
   Headphones,
   Gamepad2,
   Crown,
+  Video,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -242,6 +243,15 @@ export default function Dashboard() {
                 title={t("dash.minigame")}
                 value={t("dash.turns", { n: profile?.game_tickets || 0 })}
                 onClick={() => navigate("/minigames")}
+              />
+            </Panel>
+            {/* ===== VIDEO GIỚI THIỆU ===== */}
+            <Panel bodyClass="">
+              <LinkRow
+                icon={Video}
+                title={lang === "en" ? "Intro videos" : "Video giới thiệu"}
+                value={lang === "en" ? "Get coin codes" : "Nhận code xu"}
+                onClick={() => navigate("/intro-video")}
               />
             </Panel>
 
