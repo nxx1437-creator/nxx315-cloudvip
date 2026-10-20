@@ -34,6 +34,7 @@ export default function CreatorLayout() {
   const navigate = useNavigate();
   const [ov, setOv] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [synced, setSynced] = useState(false);
 
   const reload = useCallback(async () => {
     const { data } = await supabase.rpc("get_creator_overview");
@@ -44,6 +45,18 @@ export default function CreatorLayout() {
   useEffect(() => {
     reload();
   }, [reload]);
+
+  // Bổ sung ảnh/tên cho các kênh đã liên kết từ trước (chỉ chạy 1 lần)
+  useEffect(() => {
+    if (!ov || synced) return;
+    setSynced(true);
+    const missing = (ov.channels || []).some((c) => !c.avatar || !c.name);
+    if (missing) {
+      supabase.functions
+        .invoke("creator-verify", { body: { action: "refresh_channels" } })
+        .then(() => reload());
+    }
+  }, [ov, synced, reload]);
 
   const linked = (ov?.channels || []).length > 0;
 
@@ -98,4 +111,4 @@ export default function CreatorLayout() {
       </nav>
     </div>
   );
-}
+          }
