@@ -21,6 +21,7 @@ import TopHeader from "../components/TopHeader.jsx";
 import IpBlockedScreen from "../components/tasks/IpBlockedScreen.jsx";
 import CaptchaModal from "../components/tasks/CaptchaModal.jsx";
 import ExternalLinkWarning from "../components/tasks/ExternalLinkWarning.jsx";
+import MonthlyMissions from "../components/tasks/MonthlyMissions.jsx";
 import {
   StatPill,
   TaskCard,
@@ -512,6 +513,8 @@ export default function Tasks() {
             />
           </div>
         </div>
+        
+        <MonthlyMissions />
 
         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
