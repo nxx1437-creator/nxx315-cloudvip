@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { Send, Trophy, Timer, ScrollText, CheckCircle2, ChevronRight, Film } from "lucide-react";
 import useProfile from "../../hooks/useProfile.js";
-import { Card, Eyebrow, StatusPill, PLATFORMS, getTier } from "../../components/creator/creatorUi.jsx";
+import { Card, Eyebrow, StatusPill, PLATFORMS, getTier, Avatar } from "../../components/creator/creatorUi.jsx";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -59,6 +59,17 @@ export default function CreatorOverview() {
         <h1 className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-4xl font-extrabold text-transparent">
           {profile?.username || "Creator"}
         </h1>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {ov.channels.map((c) => (
+            <span
+              key={c.platform}
+              className="flex items-center gap-2 rounded-full border border-white/10 bg-black/20 py-1 pl-1 pr-3 text-xs text-slate-200"
+            >
+              <Avatar src={c.avatar} name={c.name} size={26} />
+              <span className="max-w-[130px] truncate">{c.name || c.handle}</span>
+            </span>
+          ))}
+        </div>
         <div className="mt-4 space-y-2.5">
           <button
             onClick={() => navigate("/creator/videos")}
