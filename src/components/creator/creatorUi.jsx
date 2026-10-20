@@ -22,6 +22,14 @@ export const getTier = (n) =>
     ? { name: "RISING", cls: "from-cyan-400 to-blue-500" }
     : { name: "COMMON", cls: "from-slate-400 to-slate-600" };
 
+export const fmt = (n) => {
+  if (n === null || n === undefined) return "—";
+  const v = Number(n);
+  if (v >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+  if (v >= 1e3) return (v / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(v);
+};
+
 export function Card({ children, className = "" }) {
   return (
     <div
@@ -46,6 +54,28 @@ export function StatusPill({ status }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${s.cls}`}>
       <s.Icon size={11} /> {s.label}
+    </span>
+  );
+}
+
+export function Avatar({ src, name, size = 48 }) {
+  const [bad, setBad] = useState(false);
+  const letter = (name || "?").trim().charAt(0).toUpperCase();
+  return src && !bad ? (
+    <img
+      src={src}
+      alt=""
+      referrerPolicy="no-referrer"
+      onError={() => setBad(true)}
+      style={{ width: size, height: size }}
+      className="shrink-0 rounded-full border border-white/15 object-cover"
+    />
+  ) : (
+    <span
+      style={{ width: size, height: size }}
+      className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 font-bold text-white"
+    >
+      {letter}
     </span>
   );
 }
@@ -84,36 +114,6 @@ export function CodeBox({ code, coins }) {
       </div>
       <p className="mt-2 text-[11px] text-emerald-300/80">Vào Ví → Nhập Gift Code để nhận xu.</p>
     </div>
-  );
-}
-
-export const fmt = (n) => {
-  if (n === null || n === undefined) return "—";
-  const v = Number(n);
-  if (v >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
-  if (v >= 1e3) return (v / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
-  return String(v);
-};
-
-export function Avatar({ src, name, size = 48 }) {
-  const [bad, setBad] = useState(false);
-  const letter = (name || "?").trim().charAt(0).toUpperCase();
-  return src && !bad ? (
-    <img
-      src={src}
-      alt=""
-      referrerPolicy="no-referrer"
-      onError={() => setBad(true)}
-      style={{ width: size, height: size }}
-      className="shrink-0 rounded-full border border-white/15 object-cover"
-    />
-  ) : (
-    <span
-      style={{ width: size, height: size }}
-      className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 font-bold text-white"
-    >
-      {letter}
-    </span>
   );
 }
 
@@ -242,4 +242,4 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
       )}
     </Card>
   );
-            }
+       }
