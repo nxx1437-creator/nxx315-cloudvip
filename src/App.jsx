@@ -29,7 +29,12 @@ const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
-import VideoIntro from "./pages/VideoIntro.jsx";
+import CreatorLayout from "./pages/creator/CreatorLayout.jsx";
+import CreatorOverview from "./pages/creator/CreatorOverview.jsx";
+import CreatorRanking from "./pages/creator/CreatorRanking.jsx";
+import CreatorVideos from "./pages/creator/CreatorVideos.jsx";
+import CreatorRewards from "./pages/creator/CreatorRewards.jsx";
+import CreatorSettings from "./pages/creator/CreatorSettings.jsx";
 
 // Hướng dẫn + Về chúng tôi
 const GuideHome = lazy(() => import("./pages/Guide/GuideHome.jsx"));
@@ -104,7 +109,13 @@ export default function App() {
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
             <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
-            <Route path="/intro-video" element={<VideoIntro />} />
+            <Route path="/creator" element={<CreatorLayout />}>
+            <Route index element={<CreatorOverview />} />
+            <Route path="ranking" element={<CreatorRanking />} />
+            <Route path="videos" element={<CreatorVideos />} />
+            <Route path="rewards" element={<CreatorRewards />} />
+            <Route path="settings" element={<CreatorSettings />} />
+            </Route>
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
