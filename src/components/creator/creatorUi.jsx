@@ -87,6 +87,36 @@ export function CodeBox({ code, coins }) {
   );
 }
 
+export const fmt = (n) => {
+  if (n === null || n === undefined) return "—";
+  const v = Number(n);
+  if (v >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+  if (v >= 1e3) return (v / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(v);
+};
+
+export function Avatar({ src, name, size = 48 }) {
+  const [bad, setBad] = useState(false);
+  const letter = (name || "?").trim().charAt(0).toUpperCase();
+  return src && !bad ? (
+    <img
+      src={src}
+      alt=""
+      referrerPolicy="no-referrer"
+      onError={() => setBad(true)}
+      style={{ width: size, height: size }}
+      className="shrink-0 rounded-full border border-white/15 object-cover"
+    />
+  ) : (
+    <span
+      style={{ width: size, height: size }}
+      className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 font-bold text-white"
+    >
+      {letter}
+    </span>
+  );
+}
+
 export function useMyVideos(userId) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +124,9 @@ export function useMyVideos(userId) {
     if (!userId) return;
     const { data } = await supabase
       .from("intro_video_submissions")
-      .select("id, url, platform, status, admin_note, gift_code, coins, created_at")
+      .select(
+        "id, url, platform, status, admin_note, gift_code, coins, created_at, title, thumbnail_url, views, likes, comments, shares"
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -113,10 +145,7 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
 
-  const run = async (fn, args) => {
-    setBusy(true);
-    setMsg(null);
-    const { data, error } = await supabase.rpc(fn, args);
+  const done = (data, error) => {
     setBusy(false);
     if (error || !data) {
       setMsg({ ok: false, text: "Có lỗi xảy ra, vui lòng thử lại." });
@@ -127,6 +156,22 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
       setUrl("");
       onChanged?.();
     }
+  };
+
+  const link = async () => {
+    setBusy(true);
+    setMsg(null);
+    const { data, error } = await supabase.functions.invoke("creator-verify", {
+      body: { action: "link_channel", platform, url },
+    });
+    done(data, error);
+  };
+
+  const unlink = async () => {
+    setBusy(true);
+    setMsg(null);
+    const { data, error } = await supabase.rpc("unlink_creator_channel", { p_platform: platform });
+    done(data, error);
   };
 
   return (
@@ -149,11 +194,20 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
 
       {channel ? (
         <>
-          <p className="mt-3 truncate font-mono text-sm text-slate-300">{channel.handle}</p>
+          <div className="mt-4 flex items-center gap-3">
+            <Avatar src={channel.avatar} name={channel.name} size={56} />
+            <div className="min-w-0">
+              <p className="truncate text-base font-bold text-white">{channel.name || channel.handle}</p>
+              <p className="truncate font-mono text-xs text-slate-400">{channel.handle}</p>
+              {channel.followers !== null && channel.followers !== undefined && (
+                <p className="text-xs text-cyan-300">{fmt(channel.followers)} người theo dõi</p>
+              )}
+            </div>
+          </div>
           <button
-            onClick={() => run("unlink_creator_channel", { p_platform: platform })}
+            onClick={unlink}
             disabled={busy}
-            className="mt-3 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-slate-300 disabled:opacity-50"
+            className="mt-4 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-slate-300 disabled:opacity-50"
           >
             {busy ? "Đang xử lý..." : "Huỷ liên kết"}
           </button>
@@ -171,11 +225,12 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
             className="mt-3 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-400/60"
           />
           <button
-            onClick={() => run("link_creator_channel", { p_platform: platform, p_url: url })}
+            onClick={link}
             disabled={busy || !url.trim()}
             className="mt-3 flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
           >
-            {busy && <Loader2 size={15} className="animate-spin" />} Liên kết kênh
+            {busy && <Loader2 size={15} className="animate-spin" />}
+            {busy ? "Đang kiểm tra kênh..." : "Liên kết kênh"}
           </button>
         </>
       )}
@@ -187,4 +242,4 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
       )}
     </Card>
   );
-      }
+            }
