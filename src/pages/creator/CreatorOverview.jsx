@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { Send, Trophy, Timer, ScrollText, CheckCircle2, ChevronRight, Film } from "lucide-react";
 import useProfile from "../../hooks/useProfile.js";
-import { Card, Eyebrow, StatusPill, PLATFORMS, getTier, Avatar } from "../../components/creator/creatorUi.jsx";
+import {
+  Card,
+  Eyebrow,
+  StatusPill,
+  PLATFORMS,
+  getTier,
+  Avatar,
+} from "../../components/creator/creatorUi.jsx";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -59,6 +66,7 @@ export default function CreatorOverview() {
         <h1 className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-4xl font-extrabold text-transparent">
           {profile?.username || "Creator"}
         </h1>
+
         <div className="mt-3 flex flex-wrap gap-2">
           {ov.channels.map((c) => (
             <span
@@ -70,6 +78,7 @@ export default function CreatorOverview() {
             </span>
           ))}
         </div>
+
         <div className="mt-4 space-y-2.5">
           <button
             onClick={() => navigate("/creator/videos")}
@@ -105,7 +114,9 @@ export default function CreatorOverview() {
             <Eyebrow>Hạng hiện tại</Eyebrow>
             <p className="mt-1 text-6xl font-black italic text-slate-200">{ov.rank ? `#${ov.rank}` : "—"}</p>
           </div>
-          <span className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${tier.cls} text-white shadow-lg`}>
+          <span
+            className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${tier.cls} text-white shadow-lg`}
+          >
             <Trophy size={34} />
           </span>
         </div>
@@ -190,10 +201,13 @@ export default function CreatorOverview() {
         ) : (
           <div className="space-y-2">
             {ov.recent.map((v) => (
-              <div key={v.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0E1626] px-4 py-3">
+              <div
+                key={v.id}
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0E1626] px-4 py-3"
+              >
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-white">{PLATFORMS[v.platform]?.name}</p>
-                  <p className="truncate text-xs text-slate-500">{v.url}</p>
+                  <p className="truncate text-xs text-slate-500">{v.title || v.url}</p>
                 </div>
                 <StatusPill status={v.status} />
               </div>
