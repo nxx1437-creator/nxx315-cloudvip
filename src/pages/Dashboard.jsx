@@ -251,7 +251,7 @@ export default function Dashboard() {
                 icon={Video}
                 title={lang === "en" ? "Intro videos" : "Video giới thiệu"}
                 value={lang === "en" ? "Get coin codes" : "Nhận code xu"}
-                onClick={() => navigate("/intro-video")}
+                onClick={() => navigate("/creator")}
               />
             </Panel>
 
