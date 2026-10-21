@@ -1,8 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Trophy, Film, Gift, Settings, ArrowLeft, Loader2 } from "lucide-react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Trophy,
+  Film,
+  Gift,
+  Settings,
+  ArrowLeft,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
-import { Card, Eyebrow, ChannelLinkCard } from "../../components/creator/creatorUi.jsx";
 
 const TABS = [
   { to: "/creator", end: true, label: "Tổng quan", Icon: LayoutDashboard },
@@ -12,26 +20,33 @@ const TABS = [
   { to: "/creator/settings", label: "Cài đặt", Icon: Settings },
 ];
 
-function Onboarding({ ov, reload }) {
-  const byPlatform = Object.fromEntries((ov?.channels || []).map((c) => [c.platform, c]));
+function LinkBanner({ showButton, onGo }) {
   return (
-    <div className="space-y-4">
-      <Card>
-        <Eyebrow>▸ Bắt đầu</Eyebrow>
-        <h1 className="mt-2 text-2xl font-bold text-white">Liên kết kênh của bạn</h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Để gửi video giới thiệu và nhận code xu, bạn cần liên kết ít nhất 1 kênh TikTok hoặc
-          YouTube của chính bạn. Mỗi kênh chỉ liên kết được với 1 tài khoản.
+    <div className="flex items-start gap-3 rounded-3xl border border-amber-400/30 bg-black/60 p-4">
+      <AlertTriangle size={22} className="mt-0.5 shrink-0 text-amber-300" />
+      <div className="min-w-0 flex-1">
+        <p className="font-mono text-xs font-bold uppercase tracking-widest text-white">
+          Bạn chưa liên kết kênh
         </p>
-      </Card>
-      <ChannelLinkCard platform="tiktok" channel={byPlatform.tiktok} onChanged={reload} />
-      <ChannelLinkCard platform="youtube" channel={byPlatform.youtube} onChanged={reload} />
+        <p className="mt-1 font-mono text-[11px] uppercase leading-relaxed tracking-wide text-slate-300">
+          Liên kết kênh TikTok hoặc YouTube để bắt đầu gửi video và nhận thưởng.
+        </p>
+      </div>
+      {showButton && (
+        <button
+          onClick={onGo}
+          className="shrink-0 rounded-xl bg-white px-3 py-2 text-xs font-bold text-black"
+        >
+          Liên kết ngay
+        </button>
+      )}
     </div>
   );
 }
 
 export default function CreatorLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [ov, setOv] = useState(null);
   const [loading, setLoading] = useState(true);
   const [synced, setSynced] = useState(false);
@@ -59,6 +74,7 @@ export default function CreatorLayout() {
   }, [ov, synced, reload]);
 
   const linked = (ov?.channels || []).length > 0;
+  const onSettings = pathname.startsWith("/creator/settings");
 
   return (
     <div className="min-h-screen bg-[#070B14] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-100">
@@ -67,7 +83,7 @@ export default function CreatorLayout() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-[#070B14]/90 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3 md:max-w-3xl">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300"
           >
             <ArrowLeft size={14} /> Trang chủ
@@ -83,10 +99,26 @@ export default function CreatorLayout() {
           <div className="flex justify-center py-20">
             <Loader2 size={24} className="animate-spin text-cyan-400" />
           </div>
-        ) : !linked ? (
-          <Onboarding ov={ov} reload={reload} />
+        ) : !ov ? (
+          <div className="py-16 text-center">
+            <p className="text-sm text-slate-400">Không tải được dữ liệu.</p>
+            <button
+              onClick={() => {
+                setLoading(true);
+                reload();
+              }}
+              className="mt-3 rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-slate-200"
+            >
+              Thử lại
+            </button>
+          </div>
         ) : (
-          <Outlet context={{ ov, reload }} />
+          <>
+            {!linked && (
+              <LinkBanner showButton={!onSettings} onGo={() => navigate("/creator/settings")} />
+            )}
+            <Outlet context={{ ov, reload }} />
+          </>
         )}
       </main>
 
@@ -111,4 +143,4 @@ export default function CreatorLayout() {
       </nav>
     </div>
   );
-          }
+            }
