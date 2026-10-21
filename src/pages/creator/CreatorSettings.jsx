@@ -1,7 +1,7 @@
 import React from "react";
 import { useOutletContext } from "react-router-dom";
 import useSession from "../../hooks/useSession.js";
-import { Card, Eyebrow, ChannelLinkCard } from "../../components/creator/creatorUi.jsx";
+import { Card, Eyebrow, ChannelLinkCard, GuideVideo } from "../../components/creator/creatorUi.jsx";
 
 export default function CreatorSettings() {
   const { ov, reload } = useOutletContext();
@@ -15,6 +15,8 @@ export default function CreatorSettings() {
         <h1 className="mt-1 text-3xl font-extrabold text-white">Cài đặt</h1>
         <p className="mt-1 text-sm text-slate-400">Liên kết kênh và thông tin tài khoản.</p>
       </div>
+
+      <GuideVideo url={ov?.settings?.link_guide_video} />
 
       <Eyebrow className="px-1">▸ Kênh liên kết</Eyebrow>
       <ChannelLinkCard platform="youtube" channel={by.youtube} onChanged={reload} />
