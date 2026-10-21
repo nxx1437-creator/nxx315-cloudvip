@@ -73,7 +73,15 @@ export default function CreatorVideos() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await supabase.functions.invoke("creator-verify", { body: { action: "refresh_stats" } });
+    const { data } = await supabase.functions.invoke("creator-verify", {
+      body: { action: "refresh_stats" },
+    });
+    if (data?.youtube_skipped > 0) {
+      setNotice({
+        kind: "error",
+        text: "Chưa lấy được số liệu YouTube vì hệ thống chưa có khóa YouTube API.",
+      });
+    }
     await reload();
     setRefreshing(false);
   };
@@ -138,6 +146,13 @@ export default function CreatorVideos() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
+              if ((ov?.channels || []).length === 0) {
+                setNotice({
+                  kind: "error",
+                  text: "Bạn cần liên kết kênh TikTok hoặc YouTube trước khi gửi video.",
+                });
+                return;
+              }
               setOpen(true);
               setNotice(null);
             }}
@@ -297,4 +312,4 @@ export default function CreatorVideos() {
       )}
     </>
   );
-               }                                       
+      }                   
