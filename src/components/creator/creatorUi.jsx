@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Clock, CheckCircle2, XCircle, Loader2, Copy, Check, Gift } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, Loader2, Copy, Check, Gift, PlayCircle } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 
 export const PLATFORMS = {
@@ -243,3 +243,35 @@ export function ChannelLinkCard({ platform, channel, onChanged }) {
     </Card>
   );
        }
+export function GuideVideo({ url }) {
+  const u = (url || "").trim();
+  const yt = u.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([A-Za-z0-9_-]{11})/
+  )?.[1];
+  return (
+    <Card>
+      <Eyebrow className="flex items-center gap-2">
+        <PlayCircle size={14} className="text-cyan-400" /> Hướng dẫn liên kết kênh
+      </Eyebrow>
+      <div className="mt-3 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+        {yt ? (
+          <iframe
+            title="Hướng dẫn liên kết kênh"
+            src={`https://www.youtube.com/embed/${yt}`}
+            className="aspect-video w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : /\.(mp4|webm)(\?|$)/i.test(u) ? (
+          <video src={u} controls playsInline className="aspect-video w-full" />
+        ) : (
+          <div className="flex aspect-video flex-col items-center justify-center gap-2 text-center">
+            <PlayCircle size={34} className="text-slate-600" />
+            <p className="text-sm font-semibold text-slate-300">Video hướng dẫn sắp có</p>
+            <p className="px-6 text-xs text-slate-500">Dán link kênh ở bên dưới để liên kết nhé.</p>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
