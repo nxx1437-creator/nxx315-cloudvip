@@ -287,7 +287,7 @@ export default function Register() {
   const renderAlert = () => {
     if (ipError) {
       return (
-        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0 text-amber-600">
               <IconWarning size={18} />
@@ -318,7 +318,7 @@ export default function Register() {
 
     if (ipBlocked) {
       return (
-        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-3.5">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0 text-rose-600">
               <IconShield size={18} />
@@ -346,7 +346,7 @@ export default function Register() {
     }
 
     return (
-      <p className="mb-5 flex items-start gap-2 text-[12px] leading-5 text-slate-500">
+      <p className="mb-4 flex items-start gap-2 text-[12px] leading-5 text-slate-500">
         <span className="mt-0.5 shrink-0">
           <IconWarning size={14} />
         </span>
@@ -375,7 +375,7 @@ export default function Register() {
     >
       {renderAlert()}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         <AuthField
           id="reg-username"
           label={t("reg.username")}
@@ -460,7 +460,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={loading || blocked}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-4 text-[16px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -496,7 +496,7 @@ export default function Register() {
       </form>
 
       {/* Hoặc tiếp tục với */}
-      <div className="relative my-6">
+      <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
         </div>
@@ -511,7 +511,7 @@ export default function Register() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
         >
           <IconGoogle size={20} />
           {t("reg.google")}
@@ -519,5 +519,6 @@ export default function Register() {
       </div>
     </AuthLayout>
   );
-        }
+            }
+            
                     
