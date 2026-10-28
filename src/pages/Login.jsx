@@ -26,10 +26,10 @@ const formatTime = (sec) => {
 };
 
 const inputCls =
-  "w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100 disabled:opacity-60";
+  "w-full rounded-2xl border border-slate-200 bg-white py-3 pl-12 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100 disabled:opacity-60";
 
 const labelCls =
-  "text-[12.5px] font-bold uppercase tracking-[0.08em] text-slate-800";
+  "text-[12px] font-bold uppercase tracking-[0.08em] text-slate-800";
 
 export default function Login() {
   const { t } = useI18n();
@@ -314,13 +314,13 @@ export default function Login() {
         formatTime={formatTime}
       />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         {/* Email */}
         <div>
           <label htmlFor="login-email" className={labelCls}>
             {t("login.email")}
           </label>
-          <div className="relative mt-2.5">
+          <div className="relative mt-2">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <IconMail size={18} />
             </span>
@@ -350,7 +350,7 @@ export default function Login() {
               {t("login.forgot")}
             </Link>
           </div>
-          <div className="relative mt-2.5">
+          <div className="relative mt-2">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <IconLock size={18} />
             </span>
@@ -422,7 +422,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading || disabled}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-4 text-[16px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {checkingLock ? (
             <>
@@ -449,7 +449,7 @@ export default function Login() {
       </form>
 
       {/* Hoặc tiếp tục với */}
-      <div className="relative my-6">
+      <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-slate-200" />
         </div>
@@ -464,7 +464,7 @@ export default function Login() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
         >
           <IconGoogle size={20} />
           {t("login.google")}
@@ -481,5 +481,6 @@ export default function Login() {
       )}
     </AuthLayout>
   );
-  }
+          }
+            
           
