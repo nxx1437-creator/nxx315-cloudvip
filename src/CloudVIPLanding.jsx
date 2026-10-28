@@ -162,9 +162,9 @@ function Showcase({ c, L }) {
 const COPY = {
   vi: {
     h1a: "Kiếm Coin",
-    h1b: "Đổi thưởng dễ dàng",
+    h1b: "Đổi quà thật dễ",
     heroSub:
-      "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
+      "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy những phần quà bạn yêu thích.",
     how: "Cách hoạt động",
     note: "Kiếm xu hoàn toàn miễn phí. Chuyển khoản chỉ dùng khi bạn muốn mua quà trực tiếp.",
     facts: [
@@ -355,11 +355,15 @@ export default function CloudVIPLanding() {
                 </button>
               </div>
               <ul className="lp-rise lp-d4 mt-7 space-y-2">
-                {L.ticks.map((x) => (
-                  <li key={x} className="flex items-center gap-2.5 text-[14.5px] text-slate-600">
-                    <Check size={16} className="lp-acc shrink-0" /> {x}
-                  </li>
-                ))}
+                {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
+  <li
+    key={x}
+    className="flex items-center gap-2.5 text-[14.5px] text-slate-600"
+  >
+    <Check size={16} className="lp-acc shrink-0" />
+    {x}
+  </li>
+))}
               </ul>
               <p className="mt-4 max-w-md text-[13px] leading-6 text-slate-500">{c.note}</p>
             </div>
