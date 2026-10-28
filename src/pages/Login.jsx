@@ -26,10 +26,10 @@ const formatTime = (sec) => {
 };
 
 const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 disabled:bg-slate-100 disabled:opacity-60";
+  "w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 text-[15px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100 disabled:opacity-60";
 
 const labelCls =
-  "text-[12px] font-bold uppercase tracking-wider text-slate-700";
+  "text-[12.5px] font-bold uppercase tracking-[0.08em] text-slate-800";
 
 export default function Login() {
   const { t } = useI18n();
@@ -298,7 +298,7 @@ export default function Login() {
           {t("login.noAccount")}{" "}
           <Link
             to="/register"
-            className="font-bold text-teal-700 hover:underline"
+            className="font-bold text-emerald-700 hover:underline"
           >
             {t("login.signUp")}
           </Link>
@@ -320,7 +320,7 @@ export default function Login() {
           <label htmlFor="login-email" className={labelCls}>
             {t("login.email")}
           </label>
-          <div className="relative mt-2">
+          <div className="relative mt-2.5">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <IconMail size={18} />
             </span>
@@ -345,12 +345,12 @@ export default function Login() {
             </label>
             <Link
               to="/forgot-password"
-              className="text-[13px] font-semibold text-teal-700 hover:underline"
+              className="text-[13px] font-semibold text-emerald-700 hover:underline"
             >
               {t("login.forgot")}
             </Link>
           </div>
-          <div className="relative mt-2">
+          <div className="relative mt-2.5">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <IconLock size={18} />
             </span>
@@ -382,13 +382,13 @@ export default function Login() {
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-1 h-5 w-5 shrink-0 rounded accent-teal-600"
+            className="mt-1 h-5 w-5 shrink-0 rounded accent-emerald-600"
           />
           <span>
             {t("login.agreePre")}
             <Link
               to="/terms"
-              className="font-semibold text-teal-700 underline decoration-teal-300 underline-offset-2"
+              className="font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2"
             >
               {t("login.terms")}
             </Link>
@@ -422,7 +422,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading || disabled}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-teal-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-4 text-[16px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {checkingLock ? (
             <>
@@ -454,7 +454,7 @@ export default function Login() {
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
             {t("login.orContinue")}
           </span>
         </div>
@@ -464,7 +464,7 @@ export default function Login() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
         >
           <IconGoogle size={20} />
           {t("login.google")}
@@ -481,4 +481,5 @@ export default function Login() {
       )}
     </AuthLayout>
   );
-           }
+  }
+          
