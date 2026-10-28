@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Crown, Medal, Coins, ChevronRight, Trophy } from "lucide-react";
+import { Crown, Medal, Coins, ChevronRight, Star } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 
 const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
 
-// ✅ Avatar có fallback chữ cái
-function Avatar({ src, name, size = "h-12 w-12", text = "text-sm" }) {
+// Component Avatar
+function Avatar({ src, name, size = "h-14 w-14", text = "text-lg" }) {
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
 
@@ -16,46 +16,19 @@ function Avatar({ src, name, size = "h-12 w-12", text = "text-sm" }) {
         src={src}
         alt={name}
         onError={() => setFailed(true)}
-        className={`${size} shrink-0 rounded-full border-2 border-white object-cover shadow-md`}
+        className={`${size} shrink-0 rounded-full border-4 border-white object-cover shadow-lg`}
       />
     );
   }
 
   return (
     <div
-      className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full border-2 border-white bg-slate-100 font-bold text-slate-500 shadow-md`}
+      className={`${size} ${text} flex shrink-0 items-center justify-center rounded-full border-4 border-white bg-slate-100 font-bold text-slate-500 shadow-lg`}
     >
       {initial}
     </div>
   );
 }
-
-// ✅ Icon hạng
-function RankIcon({ rank, size = 16 }) {
-  if (rank === 1) return <Crown className="text-amber-400" size={size} strokeWidth={2.6} />;
-  if (rank === 2) return <Medal className="text-slate-400" size={size} strokeWidth={2.4} />;
-  if (rank === 3) return <Medal className="text-orange-400" size={size} strokeWidth={2.4} />;
-  return <span className="text-[11px] font-bold text-slate-400">{rank}</span>;
-}
-
-// ✅ Styles cho top 1-2-3
-const TOP_STYLES = {
-  1: {
-    bg: "bg-gradient-to-br from-amber-100 to-amber-50",
-    border: "border-amber-300",
-    text: "text-amber-700",
-  },
-  2: {
-    bg: "bg-gradient-to-br from-slate-200 to-slate-100",
-    border: "border-slate-300",
-    text: "text-slate-700",
-  },
-  3: {
-    bg: "bg-gradient-to-br from-orange-100 to-orange-50",
-    border: "border-orange-300",
-    text: "text-orange-700",
-  },
-};
 
 export default function LeaderboardCard() {
   const navigate = useNavigate();
@@ -69,14 +42,14 @@ export default function LeaderboardCard() {
       setLoading(true);
       try {
         const { data, error } = await supabase.rpc("get_leaderboard", {
-          period: "week",
+          period: "month", // Lấy top tháng cho giống ảnh mẫu
           limit_count: 3,
         });
 
         if (error) throw error;
         if (alive) setUsers(data || []);
       } catch (err) {
-        console.error("Load leaderboard card error:", err);
+        console.error("Load leaderboard error:", err);
         if (alive) setUsers([]);
       } finally {
         if (alive) setLoading(false);
@@ -89,92 +62,101 @@ export default function LeaderboardCard() {
     };
   }, []);
 
-  // Loading skeleton
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
-        <div className="flex items-center justify-between">
-          <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
-          <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl bg-slate-100" />
-          ))}
-        </div>
-      </div>
+      <div className="rounded-[2rem] border border-white bg-white/80 p-5 shadow-sm h-64 animate-pulse" />
     );
   }
 
   if (users.length === 0) return null;
 
+  const top1 = users[0];
+  const top2 = users[1];
+  const top3 = users[2];
+
   return (
-    <button
-      onClick={() => navigate("/leaderboard")}
-      className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-sky-200 hover:shadow-md"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md shadow-orange-500/25">
-            <Trophy size={17} className="text-white" strokeWidth={2.4} />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-900">Top 3 tuần này</p>
-            <p className="text-[11px] text-slate-500">Ai kiếm nhiều Coin nhất?</p>
-          </div>
-        </div>
-        <ChevronRight size={18} className="text-slate-300" />
-      </div>
+    <div className="relative overflow-hidden rounded-[2rem] border border-white bg-[#e6f7f2] p-5 shadow-sm">
+      {/* Hiệu ứng ánh sáng nền */}
+      <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 h-40 w-40 rounded-full bg-amber-300/20 blur-3xl"></div>
 
-      {/* Podium top 3 */}
-      <div className="grid grid-cols-3 gap-2.5 p-4">
-        {users.map((user, idx) => {
-          const rank = idx + 1;
-          const style = TOP_STYLES[rank];
-          return (
-            <div
-              key={user.id}
-              className={`flex flex-col items-center rounded-2xl border ${style.border} ${style.bg} p-3`}
-            >
-              {/* Icon hạng */}
-              <div className="mb-2 flex h-6 w-6 items-center justify-center">
-                <RankIcon rank={rank} size={18} />
-              </div>
-
-              {/* Avatar */}
-              <Avatar
-                src={user.avatar_url}
-                name={user.display_name || user.username}
-                size="h-12 w-12"
-                text="text-base"
-              />
-
-              {/* Tên */}
-              <p
-                className={`mt-2 w-full truncate text-center text-[11.5px] font-bold ${style.text}`}
-              >
-                {user.display_name || user.username}
-              </p>
-
-              {/* Coin */}
-              <div className="mt-1 flex items-center gap-0.5 text-amber-500">
-                <Coins size={11} strokeWidth={2.6} />
-                <span className="text-[11px] font-black">
-                  {formatCoins(user.coins)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-2.5 text-center">
-        <p className="text-[11.5px] font-semibold text-sky-600">
-          Xem bảng xếp hạng đầy đủ →
+      <div className="flex items-center justify-between mb-6 relative z-10">
+        <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-emerald-700 uppercase">
+          Vinh danh tháng trước
         </p>
+        <button onClick={() => navigate("/leaderboard")} className="text-[10px] font-bold text-cyan-600 flex items-center gap-1">
+          Xem tất cả <ChevronRight size={12} />
+        </button>
       </div>
-    </button>
+
+      {/* Podium Area */}
+      <div className="relative flex items-end justify-center gap-2 sm:gap-4 px-2 z-10">
+        
+        {/* TOP 3 (Bên phải) */}
+        <div className="flex flex-col items-center mt-8">
+          <div className="relative">
+            <div className="h-16 w-16 rounded-full border-[3px] border-slate-300 p-0.5 bg-white">
+              <Avatar src={top3?.avatar_url} name={top3?.username || "U"} size="h-full w-full" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
+              3
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] font-bold text-amber-600 uppercase tracking-widest">Top 3</p>
+          <p className="text-[13px] font-bold text-slate-800 truncate max-w-[80px]">{top3?.username || "—"}</p>
+          <div className="mt-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center">
+            <p className="text-[10px] font-bold text-amber-700">200,000đ + 100h</p>
+          </div>
+          <p className="mt-1 text-[10px] font-bold text-slate-500">{top3 ? formatCoins(top3.coins) : 0} điểm</p>
+          {/* Bục đỡ mờ */}
+          <div className="mt-2 h-10 w-16 rounded-t-xl bg-gradient-to-b from-orange-200/50 to-transparent"></div>
+        </div>
+
+        {/* TOP 1 (Ở giữa, to nhất) */}
+        <div className="flex flex-col items-center z-10 -mt-4">
+          <div className="relative">
+            {/* Vương miện */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+              <Crown size={32} className="text-amber-400 fill-amber-400 drop-shadow-md" />
+            </div>
+            {/* Avatar to */}
+            <div className="h-24 w-24 rounded-full border-[4px] border-amber-400 p-0.5 bg-white shadow-[0_0_20px_rgba(251,191,36,0.4)]">
+              <Avatar src={top1?.avatar_url} name={top1?.username || "U"} size="h-full w-full" text="text-3xl" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[12px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
+              1
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] font-bold text-amber-600 uppercase tracking-widest">Top 1</p>
+          <p className="text-[15px] font-black text-slate-800 truncate max-w-[100px]">{top1?.username || "—"}</p>
+          <div className="mt-1 rounded-full border border-amber-300 bg-amber-100 px-3 py-0.5 text-center">
+            <p className="text-[11px] font-bold text-amber-700">700,000đ + 150h</p>
+          </div>
+          <p className="mt-1 text-[11px] font-bold text-slate-600">{top1 ? formatCoins(top1.coins) : 0} điểm</p>
+          {/* Bục đỡ mờ */}
+          <div className="mt-2 h-14 w-20 rounded-t-2xl bg-gradient-to-b from-amber-300/60 to-transparent"></div>
+        </div>
+
+        {/* TOP 2 (Bên trái - Ẩn nếu chỉ có 3 người) */}
+        <div className="flex flex-col items-center mt-8">
+          <div className="relative">
+            <div className="h-16 w-16 rounded-full border-[3px] border-slate-300 p-0.5 bg-white">
+              <Avatar src={top2?.avatar_url} name={top2?.username || "U"} size="h-full w-full" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
+              2
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] font-bold text-amber-600 uppercase tracking-widest">Top 2</p>
+          <p className="text-[13px] font-bold text-slate-800 truncate max-w-[80px]">{top2?.username || "—"}</p>
+          <div className="mt-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center">
+            <p className="text-[10px] font-bold text-amber-700">300,000đ + 120h</p>
+          </div>
+          <p className="mt-1 text-[10px] font-bold text-slate-500">{top2 ? formatCoins(top2.coins) : 0} điểm</p>
+          {/* Bục đỡ mờ */}
+          <div className="mt-2 h-8 w-16 rounded-t-xl bg-gradient-to-b from-slate-300/50 to-transparent"></div>
+        </div>
+
+      </div>
+    </div>
   );
-      }
+    }
