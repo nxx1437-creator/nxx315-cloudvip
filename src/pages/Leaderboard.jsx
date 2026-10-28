@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Crown, Medal, ChevronRight, Gift } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient.js";
+import { supabase } from "../lib/supabaseClient.js";
 import { Card, Eyebrow } from "../../components/creator/creatorUi.jsx";
 
 // Hàm format điểm
