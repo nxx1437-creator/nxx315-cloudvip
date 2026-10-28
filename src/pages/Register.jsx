@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout.jsx";
 import AuthField from "../components/AuthField.jsx";
+import MagicLinkSent from "../components/MagicLinkSent.jsx";
+import { AT, EMAIL_RE, mapAuthError, callbackUrl } from "../components/authText.js";
 import {
-  IconUser,
   IconMail,
-  IconLock,
   IconGift,
   IconArrow,
   IconSpinner,
@@ -18,24 +18,22 @@ import { getFingerprint } from "../lib/fingerprint.js";
 import { useI18n } from "../i18n/index.js";
 
 export default function Register() {
-  const { t } = useI18n();
-  const navigate = useNavigate();
+  const { t, lang } = useI18n();
+  const x = AT[lang] || AT.vi;
 
   // Đọc mã ref từ URL
   const [searchParams] = useSearchParams();
   const refFromUrl = searchParams.get("ref") || "";
 
   const [form, setForm] = useState({
-    username: "",
     email: "",
-    password: "",
     referral: refFromUrl.toUpperCase(),
   });
 
-  // error = { key, vars } hoặc { raw } -> dịch lúc hiển thị
+  // error = { key, vars } hoặc { text }
   const [error, setError] = useState(null);
-  const [errorType, setErrorType] = useState("error");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const [ipBlocked, setIpBlocked] = useState(false);
   const [ipChecking, setIpChecking] = useState(true);
@@ -43,9 +41,8 @@ export default function Register() {
   const [ipError, setIpError] = useState(false);
   const [blockedEmail, setBlockedEmail] = useState(null);
 
-  const fail = (key, vars, type = "error") => {
+  const fail = (key, vars) => {
     setError({ key, vars });
-    setErrorType(type);
   };
 
   // Chỉ gửi fingerprint — server tự lấy IP
@@ -121,173 +118,84 @@ export default function Register() {
       return true;
     }
     if (ipError) {
-      fail("reg.err.checkFail", null, "ip_error");
+      fail("reg.err.checkFail");
       return true;
     }
     if (ipBlocked) {
-      fail("reg.err.deviceUsed", null, "ip_blocked");
+      fail("reg.err.deviceUsed");
       return true;
     }
     return false;
   };
 
-  const emailExists = () =>
-    fail("reg.err.emailExists", { email: form.email }, "email_exists");
+  // Gửi liên kết: tạo tài khoản nếu chưa có, đã có thì đăng nhập
+  const sendLink = async (addr) => {
+    let fp = null;
+    try {
+      fp = await getFingerprint();
+    } catch (e) {
+      console.warn("[register] fingerprint:", e);
+    }
+    return supabase.auth.signInWithOtp({
+      email: addr,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: callbackUrl(),
+        // Lưu vào hồ sơ để trang nhận liên kết hoàn tất việc đăng ký (IP, mã giới thiệu)
+        data: {
+          username: addr.split("@")[0],
+          device_fingerprint: fp || null,
+          referral: form.referral.trim().toUpperCase() || null,
+        },
+      },
+    });
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-
     if (deviceGuard()) return;
 
-    if (!form.email || !form.password) {
+    const addr = form.email.trim().toLowerCase();
+    if (!addr) {
       fail("err.fill");
       return;
     }
-    if (form.password.length < 6) {
-      fail("reg.err.pwShort");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!EMAIL_RE.test(addr)) {
       fail("reg.err.email");
       return;
     }
 
     setError(null);
-    setErrorType("error");
     setLoading(true);
+    const { error: authError } = await sendLink(addr);
+    setLoading(false);
 
-    try {
-      const fp = await getFingerprint();
-
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            username: form.username || form.email.split("@")[0],
-            device_fingerprint: fp || null,
-          },
-        },
-      });
-
-      if (authError) {
-        setLoading(false);
-        const msg = authError.message?.toLowerCase() || "";
-
-        if (
-          msg.includes("already registered") ||
-          msg.includes("already been registered") ||
-          msg.includes("user already exists") ||
-          msg.includes("email address is already") ||
-          msg.includes("email already exists")
-        ) {
-          emailExists();
-        } else if (msg.includes("ip_already_registered")) {
-          fail("reg.err.deviceUsed", null, "ip_blocked");
-        } else if (msg.includes("invalid email")) {
-          fail("reg.err.email");
-        } else if (msg.includes("password")) {
-          fail("reg.err.weakPw");
-        } else if (msg.includes("rate limit") || msg.includes("too many")) {
-          fail("reg.err.rate");
-        } else {
-          setError({ raw: authError.message });
-        }
-        return;
-      }
-
-      if (data.user) {
-        const isExistingUser =
-          !data.user.identities || data.user.identities.length === 0;
-
-        if (isExistingUser) {
-          setLoading(false);
-          emailExists();
-          return;
-        }
-
-        // Lưu IP + fingerprint + device info
-        try {
-          const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-          const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-          const saveRes = await fetch(
-            `${SUPABASE_URL}/functions/v1/save-registration`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: SUPABASE_ANON_KEY,
-              },
-              body: JSON.stringify({
-                userId: data.user.id,
-                fingerprint: fp,
-                screen_resolution: `${window.screen.width}x${window.screen.height}`,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              }),
-            }
-          );
-
-          if (saveRes.ok) {
-            console.log("Đã lưu IP + fingerprint + device info");
-          } else {
-            console.warn("save-registration trả về lỗi:", saveRes.status);
-          }
-        } catch (err) {
-          console.warn("Không lưu được IP:", err);
-        }
-
-        // Xử lý mã giới thiệu
-        if (form.referral.trim()) {
-          try {
-            const { data: refResult, error: refError } = await supabase.rpc(
-              "apply_referral_code",
-              { p_code: form.referral.trim().toUpperCase() }
-            );
-
-            if (refError) {
-              console.warn("Apply referral error:", refError);
-            } else if (
-              refResult?.[0]?.success === false ||
-              refResult?.success === false
-            ) {
-              console.warn("Referral fail:", refResult);
-            }
-          } catch (err) {
-            console.warn("Referral exception:", err);
-          }
-        }
-
-        setLoading(false);
-        navigate("/onboarding", { replace: true });
-      } else {
-        setLoading(false);
-        fail("reg.err.createFail");
-      }
-    } catch (err) {
-      console.error("[register] error:", err);
-      fail("err.generic");
-      setLoading(false);
+    if (authError) {
+      const msg = (authError.message || "").toLowerCase();
+      if (msg.includes("ip_already_registered")) fail("reg.err.deviceUsed");
+      else setError(mapAuthError(authError, x));
+      return;
     }
+    setForm((f) => ({ ...f, email: addr }));
+    setSent(true);
   };
 
   const handleGoogle = async () => {
     setError(null);
-    setErrorType("error");
     if (deviceGuard()) return;
 
     const { error: authError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/dashboard` },
     });
-    if (authError) setError({ raw: authError.message });
+    if (authError) setError({ text: authError.message });
   };
 
   // Chỉ hiển thị 1 cảnh báo duy nhất
   const renderAlert = () => {
     if (ipError) {
       return (
-        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
+        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0 text-amber-600">
               <IconWarning size={18} />
@@ -318,7 +226,7 @@ export default function Register() {
 
     if (ipBlocked) {
       return (
-        <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-3.5">
+        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0 text-rose-600">
               <IconShield size={18} />
@@ -346,7 +254,7 @@ export default function Register() {
     }
 
     return (
-      <p className="mb-4 flex items-start gap-2 text-[12px] leading-5 text-slate-500">
+      <p className="mb-5 flex items-start gap-2 text-[12px] leading-5 text-slate-500">
         <span className="mt-0.5 shrink-0">
           <IconWarning size={14} />
         </span>
@@ -364,10 +272,7 @@ export default function Register() {
       footer={
         <>
           {t("reg.haveAccount")}{" "}
-          <Link
-            to="/login"
-            className="font-bold text-emerald-700 hover:underline"
-          >
+          <Link to="/login" className="font-bold text-emerald-700 hover:underline">
             {t("reg.signIn")}
           </Link>
         </>
@@ -375,150 +280,120 @@ export default function Register() {
     >
       {renderAlert()}
 
-      <form onSubmit={handleSubmit} className="space-y-3.5">
-        <AuthField
-          id="reg-username"
-          label={t("reg.username")}
-          labelRight={
-            <span className="text-[11px] font-medium text-slate-400">
-              {t("common.optional")}
-            </span>
-          }
-          icon={<IconUser size={18} />}
-          value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-          placeholder={t("reg.usernamePh")}
-          autoComplete="nickname"
-          disabled={ipChecking}
+      {sent ? (
+        <MagicLinkSent
+          email={form.email}
+          onChangeEmail={() => setSent(false)}
+          onResend={async () => {
+            const { error: e } = await sendLink(form.email);
+            return e ? mapAuthError(e, x).text : null;
+          }}
         />
+      ) : (
+        <>
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <AuthField
+              id="reg-email"
+              label={t("login.email")}
+              icon={<IconMail size={18} />}
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder={t("login.emailPh")}
+              autoComplete="email"
+              disabled={ipChecking}
+            />
 
-        <AuthField
-          id="reg-email"
-          label={t("login.email")}
-          icon={<IconMail size={18} />}
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          placeholder={t("login.emailPh")}
-          autoComplete="email"
-          disabled={ipChecking}
-        />
+            <AuthField
+              id="reg-referral"
+              label={t("reg.referral")}
+              labelRight={
+                <span className="text-[11px] font-medium text-slate-400">
+                  {t("common.optional")}
+                </span>
+              }
+              icon={<IconGift size={18} />}
+              variant="gift"
+              uppercase
+              value={form.referral}
+              onChange={(e) =>
+                setForm({ ...form, referral: e.target.value.toUpperCase() })
+              }
+              placeholder={t("reg.referralPh")}
+              maxLength={10}
+              disabled={ipChecking}
+            />
 
-        <AuthField
-          id="reg-password"
-          label={t("login.password")}
-          icon={<IconLock size={18} />}
-          type="password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          placeholder={t("reg.passwordPh")}
-          autoComplete="new-password"
-          disabled={ipChecking}
-        />
+            <p className="text-[12.5px] leading-5 text-slate-500">{x.hintReg}</p>
 
-        <AuthField
-          id="reg-referral"
-          label={t("reg.referral")}
-          labelRight={
-            <span className="text-[11px] font-medium text-slate-400">
-              {t("common.optional")}
-            </span>
-          }
-          icon={<IconGift size={18} />}
-          variant="gift"
-          uppercase
-          value={form.referral}
-          onChange={(e) =>
-            setForm({ ...form, referral: e.target.value.toUpperCase() })
-          }
-          placeholder={t("reg.referralPh")}
-          maxLength={10}
-          disabled={ipChecking}
-        />
-
-        {/* Lỗi */}
-        {error && (
-          <div
-            className={`whitespace-pre-line rounded-xl border px-4 py-3 text-xs font-medium ${
-              errorType === "email_exists"
-                ? "border-amber-200 bg-amber-50 text-amber-700"
-                : "border-rose-200 bg-rose-50 text-rose-600"
-            }`}
-          >
-            {error.raw ?? t(error.key, error.vars)}
-            {errorType === "email_exists" && (
-              <Link
-                to="/login"
-                className="mt-2 block font-bold text-amber-800 underline"
-              >
-                {t("reg.err.emailExistsCta")}
-              </Link>
+            {error && (
+              <div className="whitespace-pre-line rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-600">
+                {error.text ?? t(error.key, error.vars)}
+              </div>
             )}
+
+            <button
+              type="submit"
+              disabled={loading || blocked}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <IconSpinner size={18} />
+                  {x.sending}
+                </>
+              ) : ipChecking ? (
+                <>
+                  <IconSpinner size={18} />
+                  {t("reg.checking")}
+                </>
+              ) : ipError ? (
+                t("reg.deviceError")
+              ) : ipBlocked ? (
+                t("reg.deviceUsed")
+              ) : (
+                <>
+                  {x.sendReg}
+                  <IconArrow size={18} />
+                </>
+              )}
+            </button>
+
+            <p className="text-center text-[12px] leading-5 text-slate-500">
+              {t("reg.agree")}
+              <Link
+                to="/terms"
+                className="font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2"
+              >
+                {t("login.terms")}
+              </Link>
+            </p>
+          </form>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                {t("login.orContinue")}
+              </span>
+            </div>
           </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={loading || blocked}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <IconSpinner size={18} />
-              {t("reg.creating")}
-            </>
-          ) : ipChecking ? (
-            <>
-              <IconSpinner size={18} />
-              {t("reg.checking")}
-            </>
-          ) : ipError ? (
-            t("reg.deviceError")
-          ) : ipBlocked ? (
-            t("reg.deviceUsed")
-          ) : (
-            <>
-              {t("reg.submit")}
-              <IconArrow size={18} />
-            </>
-          )}
-        </button>
-
-        <p className="text-center text-[12px] leading-5 text-slate-500">
-          {t("reg.agree")}
-          <Link
-            to="/terms"
-            className="font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2"
-          >
-            {t("login.terms")}
-          </Link>
-        </p>
-      </form>
-
-      {/* Hoặc tiếp tục với */}
-      <div className="relative my-5">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-            {t("login.orContinue")}
-          </span>
-        </div>
-      </div>
-
-      <div className={blocked ? "pointer-events-none opacity-50" : ""}>
-        <button
-          type="button"
-          onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
-        >
-          <IconGoogle size={20} />
-          {t("reg.google")}
-        </button>
-      </div>
+          <div className={blocked ? "pointer-events-none opacity-50" : ""}>
+            <button
+              type="button"
+              onClick={handleGoogle}
+              className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+            >
+              <IconGoogle size={20} />
+              {t("reg.google")}
+            </button>
+          </div>
+        </>
+      )}
     </AuthLayout>
   );
-            }
-            
-                    
+    }
+    
