@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { IconEye, IconEyeOff } from "./AuthIcons.jsx";
 
 const labelCls =
-  "text-[12.5px] font-bold uppercase tracking-[0.08em] text-slate-800";
+  "text-[12px] font-bold uppercase tracking-[0.08em] text-slate-800";
 
 export default function AuthField({
   id,
@@ -36,7 +36,7 @@ export default function AuthField({
         </label>
         {labelRight}
       </div>
-      <div className="relative mt-2.5">
+      <div className="relative mt-2">
         {icon && (
           <span
             className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 ${
@@ -56,7 +56,7 @@ export default function AuthField({
           maxLength={maxLength}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
-          className={`w-full rounded-2xl border py-4 text-[15px] outline-none transition focus:ring-4 disabled:bg-slate-100 disabled:opacity-60 ${tone} ${
+          className={`w-full rounded-2xl border py-3 text-[15px] outline-none transition focus:ring-4 disabled:bg-slate-100 disabled:opacity-60 ${tone} ${
             icon ? "pl-12" : "pl-4"
           } ${isPw ? "pr-12" : "pr-4"} ${
             uppercase
@@ -78,4 +78,5 @@ export default function AuthField({
       </div>
     </div>
   );
-}
+      }
+
