@@ -366,7 +366,7 @@ export default function Register() {
           {t("reg.haveAccount")}{" "}
           <Link
             to="/login"
-            className="font-bold text-teal-700 hover:underline"
+            className="font-bold text-emerald-700 hover:underline"
           >
             {t("reg.signIn")}
           </Link>
@@ -460,7 +460,7 @@ export default function Register() {
         <button
           type="submit"
           disabled={loading || blocked}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3.5 text-[15px] font-bold text-white transition hover:bg-teal-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-4 text-[16px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -488,7 +488,7 @@ export default function Register() {
           {t("reg.agree")}
           <Link
             to="/terms"
-            className="font-semibold text-teal-700 underline decoration-teal-300 underline-offset-2"
+            className="font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2"
           >
             {t("login.terms")}
           </Link>
@@ -501,7 +501,7 @@ export default function Register() {
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
             {t("login.orContinue")}
           </span>
         </div>
@@ -511,7 +511,7 @@ export default function Register() {
         <button
           type="button"
           onClick={handleGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
         >
           <IconGoogle size={20} />
           {t("reg.google")}
@@ -519,4 +519,5 @@ export default function Register() {
       </div>
     </AuthLayout>
   );
-}
+        }
+                    
