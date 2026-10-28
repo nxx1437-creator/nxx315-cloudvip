@@ -5,7 +5,6 @@ import { supabase } from "../lib/supabaseClient.js";
 
 const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
 
-// Component Avatar
 function Avatar({ src, name, size = "h-14 w-14", text = "text-lg" }) {
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
@@ -68,11 +67,14 @@ export default function LeaderboardCard() {
   const top3 = users[2];
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-white bg-[#e6f7f2] p-5 shadow-sm">
+    // Thêm pt-10 (padding-top) để tạo khoảng trống cho vương miện
+    <div className="relative overflow-hidden rounded-[2rem] border border-white bg-[#e6f7f2] px-5 pb-5 pt-10 shadow-sm">
+      
       {/* Hiệu ứng ánh sáng nền */}
       <div className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 h-48 w-48 rounded-full bg-amber-300/30 blur-3xl"></div>
 
-      <div className="flex items-center justify-between mb-8 relative z-10">
+      {/* Header: Giảm margin-bottom để Podium có thể trồi lên */}
+      <div className="flex items-center justify-between mb-4 relative z-10">
         <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-emerald-700 uppercase">
           Vinh danh tháng trước
         </p>
@@ -81,11 +83,11 @@ export default function LeaderboardCard() {
         </button>
       </div>
 
-      {/* PODIUM (Top 1 ở giữa, Top 3 bên phải, Top 2 bên trái) */}
+      {/* PODIUM: Đẩy Top 1 lên cao chạm trần */}
       <div className="relative flex items-end justify-center gap-2 px-1 z-10">
         
-        {/* TOP 2 (Bên trái) */}
-        <div className="flex flex-col items-center flex-1">
+        {/* TOP 2 */}
+        <div className="flex flex-col items-center flex-1 mt-6">
           <div className="relative">
             <div className="h-16 w-16 rounded-full border-[3px] border-slate-300 p-0.5 bg-white">
               <Avatar src={top2?.avatar_url} name={top2?.username || "U"} size="h-full w-full" />
@@ -96,43 +98,39 @@ export default function LeaderboardCard() {
           </div>
           <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top 2</p>
           <p className="text-[12px] font-bold text-slate-800 truncate max-w-[80px] text-center">{top2?.username || "—"}</p>
-          
           <div className="mt-2 flex items-center justify-center gap-1 text-amber-500 bg-amber-50 rounded-full px-2 py-1 w-full border border-amber-100">
             <Coins size={12} strokeWidth={2.6} />
             <span className="text-[11px] font-black">{top2 ? formatCoins(top2.coins) : 0}</span>
           </div>
-          
-          {/* Bục đỡ */}
           <div className="mt-2 h-8 w-full rounded-t-xl bg-gradient-to-b from-slate-300/30 to-transparent"></div>
         </div>
 
-        {/* TOP 1 (Ở giữa, to nhất) */}
-        <div className="flex flex-col items-center flex-1 z-10 -mt-6">
+        {/* TOP 1 (Được đẩy lên cao nhất) */}
+        {/* Sử dụng -mt-20 để kéo Avatar trồi lên trên */}
+        <div className="flex flex-col items-center flex-1 z-10 -mt-20">
           <div className="relative">
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2">
-              <Crown size={32} className="text-amber-400 fill-amber-400 drop-shadow-md" />
+            {/* Vương miện sát mép trên */}
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+              <Crown size={36} className="text-amber-400 fill-amber-400 drop-shadow-md" />
             </div>
-            <div className="h-24 w-24 rounded-full border-[4px] border-amber-400 p-0.5 bg-white shadow-[0_0_20px_rgba(251,191,36,0.4)]">
+            <div className="h-24 w-24 rounded-full border-[4px] border-amber-400 p-0.5 bg-white shadow-[0_0_20px_rgba(251,191,36,0.5)]">
               <Avatar src={top1?.avatar_url} name={top1?.username || "U"} size="h-full w-full" text="text-3xl" />
             </div>
             <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[12px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
               1
             </div>
           </div>
-          <p className="mt-3 text-[10px] font-bold text-amber-600 uppercase tracking-widest text-center">Top 1</p>
+          <p className="mt-4 text-[10px] font-bold text-amber-600 uppercase tracking-widest text-center">Top 1</p>
           <p className="text-[14px] font-black text-slate-800 truncate max-w-[90px] text-center">{top1?.username || "—"}</p>
-          
           <div className="mt-2 flex items-center justify-center gap-1 text-amber-600 bg-amber-100 rounded-full px-2 py-1 w-full border border-amber-300">
             <Coins size={14} strokeWidth={2.8} />
             <span className="text-[13px] font-black">{top1 ? formatCoins(top1.coins) : 0}</span>
           </div>
-          
-          {/* Bục đỡ */}
           <div className="mt-2 h-12 w-full rounded-t-2xl bg-gradient-to-b from-amber-300/50 to-transparent"></div>
         </div>
 
-        {/* TOP 3 (Bên phải) */}
-        <div className="flex flex-col items-center flex-1">
+        {/* TOP 3 */}
+        <div className="flex flex-col items-center flex-1 mt-6">
           <div className="relative">
             <div className="h-16 w-16 rounded-full border-[3px] border-orange-300 p-0.5 bg-white">
               <Avatar src={top3?.avatar_url} name={top3?.username || "U"} size="h-full w-full" />
@@ -143,17 +141,14 @@ export default function LeaderboardCard() {
           </div>
           <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top 3</p>
           <p className="text-[12px] font-bold text-slate-800 truncate max-w-[80px] text-center">{top3?.username || "—"}</p>
-          
           <div className="mt-2 flex items-center justify-center gap-1 text-amber-500 bg-amber-50 rounded-full px-2 py-1 w-full border border-amber-100">
             <Coins size={12} strokeWidth={2.6} />
             <span className="text-[11px] font-black">{top3 ? formatCoins(top3.coins) : 0}</span>
           </div>
-          
-          {/* Bục đỡ */}
           <div className="mt-2 h-8 w-full rounded-t-xl bg-gradient-to-b from-orange-200/30 to-transparent"></div>
         </div>
       </div>
 
     </div>
   );
-          }
+        }
