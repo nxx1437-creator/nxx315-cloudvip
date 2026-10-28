@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Trophy, Crown, Medal, ChevronRight, Gift } from "lucide-react";
+import { Crown, Medal, Coins } from "lucide-react";
+
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 
-// Hàm format điểm
-const formatPoints = (n) => Number(n || 0).toLocaleString("vi-VN");
+const TABS = [
+  { key: "week", label: "Tuần này" },
+  { key: "month", label: "Tháng này" },
+];
 
-// Component Avatar có viền
-function Avatar({ src, name, size = "h-16 w-16", text = "text-xl" }) {
+const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
+
+/* ---------- Avatar có fallback chữ cái ---------- */
+function Avatar({ src, name, size = "h-12 w-12", text = "text-sm", ring = true }) {
   const initial = (name || "U").charAt(0).toUpperCase();
   const [failed, setFailed] = useState(false);
+
+  const ringClass = ring
+    ? "border-2 border-white shadow-[0_4px_14px_rgba(0,0,0,0.12)]"
+    : "";
 
   if (src && !failed) {
     return (
@@ -19,181 +27,256 @@ function Avatar({ src, name, size = "h-16 w-16", text = "text-xl" }) {
         src={src}
         alt={name}
         onError={() => setFailed(true)}
-        className={`${size} ${text} border-4 border-white shadow-lg shrink-0 rounded-full object-cover`}
+        className={`${size} ${ringClass} shrink-0 rounded-full object-cover`}
       />
     );
   }
+
   return (
-    <div className={`${size} ${text} border-4 border-white shadow-lg flex shrink-0 items-center justify-center rounded-full bg-cyan-100 font-bold text-cyan-700`}>
+    <div
+      className={`${size} ${text} ${ringClass} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500`}
+    >
       {initial}
     </div>
   );
 }
 
-// Component Podium (Bục vinh danh)
+/* ---------- Icon cúp cho podium ---------- */
+function TrophyIcon({ rank, size = 26 }) {
+  if (rank === 1)
+    return <Crown className="text-amber-400 fill-amber-400" size={size} strokeWidth={2.4} />;
+  if (rank === 2)
+    return <Medal className="text-slate-400" size={size} strokeWidth={2.2} />;
+  if (rank === 3)
+    return <Medal className="text-orange-400" size={size} strokeWidth={2.2} />;
+  return null;
+}
+
+/* ---------- Icon hạng cho list 4+ ---------- */
+function RankIcon({ rank }) {
+  if (rank === 1)
+    return <Crown className="text-amber-400" size={22} strokeWidth={2.4} />;
+  if (rank === 2)
+    return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
+  if (rank === 3)
+    return <Medal className="text-orange-400" size={22} strokeWidth={2.2} />;
+  return (
+    <span className="w-[22px] text-center text-sm font-bold text-slate-400">
+      {rank}
+    </span>
+  );
+}
+
+/* ---------- Podium styles ---------- */
+const PODIUM_STYLES = {
+  1: {
+    card: "bg-gradient-to-b from-amber-100/80 to-amber-50/30 border-amber-200/50",
+    padding: "pt-8 pb-6 -mt-6 z-10",
+    name: "text-slate-800",
+    avatarSize: "h-20 w-20",
+    avatarText: "text-2xl",
+  },
+  2: {
+    card: "bg-gradient-to-b from-slate-200/60 to-white/40 border-slate-200/50",
+    padding: "pt-6 pb-4 mt-4",
+    name: "text-slate-700",
+    avatarSize: "h-16 w-16",
+    avatarText: "text-xl",
+  },
+  3: {
+    card: "bg-gradient-to-b from-orange-100/60 to-white/40 border-orange-200/50",
+    padding: "pt-6 pb-4 mt-4",
+    name: "text-slate-700",
+    avatarSize: "h-16 w-16",
+    avatarText: "text-xl",
+  },
+};
+
 function PodiumCard({ user, rank }) {
   if (!user) return <div className="flex-1" />;
-
+  const s = PODIUM_STYLES[rank];
   const isFirst = rank === 1;
-  const bgColor = isFirst 
-    ? "from-amber-100/80 to-amber-50/30 border-amber-200/50" 
-    : "from-white/80 to-white/40 border-white/60";
-  
+
   return (
-    <div className={`relative flex flex-1 flex-col items-center justify-end rounded-[2rem] border bg-gradient-to-b p-4 pb-6 shadow-sm backdrop-blur-sm ${bgColor} ${isFirst ? 'pt-8 -mt-6 z-10' : 'pt-6 mt-4'}`}>
+    <div className={`relative flex flex-1 flex-col items-center rounded-[1.5rem] border ${s.card} ${s.padding} px-2 transition shadow-sm backdrop-blur-sm`}>
       
       {/* Vương miện cho Top 1 */}
       {isFirst && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2">
-          <Crown size={36} className="text-amber-400 fill-amber-400 drop-shadow-md" />
+        <div className="absolute -top-7 left-1/2 -translate-x-1/2">
+          <Crown size={38} className="text-amber-400 fill-amber-400 drop-shadow-md" />
         </div>
       )}
 
-      {/* Avatar & Badge */}
-      <div className="relative mb-3">
-        <Avatar src={user.avatar_url} name={user.username} size={isFirst ? "h-20 w-20" : "h-14 w-14"} />
-        <div className={`absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-white shadow-md border-2 border-white ${isFirst ? 'bg-amber-500' : 'bg-slate-400'}`}>
-          {rank}
-        </div>
+      <div className="mb-2">
+        <TrophyIcon rank={rank} size={isFirst ? 28 : 24} />
       </div>
 
-      {/* Tên */}
-      <p className={`w-full truncate text-center font-bold ${isFirst ? 'text-[15px] text-slate-800' : 'text-[13px] text-slate-700'}`}>
-        {user.username}
+      <Avatar
+        src={user.avatar_url}
+        name={user.display_name || user.username}
+        size={s.avatarSize}
+        text={s.avatarText}
+        ring={true}
+      />
+
+      <p className={`mt-3 w-full truncate text-center text-[13px] font-bold ${s.name}`}>
+        {user.display_name || user.username}
       </p>
 
-      {/* Điểm & Phần thưởng (Giả lập giống ảnh mẫu) */}
-      <div className={`mt-2 flex flex-col items-center rounded-xl px-3 py-1.5 ${isFirst ? 'bg-amber-100/50' : 'bg-slate-50'}`}>
-        <p className={`font-black ${isFirst ? 'text-amber-600 text-sm' : 'text-slate-600 text-xs'}`}>
-          {formatPoints(user.points)} điểm
-        </p>
-        <p className="text-[9px] font-bold text-slate-400 uppercase">
-          {user.approved} video
+      <div className={`mt-2 flex flex-col items-center rounded-xl px-3 py-1.5 w-full ${isFirst ? 'bg-amber-100/60' : 'bg-slate-50/80'}`}>
+        <div className="flex items-center gap-1 text-amber-500">
+          <Coins size={isFirst ? 15 : 13} strokeWidth={2.6} />
+          <span className={`${isFirst ? "text-[15px]" : "text-[13px]"} font-black`}>
+            {formatCoins(user.coins)}
+          </span>
+        </div>
+        <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
+          Lv.{user.level || 1}
         </p>
       </div>
-
     </div>
   );
 }
 
-export default function Ranking() {
-  const navigate = useNavigate();
-  const [data, setData] = useState(null);
+export default function Leaderboard() {
+  const [tab, setTab] = useState("week");
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    supabase
-      .rpc("get_creator_leaderboard")
-      .then(({ data: d }) => {
-        setData(d?.ok ? d : { items: [], me: null });
-        setLoading(false);
-      });
-  }, []);
+    let alive = true;
 
-  if (loading) {
-    return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-40 bg-slate-200 rounded-[2rem]"></div>
-        <div className="h-64 bg-slate-200 rounded-[2rem]"></div>
-      </div>
-    );
-  }
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.rpc("get_leaderboard", {
+          period: tab,
+          limit_count: 50,
+        });
 
-  const items = data?.items || [];
-  const top1 = items[0];
-  const top2 = items[1];
-  const top3 = items[2];
-  const rest = items.slice(3);
+        if (error) throw error;
+        if (alive) setUsers(data || []);
+      } catch (err) {
+        console.error("Load leaderboard error:", err);
+        if (alive) setUsers([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      alive = false;
+    };
+  }, [tab]);
+
+  const top1 = users[0];
+  const top2 = users[1];
+  const top3 = users[2];
+  const rest = users.slice(3);
 
   return (
-    <div className="space-y-6 pb-10">
-      
-      {/* HEADER */}
-      <div className="px-1">
-        <h1 className="text-3xl font-extrabold text-cyan-600">Bảng Xếp Hạng</h1>
-        <p className="mt-1 text-sm text-slate-500">Cập nhật trực tiếp — refresh lúc 00:00 ICT mỗi ngày.</p>
+    <div className="min-h-screen bg-gradient-to-b from-sky-50/60 via-white to-white pb-24">
+      <TopHeader />
+
+      {/* Title block */}
+      <div className="mt-4 flex items-center gap-3 px-4">
+        <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_16px_rgba(56,130,246,0.35)]">
+          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
+            <path d="M6 4h12v3a6 6 0 0 1-12 0V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M6 6H4a2 2 0 0 0 0 4h2M18 6h2a2 2 0 0 1 0 4h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M9 14h6M12 14v4M9 20h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-[22px] font-black leading-tight text-slate-900">Bảng Xếp Hạng</h1>
+          <p className="text-[13px] text-slate-500">Top user kiếm Coin nhiều nhất</p>
+        </div>
       </div>
 
-      {/* 1. PODIUM (TOP 1, 2, 3) */}
-      <Card className="relative overflow-hidden rounded-[2.5rem] border-white bg-[#e6f7f2] p-5 shadow-sm">
-        <div className="text-center mb-6">
-          <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-emerald-600 uppercase">Vinh danh tháng này</p>
-        </div>
+      {/* Tabs */}
+      <div className="mt-4 flex gap-3 px-4">
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`rounded-full px-5 py-2.5 text-sm font-bold transition ${
+                active
+                  ? "bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-[0_4px_14px_rgba(56,130,246,0.35)]"
+                  : "bg-white text-slate-500 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
-        {items.length === 0 ? (
-           <div className="py-10 text-center text-sm text-slate-500">Chưa có ai trên bảng xếp hạng tháng này.</div>
+      {/* Podium (TOP 1, 2, 3) */}
+      <div className="mt-8 px-4">
+        {loading ? (
+          <div className="flex items-end gap-3">
+            <div className="h-[150px] flex-1 animate-pulse rounded-2xl bg-slate-100 mt-4" />
+            <div className="h-[180px] flex-1 animate-pulse rounded-2xl bg-slate-100" />
+            <div className="h-[150px] flex-1 animate-pulse rounded-2xl bg-slate-100 mt-4" />
+          </div>
+        ) : users.length === 0 ? (
+          <div className="rounded-2xl bg-white p-6 text-center text-sm text-slate-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+            Chưa có dữ liệu xếp hạng
+          </div>
         ) : (
-          <div className="flex items-end justify-center gap-2 sm:gap-4 px-2">
+          <div className="flex items-end justify-center gap-2 sm:gap-3 px-2">
             <PodiumCard user={top2} rank={2} />
             <PodiumCard user={top1} rank={1} />
             <PodiumCard user={top3} rank={3} />
           </div>
         )}
-      </Card>
+      </div>
 
-      {/* 2. VỪA NHẬN THƯỞNG (Giả lập giao diện) */}
-      <Card className="relative overflow-hidden rounded-[2.5rem] border-white bg-white/80 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-500"><Gift size={16}/></div>
-             <div>
-               <h3 className="text-sm font-bold text-slate-800">Vừa nhận thưởng</h3>
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giờ vừa được cộng cho Creator</p>
-             </div>
-          </div>
-        </div>
+      {/* List 4+ */}
+      <div className="mt-6 space-y-3 px-4">
+        {loading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]" />
+            ))
+          : rest.map((u, idx) => {
+              const rank = idx + 4;
+              return (
+                <div key={u.id || idx} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+                  <div className="flex w-7 shrink-0 justify-center">
+                    <RankIcon rank={rank} />
+                  </div>
 
-        <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-4 flex items-center justify-between mb-2">
-           <div className="flex items-center gap-2 text-cyan-700 text-xs font-bold">
-             <Trophy size={16} /> TỔNG GIỜ ĐÃ TĂNG
-           </div>
-           <div className="flex items-end gap-1">
-             <span className="text-xl font-black text-cyan-600">83.334</span>
-             <span className="text-[10px] font-bold text-cyan-600 mb-1">GIỜ</span>
-           </div>
-        </div>
+                  <Avatar
+                    src={u.avatar_url}
+                    name={u.display_name || u.username}
+                    size="h-12 w-12"
+                    text="text-base"
+                    ring={false}
+                  />
 
-        {/* Mock list (Sau này thay bằng API thật) */}
-        <div className="space-y-3 mt-4">
-           {items.slice(0, 3).map((u, i) => (
-             <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                   <Avatar src={u.avatar_url} name={u.username} size="h-10 w-10" text="text-sm" />
-                   <div>
-                      <p className="text-sm font-bold text-slate-800">{u.username}</p>
-                      <p className="text-[11px] text-slate-500">Vừa được duyệt video mới</p>
-                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-bold text-slate-800">
+                      {u.display_name || u.username}
+                    </p>
+                    <p className="text-[13px] text-slate-400">Lv.{u.level || 1}</p>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <div className="flex items-center justify-end gap-1 text-amber-500">
+                      <Coins size={15} strokeWidth={2.6} />
+                      <span className="text-[16px] font-black">{formatCoins(u.coins)}</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-400">Coin kiếm được</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                   <span className="inline-block rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">+{u.approved * 6} giờ</span>
-                   <p className="text-[9px] text-slate-400 mt-1">Hôm qua</p>
-                </div>
-             </div>
-           ))}
-        </div>
-      </Card>
+              );
+            })}
+      </div>
 
-      {/* 3. DANH SÁCH TỪ TOP 4 TRỞ XUỐNG */}
-      {rest.length > 0 && (
-        <Card className="relative overflow-hidden rounded-[2.5rem] border-white bg-white/80 p-5 shadow-sm">
-          <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4">Top Creator</h3>
-          <div className="divide-y divide-slate-100">
-            {rest.map((it) => (
-              <div key={it.rank} className="flex items-center gap-3 py-3">
-                <span className="w-6 text-center text-sm font-black text-slate-400">{it.rank}</span>
-                <Avatar src={it.avatar_url} name={it.username} size="h-10 w-10" text="text-sm" />
-                <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-slate-800">
-                  {it.username} {it.is_me && <span className="text-xs text-cyan-600">(bạn)</span>}
-                </span>
-                <span className="text-right">
-                  <b className="block text-[14px] text-cyan-600">{formatPoints(it.points)}</b>
-                  <span className="text-[10px] text-slate-500">{it.approved} video</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      <BottomNav />
     </div>
   );
-      }
+    }
