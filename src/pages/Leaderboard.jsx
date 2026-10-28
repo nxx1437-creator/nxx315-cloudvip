@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Crown, Medal, ChevronRight, Gift } from "lucide-react";
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-import { Card, Eyebrow } from "../../components/creator/creatorUi.jsx";
 
 // Hàm format điểm
 const formatPoints = (n) => Number(n || 0).toLocaleString("vi-VN");
