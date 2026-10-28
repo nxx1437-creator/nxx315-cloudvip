@@ -7,6 +7,7 @@ import GuideWelcomeModal from "./components/GuideWelcomeModal.jsx";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import AuthCallback from "./pages/AuthCallback.jsx";
 
 // ✅ Page chính — lazy load
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
@@ -95,6 +96,7 @@ export default function App() {
             <Route path="/guide/:id" element={<GuideDetail />} />
 
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
