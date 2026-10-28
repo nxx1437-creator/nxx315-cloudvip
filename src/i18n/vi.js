@@ -247,9 +247,9 @@ export default {
   "ld.nav.faq": "FAQ",
   "ld.login": "Đăng nhập",
   "ld.register": "Đăng ký",
-  "ld.badge": "✦ MIỄN PHÍ THAM GIA · LINH HOẠT ĐỔI THƯỞNG",
-  "ld.h1a": "kiếm coin dễ dàng. ",
-  "ld.h1b": "Đổi quà thỏa thích.",
+  "ld.badge": "✦ MỖI NHIỆM VỤ · THÊM COIN · THÊM QUÀ",
+  "ld.h1a": "KIẾM COIN ",
+  "ld.h1b": "ĐỔI QUÀ THẬT DỄ",
   "ld.heroSub":
     "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy Robux, kim cương game cùng nhiều phần quà hấp dẫn!",
   "ld.ctaStart": "Bắt đầu ngay",
