@@ -1,17 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowRight,
-  ChevronDown,
-  ListChecks,
-  Coins,
-  Wallet,
-  Gift,
-  Users,
-  Lock,
-  ShieldCheck,
-  Bot,
-  KeyRound,
+  ArrowRight, ChevronDown, ListChecks, Coins, Wallet, Gift, Users,
+  Lock, ShieldCheck, Bot, KeyRound, Check, Plus,
 } from "lucide-react";
 import {
   LandingHeader,
@@ -25,10 +16,41 @@ import { useI18n } from "./i18n/index.js";
 const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
+/* ===== Giao diện: đổi màu chủ đạo ở đúng 3 biến --ac, --ac2, --soft dưới đây =====
+   Xanh dương (mặc định): #2563eb / #1d4ed8 / #eff6ff
+   Xanh lá (giống trang mẫu): #10b981 / #059669 / #ecfdf5 */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800&family=Roboto+Mono:wght@500;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+.lp { --ac:#2563eb; --ac2:#1d4ed8; --soft:#eff6ff; font-family:'Be Vietnam Pro',sans-serif; }
+.lp-display { font-family:'Barlow Condensed','Be Vietnam Pro',sans-serif; font-style:italic; font-weight:800; text-transform:uppercase; letter-spacing:-.005em; line-height:1.02; }
+.lp-mono { font-family:'Roboto Mono',ui-monospace,monospace; text-transform:uppercase; letter-spacing:.14em; }
+.lp-br { position:relative; }
+.lp-br::before, .lp-br::after { content:""; position:absolute; width:10px; height:10px; border:2px solid var(--ac); pointer-events:none; }
+.lp-br::before { top:-2px; left:-2px; border-right:0; border-bottom:0; }
+.lp-br::after { bottom:-2px; right:-2px; border-left:0; border-top:0; }
+.lp-grid { background-color:#fff; background-image:linear-gradient(rgba(15,23,42,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.06) 1px,transparent 1px); background-size:28px 28px; }
+.lp-acc { color:var(--ac); }
+.lp-on { border-color:var(--ac) !important; color:var(--ac) !important; background:#fff !important; }
+.lp-ico { display:flex; height:48px; width:48px; align-items:center; justify-content:center; background:var(--soft); color:var(--ac); }
+.lp-outline { color:transparent; -webkit-text-stroke:1.5px var(--ac); }
+.lp-btn { display:inline-flex; height:52px; align-items:center; justify-content:center; gap:8px; padding:0 26px; background:var(--ac); color:#fff; font-weight:700; font-size:15px; transition:background .2s, transform .2s; }
+.lp-btn:hover { background:var(--ac2); transform:translateY(-1px); }
+.lp-btn-o { display:inline-flex; height:52px; align-items:center; justify-content:center; gap:6px; padding:0 26px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:700; font-size:15px; transition:border-color .2s,color .2s; }
+.lp-btn-o:hover { border-color:var(--ac); color:var(--ac); }
+@keyframes lp-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes lp-pop { from { opacity:0; transform:translateY(14px) scale(.97); } to { opacity:1; transform:none; } }
+@keyframes lp-rise { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+.lp-float { animation:lp-float 4.6s ease-in-out infinite; }
+.lp-float2 { animation:lp-float 5.6s ease-in-out -2s infinite; }
+.lp-pop { animation:lp-pop .55s cubic-bezier(.2,.8,.2,1) both; }
+.lp-rise { animation:lp-rise .8s cubic-bezier(.2,.8,.2,1) both; }
+.lp-d1 { animation-delay:.08s; } .lp-d2 { animation-delay:.18s; } .lp-d3 { animation-delay:.3s; } .lp-d4 { animation-delay:.42s; }
+`;
+
 // Icon 3D trên Supabase, lỗi ảnh thì dùng icon dự phòng
 function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
   const [ok, setOk] = useState(true);
-  if (!ok) return <Fallback className="h-10 w-10 text-blue-600" />;
+  if (!ok) return <Fallback className="h-10 w-10 lp-acc" />;
   return (
     <img
       src={`${ICON_BASE}/${name}.png`}
@@ -40,59 +62,97 @@ function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
   );
 }
 
-function FaqRow({ q, a, open, onToggle }) {
+// Khối hiện dần khi cuộn tới
+function Reveal({ children, className = "" }) {
+  const ref = useRef(null);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) { setOn(true); return undefined; }
+    const io = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect(); } },
+      { threshold: 0.1, rootMargin: "0px 0px -5% 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={`transition-[opacity,transform] duration-700 ease-out ${on ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// Tiêu đề mục: nhãn "00X — TÊN" trong khung góc + tiêu đề nghiêng in hoa
+function Head({ n, label, title, sub, center = true }) {
+  return (
+    <div className={center ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
+      <span className="lp-br lp-mono lp-acc inline-block border border-slate-200 bg-white px-3.5 py-1.5 text-[11px] font-bold">
+        <span className="opacity-50">{n} — </span>{label}
+      </span>
+      <h2 className="lp-display mt-5 text-[36px] text-slate-900 sm:text-5xl">{title}</h2>
+      {sub && <p className="mt-3 text-[16px] leading-7 text-slate-600">{sub}</p>}
+    </div>
+  );
+}
+
+function FaqRow({ n, q, a, open, onToggle }) {
   return (
     <div className="border-b border-slate-200">
-      <button
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 py-5 text-left"
-      >
-        <span className="text-[16px] font-semibold text-slate-900">{q}</span>
-        <ChevronDown
-          size={18}
-          className={`shrink-0 text-slate-400 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
+      <button onClick={onToggle} aria-expanded={open} className="flex w-full items-center gap-4 py-5 text-left">
+        <span className="lp-mono w-9 shrink-0 text-[11px] font-bold text-slate-300">{n}</span>
+        <span className="flex-1 text-[16px] font-bold text-slate-900">{q}</span>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center border transition ${open ? "lp-on rotate-45" : "border-slate-200 text-slate-400"}`}>
+          <Plus size={16} />
+        </span>
       </button>
-      <div
-        className={`grid transition-all duration-200 ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
+      <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
-          <p className="pb-5 text-[15px] leading-7 text-slate-600">{a}</p>
+          <p className="pb-5 pl-[52px] pr-10 text-[15px] leading-7 text-slate-600">{a}</p>
         </div>
       </div>
     </div>
   );
 }
 
-// Ba hình 3D xếp lệch bên phải phần đầu trang
-function HeroArt() {
+/* Khối minh hoạ đầu trang: 3 thẻ chuyển tự động (như trang mẫu) */
+const SHOW = [["icon-task", ListChecks], ["icon-gift", Gift], ["icon-money", Wallet]];
+
+function Showcase({ c, L }) {
+  const [i, setI] = useState(0);
+  const [hold, setHold] = useState(false);
+  useEffect(() => {
+    if (hold) return undefined;
+    const id = setInterval(() => setI((v) => (v + 1) % 3), 3800);
+    return () => clearInterval(id);
+  }, [hold]);
+  const f = c.features[i];
+  const [name, Fb] = SHOW[i];
   return (
-    <div className="relative mx-auto h-[280px] w-full max-w-[420px] rounded-3xl border border-slate-200 bg-slate-50 sm:h-[360px]">
-      <div className="absolute left-[8%] top-[10%] -rotate-6">
-        <Img3D
-          name="icon-task"
-          Fallback={ListChecks}
-          size="h-28 w-28 sm:h-36 sm:w-36"
-        />
+    <div className="lp-rise lp-d2">
+      <div className="lp-br lp-grid relative overflow-hidden border border-slate-200 p-6 sm:p-9">
+        <span className="lp-float lp-mono absolute left-3 top-3 border border-slate-200 bg-white px-2.5 py-1.5 text-[10.5px] font-bold lp-acc shadow-sm">
+          {c.facts[0][0]}
+        </span>
+        <span className="lp-float2 lp-mono absolute bottom-3 right-3 border border-slate-200 bg-white px-2.5 py-1.5 text-[10.5px] font-bold lp-acc shadow-sm">
+          {c.facts[1][0]}
+        </span>
+        <div key={i} className="lp-pop flex min-h-[300px] flex-col items-center justify-center text-center">
+          <Img3D name={name} Fallback={Fb} size="h-32 w-32 sm:h-40 sm:w-40" />
+          <h3 className="mt-5 max-w-sm text-xl font-bold tracking-tight text-slate-900">{f.title}</h3>
+          <p className="mt-2 max-w-sm text-[14.5px] leading-6 text-slate-600">{f.body}</p>
+        </div>
       </div>
-      <div className="absolute right-[8%] top-[28%] rotate-6">
-        <Img3D
-          name="icon-coin"
-          Fallback={Coins}
-          size="h-32 w-32 sm:h-44 sm:w-44"
-        />
-      </div>
-      <div className="absolute bottom-[6%] left-[22%] -rotate-3">
-        <Img3D
-          name="icon-money"
-          Fallback={Wallet}
-          size="h-24 w-24 sm:h-32 sm:w-32"
-        />
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {L.tabs.map(([n, label], k) => (
+          <button
+            key={n}
+            onClick={() => { setI(k); setHold(true); }}
+            className={`lp-br lp-mono border border-slate-200 bg-white/70 px-2 py-3 text-[10.5px] font-bold text-slate-400 transition ${k === i ? "lp-on" : ""}`}
+          >
+            <span className="mr-1 opacity-60">{n}</span>{label}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -208,6 +268,20 @@ const COPY = {
   },
 };
 
+
+const LABELS = {
+  vi: {
+    feat: "TÍNH NĂNG", how: "CÁCH HOẠT ĐỘNG", safe: "AN TOÀN", who: "MINH BẠCH", faq: "HỎI ĐÁP",
+    tabs: [["01", "NHIỆM VỤ"], ["02", "ĐỔI QUÀ"], ["03", "RÚT TIỀN"]],
+    ticks: ["Kiếm xu hoàn toàn miễn phí", "Không cần nạp tiền để rút", "Theo dõi mọi đơn trong Lịch sử"],
+  },
+  en: {
+    feat: "FEATURES", how: "HOW IT WORKS", safe: "SAFETY", who: "TRANSPARENCY", faq: "FAQ",
+    tabs: [["01", "TASKS"], ["02", "REDEEM"], ["03", "WITHDRAW"]],
+    ticks: ["Earning coins is free", "No deposit needed to withdraw", "Track every order in History"],
+  },
+};
+
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
   { icon: ShieldCheck, t: "ld.b2t", d: "ld.b2d" },
@@ -220,9 +294,26 @@ const FEATURE_ICONS = [ListChecks, Gift, Wallet, Users];
 
 const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 
+
+function Eyebrow({ label }) {
+  return (
+    <span className="lp-br lp-mono lp-acc inline-block border border-slate-200 bg-white px-3.5 py-1.5 text-[11px] font-bold">
+      {label}
+    </span>
+  );
+}
+
+const Row = ({ k, children }) => (
+  <div className="flex justify-between gap-4 py-3.5">
+    <dt className="text-slate-500">{k}</dt>
+    <dd className="text-right font-semibold text-slate-900">{children}</dd>
+  </div>
+);
+
 export default function CloudVIPLanding() {
   const { t, lang } = useI18n();
   const c = COPY[lang] || COPY.vi;
+  const L = LABELS[lang] || LABELS.vi;
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -232,132 +323,110 @@ export default function CloudVIPLanding() {
       ? SITE.launched[lang] || SITE.launched.vi
       : SITE.launched;
 
+  const linkCls = "font-semibold lp-acc hover:underline";
+
   return (
-    <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
+    <div className="lp min-h-screen bg-white text-slate-900">
+      <style>{CSS}</style>
       <LandingHeader />
 
       <main>
         {/* ============ ĐẦU TRANG ============ */}
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-14 pt-10 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:pb-24 lg:pt-20">
-          <div>
-            <p className="text-[14px] font-medium text-slate-500">
-              {t("ld.badge")}
-            </p>
-            <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
-              <span className="text-blue-600">{c.h1a}</span> {c.h1b}
-              <Img3D
-                name="icon-gift"
-                Fallback={Gift}
-                shadow={false}
-                size="ml-1.5 inline-block h-10 w-10 align-[-0.15em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
-              />
-            </h1>
-            <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
-              {c.heroSub}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex h-12 items-center gap-2 rounded-xl bg-blue-600 px-6 text-[15px] font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
-              >
-                {t("ld.ctaStart")} <ArrowRight size={17} />
-              </button>
-              <button
-                onClick={() => scrollToId("how")}
-                className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-slate-700 transition hover:text-blue-600"
-              >
-                {c.how} <ChevronDown size={16} />
-              </button>
+        <section className="lp-grid relative border-b border-slate-200">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent" />
+          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-16 lg:pb-24 lg:pt-20">
+            <div>
+              <span className="lp-br lp-mono lp-acc lp-rise inline-block border border-slate-200 bg-white px-3.5 py-1.5 text-[11px] font-bold">
+                {t("ld.badge")}
+              </span>
+              <h1 className="lp-display lp-rise lp-d1 mt-6 text-[46px] text-slate-900 sm:text-6xl lg:text-[76px]">
+                {c.h1a}
+                <span className="lp-acc mt-1 block">
+                  {c.h1b}
+                  <Img3D
+                    name="icon-gift"
+                    Fallback={Gift}
+                    shadow={false}
+                    size="ml-2 inline-block h-9 w-9 align-[-0.12em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
+                  />
+                </span>
+              </h1>
+              <p className="lp-rise lp-d2 mt-6 max-w-lg text-[17px] leading-8 text-slate-600">{c.heroSub}</p>
+              <div className="lp-rise lp-d3 mt-8 flex flex-wrap gap-3">
+                <button onClick={() => navigate("/register")} className="lp-btn lp-br">
+                  {t("ld.ctaStart")} <ArrowRight size={17} />
+                </button>
+                <button onClick={() => scrollToId("how")} className="lp-btn-o">
+                  {c.how} <ChevronDown size={16} />
+                </button>
+              </div>
+              <ul className="lp-rise lp-d4 mt-7 space-y-2">
+                {L.ticks.map((x) => (
+                  <li key={x} className="flex items-center gap-2.5 text-[14.5px] text-slate-600">
+                    <Check size={16} className="lp-acc shrink-0" /> {x}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 max-w-md text-[13px] leading-6 text-slate-500">{c.note}</p>
             </div>
-            <p className="mt-4 max-w-md text-[13.5px] leading-6 text-slate-500">
-              {c.note}
-            </p>
+            <Showcase c={c} L={L} />
           </div>
-          <HeroArt />
         </section>
 
         {/* ============ SỐ LIỆU ============ */}
-        <section className="border-y border-slate-200 bg-slate-50">
-          <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-5 py-10 lg:grid-cols-4 lg:gap-x-0">
+        <section className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {c.facts.map(([v, l], i) => (
-              <div
-                key={i}
-                className={i > 0 ? "lg:border-l lg:border-slate-200 lg:pl-8" : ""}
-              >
-                <dt className="text-[26px] font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-                  {v}
-                </dt>
-                <dd className="mt-1 max-w-[220px] text-[13.5px] leading-5 text-slate-500">
-                  {l}
-                </dd>
-              </div>
+              <Reveal key={i} className="h-full">
+                <div className="lp-br h-full border border-slate-200 bg-white p-5">
+                  <dt className="lp-display lp-acc text-4xl sm:text-5xl">{v}</dt>
+                  <dd className="lp-mono mt-3 text-[10.5px] font-bold leading-5 text-slate-500">{l}</dd>
+                </div>
+              </Reveal>
             ))}
           </dl>
         </section>
 
         {/* ============ TÍNH NĂNG ============ */}
-        <section
-          id="features"
-          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-24"
-        >
-          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            {c.featTitle}
-          </h2>
-
-          <div className="mt-12 divide-y divide-slate-200 border-y border-slate-200">
+        <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:py-20">
+          <Head n="001" label={L.feat} title={c.featTitle} />
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
             {c.features.map((f, i) => {
               const Icon = FEATURE_ICONS[i] || ListChecks;
               return (
-                <div
-                  key={f.to}
-                  className="grid gap-4 py-8 md:grid-cols-[48px_1fr_auto] md:items-start md:gap-8"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <Icon size={22} />
-                  </span>
-                  <div>
-                    <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                      {f.title}
-                    </h3>
-                    <p className="mt-2 max-w-xl text-[16px] leading-7 text-slate-600">
-                      {f.body}
-                    </p>
+                <Reveal key={f.to} className="h-full">
+                  <div className="lp-br h-full border border-slate-200 bg-white p-6 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/70 sm:p-7">
+                    <div className="flex items-start justify-between">
+                      <span className="lp-ico"><Icon size={22} /></span>
+                      <span className="lp-mono text-[11px] font-bold text-slate-300">0{i + 1}</span>
+                    </div>
+                    <h3 className="mt-5 text-xl font-bold tracking-tight text-slate-900">{f.title}</h3>
+                    <p className="mt-2 text-[15px] leading-7 text-slate-600">{f.body}</p>
+                    <Link to={f.to} className="mt-5 inline-flex items-center gap-1 text-[14px] font-semibold lp-acc hover:underline">
+                      {c.guide} <ArrowRight size={15} />
+                    </Link>
                   </div>
-                  <Link
-                    to={f.to}
-                    className="inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline md:mt-1.5"
-                  >
-                    {c.guide} <ArrowRight size={15} />
-                  </Link>
-                </div>
+                </Reveal>
               );
             })}
           </div>
-
-          <p className="mt-8 text-[15px] text-slate-500">{c.more}</p>
+          <p className="lp-mono mt-8 text-center text-[11px] font-bold leading-6 text-slate-400">{c.more}</p>
         </section>
 
-        {/* ============ CÁCH HOẠT ĐỘNG ============ */}
-        <section
-          id="how"
-          className="scroll-mt-20 border-y border-slate-200 bg-slate-50"
-        >
-          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              {c.howTitle}
-            </h2>
-            <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+     {/* ============ CÁCH HOẠT ĐỘNG ============ */}
+        <section id="how" className="lp-grid scroll-mt-20 border-y border-slate-200">
+          <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
+            <Head n="002" label={L.how} title={c.howTitle} />
+            <ol className="mt-12 grid gap-4 md:grid-cols-3">
               {[1, 2, 3].map((n) => (
-                <li key={n} className="border-t-2 border-slate-900 pt-5">
-                  <span className="text-[14px] font-semibold text-slate-400">
-                    0{n}
-                  </span>
-                  <h3 className="mt-2 text-xl font-bold text-slate-900">
-                    {t(`ld.s${n}t`)}
-                  </h3>
-                  <p className="mt-2 text-[15px] leading-7 text-slate-600">
-                    {t(`ld.s${n}d`)}
-                  </p>
+                <li key={n}>
+                  <Reveal className="h-full">
+                    <div className="lp-br h-full border border-slate-200 bg-white p-6 sm:p-7">
+                      <span className="lp-display lp-outline text-7xl">0{n}</span>
+                      <h3 className="mt-3 text-xl font-bold text-slate-900">{t(`ld.s${n}t`)}</h3>
+                      <p className="mt-2 text-[15px] leading-7 text-slate-600">{t(`ld.s${n}d`)}</p>
+                    </div>
+                  </Reveal>
                 </li>
               ))}
             </ol>
@@ -365,206 +434,120 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* ============ AN TOÀN ============ */}
-        <section
-          id="safety"
-          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-24"
-        >
-          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            {t("ld.safeTitle")}
-          </h2>
-          <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-600">
-            {t("ld.safeSub")}
-          </p>
-          <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
-            {SAFETY.map(({ icon: Icon, t: tk, d }) => (
-              <div key={tk} className="flex gap-4">
-                <Icon className="mt-1 h-5 w-5 shrink-0 text-blue-600" />
-                <div>
-                  <h3 className="font-semibold text-slate-900">{t(tk)}</h3>
-                  <p className="mt-1.5 text-[15px] leading-7 text-slate-600">
-                    {t(d)}
-                  </p>
-                </div>
+        <section id="safety" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:py-20">
+          <Head n="003" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} />
+          <Reveal>
+            <div className="lp-br mt-12 bg-slate-900 p-6 text-white sm:p-10">
+              <div className="grid gap-x-12 gap-y-8 sm:grid-cols-2">
+                {SAFETY.map(({ icon: Icon, t: tk, d }) => (
+                  <div key={tk} className="flex gap-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/15 bg-white/5 text-white">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h3 className="font-bold">{t(tk)}</h3>
+                      <p className="mt-1.5 text-[15px] leading-7 text-slate-300">{t(d)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          </Reveal>
         </section>
 
         {/* ============ AI ĐỨNG SAU ============ */}
-        <section className="border-t border-slate-200 bg-slate-50">
-          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-2 md:gap-16">
+        <section className="lp-grid border-y border-slate-200">
+          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:py-20 md:grid-cols-2 md:gap-14">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                {c.whoTitle}
-              </h2>
-              <p className="mt-4 max-w-md text-[16px] leading-7 text-slate-600">
-                {c.whoBody}
-              </p>
-              <ul className="mt-5 space-y-2 text-[15px] text-slate-700">
+              <Eyebrow label={L.who} />
+              <h2 className="lp-display mt-5 text-[34px] text-slate-900 sm:text-5xl">{c.whoTitle}</h2>
+              <p className="mt-4 max-w-md text-[16px] leading-7 text-slate-600">{c.whoBody}</p>
+              <ul className="mt-5 space-y-2.5 text-[15px] text-slate-700">
                 {c.whoPoints.map((p) => (
                   <li key={p} className="flex gap-3">
-                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                    <Check size={17} className="mt-1 shrink-0 lp-acc" />
                     {p}
                   </li>
                 ))}
               </ul>
-              <Link
-                to="/about"
-                className="mt-6 inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline"
-              >
+              <Link to="/about" className="mt-6 inline-flex items-center gap-1 text-[15px] font-semibold lp-acc hover:underline">
                 {c.whoMore} <ArrowRight size={15} />
               </Link>
 
-              {/* Pháp lý & chính sách */}
               <div className="mt-8 border-t border-slate-200 pt-5">
-                <p className="text-[13px] font-semibold uppercase tracking-wide text-slate-500">
-                  {c.whoLegal}
-                </p>
+                <p className="lp-mono text-[11px] font-bold text-slate-500">{c.whoLegal}</p>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
-                  <Link
-                    to="/terms"
-                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
-                  >
+                  <Link to="/terms" className="text-slate-700 underline-offset-4 hover:underline">
                     {lang === "en" ? "Terms of Service" : "Điều khoản sử dụng"}
                   </Link>
-                  <Link
-                    to="/privacy"
-                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
-                  >
+                  <Link to="/privacy" className="text-slate-700 underline-offset-4 hover:underline">
                     {lang === "en" ? "Privacy Policy" : "Chính sách bảo mật"}
                   </Link>
-                  <Link
-                    to="/refund"
-                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
-                  >
+                  <Link to="/refund" className="text-slate-700 underline-offset-4 hover:underline">
                     {lang === "en" ? "Refund Policy" : "Chính sách hoàn tiền"}
                   </Link>
                 </div>
               </div>
             </div>
 
-            <dl className="divide-y divide-slate-200 border-y border-slate-200 text-[15px]">
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">{c.whoOperator}</dt>
-                <dd className="font-semibold text-slate-900">{SITE.operator}</dd>
-              </div>
-
-              {SITE.address && (
-                <div className="flex justify-between gap-4 py-3.5">
-                  <dt className="text-slate-500">
-                    {lang === "en" ? "Address" : "Địa chỉ"}
-                  </dt>
-                  <dd className="text-right font-semibold text-slate-900">
-                    {SITE.address}
-                  </dd>
-                </div>
-              )}
-
-              {SITE.business && (
-                <div className="flex justify-between gap-4 py-3.5">
-                  <dt className="text-slate-500">
-                    {lang === "en" ? "Business" : "Kinh doanh"}
-                  </dt>
-                  <dd className="text-right font-semibold text-slate-900">
-                    {SITE.business}
-                  </dd>
-                </div>
-              )}
-
-              {SITE.youtube && (
-                <div className="flex justify-between gap-4 py-3.5">
-                  <dt className="text-slate-500">YouTube</dt>
-                  <dd>
-                    <a
-                      href={SITE.youtube}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-blue-600 hover:underline"
-                    >
+            <Reveal>
+              <dl className="lp-br divide-y divide-slate-200 border border-slate-200 bg-white px-5 text-[15px]">
+                <Row k={c.whoOperator}>{SITE.operator}</Row>
+                {SITE.address && <Row k={lang === "en" ? "Address" : "Địa chỉ"}>{SITE.address}</Row>}
+                {SITE.business && <Row k={lang === "en" ? "Business" : "Kinh doanh"}>{SITE.business}</Row>}
+                {SITE.youtube && (
+                  <Row k="YouTube">
+                    <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className={linkCls}>
                       {SITE.youtube.replace("https://www.youtube.com/", "")}
                     </a>
-                  </dd>
-                </div>
-              )}
-
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">Zalo</dt>
-                <dd>
-                  <a
-                    href={SITE.zaloUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-blue-600 hover:underline"
-                  >
+                  </Row>
+                )}
+                <Row k="Zalo">
+                  <a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer" className={linkCls}>
                     {SITE.zalo}
                   </a>
-                </dd>
-              </div>
-
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">Email</dt>
-                <dd className="break-all text-right font-semibold text-slate-900">
-                  {SITE.email}
-                </dd>
-              </div>
-
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">{c.whoSince}</dt>
-                <dd className="font-semibold text-slate-900">
-                  {launchedText}
-                </dd>
-              </div>
-            </dl>
+                </Row>
+                <Row k="Email"><span className="break-all">{SITE.email}</span></Row>
+                <Row k={c.whoSince}>{launchedText}</Row>
+              </dl>
+            </Reveal>
           </div>
         </section>
 
-                {/* ============ FAQ ============ */}
-        <section
-          id="faq"
-          className="scroll-mt-20 border-t border-slate-200 bg-white"
-        >
-          <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              {t("ld.faqTitle")}
-            </h2>
-            <div className="mt-8 border-t border-slate-200">
-              {FAQ_ORDER.map((i, idx) => (
-                <FaqRow
-                  key={i}
-                  q={t(`ld.faq${i}q`)}
-                  a={t(`ld.faq${i}a`)}
-                  open={openFaq === idx}
-                  onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-                />
-              ))}
-            </div>
+        {/* ============ FAQ ============ */}
+        <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-5 py-14 sm:py-20">
+          <Head n="004" label={L.faq} title={t("ld.faqTitle")} />
+          <div className="mt-10 border-t border-slate-200">
+            {FAQ_ORDER.map((i, idx) => (
+              <FaqRow
+                key={i}
+                n={String(idx + 1).padStart(3, "0")}
+                q={t(`ld.faq${i}q`)}
+                a={t(`ld.faq${i}a`)}
+                open={openFaq === idx}
+                onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
+              />
+            ))}
           </div>
         </section>
 
         {/* ============ KÊU GỌI CUỐI ============ */}
-        <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-          <div className="rounded-3xl bg-blue-600 px-6 py-12 sm:px-12 sm:py-16">
-            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              {c.ctaTitle}
-            </h2>
-            <p className="mt-3 max-w-lg text-[16px] leading-7 text-blue-100">
-              {t("ld.ctaSub")}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-[15px] font-semibold text-blue-700 transition hover:bg-blue-50 active:scale-[0.98]"
-              >
-                {t("ld.ctaReg")} <ArrowRight size={17} />
-              </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="text-[15px] font-semibold text-white underline-offset-4 hover:underline"
-              >
-                {t("ld.login")}
-              </button>
+        <section className="mx-auto max-w-6xl px-5 pb-16 sm:pb-24">
+          <Reveal>
+            <div className="lp-br relative overflow-hidden bg-slate-900 px-6 py-14 text-white sm:px-14 sm:py-20">
+              <Coins className="absolute -right-6 -top-6 h-52 w-52 rotate-12 text-white/[0.05]" />
+              <h2 className="lp-display relative max-w-2xl text-[40px] sm:text-6xl">{c.ctaTitle}</h2>
+              <p className="relative mt-4 max-w-lg text-[16px] leading-7 text-slate-300">{t("ld.ctaSub")}</p>
+              <div className="relative mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+                <button onClick={() => navigate("/register")} className="lp-btn lp-br">
+                  {t("ld.ctaReg")} <ArrowRight size={17} />
+                </button>
+                <button onClick={() => navigate("/login")} className="text-[15px] font-semibold text-white underline-offset-4 hover:underline">
+                  {t("ld.login")}
+                </button>
+              </div>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 
@@ -572,4 +555,5 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-}
+                                   }
+                          
