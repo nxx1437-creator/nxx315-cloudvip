@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { IconEye, IconEyeOff } from "./AuthIcons.jsx";
 
 const labelCls =
-  "text-[12px] font-bold uppercase tracking-wider text-slate-700";
+  "text-[12.5px] font-bold uppercase tracking-[0.08em] text-slate-800";
 
 export default function AuthField({
   id,
@@ -26,7 +26,7 @@ export default function AuthField({
   const tone =
     variant === "gift"
       ? "border-amber-200 bg-amber-50/50 text-amber-900 placeholder:text-amber-400 focus:border-amber-400 focus:ring-amber-100"
-      : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-100";
+      : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-100";
 
   return (
     <div>
@@ -36,7 +36,7 @@ export default function AuthField({
         </label>
         {labelRight}
       </div>
-      <div className="relative mt-2">
+      <div className="relative mt-2.5">
         {icon && (
           <span
             className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 ${
@@ -56,8 +56,8 @@ export default function AuthField({
           maxLength={maxLength}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
-          className={`w-full rounded-xl border py-3.5 text-sm outline-none transition focus:ring-4 disabled:bg-slate-100 disabled:opacity-60 ${tone} ${
-            icon ? "pl-11" : "pl-4"
+          className={`w-full rounded-2xl border py-4 text-[15px] outline-none transition focus:ring-4 disabled:bg-slate-100 disabled:opacity-60 ${tone} ${
+            icon ? "pl-12" : "pl-4"
           } ${isPw ? "pr-12" : "pr-4"} ${
             uppercase
               ? "font-semibold uppercase tracking-wider placeholder:font-normal placeholder:normal-case placeholder:tracking-normal"
