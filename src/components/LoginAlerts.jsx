@@ -12,7 +12,7 @@ const ZALO = "0865245988";
 const ZALO_URL = "https://zalo.me/0865245988";
 
 const TONES = {
-  teal: "border-teal-200 bg-teal-50 text-teal-800 [--i:theme(colors.teal.100)]",
+  teal: "border-emerald-200 bg-emerald-50 text-emerald-800 [--i:theme(colors.emerald.100)]",
   amber: "border-amber-200 bg-amber-50 text-amber-800 [--i:theme(colors.amber.100)]",
   rose: "border-rose-200 bg-rose-50 text-rose-800 [--i:theme(colors.rose.100)]",
   red: "border-red-300 bg-red-50 text-red-800 [--i:theme(colors.red.100)]",
@@ -21,7 +21,7 @@ const TONES = {
 
 function Box({ tone, icon, title, children }) {
   return (
-    <div className={`mb-4 rounded-2xl border p-3.5 ${TONES[tone]}`}>
+    <div className={`mb-4 rounded-2xl border p-4 ${TONES[tone]}`}>
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/70 shadow-sm">
           {icon}
@@ -116,4 +116,5 @@ export default function LoginAlerts({
       )}
     </>
   );
-  }
+}
+
