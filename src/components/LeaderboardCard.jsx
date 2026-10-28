@@ -41,7 +41,7 @@ export default function LeaderboardCard() {
       setLoading(true);
       try {
         const { data, error } = await supabase.rpc("get_leaderboard", {
-          period: "month", // Lấy top tháng
+          period: "month", 
           limit_count: 3,
         });
         if (error) throw error;
@@ -90,17 +90,19 @@ export default function LeaderboardCard() {
             <div className="h-16 w-16 rounded-full border-[3px] border-slate-300 p-0.5 bg-white">
               <Avatar src={top2?.avatar_url} name={top2?.username || "U"} size="h-full w-full" />
             </div>
-            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
+            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-400 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
               2
             </div>
           </div>
           <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top 2</p>
           <p className="text-[12px] font-bold text-slate-800 truncate max-w-[80px] text-center">{top2?.username || "—"}</p>
-          <div className="mt-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center w-full">
-            <p className="text-[9px] font-bold text-amber-700">300,000đ + 120h</p>
+          
+          {/* CHỈ HIỆN COIN */}
+          <div className="mt-2 flex items-center justify-center gap-1 text-amber-500 bg-amber-50 rounded-full px-2 py-1 w-full border border-amber-100">
+            <Coins size={12} strokeWidth={2.6} />
+            <span className="text-[11px] font-black">{top2 ? formatCoins(top2.coins) : 0}</span>
           </div>
-          <p className="mt-1 text-[10px] font-bold text-slate-500">{top2 ? formatCoins(top2.coins) : 0} điểm</p>
-          {/* Bục đỡ */}
+          
           <div className="mt-2 h-10 w-full rounded-t-xl bg-gradient-to-b from-slate-300/40 to-transparent"></div>
         </div>
 
@@ -119,35 +121,39 @@ export default function LeaderboardCard() {
           </div>
           <p className="mt-3 text-[10px] font-bold text-amber-600 uppercase tracking-widest text-center">Top 1</p>
           <p className="text-[14px] font-black text-slate-800 truncate max-w-[90px] text-center">{top1?.username || "—"}</p>
-          <div className="mt-1 rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-center w-full">
-            <p className="text-[10px] font-bold text-amber-700">700,000đ + 150h</p>
+          
+          {/* CHỈ HIỆN COIN */}
+          <div className="mt-2 flex items-center justify-center gap-1 text-amber-600 bg-amber-100 rounded-full px-2 py-1 w-full border border-amber-300">
+            <Coins size={14} strokeWidth={2.8} />
+            <span className="text-[13px] font-black">{top1 ? formatCoins(top1.coins) : 0}</span>
           </div>
-          <p className="mt-1 text-[11px] font-bold text-slate-600">{top1 ? formatCoins(top1.coins) : 0} điểm</p>
-          {/* Bục đỡ */}
+          
           <div className="mt-2 h-14 w-full rounded-t-2xl bg-gradient-to-b from-amber-300/60 to-transparent"></div>
         </div>
 
         {/* TOP 3 (Bên phải) */}
         <div className="flex flex-col items-center flex-1">
           <div className="relative">
-            <div className="h-16 w-16 rounded-full border-[3px] border-slate-300 p-0.5 bg-white">
+            <div className="h-16 w-16 rounded-full border-[3px] border-orange-300 p-0.5 bg-white">
               <Avatar src={top3?.avatar_url} name={top3?.username || "U"} size="h-full w-full" />
             </div>
-            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
+            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-orange-400 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
               3
             </div>
           </div>
           <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top 3</p>
           <p className="text-[12px] font-bold text-slate-800 truncate max-w-[80px] text-center">{top3?.username || "—"}</p>
-          <div className="mt-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center w-full">
-            <p className="text-[9px] font-bold text-amber-700">200,000đ + 100h</p>
+          
+          {/* CHỈ HIỆN COIN */}
+          <div className="mt-2 flex items-center justify-center gap-1 text-amber-500 bg-amber-50 rounded-full px-2 py-1 w-full border border-amber-100">
+            <Coins size={12} strokeWidth={2.6} />
+            <span className="text-[11px] font-black">{top3 ? formatCoins(top3.coins) : 0}</span>
           </div>
-          <p className="mt-1 text-[10px] font-bold text-slate-500">{top3 ? formatCoins(top3.coins) : 0} điểm</p>
-          {/* Bục đỡ */}
+          
           <div className="mt-2 h-10 w-full rounded-t-xl bg-gradient-to-b from-orange-200/40 to-transparent"></div>
         </div>
       </div>
 
     </div>
   );
-          }
+}
