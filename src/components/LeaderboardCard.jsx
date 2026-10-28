@@ -81,8 +81,8 @@ export default function LeaderboardCard() {
         </button>
       </div>
 
-      {/* PODIUM */}
-      <div className="relative flex items-end justify-center gap-1 sm:gap-2 px-1 z-10">
+      {/* PODIUM (Top 1 ở giữa, Top 3 bên phải, Top 2 bên trái) */}
+      <div className="relative flex items-end justify-center gap-2 px-1 z-10">
         
         {/* TOP 2 (Bên trái) */}
         <div className="flex flex-col items-center flex-1">
@@ -90,20 +90,20 @@ export default function LeaderboardCard() {
             <div className="h-16 w-16 rounded-full border-[3px] border-slate-300 p-0.5 bg-white">
               <Avatar src={top2?.avatar_url} name={top2?.username || "U"} size="h-full w-full" />
             </div>
-            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-400 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
+            <div className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-md border-2 border-[#e6f7f2]">
               2
             </div>
           </div>
           <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top 2</p>
           <p className="text-[12px] font-bold text-slate-800 truncate max-w-[80px] text-center">{top2?.username || "—"}</p>
           
-          {/* CHỈ HIỆN COIN */}
           <div className="mt-2 flex items-center justify-center gap-1 text-amber-500 bg-amber-50 rounded-full px-2 py-1 w-full border border-amber-100">
             <Coins size={12} strokeWidth={2.6} />
             <span className="text-[11px] font-black">{top2 ? formatCoins(top2.coins) : 0}</span>
           </div>
           
-          <div className="mt-2 h-10 w-full rounded-t-xl bg-gradient-to-b from-slate-300/40 to-transparent"></div>
+          {/* Bục đỡ */}
+          <div className="mt-2 h-8 w-full rounded-t-xl bg-gradient-to-b from-slate-300/30 to-transparent"></div>
         </div>
 
         {/* TOP 1 (Ở giữa, to nhất) */}
@@ -122,13 +122,13 @@ export default function LeaderboardCard() {
           <p className="mt-3 text-[10px] font-bold text-amber-600 uppercase tracking-widest text-center">Top 1</p>
           <p className="text-[14px] font-black text-slate-800 truncate max-w-[90px] text-center">{top1?.username || "—"}</p>
           
-          {/* CHỈ HIỆN COIN */}
           <div className="mt-2 flex items-center justify-center gap-1 text-amber-600 bg-amber-100 rounded-full px-2 py-1 w-full border border-amber-300">
             <Coins size={14} strokeWidth={2.8} />
             <span className="text-[13px] font-black">{top1 ? formatCoins(top1.coins) : 0}</span>
           </div>
           
-          <div className="mt-2 h-14 w-full rounded-t-2xl bg-gradient-to-b from-amber-300/60 to-transparent"></div>
+          {/* Bục đỡ */}
+          <div className="mt-2 h-12 w-full rounded-t-2xl bg-gradient-to-b from-amber-300/50 to-transparent"></div>
         </div>
 
         {/* TOP 3 (Bên phải) */}
@@ -144,16 +144,16 @@ export default function LeaderboardCard() {
           <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Top 3</p>
           <p className="text-[12px] font-bold text-slate-800 truncate max-w-[80px] text-center">{top3?.username || "—"}</p>
           
-          {/* CHỈ HIỆN COIN */}
           <div className="mt-2 flex items-center justify-center gap-1 text-amber-500 bg-amber-50 rounded-full px-2 py-1 w-full border border-amber-100">
             <Coins size={12} strokeWidth={2.6} />
             <span className="text-[11px] font-black">{top3 ? formatCoins(top3.coins) : 0}</span>
           </div>
           
-          <div className="mt-2 h-10 w-full rounded-t-xl bg-gradient-to-b from-orange-200/40 to-transparent"></div>
+          {/* Bục đỡ */}
+          <div className="mt-2 h-8 w-full rounded-t-xl bg-gradient-to-b from-orange-200/30 to-transparent"></div>
         </div>
       </div>
 
     </div>
   );
-}
+          }
