@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ArrowUp } from "lucide-react";
+import { Menu, X, ArrowUp, ArrowUpRight, ChevronRight } from "lucide-react";
 import { useI18n } from "../i18n/index.js";
 
 export const scrollToId = (id) =>
@@ -17,9 +17,27 @@ const NAV = [
 
 const SHORT = { vi: "Đăng ký", en: "Sign up" };
 
+/* Dùng chung màu với trang chủ: trang chủ khai báo --ac / --ac2,
+   các trang khác (about, terms...) không có thì tự dùng xanh dương. */
+const NAV_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap');
+.nv-mono { font-family:'Roboto Mono',ui-monospace,monospace; text-transform:uppercase; letter-spacing:.14em; }
+.nv-acc { color:var(--ac,#2563eb); }
+.nv-br { position:relative; }
+.nv-br::before, .nv-br::after { content:""; position:absolute; width:9px; height:9px; border:2px solid var(--ac,#2563eb); pointer-events:none; }
+.nv-br::before { top:-2px; left:-2px; border-right:0; border-bottom:0; }
+.nv-br::after { bottom:-2px; right:-2px; border-left:0; border-top:0; }
+.nv-btn { background:var(--ac,#2563eb); color:#fff; transition:background .2s, transform .2s; }
+.nv-btn:hover { background:var(--ac2,#1d4ed8); }
+.nv-btn:active { transform:scale(.97); }
+.nv-hov:hover { color:var(--ac,#2563eb); }
+.nv-stroke { color:transparent; -webkit-text-stroke:1.5px var(--ac,#2563eb); }
+`;
+const NavStyle = () => <style>{NAV_CSS}</style>;
+
 const Logo = () => (
   <span className="shrink-0 whitespace-nowrap text-[18px] font-extrabold tracking-tight text-slate-900 sm:text-[19px]">
-    Nxx315 <span className="text-blue-600">Studio</span>
+    Nxx315 <span className="nv-acc">Studio</span>
   </span>
 );
 
@@ -37,6 +55,7 @@ export function LandingHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <NavStyle />
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:px-5">
         <button
           onClick={() => {
@@ -55,37 +74,37 @@ export function LandingHeader() {
             <button
               key={id}
               onClick={() => go(id)}
-              className="whitespace-nowrap text-[14px] font-medium text-slate-600 transition hover:text-slate-900"
+              className="nv-mono nv-hov whitespace-nowrap text-[11.5px] font-bold text-slate-500 transition"
             >
               {t(k)}
             </button>
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             onClick={() => setLang(lang === "vi" ? "en" : "vi")}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100"
+            className="inline-flex items-center gap-1.5 px-2 py-1.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100"
             aria-label="Language"
           >
             <span className="text-[16px] leading-none">
               {lang === "vi" ? "🇻🇳" : "🇺🇸"}
             </span>
-            <span className="hidden sm:inline">
+            <span className="nv-mono hidden text-[11px] sm:inline">
               {lang === "vi" ? "VI" : "EN"}
             </span>
           </button>
 
           <button
             onClick={() => navigate("/login")}
-            className="hidden whitespace-nowrap px-3 py-2 text-[14px] font-semibold text-slate-700 transition hover:text-blue-600 md:inline-flex"
+            className="nv-mono nv-hov hidden whitespace-nowrap px-3 py-2 text-[11.5px] font-bold text-slate-700 transition md:inline-flex"
           >
             {t("ld.login")}
           </button>
 
           <button
             onClick={() => navigate("/register")}
-            className="whitespace-nowrap rounded-xl bg-blue-600 px-3.5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-blue-700 active:scale-95 sm:px-4"
+            className="nv-btn nv-br whitespace-nowrap px-3.5 py-2.5 text-[12px] font-extrabold uppercase tracking-[0.1em] sm:px-4"
           >
             <span className="sm:hidden">{SHORT[lang] || SHORT.vi}</span>
             <span className="hidden sm:inline">{t("ld.ctaReg")}</span>
@@ -94,7 +113,7 @@ export function LandingHeader() {
           <button
             onClick={() => setOpen(!open)}
             aria-label="Menu"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 md:hidden"
+            className="flex h-10 w-10 items-center justify-center border border-slate-200 text-slate-700 hover:bg-slate-100 md:hidden"
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -103,13 +122,19 @@ export function LandingHeader() {
 
       {open && (
         <div className="border-t border-slate-100 bg-white px-5 pb-5 pt-2 md:hidden">
-          {NAV.map(([id, k]) => (
+          {NAV.map(([id, k], i) => (
             <button
               key={id}
               onClick={() => go(id)}
-              className="block w-full border-b border-slate-100 py-3.5 text-left text-[15px] font-medium text-slate-700"
+              className="flex w-full items-center gap-3 border-b border-slate-100 py-3.5 text-left"
             >
-              {t(k)}
+              <span className="nv-mono w-8 text-[11px] font-bold text-slate-300">
+                {String(i + 1).padStart(3, "0")}
+              </span>
+              <span className="flex-1 text-[15px] font-semibold text-slate-800">
+                {t(k)}
+              </span>
+              <ChevronRight size={16} className="text-slate-300" />
             </button>
           ))}
           <button
@@ -117,7 +142,7 @@ export function LandingHeader() {
               setOpen(false);
               navigate("/login");
             }}
-            className="mt-4 w-full rounded-xl border border-slate-300 py-3 text-[15px] font-semibold text-slate-800"
+            className="nv-br nv-mono nv-hov mt-5 w-full border border-slate-300 py-3 text-[12px] font-bold text-slate-800 transition"
           >
             {t("ld.login")}
           </button>
@@ -165,10 +190,21 @@ const FOOT = {
 const FLink = ({ to, children }) => (
   <Link
     to={to}
-    className="block py-1.5 text-[14px] text-slate-500 transition hover:text-blue-600"
+    className="nv-hov group flex items-center gap-1 py-1.5 text-[14px] text-slate-500 transition"
   >
     {children}
+    <ArrowUpRight
+      size={13}
+      className="opacity-0 transition group-hover:opacity-100"
+    />
   </Link>
+);
+
+const FHead = ({ n, children }) => (
+  <p className="nv-mono text-[11px] font-bold text-slate-900">
+    <span className="mr-2 text-slate-300">{n}</span>
+    {children}
+  </p>
 );
 
 export function LandingFooter() {
@@ -181,27 +217,42 @@ export function LandingFooter() {
     else navigate("/");
   };
 
+  const contactCls =
+    "nv-br nv-mono nv-hov inline-flex items-center gap-2 border border-slate-200 bg-white px-3.5 py-2.5 text-[11px] font-bold text-slate-600 transition";
+
   return (
-    <footer className="border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-5 py-12">
+    <footer className="relative overflow-hidden border-t border-slate-200 bg-slate-50">
+      <NavStyle />
+      <div className="relative mx-auto max-w-6xl px-5 pt-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Logo />
             <p className="mt-3 max-w-xs text-[14px] leading-6 text-slate-500">
               {t("ld.heroSub")}
             </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <a
+                href="https://zalo.me/0865245988"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={contactCls}
+              >
+                Zalo <ArrowUpRight size={13} />
+              </a>
+              <a href="mailto:nxx315hub@gmail.com" className={contactCls}>
+                Email <ArrowUpRight size={13} />
+              </a>
+            </div>
           </div>
 
           <div>
-            <p className="text-[14px] font-semibold text-slate-900">
-              {f.product}
-            </p>
+            <FHead n="001">{f.product}</FHead>
             <div className="mt-2">
               {NAV.map(([id, k]) => (
                 <button
                   key={id}
                   onClick={() => go(id)}
-                  className="block py-1.5 text-left text-[14px] text-slate-500 transition hover:text-blue-600"
+                  className="nv-hov block py-1.5 text-left text-[14px] text-slate-500 transition"
                 >
                   {t(k)}
                 </button>
@@ -210,9 +261,7 @@ export function LandingFooter() {
           </div>
 
           <div>
-            <p className="text-[14px] font-semibold text-slate-900">
-              {f.support}
-            </p>
+            <FHead n="002">{f.support}</FHead>
             <div className="mt-2">
               <FLink to="/about">{f.about}</FLink>
               <FLink to="/guide">{f.guide}</FLink>
@@ -223,9 +272,7 @@ export function LandingFooter() {
           </div>
 
           <div>
-            <p className="text-[14px] font-semibold text-slate-900">
-              {f.legal}
-            </p>
+            <FHead n="003">{f.legal}</FHead>
             <div className="mt-2">
               <FLink to="/terms">{f.terms}</FLink>
               <FLink to="/privacy">{f.privacy}</FLink>
@@ -235,28 +282,23 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 text-[13px] text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="nv-mono mt-10 flex flex-col gap-2 border-t border-slate-200 pt-6 text-[10.5px] font-bold text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} NXX315 Studio. {f.rights}
+            © {new Date().getFullYear()} NXX315 Studio · {f.rights}
           </p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
-            <a
-              href="https://zalo.me/0865245988"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-blue-600"
-            >
-              Zalo 0865245988
-            </a>
-            <a
-              href="mailto:nxx315hub@gmail.com"
-              className="hover:text-blue-600"
-            >
-              nxx315hub@gmail.com
-            </a>
-          </div>
+          <p>
+            Zalo 0865245988 · nxx315hub@gmail.com
+          </p>
         </div>
       </div>
+
+      {/* chữ lớn mờ ở đáy, trang trí */}
+      <p
+        aria-hidden="true"
+        className="nv-stroke pointer-events-none mt-4 select-none text-center text-[24vw] font-black leading-[0.8] tracking-tighter opacity-[0.14] sm:text-[170px]"
+      >
+        NXX315
+      </p>
     </footer>
   );
 }
@@ -276,7 +318,7 @@ export function BackToTop() {
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       aria-label={(FOOT[lang] || FOOT.vi).top}
-      className={`fixed bottom-5 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md transition hover:text-blue-600 sm:right-6 ${
+      className={`nv-br nv-acc fixed bottom-5 right-4 z-40 flex h-11 w-11 items-center justify-center border border-slate-200 bg-white shadow-md transition hover:-translate-y-0.5 sm:right-6 ${
         show ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
@@ -284,3 +326,4 @@ export function BackToTop() {
     </button>
   );
     }
+                         
