@@ -56,7 +56,7 @@ export default function AuthField({
           maxLength={maxLength}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
-          className={`w-full rounded-2xl border py-3 text-[15px] outline-none transition focus:ring-4 disabled:bg-slate-100 disabled:opacity-60 ${tone} ${
+          className={`w-full rounded-xl border py-3 text-[15px] outline-none transition focus:ring-4 disabled:bg-slate-100 disabled:opacity-60 ${tone} ${
             icon ? "pl-12" : "pl-4"
           } ${isPw ? "pr-12" : "pr-4"} ${
             uppercase
@@ -78,5 +78,4 @@ export default function AuthField({
       </div>
     </div>
   );
-      }
-
+}
