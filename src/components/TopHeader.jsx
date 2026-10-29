@@ -299,7 +299,7 @@ export default function TopHeader() {
                 src={avatarUrl}
                 name={displayName}
                 size={40}
-                className="ring-2 ring-white shadow-sm"
+                className="ring-2 ring-emerald-200"
               />
             </button>
           </div>
@@ -377,5 +377,5 @@ export default function TopHeader() {
       />
     </>
   );
-        }
+    }
       
