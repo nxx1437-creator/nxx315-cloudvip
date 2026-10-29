@@ -78,6 +78,7 @@ async function loadProfile() {
         profileData?.role === "admin" || profileData?.role === "support",
       email: profileData?.email || gameData?.email || "",
       full_name: profileData?.full_name || gameData?.full_name || "",
+      avatar_url: profileData?.avatar_url || gameData?.avatar_url || "",
     };
 
     cache = { userId: user.id, profile };
@@ -140,3 +141,4 @@ export default function useProfile() {
 
   return { profile, loading, setProfile: updateProfile, isAuthed };
 }
+
