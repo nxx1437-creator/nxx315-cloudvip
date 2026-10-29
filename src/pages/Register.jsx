@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout.jsx";
 import AuthField from "../components/AuthField.jsx";
 import MagicLinkSent from "../components/MagicLinkSent.jsx";
+import GoogleButton from "../components/GoogleButton.jsx";
 import { AT, EMAIL_RE, mapAuthError, callbackUrl } from "../components/authText.js";
 import {
   IconMail,
@@ -11,7 +12,6 @@ import {
   IconSpinner,
   IconWarning,
   IconShield,
-  IconGoogle,
 } from "../components/AuthIcons.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 import { getFingerprint } from "../lib/fingerprint.js";
@@ -195,7 +195,7 @@ export default function Register() {
   const renderAlert = () => {
     if (ipError) {
       return (
-        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0 text-amber-600">
               <IconWarning size={18} />
@@ -226,7 +226,7 @@ export default function Register() {
 
     if (ipBlocked) {
       return (
-        <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 shrink-0 text-rose-600">
               <IconShield size={18} />
@@ -327,7 +327,7 @@ export default function Register() {
             <p className="text-[12.5px] leading-5 text-slate-500">{x.hintReg}</p>
 
             {error && (
-              <div className="whitespace-pre-line rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-600">
+              <div className="whitespace-pre-line rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-600">
                 {error.text ?? t(error.key, error.vars)}
               </div>
             )}
@@ -335,7 +335,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading || blocked}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -382,18 +382,16 @@ export default function Register() {
           </div>
 
           <div className={blocked ? "pointer-events-none opacity-50" : ""}>
-            <button
-              type="button"
-              onClick={handleGoogle}
-              className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
-            >
-              <IconGoogle size={20} />
-              {t("reg.google")}
-            </button>
+            <GoogleButton
+              text="signup_with"
+              label={t("reg.google")}
+              onFallbackClick={handleGoogle}
+              onError={(m) => setError({ text: m })}
+            />
           </div>
         </>
       )}
     </AuthLayout>
   );
-    }
-    
+  }
+                   
