@@ -175,7 +175,7 @@ export default function TopHeader() {
           </button>
 
           <div ref={searchRef} className="relative min-w-0 flex-1">
-            <div className="flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400 transition focus-within:border-emerald-500">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400 transition focus-within:border-emerald-500">
               <Search size={15} className="shrink-0" />
               <input
                 value={query}
@@ -195,7 +195,7 @@ export default function TopHeader() {
             </div>
 
             {searchOpen && query.trim() && (
-              <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto border border-slate-200 bg-white p-1.5 shadow-xl">
+              <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
                 {matches.length === 0 ? (
                   <p className="px-3 py-4 text-center text-xs text-slate-400">
                     {t("hd.noResult")}
@@ -227,18 +227,18 @@ export default function TopHeader() {
           <div ref={notifRef} className="relative shrink-0">
             <button
               onClick={() => setNotifOpen((prev) => !prev)}
-              className="relative flex h-9 w-9 items-center justify-center border border-slate-200 bg-white transition hover:border-emerald-500"
+              className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white transition hover:border-emerald-500"
             >
               <Bell size={16} className="text-slate-600" />
               {unreadCount > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center bg-rose-500 px-1 text-[9px] font-bold text-white">
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
             </button>
 
             {notifOpen && (
-              <div className="fixed left-3 right-3 top-[60px] z-50 mx-auto max-w-sm overflow-hidden border border-slate-200 bg-white shadow-xl">
+              <div className="fixed left-3 right-3 top-[60px] z-50 mx-auto max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
                 <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50 px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Bell size={15} className="text-emerald-700" />
@@ -319,7 +319,7 @@ export default function TopHeader() {
 
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center text-slate-600 transition hover:bg-slate-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-50"
           >
             <Menu size={20} />
           </button>
@@ -336,4 +336,5 @@ export default function TopHeader() {
       />
     </>
   );
-}
+      }
+      
