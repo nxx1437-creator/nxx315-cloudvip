@@ -146,10 +146,8 @@ export default function Dashboard() {
 
             {/* ===== SỐ DƯ ===== */}
             <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-500 p-5 text-white shadow-[0_18px_40px_-18px_rgba(5,150,105,0.7)]">
-              <Coins
-                aria-hidden="true"
-                className="pointer-events-none absolute -right-5 -top-5 h-36 w-36 rotate-12 text-white/10"
-              />
+              <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-14 h-48 w-48 rounded-full bg-white/10" />
+              <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 right-10 h-32 w-32 rounded-full bg-white/[0.07]" />
               <p className="relative text-[13px] font-medium text-emerald-50/90 lowercase first-letter:uppercase">
                 {t("dash.balance")}
               </p>
@@ -304,4 +302,5 @@ export default function Dashboard() {
     </div>
   );
             }
+                  
               
