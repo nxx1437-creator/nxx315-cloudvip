@@ -23,7 +23,7 @@ export function Avatar({ src, name = "", size = 48, className = "" }) {
         referrerPolicy="no-referrer"
         onError={() => setBad(true)}
         style={box}
-        className={`shrink-0 rounded-full object-cover ${className}`}
+        className={`shrink-0 rounded-full bg-emerald-50 object-cover ${className}`}
       />
     );
   }
@@ -48,7 +48,7 @@ export function Panel({
 }) {
   const tone = dark
     ? "border-[#2E2E2E] bg-[#1F1F1F]"
-    : "border-white bg-white shadow-[0_14px_36px_-24px_rgba(6,78,59,0.45)]";
+    : "border-emerald-100 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]";
   return (
     <section
       onPointerMove={dark ? trackPointer : undefined}
@@ -97,7 +97,7 @@ export function Shortcut({ icon: Icon, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="hv-card hv-btn-ghost flex flex-col items-center gap-2 rounded-2xl border border-white bg-white px-1 py-4 shadow-[0_10px_26px_-20px_rgba(6,78,59,0.5)] transition active:scale-[0.97]"
+      className="hv-card hv-btn-ghost flex flex-col items-center gap-2 rounded-2xl border border-emerald-100 bg-white px-1 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)] transition active:scale-[0.97]"
     >
       <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
         <Icon size={20} strokeWidth={2} />
@@ -202,3 +202,4 @@ export function MilestoneRow({
     </div>
   );
         }
+
