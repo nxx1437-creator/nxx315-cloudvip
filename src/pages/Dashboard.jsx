@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Coins,
   CheckSquare,
   ShoppingBag,
   ArrowLeftRight,
@@ -10,6 +9,9 @@ import {
   Crown,
   Video,
   Sparkles,
+  Users,
+  ListChecks,
+  ArrowRight,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -90,13 +92,13 @@ export default function Dashboard() {
   const earnedToday = profile?.coins_earned_today || 0;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#eef7f3] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
+    <div className="relative min-h-screen overflow-hidden bg-[#eefaf7] pb-32 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[560px]"
         style={{
           background:
-            "radial-gradient(420px 320px at 85% 40px,rgba(255,255,255,.7),transparent 70%),linear-gradient(180deg,#cde7dc 0,#e4f3ed 55%,#eef7f3 100%)",
+            "radial-gradient(420px 320px at 85% 40px,rgba(255,255,255,.7),transparent 70%),linear-gradient(180deg,#d6f0e9 0,#e6f6f2 50%,#eefaf7 100%)",
         }}
       />
       <div
@@ -115,71 +117,89 @@ export default function Dashboard() {
 
       <TopHeader />
 
-      <main className="relative mx-auto max-w-md space-y-3.5 px-4 py-5 md:max-w-3xl">
+      <main className="relative mx-auto max-w-md space-y-4 px-4 py-3 md:max-w-3xl">
         {loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
-            {/* ===== LỜI CHÀO ===== */}
-            <div className="flex items-center gap-3 pb-1">
-              <Avatar
-                src={avatarUrl}
-                name={displayName}
-                size={54}
-                className="ring-[3px] ring-white shadow-md"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-slate-500">
-                  {getGreeting()}
-                </p>
-                <h1 className="truncate text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
-                  {displayName}
-                </h1>
+            {/* ===== THẺ CHÀO ===== */}
+            <section className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-[0_18px_44px_-24px_rgba(6,78,59,0.45)]">
+              <div className="flex items-center gap-4">
+                <div className="relative shrink-0 pb-3">
+                  <Avatar
+                    src={avatarUrl}
+                    name={displayName}
+                    size={84}
+                    className="ring-4 ring-white shadow-lg"
+                  />
+                  {lv && (
+                    <span className="absolute -bottom-0 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-xl bg-slate-800 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-white shadow">
+                      <Crown size={11} />
+                      {t("dash2.lvNow", { level: lv.level })}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {lang === "en" ? "My account" : "Tài khoản của bạn"}
+                  </span>
+                  <p className="mt-1.5 text-[16px] text-slate-500">{getGreeting()}</p>
+                  <h1 className="truncate text-[30px] font-extrabold leading-tight tracking-tight text-emerald-600">
+                    {displayName}
+                  </h1>
+                </div>
               </div>
-              {lv && (
-                <Tag tone="amber">
-                  <Crown size={11} />
-                  {t("dash2.lvNow", { level: lv.level })}
-                </Tag>
-              )}
-            </div>
+
+              <button
+                type="button"
+                onClick={() => navigate("/tasks")}
+                className="mt-5 flex w-full items-center justify-between rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 py-2.5 pl-6 pr-2.5 text-[17px] font-bold text-white shadow-lg shadow-emerald-500/30 transition active:scale-[0.99]"
+              >
+                {t("dash.startTasks")}
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/25">
+                  <ListChecks size={20} />
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/invite")}
+                className="mt-3 flex w-full items-center justify-between rounded-full border border-slate-200 bg-white py-3.5 pl-5 pr-5 text-[17px] font-semibold text-slate-700 transition active:bg-slate-50"
+              >
+                <span className="flex items-center gap-3">
+                  <Users size={22} className="text-amber-500" />
+                  {t("dash.invite")}
+                </span>
+                <ArrowRight size={18} className="text-slate-400" />
+              </button>
+              <span className="absolute inset-x-10 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-sky-300 to-transparent" />
+            </section>
 
             {/* ===== SỐ DƯ ===== */}
-            <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-500 p-5 text-white shadow-[0_18px_40px_-18px_rgba(5,150,105,0.7)]">
-              <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-14 h-48 w-48 rounded-full bg-white/10" />
-              <span aria-hidden="true" className="pointer-events-none absolute -bottom-16 right-10 h-32 w-32 rounded-full bg-white/[0.07]" />
-              <p className="relative text-[13px] font-medium text-emerald-50/90 lowercase first-letter:uppercase">
+            <section className="rounded-[2rem] border border-white bg-white p-5 shadow-[0_18px_44px_-24px_rgba(6,78,59,0.45)]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-cyan-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
                 {t("dash.balance")}
-              </p>
-              <div className="relative mt-2 flex items-end gap-2.5">
-                <span className="text-[42px] font-extrabold leading-none tracking-tight tabular-nums">
+              </span>
+              <div className="mt-3 flex items-end gap-3">
+                <span className="text-[44px] font-black leading-none tracking-tight text-cyan-600 tabular-nums">
                   {fmt(profile?.coins)}
                 </span>
-                <span className="pb-1 text-sm font-semibold text-emerald-50/90">
+                <span className="pb-1.5 text-base font-bold text-slate-500">
                   {t("dash.coin")}
                 </span>
               </div>
               {earnedToday > 0 && (
-                <p className="relative mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tabular-nums">
-                  <Sparkles size={12} />+{fmt(earnedToday)} {t("dash.statCoinToday")}
-                </p>
+                <div className="mt-4 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <span className="flex items-center gap-2.5 text-[13px] font-bold uppercase tracking-wide text-amber-700">
+                    <Sparkles size={17} />
+                    {t("dash.statCoinToday")}
+                  </span>
+                  <span className="text-xl font-extrabold tabular-nums text-amber-700">
+                    +{fmt(earnedToday)}
+                  </span>
+                </div>
               )}
-              <div className="relative mt-5 grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => navigate("/tasks")}
-                  className="h-11 rounded-xl bg-white text-[14px] font-bold text-emerald-700 shadow-sm transition active:scale-[0.98]"
-                >
-                  {t("dash.startTasks")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/invite")}
-                  className="h-11 rounded-xl border border-white/40 bg-white/10 text-[14px] font-bold text-white transition active:bg-white/20"
-                >
-                  {t("dash.invite")}
-                </button>
-              </div>
             </section>
 
             {/* ===== LỐI TẮT ===== */}
@@ -301,6 +321,7 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-            }
+                }
+            
                   
               
