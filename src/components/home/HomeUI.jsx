@@ -48,32 +48,30 @@ export function Panel({
 }) {
   const tone = dark
     ? "border-[#2E2E2E] bg-[#1F1F1F]"
-    : "border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]";
+    : "border-white bg-white shadow-[0_14px_36px_-24px_rgba(6,78,59,0.45)]";
   return (
     <section
       onPointerMove={dark ? trackPointer : undefined}
-      className={`overflow-hidden rounded-xl border ${tone} ${
+      className={`overflow-hidden rounded-[1.75rem] border ${tone} ${
         lift ? "hv-card" : ""
       } ${dark ? "hv-spot" : ""} ${className}`}
     >
       {title && (
-        <div
-          className={`flex items-center justify-between gap-3 border-b px-4 py-3 ${
-            dark ? "border-[#2E2E2E]" : "border-slate-100"
-          }`}
-        >
+        <div className="flex items-center justify-between gap-3 px-5 pb-1 pt-5">
           <h2
-            className={`flex items-center gap-2 text-[13.5px] font-bold ${
-              dark ? "text-[#EDEDED]" : "text-slate-900"
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.12em] ${
+              dark
+                ? "border-white/15 bg-white/5 text-[#EDEDED]"
+                : "border-emerald-200 bg-emerald-50 text-emerald-700"
             }`}
           >
-            <span className="h-3.5 w-1 rounded-full bg-emerald-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             {title}
           </h2>
           {right}
         </div>
       )}
-      <div className={bodyClass}>{children}</div>
+      <div className={`${title ? "mt-1 " : ""}${bodyClass}`}>{children}</div>
     </section>
   );
 }
@@ -99,10 +97,10 @@ export function Shortcut({ icon: Icon, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="hv-card hv-btn-ghost flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-1 py-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition active:scale-[0.97]"
+      className="hv-card hv-btn-ghost flex flex-col items-center gap-2 rounded-2xl border border-white bg-white px-1 py-4 shadow-[0_10px_26px_-20px_rgba(6,78,59,0.5)] transition active:scale-[0.97]"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-        <Icon size={19} strokeWidth={2} />
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+        <Icon size={20} strokeWidth={2} />
       </span>
       <span className="text-center text-[11.5px] font-semibold leading-tight text-slate-800">
         {label}
@@ -140,7 +138,7 @@ export function LinkRow({ icon: Icon, title, value, onClick }) {
       onClick={onClick}
       className="hv-row flex w-full items-center gap-3 px-4 py-3 text-left active:bg-slate-50"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
         <Icon size={17} strokeWidth={2} />
       </span>
       <span className="flex-1 text-[13.5px] font-semibold text-slate-900">
@@ -203,5 +201,4 @@ export function MilestoneRow({
       </div>
     </div>
   );
-    }
-
+        }
