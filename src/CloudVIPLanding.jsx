@@ -16,25 +16,25 @@ import { useI18n } from "./i18n/index.js";
 const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
-/* ===== Giao diện: đổi màu chủ đạo ở đúng 3 biến --ac, --ac2, --soft dưới đây =====
-   Xanh dương (mặc định): #2563eb / #1d4ed8 / #eff6ff
-   Xanh lá (giống trang mẫu): #10b981 / #059669 / #ecfdf5 */
+/* ===== Màu chủ đạo: --ac, --ac2, --soft (đang dùng xanh lá giống trang Đăng nhập/Đăng ký) =====
+   Xanh lá (hiện tại):  #059669 / #047857 / #ecfdf5
+   Xanh dương (cũ):     #2563eb / #1d4ed8 / #eff6ff */
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800&family=Roboto+Mono:wght@500;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-.lp { --ac:#2563eb; --ac2:#1d4ed8; --soft:#eff6ff; font-family:'Be Vietnam Pro',sans-serif; }
+.lp { --ac:#059669; --ac2:#047857; --soft:#ecfdf5; font-family:'Be Vietnam Pro',sans-serif; }
 .lp-display { font-family:'Barlow Condensed','Be Vietnam Pro',sans-serif; font-style:italic; font-weight:800; text-transform:uppercase; letter-spacing:-.005em; line-height:1.02; }
 .lp-mono { font-family:'Roboto Mono',ui-monospace,monospace; text-transform:uppercase; letter-spacing:.14em; }
 .lp-br { position:relative; }
 .lp-br::before, .lp-br::after { content:""; position:absolute; width:10px; height:10px; border:2px solid var(--ac); pointer-events:none; }
 .lp-br::before { top:-2px; left:-2px; border-right:0; border-bottom:0; }
 .lp-br::after { bottom:-2px; right:-2px; border-left:0; border-top:0; }
-.lp-grid { background-color:#fff; background-image:linear-gradient(rgba(15,23,42,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.06) 1px,transparent 1px); background-size:28px 28px; }
-.lp-acc { color:var(--ac); }
+.lp-grid { background-color:#eaf6f2; background-image:linear-gradient(rgba(15,23,42,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.06) 1px,transparent 1px); background-size:28px 28px; }
+.lp-acc { color:var(--ac2); }
 .lp-on { border-color:var(--ac) !important; color:var(--ac) !important; background:#fff !important; }
 .lp-ico { display:flex; height:48px; width:48px; align-items:center; justify-content:center; background:var(--soft); color:var(--ac); }
 .lp-outline { color:transparent; -webkit-text-stroke:1.5px var(--ac); }
-.lp-btn { display:inline-flex; height:52px; align-items:center; justify-content:center; gap:8px; padding:0 26px; background:var(--ac); color:#fff; font-weight:700; font-size:15px; transition:background .2s, transform .2s; }
-.lp-btn:hover { background:var(--ac2); transform:translateY(-1px); }
+.lp-btn { display:inline-flex; height:52px; align-items:center; justify-content:center; gap:8px; padding:0 26px; background:linear-gradient(90deg,var(--ac),#14b8a6); color:#fff; font-weight:700; font-size:15px; transition:filter .2s, transform .2s; }
+.lp-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
 .lp-btn-o { display:inline-flex; height:52px; align-items:center; justify-content:center; gap:6px; padding:0 26px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:700; font-size:15px; transition:border-color .2s,color .2s; }
 .lp-btn-o:hover { border-color:var(--ac); color:var(--ac); }
 @keyframes lp-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
@@ -162,9 +162,9 @@ function Showcase({ c, L }) {
 const COPY = {
   vi: {
     h1a: "Kiếm Coin",
-    h1b: "Đổi quà thật dễ",
+    h1b: "Đổi thưởng dễ dàng",
     heroSub:
-      "Hoàn thành nhiệm vụ, tích lũy Coin và đổi lấy những phần quà bạn yêu thích.",
+      "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
     note: "Kiếm xu hoàn toàn miễn phí. Chuyển khoản chỉ dùng khi bạn muốn mua quà trực tiếp.",
     facts: [
@@ -356,14 +356,10 @@ export default function CloudVIPLanding() {
               </div>
               <ul className="lp-rise lp-d4 mt-7 space-y-2">
                 {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
-  <li
-    key={x}
-    className="flex items-center gap-2.5 text-[14.5px] text-slate-600"
-  >
-    <Check size={16} className="lp-acc shrink-0" />
-    {x}
-  </li>
-))}
+                  <li key={x} className="flex items-center gap-2.5 text-[14.5px] text-slate-600">
+                    <Check size={16} className="lp-acc shrink-0" /> {x}
+                  </li>
+                ))}
               </ul>
               <p className="mt-4 max-w-md text-[13px] leading-6 text-slate-500">{c.note}</p>
             </div>
@@ -431,11 +427,11 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ AN TOÀN ============ */}
+         {/* ============ AN TOÀN ============ */}
         <section id="safety" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:py-20">
           <Head n="003" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} />
           <Reveal>
-            <div className="lp-br mt-12 bg-slate-900 p-6 text-white sm:p-10">
+            <div className="lp-br mt-12 bg-[#0b2e27] p-6 text-white sm:p-10">
               <div className="grid gap-x-12 gap-y-8 sm:grid-cols-2">
                 {SAFETY.map(({ icon: Icon, t: tk, d }) => (
                   <div key={tk} className="flex gap-4">
@@ -532,7 +528,7 @@ export default function CloudVIPLanding() {
         {/* ============ KÊU GỌI CUỐI ============ */}
         <section className="mx-auto max-w-6xl px-5 pb-16 sm:pb-24">
           <Reveal>
-            <div className="lp-br relative overflow-hidden bg-slate-900 px-6 py-14 text-white sm:px-14 sm:py-20">
+            <div className="lp-br relative overflow-hidden bg-[#0b2e27] px-6 py-14 text-white sm:px-14 sm:py-20">
               <Coins className="absolute -right-6 -top-6 h-52 w-52 rotate-12 text-white/[0.05]" />
               <h2 className="lp-display relative max-w-2xl text-[40px] sm:text-6xl">{c.ctaTitle}</h2>
               <p className="relative mt-4 max-w-lg text-[16px] leading-7 text-slate-300">{t("ld.ctaSub")}</p>
@@ -553,4 +549,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-}
+                                            }
