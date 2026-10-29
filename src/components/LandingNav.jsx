@@ -22,16 +22,16 @@ const SHORT = { vi: "Đăng ký", en: "Sign up" };
 const NAV_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap');
 .nv-mono { font-family:'Roboto Mono',ui-monospace,monospace; text-transform:uppercase; letter-spacing:.14em; }
-.nv-acc { color:var(--ac,#2563eb); }
+.nv-acc { color:var(--ac,#059669); }
 .nv-br { position:relative; }
-.nv-br::before, .nv-br::after { content:""; position:absolute; width:9px; height:9px; border:2px solid var(--ac,#2563eb); pointer-events:none; }
+.nv-br::before, .nv-br::after { content:""; position:absolute; width:9px; height:9px; border:2px solid var(--ac,#059669); pointer-events:none; }
 .nv-br::before { top:-2px; left:-2px; border-right:0; border-bottom:0; }
 .nv-br::after { bottom:-2px; right:-2px; border-left:0; border-top:0; }
-.nv-btn { background:var(--ac,#2563eb); color:#fff; transition:background .2s, transform .2s; }
-.nv-btn:hover { background:var(--ac2,#1d4ed8); }
+.nv-btn { background:var(--ac,#059669); color:#fff; transition:background .2s, transform .2s; }
+.nv-btn:hover { background:var(--ac2,#047857); }
 .nv-btn:active { transform:scale(.97); }
-.nv-hov:hover { color:var(--ac,#2563eb); }
-.nv-stroke { color:transparent; -webkit-text-stroke:1.5px var(--ac,#2563eb); }
+.nv-hov:hover { color:var(--ac,#059669); }
+.nv-stroke { color:transparent; -webkit-text-stroke:1.5px var(--ac,#059669); }
 `;
 const NavStyle = () => <style>{NAV_CSS}</style>;
 
@@ -326,4 +326,4 @@ export function BackToTop() {
     </button>
   );
     }
-                         
+                  
