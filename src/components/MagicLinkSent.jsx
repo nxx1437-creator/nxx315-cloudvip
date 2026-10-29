@@ -35,13 +35,13 @@ export default function MagicLinkSent({ email, onResend, onChangeEmail }) {
       <h2 className="mt-4 text-[20px] font-extrabold text-slate-900">{x.sentTitle}</h2>
       <p className="mt-2 text-[14px] leading-6 text-slate-500">{x.sentTo}</p>
       <p className="mt-1 break-all text-[15px] font-bold text-slate-900">{email}</p>
-      <p className="mx-auto mt-4 max-w-sm rounded-2xl bg-emerald-50 px-4 py-3 text-[13px] leading-5 text-emerald-800">
+      <p className="mx-auto mt-4 max-w-sm rounded-xl bg-emerald-50 px-4 py-3 text-[13px] leading-5 text-emerald-800">
         {x.sentNote}
       </p>
       <p className="mt-3 text-[12px] text-slate-400">{x.spam}</p>
 
       {err && (
-        <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
+        <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
           {err}
         </p>
       )}
@@ -50,7 +50,7 @@ export default function MagicLinkSent({ email, onResend, onChangeEmail }) {
         type="button"
         onClick={resend}
         disabled={left > 0 || busy}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {busy ? <IconSpinner size={16} /> : null}
         {left > 0 ? x.resendIn.replace("{s}", left) : x.resend}
