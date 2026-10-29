@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   Bell,
-  Menu,
+  Globe,
   X,
   Coins,
   ShoppingBag,
@@ -18,7 +18,7 @@ import useProfile from "../hooks/useProfile.js";
 import useLevelProgress from "../hooks/useLevelProgress.js";
 import { supabase } from "../lib/supabaseClient.js";
 import Sidebar from "./Sidebar.jsx";
-import LanguageSwitcher from "./LanguageSwitcher.jsx";
+import { Avatar } from "./home/HomeUI.jsx";
 import { useI18n } from "../i18n/index.js";
 
 // label: khoá dịch; keywords: từ khoá tìm kiếm (không dấu + tiếng Anh)
@@ -33,7 +33,7 @@ const SEARCH_INDEX = [
 ];
 
 export default function TopHeader() {
-  const { t, lang } = useI18n();
+  const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
   const { session } = useSession();
   const { profile } = useProfile();
@@ -55,6 +55,12 @@ export default function TopHeader() {
     session?.user?.email?.split("@")[0] ||
     t("dash.fallbackName");
   const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl =
+    profile?.avatar_url ||
+    session?.user?.user_metadata?.avatar_url ||
+    session?.user?.user_metadata?.picture ||
+    "";
+  const [showSearch, setShowSearch] = useState(false);
 
   const q = query.trim().toLowerCase();
   const matches = q
@@ -163,82 +169,46 @@ export default function TopHeader() {
     return new Date(dateStr).toLocaleDateString(lang === "en" ? "en-US" : "vi-VN");
   };
 
+  const iconBtn =
+    "flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-white";
+
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center gap-2 px-3 py-2.5 md:max-w-5xl">
+      <header className="sticky top-0 z-30 bg-[#eefaf7]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3 md:max-w-5xl">
           <button
             onClick={() => navigate("/dashboard")}
-            className="shrink-0 text-[15px] font-black leading-none tracking-tight text-slate-900"
+            className="shrink-0 text-[22px] font-extrabold leading-none tracking-tight text-slate-900"
           >
             Nxx315 <span className="text-emerald-600">Studio</span>
           </button>
 
-          <div ref={searchRef} className="relative min-w-0 flex-1">
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400 transition focus-within:border-emerald-500">
-              <Search size={15} className="shrink-0" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setSearchOpen(true)}
-                placeholder={t("hd.searchPh")}
-                className="w-full min-w-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              />
-              {query && (
-                <button
-                  onClick={() => setQuery("")}
-                  className="shrink-0 text-slate-300"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            {searchOpen && query.trim() && (
-              <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                {matches.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-xs text-slate-400">
-                    {t("hd.noResult")}
-                  </p>
-                ) : (
-                  matches.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.path}
-                        onClick={() => handleSelectResult(item.path)}
-                        className="flex w-full items-center gap-3 px-2.5 py-2.5 text-left transition hover:bg-emerald-50"
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center bg-emerald-50 text-emerald-600">
-                          <Icon size={15} />
-                        </span>
-                        <span className="text-sm font-semibold text-slate-700">
-                          {t(item.labelKey)}
-                        </span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Nút chuông */}
-          <div ref={notifRef} className="relative shrink-0">
+          <div className="flex items-center gap-0.5">
             <button
-              onClick={() => setNotifOpen((prev) => !prev)}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white transition hover:border-emerald-500"
+              onClick={() => setShowSearch((v) => !v)}
+              aria-label="Search"
+              className={iconBtn}
             >
-              <Bell size={16} className="text-slate-600" />
-              {unreadCount > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
+              <Search size={22} />
             </button>
 
+            {/* Chuông */}
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={() => setNotifOpen((prev) => !prev)}
+                aria-label="Notifications"
+                className={`relative ${iconBtn}`}
+              >
+                <Bell size={22} />
+                {unreadCount > 0 && (
+                  <span className="absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
             {notifOpen && (
-              <div className="fixed left-3 right-3 top-[60px] z-50 mx-auto max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+              <div className="fixed left-3 right-3 top-[64px] z-50 mx-auto max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                 <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50 px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Bell size={15} className="text-emerald-700" />
@@ -310,20 +280,90 @@ export default function TopHeader() {
                 </button>
               </div>
             )}
-          </div>
+            </div>
 
-          {/* Đổi ngôn ngữ (gọn) */}
-          <div className="shrink-0">
-            <LanguageSwitcher compact />
-          </div>
+            <button
+              onClick={() => setLang(lang === "vi" ? "en" : "vi")}
+              aria-label="Language"
+              className={iconBtn}
+            >
+              <Globe size={22} />
+            </button>
 
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-50"
-          >
-            <Menu size={20} />
-          </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Menu"
+              className="ml-1.5 rounded-full"
+            >
+              <Avatar
+                src={avatarUrl}
+                name={displayName}
+                size={40}
+                className="ring-2 ring-white shadow-sm"
+              />
+            </button>
+          </div>
         </div>
+
+        {showSearch && (
+          <div ref={searchRef} className="relative mx-auto max-w-md px-4 pb-3 md:max-w-5xl">
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-400 focus-within:border-emerald-500">
+              <Search size={16} className="shrink-0" />
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                placeholder={t("hd.searchPh")}
+                className="w-full min-w-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              />
+              <button
+                onClick={() => {
+                  setQuery("");
+                  setShowSearch(false);
+                }}
+                aria-label="Close"
+                className="shrink-0 text-slate-400"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {searchOpen && query.trim() && (
+              <div className="absolute left-4 right-4 top-full -mt-1 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                {matches.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-xs text-slate-400">
+                    {t("hd.noResult")}
+                  </p>
+                ) : (
+                  matches.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.path}
+                        onClick={() => {
+                          setShowSearch(false);
+                          handleSelectResult(item.path);
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-emerald-50"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                          <Icon size={15} />
+                        </span>
+                        <span className="text-sm font-semibold text-slate-700">
+                          {t(item.labelKey)}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <Sidebar
@@ -331,10 +371,11 @@ export default function TopHeader() {
         onClose={() => setSidebarOpen(false)}
         displayName={displayName}
         initial={initial}
+        avatarUrl={avatarUrl}
         coins={profile?.coins}
         level={lv?.level ?? profile?.level}
       />
     </>
   );
-      }
+        }
       
