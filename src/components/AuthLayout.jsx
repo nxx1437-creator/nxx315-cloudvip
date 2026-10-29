@@ -8,7 +8,16 @@ const ZALO_URL = "https://zalo.me/0865245988";
 const HOME = { vi: "Về trang chủ", en: "Back to home" };
 const HELP = { vi: "Cần hỗ trợ?", en: "Need help?" };
 
-export default function AuthLayout({ title, subtitle, children, footer }) {
+export default function AuthLayout({
+  title,
+  subtitle,
+  children,
+  footer,
+  icon, // biểu tượng trong ô vuông phía trên tiêu đề
+  centered = false, // căn giữa tiêu đề
+  showHome = true, // dải "Về trang chủ" cuối thẻ
+  onBack, // nút ← góc trái
+}) {
   const { t, lang } = useI18n();
 
   return (
@@ -34,7 +43,19 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-8 pt-3">
         {/* Ngôn ngữ */}
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Back"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-700 shadow-sm transition hover:bg-white"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          ) : (
+            <span />
+          )}
           <LanguageSwitcher />
         </div>
 
@@ -63,7 +84,12 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         <div className="relative mt-5 overflow-hidden rounded-2xl border border-white bg-white/90 shadow-[0_24px_60px_-24px_rgba(6,78,59,0.35)] backdrop-blur">
           <span className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
           <div className="px-5 pb-5 pt-6">
-            <div className="mb-5">
+            <div className={`mb-5 ${centered ? "text-center" : ""}`}>
+              {icon && (
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">
+                  {icon}
+                </div>
+              )}
               <h1 className="text-[26px] font-extrabold leading-[1.15] tracking-tight text-slate-900">
                 {title}
               </h1>
@@ -79,12 +105,14 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
               {footer}
             </div>
           )}
-          <Link
-            to="/"
-            className="flex items-center justify-center gap-2 border-t border-slate-100 px-5 py-3.5 text-[13.5px] font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-emerald-700"
-          >
-            <ArrowLeft size={16} /> {HOME[lang] || HOME.vi}
-          </Link>
+          {showHome && (
+            <Link
+              to="/"
+              className="flex items-center justify-center gap-2 border-t border-slate-100 px-5 py-3.5 text-[13.5px] font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-emerald-700"
+            >
+              <ArrowLeft size={16} /> {HOME[lang] || HOME.vi}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -101,5 +129,6 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
       </p>
     </div>
   );
-        }
+              }
+
 
