@@ -9,6 +9,7 @@ import {
   Gamepad2,
   Crown,
   Video,
+  Sparkles,
 } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -30,6 +31,7 @@ import {
   ReferralCard,
 } from "../components/home/HomeLevelReferral.jsx";
 import {
+  Avatar,
   Panel,
   Tag,
   Shortcut,
@@ -74,6 +76,11 @@ export default function Dashboard() {
     user?.user_metadata?.username ||
     user?.email?.split("@")[0] ||
     t("dash.fallbackName");
+  const avatarUrl =
+    profile?.avatar_url ||
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    "";
   const todayTasksDone = profile?.tasks_completed_today || 0;
   const todayTasksTotal = 3;
   const todayTaskPct = Math.min(
@@ -83,7 +90,24 @@ export default function Dashboard() {
   const earnedToday = profile?.coins_earned_today || 0;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-[#171717]">
+    <div className="relative min-h-screen overflow-hidden bg-[#eef7f3] pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[560px]"
+        style={{
+          background:
+            "radial-gradient(420px 320px at 85% 40px,rgba(255,255,255,.7),transparent 70%),linear-gradient(180deg,#cde7dc 0,#e4f3ed 55%,#eef7f3 100%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[560px] opacity-40"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(6,78,59,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(6,78,59,.07) 1px,transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
       <style>{`
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-shimmer { background-image: linear-gradient(90deg, #f1f1f1 0%, #e6e6e6 50%, #f1f1f1 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; }
@@ -91,16 +115,24 @@ export default function Dashboard() {
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-3 px-4 py-5 md:max-w-3xl">
+      <main className="relative mx-auto max-w-md space-y-3.5 px-4 py-5 md:max-w-3xl">
         {loading && <DashboardSkeleton />}
 
         {!loading && (
           <>
-            {/* ===== TIÊU ĐỀ ===== */}
-            <div className="flex items-center justify-between gap-3 pb-1">
-              <div className="min-w-0">
-                <p className="text-xs text-[#6F6F6F]">{getGreeting()}</p>
-                <h1 className="truncate text-xl font-medium tracking-tight">
+            {/* ===== LỜI CHÀO ===== */}
+            <div className="flex items-center gap-3 pb-1">
+              <Avatar
+                src={avatarUrl}
+                name={displayName}
+                size={54}
+                className="ring-[3px] ring-white shadow-md"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-slate-500">
+                  {getGreeting()}
+                </p>
+                <h1 className="truncate text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
                   {displayName}
                 </h1>
               </div>
@@ -113,41 +145,44 @@ export default function Dashboard() {
             </div>
 
             {/* ===== SỐ DƯ ===== */}
-            <Panel>
-              <p className="text-xs text-[#6F6F6F] lowercase first-letter:uppercase">
+            <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-500 p-5 text-white shadow-[0_18px_40px_-18px_rgba(5,150,105,0.7)]">
+              <Coins
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-5 -top-5 h-36 w-36 rotate-12 text-white/10"
+              />
+              <p className="relative text-[13px] font-medium text-emerald-50/90 lowercase first-letter:uppercase">
                 {t("dash.balance")}
               </p>
-              <div className="mt-1.5 flex items-center gap-2.5">
-                <Coins size={24} strokeWidth={1.75} className="text-amber-500" />
-                <span className="text-4xl font-medium leading-none tracking-tight tabular-nums">
+              <div className="relative mt-2 flex items-end gap-2.5">
+                <span className="text-[42px] font-extrabold leading-none tracking-tight tabular-nums">
                   {fmt(profile?.coins)}
                 </span>
-                <span className="mt-2 text-xs text-[#9A9A9A]">
+                <span className="pb-1 text-sm font-semibold text-emerald-50/90">
                   {t("dash.coin")}
                 </span>
               </div>
               {earnedToday > 0 && (
-                <p className="mt-2 text-xs tabular-nums text-[#0F7A4D]">
-                  +{fmt(earnedToday)} {t("dash.statCoinToday")}
+                <p className="relative mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tabular-nums">
+                  <Sparkles size={12} />+{fmt(earnedToday)} {t("dash.statCoinToday")}
                 </p>
               )}
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="relative mt-5 grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => navigate("/tasks")}
-                  className="h-10 rounded-md border border-[#24B47E] bg-[#3ECF8E] text-[13px] font-medium text-[#0B1F17] transition active:scale-[0.98]"
+                  className="h-11 rounded-xl bg-white text-[14px] font-bold text-emerald-700 shadow-sm transition active:scale-[0.98]"
                 >
                   {t("dash.startTasks")}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate("/invite")}
-                  className="h-10 rounded-md border border-[#D4D4D4] bg-white text-[13px] font-medium text-[#171717] transition active:bg-[#F4F4F4]"
+                  className="h-11 rounded-xl border border-white/40 bg-white/10 text-[14px] font-bold text-white transition active:bg-white/20"
                 >
                   {t("dash.invite")}
                 </button>
               </div>
-            </Panel>
+            </section>
 
             {/* ===== LỐI TẮT ===== */}
             <div className="grid grid-cols-4 gap-2.5">
@@ -190,13 +225,13 @@ export default function Dashboard() {
             <Panel
               title={t("dash2.todayTitle")}
               right={
-                <span className="text-xs tabular-nums text-[#6F6F6F]">
+                <span className="text-xs font-semibold tabular-nums text-slate-500">
                   {todayTasksDone}/{todayTasksTotal}
                 </span>
               }
             >
               <ProgressBar pct={todayTaskPct} />
-              <div className="mt-4 grid grid-cols-3 divide-x divide-[#E6E6E6]">
+              <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100">
                 <Stat
                   value={`${profile?.streak_days || 0} ${t("dash.days")}`}
                   label={t("dash.streak")}
@@ -215,9 +250,9 @@ export default function Dashboard() {
             {/* ===== MỐC THƯỞNG ===== */}
             <Panel
               title={t("dash.milestoneTitle")}
-              bodyClass="divide-y divide-[#E6E6E6]"
+              bodyClass="divide-y divide-slate-100"
               right={
-                <span className="text-[11px] text-[#9A9A9A]">
+                <span className="text-[11px] text-slate-400">
                   {t("dash.done", { n: todayTasksDone })}
                 </span>
               }
@@ -236,17 +271,17 @@ export default function Dashboard() {
               ))}
             </Panel>
 
-            {/* ===== MINI GAME ===== */}
-            <Panel bodyClass="">
+            {/* ===== KHÁM PHÁ ===== */}
+            <Panel
+              title={lang === "en" ? "Explore" : "Khám phá"}
+              bodyClass="divide-y divide-slate-100"
+            >
               <LinkRow
                 icon={Gamepad2}
                 title={t("dash.minigame")}
                 value={t("dash.turns", { n: profile?.game_tickets || 0 })}
                 onClick={() => navigate("/minigames")}
               />
-            </Panel>
-            {/* ===== VIDEO GIỚI THIỆU ===== */}
-            <Panel bodyClass="">
               <LinkRow
                 icon={Video}
                 title={lang === "en" ? "Intro videos" : "Video giới thiệu"}
@@ -268,4 +303,5 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-              }
+            }
+              
