@@ -8,7 +8,6 @@ import {
   Gamepad2,
   Crown,
   Video,
-  Sparkles,
   Users,
   ListChecks,
   ArrowRight,
@@ -123,17 +122,17 @@ export default function Dashboard() {
         {!loading && (
           <>
             {/* ===== THẺ CHÀO ===== */}
-            <section className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-[0_18px_44px_-24px_rgba(6,78,59,0.45)]">
+            <section className="relative overflow-hidden rounded-[2rem] border border-emerald-100 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0 pb-3">
                   <Avatar
                     src={avatarUrl}
                     name={displayName}
                     size={84}
-                    className="ring-4 ring-white shadow-lg"
+                    className="bg-emerald-50 ring-4 ring-emerald-100"
                   />
                   {lv && (
-                    <span className="absolute -bottom-0 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-xl bg-slate-800 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-white shadow">
+                    <span className="absolute -bottom-0 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-xl bg-slate-800 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-white">
                       <Crown size={11} />
                       {t("dash2.lvNow", { level: lv.level })}
                     </span>
@@ -142,7 +141,7 @@ export default function Dashboard() {
                 <div className="min-w-0 flex-1">
                   <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-700">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {lang === "en" ? "My account" : "Tài khoản của bạn"}
+                    {t("dash.streak")}: {profile?.streak_days || 0} {t("dash.days")}
                   </span>
                   <p className="mt-1.5 text-[16px] text-slate-500">{getGreeting()}</p>
                   <h1 className="truncate text-[30px] font-extrabold leading-tight tracking-tight text-emerald-600">
@@ -154,7 +153,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => navigate("/tasks")}
-                className="mt-5 flex w-full items-center justify-between rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 py-2.5 pl-6 pr-2.5 text-[17px] font-bold text-white shadow-lg shadow-emerald-500/30 transition active:scale-[0.99]"
+                className="mt-5 flex w-full items-center justify-between rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 py-2.5 pl-6 pr-2.5 text-[17px] font-bold text-white transition active:scale-[0.99]"
               >
                 {t("dash.startTasks")}
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/25">
@@ -175,12 +174,21 @@ export default function Dashboard() {
               <span className="absolute inset-x-10 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-sky-300 to-transparent" />
             </section>
 
-            {/* ===== SỐ DƯ ===== */}
-            <section className="rounded-[2rem] border border-white bg-white p-5 shadow-[0_18px_44px_-24px_rgba(6,78,59,0.45)]">
-              <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-cyan-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                {t("dash.balance")}
-              </span>
+            {/* ===== SỐ DƯ + HÔM NAY ===== */}
+            <section className="rounded-[2rem] border border-emerald-100 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
+              <div className="flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-cyan-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                  {t("dash.balance")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => navigate("/wallet")}
+                  className="inline-flex items-center gap-1 text-[12.5px] font-bold text-emerald-700"
+                >
+                  {lang === "en" ? "Wallet" : "Ví"} <ArrowRight size={13} />
+                </button>
+              </div>
               <div className="mt-3 flex items-end gap-3">
                 <span className="text-[44px] font-black leading-none tracking-tight text-cyan-600 tabular-nums">
                   {fmt(profile?.coins)}
@@ -189,17 +197,30 @@ export default function Dashboard() {
                   {t("dash.coin")}
                 </span>
               </div>
-              {earnedToday > 0 && (
-                <div className="mt-4 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <span className="flex items-center gap-2.5 text-[13px] font-bold uppercase tracking-wide text-amber-700">
-                    <Sparkles size={17} />
-                    {t("dash.statCoinToday")}
-                  </span>
-                  <span className="text-xl font-extrabold tabular-nums text-amber-700">
-                    +{fmt(earnedToday)}
+
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <div className="mb-2 flex items-center justify-between text-[12.5px] font-semibold text-slate-600">
+                  <span>{t("dash2.todayTitle")}</span>
+                  <span className="tabular-nums text-slate-500">
+                    {todayTasksDone}/{todayTasksTotal}
                   </span>
                 </div>
-              )}
+                <ProgressBar pct={todayTaskPct} />
+                <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100">
+                  <Stat
+                    value={`${profile?.streak_days || 0} ${t("dash.days")}`}
+                    label={t("dash.streak")}
+                  />
+                  <Stat
+                    value={`+${fmt(earnedToday)}`}
+                    label={t("dash.statCoinToday")}
+                  />
+                  <Stat
+                    value={profile?.referrals_count || 0}
+                    label={t("dash.statInvited")}
+                  />
+                </div>
+              </div>
             </section>
 
             {/* ===== LỐI TẮT ===== */}
@@ -238,32 +259,6 @@ export default function Dashboard() {
 
             <AnnouncementsCard />
             <HomeTutorial />
-
-            {/* ===== HÔM NAY ===== */}
-            <Panel
-              title={t("dash2.todayTitle")}
-              right={
-                <span className="text-xs font-semibold tabular-nums text-slate-500">
-                  {todayTasksDone}/{todayTasksTotal}
-                </span>
-              }
-            >
-              <ProgressBar pct={todayTaskPct} />
-              <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100">
-                <Stat
-                  value={`${profile?.streak_days || 0} ${t("dash.days")}`}
-                  label={t("dash.streak")}
-                />
-                <Stat
-                  value={fmt(earnedToday)}
-                  label={t("dash.statCoinToday")}
-                />
-                <Stat
-                  value={profile?.referrals_count || 0}
-                  label={t("dash.statInvited")}
-                />
-              </div>
-            </Panel>
 
             {/* ===== MỐC THƯỞNG ===== */}
             <Panel
@@ -321,7 +316,5 @@ export default function Dashboard() {
       <BottomNav />
     </div>
   );
-                }
-            
-                  
+              }
               
