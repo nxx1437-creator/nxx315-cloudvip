@@ -60,7 +60,7 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         </div>
 
         {/* Thẻ */}
-        <div className="relative mt-5 overflow-hidden rounded-3xl border border-white bg-white/90 shadow-[0_24px_60px_-24px_rgba(6,78,59,0.35)] backdrop-blur">
+        <div className="relative mt-5 overflow-hidden rounded-2xl border border-white bg-white/90 shadow-[0_24px_60px_-24px_rgba(6,78,59,0.35)] backdrop-blur">
           <span className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
           <div className="px-5 pb-5 pt-6">
             <div className="mb-5">
@@ -101,4 +101,5 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
       </p>
     </div>
   );
-}
+        }
+
