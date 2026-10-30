@@ -64,8 +64,8 @@ function Chip({ active, onClick, icon: Icon, children, count }) {
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
         active
-          ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-md shadow-sky-500/30"
-          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          ? "bg-gradient-to-r from-emerald-500 to-emerald-400 text-white"
+          : "border border-emerald-100 bg-white text-slate-600 hover:bg-emerald-50"
       }`}
     >
       <Icon size={13} />
@@ -368,7 +368,15 @@ export default function Tasks() {
   if (ipBlocked) return <IpBlockedScreen reason={ipBlocked.reason} />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white pb-24 font-[Be_Vietnam_Pro]">
+    <div className="relative min-h-screen overflow-hidden bg-[#eefaf7] pb-32 font-[Be_Vietnam_Pro]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
+        style={{
+          background:
+            "radial-gradient(420px 320px at 85% 40px,rgba(255,255,255,.7),transparent 70%),linear-gradient(180deg,#d6f0e9 0,#e6f6f2 50%,#eefaf7 100%)",
+        }}
+      />
       {toast && (
         <div
           className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border px-4 py-3 shadow-xl ${
@@ -413,9 +421,9 @@ export default function Tasks() {
 
       {isLoading && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/20 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-xs rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
-              <Loader2 size={26} className="animate-spin text-sky-500" />
+          <div className="w-full max-w-xs rounded-[2rem] bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+              <Loader2 size={26} className="animate-spin text-emerald-500" />
             </div>
             <h3 className="mt-4 text-base font-bold text-slate-900">
               {t("tk.m.creating")}
@@ -429,10 +437,10 @@ export default function Tasks() {
 
       <TopHeader />
 
-      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-5xl">
+      <main className="relative mx-auto max-w-md space-y-4 px-4 py-3 md:max-w-5xl">
         {/* Đầu trang gọn */}
-        <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-100 via-sky-50 to-white p-4">
-          <h1 className="text-xl font-bold leading-tight text-slate-900">
+        <div className="rounded-[2rem] border border-emerald-100 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
+          <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-slate-900">
             {t("tk.title")}
           </h1>
           <p className="mt-0.5 text-sm text-slate-500">
@@ -448,9 +456,9 @@ export default function Tasks() {
                 {t("tk.plays", { done: totalDone, total: totalLimit })}
               </span>
             </div>
-            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-white">
+            <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all"
                 style={{ width: `${overallPct}%` }}
               />
             </div>
@@ -486,28 +494,28 @@ export default function Tasks() {
             </div>
           )}
 
-          <div className="mt-3 grid grid-cols-4 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2">
             <StatPill
               value={availableCount}
               label={t("tk.stAvail")}
               icon={Zap}
-              bg="bg-sky-100/70"
-              valueColor="text-sky-700"
-              iconColor="text-sky-500"
+              bg="bg-emerald-50"
+              valueColor="text-emerald-700"
+              iconColor="text-emerald-500"
             />
             <StatPill
               value={profile.tasks_completed_today || 0}
               label={t("tk.stDone")}
               icon={Trophy}
-              bg="bg-emerald-100/60"
-              valueColor="text-emerald-700"
-              iconColor="text-emerald-500"
+              bg="bg-cyan-50"
+              valueColor="text-cyan-700"
+              iconColor="text-cyan-500"
             />
             <StatPill
               value={profile.coins_earned_today || 0}
               label={t("tk.stCoin")}
               icon={Coins}
-              bg="bg-amber-100/60"
+              bg="bg-amber-50"
               valueColor="text-amber-700"
               iconColor="text-amber-500"
             />
@@ -527,7 +535,7 @@ export default function Tasks() {
 
         {/* Tìm kiếm + Tab */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-3">
             <Search size={16} className="shrink-0 text-slate-400" />
             <input
               value={query}
@@ -567,7 +575,7 @@ export default function Tasks() {
                 className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
                   onlyAvail
                     ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : "border-slate-200 bg-white text-slate-500"
+                    : "border-emerald-100 bg-white text-slate-500"
                 }`}
               >
                 {t("tk.onlyAvail")}
@@ -600,7 +608,7 @@ export default function Tasks() {
               />
             )}
 
-            {!loading && filteredTasks.length > 0 && (
+             {!loading && filteredTasks.length > 0 && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredTasks.map((task) => (
                   <TaskCard
@@ -630,4 +638,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-          }
+}
