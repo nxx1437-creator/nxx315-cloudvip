@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Flame, Trophy, Sparkles, Check } from "lucide-react";
@@ -161,7 +162,9 @@ export default function NotificationBell() {
                       <p className={`text-sm ${!notif.is_read ? "font-bold text-slate-900" : "font-semibold text-slate-700"}`}>
                         {notif.title}
                       </p>
-                      <p className="mt-0.5 text-xs leading-5 text-slate-500">{notif.body}</p>
+                      <p className="mt-0.5 whitespace-pre-line break-words text-xs leading-5 text-slate-500">
+                        {notif.body}
+                      </p>
                       <p className="mt-1 text-[10px] text-slate-400">{formatTime(notif.created_at)}</p>
                     </div>
                     {!notif.is_read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-500" />}
@@ -174,4 +177,4 @@ export default function NotificationBell() {
       )}
     </div>
   );
-      }
+}
