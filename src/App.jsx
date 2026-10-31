@@ -50,6 +50,7 @@ const FreeFire = lazy(() => import("./pages/FreeFire.jsx"));
 const PubgMobile = lazy(() => import("./pages/PubgMobile.jsx"));
 const FcMobile = lazy(() => import("./pages/FcMobile.jsx"));
 const Valorant = lazy(() => import("./pages/Valorant.jsx"));
+const CloudPhone = lazy(() => import("./pages/CloudPhone.jsx"));
 
 // Khác
 const ShopEarn = lazy(() => import("./pages/ShopEarn.jsx"));
@@ -130,6 +131,7 @@ export default function App() {
             <Route path="/store/pubg-mobile" element={<ProtectedRoute><PubgMobile /></ProtectedRoute>} />
             <Route path="/store/fc-mobile" element={<ProtectedRoute><FcMobile /></ProtectedRoute>} />
             <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
+            <Route path="/store/cloud-phone" element={<ProtectedRoute><CloudPhone /></ProtectedRoute>} />
 
             <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
             <Route path="/link-history" element={<LinkHistory />} />
