@@ -259,48 +259,67 @@ export default function CloudPhone() {
     </div>
   );
 }
+  const CHIPS = [
+  { icon: Cloud, text: "Treo 24/24" },
+  { icon: Layers, text: "Không tốn pin, data" },
+  { icon: Gamepad2, text: "Nhiều game Android" },
+];
+
+const SPEC_ROW = [
+  { icon: Cpu, label: "CPU", value: "8 nhân" },
+  { icon: HardDrive, label: "RAM", value: "5.4GB" },
+  { icon: Smartphone, label: "Android", value: "13" },
+  { icon: Globe, label: "Khu vực", value: REGION_LABEL },
+];
+
 function Hero({ onBack }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm">
-      <div className="relative bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 px-5 pb-6 pt-14">
+    <div className="rounded-3xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 p-4 text-white shadow-lg shadow-sky-500/20">
+      <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl border border-white/60 bg-white/90 text-slate-700 shadow-md backdrop-blur-md transition hover:bg-white"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
         >
           <ArrowLeft size={18} />
         </button>
 
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white shadow-lg backdrop-blur">
-            <Smartphone size={30} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1">
+            <Zap size={11} className="fill-yellow-300 text-yellow-300" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-sky-100">
+              Cloud Phone
+            </span>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <Zap size={12} className="fill-yellow-300 text-yellow-300" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-sky-100">
-                Cloud Phone
-              </span>
-            </div>
-            <h1 className="mt-0.5 text-xl font-black text-white sm:text-2xl">
-              Điện thoại đám mây của riêng bạn
-            </h1>
-          </div>
+          <h1 className="text-lg font-black leading-tight">
+            Điện thoại đám mây của bạn
+          </h1>
+        </div>
+
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+          <Smartphone size={24} />
         </div>
       </div>
 
-      <div className="space-y-2 p-4">
-        {FEATURES.map((f) => (
-          <div
-            key={f.text}
-            className="flex items-center gap-3 rounded-xl border border-sky-100 bg-sky-50/60 px-3 py-2.5"
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {CHIPS.map((c) => (
+          <span
+            key={c.text}
+            className="flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold backdrop-blur"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500 text-white">
-              <f.icon size={15} />
-            </div>
-            <span className="text-sm font-semibold text-slate-700">{f.text}</span>
-          </div>
+            <c.icon size={12} />
+            {c.text}
+          </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+function SectionTitle({ icon: Icon, text }) {
+  return (
+    <div className="mb-2.5 flex items-center gap-2">
+      <Icon size={16} className="text-sky-500" />
+      <p className="text-sm font-black text-slate-900">{text}</p>
     </div>
   );
 }
@@ -321,102 +340,94 @@ function BuyForm({
   const canBuy = !soldOut && !!pkg && agreed && account.trim() && !busy;
 
   return (
-    <div className="space-y-4">
-      {/* Cấu hình máy */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="mb-3 text-sm font-black text-slate-900">Cấu hình máy</p>
-        <div className="grid grid-cols-2 gap-2">
-          {SPECS.map((s) => (
+    <div className="space-y-3">
+      <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+        {/* Cấu hình */}
+        <div className="grid grid-cols-4 gap-2">
+          {SPEC_ROW.map((s) => (
             <div
               key={s.label}
-              className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2.5"
+              className="flex flex-col items-center rounded-2xl bg-sky-50/70 px-1 py-2.5 text-center"
             >
-              <s.icon size={16} className="shrink-0 text-sky-500" />
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase text-slate-400">
-                  {s.label}
-                </p>
-                <p className="truncate text-sm font-bold text-slate-800">{s.value}</p>
-              </div>
+              <s.icon size={16} className="text-sky-500" />
+              <p className="mt-1 text-[13px] font-black leading-tight text-slate-800">
+                {s.value}
+              </p>
+              <p className="text-[10px] font-semibold text-slate-400">{s.label}</p>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Combo */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center gap-2">
-          <Clock size={16} className="text-sky-500" />
-          <p className="text-sm font-black text-slate-900">Chọn thời hạn</p>
+        {/* Thời hạn */}
+        <div>
+          <SectionTitle icon={Clock} text="Chọn thời hạn" />
+          {soldOut ? (
+            <p className="rounded-2xl bg-slate-100 py-4 text-center text-sm font-bold text-slate-400">
+              Đang chờ hàng về
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              {pkgs.map((p) => {
+                const on = p.id === selectedId;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedId(p.id)}
+                    className={`relative rounded-2xl p-3.5 text-left transition ${
+                      on
+                        ? "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                        : "bg-slate-50 text-slate-800 ring-1 ring-slate-200 hover:ring-sky-300"
+                    }`}
+                  >
+                    {on && (
+                      <CheckCircle2
+                        size={16}
+                        className="absolute right-2.5 top-2.5 text-white"
+                      />
+                    )}
+                    <p className="text-xl font-black leading-none">
+                      {hoursLabel(p.duration_hours)}
+                    </p>
+                    <p
+                      className={`mt-2 flex items-center gap-1 text-sm font-bold ${
+                        on ? "text-yellow-200" : "text-amber-600"
+                      }`}
+                    >
+                      <Coins size={14} />
+                      {fmt(p.price_coins)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {soldOut ? (
-          <p className="rounded-xl bg-slate-100 py-4 text-center text-sm font-bold text-slate-400">
-            Đang chờ hàng về
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {pkgs.map((p) => {
-              const on = p.id === selectedId;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedId(p.id)}
-                  className={`relative rounded-2xl border-2 p-3 text-center transition ${
-                    on
-                      ? "-translate-y-0.5 border-sky-500 bg-sky-50 shadow-lg shadow-sky-200/60"
-                      : "border-slate-200 bg-white hover:border-sky-300"
-                  }`}
-                >
-                  {on && (
-                    <CheckCircle2
-                      size={16}
-                      className="absolute right-2 top-2 text-sky-500"
-                    />
-                  )}
-                  <p className="text-lg font-black text-slate-900">
-                    {hoursLabel(p.duration_hours)}
-                  </p>
-                  <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-amber-600">
-                    <Coins size={13} />
-                    {fmt(p.price_coins)}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Email VMOS */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="mb-2 flex items-center gap-2">
-          <Mail size={16} className="text-sky-500" />
-          <p className="text-sm font-black text-slate-900">Email tài khoản VMOS Cloud</p>
-        </div>
-        <input
-          type="email"
-          inputMode="email"
-          autoCapitalize="none"
-          value={account}
-          onChange={(e) => setAccount(e.target.value)}
-          placeholder="ten@gmail.com"
-          className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-sky-400 focus:bg-white"
-        />
-        <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <AlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-600" />
-          <p className="text-xs leading-5 text-amber-800">
-            Máy được chuyển thẳng vào tài khoản này. Nhập sai email sẽ không lấy lại
-            được máy và không hoàn Coin. Chưa có tài khoản?{" "}
-            <a
-              href={VMOS_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="font-bold underline"
-            >
-              Tải app VMOS Cloud và đăng ký
-            </a>
-            .
+        {/* Email VMOS */}
+        <div>
+          <SectionTitle icon={Mail} text="Email tài khoản VMOS Cloud" />
+          <input
+            type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            value={account}
+            onChange={(e) => setAccount(e.target.value)}
+            placeholder="ten@gmail.com"
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-sky-400 focus:bg-white"
+          />
+          <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-4 text-amber-700">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+            <span>
+              Máy chuyển thẳng vào tài khoản này, nhập sai sẽ không lấy lại được.{" "}
+              <a
+                href={VMOS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold underline"
+              >
+                Chưa có tài khoản?
+              </a>
+            </span>
           </p>
         </div>
       </div>
@@ -452,7 +463,7 @@ function ActiveCard({ order, busy, onRetry }) {
 
   if (delivered) {
     return (
-      <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+      <div className="space-y-3 rounded-3xl border border-emerald-200 bg-emerald-50 p-4">
         <div className="flex items-center gap-2">
           <CheckCircle2 size={20} className="text-emerald-600" />
           <p className="text-base font-black text-emerald-900">Máy đã được giao</p>
@@ -464,7 +475,7 @@ function ActiveCard({ order, busy, onRetry }) {
         <p className="text-sm text-emerald-900">
           Hết hạn: <span className="font-bold">{fmtDate(order.expires_at)}</span>
         </p>
-        <div className="rounded-xl bg-white p-3 text-xs leading-5 text-slate-600">
+        <div className="rounded-2xl bg-white p-3 text-xs leading-5 text-slate-600">
           Mở app VMOS Cloud, đăng nhập bằng email trên rồi vào danh sách máy để
           dùng. Máy hết hạn sẽ tự dừng.
         </div>
@@ -473,7 +484,7 @@ function ActiveCard({ order, busy, onRetry }) {
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-sky-200 bg-white p-4 shadow-sm">
+    <div className="space-y-3 rounded-3xl border border-sky-200 bg-white p-4 shadow-sm">
       <div className="flex items-center gap-2">
         {stuck || transferFail ? (
           <AlertTriangle size={20} className="text-amber-500" />
@@ -504,7 +515,7 @@ function ActiveCard({ order, busy, onRetry }) {
           autoCapitalize="none"
           value={acc}
           onChange={(e) => setAcc(e.target.value)}
-          className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-sky-400 focus:bg-white"
+          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-sky-400 focus:bg-white"
         />
       )}
 
@@ -512,7 +523,7 @@ function ActiveCard({ order, busy, onRetry }) {
         <button
           onClick={() => onRetry(order, transferFail ? acc : undefined)}
           disabled={busy || order.status === "fulfilling"}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 text-sm font-bold text-white transition hover:bg-sky-600 disabled:opacity-40"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 text-sm font-bold text-white transition hover:bg-sky-600 disabled:opacity-40"
         >
           {busy ? (
             <Loader2 size={16} className="animate-spin" />
@@ -528,19 +539,15 @@ function ActiveCard({ order, busy, onRetry }) {
 
 function BalanceBar({ coins, onEarn }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-4">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-white">
-          <Coins size={17} />
-        </div>
-        <div>
-          <p className="text-[11px] font-semibold text-amber-700">Số dư Coin</p>
-          <p className="text-lg font-black text-slate-900">{fmt(coins)}</p>
-        </div>
+    <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-amber-100">
+      <div className="flex items-center gap-2">
+        <Coins size={18} className="text-amber-500" />
+        <span className="text-sm text-slate-500">Số dư</span>
+        <span className="text-base font-black text-slate-900">{fmt(coins)}</span>
       </div>
       <button
         onClick={onEarn}
-        className="flex items-center gap-1 text-sm font-bold text-sky-600"
+        className="flex items-center gap-0.5 text-sm font-bold text-sky-600"
       >
         Kiếm thêm Coin
         <ChevronRight size={16} />
@@ -559,18 +566,15 @@ const STATUS_LABEL = {
 function OrderList({ orders }) {
   if (!orders.length) return null;
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
-        <ShieldCheck size={16} className="text-sky-500" />
-        <p className="text-sm font-black text-slate-900">Lịch sử thuê máy</p>
-      </div>
+    <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+      <SectionTitle icon={ShieldCheck} text="Lịch sử thuê máy" />
       <div className="space-y-2">
         {orders.map((o) => {
           const st = STATUS_LABEL[o.status] || STATUS_LABEL.paid;
           return (
             <div
               key={o.id}
-              className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5"
+              className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2.5"
             >
               <div className="min-w-0">
                 <p className="text-sm font-bold text-slate-800">
@@ -591,4 +595,4 @@ function OrderList({ orders }) {
       </div>
     </div>
   );
-                }
+              }
