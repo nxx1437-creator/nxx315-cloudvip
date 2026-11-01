@@ -1,51 +1,45 @@
 import React from "react";
-import { Coins } from "lucide-react";
-import { GRAD } from "./cpUi.jsx";
+import { Check, Coins } from "lucide-react";
 import { fmt, hoursLabel } from "./cpUtils.js";
 
 // Thẻ chọn thời hạn thuê. p có thêm original / discountPct (xem withDiscount)
-export default function ComboCard({ p, on, onSelect }) {
+export default function ComboCard({ p, on, onSelect, hot }) {
   const hasDiscount = p.discountPct > 0;
   return (
     <button
       onClick={onSelect}
-      className={`relative overflow-hidden rounded-2xl bg-white text-center transition active:scale-[0.98] ${
-        on ? "ring-2 ring-emerald-500" : "ring-1 ring-slate-200"
+      className={`relative min-h-[132px] rounded-2xl border-2 p-4 text-left transition active:scale-[0.98] ${
+        on ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-white"
       }`}
     >
-      {hasDiscount && (
-        <span className="absolute right-0 top-0 z-10 rounded-bl-xl bg-rose-500 px-2 py-1 font-mono text-[11px] font-bold text-white">
-          {p.discountPct}% OFF
+      {hot && (
+        <span className="absolute -top-2.5 right-3 rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-black text-white">
+          HOT
         </span>
       )}
-      <div
-        className={`flex h-24 items-center justify-center text-2xl font-black ${
-          on ? "bg-emerald-50 text-emerald-700" : "bg-white text-slate-900"
-        }`}
-      >
+      <p className="font-mono text-[11.5px] font-bold uppercase tracking-wider text-slate-400">
         {hoursLabel(p.duration_hours)}
-      </div>
-      <div
-        className={`flex h-14 flex-col items-center justify-center text-lg font-black ${
-          on
-            ? `bg-gradient-to-r ${GRAD} text-white`
-            : "bg-slate-100 text-amber-600"
-        }`}
-      >
-        <span className="flex items-center gap-1.5 leading-none">
-          <Coins size={17} />
-          {fmt(p.price_coins)}
+      </p>
+      <p className="mt-2 flex items-center gap-1.5 text-[22px] font-black leading-none text-slate-900">
+        <Coins size={18} className="text-amber-500" />
+        {fmt(p.price_coins)}
+      </p>
+      {hasDiscount ? (
+        <>
+          <p className="mt-2 text-[12.5px] font-bold text-emerald-700">
+            Tiết kiệm {p.discountPct}%
+          </p>
+          <p className="text-[11.5px] text-slate-400 line-through">{fmt(p.original)}</p>
+        </>
+      ) : (
+        <p className="mt-2 text-[12.5px] text-slate-400">Giá gốc</p>
+      )}
+      {on && (
+        <span className="absolute bottom-3 right-3 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <Check size={15} strokeWidth={3} />
         </span>
-        {hasDiscount && (
-          <span
-            className={`mt-1 text-[11px] font-semibold leading-none line-through ${
-              on ? "text-white/70" : "text-slate-400"
-            }`}
-          >
-            {fmt(p.original)}
-          </span>
-        )}
-      </div>
+      )}
     </button>
   );
 }
+
