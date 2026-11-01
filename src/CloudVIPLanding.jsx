@@ -187,8 +187,8 @@ function Showcase({ c, L }) {
 // Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
 const COPY = {
   vi: {
-    h1a: "Làm",
-    h1b: "Nhận",
+    h1a: "Làm nhiệm vụ",
+    h1b: "Nhận Coin ngay",
     heroSub:
       "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
