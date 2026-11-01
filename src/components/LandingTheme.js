@@ -78,35 +78,33 @@ export const CSS = `
 .lp-cta:active { transform:scale(.97); }
 @media (hover:hover){ .lp-cta:hover { opacity:.9; } }
 
-/* --- MEDIA ĐẦU TRANG (Hiệu ứng trượt lên + Giữ nguyên GIF) --- */
+/* --- MEDIA ĐẦU TRANG (Hiệu ứng trượt lên + Tan vào nền) --- */
 .lp-hero-media {
   position: absolute; left: 50%; top: 50%;
-  width: 100%; max-width: 1000px; height: 100%; max-height: 80vh;
-  /* Kết hợp translate cho parallax */
+  width: 100%; max-width: 1000px; aspect-ratio: 16/9;
   transform: translate3d(-50%, calc(-50% + var(--py, 0px)), 0) scale(var(--ps, 1));
   opacity: var(--po, 1); will-change: transform, opacity; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
   
-  /* Hiệu ứng trượt lên khi load */
+  /* Hiệu ứng trượt lên khi mới load */
   animation: heroSlideUp 1.4s cubic-bezier(.22,1,.36,1) both;
 }
 
 @keyframes heroSlideUp {
-  0% { opacity: 0; transform: translate3d(-50%, -20%, 0) scale(0.95); }
+  0% { opacity: 0; transform: translate3d(-50%, -10%, 0) scale(0.95); }
   100% { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
 }
 
 @media (min-width: 900px) {
-  .lp-hero-media { left: 62%; top: 45%; width: 90vw; max-width: 1200px; }
+  .lp-hero-media { left: 62%; top: 50%; width: 90vw; max-width: 1100px; }
 }
 
-.lp-hero-video,
-.lp-hero-media > img {
-  width: auto; height: auto;
-  max-width: 100%; max-height: 100%;
-  object-fit: contain; /* Hiển thị trọn vẹn ảnh */
-  display: block;
-  filter: drop-shadow(0 20px 40px rgba(0, 113, 227, 0.15)); /* Bóng mờ xanh nhẹ cho nổi bật */
+/* Ảnh/Video: Tan dần vào nền */
+.lp-hero-video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: saturate(1.15);
+  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
 }
 
 .lp-hero-fallback { background:radial-gradient(closest-side,rgba(0,113,227,.35),transparent); }
