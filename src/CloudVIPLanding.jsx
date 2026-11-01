@@ -16,76 +16,91 @@ import { useI18n } from "./i18n/index.js";
 const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
-/* ===== Wise design tokens =====
-   Forest Ink #163300 · Lime #9fe870 · Spruce #054d28 · Linen Mist #e2f6d5
-   Fog #e8ebe6 · Charcoal #454745 · Obsidian #0e0f0c · Pebble #868685 */
+/* ===== Analogue design tokens =====
+   Carbon #000000 · Bone #ffffff · Ash #e5e7eb · Smoke #bfbfbf · Iron #999999
+   Monochrome only. Max weight 500. Cards 17.6px. Pills 9999px. */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap');
 .lp {
-  --ink:#163300; --lime:#9fe870; --spruce:#054d28; --mist:#e2f6d5;
-  --fog:#e8ebe6; --charcoal:#454745; --obsidian:#0e0f0c; --pebble:#868685;
-  --slate:#6a6c6a; --paper:#ffffff;
-  font-family:'Inter',ui-sans-serif,system-ui,sans-serif;
-  color:var(--charcoal);
+  --carbon:#000000; --bone:#ffffff; --ash:#e5e7eb;
+  --smoke:#bfbfbf; --iron:#999999;
+  --font:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  font-family:var(--font);
+  font-feature-settings:"ss08" on, "calt" on;
+  color:var(--bone);
+  background:var(--carbon);
   -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.02em;
 }
-/* Display: Inter Black 900, tracking cực âm */
+/* Display: weight 450/500, tracking cực âm khi size lớn */
 .lp-display {
-  font-family:'Inter',sans-serif;
-  font-weight:900;
-  letter-spacing:-0.04em;
-  line-height:0.92;
-  color:var(--obsidian);
+  font-weight:450;
+  letter-spacing:-0.05em;
+  line-height:1.0;
+  color:var(--bone);
 }
-.lp-display-xl { font-size:clamp(48px,8vw,104px); letter-spacing:-0.045em; line-height:0.86; }
+.lp-display-xl {
+  font-size:clamp(40px,7vw,76px);
+  letter-spacing:-0.06em;
+  line-height:0.85;
+  font-weight:450;
+}
 .lp-mono {
   font-family:'Roboto Mono',ui-monospace,monospace;
-  text-transform:uppercase; letter-spacing:.16em; font-weight:700;
+  text-transform:uppercase; letter-spacing:.14em; font-weight:400;
 }
-/* Góc cắt hairline thay cho khung xanh cũ */
+/* Hairline corner — thay cho khung xanh */
 .lp-br { position:relative; }
 .lp-br::before, .lp-br::after {
   content:""; position:absolute; width:8px; height:8px;
-  border:1.5px solid var(--ink); pointer-events:none; opacity:.55;
+  border:1px solid rgba(229,231,235,0.35); pointer-events:none;
 }
 .lp-br::before { top:-1px; left:-1px; border-right:0; border-bottom:0; }
 .lp-br::after { bottom:-1px; right:-1px; border-left:0; border-top:0; }
 
-.lp-acc { color:var(--ink); }
+.lp-acc { color:var(--bone); }
+.lp-muted { color:var(--iron); }
+.lp-mid { color:var(--smoke); }
+
 .lp-ico {
   display:flex; height:48px; width:48px; align-items:center; justify-content:center;
-  background:var(--mist); color:var(--ink); border-radius:14px;
+  border:1px solid rgba(229,231,235,0.15);
+  color:var(--bone);
+  border-radius:12px;
 }
-/* Primary CTA — pill Lime, chữ Forest Ink */
+/* Primary Action Pill — trắng duy nhất trên nền tối */
 .lp-btn {
   display:inline-flex; height:52px; align-items:center; justify-content:center; gap:8px;
-  padding:0 28px; border-radius:9999px; background:var(--lime); color:var(--ink);
-  font-weight:600; font-size:16px; border:0;
-  transition:filter .18s, transform .18s;
+  padding:0 32px; border-radius:9999px; background:var(--bone); color:var(--carbon);
+  font-weight:500; font-size:15px; border:0; letter-spacing:-0.02em;
+  transition:opacity .2s, transform .2s;
 }
-.lp-btn:hover { filter:brightness(.94); transform:translateY(-1px); }
-/* Secondary — pill outline Forest Ink */
+.lp-btn:hover { opacity:.88; transform:translateY(-1px); }
+/* Ghost outline — chỉ dùng ngoài nền tối, viền hairline */
 .lp-btn-o {
   display:inline-flex; height:52px; align-items:center; justify-content:center; gap:6px;
-  padding:0 26px; border-radius:9999px; border:1.5px solid var(--ink);
-  background:var(--paper); color:var(--ink); font-weight:600; font-size:16px;
-  transition:background .18s, color .18s;
+  padding:0 28px; border-radius:9999px;
+  border:1px solid rgba(229,231,235,0.4);
+  background:transparent; color:var(--bone);
+  font-weight:450; font-size:15px; letter-spacing:-0.02em;
+  transition:border-color .2s, background .2s;
 }
-.lp-btn-o:hover { background:var(--ink); color:var(--paper); }
-/* CTA trên nền tối — pill Lime giữ nguyên */
+.lp-btn-o:hover { border-color:var(--bone); background:rgba(255,255,255,0.04); }
+/* Nút trắng dùng trên nền sáng (section Ash) */
 .lp-btn-dark {
   display:inline-flex; height:52px; align-items:center; justify-content:center; gap:8px;
-  padding:0 28px; border-radius:9999px; background:var(--lime); color:var(--ink);
-  font-weight:600; font-size:16px; border:0;
-  transition:filter .18s, transform .18s;
+  padding:0 32px; border-radius:9999px;
+  background:var(--carbon); color:var(--bone);
+  font-weight:500; font-size:15px; border:0; letter-spacing:-0.02em;
+  transition:opacity .2s;
 }
-.lp-btn-dark:hover { filter:brightness(.94); transform:translateY(-1px); }
+.lp-btn-dark:hover { opacity:.85; }
 
-@keyframes lp-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes lp-float { 0%,100% { transform:translateY(0) rotate(var(--r,0deg)); } 50% { transform:translateY(-10px) rotate(var(--r,0deg)); } }
 @keyframes lp-pop { from { opacity:0; transform:translateY(14px) scale(.97); } to { opacity:1; transform:none; } }
 @keyframes lp-rise { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
-.lp-float { animation:lp-float 4.6s ease-in-out infinite; }
-.lp-float2 { animation:lp-float 5.6s ease-in-out -2s infinite; }
+.lp-float { animation:lp-float 5.2s ease-in-out infinite; }
+.lp-float2 { animation:lp-float 6.4s ease-in-out -2s infinite; }
 .lp-pop { animation:lp-pop .55s cubic-bezier(.2,.8,.2,1) both; }
 .lp-rise { animation:lp-rise .8s cubic-bezier(.2,.8,.2,1) both; }
 .lp-d1 { animation-delay:.08s; } .lp-d2 { animation-delay:.18s; }
@@ -93,13 +108,13 @@ const CSS = `
 `;
 function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
   const [ok, setOk] = useState(true);
-  if (!ok) return <Fallback className="h-10 w-10 lp-acc" />;
+  if (!ok) return <Fallback className="h-10 w-10 text-[var(--smoke)]" strokeWidth={1.25} />;
   return (
     <img
       src={`${ICON_BASE}/${name}.png`}
       alt=""
       loading="lazy"
-      className={`${size} object-contain ${shadow ? "drop-shadow-md" : ""}`}
+      className={`${size} object-contain ${shadow ? "drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]" : ""}`}
       onError={() => setOk(false)}
     />
   );
@@ -125,40 +140,47 @@ function Reveal({ children, className = "" }) {
   );
 }
 
-// Tiêu đề mục — nhãn pill Linen Mist + Inter Black
-function Head({ n, label, title, sub, center = true }) {
+// Tiêu đề mục — hai dòng stacked: nhãn nhỏ Ash + tiêu đề lớn Bone
+function Head({ n, label, title, sub, center = true, onLight = false }) {
   return (
     <div className={center ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
-      <span className="lp-mono inline-block rounded-full bg-[var(--mist)] px-4 py-1.5 text-[11px] text-[var(--ink)]">
-        <span className="opacity-50">{n} — </span>{label}
+      <span className={`lp-mono text-[11px] ${onLight ? "text-[var(--iron)]" : "text-[var(--smoke)]"}`}>
+        {n} — {label}
       </span>
-      <h2 className="lp-display mt-5 text-[38px] sm:text-[56px]">{title}</h2>
-      {sub && <p className="mt-4 text-[17px] leading-7 text-[var(--slate)]">{sub}</p>}
+      <h2 className="lp-display mt-4 text-[36px] sm:text-[52px]" style={{ color: onLight ? "var(--carbon)" : "var(--bone)" }}>
+        {title}
+      </h2>
+      {sub && (
+        <p className={`mt-4 text-[16px] leading-[1.5] ${onLight ? "text-[#555]" : "text-[var(--smoke)]"}`}>
+          {sub}
+        </p>
+      )}
     </div>
   );
 }
 
 function FaqRow({ n, q, a, open, onToggle }) {
   return (
-    <div className="border-b border-[var(--fog)]">
+    <div className="border-b border-white/10">
       <button onClick={onToggle} aria-expanded={open} className="flex w-full items-center gap-4 py-5 text-left">
-        <span className="lp-mono w-9 shrink-0 text-[11px] text-[var(--pebble)]">{n}</span>
-        <span className="flex-1 text-[17px] font-bold text-[var(--obsidian)]">{q}</span>
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${open ? "rotate-45 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]" : "border-[var(--fog)] text-[var(--pebble)]"}`}>
-          <Plus size={16} />
+        <span className="lp-mono w-10 shrink-0 text-[11px] text-[var(--iron)]">{n}</span>
+        <span className="flex-1 text-[16px] font-normal text-[var(--bone)]" style={{ fontWeight: 450 }}>{q}</span>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${open ? "rotate-45 border-[var(--bone)] text-[var(--bone)]" : "border-white/20 text-[var(--smoke)]"}`}>
+          <Plus size={15} strokeWidth={1.5} />
         </span>
       </button>
       <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
-          <p className="pb-5 pl-[52px] pr-10 text-[15px] leading-7 text-[var(--slate)]">{a}</p>
+          <p className="pb-5 pl-[56px] pr-10 text-[15px] leading-[1.6] text-[var(--smoke)]">{a}</p>
         </div>
       </div>
     </div>
   );
 }
 
-/* Khối minh hoạ đầu trang: 3 thẻ chuyển tự động */
+/* Showcase — artifact nổi trên void như Analogue */
 const SHOW = [["icon-task", ListChecks], ["icon-gift", Gift], ["icon-money", Wallet]];
+const ROTS = [-14, 8, -6];
 
 function Showcase({ c, L }) {
   const [i, setI] = useState(0);
@@ -172,30 +194,39 @@ function Showcase({ c, L }) {
   const [name, Fb] = SHOW[i];
   return (
     <div className="lp-rise lp-d2">
-      {/* Card lớn — radius 28px, surface Linen Mist, không grid nền */}
-      <div className="relative overflow-hidden rounded-[28px] border border-[var(--mist)] bg-[var(--mist)] p-6 sm:p-9">
-        <span className="lp-float lp-mono absolute left-3 top-3 rounded-full bg-[var(--paper)] px-3 py-1.5 text-[10.5px] text-[var(--ink)] shadow-sm">
+      {/* Vitrine — void đen, viền hairline, không grid */}
+      <div className="relative overflow-hidden rounded-[17.6px] border border-white/10 bg-[var(--carbon)] p-8 sm:p-10">
+        {/* Nhãn góc — chỉ chữ, không fill */}
+        <span className="lp-mono absolute left-4 top-4 text-[10px] text-[var(--iron)]">
           {c.facts[0][0]}
         </span>
-        <span className="lp-float2 lp-mono absolute bottom-3 right-3 rounded-full bg-[var(--ink)] px-3 py-1.5 text-[10.5px] text-[var(--lime)] shadow-sm">
+        <span className="lp-mono absolute bottom-4 right-4 text-[10px] text-[var(--iron)]">
           {c.facts[1][0]}
         </span>
-        <div key={i} className="lp-pop flex min-h-[300px] flex-col items-center justify-center text-center">
-          <Img3D name={name} Fallback={Fb} size="h-32 w-32 sm:h-40 sm:w-40" />
-          <h3 className="mt-6 max-w-sm text-xl font-bold tracking-tight text-[var(--obsidian)]">{f.title}</h3>
-          <p className="mt-2 max-w-sm text-[14.5px] leading-6 text-[var(--slate)]">{f.body}</p>
+
+        <div key={i} className="lp-pop flex min-h-[320px] flex-col items-center justify-center text-center">
+          <div
+            className="lp-float"
+            style={{ "--r": `${ROTS[i]}deg` }}
+          >
+            <Img3D name={name} Fallback={Fb} size="h-36 w-36 sm:h-44 sm:w-44" />
+          </div>
+          <h3 className="mt-8 max-w-sm text-[21px] leading-[1.15] text-[var(--bone)]" style={{ fontWeight: 450, letterSpacing: "-0.03em" }}>
+            {f.title}
+          </h3>
+          <p className="mt-3 max-w-sm text-[15px] leading-[1.6] text-[var(--smoke)]">{f.body}</p>
         </div>
       </div>
-      {/* Tab segmented pill — active = Lime fill */}
+      {/* Tab — pill, active = trắng, không viền */}
       <div className="mt-3 grid grid-cols-3 gap-2">
         {L.tabs.map(([n, label], k) => (
           <button
             key={n}
             onClick={() => { setI(k); setHold(true); }}
-            className={`lp-mono rounded-full border px-2 py-3 text-[10.5px] transition ${
+            className={`lp-mono rounded-full px-2 py-3 text-[10px] transition ${
               k === i
-                ? "border-[var(--lime)] bg-[var(--lime)] text-[var(--ink)]"
-                : "border-[var(--fog)] bg-[var(--paper)] text-[var(--pebble)] hover:border-[var(--ink)]"
+                ? "bg-[var(--bone)] text-[var(--carbon)]"
+                : "border border-white/10 text-[var(--smoke)] hover:border-white/30 hover:text-[var(--bone)]"
             }`}
           >
             <span className="mr-1 opacity-60">{n}</span>{label}
@@ -204,12 +235,12 @@ function Showcase({ c, L }) {
       </div>
     </div>
   );
-        }
+      }
 // Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
 const COPY = {
   vi: {
     h1a: "Kiếm Coin",
-    h1b: "Đổi quà thật dễ!",
+    h1b: "Đổi thưởng dễ dàng",
     heroSub:
       "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
@@ -340,132 +371,142 @@ const FEATURE_ICONS = [ListChecks, Gift, Wallet, Users];
 
 const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 
-function Eyebrow({ label }) {
+function Eyebrow({ label, onLight = false }) {
   return (
-    <span className="lp-mono inline-block rounded-full bg-[var(--mist)] px-4 py-1.5 text-[11px] text-[var(--ink)]">
+    <span className={`lp-mono text-[11px] ${onLight ? "text-[var(--iron)]" : "text-[var(--smoke)]"}`}>
       {label}
     </span>
   );
 }
 
 const Row = ({ k, children }) => (
-  <div className="flex justify-between gap-4 py-3.5">
-    <dt className="text-[var(--pebble)]">{k}</dt>
-    <dd className="text-right font-semibold text-[var(--obsidian)]">{children}</dd>
+  <div className="flex justify-between gap-4 border-b border-white/10 py-4 last:border-b-0">
+    <dt className="text-[14px] text-[var(--iron)]">{k}</dt>
+    <dd className="text-right text-[14px] text-[var(--bone)]" style={{ fontWeight: 450 }}>{children}</dd>
   </div>
 );
- export default function CloudVIPLanding() {
+export default function CloudVIPLanding() {
   const { t, lang } = useI18n();
   const c = COPY[lang] || COPY.vi;
   const L = LABELS[lang] || LABELS.vi;
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(0);
 
-  // Xử lý an toàn cho launched (string hoặc object)
   const launchedText =
     typeof SITE.launched === "object"
       ? SITE.launched[lang] || SITE.launched.vi
       : SITE.launched;
 
-  const linkCls = "font-semibold text-[var(--ink)] hover:underline";
+  const linkCls = "text-[var(--bone)] underline-offset-4 hover:underline";
 
   return (
-    <div className="lp min-h-screen bg-[var(--paper)]">
+    <div className="lp min-h-screen bg-[var(--carbon)]">
       <style>{CSS}</style>
       <LandingHeader />
 
       <main>
-        {/* ============ HERO ============ */}
-        <section className="relative overflow-hidden border-b border-[var(--fog)] bg-[var(--paper)]">
-          <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 pb-16 pt-14 lg:grid-cols-[1.05fr_.95fr] lg:gap-16 lg:pb-24 lg:pt-20">
+        {/* ============ HERO — vitrine ============ */}
+        <section className="relative border-b border-white/10 bg-[var(--carbon)]">
+          <div className="relative mx-auto grid max-w-[1200px] items-center gap-14 px-5 pb-20 pt-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-16 lg:pb-28 lg:pt-24">
             <div>
-              <span className="lp-mono lp-rise inline-block rounded-full bg-[var(--mist)] px-4 py-1.5 text-[11px] text-[var(--ink)]">
+              <span className="lp-mono lp-rise text-[11px] text-[var(--smoke)]">
                 {t("ld.badge")}
               </span>
-              <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-7">
+              <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-6">
                 {c.h1a}
-                <span className="mt-1 block text-[var(--ink)]">{c.h1b}</span>
+                <span className="mt-1 block text-[var(--bone)]">{c.h1b}</span>
               </h1>
-              <p className="lp-rise lp-d2 mt-7 max-w-lg text-[18px] leading-[1.5] text-[var(--slate)]">
+              <p className="lp-rise lp-d2 mt-7 max-w-lg text-[17px] leading-[1.55] text-[var(--smoke)]">
                 {c.heroSub}
               </p>
               <div className="lp-rise lp-d3 mt-9 flex flex-wrap gap-3">
                 <button onClick={() => navigate("/register")} className="lp-btn">
-                  {t("ld.ctaStart")} <ArrowRight size={17} />
+                  {t("ld.ctaStart")} <ArrowRight size={16} strokeWidth={1.75} />
                 </button>
                 <button onClick={() => scrollToId("how")} className="lp-btn-o">
-                  {c.how} <ChevronDown size={16} />
+                  {c.how} <ChevronDown size={15} strokeWidth={1.75} />
                 </button>
               </div>
-              <ul className="lp-rise lp-d4 mt-8 space-y-2.5">
+              <ul className="lp-rise lp-d4 mt-9 space-y-2.5">
                 {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
-                  <li key={x} className="flex items-center gap-2.5 text-[15px] text-[var(--charcoal)]">
-                    <Check size={16} className="shrink-0 text-[var(--ink)]" /> {x}
+                  <li key={x} className="flex items-center gap-2.5 text-[15px] text-[var(--smoke)]">
+                    <Check size={15} strokeWidth={2} className="shrink-0 text-[var(--bone)]" /> {x}
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 max-w-md text-[13px] leading-6 text-[var(--pebble)]">{c.note}</p>
+              <p className="mt-5 max-w-md text-[13px] leading-[1.6] text-[var(--iron)]">{c.note}</p>
             </div>
             <Showcase c={c} L={L} />
           </div>
         </section>
 
-        {/* ============ SỐ LIỆU ============ */}
-        <section className="mx-auto max-w-[1200px] px-5 py-14 sm:py-20">
-          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {c.facts.map(([v, l], i) => (
-              <Reveal key={i} className="h-full">
-                <div className="h-full rounded-[10px] border border-[var(--fog)] bg-[var(--paper)] p-6">
-                  <dt className="lp-display text-[44px] text-[var(--ink)] sm:text-[52px]">{v}</dt>
-                  <dd className="lp-mono mt-3 text-[10.5px] leading-5 text-[var(--pebble)]">{l}</dd>
-                </div>
-              </Reveal>
-            ))}
-          </dl>
+        {/* ============ SỐ LIỆU — dải đen liền mạch ============ */}
+        <section className="border-b border-white/10 bg-[var(--carbon)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-16 sm:py-20">
+            <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {c.facts.map(([v, l], i) => (
+                <Reveal key={i} className="h-full">
+                  <div className="h-full rounded-[17.6px] border border-white/10 bg-[var(--carbon)] p-7">
+                    <dt className="lp-display text-[40px] text-[var(--bone)] sm:text-[52px]">{v}</dt>
+                    <dd className="lp-mono mt-4 text-[10px] leading-5 text-[var(--iron)]">{l}</dd>
+                  </div>
+                </Reveal>
+              ))}
+            </dl>
+          </div>
         </section>
 
-        {/* ============ TÍNH NĂNG ============ */}
-        <section id="features" className="scroll-mt-20 border-y border-[var(--fog)] bg-[var(--fog)]/40">
-          <div className="mx-auto max-w-[1200px] px-5 py-16 sm:py-24">
-            <Head n="001" label={L.feat} title={c.featTitle} />
-            <div className="mt-12 grid gap-4 md:grid-cols-2">
+        {/* ============ TÍNH NĂNG — dải sáng Ash ============ */}
+        <section id="features" className="scroll-mt-20 bg-[var(--ash)] text-[var(--carbon)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
+            <Head n="001" label={L.feat} title={c.featTitle} onLight />
+            <div className="mt-14 grid gap-4 md:grid-cols-2">
               {c.features.map((f, i) => {
                 const Icon = FEATURE_ICONS[i] || ListChecks;
                 return (
                   <Reveal key={f.to} className="h-full">
-                    <div className="h-full rounded-[10px] border border-[var(--fog)] bg-[var(--paper)] p-7 transition duration-300 hover:-translate-y-1 hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
+                    <div className="h-full rounded-[17.6px] border border-black/10 bg-[var(--bone)] p-7 transition duration-300 hover:border-black/30">
                       <div className="flex items-start justify-between">
-                        <span className="lp-ico"><Icon size={22} /></span>
-                        <span className="lp-mono text-[11px] text-[var(--pebble)]">0{i + 1}</span>
+                        <span className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-black/10 text-[var(--carbon)]">
+                          <Icon size={20} strokeWidth={1.5} />
+                        </span>
+                        <span className="lp-mono text-[10px] text-[var(--iron)]">0{i + 1}</span>
                       </div>
-                      <h3 className="mt-6 text-xl font-bold tracking-tight text-[var(--obsidian)]">{f.title}</h3>
-                      <p className="mt-2 text-[15px] leading-7 text-[var(--slate)]">{f.body}</p>
-                      <Link to={f.to} className="mt-5 inline-flex items-center gap-1 text-[14px] font-semibold text-[var(--ink)] hover:underline">
-                        {c.guide} <ArrowRight size={15} />
+                      <h3 className="mt-7 text-[21px] leading-[1.15] text-[var(--carbon)]" style={{ fontWeight: 450, letterSpacing: "-0.03em" }}>
+                        {f.title}
+                      </h3>
+                      <p className="mt-3 text-[15px] leading-[1.6] text-[#454545]">{f.body}</p>
+                      <Link to={f.to} className="mt-5 inline-flex items-center gap-1 text-[14px] text-[var(--carbon)] underline-offset-4 hover:underline" style={{ fontWeight: 450 }}>
+                        {c.guide} <ArrowRight size={14} strokeWidth={1.75} />
                       </Link>
                     </div>
                   </Reveal>
                 );
               })}
             </div>
-            <p className="lp-mono mt-10 text-center text-[11px] leading-6 text-[var(--pebble)]">{c.more}</p>
+            <p className="lp-mono mt-12 text-center text-[10px] leading-6 text-[var(--iron)]">{c.more}</p>
           </div>
         </section>
 
-        {/* ============ CÁCH HOẠT ĐỘNG ============ */}
-        <section id="how" className="scroll-mt-20">
-          <div className="mx-auto max-w-[1200px] px-5 py-16 sm:py-24">
+        {/* ============ CÁCH HOẠT ĐỘNG — về void ============ */}
+        <section id="how" className="scroll-mt-20 bg-[var(--carbon)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
             <Head n="002" label={L.how} title={c.howTitle} />
-            <ol className="mt-12 grid gap-4 md:grid-cols-3">
+            <ol className="mt-14 grid gap-4 md:grid-cols-3">
               {[1, 2, 3].map((n) => (
                 <li key={n}>
                   <Reveal className="h-full">
-                    <div className="h-full rounded-[10px] border border-[var(--fog)] bg-[var(--paper)] p-7">
-                      <span className="lp-display text-[72px] leading-none text-transparent [-webkit-text-stroke:1.5px_var(--lime)]">
+                    <div className="h-full rounded-[17.6px] border border-white/10 bg-[var(--carbon)] p-7">
+                      <span
+                        className="lp-display text-[64px] leading-none text-transparent"
+                        style={{ WebkitTextStroke: "1px rgba(229,231,235,0.45)" }}
+                      >
                         0{n}
                       </span>
-                      <h3 className="mt-3 text-xl font-bold text-[var(--obsidian)]">{t(`ld.s${n}t`)}</h3>
-                      <p className="mt-2 text-[15px] leading-7 text-[var(--slate)]">{t(`ld.s${n}d`)}</p>
+                      <h3 className="mt-5 text-[21px] leading-[1.15] text-[var(--bone)]" style={{ fontWeight: 450, letterSpacing: "-0.03em" }}>
+                        {t(`ld.s${n}t`)}
+                      </h3>
+                      <p className="mt-3 text-[15px] leading-[1.6] text-[var(--smoke)]">{t(`ld.s${n}d`)}</p>
                     </div>
                   </Reveal>
                 </li>
@@ -474,21 +515,21 @@ const Row = ({ k, children }) => (
           </div>
         </section>
 
-        {/* ============ AN TOÀN ============ */}
-        <section id="safety" className="scroll-mt-20 bg-[var(--paper)]">
-          <div className="mx-auto max-w-[1200px] px-5 py-16 sm:py-24">
-            <Head n="003" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} />
+        {/* ============ AN TOÀN — dải Ash ============ */}
+        <section id="safety" className="scroll-mt-20 bg-[var(--ash)] text-[var(--carbon)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
+            <Head n="003" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} onLight />
             <Reveal>
-              <div className="mt-12 rounded-[28px] bg-[var(--ink)] p-7 text-[var(--paper)] sm:p-12">
-                <div className="grid gap-x-12 gap-y-9 sm:grid-cols-2">
+              <div className="mt-14 rounded-[17.6px] border border-black/10 bg-[var(--bone)] p-8 sm:p-12">
+                <div className="grid gap-x-12 gap-y-10 sm:grid-cols-2">
                   {SAFETY.map(({ icon: Icon, t: tk, d }) => (
                     <div key={tk} className="flex gap-4">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-[var(--lime)]">
-                        <Icon className="h-5 w-5" />
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/15 text-[var(--carbon)]">
+                        <Icon className="h-5 w-5" strokeWidth={1.5} />
                       </span>
                       <div>
-                        <h3 className="font-bold text-[var(--paper)]">{t(tk)}</h3>
-                        <p className="mt-1.5 text-[15px] leading-7 text-[#c9d3c6]">{t(d)}</p>
+                        <h3 className="text-[17px] text-[var(--carbon)]" style={{ fontWeight: 450, letterSpacing: "-0.02em" }}>{t(tk)}</h3>
+                        <p className="mt-2 text-[15px] leading-[1.6] text-[#454545]">{t(d)}</p>
                       </div>
                     </div>
                   ))}
@@ -498,35 +539,35 @@ const Row = ({ k, children }) => (
           </div>
         </section>
 
-        {/* ============ AI ĐỨNG SAU ============ */}
-        <section className="border-y border-[var(--fog)] bg-[var(--fog)]/40">
-          <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-16 sm:py-24 md:grid-cols-2 md:gap-14">
+        {/* ============ AI ĐỨNG SAU — void ============ */}
+        <section className="border-y border-white/10 bg-[var(--carbon)]">
+          <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-20 sm:py-28 md:grid-cols-2 md:gap-16">
             <div>
               <Eyebrow label={L.who} />
-              <h2 className="lp-display mt-5 text-[38px] sm:text-[52px]">{c.whoTitle}</h2>
-              <p className="mt-4 max-w-md text-[16px] leading-7 text-[var(--slate)]">{c.whoBody}</p>
-              <ul className="mt-6 space-y-3 text-[15px] text-[var(--charcoal)]">
+              <h2 className="lp-display mt-5 text-[36px] sm:text-[52px]">{c.whoTitle}</h2>
+              <p className="mt-5 max-w-md text-[16px] leading-[1.6] text-[var(--smoke)]">{c.whoBody}</p>
+              <ul className="mt-6 space-y-3 text-[15px] text-[var(--bone)]">
                 {c.whoPoints.map((p) => (
                   <li key={p} className="flex gap-3">
-                    <Check size={17} className="mt-1 shrink-0 text-[var(--ink)]" />
-                    {p}
+                    <Check size={16} strokeWidth={2} className="mt-1 shrink-0 text-[var(--bone)]" />
+                    <span className="text-[var(--smoke)]">{p}</span>
                   </li>
                 ))}
               </ul>
-              <Link to="/about" className="mt-7 inline-flex items-center gap-1 text-[15px] font-semibold text-[var(--ink)] hover:underline">
-                {c.whoMore} <ArrowRight size={15} />
+              <Link to="/about" className="mt-7 inline-flex items-center gap-1 text-[15px] text-[var(--bone)] underline-offset-4 hover:underline" style={{ fontWeight: 450 }}>
+                {c.whoMore} <ArrowRight size={14} strokeWidth={1.75} />
               </Link>
 
-              <div className="mt-8 border-t border-[var(--fog)] pt-5">
-                <p className="lp-mono text-[11px] text-[var(--pebble)]">{c.whoLegal}</p>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
-                  <Link to="/terms" className="text-[var(--charcoal)] underline-offset-4 hover:underline">
+              <div className="mt-10 border-t border-white/10 pt-6">
+                <p className="lp-mono text-[10px] text-[var(--iron)]">{c.whoLegal}</p>
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
+                  <Link to="/terms" className="text-[var(--smoke)] underline-offset-4 hover:text-[var(--bone)] hover:underline">
                     {lang === "en" ? "Terms of Service" : "Điều khoản sử dụng"}
                   </Link>
-                  <Link to="/privacy" className="text-[var(--charcoal)] underline-offset-4 hover:underline">
+                  <Link to="/privacy" className="text-[var(--smoke)] underline-offset-4 hover:text-[var(--bone)] hover:underline">
                     {lang === "en" ? "Privacy Policy" : "Chính sách bảo mật"}
                   </Link>
-                  <Link to="/refund" className="text-[var(--charcoal)] underline-offset-4 hover:underline">
+                  <Link to="/refund" className="text-[var(--smoke)] underline-offset-4 hover:text-[var(--bone)] hover:underline">
                     {lang === "en" ? "Refund Policy" : "Chính sách hoàn tiền"}
                   </Link>
                 </div>
@@ -534,7 +575,7 @@ const Row = ({ k, children }) => (
             </div>
 
             <Reveal>
-              <dl className="divide-y divide-[var(--fog)] rounded-[10px] border border-[var(--fog)] bg-[var(--paper)] px-6 text-[15px]">
+              <dl className="rounded-[17.6px] border border-white/10 bg-[var(--carbon)] px-6 py-2">
                 <Row k={c.whoOperator}>{SITE.operator}</Row>
                 {SITE.address && <Row k={lang === "en" ? "Address" : "Địa chỉ"}>{SITE.address}</Row>}
                 {SITE.business && <Row k={lang === "en" ? "Business" : "Kinh doanh"}>{SITE.business}</Row>}
@@ -557,47 +598,62 @@ const Row = ({ k, children }) => (
           </div>
         </section>
 
-        {/* ============ FAQ ============ */}
-        <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-5 py-16 sm:py-24">
-          <Head n="004" label={L.faq} title={t("ld.faqTitle")} />
-          <div className="mt-10 border-t border-[var(--fog)]">
-            {FAQ_ORDER.map((i, idx) => (
-              <FaqRow
-                key={i}
-                n={String(idx + 1).padStart(3, "0")}
-                q={t(`ld.faq${i}q`)}
-                a={t(`ld.faq${i}a`)}
-                open={openFaq === idx}
-                onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-              />
-            ))}
+        {/* ============ FAQ — Ash ============ */}
+        <section id="faq" className="scroll-mt-20 bg-[var(--ash)] text-[var(--carbon)]">
+          <div className="mx-auto max-w-3xl px-5 py-20 sm:py-28">
+            <Head n="004" label={L.faq} title={t("ld.faqTitle")} onLight />
+            <div className="mt-12 border-t border-black/10">
+              <div className="[&_.lp-mono]:text-[var(--iron)] [&_p]:text-[#454545] [&_button_span:nth-child(2)]:text-[var(--carbon)] [&_.border-b]:border-black/10">
+                {FAQ_ORDER.map((i, idx) => (
+                  <FaqRow
+                    key={i}
+                    n={String(idx + 1).padStart(3, "0")}
+                    q={t(`ld.faq${i}q`)}
+                    a={t(`ld.faq${i}a`)}
+                    open={openFaq === idx}
+                    onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ============ KÊU GỌI CUỐI ============ */}
-        <section className="mx-auto max-w-[1200px] px-5 pb-20 sm:pb-28">
-          <Reveal>
-            <div className="relative overflow-hidden rounded-[28px] bg-[var(--ink)] px-7 py-16 text-[var(--paper)] sm:px-14 sm:py-20">
-              <Coins className="absolute -right-8 -top-8 h-56 w-56 rotate-12 text-[var(--lime)]/[0.08]" />
-              <h2 className="lp-display relative max-w-2xl text-[42px] text-[var(--lime)] sm:text-[64px]">
-                {c.ctaTitle}
-              </h2>
-              <p className="relative mt-5 max-w-lg text-[16px] leading-7 text-[#c9d3c6]">{t("ld.ctaSub")}</p>
-              <div className="relative mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
-                <button onClick={() => navigate("/register")} className="lp-btn-dark">
-                  {t("ld.ctaReg")} <ArrowRight size={17} />
-                </button>
-                <button onClick={() => navigate("/login")} className="text-[15px] font-semibold text-[var(--paper)] underline-offset-4 hover:underline">
-                  {t("ld.login")}
-                </button>
+        {/* ============ KÊU GỌI CUỐI — void, pill trắng ============ */}
+        <section className="bg-[var(--carbon)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
+            <Reveal>
+              <div className="relative overflow-hidden rounded-[17.6px] border border-white/10 bg-[var(--carbon)] px-8 py-16 text-center sm:px-14 sm:py-24">
+                <Coins
+                  className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rotate-12 text-white/[0.04]"
+                  strokeWidth={0.75}
+                />
+                <h2 className="lp-display relative mx-auto max-w-2xl text-[40px] sm:text-[64px] text-[var(--bone)]">
+                  {c.ctaTitle}
+                </h2>
+                <p className="relative mx-auto mt-5 max-w-lg text-[16px] leading-[1.6] text-[var(--smoke)]">
+                  {t("ld.ctaSub")}
+                </p>
+                <div className="relative mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
+                  <button onClick={() => navigate("/register")} className="lp-btn">
+                    {t("ld.ctaReg")} <ArrowRight size={16} strokeWidth={1.75} />
+                  </button>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="text-[15px] text-[var(--bone)] underline-offset-4 hover:underline"
+                    style={{ fontWeight: 450 }}
+                  >
+                    {t("ld.login")}
+                  </button>
+                </div>
               </div>
-            </div>
-          </Reveal>
+            </Reveal>
+          </div>
         </section>
       </main>
 
-            <LandingFooter />
+      <LandingFooter />
       <BackToTop />
     </div>
   );
- }
+    }
