@@ -10,7 +10,7 @@ import {
   FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
 } from "./components/LandingParts.jsx";
 
-/* Media đầu trang (GIF của bạn) */
+/* Media đầu trang (GIF) */
 const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
 const HERO_POSTER = undefined;
 
@@ -279,4 +279,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-                  }
+}
