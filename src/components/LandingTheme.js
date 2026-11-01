@@ -20,7 +20,7 @@ export const CSS = `
 .lp-sub { font-size:18px; line-height:1.3; letter-spacing:-.36px; }
 .lp-body { font-size:16px; line-height:1.4; letter-spacing:-.32px; color:var(--steel); }
 .lp-link { color:var(--blue); transition:opacity .2s; }
-.lp-link:hover { opacity:.7; }
+@media (hover:hover){ .lp-link:hover { opacity:.7; } }
 
 /* Thẻ bo tròn lớn, không đổ bóng */
 .lp-card { background:var(--panel); border:.5px solid var(--hair); border-radius:40px; }
@@ -52,7 +52,7 @@ export const CSS = `
 .lp-nav-bar { display:flex; align-items:center; height:44px; border-radius:10px; padding:0 6px; }
 .lp-nav-link { padding:8px 11px; border-radius:8px; font-size:14px; color:var(--ink); white-space:nowrap; }
 @media (min-width:640px){ .lp-nav-link { padding:8px 16px; font-size:16px; } }
-.lp-nav-link:hover { opacity:.6; }
+@media (hover:hover){ .lp-nav-link:hover { opacity:.6; } }
 
 /* Dải thông báo + nút nổi */
 .lp-banner {
@@ -68,17 +68,17 @@ export const CSS = `
 }
 .lp-cta svg { color:var(--blue); }
 
-/* Video đầu trang: tan dần vào nền trắng như ảnh chân dung của Augen */
+/* Video đầu trang: nằm giữa banner và chữ, rìa tan dần vào nền trắng */
 .lp-hero-media {
-  position:absolute; left:50%; top:40%; width:min(1100px,150vw); aspect-ratio:16/9;
+  position:absolute; left:50%; top:50%; width:min(820px,175vw); aspect-ratio:16/9;
   transform:translate3d(-50%,calc(-50% + var(--py,0px)),0) scale(var(--ps,1));
   opacity:var(--po,1); will-change:transform,opacity; pointer-events:none;
 }
 @media (min-width:900px){ .lp-hero-media { left:62%; top:48%; width:min(1100px,92vw); } }
 .lp-hero-video {
-  width:100%; height:100%; object-fit:cover; display:block;
-  -webkit-mask-image:radial-gradient(closest-side,#000 30%,transparent 98%);
-  mask-image:radial-gradient(closest-side,#000 30%,transparent 98%);
+  width:100%; height:100%; object-fit:cover; display:block; filter:saturate(1.15);
+  -webkit-mask-image:radial-gradient(closest-side,#000 58%,transparent 100%);
+  mask-image:radial-gradient(closest-side,#000 58%,transparent 100%);
 }
 .lp-hero-fallback { background:radial-gradient(closest-side,rgba(0,113,227,.35),transparent); }
 
@@ -101,3 +101,4 @@ export const CSS = `
   .lp-card, .lp-glass { border:1px solid rgba(0,0,0,.4); }
 }
 `;
+
