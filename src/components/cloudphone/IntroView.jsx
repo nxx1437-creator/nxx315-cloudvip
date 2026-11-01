@@ -73,8 +73,8 @@ export default function IntroView({ onStart, from }) {
           </h1>
           <div className="mt-4 flex items-center justify-center gap-1.5">
             {[
-              [Cpu, SPEC.cores],
-              [HardDrive, `${SPEC.ram} RAM`],
+              [Cpu, `${SPEC.cores} nhân`],
+              [HardDrive, `${SPEC.ram}GB RAM`],
               [Smartphone, `Android ${SPEC.android}`],
             ].map(([Icon, label]) => (
               <span
@@ -125,6 +125,7 @@ export default function IntroView({ onStart, from }) {
       </div>
     </div>
   );
-            }
+        }
+              
           
 
