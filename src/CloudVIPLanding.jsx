@@ -11,7 +11,7 @@ import {
 } from "./components/LandingParts.jsx";
 
 /* Video đầu trang: tải file hero.mp4 lên thư mục public của repo */
-const HERO_VIDEO = "/hero.mp4";
+const HERO_VIDEO = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
 
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
