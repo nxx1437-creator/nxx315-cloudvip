@@ -222,6 +222,10 @@ export default function CloudPhone() {
                 agreed={agreed}
                 setAgreed={setAgreed}
                 hasActive={!!active}
+                coins={coins}
+                ordersCount={orders.length}
+                onEarn={() => navigate(EARN_PATH)}
+                onMine={() => setView("mine")}
               />
             ) : (
               <MineView
@@ -239,19 +243,18 @@ export default function CloudPhone() {
 
       {view === "buy" && !loading && (
         <BuyBar
-          coins={coins}
           pkg={pkg}
           soldOut={soldOut}
           hasActive={!!active}
           canBuy={canBuy}
           busy={busy}
           onBuy={handleBuy}
-          onEarn={() => navigate(EARN_PATH)}
         />
       )}
 
       <BottomNav />
     </div>
   );
-        }
+  }
+    
     
