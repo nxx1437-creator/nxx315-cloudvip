@@ -16,82 +16,63 @@ import { useI18n } from "./i18n/index.js";
 const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
-/* ===== Apple design tokens =====
-   Studio #ffffff · Gallery #fafafc · Cloud #f5f5f7 · Graphite #1d1d1f
-   Slate #5b5b61 · Steel #86868b · Divider #d6d6d6 · Control #e2e2e5
-   Blue #0071e3 · Link #0066cc · New #b64400 */
+/* ===== Apple (España) design tokens =====
+   Ink #1d1d1f · Fog #f5f5f7 · White #ffffff · Slate #86868b
+   Blue #0071e3 (chỉ dùng cho CTA) · Link #0066cc */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&family=Inter:wght@400;600&display=swap');
 .lp {
-  --studio:#ffffff; --gallery:#fafafc; --cloud:#f5f5f7;
-  --graphite:#1d1d1f; --slate:#5b5b61; --steel:#86868b;
-  --divider:#d6d6d6; --control:#e2e2e5;
-  --blue:#0071e3; --link:#0066cc; --new:#b64400;
-  font-family:'Inter','SF Pro Text',ui-sans-serif,system-ui,-apple-system,sans-serif;
-  color:var(--graphite);
-  background:var(--studio);
+  --ink:#1d1d1f; --fog:#f5f5f7; --white:#ffffff; --ash:#e8e8ed;
+  --graphite:#707070; --slate:#86868b; --blue:#0071e3; --link:#0066cc;
+  font-family:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  background:var(--fog);
   -webkit-font-smoothing:antialiased;
-  letter-spacing:-0.01em;
 }
-/* Display — SF Pro Display 600 (Inter 600 substitute) */
+/* Display — SF Pro Display 600 */
 .lp-display {
+  font-family:'Inter Tight','Inter',sans-serif;
   font-weight:600;
-  letter-spacing:-0.02em;
-  line-height:1.06;
-  color:var(--graphite);
+  letter-spacing:-0.015em;
+  line-height:1.07;
+  color:var(--ink);
 }
 .lp-display-xl {
-  font-size: clamp(40px, 7.5vw, 80px);
-  letter-spacing: -0.03em;
-  line-height: 1.02;
-  font-weight: 600;
-  color: #ffffff !important; 
+  font-size:clamp(52px,8vw,96px);
+  letter-spacing:-0.02em;
+  line-height:1.02;
+  font-weight:600;
 }
 .lp-mono {
-  font-family:'Roboto Mono',ui-monospace,monospace;
-  text-transform:uppercase; letter-spacing:.12em; font-weight:400;
+  font-family:'Inter',sans-serif;
+  text-transform:uppercase; letter-spacing:.06em; font-weight:600;
 }
-.lp-acc { color:var(--graphite); }
-.lp-muted { color:var(--steel); }
+.lp-acc { color:var(--ink); }
 
-.lp-ico {
-  display:flex; height:52px; width:52px; align-items:center; justify-content:center;
-  border-radius:14px; background:var(--cloud); color:var(--graphite);
-}
-/* Primary Buy Pill — Apple Blue duy nhất cho CTA */
+/* CTA — Electric Blue duy nhất */
 .lp-btn {
   display:inline-flex; height:48px; align-items:center; justify-content:center; gap:8px;
-  padding:0 24px; border-radius:9999px;
+  padding:0 24px; border-radius:980px;
   background:var(--blue); color:#fff;
-  font-weight:500; font-size:16px; border:0; letter-spacing:-0.02em;
+  font-weight:400; font-size:17px; border:0;
   transition:opacity .2s, transform .2s;
 }
 .lp-btn:hover { opacity:.9; transform:translateY(-1px); }
-/* Ghost — viền graphite */
+/* Ghost — viền Ink */
 .lp-btn-o {
   display:inline-flex; height:48px; align-items:center; justify-content:center; gap:6px;
-  padding:0 22px; border-radius:9999px;
-  border:1px solid var(--divider); background:transparent; color:var(--graphite);
-  font-weight:500; font-size:16px; letter-spacing:-0.02em;
-  transition:border-color .2s, background .2s;
+  padding:0 24px; border-radius:980px;
+  border:1px solid var(--ink); background:transparent; color:var(--ink);
+  font-weight:400; font-size:17px;
+  transition:background .2s, color .2s;
 }
-.lp-btn-o:hover { border-color:var(--graphite); background:var(--gallery); }
-/* Pill trắng cho nền tối (hero film) */
-.lp-btn-light {
-  display:inline-flex; height:48px; align-items:center; justify-content:center; gap:8px;
-  padding:0 24px; border-radius:9999px;
-  background:rgba(210,210,215,0.64); color:var(--graphite);
-  font-weight:500; font-size:16px; border:0; letter-spacing:-0.02em;
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-  transition:opacity .2s;
-}
-.lp-btn-light:hover { opacity:.9; }
+.lp-btn-o:hover { background:var(--ink); color:#fff; }
 
-@keyframes lp-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes lp-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
 @keyframes lp-pop { from { opacity:0; transform:translateY(14px) scale(.97); } to { opacity:1; transform:none; } }
 @keyframes lp-rise { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
-.lp-float { animation:lp-float 5s ease-in-out infinite; }
-.lp-float2 { animation:lp-float 6s ease-in-out -2s infinite; }
+.lp-float { animation:lp-float 6s ease-in-out infinite; }
+.lp-float2 { animation:lp-float 7s ease-in-out -2s infinite; }
 .lp-pop { animation:lp-pop .55s cubic-bezier(.2,.8,.2,1) both; }
 .lp-rise { animation:lp-rise .8s cubic-bezier(.2,.8,.2,1) both; }
 .lp-d1 { animation-delay:.08s; } .lp-d2 { animation-delay:.18s; }
@@ -99,13 +80,13 @@ const CSS = `
 `;
 function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
   const [ok, setOk] = useState(true);
-  if (!ok) return <Fallback className="h-10 w-10 text-[var(--steel)]" strokeWidth={1.25} />;
+  if (!ok) return <Fallback className="h-10 w-10 text-[var(--slate)]" strokeWidth={1.25} />;
   return (
     <img
       src={`${ICON_BASE}/${name}.png`}
       alt=""
       loading="lazy"
-      className={`${size} object-contain ${shadow ? "drop-shadow-[0_20px_40px_rgba(0,0,0,0.18)]" : ""}`}
+      className={`${size} object-contain ${shadow ? "drop-shadow-[0_20px_40px_rgba(0,0,0,0.12)]" : ""}`}
       onError={() => setOk(false)}
     />
   );
@@ -131,48 +112,35 @@ function Reveal({ children, className = "" }) {
   );
 }
 
-// Head — kicker 28px Graphite + headline 48–64px
-function Head({ n, label, title, sub, center = true, onDark = false }) {
+function Head({ n, label, title, sub, center = true }) {
   return (
     <div className={center ? "mx-auto max-w-3xl text-center" : "max-w-3xl"}>
-      <span className={`lp-mono text-[11px] ${onDark ? "text-white/60" : "text-[var(--steel)]"}`}>
-        {n} — {label}
-      </span>
-      <h2
-        className="lp-display mt-4 text-[36px] sm:text-[56px]"
-        style={{ color: onDark ? "#fff" : "var(--graphite)" }}
-      >
-        {title}
-      </h2>
-      {sub && (
-        <p className={`mt-4 text-[17px] leading-[1.5] ${onDark ? "text-white/70" : "text-[var(--slate)]"}`}>
-          {sub}
-        </p>
-      )}
+      <span className="lp-mono text-[12px] text-[var(--slate)]">{n} — {label}</span>
+      <h2 className="lp-display mt-3 text-[32px] sm:text-[48px]">{title}</h2>
+      {sub && <p className="mt-4 text-[17px] leading-[1.47] text-[var(--graphite)]">{sub}</p>}
     </div>
   );
 }
 
 function FaqRow({ n, q, a, open, onToggle }) {
   return (
-    <div className="border-b border-[var(--divider)]">
+    <div className="border-b border-[var(--ash)]">
       <button onClick={onToggle} aria-expanded={open} className="flex w-full items-center gap-4 py-5 text-left">
-        <span className="lp-mono w-10 shrink-0 text-[11px] text-[var(--steel)]">{n}</span>
-        <span className="flex-1 text-[17px] font-semibold text-[var(--graphite)]">{q}</span>
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${open ? "rotate-45 border-[var(--graphite)] text-[var(--graphite)]" : "border-[var(--divider)] text-[var(--steel)]"}`}>
-          <Plus size={15} strokeWidth={1.75} />
+        <span className="lp-mono w-10 shrink-0 text-[12px] text-[var(--slate)]">{n}</span>
+        <span className="flex-1 text-[17px] font-semibold text-[var(--ink)]">{q}</span>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${open ? "rotate-45 border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--ash)] text-[var(--slate)]"}`}>
+          <Plus size={16} strokeWidth={1.5} />
         </span>
       </button>
       <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
-          <p className="pb-5 pl-[56px] pr-10 text-[15px] leading-[1.6] text-[var(--slate)]">{a}</p>
+          <p className="pb-5 pl-[56px] pr-10 text-[17px] leading-[1.47] text-[var(--graphite)]">{a}</p>
         </div>
       </div>
     </div>
   );
 }
 
-/* Showcase — media panel 20px radius, text overlay kiểu Apple film card */
 const SHOW = [["icon-task", ListChecks], ["icon-gift", Gift], ["icon-money", Wallet]];
 
 function Showcase({ c, L }) {
@@ -187,26 +155,26 @@ function Showcase({ c, L }) {
   const [name, Fb] = SHOW[i];
   return (
     <div className="lp-rise lp-d2">
-      <div className="relative overflow-hidden rounded-[20px] border border-[var(--divider)] bg-[var(--cloud)] p-8 sm:p-10">
-        <div key={i} className="lp-pop flex min-h-[320px] flex-col items-center justify-center text-center">
+      <div className="relative overflow-hidden rounded-[28px] bg-[var(--white)] p-8 sm:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+        <div key={i} className="lp-pop flex min-h-[340px] flex-col items-center justify-center text-center">
           <div className="lp-float">
-            <Img3D name={name} Fallback={Fb} size="h-36 w-36 sm:h-44 sm:w-44" />
+            <Img3D name={name} Fallback={Fb} size="h-40 w-40 sm:h-52 sm:w-52" />
           </div>
-          <h3 className="mt-8 max-w-sm text-[24px] font-semibold leading-[1.17] text-[var(--graphite)]">
+          <h3 className="mt-8 max-w-sm text-[24px] font-semibold leading-[1.19] text-[var(--ink)]">
             {f.title}
           </h3>
-          <p className="mt-3 max-w-sm text-[15px] leading-[1.6] text-[var(--slate)]">{f.body}</p>
+          <p className="mt-3 max-w-sm text-[17px] leading-[1.47] text-[var(--graphite)]">{f.body}</p>
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         {L.tabs.map(([n, label], k) => (
           <button
             key={n}
             onClick={() => { setI(k); setHold(true); }}
-            className={`lp-mono rounded-full px-2 py-3 text-[10px] transition ${
+            className={`lp-mono rounded-full px-2 py-3 text-[11px] transition ${
               k === i
-                ? "bg-[var(--graphite)] text-white"
-                : "border border-[var(--divider)] text-[var(--steel)] hover:border-[var(--graphite)] hover:text-[var(--graphite)]"
+                ? "bg-[var(--ink)] text-white"
+                : "border border-[var(--ash)] bg-[var(--white)] text-[var(--slate)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
             }`}
           >
             <span className="mr-1 opacity-60">{n}</span>{label}
@@ -330,12 +298,10 @@ const LABELS = {
   vi: {
     feat: "TÍNH NĂNG", how: "CÁCH HOẠT ĐỘNG", safe: "AN TOÀN", who: "MINH BẠCH", faq: "HỎI ĐÁP",
     tabs: [["01", "NHIỆM VỤ"], ["02", "ĐỔI QUÀ"], ["03", "RÚT TIỀN"]],
-    ticks: ["Kiếm xu hoàn toàn miễn phí", "Không cần nạp tiền để rút", "Theo dõi mọi đơn trong Lịch sử"],
   },
   en: {
     feat: "FEATURES", how: "HOW IT WORKS", safe: "SAFETY", who: "TRANSPARENCY", faq: "FAQ",
     tabs: [["01", "TASKS"], ["02", "REDEEM"], ["03", "WITHDRAW"]],
-    ticks: ["Earning coins is free", "No deposit needed to withdraw", "Track every order in History"],
   },
 };
 
@@ -350,18 +316,14 @@ const FEATURE_ICONS = [ListChecks, Gift, Wallet, Users];
 
 const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
 
-function Eyebrow({ label, onDark = false }) {
-  return (
-    <span className={`lp-mono text-[11px] ${onDark ? "text-white/60" : "text-[var(--steel)]"}`}>
-      {label}
-    </span>
-  );
+function Eyebrow({ label }) {
+  return <span className="lp-mono text-[12px] text-[var(--slate)]">{label}</span>;
 }
 
 const Row = ({ k, children }) => (
-  <div className="flex justify-between gap-4 border-b border-[var(--divider)] py-4 last:border-b-0">
-    <dt className="text-[14px] text-[var(--steel)]">{k}</dt>
-    <dd className="text-right text-[14px] font-semibold text-[var(--graphite)]">{children}</dd>
+  <div className="flex justify-between gap-4 border-b border-[var(--ash)] py-4 last:border-b-0">
+    <dt className="text-[15px] text-[var(--slate)]">{k}</dt>
+    <dd className="text-right text-[15px] font-semibold text-[var(--ink)]">{children}</dd>
   </div>
 );
 export default function CloudVIPLanding() {
@@ -376,71 +338,67 @@ export default function CloudVIPLanding() {
       ? SITE.launched[lang] || SITE.launched.vi
       : SITE.launched;
 
-  const linkCls = "text-[var(--graphite)] underline-offset-4 hover:text-[var(--link)] hover:underline";
+  const linkCls = "text-[var(--ink)] underline-offset-4 hover:text-[var(--link)] hover:underline";
 
   return (
-    <div className="lp min-h-screen bg-[var(--studio)]">
+    <div className="lp min-h-screen bg-[var(--fog)]">
       <style>{CSS}</style>
       <LandingHeader />
 
       <main>
-        {/* ============ HERO — full-bleed film + copy overlay ============ */}
-        <section className="relative overflow-hidden bg-[var(--graphite)] text-white">
-          {/* 👇👇👇 DÁN LINK VIDEO HERO VÀO ĐÂY 👇👇👇 */}
-          {/* Lớp nền GIF */}
-          <img
-          src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero.gif"
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-         />
-
-         {/* Lớp phủ tối để chữ trắng nổi bật (giữ nguyên) */}
-          <div className="absolute inset-0 bg-black/50" />
-          {/* Lớp tối nhẹ để chữ đọc được trên video */}
-          <div className="absolute inset-0 bg-black/45" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
-
-          <div className="relative mx-auto grid max-w-[1200px] items-center gap-14 px-5 pb-24 pt-24 lg:grid-cols-[1.05fr_.95fr] lg:gap-16 lg:pb-32 lg:pt-32">
+        {/* ============ HERO (Apple style) ============ */}
+        <section className="relative overflow-hidden bg-[var(--fog)] pt-16 lg:pt-24 pb-20">
+          <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 lg:grid-cols-2 lg:gap-20">
             <div>
-              <span className="lp-mono lp-rise text-[11px] text-white/70">
+              <span className="lp-mono lp-rise text-[12px] text-[var(--slate)]">
                 {t("ld.badge")}
               </span>
-              <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-6 text-white">
-             {c.h1a} <br /> {c.h1b}
+              <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-4 text-[var(--ink)]">
+                {c.h1a} <br /> {c.h1b}
               </h1>
-              <p className="lp-rise lp-d2 mt-7 max-w-lg text-[17px] leading-[1.55] text-white/80">
+              <p className="lp-rise lp-d2 mt-6 max-w-lg text-[20px] leading-[1.47] text-[var(--graphite)]">
                 {c.heroSub}
               </p>
-              <div className="lp-rise lp-d3 mt-9 flex flex-wrap gap-3">
+              <div className="lp-rise lp-d3 mt-8 flex flex-wrap gap-4">
                 <button onClick={() => navigate("/register")} className="lp-btn">
-                  {t("ld.ctaStart")} <ArrowRight size={16} strokeWidth={1.75} />
+                  {t("ld.ctaStart")} <ArrowRight size={18} />
                 </button>
-                <button onClick={() => scrollToId("how")} className="lp-btn-light">
-                  {c.how} <ChevronDown size={15} strokeWidth={1.75} />
+                <button onClick={() => scrollToId("how")} className="lp-btn-o">
+                  {c.how} <ChevronDown size={18} />
                 </button>
               </div>
-              <ul className="lp-rise lp-d4 mt-9 space-y-2.5">
+              <ul className="lp-rise lp-d4 mt-10 space-y-3">
                 {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
-                  <li key={x} className="flex items-center gap-2.5 text-[15px] text-white/80">
-                    <Check size={15} strokeWidth={2} className="shrink-0 text-white" /> {x}
+                  <li key={x} className="flex items-center gap-3 text-[17px] text-[var(--ink)]">
+                    <Check size={18} strokeWidth={2} className="shrink-0 text-[var(--blue)]" /> {x}
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 max-w-md text-[13px] leading-[1.6] text-white/60">{c.note}</p>
+              <p className="mt-6 max-w-md text-[14px] leading-[1.5] text-[var(--slate)]">{c.note}</p>
             </div>
-            <Showcase c={c} L={L} />
+
+            {/* KHỐI GIF/VIDEO BÊN PHẢI */}
+            <div className="lp-rise lp-d2 flex items-center justify-center">
+              {/* 👇👇👇 DÁN LINK GIF VÀO ĐÂY 👇👇👇 */}
+              <img
+                src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero.gif"
+                alt="Hero visual"
+                className="w-full max-w-[600px] rounded-[28px] object-cover"
+              />
+              {/* 👆👆👆 HẾT SLOT GIF 👆👆👆 */}
+            </div>
           </div>
         </section>
 
-        {/* ============ SỐ LIỆU — Cloud Gray band ============ */}
-        <section className="bg-[var(--cloud)]">
-          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-24">
+        {/* ============ SỐ LIỆU ============ */}
+        <section className="bg-[var(--fog)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-16 sm:py-24">
             <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {c.facts.map(([v, l], i) => (
                 <Reveal key={i} className="h-full">
-                  <div className="h-full rounded-[28px] bg-[var(--studio)] p-7">
-                    <dt className="lp-display text-[36px] text-[var(--graphite)] sm:text-[44px]">{v}</dt>
-                    <dd className="lp-mono mt-3 text-[10px] leading-5 text-[var(--steel)]">{l}</dd>
+                  <div className="h-full rounded-[28px] bg-[var(--white)] p-8">
+                    <dt className="lp-display text-[36px] text-[var(--ink)] sm:text-[44px]">{v}</dt>
+                    <dd className="lp-mono mt-3 text-[11px] leading-5 text-[var(--slate)]">{l}</dd>
                   </div>
                 </Reveal>
               ))}
@@ -448,69 +406,53 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ TÍNH NĂNG — trắng ============ */}
-        <section id="features" className="scroll-mt-20 bg-[var(--studio)]">
-          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
+        {/* ============ TÍNH NĂNG ============ */}
+        <section id="features" className="scroll-mt-20 bg-[var(--white)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-32">
             <Head n="001" label={L.feat} title={c.featTitle} />
-            <div className="mt-16 grid gap-4 md:grid-cols-2">
+            <div className="mt-16 grid gap-6 md:grid-cols-2">
               {c.features.map((f, i) => {
                 const Icon = FEATURE_ICONS[i] || ListChecks;
                 return (
                   <Reveal key={f.to} className="h-full">
-                    <div className="h-full rounded-[28px] bg-[var(--cloud)] p-8 transition duration-300 hover:bg-[#eeeef0]">
+                    <div className="h-full rounded-[28px] bg-[var(--fog)] p-8 sm:p-10">
                       <div className="flex items-start justify-between">
-                        <span className="lp-ico"><Icon size={22} strokeWidth={1.5} /></span>
-                        <span className="lp-mono text-[10px] text-[var(--steel)]">0{i + 1}</span>
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--white)] text-[var(--ink)]">
+                          <Icon size={24} strokeWidth={1.5} />
+                        </span>
+                        <span className="lp-mono text-[11px] text-[var(--slate)]">0{i + 1}</span>
                       </div>
-                      <h3 className="mt-8 text-[24px] font-semibold leading-[1.17] text-[var(--graphite)]">
+                      <h3 className="mt-8 text-[24px] font-semibold leading-[1.19] text-[var(--ink)]">
                         {f.title}
                       </h3>
-                      <p className="mt-3 text-[15px] leading-[1.6] text-[var(--slate)]">{f.body}</p>
-                      <Link to={f.to} className="mt-5 inline-flex items-center gap-1 text-[15px] font-medium text-[var(--link)] hover:underline">
-                        {c.guide} <ArrowRight size={14} strokeWidth={1.75} />
+                      <p className="mt-3 text-[17px] leading-[1.47] text-[var(--graphite)]">{f.body}</p>
+                      <Link to={f.to} className="mt-6 inline-flex items-center gap-1 text-[17px] text-[var(--link)] hover:underline">
+                        {c.guide} <ArrowRight size={16} />
                       </Link>
                     </div>
                   </Reveal>
                 );
               })}
             </div>
-            <p className="lp-mono mt-12 text-center text-[10px] leading-6 text-[var(--steel)]">{c.more}</p>
           </div>
         </section>
 
-        {/* ============ CÁCH HOẠT ĐỘNG — có VIDEO PANEL ============ */}
-        <section id="how" className="scroll-mt-20 bg-[var(--studio)]">
-          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
+        {/* ============ CÁCH HOẠT ĐỘNG ============ */}
+        <section id="how" className="scroll-mt-20 bg-[var(--fog)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-32">
             <Head n="002" label={L.how} title={c.howTitle} />
-
-            {/* 👇👇👇 DÁN LINK VIDEO PANEL VÀO ĐÂY 👇👇👇 */}
-            <div className="mt-14 overflow-hidden rounded-[20px] bg-[var(--graphite)]">
-              <video
-                className="aspect-video w-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                controls
-              >
-                {/* 👉 ĐỔI src bên dưới thành link video thứ 2 của bạn */}
-                <source src="" type="video/mp4" />
-              </video>
-            </div>
-            {/* 👆👆👆 HẾT SLOT VIDEO PANEL 👆👆👆 */}
-
-            <ol className="mt-10 grid gap-4 md:grid-cols-3">
+            <ol className="mt-16 grid gap-6 md:grid-cols-3">
               {[1, 2, 3].map((n) => (
                 <li key={n}>
                   <Reveal className="h-full">
-                    <div className="h-full rounded-[28px] bg-[var(--cloud)] p-7">
-                      <span className="lp-display text-[56px] leading-none text-[var(--control)]">
+                    <div className="h-full rounded-[28px] bg-[var(--white)] p-8 sm:p-10">
+                      <span className="lp-display text-[56px] leading-none text-[var(--ash)]">
                         0{n}
                       </span>
-                      <h3 className="mt-4 text-[22px] font-semibold leading-[1.18] text-[var(--graphite)]">
+                      <h3 className="mt-6 text-[24px] font-semibold leading-[1.19] text-[var(--ink)]">
                         {t(`ld.s${n}t`)}
                       </h3>
-                      <p className="mt-2 text-[15px] leading-[1.6] text-[var(--slate)]">{t(`ld.s${n}d`)}</p>
+                      <p className="mt-3 text-[17px] leading-[1.47] text-[var(--graphite)]">{t(`ld.s${n}d`)}</p>
                     </div>
                   </Reveal>
                 </li>
@@ -519,21 +461,21 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ AN TOÀN — Cloud Gray ============ */}
-        <section id="safety" className="scroll-mt-20 bg-[var(--cloud)]">
-          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-28">
+        {/* ============ AN TOÀN ============ */}
+        <section id="safety" className="scroll-mt-20 bg-[var(--white)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 sm:py-32">
             <Head n="003" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} />
             <Reveal>
-              <div className="mt-14 rounded-[28px] bg-[var(--studio)] p-8 sm:p-12">
+              <div className="mt-16 rounded-[28px] bg-[var(--fog)] p-8 sm:p-14">
                 <div className="grid gap-x-12 gap-y-10 sm:grid-cols-2">
                   {SAFETY.map(({ icon: Icon, t: tk, d }) => (
-                    <div key={tk} className="flex gap-4">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--cloud)] text-[var(--graphite)]">
-                        <Icon className="h-5 w-5" strokeWidth={1.5} />
+                    <div key={tk} className="flex gap-5">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--white)] text-[var(--ink)]">
+                        <Icon className="h-6 w-6" strokeWidth={1.5} />
                       </span>
                       <div>
-                        <h3 className="text-[17px] font-semibold text-[var(--graphite)]">{t(tk)}</h3>
-                        <p className="mt-2 text-[15px] leading-[1.6] text-[var(--slate)]">{t(d)}</p>
+                        <h3 className="text-[19px] font-semibold text-[var(--ink)]">{t(tk)}</h3>
+                        <p className="mt-2 text-[17px] leading-[1.47] text-[var(--graphite)]">{t(d)}</p>
                       </div>
                     </div>
                   ))}
@@ -543,35 +485,35 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ AI ĐỨNG SAU — trắng ============ */}
-        <section className="bg-[var(--studio)]">
-          <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-20 sm:py-28 md:grid-cols-2 md:gap-16">
+        {/* ============ AI ĐỨNG SAU ============ */}
+        <section className="bg-[var(--fog)]">
+          <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-20 sm:py-32 md:grid-cols-2 md:gap-20">
             <div>
               <Eyebrow label={L.who} />
-              <h2 className="lp-display mt-5 text-[36px] sm:text-[52px]">{c.whoTitle}</h2>
-              <p className="mt-5 max-w-md text-[17px] leading-[1.55] text-[var(--slate)]">{c.whoBody}</p>
-              <ul className="mt-6 space-y-3 text-[15px] text-[var(--graphite)]">
+              <h2 className="lp-display mt-4 text-[36px] sm:text-[48px]">{c.whoTitle}</h2>
+              <p className="mt-5 max-w-md text-[17px] leading-[1.47] text-[var(--graphite)]">{c.whoBody}</p>
+              <ul className="mt-6 space-y-3 text-[17px] text-[var(--ink)]">
                 {c.whoPoints.map((p) => (
                   <li key={p} className="flex gap-3">
-                    <Check size={16} strokeWidth={2} className="mt-1 shrink-0 text-[var(--blue)]" />
-                    <span className="text-[var(--slate)]">{p}</span>
+                    <Check size={18} strokeWidth={2} className="mt-1 shrink-0 text-[var(--blue)]" />
+                    <span className="text-[var(--graphite)]">{p}</span>
                   </li>
                 ))}
               </ul>
-              <Link to="/about" className="mt-7 inline-flex items-center gap-1 text-[15px] font-medium text-[var(--link)] hover:underline">
-                {c.whoMore} <ArrowRight size={14} strokeWidth={1.75} />
+              <Link to="/about" className="mt-6 inline-flex items-center gap-1 text-[17px] text-[var(--link)] hover:underline">
+                {c.whoMore} <ArrowRight size={16} />
               </Link>
 
-              <div className="mt-10 border-t border-[var(--divider)] pt-6">
-                <p className="lp-mono text-[10px] text-[var(--steel)]">{c.whoLegal}</p>
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
-                  <Link to="/terms" className="text-[var(--slate)] hover:text-[var(--link)] hover:underline">
+              <div className="mt-10 border-t border-[var(--ash)] pt-6">
+                <p className="lp-mono text-[11px] text-[var(--slate)]">{c.whoLegal}</p>
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
+                  <Link to="/terms" className="text-[var(--graphite)] hover:text-[var(--link)] hover:underline">
                     {lang === "en" ? "Terms of Service" : "Điều khoản sử dụng"}
                   </Link>
-                  <Link to="/privacy" className="text-[var(--slate)] hover:text-[var(--link)] hover:underline">
+                  <Link to="/privacy" className="text-[var(--graphite)] hover:text-[var(--link)] hover:underline">
                     {lang === "en" ? "Privacy Policy" : "Chính sách bảo mật"}
                   </Link>
-                  <Link to="/refund" className="text-[var(--slate)] hover:text-[var(--link)] hover:underline">
+                  <Link to="/refund" className="text-[var(--graphite)] hover:text-[var(--link)] hover:underline">
                     {lang === "en" ? "Refund Policy" : "Chính sách hoàn tiền"}
                   </Link>
                 </div>
@@ -579,7 +521,7 @@ export default function CloudVIPLanding() {
             </div>
 
             <Reveal>
-              <dl className="rounded-[28px] bg-[var(--cloud)] px-7 py-2">
+              <dl className="rounded-[28px] bg-[var(--white)] px-7 py-2">
                 <Row k={c.whoOperator}>{SITE.operator}</Row>
                 {SITE.address && <Row k={lang === "en" ? "Address" : "Địa chỉ"}>{SITE.address}</Row>}
                 {SITE.business && <Row k={lang === "en" ? "Business" : "Kinh doanh"}>{SITE.business}</Row>}
@@ -602,11 +544,11 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ FAQ — Cloud Gray ============ */}
-        <section id="faq" className="scroll-mt-20 bg-[var(--cloud)]">
-          <div className="mx-auto max-w-3xl px-5 py-20 sm:py-28">
+        {/* ============ FAQ ============ */}
+        <section id="faq" className="scroll-mt-20 bg-[var(--white)]">
+          <div className="mx-auto max-w-3xl px-5 py-20 sm:py-32">
             <Head n="004" label={L.faq} title={t("ld.faqTitle")} />
-            <div className="mt-12 border-t border-[var(--divider)]">
+            <div className="mt-12 border-t border-[var(--ash)]">
               {FAQ_ORDER.map((i, idx) => (
                 <FaqRow
                   key={i}
@@ -621,27 +563,27 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ KÊU GỌI CUỐI — film tối ============ */}
-        <section className="bg-[var(--graphite)]">
-          <div className="mx-auto max-w-[1200px] px-5 py-20 text-center sm:py-28">
+        {/* ============ KÊU GỌI CUỐI ============ */}
+        <section className="bg-[var(--fog)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-20 text-center sm:py-32">
             <Reveal>
               <Coins
-                className="pointer-events-none mx-auto mb-8 h-20 w-20 text-white/15"
-                strokeWidth={0.75}
+                className="pointer-events-none mx-auto mb-8 h-20 w-20 text-[var(--ash)]"
+                strokeWidth={1.5}
               />
-              <h2 className="lp-display mx-auto max-w-2xl text-[40px] text-white sm:text-[64px]">
+              <h2 className="lp-display mx-auto max-w-2xl text-[40px] sm:text-[64px]">
                 {c.ctaTitle}
               </h2>
-              <p className="mx-auto mt-5 max-w-lg text-[17px] leading-[1.55] text-white/70">
+              <p className="mx-auto mt-5 max-w-lg text-[17px] leading-[1.47] text-[var(--graphite)]">
                 {t("ld.ctaSub")}
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
                 <button onClick={() => navigate("/register")} className="lp-btn">
-                  {t("ld.ctaReg")} <ArrowRight size={16} strokeWidth={1.75} />
+                  {t("ld.ctaReg")} <ArrowRight size={18} />
                 </button>
                 <button
                   onClick={() => navigate("/login")}
-                  className="text-[16px] font-medium text-white underline-offset-4 hover:underline"
+                  className="text-[17px] text-[var(--ink)] hover:text-[var(--link)] hover:underline"
                 >
                   {t("ld.login")}
                 </button>
@@ -655,4 +597,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-            }
+        }
