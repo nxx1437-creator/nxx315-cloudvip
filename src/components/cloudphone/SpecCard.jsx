@@ -1,11 +1,12 @@
 import React from "react";
 import { Cpu, HardDrive, Smartphone } from "lucide-react";
 import { CARD } from "./cpUi.jsx";
+import { SPEC } from "./cpUtils.js";
 
 const SPEC_ROWS = [
-  { icon: Cpu, label: "CORE", value: "8 nhân" },
-  { icon: HardDrive, label: "RAM", value: "5.4GB" },
-  { icon: Smartphone, label: "ANDROID", value: "13" },
+  { icon: Cpu, label: "CORE", value: SPEC.cores },
+  { icon: HardDrive, label: "RAM", value: SPEC.ram },
+  { icon: Smartphone, label: "ANDROID", value: SPEC.android },
 ];
 
 // Bảng cấu hình máy (một cấu hình duy nhất, muốn thêm gói thì thêm cột ở đây)
@@ -45,3 +46,4 @@ export default function SpecCard() {
     </div>
   );
 }
+
