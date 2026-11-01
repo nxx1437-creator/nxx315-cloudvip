@@ -10,8 +10,10 @@ import {
   FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
 } from "./components/LandingParts.jsx";
 
-/* Media đầu trang (GIF) */
+/* Media đầu trang */
 const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
+// 👇 Đã cập nhật link ảnh hoa sen của bạn
+const HERO_FG = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero2.png";
 const HERO_POSTER = undefined;
 
 const SAFETY = [
@@ -64,7 +66,8 @@ export default function CloudVIPLanding() {
             </div>
 
             <div className="relative min-h-[300px] flex-1 md:static md:min-h-0">
-              <HeroVideo src={HERO_MEDIA} poster={HERO_POSTER} />
+              {/* 👇 Truyền cả ảnh nền và ảnh hoa sen vào */}
+              <HeroVideo src={HERO_MEDIA} fgSrc={HERO_FG} poster={HERO_POSTER} />
             </div>
 
             <div className="mx-auto w-full max-w-[1200px] px-5 pb-8 sm:pb-12">
@@ -279,4 +282,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-}
+                    }
