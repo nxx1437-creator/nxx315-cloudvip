@@ -45,11 +45,12 @@ export function FloatingNav({ items, onItem, loginLabel, onLogin, langLabel, onL
 
 const isVideoSrc = (src) => /\.(mp4|webm|mov|ogv)(\?|$)/i.test(src || "");
 
-/* Media đầu trang */
-export function HeroVideo({ src, poster }) {
+/* Media đầu trang: Hỗ trợ 2 layer */
+export function HeroVideo({ src, fgSrc, poster }) {
   const wrap = useRef(null);
   const [reduce] = useState(prefersReduced);
   const [failed, setFailed] = useState(false);
+  const [fgFailed, setFgFailed] = useState(false);
 
   useEffect(() => {
     if (reduce) return undefined;
@@ -74,12 +75,13 @@ export function HeroVideo({ src, poster }) {
     };
   }, [reduce]);
 
-  if (!src) return <div className="lp-hero-media lp-hero-fallback" aria-hidden="true" />;
+  if (!src && !fgSrc) return <div className="lp-hero-media lp-hero-fallback" aria-hidden="true" />;
 
   return (
     <div ref={wrap} className="lp-hero-media" aria-hidden="true">
-      {isVideoSrc(src) ? (
-        !failed && (
+      {/* Lớp 1: GIF nền (nằm sau) */}
+      {src && !failed && (
+        isVideoSrc(src) ? (
           <video
             className="lp-hero-video"
             src={src}
@@ -89,9 +91,21 @@ export function HeroVideo({ src, poster }) {
             preload="metadata"
             onError={() => setFailed(true)}
           />
+        ) : (
+          <img src={src} alt="" loading="eager" decoding="async" className="lp-hero-video" />
         )
-      ) : (
-        <img src={src} alt="" loading="eager" decoding="async" className="lp-hero-video" />
+      )}
+
+      {/* Lớp 2: Ảnh hoa sen (nằm trước) */}
+      {fgSrc && !fgFailed && (
+        <img
+          src={fgSrc}
+          alt=""
+          loading="eager"
+          decoding="async"
+          className="lp-hero-fg"
+          onError={() => setFgFailed(true)}
+        />
       )}
     </div>
   );
