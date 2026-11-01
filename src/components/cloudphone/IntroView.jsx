@@ -15,38 +15,38 @@ const CSS = `
 .cp-float2 { animation: cp-float 5.6s ease-in-out -2s infinite; }
 `;
 
-// Hình minh hoạ: đám mây + điện thoại tia chớp
+// Hình minh hoạ: điện thoại tia chớp nằm trên đám mây
 function Illustration() {
   return (
-    <div className="relative mx-auto h-[190px] w-[260px]">
+    <div className="relative mx-auto h-[170px] w-[250px]">
       <style>{CSS}</style>
-      <svg viewBox="0 0 260 190" className="absolute inset-0 h-full w-full" aria-hidden="true">
+      <svg viewBox="0 0 250 170" className="absolute inset-0 h-full w-full" aria-hidden="true">
         <defs>
           <linearGradient id="cp-cloud" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#d1fae5" />
-            <stop offset="1" stopColor="#a7f3d0" />
+            <stop offset="0" stopColor="#a7f3d0" />
+            <stop offset="1" stopColor="#6ee7b7" />
           </linearGradient>
           <linearGradient id="cp-screen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#34d399" />
-            <stop offset="1" stopColor="#059669" />
+            <stop offset="1" stopColor="#047857" />
           </linearGradient>
         </defs>
-        <ellipse cx="130" cy="176" rx="82" ry="9" fill="#064e3b" opacity=".08" />
         <g fill="url(#cp-cloud)">
-          <circle cx="82" cy="112" r="38" />
-          <circle cx="132" cy="88" r="50" />
-          <circle cx="184" cy="116" r="34" />
-          <rect x="82" y="112" width="104" height="38" rx="19" />
+          <circle cx="70" cy="128" r="28" />
+          <circle cx="118" cy="112" r="40" />
+          <circle cx="170" cy="126" r="30" />
+          <rect x="60" y="128" width="130" height="30" rx="15" />
         </g>
-        <rect x="98" y="28" width="64" height="118" rx="15" fill="#fff" />
-        <rect x="103" y="33" width="54" height="108" rx="11" fill="url(#cp-screen)" />
-        <path d="M134 58 L114 96 H128 L123 122 L147 82 H133 Z" fill="#fff" />
+        <rect x="95" y="10" width="62" height="118" rx="15" fill="#fff" />
+        <rect x="100" y="15" width="52" height="108" rx="11" fill="url(#cp-screen)" />
+        <path d="M130 38 L111 76 H125 L120 102 L143 62 H129 Z" fill="#fff" />
       </svg>
-      <span className="cp-float absolute left-0 top-6 rounded-full border border-emerald-100 bg-white px-3 py-1.5 font-mono text-[11px] font-bold text-emerald-700 shadow-sm">
+      <span className="cp-float absolute left-1 top-4 rounded-full border border-emerald-200 bg-white px-3 py-1.5 font-mono text-[11px] font-bold text-emerald-700 shadow-sm">
         24/7
       </span>
-      <span className="cp-float2 absolute bottom-10 right-0 rounded-full border border-emerald-100 bg-white px-3 py-1.5 font-mono text-[11px] font-bold text-emerald-700 shadow-sm">
-        Android {SPEC.android}
+      <span className="cp-float2 absolute right-0 top-14 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-700 shadow-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        Online
       </span>
     </div>
   );
@@ -55,7 +55,7 @@ function Illustration() {
 export default function IntroView({ onStart, from }) {
   return (
     <div className="space-y-4">
-      <section className={`relative overflow-hidden px-5 pb-6 pt-5 text-center ${CARD}`}>
+      <section className={`relative overflow-hidden px-4 pb-5 pt-5 text-center ${CARD}`}>
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 h-56"
@@ -71,7 +71,7 @@ export default function IntroView({ onStart, from }) {
             <br />
             <span className="text-emerald-600">của riêng bạn</span>
           </h1>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <div className="mt-4 flex items-center justify-center gap-1.5">
             {[
               [Cpu, SPEC.cores],
               [HardDrive, `${SPEC.ram} RAM`],
@@ -79,9 +79,9 @@ export default function IntroView({ onStart, from }) {
             ].map(([Icon, label]) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-700"
+                className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[12px] font-bold text-emerald-700"
               >
-                <Icon size={13} />
+                <Icon size={12} />
                 {label}
               </span>
             ))}
@@ -125,5 +125,6 @@ export default function IntroView({ onStart, from }) {
       </div>
     </div>
   );
-}
+            }
+          
 
