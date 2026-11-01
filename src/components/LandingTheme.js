@@ -1,4 +1,4 @@
-// Style trang giới thiệu — phong cách Augen: trắng lâm sàng, chữ mảnh (350), xanh #0071e3 chỉ làm viền/chữ.
+// Style trang giới thiệu — phong cách Augen
 export const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..500&display=swap');
 .lp {
@@ -35,11 +35,7 @@ export const CSS = `
   border:.5px solid var(--blue); color:var(--blue); background:transparent;
   border-radius:9999px; padding:3px 11px; font-size:12px; line-height:1.2;
 }
-/* Biến thể tag lớn hơn — thay cho !rounded-[14px] !py-1.5 */
-.lp-tag-lg {
-  border-radius:14px;
-  padding-top:6px; padding-bottom:6px;
-}
+.lp-tag-lg { border-radius:14px; padding-top:6px; padding-bottom:6px; }
 
 .lp-press { transition:transform .12s ease-out, opacity .2s; }
 .lp-press:active { transform:scale(.97); }
@@ -60,7 +56,7 @@ export const CSS = `
 .lp-nav > * { pointer-events:auto; }
 .lp-nav-logo { display:flex; height:44px; width:44px; align-items:center; justify-content:center; border-radius:9999px; color:var(--ink); }
 .lp-nav-bar { display:flex; align-items:center; height:44px; border-radius:10px; padding:0 6px; }
-.lp-nav-link { padding:8px 11px; border-radius:8px; font-size:14px; color:var(--ink); white-space:nowrap; }
+.lp-nav-link { padding:8px 11px; border-radius:8px; font-size:14px; color:var(--ink); white-space:nowrap; transition:opacity .2s; }
 @media (min-width:640px){ .lp-nav-link { padding:8px 16px; font-size:16px; } }
 @media (hover:hover){ .lp-nav-link:hover { opacity:.6; } }
 
@@ -68,37 +64,51 @@ export const CSS = `
 .lp-banner {
   display:inline-flex; align-items:center; gap:14px; max-width:92vw;
   padding:6px 6px 6px 22px; border-radius:26px; background:rgba(12,13,15,.05);
-  font-size:12px; color:var(--steel); text-decoration:none;
-  transition:opacity .2s;
+  font-size:12px; color:var(--steel); text-decoration:none; transition:opacity .2s;
 }
 @media (hover:hover){ .lp-banner:hover { opacity:.85; } }
 .lp-arrow { display:flex; height:22px; width:34px; align-items:center; justify-content:center; border:.5px solid var(--blue); border-radius:9999px; color:var(--blue); flex:none; }
 .lp-cta {
   display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  height:48px; padding:0 22px;
-  border-radius:26px; background:rgba(12,13,15,.05); color:var(--black);
-  font-size:14px; font-weight:400; border:0; text-decoration:none;
-  transition:transform .12s ease-out, opacity .2s;
+  height:48px; padding:0 22px; border-radius:26px; background:rgba(12,13,15,.05); color:var(--black);
+  font-size:14px; font-weight:400; border:0; text-decoration:none; transition:transform .12s ease-out, opacity .2s;
 }
 .lp-cta svg { color:var(--blue); flex:none; }
 .lp-cta:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
 .lp-cta:active { transform:scale(.97); }
 @media (hover:hover){ .lp-cta:hover { opacity:.9; } }
 
-/* Media đầu trang: nằm giữa banner và chữ, rìa tan dần vào nền trắng */
+/* --- MEDIA ĐẦU TRANG (Hiệu ứng trượt lên + Giữ nguyên GIF) --- */
 .lp-hero-media {
-  position:absolute; left:50%; top:50%; width:min(820px,175vw); aspect-ratio:16/9;
-  transform:translate3d(-50%,calc(-50% + var(--py,0px)),0) scale(var(--ps,1));
-  opacity:var(--po,1); will-change:transform,opacity; pointer-events:none;
+  position: absolute; left: 50%; top: 50%;
+  width: 100%; max-width: 1000px; height: 100%; max-height: 80vh;
+  /* Kết hợp translate cho parallax */
+  transform: translate3d(-50%, calc(-50% + var(--py, 0px)), 0) scale(var(--ps, 1));
+  opacity: var(--po, 1); will-change: transform, opacity; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  
+  /* Hiệu ứng trượt lên khi load */
+  animation: heroSlideUp 1.4s cubic-bezier(.22,1,.36,1) both;
 }
-@media (min-width:900px){ .lp-hero-media { left:62%; top:48%; width:min(1100px,92vw); } }
+
+@keyframes heroSlideUp {
+  0% { opacity: 0; transform: translate3d(-50%, -20%, 0) scale(0.95); }
+  100% { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
+}
+
+@media (min-width: 900px) {
+  .lp-hero-media { left: 62%; top: 45%; width: 90vw; max-width: 1200px; }
+}
+
 .lp-hero-video,
 .lp-hero-media > img {
-  width:100%; height:100%; object-fit:cover; display:block;
-  filter:saturate(1.15);
-  -webkit-mask-image:radial-gradient(closest-side,#000 58%,transparent 100%);
-  mask-image:radial-gradient(closest-side,#000 58%,transparent 100%);
+  width: auto; height: auto;
+  max-width: 100%; max-height: 100%;
+  object-fit: contain; /* Hiển thị trọn vẹn ảnh */
+  display: block;
+  filter: drop-shadow(0 20px 40px rgba(0, 113, 227, 0.15)); /* Bóng mờ xanh nhẹ cho nổi bật */
 }
+
 .lp-hero-fallback { background:radial-gradient(closest-side,rgba(0,113,227,.35),transparent); }
 
 /* Hiện dần khi cuộn tới */
@@ -111,7 +121,7 @@ export const CSS = `
 @media (prefers-reduced-motion: reduce) {
   .lp-reveal { transform:none; transition:opacity .3s ease; }
   .lp-rise { animation:none; }
-  .lp-hero-media { transform:translate3d(-50%,-50%,0); }
+  .lp-hero-media { animation:none; transform:translate3d(-50%,-50%,0); }
   .lp-press, .lp-cta { transition:none; }
   .lp-press:active, .lp-cta:active { transform:none; }
 }
@@ -123,4 +133,3 @@ export const CSS = `
   .lp-tag { border-width:1px; }
 }
 `;
-
