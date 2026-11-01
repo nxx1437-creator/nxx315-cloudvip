@@ -387,19 +387,14 @@ export default function CloudVIPLanding() {
         {/* ============ HERO — full-bleed film + copy overlay ============ */}
         <section className="relative overflow-hidden bg-[var(--graphite)] text-white">
           {/* 👇👇👇 DÁN LINK VIDEO HERO VÀO ĐÂY 👇👇👇 */}
-          <video
-            className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster=""
-          >
-            {/* 👉 ĐỔI src bên dưới thành link video của bạn (mp4/webm) */}
-            <source src="" type="video/mp4" />
-          </video>
-          {/* 👆👆👆 HẾT SLOT VIDEO HERO 👆👆👆 */}
+          {/* Lớp nền GIF */}
+          <img
+          src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero.gif"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+         />
 
+        
           {/* Lớp tối nhẹ để chữ đọc được trên video */}
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
@@ -410,8 +405,8 @@ export default function CloudVIPLanding() {
                 {t("ld.badge")}
               </span>
               <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-6 text-white">
-  {c.h1a} <br /> {c.h1b}
-</h1>
+             {c.h1a} <br /> {c.h1b}
+              </h1>
               <p className="lp-rise lp-d2 mt-7 max-w-lg text-[17px] leading-[1.55] text-white/80">
                 {c.heroSub}
               </p>
