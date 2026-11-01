@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "../lib/supabaseClient.js";
+import TopHeader from "../components/TopHeader.jsx";
+import BottomNav from "../components/BottomNav.jsx";
 import IntroView from "../components/cloudphone/IntroView.jsx";
 import TopBar from "../components/cloudphone/TopBar.jsx";
 import BuyView from "../components/cloudphone/BuyView.jsx";
@@ -175,6 +177,9 @@ export default function CloudPhone() {
   };
 
   const pkg = pkgs.find((p) => p.id === selectedId);
+  const cheapest = pkgs.length
+    ? [...pkgs].sort((a, b) => a.price_coins - b.price_coins)[0]
+    : null;
   const soldOut = pkgs.length === 0;
   const canBuy = !soldOut && !!pkg && agreed && !!account.trim() && !busy && !active;
 
@@ -188,16 +193,18 @@ export default function CloudPhone() {
             "linear-gradient(180deg,#d6f0e9 0,#e6f6f2 55%,#eefaf7 100%)",
         }}
       />
-      <div className="relative mx-auto w-full max-w-md px-4 pb-48 pt-4">
+      <TopHeader />
+      <div
+        className={`relative mx-auto w-full max-w-md px-4 pt-3 ${
+          view === "buy" ? "pb-80" : "pb-36"
+        }`}
+      >
         {loading || !view ? (
           <div className="flex justify-center py-24">
             <Loader2 className="animate-spin text-emerald-600" size={30} />
           </div>
         ) : view === "intro" ? (
-          <IntroView
-            onBack={() => navigate("/store")}
-            onStart={() => setView("buy")}
-          />
+          <IntroView from={cheapest} onStart={() => setView("buy")} />
         ) : (
           <>
             <TopBar
@@ -242,6 +249,9 @@ export default function CloudPhone() {
           onEarn={() => navigate(EARN_PATH)}
         />
       )}
+
+      <BottomNav />
     </div>
   );
-}
+        }
+    
