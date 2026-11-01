@@ -596,8 +596,8 @@ const Row = ({ k, children }) => (
         </section>
       </main>
 
-      <LandingFooter />
+            <LandingFooter />
       <BackToTop />
     </div>
   );
-                    }                                           }
+ }
