@@ -3,47 +3,29 @@ import { Cpu, HardDrive, Smartphone } from "lucide-react";
 import { CARD } from "./cpUi.jsx";
 import { SPEC } from "./cpUtils.js";
 
-const SPEC_ROWS = [
-  { icon: Cpu, label: "CORE", value: SPEC.cores },
-  { icon: HardDrive, label: "RAM", value: SPEC.ram },
-  { icon: Smartphone, label: "ANDROID", value: SPEC.android },
+const ROWS = [
+  { icon: Cpu, value: SPEC.cores, label: "NHÂN" },
+  { icon: Smartphone, value: SPEC.android, label: "ANDROID" },
+  { icon: HardDrive, value: SPEC.ram, label: "RAM (GB)" },
 ];
 
-// Bảng cấu hình máy (một cấu hình duy nhất, muốn thêm gói thì thêm cột ở đây)
+// Cấu hình máy: ba con số lớn (muốn thêm thông số thì thêm một dòng ở ROWS)
 export default function SpecCard() {
   return (
-    <div className={`p-4 ${CARD}`}>
-      <p className="mb-3 text-lg font-black text-slate-900">Cấu hình máy</p>
-      <div className="grid grid-cols-[92px_1fr] gap-3">
-        <div className="pt-[54px]">
-          {SPEC_ROWS.map((s) => (
-            <div
-              key={s.label}
-              className="flex h-14 items-center gap-1.5 text-xs font-bold text-slate-400"
-            >
-              <s.icon size={14} />
-              {s.label}
-            </div>
-          ))}
+    <div className={`grid grid-cols-3 divide-x divide-emerald-100 py-5 ${CARD}`}>
+      {ROWS.map((r) => (
+        <div key={r.label} className="flex flex-col items-center">
+          <span className="text-[34px] font-black leading-none text-slate-900">
+            {r.value}
+          </span>
+          <span className="mt-2.5 inline-flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+            <r.icon size={13} />
+            {r.label}
+          </span>
         </div>
-        <div>
-          <div className="mb-2 flex h-10 items-center justify-center gap-1.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-sm font-black text-emerald-800">
-            <Smartphone size={15} />
-            Tiêu chuẩn
-          </div>
-          <div className="rounded-2xl border-2 border-emerald-500 bg-white">
-            {SPEC_ROWS.map((s) => (
-              <div
-                key={s.label}
-                className="flex h-14 items-center justify-center text-xl font-black text-slate-900"
-              >
-                {s.value}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
+
 
