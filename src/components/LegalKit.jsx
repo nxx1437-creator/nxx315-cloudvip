@@ -7,42 +7,41 @@ import { StarMark } from "./LandingParts.jsx";
 const BASE = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/";
 const imgUrl = (n) => (/^https?:/.test(n) ? n : BASE + n);
 
-/* [màu chữ/icon, màu nền nhạt] */
+/* Màu chỉ dùng cho icon nhỏ, chấm đầu dòng và nhãn lưu ý. Nền luôn trắng. */
 const TONE = {
-  orange: ["#e2551f", "#fff0e8"], pink: ["#d63a68", "#ffe9f0"], blue: ["#1380d4", "#e5f3ff"],
-  green: ["#1f9d68", "#e4f7ee"], purple: ["#6a4fd6", "#efeaff"], amber: ["#b7791f", "#fff6dc"],
-  rose: ["#c8374b", "#ffebee"],
+  orange: "#e2551f", pink: "#d63a68", blue: "#1380d4", green: "#1f9d68",
+  purple: "#6a4fd6", amber: "#b7791f", rose: "#c8374b",
 };
 const CYCLE = ["orange", "pink", "blue", "green", "purple", "amber"];
 const NOTE_TONE = { "Nghiêm cấm": "rose", "Hoàn xu": "rose", "Biện pháp xử lý": "rose" };
-const vars = (t) => ({ "--fg": TONE[t][0], "--bg2": TONE[t][1] });
+const vars = (t) => ({ "--fg": TONE[t] });
 const pad = (n) => String(n).padStart(2, "0");
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400..600&display=swap');
-.lg{--bg:#fbf6f0;--ink:#2a2018;--soft:#6e6255;--mute:#a89a8c;--line:#eadfd3;--accent:#f26b3a;
- font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);
- background:
-  radial-gradient(560px 380px at 8% -40px,#ffd9c4 0,rgba(255,217,196,0) 70%),
-  radial-gradient(520px 360px at 96% 40px,#ffd0e0 0,rgba(255,208,224,0) 70%),
-  radial-gradient(560px 380px at 55% 440px,#d4ecff 0,rgba(212,236,255,0) 70%),
-  var(--bg);-webkit-font-smoothing:antialiased}
-.lg button{font:inherit}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..500&display=swap');
+.lg{--bg:#fdfdfd;--ink:#0f1012;--soft:#5e5e5e;--mute:#8f8f8f;--line:rgba(0,0,0,.08);--blue:#0071e3;
+ font-family:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+ font-weight:350;letter-spacing:-.02em;font-feature-settings:"ss01","ss02","cv01","cv11";
+ color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+.lg button{font:inherit;letter-spacing:inherit}
 .lg-press{transition:transform .12s ease-out,opacity .2s}.lg-press:active{transform:scale(.97)}
-.lg-head{position:fixed;top:0;left:0;right:0;z-index:50;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 0;pointer-events:none}
-.lg-pill{pointer-events:auto;max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 10px 0 11px;border-radius:9999px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--line);box-shadow:0 10px 30px -14px rgba(80,50,20,.28)}
-.lg-logo{display:flex;height:38px;width:38px;align-items:center;justify-content:center;border-radius:9999px;background:var(--accent);color:#fff}
-.lg-btn{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border-radius:9999px;font-size:14px;font-weight:600;color:var(--ink)}
-.lg-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px;box-shadow:0 12px 30px -24px rgba(80,50,20,.3)}
-@media(min-width:640px){.lg-card{padding:32px}}
-.lg-photo{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:28px;background:#f1e8de;box-shadow:0 22px 40px -22px rgba(70,45,20,.45)}
+.lg-head{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:center;gap:8px;pointer-events:none;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px 0}
+@media(min-width:640px){.lg-head{padding-top:calc(env(safe-area-inset-top,0px) + 28px)}}
+.lg-head>*{pointer-events:auto}
+.lg-glass{background:rgba(253,253,253,.92);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:.5px solid var(--line)}
+.lg-logo{display:flex;height:44px;width:44px;align-items:center;justify-content:center;border-radius:9999px;color:var(--ink)}
+.lg-bar{display:flex;align-items:center;height:44px;border-radius:12px;padding:0 6px}
+.lg-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:14px;color:var(--ink);white-space:nowrap}
+@media(min-width:640px){.lg-link{padding:8px 16px;font-size:16px}}
+.lg-tag{display:inline-flex;align-items:center;border:.5px solid var(--blue);color:var(--blue);border-radius:9999px;padding:3px 11px;font-size:12px;line-height:1.2}
+.lg-cta{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 22px;border-radius:26px;background:rgba(12,13,15,.05);color:#020201;font-size:14px;font-weight:400}
+.lg-cta svg{color:var(--blue)}
+.lg-photo{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:#f2f2f4;border:.5px solid var(--line)}
 .lg-wide{aspect-ratio:16/10}@media(min-width:768px){.lg-wide{aspect-ratio:16/8}}
-.lg-cta{display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 26px;border-radius:9999px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;box-shadow:0 12px 24px -10px rgba(242,107,58,.65);transition:transform .12s}
-.lg-cta:active{transform:scale(.97)}
-.lg-rise{opacity:0;transform:translate3d(0,20px,0);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
+.lg-rise{opacity:0;transform:translate3d(0,18px,0);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
 .lg-rise.is-in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.lg-rise{transform:none;transition:opacity .3s}}
-@media(prefers-reduced-transparency:reduce){.lg-pill{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media(prefers-reduced-transparency:reduce){.lg-glass{background:#fdfdfd;-webkit-backdrop-filter:none;backdrop-filter:none}}
 `;
 
 function Rise({ children, className = "" }) {
@@ -58,10 +57,10 @@ function Rise({ children, className = "" }) {
   return <div ref={ref} className={`lg-rise ${on ? "is-in" : ""} ${className}`}>{children}</div>;
 }
 
-/* **chữ đậm** */
+/* **chữ đậm** → nhấn bằng màu đen, không dùng độ đậm */
 const rich = (s) =>
   s.split(/(\*\*[^*]+\*\*)/g).map((x, i) =>
-    x.startsWith("**") ? <strong key={i} className="font-bold text-[var(--ink)]">{x.slice(2, -2)}</strong> : x
+    x.startsWith("**") ? <strong key={i} className="font-[350] text-[var(--ink)]">{x.slice(2, -2)}</strong> : x
   );
 
 const goTo = (id) => {
@@ -80,9 +79,9 @@ function Photo({ v, wide }) {
     <figure className="mt-6">
       <img src={imgUrl(file)} alt={t1 || ""} loading="lazy" onError={() => setOk(false)} className={`lg-photo ${wide ? "lg-wide" : ""}`} />
       {(t1 || t2) && (
-        <figcaption className="mt-4">
-          {t1 && <p className="text-[18px] font-bold leading-snug">{t1}</p>}
-          {t2 && <p className="mt-1 text-[14px] leading-snug text-[var(--mute)]">{t2}</p>}
+        <figcaption className="mt-3">
+          {t1 && <p className="text-[16px] leading-snug">{t1}</p>}
+          {t2 && <p className="mt-1 text-[13px] leading-snug text-[var(--mute)]">{t2}</p>}
         </figcaption>
       )}
     </figure>
@@ -93,8 +92,8 @@ function Items({ items }) {
   return (
     <ul className="mt-4 space-y-2.5">
       {items.map((x) => (
-        <li key={x} className="flex gap-3 text-[16px] leading-[1.55] text-[var(--soft)]">
-          <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--fg)]" />
+        <li key={x} className="flex gap-3 text-[16px] leading-[1.5] text-[var(--soft)]">
+          <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-[var(--fg)]" />
           <span>{x}</span>
         </li>
       ))}
@@ -104,17 +103,17 @@ function Items({ items }) {
 
 function Note({ tag, x, items, foot }) {
   return (
-    <div className="mt-5 rounded-[22px] bg-[var(--bg2)] p-5" style={vars(NOTE_TONE[tag] || "amber")}>
-      <p className="text-[13px] font-bold uppercase tracking-wide text-[var(--fg)]">{tag}</p>
-      {x && <p className="mt-2 text-[16px] leading-[1.6] text-[var(--ink)]">{rich(x)}</p>}
+    <div className="mt-5 rounded-[14px] bg-[#f6f6f7] p-4 sm:p-5" style={vars(NOTE_TONE[tag] || "amber")}>
+      <p className="text-[12px] text-[var(--fg)]">{tag}</p>
+      {x && <p className="mt-1.5 text-[16px] leading-[1.5] text-[var(--ink)]">{rich(x)}</p>}
       {items && <Items items={items} />}
-      {foot && <p className="mt-4 text-[13px] leading-[1.5] text-[var(--soft)]">{foot}</p>}
+      {foot && <p className="mt-3 text-[13px] leading-[1.5] text-[var(--mute)]">{foot}</p>}
     </div>
   );
 }
 
 function Block({ b }) {
-  if (b.t === "p") return <p className="mt-3 text-[16px] leading-[1.65] text-[var(--soft)]">{rich(b.x)}</p>;
+  if (b.t === "p") return <p className="mt-3 text-[16px] leading-[1.55] text-[var(--soft)]">{rich(b.x)}</p>;
   if (b.t === "list") return <Items items={b.items} />;
   return <Note {...b} />;
 }
@@ -142,62 +141,51 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
       <style>{CSS}</style>
 
       <header className="lg-head">
-        <div className="lg-pill">
-          <Link to="/" aria-label="NXX315" className="lg-press flex items-center gap-2.5">
-            <span className="lg-logo"><StarMark size={20} /></span>
-            <span className="hidden text-[17px] font-extrabold tracking-tight min-[420px]:inline">nxx315</span>
-          </Link>
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => navigate(-1)} className="lg-btn lg-press"><ArrowLeft size={15} strokeWidth={2} /> Quay lại</button>
-            <Link to="/dashboard" className="lg-btn lg-press">Trang chủ</Link>
-          </div>
-        </div>
+        <Link to="/" aria-label="NXX315" className="lg-glass lg-press lg-logo"><StarMark /></Link>
+        <nav className="lg-glass lg-bar" aria-label="Main">
+          <button onClick={() => navigate(-1)} className="lg-link lg-press"><ArrowLeft size={14} strokeWidth={1.5} /> Quay lại</button>
+          <Link to="/dashboard" className="lg-link lg-press">Trang chủ</Link>
+        </nav>
       </header>
 
-      <main className="mx-auto max-w-[1100px] px-5 pb-20 pt-[104px] sm:pb-[94px] sm:pt-[128px]">
-        <div className="max-w-[680px]">
-          <span className="inline-flex rounded-full border border-[var(--line)] bg-white/70 px-3.5 py-1.5 text-[13px] font-semibold text-[var(--accent)]">
-            Pháp lý · Cập nhật lần cuối {updated}
-          </span>
-          <h1 className="mt-5 text-[34px] font-extrabold leading-[1.1] tracking-[-0.02em] sm:text-[52px]">{title}</h1>
-          <p className="mt-5 text-[19px] leading-[1.5] text-[var(--soft)]" style={{ fontFamily: "'Fraunces',Georgia,serif" }}>{intro}</p>
-          <ul className="mt-6 flex flex-wrap gap-2">
-            {chips.map((c, i) => (
-              <li key={c} style={vars(CYCLE[i % CYCLE.length])} className="rounded-full bg-[var(--bg2)] px-3.5 py-1.5 text-[13px] font-semibold text-[var(--fg)]">{c}</li>
-            ))}
+      <main className="mx-auto max-w-[1100px] px-5 pb-20 pt-[110px] sm:pb-[94px] sm:pt-[150px]">
+        <div className="max-w-[640px]">
+          <p className="text-[12px] text-[var(--mute)]">Pháp lý · Cập nhật lần cuối {updated}</p>
+          <h1 className="mt-3 text-[clamp(27px,3.6vw,40px)] leading-[1.2] tracking-[-0.03em]">{title}</h1>
+          <p className="mt-4 text-[16px] leading-[1.55] text-[var(--soft)]">{intro}</p>
+          <ul className="mt-6 flex flex-wrap gap-1.5">
+            {chips.map((c) => <li key={c} className="lg-tag">{c}</li>)}
           </ul>
         </div>
         {hero && <div className="max-w-[900px]"><Photo v={hero} wide /></div>}
 
-        <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-16 lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-14">
+        <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-16 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16">
           <nav aria-label="Mục lục" className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-            <p className="mb-3 hidden text-[13px] font-bold text-[var(--mute)] lg:block">Mục lục</p>
-            <ol className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0">
+            <p className="mb-3 hidden text-[12px] text-[var(--mute)] lg:block">Mục lục</p>
+            <ol className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0">
               {toc.map((s, i) => (
                 <li key={s.id} className="shrink-0">
                   <button onClick={() => goTo(s.id)}
-                    className={`lg-press whitespace-nowrap rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-[7px] lg:text-[14px] ${
-                      active === s.id
-                        ? "border-transparent bg-[var(--accent)] text-white lg:text-[var(--accent)]"
-                        : "border-[var(--line)] bg-white/70 text-[var(--soft)]"
+                    className={`lg-press whitespace-nowrap rounded-full border-[.5px] px-3 py-1.5 text-[12px] transition-colors lg:rounded-none lg:border-0 lg:px-0 lg:py-[7px] lg:text-[14px] ${
+                      active === s.id ? "border-[var(--blue)] text-[var(--blue)]" : "border-[var(--line)] text-[var(--soft)]"
                     }`}>
-                    <span className="mr-1.5 opacity-60">{pad(i + 1)}</span>{s.title}
+                    <span className="mr-1.5 text-[var(--mute)]">{pad(i + 1)}</span>{s.title}
                   </button>
                 </li>
               ))}
             </ol>
           </nav>
 
-          <div className="min-w-0 max-w-[720px] space-y-4">
+          <div className="min-w-0 max-w-[720px]">
             {sections.map((s, i) => {
               const Icon = s.icon;
               return (
                 <Rise key={s.id}>
-                  <section id={s.id} className="lg-card scroll-mt-28" style={vars(CYCLE[i % CYCLE.length])}>
+                  <section id={s.id} className="scroll-mt-28 border-t-[.5px] border-[var(--line)] py-10 first:border-t-0 first:pt-0 sm:py-12" style={vars(CYCLE[i % CYCLE.length])}>
                     <div className="flex items-center gap-3">
-                      {Icon && <Icon size={28} strokeWidth={1.75} className="shrink-0 text-[var(--fg)]" />}
-                      <h2 className="flex-1 text-[20px] font-bold leading-tight sm:text-[22px]">{s.title}</h2>
-                      <span className="text-[13px] font-semibold text-[var(--mute)]">{pad(i + 1)}</span>
+                      {Icon && <Icon size={22} strokeWidth={1.25} className="shrink-0 text-[var(--fg)]" />}
+                      <h2 className="flex-1 text-[22px] leading-[1.25] tracking-[-0.44px] sm:text-[24px]">{s.title}</h2>
+                      <span className="text-[12px] text-[var(--mute)]">{pad(i + 1)}</span>
                     </div>
                     {s.blocks.map((b, k) => <Block key={k} b={b} />)}
                     <Photo v={s.img} />
@@ -208,30 +196,29 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
 
             {accept && (
               <Rise>
-                <section id={accept.id} className="scroll-mt-28 rounded-[28px] border border-[var(--line)] p-6 sm:p-8"
-                  style={{ ...vars("green"), background: "linear-gradient(135deg,#fff3ea,#ffe9f0 60%,#e5f3ff)" }}>
-                  <h2 className="text-[22px] font-bold leading-tight sm:text-[26px]">{accept.title}</h2>
-                  <p className="mt-3 text-[16px] leading-[1.6] text-[var(--soft)]">{accept.lead}</p>
+                <section id={accept.id} className="scroll-mt-28 border-t-[.5px] border-[var(--line)] py-10 sm:py-12">
+                  <h2 className="text-[22px] leading-[1.25] tracking-[-0.44px] sm:text-[24px]">{accept.title}</h2>
+                  <p className="mt-3 text-[16px] leading-[1.55] text-[var(--soft)]">{accept.lead}</p>
                   <ul className="mt-4 space-y-3">
                     {accept.items.map((x) => (
-                      <li key={x} className="flex gap-3 text-[16px] leading-[1.55]">
-                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--fg)] text-white"><Check size={14} strokeWidth={2.5} /></span>
+                      <li key={x} className="flex gap-3 text-[16px] leading-[1.5] text-[var(--soft)]">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[.5px] border-[var(--blue)] text-[var(--blue)]"><Check size={12} strokeWidth={1.5} /></span>
                         <span>{x}</span>
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-5 text-[13px] leading-[1.5] text-[var(--soft)]">{accept.foot}</p>
+                  <p className="mt-5 text-[13px] leading-[1.5] text-[var(--mute)]">{accept.foot}</p>
                 </section>
               </Rise>
             )}
 
-            <div className="pt-4">
-              <Link to="/dashboard" className="lg-cta">Quay về trang chủ <ArrowRight size={17} strokeWidth={2} /></Link>
-            </div>
+            <Link to="/dashboard" className="lg-cta lg-press mt-2">
+              <span>Quay về trang chủ</span><ArrowRight size={16} strokeWidth={1.5} />
+            </Link>
           </div>
         </div>
       </main>
     </div>
   );
-  }
-    
+                                                                             }
+      
