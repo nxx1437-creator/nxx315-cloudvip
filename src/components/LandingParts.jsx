@@ -6,7 +6,7 @@ const REDUCE = "(prefers-reduced-motion: reduce)";
 const prefersReduced = () =>
   typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(REDUCE).matches;
 
-/* Ngôi sao 8 cánh (đã quay lại như cũ) */
+/* Ngôi sao 8 cánh */
 export function StarMark({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -91,7 +91,7 @@ export function HeroVideo({ src, poster }) {
           />
         )
       ) : (
-        <img src={src} alt="" loading="eager" decoding="async" />
+        <img src={src} alt="" loading="eager" decoding="async" className="lp-hero-video" />
       )}
     </div>
   );
