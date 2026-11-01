@@ -10,8 +10,8 @@ import {
   FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
 } from "./components/LandingParts.jsx";
 
-/* Video đầu trang: tải file hero.mp4 lên thư mục public của repo */
-const HERO_VIDEO = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
+/* Media đầu trang: GIF/MP4 trong public hoặc Supabase storage */
+const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
 
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
@@ -30,10 +30,16 @@ export default function CloudVIPLanding() {
   const c = COPY[lang] || COPY.vi;
   const L = LABELS[lang] || LABELS.vi;
   const navigate = useNavigate();
-  const [openFaq, setOpenFaq] = useState(0);
+
+  // Dùng key thật của FAQ thay vì index hiển thị
+  const [openFaq, setOpenFaq] = useState(FAQ_ORDER[0]);
 
   const launchedText =
-    typeof SITE.launched === "object" ? SITE.launched[lang] || SITE.launched.vi : SITE.launched;
+    typeof SITE.launched === "object"
+      ? SITE.launched[lang] || SITE.launched.vi
+      : SITE.launched ?? "—";
+
+  const canSwitchLang = typeof setLang === "function";
 
   return (
     <div className="lp min-h-screen">
@@ -45,11 +51,11 @@ export default function CloudVIPLanding() {
         loginLabel={t("ld.login")}
         onLogin={() => navigate("/login")}
         langLabel={lang === "vi" ? "EN" : "VI"}
-        onLang={typeof setLang === "function" ? () => setLang(lang === "vi" ? "en" : "vi") : null}
+        onLang={canSwitchLang ? () => setLang(lang === "vi" ? "en" : "vi") : undefined}
       />
 
       <main>
-        {/* ============ HERO: video + chữ góc trái dưới ============ */}
+        {/* ============ HERO: media + chữ góc trái dưới ============ */}
         <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-[var(--panel)]">
           <div className="relative z-10 flex flex-1 flex-col">
             <div className="lp-rise lp-d2 flex justify-center px-3 pt-[76px] sm:pt-[104px]">
@@ -60,7 +66,7 @@ export default function CloudVIPLanding() {
             </div>
 
             <div className="relative min-h-[300px] flex-1 md:static md:min-h-0">
-              <HeroVideo src={HERO_VIDEO} />
+              <HeroVideo src={HERO_MEDIA} />
             </div>
 
             <div className="mx-auto w-full max-w-[1200px] px-5 pb-8 sm:pb-12">
@@ -73,22 +79,29 @@ export default function CloudVIPLanding() {
                   <p className="lp-rise lp-d2 lp-body mt-3">{c.heroSub}</p>
                   <div className="lp-rise lp-d3 mt-5 flex flex-wrap items-center gap-1.5">
                     <span className="mr-1 text-[16px] text-[var(--ash)]">{c.explore}</span>
-                    {c.tags.map(([k, label]) => (
-                      <button key={k} onClick={() => scrollToId("features")} className="lp-tag lp-press">
+                    {c.tags.map(([k, label], i) => (
+                      <button
+                        key={`${k}-${i}`}
+                        onClick={() => scrollToId("features")}
+                        className="lp-tag lp-press"
+                      >
                         {k} {label}
                       </button>
                     ))}
                   </div>
-                  <button onClick={() => scrollToId("overview")} aria-label="Scroll"
-                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full">
+                  <button
+                    onClick={() => scrollToId("overview")}
+                    aria-label="Scroll"
+                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full"
+                  >
                     <ArrowDown size={12} strokeWidth={1.5} />
                   </button>
                 </div>
 
-                <button onClick={() => navigate("/register")} className="lp-cta lp-press lp-rise lp-d3 w-fit">
+                <Link to="/register" className="lp-cta lp-press lp-rise lp-d3 w-fit">
                   <span>{t("ld.ctaStart")}</span>
                   <ArrowRight size={16} strokeWidth={1.5} />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -103,8 +116,8 @@ export default function CloudVIPLanding() {
                 <div>
                   <h2 className="lp-h2 max-w-[560px]">{c.overTitle}</h2>
                   <ul className="mt-6 flex flex-wrap gap-1.5">
-                    {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
-                      <li key={x} className="lp-tag">{x}</li>
+                    {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x, i) => (
+                      <li key={i} className="lp-tag">{x}</li>
                     ))}
                   </ul>
                 </div>
@@ -114,7 +127,7 @@ export default function CloudVIPLanding() {
 
             <dl className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {c.facts.map(([v, l], i) => (
-                <Reveal key={v} delay={i * 60} className="h-full">
+                <Reveal key={`${v}-${i}`} delay={i * 60} className="h-full">
                   <div className="lp-card h-full p-6 sm:p-8">
                     <dt className="text-[22px] leading-[1.2] tracking-[-0.44px] sm:text-[27px]">{v}</dt>
                     <dd className="lp-label mt-3 leading-[1.4]">{l}</dd>
@@ -133,7 +146,7 @@ export default function CloudVIPLanding() {
               {c.features.map((f, i) => (
                 <Reveal key={f.to} delay={(i % 2) * 70} className="h-full">
                   <div className="lp-card flex h-full flex-col p-7 sm:p-[69px]">
-                    <span className="lp-tag w-fit">{FEATURE_TAGS[i]}</span>
+                    {FEATURE_TAGS[i] && <span className="lp-tag w-fit">{FEATURE_TAGS[i]}</span>}
                     <h3 className="mt-10 text-[24px] leading-[1.2] tracking-[-0.48px] sm:text-[27px]">{f.title}</h3>
                     <p className="lp-body mt-3 flex-1">{f.body}</p>
                     <Link to={f.to} className="lp-link mt-8 inline-flex items-center gap-1 text-[16px]">
@@ -194,7 +207,9 @@ export default function CloudVIPLanding() {
               <h2 className="lp-h2 mt-2">{c.whoTitle}</h2>
               <p className="lp-body mt-5 max-w-md">{c.whoBody}</p>
               <ul className="mt-6 flex flex-wrap gap-1.5">
-                {c.whoPoints.map((p) => <li key={p} className="lp-tag !rounded-[14px] !py-1.5">{p}</li>)}
+                {c.whoPoints.map((p, i) => (
+                  <li key={`${p}-${i}`} className="lp-tag lp-tag-lg">{p}</li>
+                ))}
               </ul>
               <Link to="/about" className="lp-link mt-6 inline-flex items-center gap-1 text-[16px]">
                 {c.whoMore} <ArrowRight size={14} strokeWidth={1.5} />
@@ -216,15 +231,29 @@ export default function CloudVIPLanding() {
                 {SITE.business && <Row k={c.business}>{SITE.business}</Row>}
                 {SITE.youtube && (
                   <Row k="YouTube">
-                    <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="lp-link">
+                    <a
+                      href={SITE.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="lp-link"
+                    >
                       {SITE.youtube.replace("https://www.youtube.com/", "")}
                     </a>
                   </Row>
                 )}
-                <Row k="Zalo">
-                  <a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer" className="lp-link">{SITE.zalo}</a>
-                </Row>
-                <Row k="Email"><span className="break-all">{SITE.email}</span></Row>
+                {SITE.zaloUrl && (
+                  <Row k="Zalo">
+                    <a
+                      href={SITE.zaloUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="lp-link"
+                    >
+                      {SITE.zalo}
+                    </a>
+                  </Row>
+                )}
+                {SITE.email && <Row k="Email"><span className="break-all">{SITE.email}</span></Row>}
                 <Row k={c.whoSince}>{launchedText}</Row>
               </dl>
             </Reveal>
@@ -236,9 +265,15 @@ export default function CloudVIPLanding() {
           <div className="mx-auto max-w-3xl px-5 py-16 sm:py-[94px]">
             <Head n="06" label={L.faq} title={t("ld.faqTitle")} />
             <div className="mt-10 border-t-[.5px] border-[var(--hair)]">
-              {FAQ_ORDER.map((i, idx) => (
-                <FaqRow key={i} n={String(idx + 1).padStart(2, "0")} q={t(`ld.faq${i}q`)} a={t(`ld.faq${i}a`)}
-                  open={openFaq === idx} onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)} />
+              {FAQ_ORDER.map((faqKey, idx) => (
+                <FaqRow
+                  key={faqKey}
+                  n={String(idx + 1).padStart(2, "0")}
+                  q={t(`ld.faq${faqKey}q`)}
+                  a={t(`ld.faq${faqKey}a`)}
+                  open={openFaq === faqKey}
+                  onToggle={() => setOpenFaq(openFaq === faqKey ? null : faqKey)}
+                />
               ))}
             </div>
           </div>
@@ -252,10 +287,11 @@ export default function CloudVIPLanding() {
                 <h2 className="max-w-[560px] text-[clamp(27px,4vw,44px)] leading-[1.2] tracking-[-0.03em]">{c.ctaTitle}</h2>
                 <p className="lp-body mt-4 max-w-md">{t("ld.ctaSub")}</p>
                 <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-                  <button onClick={() => navigate("/register")} className="lp-cta lp-press">
-                    <span>{t("ld.ctaReg")}</span><ArrowRight size={16} strokeWidth={1.5} />
-                  </button>
-                  <button onClick={() => navigate("/login")} className="lp-link text-[16px]">{t("ld.login")}</button>
+                  <Link to="/register" className="lp-cta lp-press">
+                    <span>{t("ld.ctaReg")}</span>
+                    <ArrowRight size={16} strokeWidth={1.5} />
+                  </Link>
+                  <Link to="/login" className="lp-link text-[16px]">{t("ld.login")}</Link>
                 </div>
               </div>
             </Reveal>
@@ -267,8 +303,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-                  }
-                  
-                  
-                                
-
+        }                           
