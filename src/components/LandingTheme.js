@@ -78,10 +78,10 @@ export const CSS = `
 .lp-cta:active { transform:scale(.97); }
 @media (hover:hover){ .lp-cta:hover { opacity:.9; } }
 
-/* --- MEDIA ĐẦU TRANG (Hiệu ứng trượt lên + Tan vào nền) --- */
+/* --- MEDIA ĐẦU TRANG (2 Layer + Hiệu ứng trượt lên) --- */
 .lp-hero-media {
   position: absolute; left: 50%; top: 50%;
-  width: 100%; max-width: 1000px; aspect-ratio: 16/9;
+  width: 100%; max-width: 900px; aspect-ratio: 4/3;
   transform: translate3d(-50%, calc(-50% + var(--py, 0px)), 0) scale(var(--ps, 1));
   opacity: var(--po, 1); will-change: transform, opacity; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
@@ -96,15 +96,38 @@ export const CSS = `
 }
 
 @media (min-width: 900px) {
-  .lp-hero-media { left: 62%; top: 50%; width: 90vw; max-width: 1100px; }
+  .lp-hero-media { left: 62%; top: 50%; width: 90vw; max-width: 1000px; }
 }
 
-/* Ảnh/Video: Tan dần vào nền */
+/* Lớp GIF nền: Tan vào nền trắng */
 .lp-hero-video {
+  position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover; display: block;
   filter: saturate(1.15);
   -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
   mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+  z-index: 1;
+}
+
+/* Lớp Ảnh hoa sen (foreground) */
+.lp-hero-fg {
+  position: absolute; 
+  left: 50%; 
+  bottom: 0;
+  width: auto; 
+  height: 110%; /* Nhô cao lên một chút so với GIF cho đẹp */
+  max-width: 100%; 
+  object-fit: contain;
+  transform: translateX(-50%); 
+  z-index: 2;
+  pointer-events: none;
+  /* Thêm bóng đổ nhẹ cho hoa sen nổi lên */
+  filter: drop-shadow(0 20px 30px rgba(0,113,227,0.15)); 
+}
+
+@media (min-width: 900px) {
+  /* Trên desktop đẩy hoa sen lệch phải một chút để không che chữ */
+  .lp-hero-fg { left: 55%; transform: translateX(-40%); }
 }
 
 .lp-hero-fallback { background:radial-gradient(closest-side,rgba(0,113,227,.35),transparent); }
