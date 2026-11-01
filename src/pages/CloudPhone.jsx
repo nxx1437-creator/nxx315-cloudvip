@@ -18,22 +18,6 @@ import {
   hoursLabel,
 } from "../components/cloudphone/cpUtils.js";
 
-const INTRO_KEY = "cp_intro_seen";
-const introSeen = () => {
-  try {
-    return localStorage.getItem(INTRO_KEY) === "1";
-  } catch {
-    return false;
-  }
-};
-const markIntroSeen = () => {
-  try {
-    localStorage.setItem(INTRO_KEY, "1");
-  } catch {
-    /* bỏ qua */
-  }
-};
-
 export default function CloudPhone() {
   const navigate = useNavigate();
 
@@ -80,12 +64,7 @@ export default function CloudPhone() {
 
       if (!initRef.current) {
         initRef.current = true;
-        // Đã xem giới thiệu (hoặc đã từng thuê) thì vào thẳng trang thuê máy;
-        // đang có đơn chờ giao thì mở "Máy của tôi" để thấy tiến trình.
-        const waiting = myOrders.some(
-          (x) => x.status === "paid" || x.status === "fulfilling"
-        );
-        setView(waiting ? "mine" : introSeen() || myOrders.length ? "buy" : "intro");
+        setView(myOrders.length ? "mine" : "intro");
       }
     } catch (e) {
       console.error("Load cloud phone:", e);
@@ -225,18 +204,13 @@ export default function CloudPhone() {
             <Loader2 className="animate-spin text-emerald-600" size={30} />
           </div>
         ) : view === "intro" ? (
-          <IntroView
-            from={cheapest}
-            onStart={() => {
-              markIntroSeen();
-              setView("buy");
-            }}
-          />
+          <IntroView from={cheapest} onStart={() => setView("buy")} />
         ) : (
           <>
             <TopBar
               view={view}
               setView={setView}
+              onBack={() => navigate("/store")}
             />
             {view === "buy" ? (
               <BuyView
@@ -281,5 +255,7 @@ export default function CloudPhone() {
       <BottomNav />
     </div>
   );
-          }
+  }
+    
+    
       
