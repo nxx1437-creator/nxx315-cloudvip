@@ -6,7 +6,7 @@ import { fmt } from "./cpUtils.js";
 // Thanh cố định dưới đáy: nút thuê + số dư
 export default function BuyBar({ coins, pkg, soldOut, hasActive, canBuy, busy, onBuy, onEarn }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-[#eefaf7] via-[#eefaf7] to-transparent px-4 pb-5 pt-8">
+    <div className="fixed inset-x-0 bottom-[96px] z-20 bg-gradient-to-t from-[#eefaf7] via-[#eefaf7]/95 to-transparent px-4 pb-2 pt-6">
       <div className="mx-auto max-w-md">
         <button
           onClick={onBuy}
@@ -47,3 +47,4 @@ export default function BuyBar({ coins, pkg, soldOut, hasActive, canBuy, busy, o
     </div>
   );
 }
+
