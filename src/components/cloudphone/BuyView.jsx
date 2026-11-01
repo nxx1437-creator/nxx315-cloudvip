@@ -1,8 +1,10 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Clock, Globe, Mail, Server, AlertTriangle } from "lucide-react";
-import { Section, Chip, CARD } from "./cpUi.jsx";
+import { Clock, Cpu, Sparkles, Mail, AlertTriangle } from "lucide-react";
+import { Section, CARD } from "./cpUi.jsx";
+import SummaryStrip from "./SummaryStrip.jsx";
 import SpecCard from "./SpecCard.jsx";
+import FeatureGrid from "./FeatureGrid.jsx";
 import ComboCard from "./ComboCard.jsx";
 import { REGION_LABEL, VMOS_URL, withDiscount } from "./cpUtils.js";
 
@@ -15,8 +17,17 @@ export default function BuyView({
   agreed,
   setAgreed,
   hasActive,
+  coins,
+  ordersCount,
+  onEarn,
+  onMine,
 }) {
   const list = useMemo(() => withDiscount(pkgs), [pkgs]);
+  // Gói tiết kiệm nhất được gắn nhãn HOT
+  const hotId = useMemo(() => {
+    const best = [...list].sort((a, b) => b.discountPct - a.discountPct)[0];
+    return best && best.discountPct > 0 ? best.id : null;
+  }, [list]);
 
   return (
     <div className="space-y-6">
@@ -26,31 +37,34 @@ export default function BuyView({
         </div>
       )}
 
-      <SpecCard />
+      <SummaryStrip
+        coins={coins}
+        region={REGION_LABEL}
+        count={ordersCount}
+        onEarn={onEarn}
+        onMine={onMine}
+      />
 
-      <Section icon={Server} title="Máy chủ">
-        <div className="grid grid-cols-2 gap-3">
-          <Chip text={REGION_LABEL} />
-        </div>
+      <Section icon={Cpu} title="Cấu hình">
+        <SpecCard />
       </Section>
 
-      <Section icon={Globe} title="Hệ thống">
-        <div className="grid grid-cols-2 gap-3">
-          <Chip text="Android 13" />
-        </div>
+      <Section icon={Sparkles} title="Tính năng">
+        <FeatureGrid />
       </Section>
 
-      <Section icon={Clock} title="Combo">
+      <Section icon={Clock} title="Thời gian thuê">
         {list.length === 0 ? (
           <p className={`py-6 text-center text-sm font-bold text-slate-400 ${CARD}`}>
             Đang chờ hàng về
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 pt-2">
             {list.map((p) => (
               <ComboCard
                 key={p.id}
                 p={p}
+                hot={p.id === hotId}
                 on={p.id === selectedId}
                 onSelect={() => setSelectedId(p.id)}
               />
@@ -73,12 +87,7 @@ export default function BuyView({
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <span>
             Máy chuyển thẳng vào tài khoản này, nhập sai sẽ không lấy lại được.{" "}
-            <a
-              href={VMOS_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="font-bold underline"
-            >
+            <a href={VMOS_URL} target="_blank" rel="noreferrer" className="font-bold underline">
               Chưa có tài khoản?
             </a>
           </span>
@@ -107,3 +116,4 @@ export default function BuyView({
     </div>
   );
 }
+
