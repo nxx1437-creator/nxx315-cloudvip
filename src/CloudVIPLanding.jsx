@@ -394,7 +394,8 @@ export default function CloudVIPLanding() {
           className="absolute inset-0 h-full w-full object-cover"
          />
 
-        
+         {/* Lớp phủ tối để chữ trắng nổi bật (giữ nguyên) */}
+          <div className="absolute inset-0 bg-black/50" />
           {/* Lớp tối nhẹ để chữ đọc được trên video */}
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent" />
