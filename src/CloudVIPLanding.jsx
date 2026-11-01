@@ -10,9 +10,9 @@ import {
   FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
 } from "./components/LandingParts.jsx";
 
-/* Media đầu trang: GIF/MP4/WEBM trong public hoặc Supabase storage */
+/* Media đầu trang (GIF của bạn) */
 const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
-const HERO_POSTER = undefined; // đặt "/hero-poster.jpg" nếu có ảnh poster
+const HERO_POSTER = undefined;
 
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
@@ -31,14 +31,11 @@ export default function CloudVIPLanding() {
   const c = COPY[lang] || COPY.vi;
   const L = LABELS[lang] || LABELS.vi;
   const navigate = useNavigate();
-
-  // Dùng key thật của FAQ thay vì index hiển thị
   const [openFaq, setOpenFaq] = useState(FAQ_ORDER[0]);
 
-  const launchedText =
-    typeof SITE.launched === "object"
-      ? SITE.launched[lang] || SITE.launched.vi
-      : SITE.launched ?? "—";
+  const launchedText = typeof SITE.launched === "object"
+    ? SITE.launched[lang] || SITE.launched.vi
+    : SITE.launched ?? "—";
 
   const canSwitchLang = typeof setLang === "function";
 
@@ -56,8 +53,8 @@ export default function CloudVIPLanding() {
       />
 
       <main>
-        {/* ============ HERO: media + chữ góc trái dưới ============ */}
-        <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-[var(--panel)]">
+        {/* ============ HERO ============ */}
+        <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white">
           <div className="relative z-10 flex flex-1 flex-col">
             <div className="lp-rise lp-d2 flex justify-center px-3 pt-[76px] sm:pt-[104px]">
               <Link to="/register" className="lp-banner lp-press">
@@ -81,22 +78,13 @@ export default function CloudVIPLanding() {
                   <div className="lp-rise lp-d3 mt-5 flex flex-wrap items-center gap-1.5">
                     <span className="mr-1 text-[16px] text-[var(--ash)]">{c.explore}</span>
                     {c.tags.map(([k, label], i) => (
-                      <button
-                        key={`${k}-${i}`}
-                        type="button"
-                        onClick={() => scrollToId("features")}
-                        className="lp-tag lp-press"
-                      >
+                      <button key={`${k}-${i}`} type="button" onClick={() => scrollToId("features")} className="lp-tag lp-press">
                         {k} {label}
                       </button>
                     ))}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => scrollToId("overview")}
-                    aria-label="Scroll to overview"
-                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full"
-                  >
+                  <button type="button" onClick={() => scrollToId("overview")} aria-label="Scroll to overview"
+                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full">
                     <ArrowDown size={12} strokeWidth={1.5} />
                   </button>
                 </div>
@@ -110,7 +98,7 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ============ TỔNG QUAN: 3 cột lệch ============ */}
+        {/* ============ TỔNG QUAN ============ */}
         <section id="overview" className="scroll-mt-24">
           <div className={SECTION}>
             <Reveal>
@@ -128,7 +116,6 @@ export default function CloudVIPLanding() {
               </div>
             </Reveal>
 
-            {/* dl: mỗi cột là <div> chứa <dt>/<dd> — hợp lệ HTML5 */}
             <dl className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {c.facts.map(([v, l], i) => (
                 <Reveal key={`${v}-${i}`} delay={i * 60} className="h-full">
@@ -235,33 +222,19 @@ export default function CloudVIPLanding() {
                 {SITE.business && <Row k={c.business}>{SITE.business}</Row>}
                 {SITE.youtube && (
                   <Row k="YouTube">
-                    <a
-                      href={SITE.youtube}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="lp-link"
-                    >
+                    <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="lp-link">
                       {SITE.youtube.replace("https://www.youtube.com/", "")}
                     </a>
                   </Row>
                 )}
                 {SITE.zaloUrl && (
                   <Row k="Zalo">
-                    <a
-                      href={SITE.zaloUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="lp-link"
-                    >
+                    <a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer" className="lp-link">
                       {SITE.zalo ?? "Zalo"}
                     </a>
                   </Row>
                 )}
-                {SITE.email && (
-                  <Row k="Email">
-                    <span className="break-all">{SITE.email}</span>
-                  </Row>
-                )}
+                {SITE.email && <Row k="Email"><span className="break-all">{SITE.email}</span></Row>}
                 <Row k={c.whoSince}>{launchedText}</Row>
               </dl>
             </Reveal>
@@ -274,15 +247,9 @@ export default function CloudVIPLanding() {
             <Head n="06" label={L.faq} title={t("ld.faqTitle")} />
             <div className="mt-10 border-t-[.5px] border-[var(--hair)]">
               {FAQ_ORDER.map((faqKey, idx) => (
-                <FaqRow
-                  key={faqKey}
-                  id={faqKey}
-                  n={String(idx + 1).padStart(2, "0")}
-                  q={t(`ld.faq${faqKey}q`)}
-                  a={t(`ld.faq${faqKey}a`)}
-                  open={openFaq === faqKey}
-                  onToggle={() => setOpenFaq(openFaq === faqKey ? null : faqKey)}
-                />
+                <FaqRow key={faqKey} id={faqKey} n={String(idx + 1).padStart(2, "0")}
+                  q={t(`ld.faq${faqKey}q`)} a={t(`ld.faq${faqKey}a`)}
+                  open={openFaq === faqKey} onToggle={() => setOpenFaq(openFaq === faqKey ? null : faqKey)} />
               ))}
             </div>
           </div>
@@ -312,4 +279,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-                      }
+                  }
