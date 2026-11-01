@@ -10,8 +10,9 @@ import {
   FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
 } from "./components/LandingParts.jsx";
 
-/* Media đầu trang: GIF/MP4 trong public hoặc Supabase storage */
+/* Media đầu trang: GIF/MP4/WEBM trong public hoặc Supabase storage */
 const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
+const HERO_POSTER = undefined; // đặt "/hero-poster.jpg" nếu có ảnh poster
 
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
@@ -66,7 +67,7 @@ export default function CloudVIPLanding() {
             </div>
 
             <div className="relative min-h-[300px] flex-1 md:static md:min-h-0">
-              <HeroVideo src={HERO_MEDIA} />
+              <HeroVideo src={HERO_MEDIA} poster={HERO_POSTER} />
             </div>
 
             <div className="mx-auto w-full max-w-[1200px] px-5 pb-8 sm:pb-12">
@@ -82,6 +83,7 @@ export default function CloudVIPLanding() {
                     {c.tags.map(([k, label], i) => (
                       <button
                         key={`${k}-${i}`}
+                        type="button"
                         onClick={() => scrollToId("features")}
                         className="lp-tag lp-press"
                       >
@@ -90,8 +92,9 @@ export default function CloudVIPLanding() {
                     ))}
                   </div>
                   <button
+                    type="button"
                     onClick={() => scrollToId("overview")}
-                    aria-label="Scroll"
+                    aria-label="Scroll to overview"
                     className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full"
                   >
                     <ArrowDown size={12} strokeWidth={1.5} />
@@ -125,6 +128,7 @@ export default function CloudVIPLanding() {
               </div>
             </Reveal>
 
+            {/* dl: mỗi cột là <div> chứa <dt>/<dd> — hợp lệ HTML5 */}
             <dl className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {c.facts.map(([v, l], i) => (
                 <Reveal key={`${v}-${i}`} delay={i * 60} className="h-full">
@@ -188,7 +192,7 @@ export default function CloudVIPLanding() {
                 <div className="grid gap-x-16 gap-y-10 sm:grid-cols-2">
                   {SAFETY.map(({ icon: Icon, t: tk, d }) => (
                     <div key={tk}>
-                      <Icon size={22} strokeWidth={1.1} />
+                      <Icon size={22} strokeWidth={1.1} aria-hidden="true" />
                       <h3 className="lp-sub mt-5">{t(tk)}</h3>
                       <p className="lp-body mt-2">{t(d)}</p>
                     </div>
@@ -226,7 +230,7 @@ export default function CloudVIPLanding() {
 
             <Reveal>
               <dl className="lp-card px-7 py-3 sm:px-10">
-                <Row k={c.whoOperator}>{SITE.operator}</Row>
+                <Row k={c.whoOperator}>{SITE.operator ?? "—"}</Row>
                 {SITE.address && <Row k={c.address}>{SITE.address}</Row>}
                 {SITE.business && <Row k={c.business}>{SITE.business}</Row>}
                 {SITE.youtube && (
@@ -249,11 +253,15 @@ export default function CloudVIPLanding() {
                       rel="noopener noreferrer"
                       className="lp-link"
                     >
-                      {SITE.zalo}
+                      {SITE.zalo ?? "Zalo"}
                     </a>
                   </Row>
                 )}
-                {SITE.email && <Row k="Email"><span className="break-all">{SITE.email}</span></Row>}
+                {SITE.email && (
+                  <Row k="Email">
+                    <span className="break-all">{SITE.email}</span>
+                  </Row>
+                )}
                 <Row k={c.whoSince}>{launchedText}</Row>
               </dl>
             </Reveal>
@@ -268,6 +276,7 @@ export default function CloudVIPLanding() {
               {FAQ_ORDER.map((faqKey, idx) => (
                 <FaqRow
                   key={faqKey}
+                  id={faqKey}
                   n={String(idx + 1).padStart(2, "0")}
                   q={t(`ld.faq${faqKey}q`)}
                   a={t(`ld.faq${faqKey}a`)}
@@ -303,4 +312,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-        }                           
+                      }
