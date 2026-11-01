@@ -3,6 +3,9 @@ export const EARN_PATH = "/tasks";
 export const VMOS_URL = "https://www.vmoscloud.com";
 export const REGION_LABEL = "Hồng Kông"; // đổi thành "Việt Nam" nếu đặt VMOS_COUNTRY_CODE=VN
 
+// Cấu hình máy (hiện chỉ có một loại)
+export const SPEC = { cores: "8 nhân", ram: "5.4GB", android: "13" };
+
 export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export const BUY_ERRORS = {
@@ -54,3 +57,4 @@ export function withDiscount(pkgs) {
     return { ...p, original, discountPct: pct };
   });
 }
+
