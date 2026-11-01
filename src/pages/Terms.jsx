@@ -232,9 +232,9 @@ export default function Terms() {
           </ul>
         </div>
 
-        <div className="mt-14 grid gap-10 lg:mt-20 lg:grid-cols-[220px_1fr] lg:gap-16">
+        <div className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-10 lg:mt-20 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16">
           {/* Mục lục: hàng chip cuộn ngang trên điện thoại, cột dính bên trái trên máy tính */}
-          <nav aria-label="Mục lục" className="lg:sticky lg:top-28 lg:self-start">
+          <nav aria-label="Mục lục" className="min-w-0 lg:sticky lg:top-28 lg:self-start">
             <p className="lp-label mb-3 hidden lg:block">Mục lục</p>
             <ol className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0">
               {ALL.map((s, i) => (
@@ -253,7 +253,7 @@ export default function Terms() {
           </nav>
 
           {/* Nội dung */}
-          <div className="max-w-[720px]">
+          <div className="min-w-0 max-w-[720px]">
             {SECTIONS.map((s, i) => (
               <section key={s.id} id={s.id} className="scroll-mt-28 border-t-[.5px] border-[var(--hair)] py-10 first:border-t-0 first:pt-0 sm:py-12">
                 <Reveal>
@@ -284,5 +284,6 @@ export default function Terms() {
       </main>
     </div>
   );
-    }
+      }
+  
      
