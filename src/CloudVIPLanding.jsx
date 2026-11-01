@@ -28,7 +28,6 @@ const CSS = `
   --divider:#d6d6d6; --control:#e2e2e5;
   --blue:#0071e3; --link:#0066cc; --new:#b64400;
   font-family:'Inter','SF Pro Text',ui-sans-serif,system-ui,-apple-system,sans-serif;
-  font-feature-settings:"numr" on;
   color:var(--graphite);
   background:var(--studio);
   -webkit-font-smoothing:antialiased;
@@ -42,10 +41,11 @@ const CSS = `
   color:var(--graphite);
 }
 .lp-display-xl {
-  font-size:clamp(40px,7.5vw,80px);
-  letter-spacing:-0.03em;
-  line-height:1.02;
-  font-weight:600;
+  font-size: clamp(40px, 7.5vw, 80px);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  font-weight: 600;
+  color: #ffffff !important; 
 }
 .lp-mono {
   font-family:'Roboto Mono',ui-monospace,monospace;
@@ -410,9 +410,8 @@ export default function CloudVIPLanding() {
                 {t("ld.badge")}
               </span>
               <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-6 text-white">
-                {c.h1a}
-                <span className="mt-1 block text-white">{c.h1b}</span>
-              </h1>
+  {c.h1a} <br /> {c.h1b}
+</h1>
               <p className="lp-rise lp-d2 mt-7 max-w-lg text-[17px] leading-[1.55] text-white/80">
                 {c.heroSub}
               </p>
