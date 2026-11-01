@@ -6,14 +6,21 @@ const REDUCE = "(prefers-reduced-motion: reduce)";
 const prefersReduced = () =>
   typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(REDUCE).matches;
 
-/* Ngôi sao 8 cánh ở thanh điều hướng */
+/* Ngôi sao 5 cánh ở thanh điều hướng */
 export function StarMark({ size = 22 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.1" strokeLinecap="round" aria-hidden="true">
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((d) => (
-        <line key={d} x1="12" y1="2.6" x2="12" y2="8.4" transform={`rotate(${d} 12 12)`} />
-      ))}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 2.5 14.9 8.7 21.7 9.4 16.6 14.1 18 20.8 12 17.4 6 20.8 7.4 14.1 2.3 9.4 9.1 8.7Z" />
     </svg>
   );
 }
