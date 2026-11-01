@@ -16,6 +16,59 @@ import { useI18n } from "./i18n/index.js";
 const ICON_BASE =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
 
+/* 👇👇👇 DÁN LINK VIDEO VÀO GIỮA 2 DẤU NGOẶC KÉP 👇👇👇
+   Hỗ trợ: YouTube (watch / youtu.be / shorts), TikTok (link có /video/số),
+   hoặc link file .mp4 / .webm. Để trống thì hiện khung chờ. */
+const VIDEO_URL = "";
+/* 👆👆👆 HẾT CHỖ DÁN VIDEO 👆👆👆 */
+
+/* Ảnh/GIF ở đầu trang */
+const HERO_IMG =
+  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero.gif";
+
+function parseVideo(raw) {
+  const url = (raw || "").trim();
+  if (!url) return null;
+  let m = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/
+  );
+  if (m) return { kind: "iframe", src: `https://www.youtube.com/embed/${m[1]}?rel=0`, ratio: "16 / 9" };
+  m = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+  if (m) return { kind: "iframe", src: `https://www.tiktok.com/embed/v2/${m[1]}`, ratio: "9 / 16" };
+  if (/\.(mp4|webm|mov)(\?.*)?$/i.test(url)) return { kind: "file", src: url, ratio: "16 / 9" };
+  return null;
+}
+
+function VideoBox({ empty }) {
+  const v = parseVideo(VIDEO_URL);
+  const tall = v?.ratio === "9 / 16";
+  return (
+    <div
+      className={`mx-auto w-full overflow-hidden rounded-[28px] bg-[var(--white)] ${
+        tall ? "max-w-[340px]" : "max-w-[1024px]"
+      }`}
+      style={{ aspectRatio: v ? v.ratio : "16 / 9" }}
+    >
+      {v?.kind === "iframe" && (
+        <iframe
+          src={v.src}
+          title="Video"
+          className="h-full w-full"
+          loading="lazy"
+          allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+        />
+      )}
+      {v?.kind === "file" && <video src={v.src} controls playsInline className="h-full w-full bg-black" />}
+      {!v && (
+        <div className="flex h-full w-full items-center justify-center px-6 text-center text-[17px] text-[var(--slate)]">
+          {empty}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ===== Apple (España) design tokens =====
    Ink #1d1d1f · Fog #f5f5f7 · White #ffffff · Slate #86868b
    Blue #0071e3 (chỉ dùng cho CTA) · Link #0066cc */
@@ -192,6 +245,10 @@ const COPY = {
     heroSub:
       "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
     how: "Cách hoạt động",
+    videoTitle: "Xem NXX315 hoạt động thế nào",
+    videoSub: "Một video ngắn cho bạn thấy từ lúc đăng ký đến lúc nhận quà.",
+    videoEmpty: "Video giới thiệu sẽ xuất hiện ở đây.",
+    watch: "Xem video giới thiệu",
     note: "Kiếm xu hoàn toàn miễn phí. Chuyển khoản chỉ dùng khi bạn muốn mua quà trực tiếp.",
     facts: [
       ["1 Coin = 1đ", "Giá Coin bằng giá tiền"],
@@ -245,6 +302,10 @@ const COPY = {
     heroSub:
       "Complete simple tasks, earn Coins and redeem Robux, in-game diamonds and more rewards.",
     how: "How it works",
+    videoTitle: "See how NXX315 works",
+    videoSub: "A short video from signing up to getting your reward.",
+    videoEmpty: "The intro video will appear here.",
+    watch: "Watch the intro video",
     note: "Earning coins is completely free. Bank transfer is only for buying gifts directly.",
     facts: [
       ["1 Coin = 1 VND", "Coin price equals cash price"],
@@ -347,46 +408,73 @@ export default function CloudVIPLanding() {
 
       <main>
         {/* ============ HERO (Apple style) ============ */}
-        <section className="relative overflow-hidden bg-[var(--fog)] pt-16 lg:pt-24 pb-20">
-          <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 lg:grid-cols-2 lg:gap-20">
-            <div>
-              <span className="lp-mono lp-rise text-[12px] text-[var(--slate)]">
-                {t("ld.badge")}
-              </span>
-              <h1 className="lp-display lp-display-xl lp-rise lp-d1 mt-4 text-[var(--ink)]">
-                {c.h1a} <br /> {c.h1b}
-              </h1>
-              <p className="lp-rise lp-d2 mt-6 max-w-lg text-[20px] leading-[1.47] text-[var(--graphite)]">
-                {c.heroSub}
-              </p>
-              <div className="lp-rise lp-d3 mt-8 flex flex-wrap gap-4">
-                <button onClick={() => navigate("/register")} className="lp-btn">
-                  {t("ld.ctaStart")} <ArrowRight size={18} />
-                </button>
-                <button onClick={() => scrollToId("how")} className="lp-btn-o">
-                  {c.how} <ChevronDown size={18} />
+        <section className="flex min-h-[calc(100svh-4rem)] flex-col bg-[var(--fog)]">
+          {/* Ảnh minh họa: căn giữa, đứng trực tiếp trên nền */}
+          <div className="lp-rise flex min-h-[280px] flex-1 items-center justify-center px-5 pt-8">
+            <img
+              src={HERO_IMG}
+              alt=""
+              className="max-h-[54svh] w-full max-w-[1100px] object-contain mix-blend-multiply"
+            />
+          </div>
+
+          {/* Khối chữ góc trái dưới + giá/nút góc phải dưới */}
+          <div className="mx-auto w-full max-w-[1200px] px-5 pb-12 pt-8 lg:pb-16">
+            <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-[760px]">
+                <p className="lp-rise text-[19px] font-semibold tracking-[-0.015em] text-[var(--ink)] sm:text-[21px]">
+                  {t("ld.badge")}
+                </p>
+                <h1 className="lp-display lp-rise lp-d1 mt-2 text-[clamp(40px,6.4vw,80px)]">
+                  {c.h1a} <br /> {c.h1b}
+                </h1>
+                <p className="lp-rise lp-d2 mt-4 max-w-xl text-[17px] leading-[1.47] text-[var(--graphite)]">
+                  {c.heroSub}
+                </p>
+                <button
+                  onClick={() => scrollToId("video")}
+                  className="lp-rise lp-d3 mt-4 inline-flex items-center gap-2 text-[17px] text-[var(--link)] hover:underline"
+                >
+                  <Play size={16} fill="currentColor" strokeWidth={0} /> {c.watch}
                 </button>
               </div>
-              <ul className="lp-rise lp-d4 mt-10 space-y-3">
-                {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
-                  <li key={x} className="flex items-center gap-3 text-[17px] text-[var(--ink)]">
-                    <Check size={18} strokeWidth={2} className="shrink-0 text-[var(--blue)]" /> {x}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-6 max-w-md text-[14px] leading-[1.5] text-[var(--slate)]">{c.note}</p>
-            </div>
 
-            {/* KHỐI GIF/VIDEO BÊN PHẢI */}
-            <div className="lp-rise lp-d2 flex items-center justify-center">
-              {/* 👇👇👇 DÁN LINK GIF VÀO ĐÂY 👇👇👇 */}
-              <img
-                src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero.gif"
-                alt="Hero visual"
-                className="w-full max-w-[600px] rounded-[28px] object-cover"
-              />
-              {/* 👆👆👆 HẾT SLOT GIF 👆👆👆 */}
+              <div className="lp-rise lp-d3 flex w-fit items-center gap-3 rounded-full bg-[var(--white)] py-2 pl-6 pr-2">
+                <span className="text-[17px] text-[var(--ink)]">{c.facts[0][0]}</span>
+                <button onClick={() => navigate("/register")} className="lp-btn !h-10 !px-5">
+                  {t("ld.ctaStart")}
+                </button>
+              </div>
             </div>
+          </div>
+        </section>
+
+        {/* ============ 3 ĐIỂM NHANH ============ */}
+        <section className="bg-[var(--fog)]">
+          <div className="mx-auto max-w-[1200px] px-5 pb-6">
+            <ul className="flex flex-wrap justify-center gap-x-8 gap-y-2">
+              {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x) => (
+                <li key={x} className="flex items-center gap-2 text-[15px] text-[var(--graphite)]">
+                  <Check size={16} strokeWidth={2} className="shrink-0 text-[var(--slate)]" /> {x}
+                </li>
+              ))}
+            </ul>
+            <p className="mx-auto mt-4 max-w-md text-center text-[14px] leading-[1.5] text-[var(--slate)]">{c.note}</p>
+          </div>
+        </section>
+
+        {/* ============ VIDEO (dán link ở đầu file) ============ */}
+        <section id="video" className="scroll-mt-20 bg-[var(--fog)]">
+          <div className="mx-auto max-w-[1200px] px-5 py-16 sm:py-24">
+            <Reveal>
+              <div className="mx-auto max-w-3xl text-center">
+                <h2 className="lp-display text-[32px] sm:text-[56px]">{c.videoTitle}</h2>
+                <p className="mt-4 text-[17px] leading-[1.47] text-[var(--graphite)]">{c.videoSub}</p>
+              </div>
+              <div className="mt-10">
+                <VideoBox empty={c.videoEmpty} />
+              </div>
+            </Reveal>
           </div>
         </section>
 
@@ -597,4 +685,6 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-        }
+      }
+                                
+
