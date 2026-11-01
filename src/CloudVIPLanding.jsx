@@ -51,8 +51,6 @@ export default function CloudVIPLanding() {
       <main>
         {/* ============ HERO: video + chữ góc trái dưới ============ */}
         <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-[var(--panel)]">
-          <HeroVideo src={HERO_VIDEO} />
-
           <div className="relative z-10 flex flex-1 flex-col">
             <div className="lp-rise lp-d2 flex justify-center px-3 pt-[76px] sm:pt-[104px]">
               <Link to="/register" className="lp-banner lp-press">
@@ -61,13 +59,15 @@ export default function CloudVIPLanding() {
               </Link>
             </div>
 
-            <div className="flex-1" />
+            <div className="relative min-h-[300px] flex-1 md:static md:min-h-0">
+              <HeroVideo src={HERO_VIDEO} />
+            </div>
 
             <div className="mx-auto w-full max-w-[1200px] px-5 pb-8 sm:pb-12">
               <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
                 <div className="max-w-[520px]">
-                  <p className="lp-rise lp-sub">{t("ld.badge")}</p>
-                  <h1 className="lp-rise lp-d1 mt-2 text-[clamp(27px,3.6vw,44px)] leading-[1.2] tracking-[-0.03em]">
+                  <p className="lp-rise lp-label">{t("ld.badge")}</p>
+                  <h1 className="lp-rise lp-d1 mt-3 text-[clamp(27px,3.6vw,44px)] leading-[1.2] tracking-[-0.03em]">
                     {c.h1a}<br />{c.h1b}
                   </h1>
                   <p className="lp-rise lp-d2 lp-body mt-3">{c.heroSub}</p>
@@ -80,7 +80,7 @@ export default function CloudVIPLanding() {
                     ))}
                   </div>
                   <button onClick={() => scrollToId("overview")} aria-label="Scroll"
-                    className="lp-glass lp-press mt-8 flex h-10 w-6 items-center justify-center rounded-full">
+                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full">
                     <ArrowDown size={12} strokeWidth={1.5} />
                   </button>
                 </div>
@@ -267,7 +267,8 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-        }
+                  }
+                  
                   
                                 
 
