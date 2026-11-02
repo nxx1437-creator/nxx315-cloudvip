@@ -14,7 +14,7 @@ const TONE = {
   purple: "#6a4fd6", amber: "#b7791f", rose: "#c8374b",
 };
 const CYCLE = ["orange", "pink", "blue", "green", "purple", "amber"];
-const NOTE_TONE = { "Nghiêm cấm": "rose", "Hoàn xu": "rose", "Không hoàn xu": "rose", "Biện pháp xử lý": "rose", "Được hoàn xu": "green" };
+const NOTE_TONE = { "Nghiêm cấm": "rose", "Hoàn xu": "rose", "Không hoàn xu": "rose", "Biện pháp xử lý": "rose", "Được hoàn xu": "green", "Bảo mật": "rose" };
 const vars = (t) => ({ "--fg": TONE[t] });
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -172,10 +172,12 @@ function useActive(ids) {
   return active;
 }
 
+const NO_TOC = [];
+
 /* Trang pháp lý dùng chung: sections = [{ id, title, icon, img, blocks }] */
-export default function LegalPage({ title, updated, intro, chips, hero, sections, accept }) {
+export default function LegalPage({ title, updated, intro, chips, hero, sections, accept, extra, extraToc = NO_TOC, home = "/dashboard", eyebrow }) {
   const navigate = useNavigate();
-  const toc = useMemo(() => (accept ? [...sections, { id: accept.id, title: accept.title }] : sections), [sections, accept]);
+  const toc = useMemo(() => [...sections, ...extraToc, ...(accept ? [{ id: accept.id, title: accept.title }] : [])], [sections, accept, extraToc]);
   const ids = useMemo(() => toc.map((s) => s.id), [toc]);
   const active = useActive(ids);
 
@@ -187,13 +189,13 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
         <Link to="/" aria-label="NXX315" className="lg-glass lg-press lg-logo"><StarMark /></Link>
         <nav className="lg-glass lg-bar" aria-label="Main">
           <button onClick={() => navigate(-1)} className="lg-link lg-press"><ArrowLeft size={14} strokeWidth={1.5} /> Quay lại</button>
-          <Link to="/dashboard" className="lg-link lg-press">Trang chủ</Link>
+          <Link to={home} className="lg-link lg-press">Trang chủ</Link>
         </nav>
       </header>
 
       <main className="mx-auto max-w-[1100px] px-5 pb-20 pt-[110px] sm:pb-[94px] sm:pt-[150px]">
         <div className="max-w-[640px]">
-          <p className="text-[12px] text-[var(--mute)]">Pháp lý · Cập nhật lần cuối {updated}</p>
+          <p className="text-[12px] text-[var(--mute)]">{eyebrow || `Pháp lý · Cập nhật lần cuối ${updated}`}</p>
           <h1 className="mt-3 text-[clamp(27px,3.6vw,40px)] leading-[1.2] tracking-[-0.03em]">{title}</h1>
           <p className="mt-4 text-[16px] leading-[1.55] text-[var(--soft)]">{intro}</p>
           <ul className="mt-6 flex flex-wrap gap-1.5">
@@ -255,7 +257,9 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
               </Rise>
             )}
 
-            <Link to="/dashboard" className="lg-cta lg-press mt-2">
+            {extra}
+
+            <Link to={home} className="lg-cta lg-press mt-2">
               <span>Quay về trang chủ</span><ArrowRight size={16} strokeWidth={1.5} />
             </Link>
           </div>
@@ -263,7 +267,8 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
       </main>
     </div>
   );
-                     }
+               }
+      
                  
   
   
