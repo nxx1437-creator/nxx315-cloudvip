@@ -8,7 +8,7 @@ import LegalPage from "../components/LegalKit.jsx";
 // ẢNH MINH HỌA: tải ảnh lên Supabase (bucket game_logos), rồi ghi TÊN FILE vào đây. Để "" nếu chưa có.
 // Muốn có chú thích dưới ảnh thì viết ["ten-file.jpg", "Tiêu đề", "Mô tả ngắn"].
 const IMAGES = {
-  hero: "",
+  hero: "/terms-hero.mp4", // video để trong thư mục public của repo (hoặc ảnh: ghi tên file trong game_logos)
   "gioi-thieu": "", "dieu-kien": "", "tai-khoan": "", "xu-diem": "", "nhiem-vu": "",
   "doi-thuong": "", "tu-choi": "", "chong-gian-lan": "", "loi-he-thong": "", "kha-dung": "",
   "thay-doi": "", "cham-dut": "", "trach-nhiem": "", "lien-he": "",
@@ -176,6 +176,4 @@ export default function Terms() {
     />
   );
      }
-      
-  
      
