@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, Pause, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { StarMark } from "./LandingParts.jsx";
 
 /* Ảnh minh họa lấy từ bucket game_logos trên Supabase: chỉ cần ghi tên file */
@@ -72,10 +72,11 @@ const goTo = (id) => {
   el.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
 };
 
-/* Video tự phát (tắt tiếng, lặp) kèm nút tạm dừng để ai cần thì dừng được */
+/* Video tự phát, lặp lại. Mặc định tắt tiếng (trình duyệt chặn tự phát có tiếng), bấm loa để bật nhạc nền. */
 function Video({ url, label, onError }) {
   const ref = useRef(null);
   const [paused, setPaused] = useState(false);
+  const [muted, setMuted] = useState(true);
   useEffect(() => {
     const v = ref.current;
     if (v && v.play) { const r = v.play(); if (r && r.catch) r.catch(() => setPaused(true)); }
@@ -85,13 +86,24 @@ function Video({ url, label, onError }) {
     if (!v) return;
     if (v.paused) { v.play().catch(() => {}); setPaused(false); } else { v.pause(); setPaused(true); }
   };
+  const sound = () => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = !v.muted; setMuted(v.muted);
+    if (v.paused) { v.play().catch(() => {}); setPaused(false); }
+  };
+  const btn = "lg-glass lg-press flex h-9 w-9 items-center justify-center rounded-full";
   return (
     <div className="relative">
       <video ref={ref} src={url} muted loop playsInline autoPlay preload="auto" aria-label={label} onError={onError} className="lg-photo lg-vid" />
-      <button onClick={toggle} aria-label={paused ? "Phát video" : "Tạm dừng video"}
-        className="lg-glass lg-press absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full">
-        {paused ? <Play size={14} strokeWidth={1.5} /> : <Pause size={14} strokeWidth={1.5} />}
-      </button>
+      <div className="absolute bottom-3 right-3 flex gap-2">
+        <button onClick={sound} aria-label={muted ? "Bật nhạc nền" : "Tắt nhạc nền"} className={btn}>
+          {muted ? <VolumeX size={14} strokeWidth={1.5} /> : <Volume2 size={14} strokeWidth={1.5} />}
+        </button>
+        <button onClick={toggle} aria-label={paused ? "Phát video" : "Tạm dừng video"} className={btn}>
+          {paused ? <Play size={14} strokeWidth={1.5} /> : <Pause size={14} strokeWidth={1.5} />}
+        </button>
+      </div>
     </div>
   );
 }
@@ -252,4 +264,5 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
     </div>
   );
 }
+  
   
