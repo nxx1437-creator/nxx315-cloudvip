@@ -5,7 +5,7 @@ import LegalPage from "../components/LegalKit.jsx";
 // ẢNH MINH HỌA: tải ảnh lên Supabase (bucket game_logos), rồi ghi TÊN FILE vào đây. Để "" nếu chưa có.
 // Muốn có chú thích dưới ảnh thì viết ["ten-file.jpg", "Tiêu đề", "Mô tả ngắn"].
 const IMAGES = {
-  hero: "",
+  hero: "/privacy-hero.mp4", // video để trong thư mục public của repo (hoặc ảnh: ghi tên file trong game_logos)
   "thu-thap": "", "muc-dich": "", "bao-ve": "", "chia-se": "", "luu-tru": "",
   quyen: "", "do-tuoi": "", "thay-doi": "", "lien-he": "",
 };
@@ -104,6 +104,4 @@ export default function Privacy() {
       sections={PAGE_SECTIONS}
     />
   );
-      }
-
-    
+}
