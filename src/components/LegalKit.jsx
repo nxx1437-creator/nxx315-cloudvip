@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Pause, Play } from "lucide-react";
 import { StarMark } from "./LandingParts.jsx";
 
 /* Ảnh minh họa lấy từ bucket game_logos trên Supabase: chỉ cần ghi tên file */
@@ -72,18 +72,40 @@ const goTo = (id) => {
   el.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
 };
 
+/* Video tự phát (tắt tiếng, lặp) kèm nút tạm dừng để ai cần thì dừng được */
+function Video({ url, label, onError }) {
+  const ref = useRef(null);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const v = ref.current;
+    if (v && v.play) { const r = v.play(); if (r && r.catch) r.catch(() => setPaused(true)); }
+  }, []);
+  const toggle = () => {
+    const v = ref.current;
+    if (!v) return;
+    if (v.paused) { v.play().catch(() => {}); setPaused(false); } else { v.pause(); setPaused(true); }
+  };
+  return (
+    <div className="relative">
+      <video ref={ref} src={url} muted loop playsInline autoPlay preload="auto" aria-label={label} onError={onError} className="lg-photo lg-vid" />
+      <button onClick={toggle} aria-label={paused ? "Phát video" : "Tạm dừng video"}
+        className="lg-glass lg-press absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full">
+        {paused ? <Play size={14} strokeWidth={1.5} /> : <Pause size={14} strokeWidth={1.5} />}
+      </button>
+    </div>
+  );
+}
+
 /* Ảnh hoặc video: v là "ten-file.jpg" | "/ten-video.mp4" | ["ten-file.jpg", "Tiêu đề", "Mô tả"]. Trống hoặc lỗi thì ẩn. */
 function Photo({ v, wide }) {
   const [ok, setOk] = useState(true);
   const [file, t1, t2] = Array.isArray(v) ? v : [v];
   if (!file || !ok) return null;
-  const calm = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const url = imgUrl(file);
   return (
     <figure className="mt-6">
       {isVideo(file) ? (
-        <video src={calm ? url + "#t=6" : url} muted loop playsInline autoPlay={!calm} preload="metadata"
-          aria-label={t1 || ""} onError={() => setOk(false)} className="lg-photo lg-vid" />
+        <Video url={url} label={t1 || ""} onError={() => setOk(false)} />
       ) : (
         <img src={url} alt={t1 || ""} loading="lazy" onError={() => setOk(false)} className={`lg-photo ${wide ? "lg-wide" : ""}`} />
       )}
@@ -229,5 +251,5 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
       </main>
     </div>
   );
-        }
-                                                                         
+}
+  
