@@ -14,7 +14,7 @@ const TONE = {
   purple: "#6a4fd6", amber: "#b7791f", rose: "#c8374b",
 };
 const CYCLE = ["orange", "pink", "blue", "green", "purple", "amber"];
-const NOTE_TONE = { "Nghiêm cấm": "rose", "Hoàn xu": "rose", "Biện pháp xử lý": "rose" };
+const NOTE_TONE = { "Nghiêm cấm": "rose", "Hoàn xu": "rose", "Không hoàn xu": "rose", "Biện pháp xử lý": "rose", "Được hoàn xu": "green" };
 const vars = (t) => ({ "--fg": TONE[t] });
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -263,6 +263,7 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
       </main>
     </div>
   );
-}
+                     }
+                 
   
   
