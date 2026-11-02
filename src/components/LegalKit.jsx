@@ -5,7 +5,8 @@ import { StarMark } from "./LandingParts.jsx";
 
 /* Ảnh minh họa lấy từ bucket game_logos trên Supabase: chỉ cần ghi tên file */
 const BASE = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/";
-const imgUrl = (n) => (/^https?:/.test(n) ? n : BASE + n);
+const imgUrl = (n) => (/^(https?:|\/)/.test(n) ? n : BASE + n);
+const isVideo = (n) => /\.(mp4|webm)(#.*)?$/i.test(n);
 
 /* Màu chỉ dùng cho icon nhỏ, chấm đầu dòng và nhãn lưu ý. Nền luôn trắng. */
 const TONE = {
@@ -38,6 +39,7 @@ const CSS = `
 .lg-cta svg{color:var(--blue)}
 .lg-photo{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:#f2f2f4;border:.5px solid var(--line)}
 .lg-wide{aspect-ratio:16/10}@media(min-width:768px){.lg-wide{aspect-ratio:16/8}}
+.lg-photo.lg-vid{aspect-ratio:16/9}
 .lg-rise{opacity:0;transform:translate3d(0,18px,0);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
 .lg-rise.is-in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.lg-rise{transform:none;transition:opacity .3s}}
@@ -70,14 +72,21 @@ const goTo = (id) => {
   el.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
 };
 
-/* Ảnh: v là "ten-file.jpg" hoặc ["ten-file.jpg", "Tiêu đề", "Mô tả"]. Trống hoặc lỗi thì ẩn. */
+/* Ảnh hoặc video: v là "ten-file.jpg" | "/ten-video.mp4" | ["ten-file.jpg", "Tiêu đề", "Mô tả"]. Trống hoặc lỗi thì ẩn. */
 function Photo({ v, wide }) {
   const [ok, setOk] = useState(true);
   const [file, t1, t2] = Array.isArray(v) ? v : [v];
   if (!file || !ok) return null;
+  const calm = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const url = imgUrl(file);
   return (
     <figure className="mt-6">
-      <img src={imgUrl(file)} alt={t1 || ""} loading="lazy" onError={() => setOk(false)} className={`lg-photo ${wide ? "lg-wide" : ""}`} />
+      {isVideo(file) ? (
+        <video src={calm ? url + "#t=6" : url} muted loop playsInline autoPlay={!calm} preload="metadata"
+          aria-label={t1 || ""} onError={() => setOk(false)} className="lg-photo lg-vid" />
+      ) : (
+        <img src={url} alt={t1 || ""} loading="lazy" onError={() => setOk(false)} className={`lg-photo ${wide ? "lg-wide" : ""}`} />
+      )}
       {(t1 || t2) && (
         <figcaption className="mt-3">
           {t1 && <p className="text-[16px] leading-snug">{t1}</p>}
@@ -220,5 +229,5 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
       </main>
     </div>
   );
-                                                                             }
-      
+        }
+                                                                         
