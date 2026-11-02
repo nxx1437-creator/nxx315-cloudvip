@@ -144,9 +144,9 @@ function Items({ items }) {
   );
 }
 
-function Note({ tag, x, items, foot }) {
+function Note({ tag, tone, x, items, foot }) {
   return (
-    <div className="mt-5 rounded-[14px] bg-[#f6f6f7] p-4 sm:p-5" style={vars(NOTE_TONE[tag] || "amber")}>
+    <div className="mt-5 rounded-[14px] bg-[#f6f6f7] p-4 sm:p-5" style={vars(tone || NOTE_TONE[tag] || "amber")}>
       <p className="text-[12px] text-[var(--fg)]">{tag}</p>
       {x && <p className="mt-1.5 text-[16px] leading-[1.5] text-[var(--ink)]">{rich(x)}</p>}
       {items && <Items items={items} />}
@@ -155,9 +155,40 @@ function Note({ tag, x, items, foot }) {
   );
 }
 
+function Rows({ rows }) {
+  return (
+    <dl className="mt-4 border-t-[.5px] border-[var(--line)]">
+      {rows.map(([k, v]) => (
+        <div key={k} className="grid gap-1 border-b-[.5px] border-[var(--line)] py-3.5 sm:grid-cols-[190px_1fr] sm:gap-6">
+          <dt className="text-[13px] text-[var(--mute)]">{k}</dt>
+          <dd className="break-words text-[16px] leading-[1.5] text-[var(--ink)]">
+            {typeof v === "string" ? v
+              : v.to ? <Link to={v.to} className="text-[var(--blue)]">{v.text}</Link>
+              : <a href={v.href} {...(v.ext ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="break-all text-[var(--blue)]">{v.text}</a>}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function Links({ items }) {
+  return (
+    <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+      {items.map(([to, label]) => (
+        <Link key={to} to={to} className="inline-flex items-center gap-1 text-[16px] text-[var(--blue)]">
+          {label} <ArrowRight size={14} strokeWidth={1.5} />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function Block({ b }) {
   if (b.t === "p") return <p className="mt-3 text-[16px] leading-[1.55] text-[var(--soft)]">{rich(b.x)}</p>;
   if (b.t === "list") return <Items items={b.items} />;
+  if (b.t === "rows") return <Rows rows={b.rows} />;
+  if (b.t === "links") return <Links items={b.items} />;
   return <Note {...b} />;
 }
 
@@ -175,8 +206,9 @@ function useActive(ids) {
 const NO_TOC = [];
 
 /* Trang pháp lý dùng chung: sections = [{ id, title, icon, img, blocks }] */
-export default function LegalPage({ title, updated, intro, chips, hero, sections, accept, extra, extraToc = NO_TOC, home = "/dashboard", eyebrow }) {
+export default function LegalPage({ title, updated, intro, chips, hero, sections, accept, extra, extraToc = NO_TOC, home = "/dashboard", eyebrow, ui }) {
   const navigate = useNavigate();
+  const U = { back: "Quay lại", home: "Trang chủ", toc: "Mục lục", backHome: "Quay về trang chủ", ...ui };
   const toc = useMemo(() => [...sections, ...extraToc, ...(accept ? [{ id: accept.id, title: accept.title }] : [])], [sections, accept, extraToc]);
   const ids = useMemo(() => toc.map((s) => s.id), [toc]);
   const active = useActive(ids);
@@ -188,8 +220,8 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
       <header className="lg-head">
         <Link to="/" aria-label="NXX315" className="lg-glass lg-press lg-logo"><StarMark /></Link>
         <nav className="lg-glass lg-bar" aria-label="Main">
-          <button onClick={() => navigate(-1)} className="lg-link lg-press"><ArrowLeft size={14} strokeWidth={1.5} /> Quay lại</button>
-          <Link to={home} className="lg-link lg-press">Trang chủ</Link>
+          <button onClick={() => navigate(-1)} className="lg-link lg-press"><ArrowLeft size={14} strokeWidth={1.5} /> {U.back}</button>
+          <Link to={home} className="lg-link lg-press">{U.home}</Link>
         </nav>
       </header>
 
@@ -205,8 +237,8 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
         {hero && <div className="max-w-[900px]"><Photo v={hero} wide /></div>}
 
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-8 lg:mt-16 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16">
-          <nav aria-label="Mục lục" className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-            <p className="mb-3 hidden text-[12px] text-[var(--mute)] lg:block">Mục lục</p>
+          <nav aria-label={U.toc} className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+            <p className="mb-3 hidden text-[12px] text-[var(--mute)] lg:block">{U.toc}</p>
             <ol className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-0">
               {toc.map((s, i) => (
                 <li key={s.id} className="shrink-0">
@@ -260,15 +292,14 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
             {extra}
 
             <Link to={home} className="lg-cta lg-press mt-2">
-              <span>Quay về trang chủ</span><ArrowRight size={16} strokeWidth={1.5} />
+              <span>{U.backHome}</span><ArrowRight size={16} strokeWidth={1.5} />
             </Link>
           </div>
         </div>
       </main>
     </div>
   );
-               }
-      
-                 
+    }
+
   
   
