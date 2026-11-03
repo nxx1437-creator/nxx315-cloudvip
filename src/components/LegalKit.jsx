@@ -73,18 +73,27 @@ const goTo = (id) => {
 };
 
 /* Video tự phát, lặp lại. Mặc định tắt tiếng (trình duyệt chặn tự phát có tiếng), bấm loa để bật nhạc nền. */
-function Video({ url, label, onError }) {
+function Video({ url, label, poster, onError }) {
   const ref = useRef(null);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(true);
+  /* Video nằm cuối trang: chỉ tải/phát khi cuộn tới, rời khỏi màn hình thì tạm dừng cho nhẹ máy */
+  const userPaused = useRef(false);
   useEffect(() => {
     const v = ref.current;
-    if (v && v.play) { const r = v.play(); if (r && r.catch) r.catch(() => setPaused(true)); }
+    if (!v) return undefined;
+    if (!("IntersectionObserver" in window)) { v.play && v.play().catch(() => setPaused(true)); return undefined; }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { if (!userPaused.current && v.paused) v.play().then(() => setPaused(false)).catch(() => setPaused(true)); }
+      else if (!v.paused) v.pause();
+    }, { threshold: 0.35 });
+    io.observe(v);
+    return () => io.disconnect();
   }, []);
   const toggle = () => {
     const v = ref.current;
     if (!v) return;
-    if (v.paused) { v.play().catch(() => {}); setPaused(false); } else { v.pause(); setPaused(true); }
+    if (v.paused) { userPaused.current = false; v.play().catch(() => {}); setPaused(false); } else { userPaused.current = true; v.pause(); setPaused(true); }
   };
   const sound = () => {
     const v = ref.current;
@@ -95,7 +104,7 @@ function Video({ url, label, onError }) {
   const btn = "lg-glass lg-press flex h-9 w-9 items-center justify-center rounded-full";
   return (
     <div className="relative">
-      <video ref={ref} src={url} muted loop playsInline autoPlay preload="auto" aria-label={label} onError={onError} className="lg-photo lg-vid" />
+      <video ref={ref} src={url} poster={poster} muted loop playsInline preload="metadata" aria-label={label} onError={onError} className="lg-photo lg-vid" />
       <div className="absolute bottom-3 right-3 flex gap-2">
         <button onClick={sound} aria-label={muted ? "Bật nhạc nền" : "Tắt nhạc nền"} className={btn}>
           {muted ? <VolumeX size={14} strokeWidth={1.5} /> : <Volume2 size={14} strokeWidth={1.5} />}
@@ -111,13 +120,13 @@ function Video({ url, label, onError }) {
 /* Ảnh hoặc video: v là "ten-file.jpg" | "/ten-video.mp4" | ["ten-file.jpg", "Tiêu đề", "Mô tả"]. Trống hoặc lỗi thì ẩn. */
 function Photo({ v, wide }) {
   const [ok, setOk] = useState(true);
-  const [file, t1, t2] = Array.isArray(v) ? v : [v];
+  const [file, t1, t2, poster] = Array.isArray(v) ? v : [v];
   if (!file || !ok) return null;
   const url = imgUrl(file);
   return (
     <figure className="mt-6">
       {isVideo(file) ? (
-        <Video url={url} label={t1 || ""} onError={() => setOk(false)} />
+        <Video url={url} label={t1 || ""} poster={poster ? imgUrl(poster) : undefined} onError={() => setOk(false)} />
       ) : (
         <img src={url} alt={t1 || ""} loading="lazy" onError={() => setOk(false)} className={`lg-photo ${wide ? "lg-wide" : ""}`} />
       )}
@@ -206,10 +215,10 @@ function useActive(ids) {
 const NO_TOC = [];
 
 /* Trang pháp lý dùng chung: sections = [{ id, title, icon, img, blocks }] */
-export default function LegalPage({ title, updated, intro, chips, hero, sections, accept, extra, extraToc = NO_TOC, home = "/dashboard", eyebrow, ui }) {
+export default function LegalPage({ title, updated, intro, chips, hero, sections, accept, extra, extraToc = NO_TOC, home = "/dashboard", eyebrow, ui, video }) {
   const navigate = useNavigate();
   const U = { back: "Quay lại", home: "Trang chủ", toc: "Mục lục", backHome: "Quay về trang chủ", ...ui };
-  const toc = useMemo(() => [...sections, ...extraToc, ...(accept ? [{ id: accept.id, title: accept.title }] : [])], [sections, accept, extraToc]);
+  const toc = useMemo(() => [...sections, ...extraToc, ...(accept ? [{ id: accept.id, title: accept.title }] : []), ...(video && video.src ? [{ id: "video", title: video.title }] : [])], [sections, accept, extraToc, video]);
   const ids = useMemo(() => toc.map((s) => s.id), [toc]);
   const active = useActive(ids);
 
@@ -291,6 +300,16 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
 
             {extra}
 
+            {/* Video giới thiệu: luôn nằm CUỐI nội dung, sau các mục, trước nút quay về */}
+            {video && video.src && (
+              <Rise>
+                <section id="video" className="scroll-mt-28 border-t-[.5px] border-[var(--line)] py-10 sm:py-12">
+                  <h2 className="text-[22px] leading-[1.25] tracking-[-0.44px] sm:text-[24px]">{video.title}</h2>
+                  <Photo v={[video.src, "", video.caption, video.poster]} />
+                </section>
+              </Rise>
+            )}
+
             <Link to={home} className="lg-cta lg-press mt-2">
               <span>{U.backHome}</span><ArrowRight size={16} strokeWidth={1.5} />
             </Link>
@@ -302,4 +321,6 @@ export default function LegalPage({ title, updated, intro, chips, hero, sections
     }
 
   
+
+               
   
