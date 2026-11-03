@@ -4,6 +4,7 @@ import { User, ArrowRight, Loader2, ShieldCheck, Info, AlertCircle } from "lucid
 import AuthLayout from "../components/AuthLayout.jsx";
 import AuthField from "../components/AuthField.jsx";
 import useSession from "../hooks/useSession.js";
+import { refreshProfile } from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { useI18n } from "../i18n/index.js";
 
@@ -116,24 +117,31 @@ export default function Onboarding() {
       p_referral_code: null,
     });
 
-    setSubmitting(false);
-
     if (rpcError) {
+      setSubmitting(false);
       setError(rpcError.message);
       return;
     }
 
     const result = Array.isArray(data) ? data[0] : data;
 
+    // Làm mới profile dùng chung để guard thấy onboarding_completed = true
+    try {
+      await refreshProfile();
+    } catch (err) {
+      console.warn("[Onboarding] refreshProfile lỗi:", err);
+    }
+
+    setSubmitting(false);
+
     if (result?.was_renamed) {
       setRenameNotice(x.renamed(username.trim(), result.final_username));
-      setTimeout(() => navigate("/dashboard"), 2800);
+      setTimeout(() => navigate("/dashboard", { replace: true }), 2800);
     } else {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   };
-
-  if (sessionLoading || !session) return null;
+    if (sessionLoading || !session) return null;
 
   const bars = (
     <div className="mb-5 flex items-center gap-2">
@@ -279,5 +287,4 @@ export default function Onboarding() {
       </button>
     </AuthLayout>
   );
-  }
-            
+                }
