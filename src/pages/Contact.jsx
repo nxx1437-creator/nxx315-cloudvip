@@ -12,7 +12,7 @@ const IMAGES = { hero: "/contact-hero.mp4", "tai-khoan": "", "doi-thuong": "", "
 const ICONS = { "tai-khoan": AlertCircle, "doi-thuong": Gift, "bao-loi": Bug, "gop-y": Lightbulb };
 
 // Nội dung: sửa chữ ở đây. Dùng **chữ đậm** để nhấn mạnh.
-const EMAIL = "nxx315hub@gmail.com";
+const EMAIL = "support@nxx315.com";
 const YOUTUBE = "https://youtube.com/@nxx3155/community";
 const INTRO = {
   text: "Bạn cần hỗ trợ, muốn báo lỗi hoặc có vấn đề liên quan đến tài khoản? Hãy liên hệ NXX315 Studio Rewards qua các kênh hỗ trợ chính thức bên dưới.",
