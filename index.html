@@ -334,6 +334,13 @@
 
         setTimeout(hideLoader, 12000);
       })();
+      <script>
+  window.addEventListener("error", function (e) {
+    document.body.innerHTML =
+      '<pre style="padding:16px;white-space:pre-wrap;font:14px monospace">LỖI: ' +
+      e.message + '\n' + (e.filename || '') + ':' + (e.lineno || '') + '</pre>';
+  });
+</script>
     </script>
   </body>
 </html>
