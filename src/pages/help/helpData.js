@@ -24,10 +24,10 @@ export const ORDER_STATUS = {
 };
 
 export const TICKET_STATUS = {
-  open: { label: "Đã gửi", cls: "bg-amber-50 text-amber-700" },
-  in_progress: { label: "Đang xử lý", cls: "bg-sky-50 text-sky-700" },
-  resolved: { label: "Đã giải quyết", cls: "bg-emerald-50 text-emerald-700" },
-  closed: { label: "Đã giải quyết", cls: "bg-emerald-50 text-emerald-700" },
+  open: { label: "Đã gửi", cls: "bg-amber-100 text-amber-700" },
+  in_progress: { label: "Đang xử lý", cls: "bg-sky-100 text-sky-700" },
+  resolved: { label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
+  closed: { label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
 };
 
 export function fmtDate(iso) {
@@ -56,4 +56,5 @@ export function fold(s = "") {
       return f[0] || c;
     })
     .join("");
-}
+  }
+              
