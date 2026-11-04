@@ -2,22 +2,6 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-
-    <!-- ===== BẮT LỖI TẠM THỜI (xóa sau khi tìm ra lỗi) ===== -->
-    <script>
-      function showErr(msg) {
-        document.body.innerHTML =
-          '<pre style="padding:16px;white-space:pre-wrap;font:14px monospace">LỖI: ' + msg + '</pre>';
-      }
-      window.addEventListener("error", function (e) {
-        showErr(e.message + "\n" + (e.filename || "") + ":" + (e.lineno || ""));
-      });
-      window.addEventListener("unhandledrejection", function (e) {
-        showErr(String((e.reason && e.reason.message) || e.reason));
-      });
-    </script>
-    <!-- ====================================================== -->
-
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
