@@ -4,22 +4,22 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
-import { Hero, SearchBar } from "./help/HelpHero.jsx";
-import { QuickActions, OrderList, CategoryGrid } from "./help/HelpSections.jsx";
-import { FaqSection, ContactCard } from "./help/HelpFaq.jsx";
-import { TicketSheet, HistorySheet } from "./help/HelpSheets.jsx";
+import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards, FaqSection, ContactCard } from "./help/HelpUI.jsx";
+import { RequestScreen, HistoryScreen } from "./help/HelpRequest.jsx";
 import { fold } from "./help/helpData.js";
 
 export default function HelpCenter() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState(null);
+  const [openId, setOpenId] = useState(null);
   const [faqs, setFaqs] = useState([]);
   const [faqLoading, setFaqLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
-  const [sheet, setSheet] = useState(null); // {type:"ticket", preset} | {type:"history"}
+  const [name, setName] = useState("");
+  const [view, setView] = useState(null); // {type:"request", preset} | {type:"history"}
 
   useEffect(() => {
     let alive = true;
@@ -35,23 +35,23 @@ export default function HelpCenter() {
     })();
     (async () => {
       const { data: s } = await supabase.auth.getSession();
-      const uid = s?.session?.user?.id;
+      const user = s?.session?.user;
       if (!alive) return;
-      setSignedIn(!!uid);
-      if (!uid) return setOrdersLoading(false);
+      setSignedIn(!!user);
+      const meta = user?.user_metadata || {};
+      setName(((meta.full_name || meta.name || "").trim().split(/\s+/).pop()) || "");
+      if (!user) return setOrdersLoading(false);
       const { data } = await supabase
         .from("redemption_orders")
         .select("id,order_code,package_name,coins_charged,status,created_at")
-        .eq("user_id", uid)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(6);
       if (!alive) return;
       setOrders(data || []);
       setOrdersLoading(false);
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -62,49 +62,54 @@ export default function HelpCenter() {
     });
   }, [faqs, query, cat]);
 
+  const scrollToFaq = () =>
+    setTimeout(() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+
   const pickCategory = (key) => {
     setQuery("");
+    setOpenId(null);
     setCat(key);
-    if (key) {
-      setTimeout(() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-    }
+    if (key) scrollToFaq();
+  };
+  const pickFaq = (f) => {
+    setQuery("");
+    setCat(null);
+    setOpenId(f.id);
+    scrollToFaq();
   };
 
-  const openTicket = (preset = {}) => setSheet({ type: "ticket", preset });
+  const openRequest = (preset = {}) => setView({ type: "request", preset });
   const searching = !!query.trim();
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 dark:bg-slate-950">
       <TopHeader />
-      <Hero onBack={() => navigate(-1)} onHome={() => navigate("/")} />
+      <Hero name={name} query={query} onQuery={setQuery} onBack={() => navigate(-1)} onHome={() => navigate("/")} />
 
-      <main className="relative z-10 mx-auto -mt-7 max-w-md space-y-7 px-4 md:max-w-3xl">
-        <SearchBar value={query} onChange={setQuery} />
+      <main className="mx-auto max-w-md space-y-6 px-4 md:max-w-3xl">
+        {!searching && <PopularFaqs faqs={faqs} onPick={pickFaq} />}
         {!searching && (
-          <QuickActions
-            onChat={() => navigate("/support")}
-            onTicket={() => openTicket()}
-            onHistory={() => setSheet({ type: "history" })}
-          />
+          <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={() => setView({ type: "history" })} />
         )}
         {!searching && (
-          <OrderList
-            orders={orders}
-            loading={ordersLoading}
-            signedIn={signedIn}
-            onAsk={openTicket}
-            onAll={() => navigate("/history")}
-          />
+          <OrderList orders={orders} loading={ordersLoading} signedIn={signedIn} onAsk={openRequest} onAll={() => navigate("/history")} />
         )}
-        {!searching && <CategoryGrid active={cat} onPick={pickCategory} />}
-        <FaqSection faqs={filtered} loading={faqLoading} cat={cat} setCat={setCat} query={query} onAsk={openTicket} />
-        {!searching && <ContactCard onAsk={openTicket} />}
+        {!searching && <CategoryCards faqs={faqs} active={cat} onPick={pickCategory} />}
+        <FaqSection faqs={filtered} loading={faqLoading} cat={cat} setCat={setCat} query={query}
+          openId={openId} setOpenId={setOpenId} onAsk={openRequest} />
+        {!searching && <ContactCard onRequest={openRequest} />}
       </main>
 
-      {sheet?.type === "ticket" && (
-        <TicketSheet preset={sheet.preset} onClose={() => setSheet(null)} onHistory={() => setSheet({ type: "history" })} />
+      {view?.type === "request" && (
+        <RequestScreen
+          preset={view.preset}
+          orders={orders}
+          onClose={() => setView(null)}
+          onHistory={() => setView({ type: "history" })}
+          onChat={() => navigate("/support")}
+        />
       )}
-      {sheet?.type === "history" && <HistorySheet onClose={() => setSheet(null)} onNew={() => openTicket()} />}
+      {view?.type === "history" && <HistoryScreen onClose={() => setView(null)} onNew={() => openRequest()} />}
 
       <BottomNav />
     </div>
