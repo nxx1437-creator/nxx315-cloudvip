@@ -42,9 +42,9 @@ const SECTIONS = [
   { id: "minh-bach", title: "Minh bạch và Cam kết", blocks: [
     { t: "p", x: "Chúng tôi hiểu rằng sự tin tưởng của bạn là yếu tố tiên quyết. Do đó, NXX315 Studio Rewards cam kết:" },
     { t: "list", items: [
-      "**Minh bạch nguồn hàng:** NXX315 Studio cam kết cung cấp Robux thông qua các kênh phân phối hợp pháp và chính thức tại Việt Nam (mua qua đối tác VNG). Chúng tôi không sử dụng tool bơm Robux lậu, cam kết không làm ảnh hưởng đến tài khoản của bạn.",
-      "**Cam kết đền bù:** Trong trường hợp hy hữu Robux bị Roblox thu hồi do lỗi từ phía chúng tôi, NXX315 sẽ hoàn lại số Xu tương ứng vào tài khoản của bạn.",
-      "**Thời gian xử lý:** Robux sẽ được nạp vào tài khoản trong vòng tối đa 24 giờ (hoặc sớm hơn) sau khi bạn đổi thưởng thành công. Vui lòng kiểm tra kỹ Username trước khi xác nhận."
+      "Minh bạch nguồn hàng: NXX315 Studio cam kết cung cấp Robux thông qua các kênh phân phối hợp pháp và chính thức tại Việt Nam (mua qua đối tác VNG). Chúng tôi không sử dụng tool bơm Robux lậu, cam kết không làm ảnh hưởng đến tài khoản của bạn.",
+      "Cam kết đền bù: Trong trường hợp hy hữu Robux bị Roblox thu hồi do lỗi từ phía chúng tôi, NXX315 sẽ hoàn lại số Xu tương ứng vào tài khoản của bạn.",
+      "Thời gian xử lý: Robux sẽ được nạp vào tài khoản trong vòng tối đa 24 giờ (hoặc sớm hơn) sau khi bạn đổi thưởng thành công. Vui lòng kiểm tra kỹ Username trước khi xác nhận."
     ]},
   ]},
   { id: "dieu-kien", title: "Điều kiện sử dụng", blocks: [
