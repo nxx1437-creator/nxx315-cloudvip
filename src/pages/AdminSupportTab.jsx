@@ -1,6 +1,9 @@
 // src/pages/AdminSupportTab.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, RefreshCw, Send, ArrowLeft, X, Zap, MessageCircle, Clock } from "lucide-react";
+import { 
+  Search, RefreshCw, Send, ArrowLeft, X, Zap, MessageCircle, 
+  Clock, Tag, Plus, Check, Lock, ShieldAlert 
+} from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
 const BUCKET = "support-attachments";
@@ -11,6 +14,25 @@ const QUICK_REPLIES = [
   "Đơn của bạn đang được xử lý, bạn vui lòng chờ thêm ít phút nhé.",
   "Vấn đề đã được xử lý xong. Nếu còn cần hỗ trợ, bạn cứ nhắn tiếp tại đây nhé!",
 ];
+
+// ====== CẤU HÌNH NHÃN (LABELS) ======
+const LABEL_CONFIG = {
+  vip: { label: "VIP", color: "bg-red-100 text-red-700 border-red-200" },
+  khach_sop: { label: "Khách sộp", color: "bg-red-100 text-red-700 border-red-200" },
+  bom_hang: { label: "Bom hàng", color: "bg-red-100 text-red-700 border-red-200" },
+  spam: { label: "Spam", color: "bg-red-100 text-red-700 border-red-200" },
+  bao_loi: { label: "Đang báo lỗi", color: "bg-red-100 text-red-700 border-red-200" },
+  
+  cho_ck: { label: "Chờ CK", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  cho_roblox: { label: "Chờ Roblox", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  can_goi: { label: "Cần gọi lại", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  don_lon: { label: "Đơn lớn", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  
+  khach_moi: { label: "Khách mới", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  da_xu_ly: { label: "Đã xử lý", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  dai_ly: { label: "Đại lý", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  phan_hoi_tot: { label: "Phản hồi tốt", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+};
 
 const STATUS = {
   open: { label: "Mới", dot: "bg-amber-500", bg: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -49,6 +71,20 @@ function Dot({ status }) {
   );
 }
 
+function LabelTag({ labelId, onRemove }) {
+  const conf = LABEL_CONFIG[labelId] || { label: labelId, color: "bg-slate-100 text-slate-700 border-slate-200" };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold ${conf.color}`}>
+      {conf.label}
+      {onRemove && (
+        <button onClick={(e) => { e.stopPropagation(); onRemove(labelId); }} className="ml-0.5 rounded-full p-0.5 hover:bg-black/10">
+          <X size={10} />
+        </button>
+      )}
+    </span>
+  );
+}
+
 /* ================= CHAT MỘT YÊU CẦU ================= */
 function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
   const [msgs, setMsgs] = useState([]);
@@ -58,8 +94,15 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
   const [err, setErr] = useState("");
   const [view, setView] = useState(null);
   const [quick, setQuick] = useState(false);
+  
+  // State cho Labels
+  const [labels, setLabels] = useState(ticket.labels || []);
+  const [showLabelPicker, setShowLabelPicker] = useState(false);
+  const [customLabelInput, setCustomLabelInput] = useState("");
+  
   const endRef = useRef(null);
   const who = user?.username || user?.email || `Khách #${String(ticket.user_id || "").slice(0, 6)}`;
+  const isLocked = isDone(ticket);
 
   useEffect(() => {
     let alive = true;
@@ -101,7 +144,40 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
     onStatus(ticket.id, status);
   };
 
+  const updateLabels = async (newLabels) => {
+    setLabels(newLabels);
+    const { error } = await supabase.from("support_tickets").update({ labels: newLabels }).eq("id", ticket.id);
+    if (error) {
+      setErr("Lỗi lưu nhãn: " + error.message);
+      // Revert if error
+      setLabels(ticket.labels || []);
+    }
+  };
+
+  const handleAddLabel = (labelId) => {
+    if (labels.includes(labelId)) return;
+    updateLabels([...labels, labelId]);
+    setShowLabelPicker(false);
+    setCustomLabelInput("");
+  };
+
+  const handleAddCustomLabel = () => {
+    const val = customLabelInput.trim();
+    if (!val) return;
+    const labelId = val.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    if (!labels.includes(labelId)) {
+      updateLabels([...labels, labelId]);
+    }
+    setShowLabelPicker(false);
+    setCustomLabelInput("");
+  };
+
+  const handleRemoveLabel = (labelId) => {
+    updateLabels(labels.filter(l => l !== labelId));
+  };
+
   const send = async () => {
+    if (isLocked) return;
     const body = text.trim();
     if (!body || busy) return;
     setBusy(true);
@@ -148,8 +224,8 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
   const btn = "rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50";
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-[500px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      {/* Header */}
+    <div className="relative flex h-[calc(100dvh-9rem)] min-h-[500px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {/* HEADER */}
       <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3">
         <div className="flex items-start gap-3">
           <button onClick={onBack} aria-label="Quay lại" className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 lg:hidden">
@@ -166,14 +242,73 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
             {statusOf(ticket.status).label}
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {ticket.status !== "in_progress" && !isDone(ticket) && <button onClick={() => changeStatus("in_progress")} className={btn}>Đang xử lý</button>}
-          {!isDone(ticket) && <button onClick={() => changeStatus("resolved")} className={`${btn} !border-emerald-200 !bg-emerald-50 !text-emerald-700`}>Đánh dấu đã xong</button>}
-          {isDone(ticket) && <button onClick={() => changeStatus("open")} className={btn}>Mở lại</button>}
+
+        {/* KHU VỰC NHÃN & NÚT THAO TÁC */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+          {/* Labels list */}
+          {labels.map(id => (
+            <LabelTag key={id} labelId={id} onRemove={!isLocked ? handleRemoveLabel : null} />
+          ))}
+          
+          {/* Nút thêm nhãn */}
+          {!isLocked && (
+            <div className="relative">
+              <button 
+                onClick={() => setShowLabelPicker(!showLabelPicker)}
+                className="inline-flex items-center gap-1 rounded-md border border-dashed border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <Plus size={12} /> Thêm nhãn
+              </button>
+              
+              {/* Dropdown chọn nhãn */}
+              {showLabelPicker && (
+                <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                  <div className="mb-2 border-b border-slate-100 pb-2">
+                    <div className="flex gap-1">
+                      <input 
+                        value={customLabelInput}
+                        onChange={(e) => setCustomLabelInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddCustomLabel()}
+                        placeholder="Tên nhãn mới..." 
+                        className="flex-1 rounded border border-slate-200 px-2 py-1 text-xs outline-none focus:border-slate-900"
+                      />
+                      <button onClick={handleAddCustomLabel} className="rounded bg-slate-900 px-2 py-1 text-xs text-white hover:bg-slate-700">
+                        Lưu
+                      </button>
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {Object.entries(LABEL_CONFIG).map(([key, conf]) => {
+                      if (labels.includes(key)) return null;
+                      return (
+                        <button key={key} onClick={() => handleAddLabel(key)}
+                          className={`mb-1 flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs transition hover:bg-slate-50 ${conf.color.replace('border-', 'hover:bg-opacity-50 border-')}`}
+                        >
+                          <span className="font-medium">{conf.label}</span>
+                          <Plus size={12} className="opacity-50" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="ml-auto flex gap-2">
+            {ticket.status !== "in_progress" && !isLocked && <button onClick={() => changeStatus("in_progress")} className={btn}>Đang xử lý</button>}
+            {!isLocked && <button onClick={() => changeStatus("resolved")} className={`${btn} !border-emerald-200 !bg-emerald-50 !text-emerald-700`}>Đánh dấu đã xong</button>}
+            {isLocked && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                <Lock size={12} /> Đã đóng
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Hội thoại */}
+      {/* HỘI THOẠI */}
       <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50/50 px-4 py-5">
         <Bubble label={who} time={fmtFull(ticket.created_at)}>
           {bodyOf(ticket)}
@@ -186,44 +321,55 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
             {thumbs(m.images)}
           </Bubble>
         ))}
+        
+        {/* Thông báo khóa chat */}
+        {isLocked && (
+          <div className="mx-auto mt-6 max-w-sm rounded-xl border border-slate-200 bg-slate-100 p-4 text-center">
+            <Lock size={20} className="mx-auto mb-2 text-slate-400" />
+            <p className="text-sm font-medium text-slate-600">Yêu cầu này đã được đóng</p>
+            <p className="mt-1 text-xs text-slate-500">Không thể gửi thêm tin nhắn mới.</p>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
-      {/* Soạn trả lời */}
-      <div className="shrink-0 border-t border-slate-200 bg-white p-3 lg:p-4">
-        {err && <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{err}</p>}
-        
-        {quick && (
-          <div className="mb-3 flex flex-col gap-1.5">
-            {QUICK_REPLIES.map((r) => (
-              <button key={r} onClick={() => { setText(r); setQuick(false); }}
-                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs leading-5 text-slate-700 hover:bg-slate-100">{r}</button>
-            ))}
+      {/* SOẠN TIN NHẮN (Chỉ hiển thị nếu chưa khóa) */}
+      {!isLocked && (
+        <div className="shrink-0 border-t border-slate-200 bg-white p-3 lg:p-4">
+          {err && <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{err}</p>}
+          
+          {quick && (
+            <div className="mb-3 flex flex-col gap-1.5">
+              {QUICK_REPLIES.map((r) => (
+                <button key={r} onClick={() => { setText(r); setQuick(false); }}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs leading-5 text-slate-700 hover:bg-slate-100">{r}</button>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex items-end gap-2">
+            <button onClick={() => setQuick(!quick)} aria-label="Mẫu trả lời" title="Mẫu trả lời"
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-slate-600 transition ${quick ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-slate-50 hover:bg-slate-100"}`}>
+              <Zap size={18} />
+            </button>
+            <textarea
+              value={text}
+              rows={1}
+              maxLength={1000}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+              placeholder="Nhập câu trả lời... (Enter để gửi)"
+              className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm outline-none transition focus:border-slate-900 focus:bg-white"
+            />
+            <button onClick={send} disabled={!text.trim() || busy} aria-label="Gửi"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-700 disabled:opacity-40">
+              <Send size={17} />
+            </button>
           </div>
-        )}
-        
-        <div className="flex items-end gap-2">
-          <button onClick={() => setQuick(!quick)} aria-label="Mẫu trả lời" title="Mẫu trả lời"
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-slate-600 transition ${quick ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-slate-50 hover:bg-slate-100"}`}>
-            <Zap size={18} />
-          </button>
-          <textarea
-            value={text}
-            rows={1}
-            maxLength={1000}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Nhập câu trả lời... (Enter để gửi)"
-            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm outline-none transition focus:border-slate-900 focus:bg-white"
-          />
-          <button onClick={send} disabled={!text.trim() || busy} aria-label="Gửi"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-700 disabled:opacity-40">
-            <Send size={17} />
-          </button>
         </div>
-      </div>
+      )}
 
-      {/* Lightbox xem ảnh */}
+      {/* Lightbox */}
       {view && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4" onClick={() => setView(null)}>
           <button aria-label="Đóng" onClick={() => setView(null)} className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-900">
@@ -245,6 +391,7 @@ export default function AdminSupportTab({ onChanged }) {
   const [err, setErr] = useState("");
   const [tab, setTab] = useState("wait");
   const [q, setQ] = useState("");
+  const [filterLabel, setFilterLabel] = useState(null); // Lọc theo nhãn
   const [selId, setSelId] = useState(null);
 
   const load = useCallback(async () => {
@@ -298,15 +445,26 @@ export default function AdminSupportTab({ onChanged }) {
     const kw = q.trim().toLowerCase();
     return tickets.filter((t) => {
       if (!inTab(t, tab)) return false;
+      if (filterLabel && !(t.labels || []).includes(filterLabel)) return false;
       if (!kw) return true;
       const p = profiles[t.user_id] || {};
       return [titleOf(t), bodyOf(t), codeOf(t), p.username, p.email].filter(Boolean).some((v) => String(v).toLowerCase().includes(kw));
     });
-  }, [tickets, tab, q, profiles, lastBy]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tickets, tab, q, profiles, lastBy, filterLabel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sel = tickets.find((t) => t.id === selId);
-  const onStatus = (id, status) => { setTickets((cur) => cur.map((t) => (t.id === id ? { ...t, status } : t))); onChanged?.(); };
+  const onStatus = (id, status) => { 
+    setTickets((cur) => cur.map((t) => (t.id === id ? { ...t, status } : t))); 
+    onChanged?.(); 
+  };
   const onSent = (id) => setLastBy((c) => ({ ...c, [String(id)]: "staff" }));
+
+  // Lấy danh sách các nhãn đang được dùng trong danh sách hiện tại để làm filter
+  const activeLabels = useMemo(() => {
+    const s = new Set();
+    tickets.forEach(t => (t.labels || []).forEach(l => s.add(l)));
+    return Array.from(s);
+  }, [tickets]);
 
   return (
     <div className="flex h-[calc(100dvh-9rem)] min-h-[600px] flex-col space-y-4 lg:space-y-5">
@@ -326,13 +484,31 @@ export default function AdminSupportTab({ onChanged }) {
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1 gap-4 lg:gap-5">
-        {/* Cột trái: Danh sách */}
+        
+        {/* CỘT TRÁI: DANH SÁCH */}
         <div className={`w-full shrink-0 flex-col lg:flex lg:w-[360px] ${sel ? "hidden" : "flex"}`}>
+          
           <div className="relative shrink-0">
             <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm mã, nội dung, tên, email..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-100" />
           </div>
+
+          {/* Bộ lọc nhãn */}
+          {activeLabels.length > 0 && (
+            <div className="mt-3 flex shrink-0 items-center gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
+              <span className="text-xs font-semibold text-slate-500 whitespace-nowrap"><Tag size={12} className="inline mr-1"/>Lọc:</span>
+              {activeLabels.map(l => (
+                <button key={l} onClick={() => setFilterLabel(filterLabel === l ? null : l)}
+                  className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs transition ${filterLabel === l ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"}`}>
+                  {LABEL_CONFIG[l]?.label || l}
+                </button>
+              ))}
+              {filterLabel && (
+                <button onClick={() => setFilterLabel(null)} className="text-xs text-red-500 hover:underline whitespace-nowrap">Bỏ lọc</button>
+              )}
+            </div>
+          )}
           
           <div className="-mx-1 mt-3 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {TABS.map((t) => {
@@ -374,6 +550,15 @@ export default function AdminSupportTab({ onChanged }) {
                         </span>
                       </span>
                       <span className="mt-0.5 block truncate text-[13px] text-slate-600">{titleOf(t)}</span>
+                      
+                      {/* Hiển thị nhãn thu nhỏ trong list */}
+                      {(t.labels && t.labels.length > 0) && (
+                        <span className="mt-1 flex flex-wrap gap-1">
+                          {t.labels.slice(0, 3).map(l => <LabelTag key={l} labelId={l} />)}
+                          {t.labels.length > 3 && <span className="text-[10px] text-slate-400">+{t.labels.length - 3}</span>}
+                        </span>
+                      )}
+
                       <span className="mt-1.5 flex items-center gap-2">
                         <Dot status={t.status} />
                         <span className="text-[11px] text-slate-400">#{codeOf(t)}</span>
@@ -387,7 +572,7 @@ export default function AdminSupportTab({ onChanged }) {
           </div>
         </div>
 
-                {/* Cột phải: Khung chat */}
+        {/* CỘT PHẢI: KHUNG CHAT */}
         <div className={`min-w-0 flex-1 ${sel ? "flex flex-col" : "hidden lg:flex"}`}>
           {sel ? (
             <AdminChat key={sel.id} ticket={sel} user={profiles[sel.user_id]} onBack={() => setSelId(null)} onStatus={onStatus} onSent={onSent} />
@@ -401,4 +586,4 @@ export default function AdminSupportTab({ onChanged }) {
       </div>
     </div>
   );
-}
+    }
