@@ -79,7 +79,7 @@ export default function HelpCenter() {
   const searching = !!query.trim();
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-100 pb-28 dark:bg-slate-950">
       <TopHeader />
       <Hero query={query} onQuery={setQuery} />
 
@@ -111,5 +111,6 @@ export default function HelpCenter() {
       <BottomNav />
     </div>
   );
-}
+      }
+
 
