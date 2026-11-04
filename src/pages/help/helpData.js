@@ -2,6 +2,12 @@
 export const ZALO_URL = "https://zalo.me/0865245988";
 export const ATTACH_BUCKET = "support-attachments";
 
+// Avatar và tên của CSKH trong khung chat.
+// Cách đổi avatar: bỏ ảnh vuông vào thư mục public/ (ví dụ public/cskh-avatar.png) rồi điền "/cskh-avatar.png".
+// Để trống thì hiện chữ cái đầu của tên.
+export const CSKH_AVATAR = "https://i.postimg.cc/bJ4DrKg9/234cae9d0f3763c00df5e685fa9dda6e.jpg";
+export const CSKH_NAME = "CSKH";
+
 export const CATEGORIES = [
   { key: "order", label: "Đơn hàng", icon: "box", desc: "Theo dõi đơn đổi thưởng, đơn chưa nhận hoặc bị từ chối." },
   { key: "payment", label: "Thanh toán", icon: "card", desc: "Xu, nạp xu, trừ xu và các vấn đề về giao dịch." },
@@ -57,3 +63,4 @@ export function fold(s = "") {
     })
     .join("");
 }
+
