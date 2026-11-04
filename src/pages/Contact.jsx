@@ -42,6 +42,8 @@ const SECTIONS = [
 const PAGE_SECTIONS = SECTIONS.map((s) => ({ ...s, icon: ICONS[s.id], img: IMAGES[s.id] }));
 const EXTRA_TOC = [{ id: "kenh", title: "Kênh chính thức" }, { id: "gui-yeu-cau", title: "Gửi yêu cầu" }];
 
+const CATEGORY = { "Hỗ trợ tài khoản": "account", "Hỗ trợ đổi thưởng": "order", "Báo lỗi": "bug", "Góp ý": "other", "Khác": "other" };
+
 const SEC = "scroll-mt-28 border-t-[.5px] border-[var(--line)] py-10 sm:py-12";
 const H2 = "text-[22px] leading-[1.25] tracking-[-0.44px] sm:text-[24px]";
 const INPUT = "mt-1.5 w-full rounded-[14px] border-[.5px] border-[var(--line)] bg-white px-4 py-3 text-[16px] outline-none transition-colors focus:border-[var(--blue)]";
@@ -64,34 +66,40 @@ function Channel({ icon: Icon, label, href, text, external }) {
 function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState("");
   const [error, setError] = useState("");
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
-    setSending(true); setError(""); setSent(false);
+    setSending(true); setError(""); setSent("");
     try {
-      // 1) Lưu vào database
-      const { error: dbError } = await supabase.from("support_tickets").insert({
-        user_name: form.name, user_email: form.email, subject: form.subject, message: form.message, status: "pending",
-      });
-      if (dbError) throw dbError;
+      // 1) Lưu phiếu hỗ trợ. Cần đăng nhập để phiếu hiện trong hồ sơ; khách chưa đăng nhập vẫn gửi được qua Telegram/email.
+      let code = "";
+      const { data: auth } = await supabase.auth.getUser();
+      if (auth?.user?.id) {
+        code = "TK" + Math.random().toString(36).slice(2, 9).toUpperCase();
+        const { error: dbError } = await supabase.from("support_tickets").insert({
+          user_id: auth.user.id, ticket_code: code, title: form.subject, category: CATEGORY[form.subject] || "other", type: form.subject === "Góp ý" ? "idea" : "support",
+          description: `${form.message}\n\n— ${form.name} · ${form.email}`, status: "open",
+        });
+        if (dbError) throw dbError;
+      }
       // 2) Báo lên Telegram
       try {
         await supabase.functions.invoke("telegram-webhook", {
           body: { message: {
-            text: `🆕 Yêu cầu hỗ trợ mới! Tên: ${form.name}\n📧 Email: ${form.email}\n📌 Chủ đề: ${form.subject}\n📝 Nội dung: ${form.message}`,
+            text: ` Yêu cầu hỗ trợ mới! ${code ? "Mã: " + code + "\n" : ""}Tên: ${form.name}\n📧 Email: ${form.email}\n📌 Chủ đề: ${form.subject}\n📝 Nội dung: ${form.message}`,
             chat: { id: ADMIN_CHAT_ID },
           } },
         });
       } catch (teleError) { console.error("Lỗi gửi Telegram:", teleError); }
       // 3) Gửi email
-      const { data, error: fnError } = await supabase.functions.invoke("send-email", { body: form });
+      const { data, error: fnError } = await supabase.functions.invoke("send-email", { body: { ...form, ticket_code: code } });
       if (fnError) throw new Error(fnError.message);
       if (data?.success) {
-        setSent(true); setForm({ name: "", email: "", subject: "", message: "" });
-        setTimeout(() => setSent(false), 5000);
+        setSent(code || "ok"); setForm({ name: "", email: "", subject: "", message: "" });
+        setTimeout(() => setSent(""), 12000);
       } else throw new Error(data?.error || "Gửi thất bại");
     } catch (err) {
       setError(err.message || "Lỗi kết nối, vui lòng thử lại sau");
@@ -125,7 +133,7 @@ function ContactForm() {
       </button>
       {sent && (
         <div className="flex items-start gap-2.5 rounded-[14px] bg-[#f6f6f7] p-4 text-[15px] text-[#1f9d68]">
-          <CheckCircle2 size={18} strokeWidth={1.5} className="mt-0.5 shrink-0" /> <span>Yêu cầu của bạn đã được gửi! Chúng tôi sẽ phản hồi sớm.</span>
+          <CheckCircle2 size={18} strokeWidth={1.5} className="mt-0.5 shrink-0" /> <span>Yêu cầu của bạn đã được gửi! Chúng tôi sẽ phản hồi sớm.{sent !== "ok" && <> Mã yêu cầu: <b className="font-[350] text-[var(--ink)]">{sent}</b></>}</span>
         </div>
       )}
     </form>
@@ -172,5 +180,6 @@ export default function Contact() {
       home="/"
     />
   );
-}
+   }
+                  
 
