@@ -3,10 +3,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-import TopHeader from "../components/TopHeader.jsx";
-import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards, FaqSection, ContactCard } from "./help/HelpUI.jsx";
+import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards } from "./help/HelpUI.jsx";
+import { FaqSection, ContactCard } from "./help/HelpFaq.jsx";
 import { RequestScreen, HistoryFlow } from "./help/HelpRequest.jsx";
 import { fold } from "./help/helpData.js";
+
+// Tên gọi: lấy từ tài khoản đăng nhập (tên Việt thì lấy chữ cuối). Không có thì chào chung.
+const givenName = (u) => {
+  const full = (u?.user_metadata?.full_name || u?.user_metadata?.name || "").trim();
+  return full ? full.split(/\s+/).slice(-1)[0] : "";
+};
 
 export default function HelpCenter() {
   const navigate = useNavigate();
@@ -18,6 +24,7 @@ export default function HelpCenter() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
+  const [name, setName] = useState("");
   const [view, setView] = useState(null); // {type:"request", preset} | {type:"history"}
 
   useEffect(() => {
@@ -37,6 +44,7 @@ export default function HelpCenter() {
       const user = s?.session?.user;
       if (!alive) return;
       setSignedIn(!!user);
+      setName(givenName(user));
       if (!user) return setOrdersLoading(false);
       const { data } = await supabase
         .from("redemption_orders")
@@ -77,13 +85,15 @@ export default function HelpCenter() {
 
   const openRequest = (preset = {}) => setView({ type: "request", preset });
   const searching = !!query.trim();
+  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
+  // Thẻ đầu tiên nổi lên che nửa dưới hero; khi đang tìm kiếm thì để cách ra để tiêu đề không bị đè lên nền xanh
+  const overlap = !searching && faqs.length > 0 ? "-mt-14" : "mt-6";
 
   return (
-    <div className="min-h-screen bg-[#e9ecee] pb-28">
-      <TopHeader />
-      <Hero query={query} onQuery={setQuery} />
+    <div className="min-h-screen bg-white pb-28">
+      <Hero query={query} onQuery={setQuery} name={name} onBack={goBack} />
 
-      <main className="mx-auto max-w-md space-y-8 px-4 md:max-w-3xl">
+      <main className={`relative mx-auto max-w-md space-y-8 px-4 md:max-w-4xl ${overlap}`}>
         {!searching && <PopularFaqs faqs={faqs} onPick={pickFaq} />}
         {!searching && (
           <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={() => setView({ type: "history" })} />
@@ -111,4 +121,5 @@ export default function HelpCenter() {
       <BottomNav />
     </div>
   );
-}
+                                                                          }
+
