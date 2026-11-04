@@ -64,7 +64,6 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail.jsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
 const Contact = lazy(() => import("./pages/Contact.jsx"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter.jsx"));
-import StaffSupport from "./pages/StaffSupport.jsx";
 const Support = lazy(() => import("./pages/Support/index.jsx"));
 const Community = lazy(() => import("./pages/Community.jsx"));
 const Terms = lazy(() => import("./pages/Terms.jsx"));
@@ -149,7 +148,6 @@ export default function App() {
 
             <Route path="/contact" element={<Contact />} />
             <Route path="/help" element={<HelpCenter />} />
-            <Route path="/staff/support" element={<StaffSupport />} />
             <Route path="/support" element={<Support />} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path="/terms" element={<Terms />} />
