@@ -26,7 +26,7 @@ const MiniGames = lazy(() => import("./pages/MiniGames.jsx"));
 const WheelGame = lazy(() => import("./pages/games/WheelGame.jsx"));
 const ScratchGame = lazy(() => import("./pages/games/ScratchGame.jsx"));
 const DiceGame = lazy(() => import("./pages/games/DiceGame.jsx"));
-const NotFound = lazy(() => import("./pages/NotFoundPage.jsx"));
+const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
@@ -78,8 +78,8 @@ const Admin = lazy(() => import("./pages/Admin.jsx"));
 const AdminNotifications = lazy(() => import("./pages/AdminNotifications.jsx"));
 const AdminChat = lazy(() => import("./pages/AdminChat.jsx"));
 
-// ✅ 404
-const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+// ✅ ĐÃ SỬA TẠI ĐÂY: Đổi tên file thành NotFoundPage.jsx cho khớp với GitHub của bạn
+const NotFound = lazy(() => import("./pages/NotFoundPage.jsx"));
 
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
@@ -152,7 +152,7 @@ export default function App() {
             <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
             <Route path="/store/cloud-phone" element={<ProtectedRoute><CloudPhone /></ProtectedRoute>} />
 
-            {/* Lịch sử — bọc ProtectedRoute */}
+            {/* Lịch sử */}
             <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
             <Route path="/link-history" element={<ProtectedRoute><LinkHistory /></ProtectedRoute>} />
             <Route path="/refund-history" element={<ProtectedRoute><RefundHistoryPage /></ProtectedRoute>} />
@@ -205,4 +205,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-  }
+      }
