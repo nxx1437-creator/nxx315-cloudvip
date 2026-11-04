@@ -30,12 +30,14 @@ const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
-import CreatorLayout from "./pages/creator/CreatorLayout.jsx";
-import CreatorOverview from "./pages/creator/CreatorOverview.jsx";
-import CreatorRanking from "./pages/creator/CreatorRanking.jsx";
-import CreatorVideos from "./pages/creator/CreatorVideos.jsx";
-import CreatorRewards from "./pages/creator/CreatorRewards.jsx";
-import CreatorSettings from "./pages/creator/CreatorSettings.jsx";
+
+// ✅ Creator — lazy toàn bộ
+const CreatorLayout = lazy(() => import("./pages/creator/CreatorLayout.jsx"));
+const CreatorOverview = lazy(() => import("./pages/creator/CreatorOverview.jsx"));
+const CreatorRanking = lazy(() => import("./pages/creator/CreatorRanking.jsx"));
+const CreatorVideos = lazy(() => import("./pages/creator/CreatorVideos.jsx"));
+const CreatorRewards = lazy(() => import("./pages/creator/CreatorRewards.jsx"));
+const CreatorSettings = lazy(() => import("./pages/creator/CreatorSettings.jsx"));
 
 // Hướng dẫn + Về chúng tôi
 const GuideHome = lazy(() => import("./pages/Guide/GuideHome.jsx"));
@@ -76,6 +78,9 @@ const Admin = lazy(() => import("./pages/Admin.jsx"));
 const AdminNotifications = lazy(() => import("./pages/AdminNotifications.jsx"));
 const AdminChat = lazy(() => import("./pages/AdminChat.jsx"));
 
+// ✅ 404
+const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import BanGate from "./components/BanGate";
@@ -91,11 +96,13 @@ export default function App() {
       <BrowserRouter>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            {/* Public */}
             <Route path="/" element={<CloudVIPLanding />} />
             <Route path="/about" element={<About />} />
             <Route path="/guide" element={<GuideHome />} />
             <Route path="/guide/:id" element={<GuideDetail />} />
 
+            {/* Auth */}
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/register" element={<Register />} />
@@ -105,6 +112,7 @@ export default function App() {
             <Route path="/account-review" element={<AccountReview />} />
             <Route path="/onboarding" element={<Onboarding />} />
 
+            {/* Protected */}
             <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
             <Route path="/level" element={<ProtectedRoute><Level /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
@@ -112,18 +120,29 @@ export default function App() {
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
             <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
-            <Route path="/creator" element={<CreatorLayout />}>
-            <Route index element={<CreatorOverview />} />
-            <Route path="ranking" element={<CreatorRanking />} />
-            <Route path="videos" element={<CreatorVideos />} />
-            <Route path="rewards" element={<CreatorRewards />} />
-            <Route path="settings" element={<CreatorSettings />} />
+
+            {/* Creator — bọc ProtectedRoute */}
+            <Route
+              path="/creator"
+              element={
+                <ProtectedRoute>
+                  <CreatorLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<CreatorOverview />} />
+              <Route path="ranking" element={<CreatorRanking />} />
+              <Route path="videos" element={<CreatorVideos />} />
+              <Route path="rewards" element={<CreatorRewards />} />
+              <Route path="settings" element={<CreatorSettings />} />
             </Route>
+
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
             <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
 
+            {/* Store games */}
             <Route path="/store/roblox" element={<ProtectedRoute><Roblox /></ProtectedRoute>} />
             <Route path="/store/play-together" element={<ProtectedRoute><PlayTogether /></ProtectedRoute>} />
             <Route path="/store/lien-quan" element={<ProtectedRoute><LienQuan /></ProtectedRoute>} />
@@ -133,19 +152,23 @@ export default function App() {
             <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
             <Route path="/store/cloud-phone" element={<ProtectedRoute><CloudPhone /></ProtectedRoute>} />
 
+            {/* Lịch sử — bọc ProtectedRoute */}
             <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
-            <Route path="/link-history" element={<LinkHistory />} />
-            <Route path="/refund-history" element={<RefundHistoryPage />} />
+            <Route path="/link-history" element={<ProtectedRoute><LinkHistory /></ProtectedRoute>} />
+            <Route path="/refund-history" element={<ProtectedRoute><RefundHistoryPage /></ProtectedRoute>} />
 
+            {/* Minigames */}
             <Route path="/minigames" element={<ProtectedRoute><MiniGames /></ProtectedRoute>} />
             <Route path="/minigames/wheel" element={<ProtectedRoute><WheelGame /></ProtectedRoute>} />
             <Route path="/minigames/scratch" element={<ProtectedRoute><ScratchGame /></ProtectedRoute>} />
             <Route path="/minigames/dice" element={<ProtectedRoute><DiceGame /></ProtectedRoute>} />
 
+            {/* Admin */}
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
             <Route path="/admin/chat/:conversationId" element={<AdminRoute><AdminChat /></AdminRoute>} />
 
+            {/* Info public */}
             <Route path="/contact" element={<Contact />} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/support" element={<Support />} />
@@ -155,16 +178,22 @@ export default function App() {
             <Route path="/fraud" element={<Fraud />} />
             <Route path="/redemption-policy" element={<RedemptionPolicy />} />
 
+            {/* Wallet */}
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
             <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
             <Route path="/withdraw/history" element={<ProtectedRoute><WithdrawHistory /></ProtectedRoute>} />
 
+            {/* Marketing */}
             <Route path="/marketing-video" element={<ProtectedRoute><MarketingVideo /></ProtectedRoute>} />
             <Route path="/marketing-wallet" element={<ProtectedRoute><MarketingWallet /></ProtectedRoute>} />
 
+            {/* Khác */}
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/task/callback" element={<TaskCallback />} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
 
@@ -176,4 +205,4 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-}
+  }
