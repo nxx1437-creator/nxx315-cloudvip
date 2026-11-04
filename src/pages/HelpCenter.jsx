@@ -79,11 +79,11 @@ export default function HelpCenter() {
   const searching = !!query.trim();
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-28 dark:bg-slate-950">
+    <div className="min-h-screen bg-[#eef0f2] pb-28">
       <TopHeader />
       <Hero query={query} onQuery={setQuery} />
 
-      <main className="mx-auto max-w-md space-y-6 px-4 md:max-w-3xl">
+      <main className="mx-auto max-w-md space-y-8 px-4 md:max-w-3xl">
         {!searching && <PopularFaqs faqs={faqs} onPick={pickFaq} />}
         {!searching && (
           <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={() => setView({ type: "history" })} />
@@ -111,6 +111,4 @@ export default function HelpCenter() {
       <BottomNav />
     </div>
   );
-      }
-
-
+                                    }
