@@ -26,7 +26,7 @@ const MiniGames = lazy(() => import("./pages/MiniGames.jsx"));
 const WheelGame = lazy(() => import("./pages/games/WheelGame.jsx"));
 const ScratchGame = lazy(() => import("./pages/games/ScratchGame.jsx"));
 const DiceGame = lazy(() => import("./pages/games/DiceGame.jsx"));
-const Notifications = lazy(() => import("./pages/Notifications.jsx"));
+const NotFound = lazy(() => import("./pages/NotFoundPage.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
