@@ -1,5 +1,5 @@
 // src/pages/help/HelpRequest.jsx — trang gửi yêu cầu (kiểu MoMo) + lịch sử yêu cầu (gộp từ HelpSheets)
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { Icon, IconBox } from "./HelpUI.jsx";
 import { CATEGORIES, REQUEST_TYPES, TICKET_STATUS, ATTACH_BUCKET, ZALO_URL, fmtDate, makeTicketCode } from "./helpData.js";
@@ -272,57 +272,125 @@ export function RequestScreen({ preset = {}, orders = [], onClose, onHistory, on
   );
 }
 
-/* ---------- LỊCH SỬ YÊU CẦU ---------- */
-export function HistoryScreen({ onClose, onNew }) {
-  const [rows, setRows] = useState(null);
+/* ================= LỊCH SỬ YÊU CẦU (nhóm → danh sách → chat) ================= */
+const groupKey = (t) => (t.type === "idea" ? "idea" : t.category || "other");
+const groupLabel = (k) => (k === "idea" ? "Góp ý ý tưởng" : CATEGORIES.find((c) => c.key === k)?.label || "Khác");
+const statusOf = (s) => TICKET_STATUS[s] || { label: s, cls: "bg-slate-100 text-slate-500" };
 
-  useEffect(() => {
-    (async () => {
-      const { data: s } = await supabase.auth.getSession();
-      const uid = s?.session?.user?.id;
-      if (!uid) return setRows([]);
-      const { data } = await supabase
-        .from("support_tickets")
-        .select("id,ticket_code,title,category,type,status,admin_reply,created_at")
-        .eq("user_id", uid)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      setRows(data || []);
-    })();
-  }, []);
+function Chip({ status }) {
+  const st = statusOf(status);
+  return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${st.cls}`}>{st.label}</span>;
+}
 
+function GroupCard({ label, items, onOpenGroup, onOpenTicket }) {
   return (
-    <Screen title="Lịch sử yêu cầu" onClose={onClose}>
-      {rows === null && [0, 1].map((i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />)}
-      {rows && rows.length === 0 && (
-        <div className="rounded-2xl bg-white py-10 text-center dark:bg-slate-900">
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Bạn chưa gửi yêu cầu nào</p>
-          <button onClick={onNew} className="mt-4 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
-            Gửi yêu cầu đầu tiên
+    <section className="rounded-2xl bg-white p-4 dark:bg-slate-900">
+      <button onClick={onOpenGroup} className="flex w-full items-start gap-3 text-left">
+        <span className="mt-0.5 text-emerald-600"><Icon name="folder" size={22} /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[13.5px] text-slate-500">{label}</span>
+          <span className="mt-0.5 block truncate text-[16px] font-semibold text-slate-900 dark:text-white">{items[0].title}</span>
+          <span className="mt-0.5 block text-xs text-slate-400">{items.length} yêu cầu</span>
+        </span>
+        <Icon name="chevR" size={18} className="mt-1 shrink-0 text-slate-400" />
+      </button>
+      <div className="-mx-1 mt-3 flex snap-x gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+        {items.map((t) => (
+          <button key={t.id} onClick={() => onOpenTicket(t)}
+            className="min-w-[78%] snap-start rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-left dark:border-slate-700 dark:bg-slate-800/60">
+            <span className="flex items-start justify-between gap-2">
+              <span>
+                <span className="block text-[15px] font-semibold text-slate-800 dark:text-slate-100">#{t.ticket_code}</span>
+                <span className="mt-0.5 block text-xs text-slate-400">{fmtDate(t.created_at)}</span>
+              </span>
+              <Chip status={t.status} />
+            </span>
+            <span className="mt-3 block truncate border-t border-slate-200 pt-2.5 text-[13.5px] text-slate-500 dark:border-slate-700">{t.title}</span>
           </button>
-        </div>
-      )}
-      {rows && rows.map((t) => {
-        const st = TICKET_STATUS[t.status] || { label: t.status, cls: "bg-slate-100 text-slate-500" };
-        const cat = CATEGORIES.find((c) => c.key === t.category);
-        return (
-          <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-[14px] font-semibold leading-5 text-slate-900 dark:text-white">{t.title}</p>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${st.cls}`}>{st.label}</span>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-400">
-              {t.ticket_code} · {t.type === "idea" ? "Góp ý" : cat?.label || t.category} · {fmtDate(t.created_at)}
-            </p>
-            {t.admin_reply && (
-              <div className="mt-3 rounded-lg bg-emerald-50 p-3 dark:bg-emerald-500/10">
-                <p className="text-[11px] font-semibold text-emerald-700">NXX315 phản hồi</p>
-                <p className="mt-1 whitespace-pre-line text-[13px] leading-5 text-slate-600 dark:text-slate-300">{t.admin_reply}</p>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </Screen>
+        ))}
+      </div>
+    </section>
   );
 }
+
+function TicketRow({ t, onOpen }) {
+  return (
+    <button onClick={() => onOpen(t)} className="flex w-full items-center gap-3 rounded-xl bg-white p-4 text-left transition active:bg-slate-50 dark:bg-slate-900">
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-semibold text-slate-900 dark:text-white">{t.title}</span>
+        <span className="mt-1 block text-xs text-slate-500">Mã: #{t.ticket_code}</span>
+        <span className="mt-0.5 block text-xs text-slate-400">{fmtDate(t.created_at)}</span>
+      </span>
+      <Chip status={t.status} />
+      <Icon name="chevR" size={16} className="shrink-0 text-slate-300" />
+    </button>
+  );
+}
+
+function ChatBubble({ mine, time, label, children }) {
+  if (mine) {
+    return (
+      <div className="flex flex-col items-end">
+        {time && <span className="mb-1 text-xs text-slate-400">{time}</span>}
+        <div className="max-w-[85%] space-y-2 whitespace-pre-line rounded-2xl rounded-tr-md bg-emerald-600 px-4 py-2.5 text-[14.5px] leading-6 text-white">{children}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[13px] font-bold text-emerald-700">N</span>
+      <div className="min-w-0 max-w-[85%]">
+        <p className="mb-1 text-xs text-slate-400"><span className="font-semibold text-slate-600 dark:text-slate-300">{label || "CSKH"}</span>{time ? ` ${time}` : ""}</p>
+        <div className="whitespace-pre-line rounded-2xl rounded-tl-md bg-slate-100 px-4 py-2.5 text-[14.5px] leading-6 text-slate-800 dark:bg-slate-800 dark:text-slate-100">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function ChatScreen({ ticket, onClose }) {
+  const [msgs, setMsgs] = useState([]);
+  const [imgs, setImgs] = useState([]);
+  const [info, setInfo] = useState(true);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const endRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase.from("support_messages").select("id,sender,body,created_at").eq("ticket_id", String(ticket.id)).order("created_at", { ascending: true });
+      if (alive) setMsgs(data || []);
+    })();
+    const ch = supabase
+      .channel(`ticket-${ticket.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `ticket_id=eq.${ticket.id}` },
+        (p) => setMsgs((cur) => (cur.some((m) => m.id === p.new.id) ? cur : [...cur, p.new])))
+      .subscribe();
+    return () => { alive = false; supabase.removeChannel(ch); };
+  }, [ticket.id]);
+
+  useEffect(() => {
+    if (!ticket.images?.length) return;
+    let alive = true;
+    (async () => {
+      const { data } = await supabase.storage.from(ATTACH_BUCKET).createSignedUrls(ticket.images, 3600);
+      if (alive) setImgs((data || []).map((d) => d.signedUrl).filter(Boolean));
+    })();
+    return () => { alive = false; };
+  }, [ticket.images]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs.length, imgs.length]);
+
+  const send = async () => {
+    const body = text.trim();
+    if (!body || busy) return;
+    setErr("");
+    setBusy(true);
+    const { data: s } = await supabase.auth.getSession();
+    const uid = s?.session?.user?.id;
+    if (!uid) { setBusy(false); return setErr("Bạn cần đăng nhập để nhắn tin."); }
+    const { data, error } = await supabase.from("support_messages")
+      .insert({ ticket_id: String(ticket.id), user_id: uid, sender: "user", body })
+      .select("id,sender,body,created_at").single();
+    setB
