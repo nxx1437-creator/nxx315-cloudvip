@@ -16,18 +16,18 @@ export const REQUEST_TYPES = [
 ];
 
 export const ORDER_STATUS = {
-  pending: { label: "Chờ xử lý", cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" },
-  processing: { label: "Đang xử lý", cls: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300" },
-  delivered: { label: "Thành công", cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
-  rejected: { label: "Bị từ chối", cls: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" },
-  cancelled: { label: "Đã huỷ", cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+  pending: { dot: "bg-amber-500", label: "Chờ xử lý", cls: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" },
+  processing: { dot: "bg-sky-500", label: "Đang xử lý", cls: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300" },
+  delivered: { dot: "bg-emerald-500", label: "Thành công", cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
+  rejected: { dot: "bg-rose-500", label: "Bị từ chối", cls: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" },
+  cancelled: { dot: "bg-slate-400", label: "Đã huỷ", cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
 };
 
 export const TICKET_STATUS = {
-  open: { label: "Đã gửi", cls: "bg-amber-100 text-amber-700" },
-  in_progress: { label: "Đang xử lý", cls: "bg-sky-100 text-sky-700" },
-  resolved: { label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
-  closed: { label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
+  open: { dot: "bg-amber-500", label: "Đã gửi", cls: "bg-amber-100 text-amber-700" },
+  in_progress: { dot: "bg-sky-500", label: "Đang xử lý", cls: "bg-sky-100 text-sky-700" },
+  resolved: { dot: "bg-emerald-500", label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
+  closed: { dot: "bg-emerald-500", label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
 };
 
 export function fmtDate(iso) {
@@ -56,5 +56,4 @@ export function fold(s = "") {
       return f[0] || c;
     })
     .join("");
-  }
-              
+}
