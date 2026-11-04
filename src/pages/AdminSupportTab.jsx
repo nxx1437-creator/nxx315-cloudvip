@@ -208,81 +208,93 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
             {statusOf(ticket.status).label}
           </div>
         </div>
-
-        {/* KHU VỰC NHÃN & THAO TÁC */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+        
+{/* KHU VỰC NHÃN & THAO TÁC */}
+<div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+  
+  {/* Hiển thị nhãn đã chọn (Dạng viên thuốc) */}
+  {labels.map(l => (
+    <span key={l} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+      {l}
+      {!isLocked && (
+        <button onClick={() => toggleLabel(l)} className="ml-0.5 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition">
+          <X size={12} />
+        </button>
+      )}
+    </span>
+  ))}
+  
+  {/* Nút Thêm nhãn */}
+  {!isLocked && (
+    <div className="relative">
+      <button 
+        onClick={() => setShowLabelPicker(!showLabelPicker)}
+        className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
+      >
+        <Plus size={13} /> Thêm nhãn
+      </button>
+      
+      {/* Dropdown chọn nhãn - ĐÃ FIX GIAO DIỆN MOBILE */}
+      {showLabelPicker && (
+        <>
+          {/* Lớp phủ mờ để bấm ra ngoài là đóng menu */}
+          <div className="fixed inset-0 z-40" onClick={() => setShowLabelPicker(false)} />
           
-          {/* Hiển thị nhãn đã chọn (Dạng viên thuốc giống form gửi yêu cầu) */}
-          {labels.map(l => (
-            <span key={l} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-              {l}
-              {!isLocked && (
-                <button onClick={() => toggleLabel(l)} className="ml-0.5 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition">
-                  <X size={12} />
-                </button>
-              )}
-            </span>
-          ))}
-          
-          {/* Nút Thêm nhãn */}
-          {!isLocked && (
-            <div className="relative">
-              <button 
-                onClick={() => setShowLabelPicker(!showLabelPicker)}
-                className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
-              >
-                <Plus size={13} /> Thêm nhãn
+          <div className="fixed sm:absolute left-1/2 sm:left-0 bottom-4 sm:bottom-auto sm:top-full z-50 w-[calc(100%-2rem)] sm:w-80 -translate-x-1/2 sm:translate-x-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
+              <span className="text-sm font-semibold text-slate-800">Gắn nhãn</span>
+              <button onClick={() => setShowLabelPicker(false)} className="rounded-full bg-slate-100 p-1 text-slate-500 hover:bg-slate-200">
+                <Check size={16} />
               </button>
-              
-              {/* Dropdown chọn nhãn */}
-              {showLabelPicker && (
-                <div className="absolute left-0 top-full z-10 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                  <div className="mb-3 flex gap-1.5 border-b border-slate-100 pb-3">
-                    <input 
-                      value={customLabelInput}
-                      onChange={(e) => setCustomLabelInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAddCustomLabel()}
-                      placeholder="Tạo nhãn mới..." 
-                      className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-slate-900"
-                    />
-                    <button onClick={handleAddCustomLabel} className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700">
-                      Lưu
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
-                    {SUGGESTED_LABELS.map((lbl) => {
-                      const isActive = labels.includes(lbl);
-                      return (
-                        <button 
-                          key={lbl} 
-                          onClick={() => toggleLabel(lbl)}
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
-                            isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                          }`}
-                        >
-                          {lbl}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Action buttons */}
-          <div className="ml-auto flex gap-2">
-            {ticket.status !== "in_progress" && !isLocked && <button onClick={() => changeStatus("in_progress")} className={btn}>Đang xử lý</button>}
-            {!isLocked && <button onClick={() => changeStatus("resolved")} className={`${btn} !border-emerald-200 !bg-emerald-50 !text-emerald-700`}>Đánh dấu đã xong</button>}
-            {isLocked && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-                <Lock size={12} /> Đã đóng
-              </span>
-            )}
+            <div className="mb-3 flex gap-1.5">
+              <input 
+                value={customLabelInput}
+                onChange={(e) => setCustomLabelInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddCustomLabel()}
+                placeholder="Tạo nhãn mới..." 
+                className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-900"
+              />
+              <button onClick={handleAddCustomLabel} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+                Lưu
+              </button>
+            </div>
+
+            <div className="flex max-h-56 flex-wrap gap-2 overflow-y-auto">
+              {SUGGESTED_LABELS.map((lbl) => {
+                const isActive = labels.includes(lbl);
+                return (
+                  <button 
+                    key={lbl} 
+                    onClick={() => toggleLabel(lbl)}
+                    className={`rounded-full px-3 py-1.5 text-[13px] font-medium transition ${
+                      isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {lbl}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+  )}
 
+  {/* Action buttons */}
+  <div className="ml-auto flex gap-2">
+    {ticket.status !== "in_progress" && !isLocked && <button onClick={() => changeStatus("in_progress")} className={btn}>Đang xử lý</button>}
+    {!isLocked && <button onClick={() => changeStatus("resolved")} className={`${btn} !border-emerald-200 !bg-emerald-50 !text-emerald-700`}>Đánh dấu đã xong</button>}
+    {isLocked && (
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+        <Lock size={12} /> Đã đóng
+      </span>
+    )}
+  </div>
+</div>
+        
       {/* HỘI THOẠI */}
       <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50/50 px-4 py-5">
         <Bubble label={who} time={fmtFull(ticket.created_at)}>
