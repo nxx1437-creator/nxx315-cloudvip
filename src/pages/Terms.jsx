@@ -23,7 +23,7 @@ const ICONS = {
 
 // Nội dung Điều khoản sử dụng. Muốn sửa chữ thì sửa ở đây, không cần đụng giao diện.
 // Dùng **chữ đậm** để nhấn mạnh. Loại khối: p (đoạn), list (danh sách), note (ô lưu ý có nhãn).
-const UPDATED = "25/08/2026";
+const UPDATED = "04/11/2026";
 
 const INTRO = {
   tag: "Lưu ý quan trọng",
@@ -176,4 +176,3 @@ export default function Terms() {
     />
   );
      }
-     
