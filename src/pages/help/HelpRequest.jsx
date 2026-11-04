@@ -359,12 +359,12 @@ function ChatScreen({ ticket, onClose }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase.from("support_messages").select("id,sender,body,created_at").eq("ticket_id", String(ticket.id)).order("created_at", { ascending: true });
+      const { data } = await supabase.from("support_ticket_messages").select("id,sender,body,created_at").eq("ticket_id", String(ticket.id)).order("created_at", { ascending: true });
       if (alive) setMsgs(data || []);
     })();
     const ch = supabase
       .channel(`ticket-${ticket.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `ticket_id=eq.${ticket.id}` },
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_ticket_messages", filter: `ticket_id=eq.${ticket.id}` },
         (p) => setMsgs((cur) => (cur.some((m) => m.id === p.new.id) ? cur : [...cur, p.new])))
       .subscribe();
     return () => { alive = false; supabase.removeChannel(ch); };
@@ -390,7 +390,147 @@ function ChatScreen({ ticket, onClose }) {
     const { data: s } = await supabase.auth.getSession();
     const uid = s?.session?.user?.id;
     if (!uid) { setBusy(false); return setErr("Bạn cần đăng nhập để nhắn tin."); }
-    const { data, error } = await supabase.from("support_messages")
+    const { data, error } = await supabase.from("support_ticket_messages")
       .insert({ ticket_id: String(ticket.id), user_id: uid, sender: "user", body })
       .select("id,sender,body,created_at").single();
-    setB
+    setBusy(false);
+    if (error) return setErr("Chưa gửi được tin nhắn, thử lại sau nhé.");
+    setText("");
+    setMsgs((cur) => (cur.some((m) => m.id === data.id) ? cur : [...cur, data]));
+  };
+
+  const row = "flex items-center justify-between gap-4 border-t border-slate-100 py-3.5 text-[14.5px] dark:border-slate-800";
+  return (
+    <Screen
+      title="Chi tiết yêu cầu"
+      onClose={onClose}
+      footer={
+        <>
+          {err && <p className="mb-2 rounded-lg bg-rose-50 px-4 py-2 text-xs font-medium text-rose-600">{err}</p>}
+          <div className="flex items-end gap-2">
+            <textarea value={text} rows={1} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder="Nhập tin nhắn..."
+              className="max-h-28 min-h-[44px] flex-1 resize-none rounded-xl border border-slate-300 bg-transparent px-4 py-2.5 text-[15px] text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-slate-600 dark:text-white" />
+            <button onClick={send} disabled={!text.trim() || busy} aria-label="Gửi"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white transition active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800">
+              <Icon name="send" size={18} />
+            </button>
+          </div>
+        </>
+      }
+    >
+      <section className="rounded-2xl bg-white px-4 dark:bg-slate-900">
+        <button onClick={() => setInfo(!info)} className="flex w-full items-center justify-between gap-3 py-4 text-left">
+          <span className="text-[17px] font-semibold text-slate-900 dark:text-white">{ticket.title}</span>
+          <Icon name="chevD" size={20} className={`shrink-0 text-slate-500 transition-transform ${info ? "rotate-180" : ""}`} />
+        </button>
+        {info && (
+          <>
+            <div className={row}><span className="text-slate-500">Mã yêu cầu</span><span className="font-semibold text-slate-900 dark:text-white">#{ticket.ticket_code}</span></div>
+            <div className={row}><span className="text-slate-500">Thời gian gửi</span><span className="font-semibold text-slate-900 dark:text-white">{fmtDate(ticket.created_at)}</span></div>
+            <div className={row}><span className="text-slate-500">Trạng thái</span><Chip status={ticket.status} /></div>
+          </>
+        )}
+      </section>
+
+      <section className="rounded-2xl bg-white p-4 dark:bg-slate-900">
+        <h2 className="border-b border-slate-100 pb-3 text-[17px] font-semibold text-slate-900 dark:border-slate-800 dark:text-white">Chi tiết vấn đề</h2>
+        <div className="space-y-5 pt-4">
+          <ChatBubble mine time={fmtDate(ticket.created_at)}>
+            {ticket.description}
+            {imgs.length > 0 && (
+              <span className="mt-1 flex flex-wrap gap-2">
+                {imgs.map((u) => (
+                  <a key={u} href={u} target="_blank" rel="noopener noreferrer"><img src={u} alt="Ảnh đính kèm" className="h-20 w-20 rounded-lg object-cover" /></a>
+                ))}
+              </span>
+            )}
+          </ChatBubble>
+          {ticket.admin_reply && <ChatBubble>{ticket.admin_reply}</ChatBubble>}
+          {msgs.map((m) =>
+            m.sender === "user" ? (
+              <ChatBubble key={m.id} mine time={fmtDate(m.created_at)}>{m.body}</ChatBubble>
+            ) : (
+              <ChatBubble key={m.id} time={fmtDate(m.created_at)}>{m.body}</ChatBubble>
+            )
+          )}
+          {!ticket.admin_reply && msgs.every((m) => m.sender === "user") && (
+            <p className="rounded-lg bg-emerald-50 px-3.5 py-2.5 text-[13px] leading-5 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200">
+              NXX315 đã nhận yêu cầu và sẽ trả lời tại đây. Bạn có thể nhắn thêm thông tin bất cứ lúc nào.
+            </p>
+          )}
+          <div ref={endRef} />
+        </div>
+      </section>
+    </Screen>
+  );
+}
+
+export function HistoryFlow({ onClose, onNew }) {
+  const [rows, setRows] = useState(null);
+  const [stack, setStack] = useState([{ s: "list" }]);
+  const top = stack[stack.length - 1];
+  const push = (x) => setStack((cur) => [...cur, x]);
+  const pop = () => (stack.length > 1 ? setStack((cur) => cur.slice(0, -1)) : onClose());
+
+  useEffect(() => {
+    (async () => {
+      const { data: s } = await supabase.auth.getSession();
+      const uid = s?.session?.user?.id;
+      if (!uid) return setRows([]);
+      const since = new Date();
+      since.setMonth(since.getMonth() - 6);
+      const { data } = await supabase
+        .from("support_tickets")
+        .select("id,ticket_code,title,category,type,status,description,images,admin_reply,created_at")
+        .eq("user_id", uid)
+        .gte("created_at", since.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(100);
+      setRows(data || []);
+    })();
+  }, []);
+
+  const groups = useMemo(() => {
+    const map = new Map();
+    (rows || []).forEach((t) => {
+      const k = groupKey(t);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push(t);
+    });
+    return [...map.entries()].map(([key, items]) => ({ key, label: groupLabel(key), items }));
+  }, [rows]);
+
+  if (top.s === "chat") return <ChatScreen ticket={top.ticket} onClose={pop} />;
+
+  if (top.s === "group") {
+    const g = groups.find((x) => x.key === top.key);
+    return (
+      <Screen title={g?.label || "Yêu cầu"} onClose={pop}>
+        {(g?.items || []).map((t) => <TicketRow key={t.id} t={t} onOpen={(x) => push({ s: "chat", ticket: x })} />)}
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen title="Lịch sử yêu cầu" onClose={onClose}>
+      {rows === null && [0, 1].map((i) => <div key={i} className="h-40 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />)}
+      {rows && rows.length === 0 && (
+        <div className="rounded-2xl bg-white py-10 text-center dark:bg-slate-900">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Bạn chưa gửi yêu cầu nào</p>
+          <button onClick={onNew} className="mt-4 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">Gửi yêu cầu đầu tiên</button>
+        </div>
+      )}
+      {groups.map((g) => (
+        <GroupCard key={g.key} label={g.label} items={g.items}
+          onOpenGroup={() => push({ s: "group", key: g.key })} onOpenTicket={(t) => push({ s: "chat", ticket: t })} />
+      ))}
+      {rows && rows.length > 0 && (
+        <div className="flex gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3.5 text-[13.5px] leading-5 text-slate-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-slate-200">
+          <Icon name="info" size={18} className="mt-0.5 shrink-0 text-sky-600" />
+          <p>Các yêu cầu hỗ trợ sau 6 tháng sẽ được tự động ẩn để bạn dễ quản lý hơn.</p>
+        </div>
+      )}
+    </Screen>
+  );
+              }
+            
