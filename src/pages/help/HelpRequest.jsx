@@ -9,7 +9,7 @@ const MAX_MB = 5;
 const statusOf = (s) => TICKET_STATUS[s] || { label: s, dot: "bg-slate-400" };
 
 /* ---------- Khung toàn màn hình ---------- */
-function Screen({ title, big = true, onClose, right, footer, children }) {
+export function Screen({ title, big = true, onClose, right, footer, children }) {
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -312,7 +312,7 @@ function CskhAvatar() {
   );
 }
 
-function Lightbox({ url, onClose }) {
+export function Lightbox({ url, onClose }) {
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4" onClick={onClose}>
       <button aria-label="Đóng" onClick={onClose}
@@ -324,19 +324,8 @@ function Lightbox({ url, onClose }) {
   );
 }
 
-function ChatBubble({ mine, time, label, auto, children, hasText }) {
+function ChatBubble({ mine, time, label, auto, children }) {
   if (mine) {
-    // Nếu KHÔNG có chữ (chỉ có ảnh), render ảnh trần không viền
-    if (!hasText) {
-      return (
-        <div className="flex flex-col items-end">
-          {time && <span className="mb-1.5 text-[13px] text-[#6a6b6f]">{time}</span>}
-          <div className="max-w-[88%]">{children}</div>
-        </div>
-      );
-    }
-    
-    // Nếu CÓ chữ, giữ nguyên bong bóng chat màu xanh
     return (
       <div className="flex flex-col items-end">
         {time && <span className="mb-1.5 text-[13px] text-[#6a6b6f]">{time}</span>}
@@ -466,7 +455,7 @@ function ChatScreen({ ticket, onClose }) {
 
   const thumbs = (list) =>
     list.length ? (
-      <span className="flex flex-wrap gap-2">
+      <span className="mt-1 flex flex-wrap gap-2">
         {list.map((u, i) =>
           u ? (
             <button key={u} type="button" onClick={() => setView(u)} className="block">
@@ -523,7 +512,7 @@ function ChatScreen({ ticket, onClose }) {
           <span className="text-[22px] font-semibold leading-tight tracking-[-0.5px] text-[#20282b]">{ticket.title}</span>
           <Icon name="chevD" size={20} className={`shrink-0 text-[#6a6b6f] transition-transform ${info ? "rotate-180" : ""}`} />
         </button>
-                {info && (
+        {info && (
           <>
             <div className={row}><span className="text-[#6a6b6f]">Mã yêu cầu</span><span className="font-semibold text-[#20282b]">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="text-[#6a6b6f]">Thời gian gửi</span><span className="font-semibold text-[#20282b]">{fmtDate(ticket.created_at)}</span></div>
@@ -535,28 +524,14 @@ function ChatScreen({ ticket, onClose }) {
       <section className="rounded-[30px] bg-[#fafbfb] p-6">
         <h2 className="border-b border-[#20282b]/10 pb-4 text-[22px] font-semibold tracking-[-0.5px] text-[#20282b]">Chi tiết vấn đề</h2>
         <div className="space-y-6 pt-5">
-          <ChatBubble 
-            mine 
-            time={fmtDate(ticket.created_at)} 
-            hasText={!!ticket.description && ticket.description.trim().length > 0}
-          >
+          <ChatBubble mine time={fmtDate(ticket.created_at)}>
             {ticket.description}
             {thumbs(imgs)}
           </ChatBubble>
-          
           <ChatBubble auto time={fmtDate(ticket.created_at)}>{AUTO_REPLY}</ChatBubble>
           {ticket.admin_reply && <ChatBubble>{ticket.admin_reply}</ChatBubble>}
-          
           {msgs.map((m) => (
-            <ChatBubble 
-              key={m.id} 
-              mine={m.sender === "user"} 
-              time={fmtDate(m.created_at)}
-              hasText={!!m.body && m.body.trim().length > 0}
-            >
-              {m.body}
-              {thumbs((m.images || []).map((p) => urls[p] || null))}
-            </ChatBubble>
+            <ChatBubble key={m.id} mine={m.sender === "user"} time={fmtDate(m.created_at)}>{m.body}{thumbs((m.images || []).map((p) => urls[p] || null))}</ChatBubble>
           ))}
           <div ref={endRef} />
         </div>
@@ -566,6 +541,7 @@ function ChatScreen({ ticket, onClose }) {
     </>
   );
 }
+
 export function HistoryFlow({ onClose, onNew }) {
   const [rows, setRows] = useState(null);
   const [stack, setStack] = useState([{ s: "list" }]);
@@ -639,4 +615,5 @@ export function HistoryFlow({ onClose, onNew }) {
       {rows && rows.length > 0 && <p className="px-2 text-[14px] leading-5 text-[#6a6b6f]">Yêu cầu sau 6 tháng sẽ được tự động ẩn để bạn dễ quản lý hơn.</p>}
     </Screen>
   );
-}
+    }
+    
