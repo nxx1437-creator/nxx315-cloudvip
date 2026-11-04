@@ -66,7 +66,7 @@ export function SectionTitle({ title, hint, action, onAction }) {
 /* ============ HERO + TÌM KIẾM (kiểu Intercom) ============ */
 export function Hero({ query, onQuery }) {
   return (
-    <header className="bg-gradient-to-b from-emerald-600 to-slate-50 pb-5 pt-7 dark:from-emerald-800 dark:to-slate-950">
+    <header className="bg-gradient-to-b from-emerald-600 to-slate-100 pb-5 pt-7 dark:from-emerald-800 dark:to-slate-950">
       <div className="mx-auto max-w-md px-4 md:max-w-3xl">
         <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-white">Chúng tôi có thể giúp gì cho bạn?</h1>
         <div className="relative mt-5">
@@ -337,5 +337,6 @@ export function ContactCard({ onRequest }) {
       </div>
     </section>
   );
-          }
+      }
+                                 
 
