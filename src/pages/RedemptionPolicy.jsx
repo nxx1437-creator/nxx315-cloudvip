@@ -9,10 +9,10 @@ import LegalPage from "../components/LegalKit.jsx";
 // Chỉ ghi đúng những gì bạn thật sự làm được. Giữ GIỐNG HỆT ở trang Điều khoản.
 const SUPPORT_EMAIL = "support@nxx315.com";
 const MIN_COINS = "5,000";
-const PROCESS_HOURS = "24 giờ làm việc";        // thời gian xử lý Robux, thống nhất với trang Điều khoản
-const COMPLAINT_DAYS = "7 ngày";             // thời hạn người dùng được khiếu nại
-const REPLY_DAYS = "3 ngày làm việc";        // thời gian bạn phản hồi khiếu nại
-const NOTICE_DAYS = "2 ngày";                // thông báo trước khi đổi danh sách/giá phần thưởng
+const PROCESS_HOURS = "24 giờ làm việc";       
+const COMPLAINT_DAYS = "7 ngày";            
+const REPLY_DAYS = "3 ngày làm việc";       
+const NOTICE_DAYS = "2 ngày";                
 
 // ẢNH / VIDEO MINH HỌA: ảnh thì tải lên Supabase (bucket game_logos) rồi ghi TÊN FILE;
 // video thì để trong thư mục public của repo rồi ghi "/ten-video.mp4". Để "" nếu chưa có.
