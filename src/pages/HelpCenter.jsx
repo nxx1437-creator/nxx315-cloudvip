@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards, FaqSection, ContactCard } from "./help/HelpUI.jsx";
-import { RequestScreen, HistoryScreen } from "./help/HelpRequest.jsx";
+import { RequestScreen, HistoryFlow } from "./help/HelpRequest.jsx";
 import { fold } from "./help/helpData.js";
 
 export default function HelpCenter() {
@@ -18,7 +18,6 @@ export default function HelpCenter() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
-  const [name, setName] = useState("");
   const [view, setView] = useState(null); // {type:"request", preset} | {type:"history"}
 
   useEffect(() => {
@@ -38,8 +37,6 @@ export default function HelpCenter() {
       const user = s?.session?.user;
       if (!alive) return;
       setSignedIn(!!user);
-      const meta = user?.user_metadata || {};
-      setName(((meta.full_name || meta.name || "").trim().split(/\s+/).pop()) || "");
       if (!user) return setOrdersLoading(false);
       const { data } = await supabase
         .from("redemption_orders")
@@ -84,7 +81,7 @@ export default function HelpCenter() {
   return (
     <div className="min-h-screen bg-slate-50 pb-28 dark:bg-slate-950">
       <TopHeader />
-      <Hero name={name} query={query} onQuery={setQuery} onBack={() => navigate(-1)} onHome={() => navigate("/")} />
+      <Hero query={query} onQuery={setQuery} />
 
       <main className="mx-auto max-w-md space-y-6 px-4 md:max-w-3xl">
         {!searching && <PopularFaqs faqs={faqs} onPick={pickFaq} />}
@@ -109,9 +106,10 @@ export default function HelpCenter() {
           onChat={() => navigate("/support")}
         />
       )}
-      {view?.type === "history" && <HistoryScreen onClose={() => setView(null)} onNew={() => openRequest()} />}
+      {view?.type === "history" && <HistoryFlow onClose={() => setView(null)} onNew={() => openRequest()} />}
 
       <BottomNav />
     </div>
   );
 }
+
