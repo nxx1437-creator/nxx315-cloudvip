@@ -5,7 +5,7 @@ export const ATTACH_BUCKET = "support-attachments";
 // Avatar và tên của CSKH trong khung chat.
 // Cách đổi avatar: bỏ ảnh vuông vào thư mục public/ (ví dụ public/cskh-avatar.png) rồi điền "/cskh-avatar.png".
 // Để trống thì hiện chữ cái đầu của tên.
-export const CSKH_AVATAR = "https://i.postimg.cc/6pQMdZw0/53075b3cb3a65cfe78fd510212633f32.jpg";
+export const CSKH_AVATAR = "";
 export const CSKH_NAME = "CSKH";
 
 export const CATEGORIES = [
@@ -32,6 +32,7 @@ export const ORDER_STATUS = {
 export const TICKET_STATUS = {
   open: { dot: "bg-amber-500", label: "Đã gửi", cls: "bg-amber-100 text-amber-700" },
   in_progress: { dot: "bg-sky-500", label: "Đang xử lý", cls: "bg-sky-100 text-sky-700" },
+  answered: { dot: "bg-emerald-500", label: "Đã phản hồi", cls: "bg-emerald-100 text-emerald-700" },
   resolved: { dot: "bg-emerald-500", label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
   closed: { dot: "bg-emerald-500", label: "Đã giải quyết", cls: "bg-emerald-100 text-emerald-700" },
 };
@@ -63,4 +64,5 @@ export function fold(s = "") {
     })
     .join("");
 }
+
 
