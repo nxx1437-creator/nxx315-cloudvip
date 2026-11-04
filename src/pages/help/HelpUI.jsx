@@ -20,6 +20,8 @@ const P = {
   x: <path d="M6 6l12 12M18 6 6 18" />,
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
   camera: (<><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></>),
+  folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+  info: (<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
   lock: (<><rect x="4" y="11" width="16" height="10" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>),
 };
 
@@ -62,19 +64,11 @@ export function SectionTitle({ title, hint, action, onAction }) {
 }
 
 /* ============ HERO + TÌM KIẾM (kiểu Intercom) ============ */
-export function Hero({ name, query, onQuery, onBack, onHome }) {
-  const btn = "flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25";
+export function Hero({ query, onQuery }) {
   return (
-    <header className="bg-gradient-to-b from-emerald-700 via-emerald-600 to-slate-50 pb-6 dark:from-emerald-900 dark:via-emerald-800 dark:to-slate-950">
-      <div className="mx-auto max-w-md px-4 pt-3 md:max-w-3xl">
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} className={btn} aria-label="Quay lại"><Icon name="back" size={18} /></button>
-          <span className="text-[15px] font-semibold text-white">Trung tâm Trợ giúp</span>
-          <button onClick={onHome} className={btn} aria-label="Trang chủ"><Icon name="home" size={18} /></button>
-        </div>
-        <h1 className="mt-8 text-[26px] font-semibold leading-tight tracking-tight text-white">
-          {name ? `Chào ${name}, bạn cần giúp gì?` : "Chúng tôi có thể giúp gì cho bạn?"}
-        </h1>
+    <header className="bg-gradient-to-b from-emerald-600 to-slate-50 pb-5 pt-7 dark:from-emerald-800 dark:to-slate-950">
+      <div className="mx-auto max-w-md px-4 md:max-w-3xl">
+        <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-white">Chúng tôi có thể giúp gì cho bạn?</h1>
         <div className="relative mt-5">
           <Icon name="search" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -343,4 +337,5 @@ export function ContactCard({ onRequest }) {
       </div>
     </section>
   );
-}
+          }
+
