@@ -5,7 +5,7 @@ export const ATTACH_BUCKET = "support-attachments";
 // Avatar và tên của CSKH trong khung chat.
 // Cách đổi avatar: bỏ ảnh vuông vào thư mục public/ (ví dụ public/cskh-avatar.png) rồi điền "/cskh-avatar.png".
 // Để trống thì hiện chữ cái đầu của tên.
-export const CSKH_AVATAR = "https://i.postimg.cc/Gt0FVBZf/IMG-20261104-130308.png";
+export const CSKH_AVATAR = "https://i.postimg.cc/SsY5cM6v/53075b3cb3a65cfe78fd510212633f32.jpg";
 export const CSKH_NAME = "CSKH";
 
 export const CATEGORIES = [
