@@ -1,41 +1,48 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Coins, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-import useProfile from "../hooks/useProfile.js";
-import { SectionLabel } from "../components/home/HomeSections.jsx";
 import {
-  GameCard,
-  StoreSearch,
-  BannerSlideshow,
-} from "../components/store/StoreParts.jsx";
+  SectionTitle,
+  FeaturedRow,
+  CoverGrid,
+} from "../components/store/StoreCards.jsx";
 import {
   WithdrawBanner,
   StoreHistoryPreview,
 } from "../components/store/StoreExtras.jsx";
-import {
-  GAMES,
-  getRecommendedGames,
-  trackGameView,
-  locale,
-} from "../lib/storeData.js";
+import ForYouPackages from "../components/store/ForYouPackages.jsx";
+import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx"; 
+
+import useProfile from "../hooks/useProfile.js";
+import { GAMES, trackGameView, getImageUrl } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
-import InlineAlert from "../components/InlineAlert.jsx";
 
 export default function Store() {
   const { t, lang } = useI18n();
+  const en = lang === "en";
   const navigate = useNavigate();
   const { profile } = useProfile();
-
-  const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [recommended, setRecommended] = useState([]);
+  
+  const [showScanAI, setShowScanAI] = useState(false);
 
+  // Chỉ hiển thị Modal 1 lần duy nhất
   useEffect(() => {
-    setRecommended(getRecommendedGames(4));
+    const hasSeenScanAI = localStorage.getItem("hasSeenScanAI");
+    if (!hasSeenScanAI) {
+      const timer = setTimeout(() => setShowScanAI(true), 1000);
+      return () => clearTimeout(timer);
+    }
   }, []);
+
+  const handleCloseScanAI = () => {
+    setShowScanAI(false);
+    // Lưu trạng thái đã xem vào trình duyệt
+    localStorage.setItem("hasSeenScanAI", "true"); 
+  };
 
   const tabs = useMemo(
     () => [
@@ -55,78 +62,53 @@ export default function Store() {
     []
   );
 
-  const filteredGames = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    return GAMES.filter((game) => {
-      const matchesTab =
-        activeTab === "all" ||
-        (activeTab === "hot" ? game.hot : game.category === activeTab);
-      const matchesSearch =
-        !keyword || game.name.toLowerCase().includes(keyword);
-      return matchesTab && matchesSearch;
-    });
-  }, [search, activeTab]);
+  const filteredGames = useMemo(
+    () =>
+      GAMES.filter((game) =>
+        activeTab === "all"
+          ? true
+          : activeTab === "hot"
+          ? game.hot
+          : game.category === activeTab
+      ),
+    [activeTab]
+  );
 
   const handleGameClick = (game) => {
     trackGameView(game.id);
     navigate(game.path);
   };
 
-  const clearFilters = () => {
-    setSearch("");
-    setActiveTab("all");
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
       <TopHeader />
 
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-4">
-        <StoreSearch
-  search={search}
-  setSearch={setSearch}
-  onSelect={handleGameClick}
-/>
+      <main className="mx-auto max-w-5xl space-y-7 px-4 py-4">
+        <FeaturedRow
+          navigate={navigate}
+          onTitleClick={() =>
+            document
+              .getElementById("store-list")
+              ?.scrollIntoView({ behavior: "smooth" })
+          }
+        />
 
-{/* Tạm tắt alert
-<InlineAlert
-  severity="success"
-  marquee={true}
-  dismissible={true}
-  message="💰 Rút tiền chỉ 2-24h! Tối thiểu 50,000 Coin là rút được."
-  action={{ label: "Rút ngay", href: "/withdraw" }}
-/>
-*/}
+        <ForYouPackages
+          coins={profile?.coins}
+          games={GAMES}
+          navigate={navigate}
+        />
 
-<BannerSlideshow navigate={navigate} />
-        
-        {/* Dành cho bạn */}
-        {recommended.length > 0 && !search && (
-          <section>
-            <SectionLabel>{t("st.forYou")}</SectionLabel>
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {recommended.map((game) => (
-                <div key={game.id} className="w-[150px] shrink-0 sm:w-[170px]">
-                  <GameCard game={game} onClick={handleGameClick} />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <WithdrawBanner navigate={navigate} />
-
-        {/* Danh sách game */}
-        <section>
-          <SectionLabel
+        <section id="store-list">
+          <SectionTitle
+            accent={en ? "Game" : "Danh sách"}
+            rest={en ? "categories" : "game"}
             right={
-              <span className="font-mono text-[11px] text-slate-400">
+              <span className="pb-0.5 font-mono text-[11px] text-slate-400">
                 {t("st.count", { n: filteredGames.length })}
               </span>
             }
-          >
-            {t("st.list")}
-          </SectionLabel>
+          />
 
           <div className="mb-4 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.map((tab) => {
@@ -135,18 +117,14 @@ export default function Store() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex shrink-0 items-center gap-2 rounded-xl border-2 px-4 py-2.5 font-mono text-[11px] font-extrabold uppercase tracking-wider transition ${
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-mono text-[11px] font-extrabold uppercase tracking-wider transition ${
                     active
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-700"
-                      : "border-transparent bg-white text-slate-500 shadow-sm hover:text-slate-800"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-white text-slate-500 shadow-sm"
                   }`}
                 >
                   {t(tab.key)}
-                  <span
-                    className={`rounded-md px-1.5 py-0.5 text-[10px] ${
-                      active ? "bg-emerald-600 text-white" : "bg-slate-100"
-                    }`}
-                  >
+                  <span className={active ? "text-emerald-100" : "text-slate-400"}>
                     {tab.count}
                   </span>
                 </button>
@@ -155,30 +133,30 @@ export default function Store() {
           </div>
 
           {filteredGames.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredGames.map((game) => (
-                <GameCard key={game.id} game={game} onClick={handleGameClick} />
-              ))}
-            </div>
+            <CoverGrid games={filteredGames} onSelect={handleGameClick} />
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white py-14 text-center">
-              <Search size={34} className="mx-auto mb-3 text-slate-300" />
+            <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center">
+              <Search size={30} className="mx-auto mb-2 text-slate-300" />
               <p className="font-bold text-slate-700">{t("st.noGame")}</p>
-              <p className="mt-1 text-sm text-slate-400">{t("st.tryOther")}</p>
-              <button
-                onClick={clearFilters}
-                className="mt-4 rounded-xl bg-emerald-600 px-5 py-2.5 font-mono text-[11px] font-extrabold uppercase tracking-wider text-white transition hover:bg-emerald-700"
-              >
-                {t("st.clear")}
-              </button>
             </div>
           )}
         </section>
+
+        <WithdrawBanner navigate={navigate} />
 
         <StoreHistoryPreview />
       </main>
 
       <BottomNav />
+
+      {/* Component Modal Giới thiệu */}
+      <ScanAIIntroModal
+        isOpen={showScanAI}
+        onClose={handleCloseScanAI}
+        description="Nxx315 Studio chính thức ra mắt giao diện Store mới. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực." 
+        imageSrc={getImageUrl("store-preview.png")} 
+        buttonText="Đã hiểu"
+      />
     </div>
   );
-                }
+    }

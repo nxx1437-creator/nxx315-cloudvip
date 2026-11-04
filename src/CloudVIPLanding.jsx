@@ -1,212 +1,20 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  ChevronDown,
-  ListChecks,
-  Coins,
-  Wallet,
-  Gift,
-  Users,
-  Lock,
-  ShieldCheck,
-  Bot,
-  KeyRound,
-} from "lucide-react";
-import {
-  LandingHeader,
-  LandingFooter,
-  BackToTop,
-  scrollToId,
-} from "./components/LandingNav.jsx";
+import { ArrowRight, ArrowDown, Lock, ShieldCheck, Bot, KeyRound } from "lucide-react";
+import { LandingFooter, BackToTop, scrollToId } from "./components/LandingNav.jsx";
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
+import { COPY, LABELS } from "./lib/landingCopy.js";
+import { CSS } from "./components/LandingTheme.js";
+import {
+  FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
+} from "./components/LandingParts.jsx";
 
-const ICON_BASE =
-  "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/icons";
-
-// Icon 3D trên Supabase, lỗi ảnh thì dùng icon dự phòng
-function Img3D({ name, Fallback, size = "h-24 w-24", shadow = true }) {
-  const [ok, setOk] = useState(true);
-  if (!ok) return <Fallback className="h-10 w-10 text-blue-600" />;
-  return (
-    <img
-      src={`${ICON_BASE}/${name}.png`}
-      alt=""
-      loading="lazy"
-      className={`${size} object-contain ${shadow ? "drop-shadow-md" : ""}`}
-      onError={() => setOk(false)}
-    />
-  );
-}
-
-function FaqRow({ q, a, open, onToggle }) {
-  return (
-    <div className="border-b border-slate-200">
-      <button
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 py-5 text-left"
-      >
-        <span className="text-[16px] font-semibold text-slate-900">{q}</span>
-        <ChevronDown
-          size={18}
-          className={`shrink-0 text-slate-400 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      <div
-        className={`grid transition-all duration-200 ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <p className="pb-5 text-[15px] leading-7 text-slate-600">{a}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Ba hình 3D xếp lệch bên phải phần đầu trang
-function HeroArt() {
-  return (
-    <div className="relative mx-auto h-[280px] w-full max-w-[420px] rounded-3xl border border-slate-200 bg-slate-50 sm:h-[360px]">
-      <div className="absolute left-[8%] top-[10%] -rotate-6">
-        <Img3D
-          name="icon-task"
-          Fallback={ListChecks}
-          size="h-28 w-28 sm:h-36 sm:w-36"
-        />
-      </div>
-      <div className="absolute right-[8%] top-[28%] rotate-6">
-        <Img3D
-          name="icon-coin"
-          Fallback={Coins}
-          size="h-32 w-32 sm:h-44 sm:w-44"
-        />
-      </div>
-      <div className="absolute bottom-[6%] left-[22%] -rotate-3">
-        <Img3D
-          name="icon-money"
-          Fallback={Wallet}
-          size="h-24 w-24 sm:h-32 sm:w-32"
-        />
-      </div>
-    </div>
-  );
-}
-
-// Chữ trong trang. Số liệu lấy từ hệ thống thật, đổi mức rút/phí thì sửa ở đây.
-const COPY = {
-  vi: {
-    h1a: "Kiếm Coin",
-    h1b: "Đổi thưởng dễ dàng",
-    heroSub:
-      "Làm nhiệm vụ đơn giản, nhận Coin và đổi lấy Robux, kim cương game và nhiều quà khác.",
-    how: "Cách hoạt động",
-    note: "Kiếm xu hoàn toàn miễn phí. Chuyển khoản chỉ dùng khi bạn muốn mua quà trực tiếp.",
-    facts: [
-      ["1 Coin = 1đ", "Giá Coin bằng giá tiền"],
-      ["10.000đ", "Mức rút tối thiểu"],
-      ["7 ngày", "Chuỗi điểm danh, ngày cuối thưởng 1.000 xu"],
-      ["15%", "Hoa hồng khi bạn bè làm nhiệm vụ"],
-    ],
-    featTitle: "Bạn làm được gì trên NXX315",
-    guide: "Xem hướng dẫn",
-    features: [
-      {
-        to: "/guide/lam-nhiem-vu",
-        title: "Làm nhiệm vụ, nhận xu trong ngày",
-        body: "Mở liên kết của đối tác, làm theo các bước rồi quay lại xác nhận là xu vào ví. Mỗi nhiệm vụ có số lượt riêng mỗi ngày.",
-      },
-      {
-        to: "/guide/doi-thuong",
-        title: "Đổi xu lấy quà game",
-        body: "Robux, Quân Huy, kim cương Free Fire và nhiều gói khác. Trả bằng Coin hoặc chuyển khoản, đơn nào cũng theo dõi được trong Lịch sử.",
-      },
-      {
-        to: "/guide/rut-tien",
-        title: "Rút về khi bạn cần",
-        body: "Rút từ 10.000đ về ngân hàng, MoMo hoặc ZaloPay. Phí 1.000 Coin mỗi lần, yêu cầu được xem xét thủ công.",
-      },
-      {
-        to: "/guide/moi-ban",
-        title: "Mời bạn bè, nhận hoa hồng",
-        body: "Bạn bè nhập mã của bạn nhận 200 xu. Bạn nhận 15% số xu họ kiếm từ nhiệm vụ, thêm thưởng khi đủ 3, 5, 10 và 20 người.",
-      },
-    ],
-    more: "Ngoài ra còn có điểm danh hằng ngày, minigame, cấp độ và bảng xếp hạng.",
-    howTitle: "Bắt đầu chỉ với 3 bước",
-    ctaTitle: "Bắt đầu kiếm Coin hôm nay.",
-    whoTitle: "Ai đứng sau NXX315",
-    whoBody:
-      "NXX315 do một cá nhân vận hành và mới hoạt động từ tháng 8/2026. Chúng tôi công khai cách hoạt động và kênh liên hệ chính thức để bạn tự kiểm tra.",
-    whoPoints: [
-      "Kiếm xu miễn phí, không cần nạp tiền để rút.",
-      "Chuyển khoản chỉ dùng khi bạn mua quà trực tiếp.",
-      "Hoa hồng giới thiệu không phải cam kết thu nhập.",
-    ],
-    whoMore: "Đọc trang Về chúng tôi",
-    whoOperator: "Người vận hành",
-    whoSince: "Hoạt động từ",
-    whoLegal: "Pháp lý & chính sách",
-  },
-  en: {
-    h1a: "Earn Coins",
-    h1b: "Redeem with ease",
-    heroSub:
-      "Complete simple tasks, earn Coins and redeem Robux, in-game diamonds and more rewards.",
-    how: "How it works",
-    note: "Earning coins is completely free. Bank transfer is only for buying gifts directly.",
-    facts: [
-      ["1 Coin = 1 VND", "Coin price equals cash price"],
-      ["10,000 VND", "Minimum withdrawal"],
-      ["7 days", "Check-in streak, 1,000 coins on the last day"],
-      ["15%", "Commission when friends complete tasks"],
-    ],
-    featTitle: "What you can do on NXX315",
-    guide: "Read the guide",
-    features: [
-      {
-        to: "/guide/lam-nhiem-vu",
-        title: "Do tasks, get coins the same day",
-        body: "Open a partner link, follow the steps, then come back to confirm and the coins land in your wallet. Each task has its own daily limit.",
-      },
-      {
-        to: "/guide/doi-thuong",
-        title: "Redeem coins for game gifts",
-        body: "Robux, Quân Huy, Free Fire diamonds and more. Pay with Coins or bank transfer and track every order in History.",
-      },
-      {
-        to: "/guide/rut-tien",
-        title: "Withdraw when you need to",
-        body: "Withdraw from 10,000 VND to a bank, MoMo or ZaloPay. The fee is 1,000 Coins per request and requests are reviewed manually.",
-      },
-      {
-        to: "/guide/moi-ban",
-        title: "Invite friends, earn commission",
-        body: "Friends who enter your code get 200 coins. You get 15% of the coins they earn from tasks, plus bonuses at 3, 5, 10 and 20 invites.",
-      },
-    ],
-    more: "There is also daily check-in, minigames, levels and a leaderboard.",
-    howTitle: "Get started in 3 steps",
-    ctaTitle: "Start earning Coins today.",
-    whoTitle: "Who is behind NXX315",
-    whoBody:
-      "NXX315 is run by an individual and has only been running since August 2026. We publish how it works and our official contacts so you can check for yourself.",
-    whoPoints: [
-      "Earning is free, no deposit needed to withdraw.",
-      "Bank transfer is only for buying gifts directly.",
-      "Referral commission is not an income guarantee.",
-    ],
-    whoMore: "Read the About page",
-    whoOperator: "Operator",
-    whoSince: "Running since",
-    whoLegal: "Legal & policies",
-  },
-};
+/* Media đầu trang */
+const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
+// 👇 Đã cập nhật link ảnh hoa sen của bạn
+const HERO_FG = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero2.png";
+const HERO_POSTER = undefined;
 
 const SAFETY = [
   { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
@@ -214,150 +22,151 @@ const SAFETY = [
   { icon: Bot, t: "ld.b3t", d: "ld.b3d" },
   { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
 ];
-
-// Icon Lucide cho 4 feature, có fallback nếu features > 4
-const FEATURE_ICONS = [ListChecks, Gift, Wallet, Users];
-
+const FEATURE_TAGS = ["A¹", "B¹", "C¹", "D¹"];
 const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
+const SECTION = "mx-auto max-w-[1200px] px-5 py-16 sm:py-[94px]";
 
 export default function CloudVIPLanding() {
-  const { t, lang } = useI18n();
+  const i18n = useI18n();
+  const { t, lang } = i18n;
+  const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
   const c = COPY[lang] || COPY.vi;
+  const L = LABELS[lang] || LABELS.vi;
   const navigate = useNavigate();
-  const [openFaq, setOpenFaq] = useState(0);
+  const [openFaq, setOpenFaq] = useState(FAQ_ORDER[0]);
 
-  // Xử lý an toàn cho launched (string hoặc object)
-  const launchedText =
-    typeof SITE.launched === "object"
-      ? SITE.launched[lang] || SITE.launched.vi
-      : SITE.launched;
+  const launchedText = typeof SITE.launched === "object"
+    ? SITE.launched[lang] || SITE.launched.vi
+    : SITE.launched ?? "—";
+
+  const canSwitchLang = typeof setLang === "function";
 
   return (
-    <div className="min-h-screen bg-white font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
-      <LandingHeader />
+    <div className="lp min-h-screen">
+      <style>{CSS}</style>
+
+      <FloatingNav
+        items={c.nav}
+        onItem={scrollToId}
+        loginLabel={t("ld.login")}
+        onLogin={() => navigate("/login")}
+        langLabel={lang === "vi" ? "EN" : "VI"}
+        onLang={canSwitchLang ? () => setLang(lang === "vi" ? "en" : "vi") : undefined}
+      />
 
       <main>
-        {/* ============ ĐẦU TRANG ============ */}
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-14 pt-10 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:pb-24 lg:pt-20">
-          <div>
-            <p className="text-[14px] font-medium text-slate-500">
-              {t("ld.badge")}
-            </p>
-            <h1 className="mt-4 text-[38px] font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[56px]">
-              <span className="text-blue-600">{c.h1a}</span> {c.h1b}
-              <Img3D
-                name="icon-gift"
-                Fallback={Gift}
-                shadow={false}
-                size="ml-1.5 inline-block h-10 w-10 align-[-0.15em] sm:h-12 sm:w-12 lg:h-16 lg:w-16"
-              />
-            </h1>
-            <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-600">
-              {c.heroSub}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex h-12 items-center gap-2 rounded-xl bg-blue-600 px-6 text-[15px] font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
-              >
-                {t("ld.ctaStart")} <ArrowRight size={17} />
-              </button>
-              <button
-                onClick={() => scrollToId("how")}
-                className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-slate-700 transition hover:text-blue-600"
-              >
-                {c.how} <ChevronDown size={16} />
-              </button>
+        {/* ============ HERO ============ */}
+        <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white">
+          <div className="relative z-10 flex flex-1 flex-col">
+            <div className="lp-rise lp-d2 flex justify-center px-3 pt-[76px] sm:pt-[104px]">
+              <Link to="/register" className="lp-banner lp-press">
+                <span>{c.banner}</span>
+                <span className="lp-arrow"><ArrowRight size={12} strokeWidth={1.5} /></span>
+              </Link>
             </div>
-            <p className="mt-4 max-w-md text-[13.5px] leading-6 text-slate-500">
-              {c.note}
-            </p>
+
+            <div className="relative min-h-[300px] flex-1 md:static md:min-h-0">
+              {/* 👇 Truyền cả ảnh nền và ảnh hoa sen vào */}
+              <HeroVideo src={HERO_MEDIA} fgSrc={HERO_FG} poster={HERO_POSTER} />
+            </div>
+
+            <div className="mx-auto w-full max-w-[1200px] px-5 pb-8 sm:pb-12">
+              <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+                <div className="max-w-[520px]">
+                  <p className="lp-rise lp-label">{t("ld.badge")}</p>
+                  <h1 className="lp-rise lp-d1 mt-3 text-[clamp(27px,3.6vw,44px)] leading-[1.2] tracking-[-0.03em]">
+                    {c.h1a}<br />{c.h1b}
+                  </h1>
+                  <p className="lp-rise lp-d2 lp-body mt-3">{c.heroSub}</p>
+                  <div className="lp-rise lp-d3 mt-5 flex flex-wrap items-center gap-1.5">
+                    <span className="mr-1 text-[16px] text-[var(--ash)]">{c.explore}</span>
+                    {c.tags.map(([k, label], i) => (
+                      <button key={`${k}-${i}`} type="button" onClick={() => scrollToId("features")} className="lp-tag lp-press">
+                        {k} {label}
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => scrollToId("overview")} aria-label="Scroll to overview"
+                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full">
+                    <ArrowDown size={12} strokeWidth={1.5} />
+                  </button>
+                </div>
+
+                <Link to="/register" className="lp-cta lp-press lp-rise lp-d3 w-fit">
+                  <span>{t("ld.ctaStart")}</span>
+                  <ArrowRight size={16} strokeWidth={1.5} />
+                </Link>
+              </div>
+            </div>
           </div>
-          <HeroArt />
         </section>
 
-        {/* ============ SỐ LIỆU ============ */}
-        <section className="border-y border-slate-200 bg-slate-50">
-          <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-5 py-10 lg:grid-cols-4 lg:gap-x-0">
-            {c.facts.map(([v, l], i) => (
-              <div
-                key={i}
-                className={i > 0 ? "lg:border-l lg:border-slate-200 lg:pl-8" : ""}
-              >
-                <dt className="text-[26px] font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-                  {v}
-                </dt>
-                <dd className="mt-1 max-w-[220px] text-[13.5px] leading-5 text-slate-500">
-                  {l}
-                </dd>
+        {/* ============ TỔNG QUAN ============ */}
+        <section id="overview" className="scroll-mt-24">
+          <div className={SECTION}>
+            <Reveal>
+              <div className="grid gap-6 lg:grid-cols-[180px_1fr_340px] lg:gap-12">
+                <p className="lp-label">01 · {L.over}</p>
+                <div>
+                  <h2 className="lp-h2 max-w-[560px]">{c.overTitle}</h2>
+                  <ul className="mt-6 flex flex-wrap gap-1.5">
+                    {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x, i) => (
+                      <li key={i} className="lp-tag">{x}</li>
+                    ))}
+                  </ul>
+                </div>
+                <p className="lp-body">{c.note}</p>
               </div>
-            ))}
-          </dl>
+            </Reveal>
+
+            <dl className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              {c.facts.map(([v, l], i) => (
+                <Reveal key={`${v}-${i}`} delay={i * 60} className="h-full">
+                  <div className="lp-card h-full p-6 sm:p-8">
+                    <dt className="text-[22px] leading-[1.2] tracking-[-0.44px] sm:text-[27px]">{v}</dt>
+                    <dd className="lp-label mt-3 leading-[1.4]">{l}</dd>
+                  </div>
+                </Reveal>
+              ))}
+            </dl>
+          </div>
         </section>
 
         {/* ============ TÍNH NĂNG ============ */}
-        <section
-          id="features"
-          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-24"
-        >
-          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            {c.featTitle}
-          </h2>
-
-          <div className="mt-12 divide-y divide-slate-200 border-y border-slate-200">
-            {c.features.map((f, i) => {
-              const Icon = FEATURE_ICONS[i] || ListChecks;
-              return (
-                <div
-                  key={f.to}
-                  className="grid gap-4 py-8 md:grid-cols-[48px_1fr_auto] md:items-start md:gap-8"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <Icon size={22} />
-                  </span>
-                  <div>
-                    <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                      {f.title}
-                    </h3>
-                    <p className="mt-2 max-w-xl text-[16px] leading-7 text-slate-600">
-                      {f.body}
-                    </p>
+        <section id="features" className="scroll-mt-24">
+          <div className={SECTION}>
+            <Head n="02" label={L.feat} title={c.featTitle} />
+            <div className="mt-12 grid gap-3 sm:gap-4 md:grid-cols-2">
+              {c.features.map((f, i) => (
+                <Reveal key={f.to} delay={(i % 2) * 70} className="h-full">
+                  <div className="lp-card flex h-full flex-col p-7 sm:p-[69px]">
+                    {FEATURE_TAGS[i] && <span className="lp-tag w-fit">{FEATURE_TAGS[i]}</span>}
+                    <h3 className="mt-10 text-[24px] leading-[1.2] tracking-[-0.48px] sm:text-[27px]">{f.title}</h3>
+                    <p className="lp-body mt-3 flex-1">{f.body}</p>
+                    <Link to={f.to} className="lp-link mt-8 inline-flex items-center gap-1 text-[16px]">
+                      {c.guide} <ArrowRight size={14} strokeWidth={1.5} />
+                    </Link>
                   </div>
-                  <Link
-                    to={f.to}
-                    className="inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline md:mt-1.5"
-                  >
-                    {c.guide} <ArrowRight size={15} />
-                  </Link>
-                </div>
-              );
-            })}
+                </Reveal>
+              ))}
+            </div>
           </div>
-
-          <p className="mt-8 text-[15px] text-slate-500">{c.more}</p>
         </section>
 
         {/* ============ CÁCH HOẠT ĐỘNG ============ */}
-        <section
-          id="how"
-          className="scroll-mt-20 border-y border-slate-200 bg-slate-50"
-        >
-          <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              {c.howTitle}
-            </h2>
-            <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+        <section id="how" className="scroll-mt-24">
+          <div className={SECTION}>
+            <Head n="03" label={L.how} title={c.howTitle} />
+            <ol className="mt-12 grid gap-3 sm:gap-4 md:grid-cols-3">
               {[1, 2, 3].map((n) => (
-                <li key={n} className="border-t-2 border-slate-900 pt-5">
-                  <span className="text-[14px] font-semibold text-slate-400">
-                    0{n}
-                  </span>
-                  <h3 className="mt-2 text-xl font-bold text-slate-900">
-                    {t(`ld.s${n}t`)}
-                  </h3>
-                  <p className="mt-2 text-[15px] leading-7 text-slate-600">
-                    {t(`ld.s${n}d`)}
-                  </p>
+                <li key={n}>
+                  <Reveal delay={n * 60} className="h-full">
+                    <div className="lp-card h-full p-7 sm:p-10">
+                      <span className="lp-tag">0{n}</span>
+                      <h3 className="mt-10 text-[24px] leading-[1.2] tracking-[-0.48px]">{t(`ld.s${n}t`)}</h3>
+                      <p className="lp-body mt-3">{t(`ld.s${n}d`)}</p>
+                    </div>
+                  </Reveal>
                 </li>
               ))}
             </ol>
@@ -365,205 +174,106 @@ export default function CloudVIPLanding() {
         </section>
 
         {/* ============ AN TOÀN ============ */}
-        <section
-          id="safety"
-          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:py-24"
-        >
-          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            {t("ld.safeTitle")}
-          </h2>
-          <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-600">
-            {t("ld.safeSub")}
-          </p>
-          <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
-            {SAFETY.map(({ icon: Icon, t: tk, d }) => (
-              <div key={tk} className="flex gap-4">
-                <Icon className="mt-1 h-5 w-5 shrink-0 text-blue-600" />
-                <div>
-                  <h3 className="font-semibold text-slate-900">{t(tk)}</h3>
-                  <p className="mt-1.5 text-[15px] leading-7 text-slate-600">
-                    {t(d)}
-                  </p>
+        <section id="safety" className="scroll-mt-24">
+          <div className={SECTION}>
+            <Head n="04" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} />
+            <Reveal>
+              <div className="lp-card mt-12 p-7 sm:p-[69px]">
+                <div className="grid gap-x-16 gap-y-10 sm:grid-cols-2">
+                  {SAFETY.map(({ icon: Icon, t: tk, d }) => (
+                    <div key={tk}>
+                      <Icon size={22} strokeWidth={1.1} aria-hidden="true" />
+                      <h3 className="lp-sub mt-5">{t(tk)}</h3>
+                      <p className="lp-body mt-2">{t(d)}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            </Reveal>
           </div>
         </section>
 
-        {/* ============ AI ĐỨNG SAU ============ */}
-        <section className="border-t border-slate-200 bg-slate-50">
-          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-2 md:gap-16">
+        {/* ============ MINH BẠCH ============ */}
+        <section>
+          <div className={`${SECTION} grid gap-12 md:grid-cols-2 md:gap-20`}>
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                {c.whoTitle}
-              </h2>
-              <p className="mt-4 max-w-md text-[16px] leading-7 text-slate-600">
-                {c.whoBody}
-              </p>
-              <ul className="mt-5 space-y-2 text-[15px] text-slate-700">
-                {c.whoPoints.map((p) => (
-                  <li key={p} className="flex gap-3">
-                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                    {p}
-                  </li>
+              <p className="lp-label">05 · {L.who}</p>
+              <h2 className="lp-h2 mt-2">{c.whoTitle}</h2>
+              <p className="lp-body mt-5 max-w-md">{c.whoBody}</p>
+              <ul className="mt-6 flex flex-wrap gap-1.5">
+                {c.whoPoints.map((p, i) => (
+                  <li key={`${p}-${i}`} className="lp-tag lp-tag-lg">{p}</li>
                 ))}
               </ul>
-              <Link
-                to="/about"
-                className="mt-6 inline-flex items-center gap-1 text-[15px] font-semibold text-blue-600 hover:underline"
-              >
-                {c.whoMore} <ArrowRight size={15} />
+              <Link to="/about" className="lp-link mt-6 inline-flex items-center gap-1 text-[16px]">
+                {c.whoMore} <ArrowRight size={14} strokeWidth={1.5} />
               </Link>
-
-              {/* Pháp lý & chính sách */}
-              <div className="mt-8 border-t border-slate-200 pt-5">
-                <p className="text-[13px] font-semibold uppercase tracking-wide text-slate-500">
-                  {c.whoLegal}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
-                  <Link
-                    to="/terms"
-                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
-                  >
-                    {lang === "en" ? "Terms of Service" : "Điều khoản sử dụng"}
-                  </Link>
-                  <Link
-                    to="/privacy"
-                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
-                  >
-                    {lang === "en" ? "Privacy Policy" : "Chính sách bảo mật"}
-                  </Link>
-                  <Link
-                    to="/refund"
-                    className="text-slate-700 underline-offset-4 hover:text-blue-600 hover:underline"
-                  >
-                    {lang === "en" ? "Refund Policy" : "Chính sách hoàn tiền"}
-                  </Link>
+              <div className="mt-10 border-t-[.5px] border-[var(--hair)] pt-6">
+                <p className="lp-label">{c.whoLegal}</p>
+                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
+                  <Link to="/terms" className="lp-link">{c.terms}</Link>
+                  <Link to="/privacy" className="lp-link">{c.privacy}</Link>
+                  <Link to="/refund" className="lp-link">{c.refund}</Link>
                 </div>
               </div>
             </div>
 
-            <dl className="divide-y divide-slate-200 border-y border-slate-200 text-[15px]">
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">{c.whoOperator}</dt>
-                <dd className="font-semibold text-slate-900">{SITE.operator}</dd>
-              </div>
-
-              {SITE.address && (
-                <div className="flex justify-between gap-4 py-3.5">
-                  <dt className="text-slate-500">
-                    {lang === "en" ? "Address" : "Địa chỉ"}
-                  </dt>
-                  <dd className="text-right font-semibold text-slate-900">
-                    {SITE.address}
-                  </dd>
-                </div>
-              )}
-
-              {SITE.business && (
-                <div className="flex justify-between gap-4 py-3.5">
-                  <dt className="text-slate-500">
-                    {lang === "en" ? "Business" : "Kinh doanh"}
-                  </dt>
-                  <dd className="text-right font-semibold text-slate-900">
-                    {SITE.business}
-                  </dd>
-                </div>
-              )}
-
-              {SITE.youtube && (
-                <div className="flex justify-between gap-4 py-3.5">
-                  <dt className="text-slate-500">YouTube</dt>
-                  <dd>
-                    <a
-                      href={SITE.youtube}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-blue-600 hover:underline"
-                    >
+            <Reveal>
+              <dl className="lp-card px-7 py-3 sm:px-10">
+                <Row k={c.whoOperator}>{SITE.operator ?? "—"}</Row>
+                {SITE.address && <Row k={c.address}>{SITE.address}</Row>}
+                {SITE.business && <Row k={c.business}>{SITE.business}</Row>}
+                {SITE.youtube && (
+                  <Row k="YouTube">
+                    <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="lp-link">
                       {SITE.youtube.replace("https://www.youtube.com/", "")}
                     </a>
-                  </dd>
-                </div>
-              )}
-
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">Zalo</dt>
-                <dd>
-                  <a
-                    href={SITE.zaloUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-blue-600 hover:underline"
-                  >
-                    {SITE.zalo}
-                  </a>
-                </dd>
-              </div>
-
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">Email</dt>
-                <dd className="break-all text-right font-semibold text-slate-900">
-                  {SITE.email}
-                </dd>
-              </div>
-
-              <div className="flex justify-between gap-4 py-3.5">
-                <dt className="text-slate-500">{c.whoSince}</dt>
-                <dd className="font-semibold text-slate-900">
-                  {launchedText}
-                </dd>
-              </div>
-            </dl>
+                  </Row>
+                )}
+                {SITE.zaloUrl && (
+                  <Row k="Zalo">
+                    <a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer" className="lp-link">
+                      {SITE.zalo ?? "Zalo"}
+                    </a>
+                  </Row>
+                )}
+                {SITE.email && <Row k="Email"><span className="break-all">{SITE.email}</span></Row>}
+                <Row k={c.whoSince}>{launchedText}</Row>
+              </dl>
+            </Reveal>
           </div>
         </section>
 
-                {/* ============ FAQ ============ */}
-        <section
-          id="faq"
-          className="scroll-mt-20 border-t border-slate-200 bg-white"
-        >
-          <div className="mx-auto max-w-3xl px-5 py-16 sm:py-24">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              {t("ld.faqTitle")}
-            </h2>
-            <div className="mt-8 border-t border-slate-200">
-              {FAQ_ORDER.map((i, idx) => (
-                <FaqRow
-                  key={i}
-                  q={t(`ld.faq${i}q`)}
-                  a={t(`ld.faq${i}a`)}
-                  open={openFaq === idx}
-                  onToggle={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-                />
+        {/* ============ HỎI ĐÁP ============ */}
+        <section id="faq" className="scroll-mt-24">
+          <div className="mx-auto max-w-3xl px-5 py-16 sm:py-[94px]">
+            <Head n="06" label={L.faq} title={t("ld.faqTitle")} />
+            <div className="mt-10 border-t-[.5px] border-[var(--hair)]">
+              {FAQ_ORDER.map((faqKey, idx) => (
+                <FaqRow key={faqKey} id={faqKey} n={String(idx + 1).padStart(2, "0")}
+                  q={t(`ld.faq${faqKey}q`)} a={t(`ld.faq${faqKey}a`)}
+                  open={openFaq === faqKey} onToggle={() => setOpenFaq(openFaq === faqKey ? null : faqKey)} />
               ))}
             </div>
           </div>
         </section>
 
         {/* ============ KÊU GỌI CUỐI ============ */}
-        <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-          <div className="rounded-3xl bg-blue-600 px-6 py-12 sm:px-12 sm:py-16">
-            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              {c.ctaTitle}
-            </h2>
-            <p className="mt-3 max-w-lg text-[16px] leading-7 text-blue-100">
-              {t("ld.ctaSub")}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-[15px] font-semibold text-blue-700 transition hover:bg-blue-50 active:scale-[0.98]"
-              >
-                {t("ld.ctaReg")} <ArrowRight size={17} />
-              </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="text-[15px] font-semibold text-white underline-offset-4 hover:underline"
-              >
-                {t("ld.login")}
-              </button>
-            </div>
+        <section>
+          <div className="mx-auto max-w-[1200px] px-5 pb-16 sm:pb-[94px]">
+            <Reveal>
+              <div className="lp-card p-7 sm:p-[69px]">
+                <h2 className="max-w-[560px] text-[clamp(27px,4vw,44px)] leading-[1.2] tracking-[-0.03em]">{c.ctaTitle}</h2>
+                <p className="lp-body mt-4 max-w-md">{t("ld.ctaSub")}</p>
+                <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+                  <Link to="/register" className="lp-cta lp-press">
+                    <span>{t("ld.ctaReg")}</span>
+                    <ArrowRight size={16} strokeWidth={1.5} />
+                  </Link>
+                  <Link to="/login" className="lp-link text-[16px]">{t("ld.login")}</Link>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </section>
       </main>
@@ -572,4 +282,4 @@ export default function CloudVIPLanding() {
       <BackToTop />
     </div>
   );
-}
+                    }

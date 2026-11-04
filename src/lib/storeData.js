@@ -8,25 +8,61 @@ export const locale = (lang) => (lang === "en" ? "en-US" : "vi-VN");
 
 // ============= BANNER =============
 export const BANNERS = [
-  { image: "store-banner-1.png", path: "/store/free-fire" },
-  { image: "store-banner-2.png", path: "/store/play-together" },
-  { image: "store-banner-3.png", path: "/store/lien-quan" },
-  { image: "store-banner-4.png", path: "/store/roblox" },
-  { image: "store-banner-5.png", path: "/store/pubg-mobile" },
+  {
+    image: "store-banner-1.png",
+    path: "/store/free-fire",
+    desc: {
+      vi: "Nạp Kim Cương Free Fire nhanh chóng, giao thẳng vào tài khoản.",
+      en: "Top up Free Fire Diamonds fast, delivered straight to your account.",
+    },
+  },
+  {
+    image: "store-banner-2.png",
+    path: "/store/play-together",
+    desc: {
+      vi: "Nạp Thỏi Vàng Play Together VNG bằng Coin tích lũy.",
+      en: "Get Play Together VNG Gold Bars with your saved Coins.",
+    },
+  },
+  {
+    image: "store-banner-3.png",
+    path: "/store/lien-quan",
+    desc: {
+      vi: "Nạp Quân Huy Liên Quân Mobile an toàn, nhận nhanh.",
+      en: "Safe and fast Arena of Valor Quân Huy top-ups.",
+    },
+  },
+  {
+    image: "store-banner-4.png",
+    path: "/store/roblox",
+    desc: {
+      vi: "Đổi Robux và thẻ Roblox, giao qua Discord hoặc Zalo.",
+      en: "Redeem Robux and Roblox cards, delivered via Discord or Zalo.",
+    },
+  },
+  {
+    image: "store-banner-5.png",
+    path: "/store/pubg-mobile",
+    desc: {
+      vi: "Nạp UC PUBG Mobile VN giá tốt, nhận thêm thưởng.",
+      en: "Top up PUBG Mobile VN UC at great prices with bonus rewards.",
+    },
+  },
 ];
 
 export const BANNER_INTERVAL = 5000;
 
 // ============= GAMES =============
 export const GAMES = [
-  { id: 1, name: "Roblox", category: "pc", logo: "roblox.png", path: "/store/roblox", hot: true },
-  { id: 2, name: "Play Together VNG", category: "mobile", logo: "play-together-vng.png", path: "/store/play-together", hot: true },
-  { id: 3, name: "Liên Quân Mobile", category: "mobile", logo: "lien-quan-mobile.png", path: "/store/lien-quan", hot: true },
-  { id: 4, name: "Free Fire", category: "mobile", logo: "free-fire.png", path: "/store/free-fire", hot: true },
-  { id: 5, name: "PUBG Mobile VN", category: "mobile", logo: "pubg-mobile-vn.png", path: "/store/pubg-mobile", hot: true },
-  { id: 6, name: "VALORANT", category: "pc", logo: "valorant.png", path: "/store/valorant" },
-  { id: 8, name: "Delta Force", category: "mobile", logo: "Delta.png", path: "/store/Delta-Force", hot: true },
-  { id: 10, name: "FC Mobile VN", category: "mobile", logo: "fc-mobile.png", path: "/store/fc-mobile" },
+  { id: 1, name: "Roblox", category: "pc", logo: "roblox.png", cover: "cover-roblox.png", path: "/store/roblox", hot: true },
+  { id: 2, name: "Play Together VNG", category: "mobile", logo: "play-together-vng.png", cover: "cover-play-together.png", path: "/store/play-together", hot: true },
+  { id: 3, name: "Liên Quân Mobile", category: "mobile", logo: "lien-quan-mobile.png", cover: "cover-lien-quan.png", path: "/store/lien-quan", hot: true },
+  { id: 4, name: "Free Fire", category: "mobile", logo: "free-fire.png", cover: "cover-free-fire.png", path: "/store/free-fire", hot: true },
+  { id: 5, name: "PUBG Mobile VN", category: "mobile", logo: "pubg-mobile-vn.png", cover: "cover-pubg-mobile.png", path: "/store/pubg-mobile", hot: true },
+  { id: 6, name: "VALORANT", category: "pc", logo: "valorant.png", cover: "cover-valorant.png", path: "/store/valorant" },
+  { id: 8, name: "Delta Force", category: "mobile", logo: "Delta.png", cover: "cover-delta-force.png", path: "/store/Delta-Force", hot: true },
+  { id: 10, name: "FC Mobile VN", category: "mobile", logo: "fc-mobile.png", cover: "cover-fc-mobile.png", path: "/store/fc-mobile" },
+  { id: 11, name: "Cloud Phone", category: "mobile", logo: "store-cute.png", cover: "store-cute.png", path: "/store/cloud-phone", hot: true },
 ];
 
 // ============= TRACKING (gợi ý "Dành cho bạn") =============
@@ -187,4 +223,4 @@ export function getHistoryImage(order) {
   if (id.startsWith("vp-") || id.includes("valorant")) return getImageUrl("valorant.png");
 
   return getImageUrl("store-cute.png");
-    }
+        }

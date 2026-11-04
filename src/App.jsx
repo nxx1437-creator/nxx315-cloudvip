@@ -7,6 +7,7 @@ import GuideWelcomeModal from "./components/GuideWelcomeModal.jsx";
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import AuthCallback from "./pages/AuthCallback.jsx";
 
 // ✅ Page chính — lazy load
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
@@ -29,6 +30,12 @@ const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
+import CreatorLayout from "./pages/creator/CreatorLayout.jsx";
+import CreatorOverview from "./pages/creator/CreatorOverview.jsx";
+import CreatorRanking from "./pages/creator/CreatorRanking.jsx";
+import CreatorVideos from "./pages/creator/CreatorVideos.jsx";
+import CreatorRewards from "./pages/creator/CreatorRewards.jsx";
+import CreatorSettings from "./pages/creator/CreatorSettings.jsx";
 
 // Hướng dẫn + Về chúng tôi
 const GuideHome = lazy(() => import("./pages/Guide/GuideHome.jsx"));
@@ -43,6 +50,7 @@ const FreeFire = lazy(() => import("./pages/FreeFire.jsx"));
 const PubgMobile = lazy(() => import("./pages/PubgMobile.jsx"));
 const FcMobile = lazy(() => import("./pages/FcMobile.jsx"));
 const Valorant = lazy(() => import("./pages/Valorant.jsx"));
+const CloudPhone = lazy(() => import("./pages/CloudPhone.jsx"));
 
 // Khác
 const ShopEarn = lazy(() => import("./pages/ShopEarn.jsx"));
@@ -89,6 +97,7 @@ export default function App() {
             <Route path="/guide/:id" element={<GuideDetail />} />
 
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -103,6 +112,13 @@ export default function App() {
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
             <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
+            <Route path="/creator" element={<CreatorLayout />}>
+            <Route index element={<CreatorOverview />} />
+            <Route path="ranking" element={<CreatorRanking />} />
+            <Route path="videos" element={<CreatorVideos />} />
+            <Route path="rewards" element={<CreatorRewards />} />
+            <Route path="settings" element={<CreatorSettings />} />
+            </Route>
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
@@ -115,6 +131,7 @@ export default function App() {
             <Route path="/store/pubg-mobile" element={<ProtectedRoute><PubgMobile /></ProtectedRoute>} />
             <Route path="/store/fc-mobile" element={<ProtectedRoute><FcMobile /></ProtectedRoute>} />
             <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
+            <Route path="/store/cloud-phone" element={<ProtectedRoute><CloudPhone /></ProtectedRoute>} />
 
             <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
             <Route path="/link-history" element={<LinkHistory />} />

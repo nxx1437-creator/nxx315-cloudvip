@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Coins, Gift, Loader2, TrendingUp, ArrowDownLeft, ArrowUpRight, CheckSquare, Sparkles, Star, ArrowLeftRight, Landmark, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Coins, Gift, Loader2, TrendingUp, ArrowDownLeft, ArrowUpRight, CheckSquare, Sparkles, Star, ArrowLeftRight, Landmark, CheckCircle2, AlertTriangle, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
+import GiftCodeSheet from "../components/GiftCodeSheet.jsx";
 
 const formatCoins = (v) => Number(v || 0).toLocaleString("vi-VN");
 const formatVND = (v) => Number(v || 0).toLocaleString("vi-VN") + "đ";
@@ -61,6 +62,7 @@ export default function Wallet() {
   const [transactions, setTransactions] = useState([]);
   const [refundTransactions, setRefundTransactions] = useState([]);
   const [showAll, setShowAll] = useState(false);
+  const [showGift, setShowGift] = useState(false);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -74,7 +76,7 @@ export default function Wallet() {
       try {
         const userId = session.user.id;
 
-        const [tasksRes, milestonesRes, ordersRes, gamesRes, historyRes, refundRes] = await Promise.all([
+        const [tasksRes, milestonesRes, ordersRes, gamesRes, historyRes, refundRes, giftRes] = await Promise.all([
           supabase
             .from("task_completions")
             .select("id, completed_at, coins_earned")
@@ -113,6 +115,12 @@ export default function Wallet() {
             .eq("refund_paid", true)
             .order("refund_paid_at", { ascending: false })
             .limit(30),
+          supabase
+            .from("gift_code_redemptions")
+            .select("id, coins, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(30),
         ]);
 
         const queryErrors = [
@@ -122,6 +130,7 @@ export default function Wallet() {
           gamesRes.error,
           historyRes.error,
           refundRes.error,
+          giftRes.error,
         ].filter(Boolean);
 
         if (queryErrors.length > 0) {
@@ -199,7 +208,17 @@ export default function Wallet() {
           isRefund: true,
         }));
 
-        const merged = [...taskTx, ...milestoneTx, ...orderTx, ...gameTx, ...historyTx, ...refundTx]
+        const giftTx = (giftRes.data || []).map((g) => ({
+          id: "gift-" + g.id,
+          type: "gift",
+          title: "Nhập Gift Code",
+          amount: g.coins || 0,
+          date: g.created_at,
+          icon: Ticket,
+          iconCls: "bg-violet-50 text-violet-500",
+        }));
+
+        const merged = [...taskTx, ...milestoneTx, ...orderTx, ...gameTx, ...historyTx, ...refundTx, ...giftTx]
           .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         setTransactions(merged);
@@ -320,6 +339,13 @@ export default function Wallet() {
                   <TrendingUp size={16} /> Kiếm thêm
                 </button>
               </div>
+
+              <button
+                onClick={() => setShowGift(true)}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#3478F6]/40 bg-[#EAF2FE] py-3 text-sm font-semibold text-[#3478F6]"
+              >
+                <Ticket size={16} /> Nhập Gift Code
+              </button>
             </div>
 
             {/* Lịch sử hoạt động */}
@@ -409,8 +435,9 @@ export default function Wallet() {
         )}
       </main>
 
+      <GiftCodeSheet open={showGift} onClose={() => setShowGift(false)} />
       <BottomNav />
     </div>
   );
-                          }
+                    }
                       

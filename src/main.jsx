@@ -54,3 +54,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+window.addEventListener("vite:preloadError", () => window.location.reload());
