@@ -1,5 +1,5 @@
 import React from "react";
-import { Gift, ShieldCheck, Clock, Mail, XCircle, Coins, AlertCircle, Ban, MessageCircle, RefreshCw } from "lucide-react";
+import { Gift, ShieldCheck, Clock, Mail, XCircle, Coins, AlertCircle, Ban, MessageCircle, RefreshCw, BadgeCheck } from "lucide-react";
 import LegalPage from "../components/LegalKit.jsx";
 
 // ẢNH / VIDEO MINH HỌA: ảnh thì tải lên Supabase (bucket game_logos) rồi ghi TÊN FILE;
@@ -17,16 +17,20 @@ const ICONS = {
 };
 
 // Nội dung quy định: sửa chữ ở đây. Dùng **chữ đậm** để nhấn mạnh.
-const UPDATED = "25/08/2026";
+const UPDATED = "04/11/2026";
+
 const INTRO = {
   text: "Quy định này áp dụng cho tất cả yêu cầu đổi xu/điểm lấy phần thưởng trên NXX315 Studio Rewards.",
   chips: ["Áp dụng cho mọi yêu cầu đổi thưởng", "Trừ xu khi yêu cầu được xác nhận", "Hoàn xu nếu lỗi từ hệ thống"],
 };
+
 const SECTIONS = [
   { id: "loai-qua", title: "Các loại phần thưởng", blocks: [
     { t: "p", x: "Tùy từng thời điểm, NXX315 Studio Rewards có thể cung cấp các phần thưởng như:" },
     { t: "list", items: ["Quân Huy", "Mã/code Robux", "Các phần thưởng khác được công bố trên hệ thống"] },
     { t: "note", tag: "Lưu ý", x: "Danh sách, giá trị và số xu/điểm cần thiết **có thể thay đổi** tùy từng thời điểm." },
+    // THÊM MỚI: Cam kết chất lượng để trấn an người dùng
+    { t: "note", tag: "Cam kết chất lượng", x: "Tất cả phần thưởng Roblox/Robux được NXX315 phân phối qua các kênh hợp pháp và chính thức tại Việt Nam (đối tác VNG). Chúng tôi cam kết 100% không sử dụng tool bơm Robux lậu, đảm bảo an toàn tuyệt đối cho tài khoản Roblox của bạn." },
   ]},
   { id: "dieu-kien", title: "Điều kiện đổi thưởng", blocks: [
     { t: "p", x: "Để tạo yêu cầu đổi thưởng:" },
@@ -47,7 +51,8 @@ const SECTIONS = [
       "Bước 4: Yêu cầu được kiểm tra và xử lý",
       "Bước 5: Phần thưởng được cung cấp theo phương thức được công bố",
     ]},
-    { t: "p", x: "Thời gian xử lý có thể khác nhau tùy loại phần thưởng và tình trạng hệ thống." },
+    // SỬA LẠI: Làm rõ thời gian xử lý
+    { t: "p", x: "Thời gian xử lý có thể khác nhau tùy loại phần thưởng và tình trạng hệ thống. Đối với phần thưởng là Robux, thời gian xử lý thông thường là **trong vòng 24 giờ làm việc** kể từ khi yêu cầu được duyệt thành công." },
   ]},
   { id: "thong-tin", title: "Thông tin nhận thưởng", blocks: [
     { t: "p", x: "Người dùng **chịu trách nhiệm kiểm tra thông tin** trước khi gửi yêu cầu." },
@@ -100,4 +105,3 @@ export default function Redemption() {
     />
   );
    }
-  
