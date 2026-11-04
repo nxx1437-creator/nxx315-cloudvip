@@ -1,5 +1,5 @@
 // src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ
-// Phong cách: nền xám nhạt #eef0f2, thẻ trắng bo 30px không đổ bóng, chữ đen #04080d tracking chặt,
+// Phong cách: nền xám nhạt #e9ecee, thẻ trắng bo 30px không đổ bóng, chữ đen #20282b tracking chặt,
 // nút chính là viên thuốc đen, màu aqua chỉ dùng ở vài mảng nhấn.
 import React, { useState } from "react";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
@@ -34,10 +34,10 @@ export function Icon({ name, size = 20, stroke = 2, className = "" }) {
 }
 
 /* ============ DÙNG CHUNG ============ */
-export const surface = "rounded-[30px] bg-white";
+export const surface = "rounded-[30px] bg-[#fafbfb]";
 export const ring = "shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.1)]";
-export const hairline = "divide-y divide-[#04080d]/10";
-const rowHover = "transition active:bg-[#eef0f2]";
+export const hairline = "divide-y divide-[#20282b]/10";
+const rowHover = "transition active:bg-[#e9ecee]";
 
 export function StatusDot({ st }) {
   return (
@@ -50,7 +50,7 @@ export function StatusDot({ st }) {
 
 export function IconBox({ name, size = 20 }) {
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#d5efef] text-[#04080d]">
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#d5efef] text-[#20282b]">
       <Icon name={name} size={size} />
     </span>
   );
@@ -60,11 +60,11 @@ export function SectionTitle({ title, hint, action, onAction }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-3 px-1">
       <div>
-        <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.5px] text-[#04080d]">{title}</h2>
+        <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.5px] text-[#20282b]">{title}</h2>
         {hint && <p className="mt-1 text-[14px] text-[#6a6b6f]">{hint}</p>}
       </div>
       {action && (
-        <button onClick={onAction} className="shrink-0 text-[15px] font-medium text-[#04080d] underline underline-offset-4">{action}</button>
+        <button onClick={onAction} className="shrink-0 text-[15px] font-medium text-[#20282b] underline underline-offset-4">{action}</button>
       )}
     </div>
   );
@@ -73,21 +73,21 @@ export function SectionTitle({ title, hint, action, onAction }) {
 /* ============ HERO + TÌM KIẾM ============ */
 export function Hero({ query, onQuery }) {
   return (
-    <header className="bg-[#eef0f2] pb-2 pt-9">
+    <header className="bg-[#e9ecee] pb-2 pt-9">
       <div className="mx-auto max-w-md px-4 md:max-w-3xl">
-        <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-1.2px] text-[#04080d]">Chúng tôi có thể giúp gì cho bạn?</h1>
-        <div className={`relative mt-6 rounded-full bg-white ${ring}`}>
+        <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-1.2px] text-[#20282b]">Chúng tôi có thể giúp gì cho bạn?</h1>
+        <div className={`relative mt-6 rounded-full bg-[#fafbfb] ${ring}`}>
           <Icon name="search" size={19} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#6a6b6f]" />
           <input
             type="text"
             value={query}
             onChange={(e) => onQuery(e.target.value)}
             placeholder="Tìm câu hỏi thường gặp"
-            className="h-14 w-full rounded-full bg-transparent pl-12 pr-12 text-[17px] text-[#04080d] outline-none placeholder:text-[#6a6b6f] focus:ring-2 focus:ring-[#04080d]/80"
+            className="h-14 w-full rounded-full bg-transparent pl-12 pr-12 text-[17px] text-[#20282b] outline-none placeholder:text-[#6a6b6f] focus:ring-2 focus:ring-[#20282b]/80"
           />
           {query && (
             <button onClick={() => onQuery("")} aria-label="Xoá"
-              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#6a6b6f] active:bg-[#eef0f2]">
+              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#6a6b6f] active:bg-[#e9ecee]">
               <Icon name="x" size={17} />
             </button>
           )}
@@ -103,11 +103,11 @@ export function PopularFaqs({ faqs, onPick }) {
   if (!items.length) return null;
   return (
     <section className={`${surface} px-6 pb-2 pt-6`}>
-      <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.5px] text-[#04080d]">Câu hỏi phổ biến</h2>
+      <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.5px] text-[#20282b]">Câu hỏi phổ biến</h2>
       <ul className={`mt-3 md:grid md:grid-cols-2 md:gap-x-10 ${hairline} md:divide-y-0`}>
         {items.map((f) => (
-          <li key={f.id} className="md:border-b md:border-[#04080d]/10">
-            <button onClick={() => onPick(f)} className="flex w-full items-center justify-between gap-4 py-4 text-left text-[17px] leading-6 text-[#04080d]">
+          <li key={f.id} className="md:border-b md:border-[#20282b]/10">
+            <button onClick={() => onPick(f)} className="flex w-full items-center justify-between gap-4 py-4 text-left text-[17px] leading-6 text-[#20282b]">
               <span className="line-clamp-2">{f.question}</span>
               <Icon name="chevR" size={16} className="shrink-0 text-[#6a6b6f]" />
             </button>
@@ -131,10 +131,10 @@ export function QuickActions({ onChat, onRequest, onHistory }) {
         <button key={it.title} onClick={() => it.on()} className={`flex w-full items-center gap-4 px-6 py-4 text-left ${rowHover}`}>
           <IconBox name={it.icon} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[18px] font-semibold leading-6 tracking-[-0.2px] text-[#04080d]">{it.title}</span>
+            <span className="block text-[18px] font-semibold leading-6 tracking-[-0.2px] text-[#20282b]">{it.title}</span>
             <span className="block truncate text-[14px] text-[#6a6b6f]">{it.sub}</span>
           </span>
-          {it.tag && <span className="rounded-full bg-[#d5efef] px-2.5 py-1 text-[12px] font-medium text-[#04080d]">{it.tag}</span>}
+          {it.tag && <span className="rounded-full bg-[#d5efef] px-2.5 py-1 text-[12px] font-medium text-[#20282b]">{it.tag}</span>}
           <Icon name="chevR" size={16} className="shrink-0 text-[#6a6b6f]" />
         </button>
       ))}
@@ -157,10 +157,10 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
         {loading ? (
           [0, 1].map((i) => (
             <div key={i} className="flex animate-pulse items-center gap-4 px-6 py-4">
-              <div className="h-11 w-11 rounded-full bg-[#eef0f2]" />
+              <div className="h-11 w-11 rounded-full bg-[#e9ecee]" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-1/2 rounded bg-[#eef0f2]" />
-                <div className="h-3 w-3/4 rounded bg-[#eef0f2]" />
+                <div className="h-4 w-1/2 rounded bg-[#e9ecee]" />
+                <div className="h-3 w-3/4 rounded bg-[#e9ecee]" />
               </div>
             </div>
           ))
@@ -175,11 +175,11 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
               <button key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })} className={`flex w-full items-center gap-4 px-6 py-4 text-left ${rowHover}`}>
                 <IconBox name="box" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[17px] font-semibold tracking-[-0.2px] text-[#04080d]">{o.package_name}</span>
+                  <span className="block truncate text-[17px] font-semibold tracking-[-0.2px] text-[#20282b]">{o.package_name}</span>
                   <span className="block truncate text-[14px] text-[#6a6b6f]">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
                 </span>
                 <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-[16px] font-semibold text-[#04080d]">{fmtCoins(o.coins_charged)}</span>
+                  <span className="text-[16px] font-semibold text-[#20282b]">{fmtCoins(o.coins_charged)}</span>
                   <StatusDot st={st} />
                 </span>
               </button>
@@ -202,9 +202,9 @@ export function CategoryCards({ faqs, active, onPick }) {
           const on = active === c.key;
           return (
             <button key={c.key} onClick={() => onPick(on ? null : c.key)}
-              className={`flex flex-col items-start rounded-[30px] p-5 text-left transition active:scale-[0.98] [&:last-child:nth-child(odd)]:col-span-2 md:[&:last-child:nth-child(odd)]:col-span-1 ${on ? "bg-[#a1e5e4]" : "bg-white"}`}>
-              <Icon name={c.icon} size={26} className="text-[#04080d]" />
-              <span className="mt-5 text-[18px] font-semibold leading-tight tracking-[-0.3px] text-[#04080d]">{c.label}</span>
+              className={`flex flex-col items-start rounded-[30px] p-5 text-left transition active:scale-[0.98] [&:last-child:nth-child(odd)]:col-span-2 md:[&:last-child:nth-child(odd)]:col-span-1 ${on ? "bg-[#a1e5e4]" : "bg-[#fafbfb]"}`}>
+              <Icon name={c.icon} size={26} className="text-[#20282b]" />
+              <span className="mt-5 text-[18px] font-semibold leading-tight tracking-[-0.3px] text-[#20282b]">{c.label}</span>
               <span className="mt-1.5 line-clamp-3 text-[14px] leading-5 text-[#4a4e52]">{c.desc}</span>
               <span className="mt-4 text-[13px] text-[#6a6b6f]">{count(c.key)} câu hỏi</span>
             </button>
@@ -234,11 +234,11 @@ function Hl({ text, q }) {
 
 function FaqItem({ faq, open, onToggle, query, onAsk }) {
   const [vote, setVote] = useState(null);
-  const vbtn = "rounded-full bg-[#eef0f2] px-4 py-2 text-[14px] font-medium text-[#04080d] transition active:bg-[#04080d]/10";
+  const vbtn = "rounded-full bg-[#e9ecee] px-4 py-2 text-[14px] font-medium text-[#20282b] transition active:bg-[#20282b]/10";
   return (
     <div>
       <button onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-4 px-6 py-4 text-left">
-        <span className="flex-1 text-[17px] font-medium leading-6 text-[#04080d]"><Hl text={faq.question} q={query} /></span>
+        <span className="flex-1 text-[17px] font-medium leading-6 text-[#20282b]"><Hl text={faq.question} q={query} /></span>
         <Icon name="chevD" size={19} className={`mt-1 shrink-0 text-[#6a6b6f] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
@@ -247,7 +247,7 @@ function FaqItem({ faq, open, onToggle, query, onAsk }) {
             <p className="whitespace-pre-line text-[16px] leading-7 text-[#4a4e52]">{faq.answer}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {vote === "yes" ? (
-                <span className="text-[14px] font-medium text-[#04080d]">Cảm ơn bạn đã phản hồi.</span>
+                <span className="text-[14px] font-medium text-[#20282b]">Cảm ơn bạn đã phản hồi.</span>
               ) : (
                 <>
                   <span className="mr-1 text-[14px] text-[#6a6b6f]">Câu trả lời này có hữu ích không?</span>
@@ -258,7 +258,7 @@ function FaqItem({ faq, open, onToggle, query, onAsk }) {
             </div>
             {vote === "no" && (
               <button onClick={() => onAsk({ category: faq.category, about: faq.question })}
-                className="mt-4 text-[15px] font-semibold text-[#04080d] underline underline-offset-4">
+                className="mt-4 text-[15px] font-semibold text-[#20282b] underline underline-offset-4">
                 Gửi yêu cầu hỗ trợ
               </button>
             )}
@@ -289,14 +289,14 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
       <div className={`${surface} ${hairline} overflow-hidden`}>
         {loading ? (
           <div className="animate-pulse space-y-5 p-6">
-            {[0, 1, 2].map((i) => <div key={i} className="h-4 rounded bg-[#eef0f2]" />)}
+            {[0, 1, 2].map((i) => <div key={i} className="h-4 rounded bg-[#e9ecee]" />)}
           </div>
         ) : shown.length === 0 ? (
           <div className="px-6 py-10 text-center">
-            <p className="text-[18px] font-semibold tracking-[-0.2px] text-[#04080d]">Không tìm thấy câu hỏi phù hợp</p>
+            <p className="text-[18px] font-semibold tracking-[-0.2px] text-[#20282b]">Không tìm thấy câu hỏi phù hợp</p>
             <p className="mt-1 text-[15px] text-[#6a6b6f]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
             <button onClick={() => onAsk({ category: cat || null, description: q })}
-              className="mt-5 rounded-full bg-[#04080d] px-6 py-3 text-[16px] font-semibold text-white transition active:scale-[0.98]">
+              className="mt-5 rounded-full bg-[#20282b] px-6 py-3 text-[16px] font-semibold text-white transition active:scale-[0.98]">
               Gửi yêu cầu hỗ trợ
             </button>
           </div>
@@ -306,7 +306,7 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
           ))
         )}
         {!filtering && !loading && faqs.length > 5 && openIdx < 5 && (
-          <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-[#04080d]">
+          <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-[#20282b]">
             {expanded ? "Thu gọn" : `Xem thêm ${faqs.length - 5} câu hỏi`}
             <Icon name="chevD" size={16} className={expanded ? "rotate-180" : ""} />
           </button>
@@ -320,20 +320,21 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
 export function ContactCard({ onRequest }) {
   return (
     <section className="rounded-[30px] bg-[#a1e5e4] px-7 pb-7 pt-9">
-      <h3 className="text-[30px] font-semibold leading-[1.1] tracking-[-0.8px] text-[#04080d]">Vẫn cần hỗ trợ?</h3>
-      <p className="mt-3 text-[17px] leading-6 text-[#04080d]/80">Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.</p>
+      <h3 className="text-[30px] font-semibold leading-[1.1] tracking-[-0.8px] text-[#20282b]">Vẫn cần hỗ trợ?</h3>
+      <p className="mt-3 text-[17px] leading-6 text-[#20282b]/80">Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.</p>
       <div className="mt-6 flex gap-3">
-        <button onClick={() => onRequest()} className="flex-1 rounded-full bg-[#04080d] py-3.5 text-[16px] font-semibold text-white transition active:scale-[0.98]">
+        <button onClick={() => onRequest()} className="flex-1 rounded-full bg-[#20282b] py-3.5 text-[16px] font-semibold text-white transition active:scale-[0.98]">
           Gửi yêu cầu
         </button>
         <a href={ZALO_URL} target="_blank" rel="noopener noreferrer"
-          className="flex-1 rounded-full bg-white py-3.5 text-center text-[16px] font-semibold text-[#04080d] transition active:scale-[0.98]">
+          className="flex-1 rounded-full bg-[#fafbfb] py-3.5 text-center text-[16px] font-semibold text-[#20282b] transition active:scale-[0.98]">
           Nhắn Zalo
         </a>
       </div>
     </section>
   );
-                    }
+      }
+              
                   
                                  
 
