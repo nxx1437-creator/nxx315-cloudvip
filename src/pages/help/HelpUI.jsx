@@ -1,11 +1,12 @@
-// src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ (gộp từ HelpIcons/HelpHero/HelpSections/HelpFaq)
+// src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ
+// Phong cách: nền xám nhạt #eef0f2, thẻ trắng bo 30px không đổ bóng, chữ đen #04080d tracking chặt,
+// nút chính là viên thuốc đen, màu aqua chỉ dùng ở vài mảng nhấn.
 import React, { useState } from "react";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
 
 /* ============ ICON ============ */
 const P = {
   back: <path d="M19 12H5M12 19l-7-7 7-7" />,
-  home: <path d="M3 10.5 12 3l9 7.5M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />,
   search: (<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>),
   history: <path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4M12 7v5l3 2" />,
   chat: <path d="M21 12c0 4.4-4 8-9 8-1.6 0-3-.3-4.3-.9L3 21l1.7-4.5C3.6 15.1 3 13.6 3 12c0-4.4 4-8 9-8s9 3.6 9 8z" />,
@@ -20,8 +21,6 @@ const P = {
   x: <path d="M6 6l12 12M18 6 6 18" />,
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
   camera: (<><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></>),
-  folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
-  info: (<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
   lock: (<><rect x="4" y="11" width="16" height="10" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>),
 };
 
@@ -35,13 +34,23 @@ export function Icon({ name, size = 20, stroke = 2, className = "" }) {
 }
 
 /* ============ DÙNG CHUNG ============ */
-export const surface = "rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900";
-const divide = "divide-y divide-slate-100 dark:divide-slate-800";
-const rowHover = "transition hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/60";
+export const surface = "rounded-[30px] bg-white";
+export const ring = "shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.1)]";
+export const hairline = "divide-y divide-[#04080d]/10";
+const rowHover = "transition active:bg-[#eef0f2]";
 
-export function IconBox({ name, size = 18 }) {
+export function StatusDot({ st }) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-[14px] text-[#4a4e52]">
+      <span className={`h-2 w-2 rounded-full ${st.dot || "bg-slate-400"}`} />
+      {st.label}
+    </span>
+  );
+}
+
+export function IconBox({ name, size = 20 }) {
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#d5efef] text-[#04080d]">
       <Icon name={name} size={size} />
     </span>
   );
@@ -49,39 +58,37 @@ export function IconBox({ name, size = 18 }) {
 
 export function SectionTitle({ title, hint, action, onAction }) {
   return (
-    <div className="mb-3 flex items-end justify-between gap-3">
+    <div className="mb-4 flex items-end justify-between gap-3 px-1">
       <div>
-        <h2 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h2>
-        {hint && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}
+        <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.5px] text-[#04080d]">{title}</h2>
+        {hint && <p className="mt-1 text-[14px] text-[#6a6b6f]">{hint}</p>}
       </div>
       {action && (
-        <button onClick={onAction} className="shrink-0 text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-300">
-          {action}
-        </button>
+        <button onClick={onAction} className="shrink-0 text-[15px] font-medium text-[#04080d] underline underline-offset-4">{action}</button>
       )}
     </div>
   );
 }
 
-/* ============ HERO + TÌM KIẾM (kiểu Intercom) ============ */
+/* ============ HERO + TÌM KIẾM ============ */
 export function Hero({ query, onQuery }) {
   return (
-    <header className="bg-gradient-to-b from-emerald-600 to-slate-100 pb-5 pt-7 dark:from-emerald-800 dark:to-slate-950">
+    <header className="bg-[#eef0f2] pb-2 pt-9">
       <div className="mx-auto max-w-md px-4 md:max-w-3xl">
-        <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-white">Chúng tôi có thể giúp gì cho bạn?</h1>
-        <div className="relative mt-5">
-          <Icon name="search" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+        <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-1.2px] text-[#04080d]">Chúng tôi có thể giúp gì cho bạn?</h1>
+        <div className={`relative mt-6 rounded-full bg-white ${ring}`}>
+          <Icon name="search" size={19} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#6a6b6f]" />
           <input
             type="text"
             value={query}
             onChange={(e) => onQuery(e.target.value)}
             placeholder="Tìm câu hỏi thường gặp"
-            className="h-[52px] w-full rounded-xl border border-slate-200 bg-white pl-11 pr-11 text-[15px] text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            className="h-14 w-full rounded-full bg-transparent pl-12 pr-12 text-[17px] text-[#04080d] outline-none placeholder:text-[#6a6b6f] focus:ring-2 focus:ring-[#04080d]/80"
           />
           {query && (
             <button onClick={() => onQuery("")} aria-label="Xoá"
-              className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-              <Icon name="x" size={16} />
+              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#6a6b6f] active:bg-[#eef0f2]">
+              <Icon name="x" size={17} />
             </button>
           )}
         </div>
@@ -95,15 +102,14 @@ export function PopularFaqs({ faqs, onPick }) {
   const items = faqs.slice(0, 6);
   if (!items.length) return null;
   return (
-    <section className={`${surface} p-4`}>
-      <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">Câu hỏi phổ biến</h2>
-      <ul className="mt-1 md:grid md:grid-cols-2 md:gap-x-8">
+    <section className={`${surface} px-6 pb-2 pt-6`}>
+      <h2 className="text-[24px] font-semibold leading-tight tracking-[-0.5px] text-[#04080d]">Câu hỏi phổ biến</h2>
+      <ul className={`mt-3 md:grid md:grid-cols-2 md:gap-x-10 ${hairline} md:divide-y-0`}>
         {items.map((f) => (
-          <li key={f.id}>
-            <button onClick={() => onPick(f)}
-              className="flex w-full items-center justify-between gap-3 border-b border-slate-100 py-3 text-left text-[13.5px] leading-5 text-slate-700 transition hover:text-emerald-700 dark:border-slate-800 dark:text-slate-200">
+          <li key={f.id} className="md:border-b md:border-[#04080d]/10">
+            <button onClick={() => onPick(f)} className="flex w-full items-center justify-between gap-4 py-4 text-left text-[17px] leading-6 text-[#04080d]">
               <span className="line-clamp-2">{f.question}</span>
-              <Icon name="chevR" size={15} className="shrink-0 text-emerald-600" />
+              <Icon name="chevR" size={16} className="shrink-0 text-[#6a6b6f]" />
             </button>
           </li>
         ))}
@@ -120,20 +126,16 @@ export function QuickActions({ onChat, onRequest, onHistory }) {
     { icon: "history", title: "Lịch sử yêu cầu", sub: "Theo dõi trạng thái và phản hồi", on: onHistory },
   ];
   return (
-    <section className={`${surface} ${divide} overflow-hidden`}>
+    <section className={`${surface} ${hairline} overflow-hidden`}>
       {items.map((it) => (
-        <button key={it.title} onClick={() => it.on()} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${rowHover}`}>
+        <button key={it.title} onClick={() => it.on()} className={`flex w-full items-center gap-4 px-6 py-4 text-left ${rowHover}`}>
           <IconBox name={it.icon} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-medium text-slate-900 dark:text-white">{it.title}</span>
-            <span className="mt-0.5 block truncate text-xs text-slate-500">{it.sub}</span>
+            <span className="block text-[18px] font-semibold leading-6 tracking-[-0.2px] text-[#04080d]">{it.title}</span>
+            <span className="block truncate text-[14px] text-[#6a6b6f]">{it.sub}</span>
           </span>
-          {it.tag && (
-            <span className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{it.tag}
-            </span>
-          )}
-          <Icon name="chevR" size={16} className="shrink-0 text-slate-300" />
+          {it.tag && <span className="rounded-full bg-[#d5efef] px-2.5 py-1 text-[12px] font-medium text-[#04080d]">{it.tag}</span>}
+          <Icon name="chevR" size={16} className="shrink-0 text-[#6a6b6f]" />
         </button>
       ))}
     </section>
@@ -143,22 +145,22 @@ export function QuickActions({ onChat, onRequest, onHistory }) {
 /* ============ GIAO DỊCH GẦN ĐÂY ============ */
 export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
   const note = (icon, text) => (
-    <div className="flex items-center gap-3 px-4 py-4">
+    <div className="flex items-center gap-4 px-6 py-5">
       <IconBox name={icon} />
-      <p className="text-sm leading-5 text-slate-500">{text}</p>
+      <p className="text-[15px] leading-6 text-[#6a6b6f]">{text}</p>
     </div>
   );
   return (
     <section>
       <SectionTitle title="Giao dịch gần đây" hint="Chọn một đơn để báo vấn đề" action={signedIn ? "Xem tất cả" : null} onAction={onAll} />
-      <div className={`${surface} ${divide} overflow-hidden`}>
+      <div className={`${surface} ${hairline} overflow-hidden`}>
         {loading ? (
           [0, 1].map((i) => (
-            <div key={i} className="flex animate-pulse items-center gap-3 px-4 py-3.5">
-              <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800" />
+            <div key={i} className="flex animate-pulse items-center gap-4 px-6 py-4">
+              <div className="h-11 w-11 rounded-full bg-[#eef0f2]" />
               <div className="flex-1 space-y-2">
-                <div className="h-3.5 w-1/2 rounded bg-slate-100 dark:bg-slate-800" />
-                <div className="h-3 w-3/4 rounded bg-slate-100 dark:bg-slate-800" />
+                <div className="h-4 w-1/2 rounded bg-[#eef0f2]" />
+                <div className="h-3 w-3/4 rounded bg-[#eef0f2]" />
               </div>
             </div>
           ))
@@ -168,18 +170,17 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
           note("box", "Bạn chưa có đơn đổi thưởng nào.")
         ) : (
           orders.slice(0, 3).map((o) => {
-            const st = ORDER_STATUS[o.status] || { label: o.status, cls: "bg-slate-100 text-slate-600" };
+            const st = ORDER_STATUS[o.status] || { label: o.status, dot: "bg-slate-400" };
             return (
-              <button key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })}
-                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${rowHover}`}>
+              <button key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })} className={`flex w-full items-center gap-4 px-6 py-4 text-left ${rowHover}`}>
                 <IconBox name="box" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-medium text-slate-900 dark:text-white">{o.package_name}</span>
-                  <span className="mt-0.5 block truncate text-xs text-slate-500">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
+                  <span className="block truncate text-[17px] font-semibold tracking-[-0.2px] text-[#04080d]">{o.package_name}</span>
+                  <span className="block truncate text-[14px] text-[#6a6b6f]">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
                 </span>
                 <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white">{fmtCoins(o.coins_charged)}</span>
-                  <span className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${st.cls}`}>{st.label}</span>
+                  <span className="text-[16px] font-semibold text-[#04080d]">{fmtCoins(o.coins_charged)}</span>
+                  <StatusDot st={st} />
                 </span>
               </button>
             );
@@ -190,7 +191,7 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
   );
 }
 
-/* ============ THẺ CHỦ ĐỀ (kiểu Intercom) ============ */
+/* ============ THẺ CHỦ ĐỀ ============ */
 export function CategoryCards({ faqs, active, onPick }) {
   const count = (k) => faqs.filter((f) => f.category === k).length;
   return (
@@ -201,13 +202,11 @@ export function CategoryCards({ faqs, active, onPick }) {
           const on = active === c.key;
           return (
             <button key={c.key} onClick={() => onPick(on ? null : c.key)}
-              className={`flex flex-col items-start rounded-xl border p-4 text-left transition active:scale-[0.98] [&:last-child:nth-child(odd)]:col-span-2 md:[&:last-child:nth-child(odd)]:col-span-1 ${
-                on ? "border-emerald-600 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-500/10"
-                   : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"}`}>
-              <span className="text-emerald-700 dark:text-emerald-300"><Icon name={c.icon} size={22} /></span>
-              <span className="mt-3 text-[14px] font-semibold leading-tight text-slate-900 dark:text-white">{c.label}</span>
-              <span className="mt-1 line-clamp-3 text-[12.5px] leading-[18px] text-slate-500">{c.desc}</span>
-              <span className="mt-3 text-[11.5px] text-slate-400">{count(c.key)} câu hỏi</span>
+              className={`flex flex-col items-start rounded-[30px] p-5 text-left transition active:scale-[0.98] [&:last-child:nth-child(odd)]:col-span-2 md:[&:last-child:nth-child(odd)]:col-span-1 ${on ? "bg-[#a1e5e4]" : "bg-white"}`}>
+              <Icon name={c.icon} size={26} className="text-[#04080d]" />
+              <span className="mt-5 text-[18px] font-semibold leading-tight tracking-[-0.3px] text-[#04080d]">{c.label}</span>
+              <span className="mt-1.5 line-clamp-3 text-[14px] leading-5 text-[#4a4e52]">{c.desc}</span>
+              <span className="mt-4 text-[13px] text-[#6a6b6f]">{count(c.key)} câu hỏi</span>
             </button>
           );
         })}
@@ -227,9 +226,7 @@ function Hl({ text, q }) {
     const j = ft.indexOf(fq, i);
     if (j < 0) { parts.push(text.slice(i)); break; }
     parts.push(text.slice(i, j));
-    parts.push(
-      <mark key={j} className="rounded bg-emerald-100 px-0.5 text-inherit dark:bg-emerald-500/30">{text.slice(j, j + fq.length)}</mark>
-    );
+    parts.push(<mark key={j} className="bg-[#d5efef] px-0.5 text-inherit">{text.slice(j, j + fq.length)}</mark>);
     i = j + fq.length;
   }
   return <>{parts}</>;
@@ -237,23 +234,23 @@ function Hl({ text, q }) {
 
 function FaqItem({ faq, open, onToggle, query, onAsk }) {
   const [vote, setVote] = useState(null);
-  const vbtn = "rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 active:bg-slate-100 dark:border-slate-700 dark:text-slate-300";
+  const vbtn = "rounded-full bg-[#eef0f2] px-4 py-2 text-[14px] font-medium text-[#04080d] transition active:bg-[#04080d]/10";
   return (
-    <div className="border-b border-slate-100 last:border-0 dark:border-slate-800">
-      <button onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-3 px-4 py-3.5 text-left">
-        <span className="flex-1 text-[14px] font-medium leading-5 text-slate-900 dark:text-slate-100"><Hl text={faq.question} q={query} /></span>
-        <Icon name="chevD" size={18} className={`mt-0.5 shrink-0 text-slate-400 transition-transform duration-200 ${open ? "rotate-180 text-emerald-700" : ""}`} />
+    <div>
+      <button onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-4 px-6 py-4 text-left">
+        <span className="flex-1 text-[17px] font-medium leading-6 text-[#04080d]"><Hl text={faq.question} q={query} /></span>
+        <Icon name="chevD" size={19} className={`mt-1 shrink-0 text-[#6a6b6f] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
-          <div className="px-4 pb-4">
-            <p className="whitespace-pre-line border-l-2 border-emerald-200 pl-3 text-[14px] leading-6 text-slate-600 dark:border-emerald-500/40 dark:text-slate-300">{faq.answer}</p>
+          <div className="px-6 pb-5">
+            <p className="whitespace-pre-line text-[16px] leading-7 text-[#4a4e52]">{faq.answer}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {vote === "yes" ? (
-                <span className="text-xs font-medium text-emerald-700">Cảm ơn bạn đã phản hồi.</span>
+                <span className="text-[14px] font-medium text-[#04080d]">Cảm ơn bạn đã phản hồi.</span>
               ) : (
                 <>
-                  <span className="text-xs text-slate-500">Câu trả lời này có hữu ích không?</span>
+                  <span className="mr-1 text-[14px] text-[#6a6b6f]">Câu trả lời này có hữu ích không?</span>
                   <button onClick={() => setVote("yes")} className={vbtn}>Có</button>
                   <button onClick={() => setVote("no")} className={vbtn}>Không</button>
                 </>
@@ -261,8 +258,8 @@ function FaqItem({ faq, open, onToggle, query, onAsk }) {
             </div>
             {vote === "no" && (
               <button onClick={() => onAsk({ category: faq.category, about: faq.question })}
-                className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-emerald-700 hover:underline dark:text-emerald-300">
-                Gửi yêu cầu hỗ trợ <Icon name="chevR" size={14} />
+                className="mt-4 text-[15px] font-semibold text-[#04080d] underline underline-offset-4">
+                Gửi yêu cầu hỗ trợ
               </button>
             )}
           </div>
@@ -289,17 +286,17 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
         action={cat && !q ? "Xoá bộ lọc" : null}
         onAction={() => setCat(null)}
       />
-      <div className={`${surface} overflow-hidden`}>
+      <div className={`${surface} ${hairline} overflow-hidden`}>
         {loading ? (
-          <div className="animate-pulse space-y-4 p-4">
-            {[0, 1, 2].map((i) => <div key={i} className="h-4 rounded bg-slate-100 dark:bg-slate-800" />)}
+          <div className="animate-pulse space-y-5 p-6">
+            {[0, 1, 2].map((i) => <div key={i} className="h-4 rounded bg-[#eef0f2]" />)}
           </div>
         ) : shown.length === 0 ? (
-          <div className="px-5 py-8 text-center">
-            <p className="text-[15px] font-medium text-slate-900 dark:text-white">Không tìm thấy câu hỏi phù hợp</p>
-            <p className="mt-1 text-sm text-slate-500">Hãy gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
+          <div className="px-6 py-10 text-center">
+            <p className="text-[18px] font-semibold tracking-[-0.2px] text-[#04080d]">Không tìm thấy câu hỏi phù hợp</p>
+            <p className="mt-1 text-[15px] text-[#6a6b6f]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
             <button onClick={() => onAsk({ category: cat || null, description: q })}
-              className="mt-4 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700 active:bg-emerald-800">
+              className="mt-5 rounded-full bg-[#04080d] px-6 py-3 text-[16px] font-semibold text-white transition active:scale-[0.98]">
               Gửi yêu cầu hỗ trợ
             </button>
           </div>
@@ -309,10 +306,9 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
           ))
         )}
         {!filtering && !loading && faqs.length > 5 && openIdx < 5 && (
-          <button onClick={() => setExpanded(!expanded)}
-            className="flex w-full items-center justify-center gap-1.5 border-t border-slate-100 py-3 text-sm font-medium text-emerald-700 transition hover:bg-slate-50 dark:border-slate-800 dark:text-emerald-300">
+          <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center justify-center gap-1.5 py-4 text-[16px] font-semibold text-[#04080d]">
             {expanded ? "Thu gọn" : `Xem thêm ${faqs.length - 5} câu hỏi`}
-            <Icon name="chevD" size={15} className={expanded ? "rotate-180" : ""} />
+            <Icon name="chevD" size={16} className={expanded ? "rotate-180" : ""} />
           </button>
         )}
       </div>
@@ -320,23 +316,24 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   );
 }
 
-/* ============ VẪN CẦN HỖ TRỢ ============ */
+/* ============ VẪN CẦN HỖ TRỢ (mảng aqua duy nhất của trang) ============ */
 export function ContactCard({ onRequest }) {
   return (
-    <section className="rounded-xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-      <h3 className="text-base font-semibold text-slate-900 dark:text-white">Vẫn cần hỗ trợ?</h3>
-      <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.</p>
-      <div className="mt-4 flex gap-3">
-        <button onClick={() => onRequest()} className="flex-1 rounded-lg bg-emerald-600 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700 active:bg-emerald-800">
+    <section className="rounded-[30px] bg-[#a1e5e4] px-7 pb-7 pt-9">
+      <h3 className="text-[30px] font-semibold leading-[1.1] tracking-[-0.8px] text-[#04080d]">Vẫn cần hỗ trợ?</h3>
+      <p className="mt-3 text-[17px] leading-6 text-[#04080d]/80">Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.</p>
+      <div className="mt-6 flex gap-3">
+        <button onClick={() => onRequest()} className="flex-1 rounded-full bg-[#04080d] py-3.5 text-[16px] font-semibold text-white transition active:scale-[0.98]">
           Gửi yêu cầu
         </button>
         <a href={ZALO_URL} target="_blank" rel="noopener noreferrer"
-          className="flex-1 rounded-lg border border-emerald-200 bg-white py-2.5 text-center text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-500/30 dark:bg-transparent dark:text-emerald-300">
+          className="flex-1 rounded-full bg-white py-3.5 text-center text-[16px] font-semibold text-[#04080d] transition active:scale-[0.98]">
           Nhắn Zalo
         </a>
       </div>
     </section>
   );
-      }
+                    }
+                  
                                  
 
