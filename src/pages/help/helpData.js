@@ -1,12 +1,18 @@
 // src/pages/help/helpData.js
 export const ZALO_URL = "https://zalo.me/0865245988";
+export const ATTACH_BUCKET = "support-attachments";
 
 export const CATEGORIES = [
-  { key: "order", label: "Đơn hàng", icon: "box" },
-  { key: "payment", label: "Thanh toán", icon: "card" },
-  { key: "account", label: "Tài khoản & bảo mật", icon: "shield" },
-  { key: "bug", label: "Báo lỗi", icon: "bug" },
-  { key: "other", label: "Khác", icon: "help" },
+  { key: "order", label: "Đơn hàng", icon: "box", desc: "Theo dõi đơn đổi thưởng, đơn chưa nhận hoặc bị từ chối." },
+  { key: "payment", label: "Thanh toán", icon: "card", desc: "Xu, nạp xu, trừ xu và các vấn đề về giao dịch." },
+  { key: "account", label: "Tài khoản & bảo mật", icon: "shield", desc: "Đăng nhập, liên kết Google, email và bảo vệ tài khoản." },
+  { key: "bug", label: "Báo lỗi", icon: "bug", desc: "Trang bị lỗi, nút không bấm được hoặc hiển thị sai." },
+  { key: "other", label: "Khác", icon: "help", desc: "Những vấn đề chưa thuộc chủ đề nào ở trên." },
+];
+
+export const REQUEST_TYPES = [
+  { key: "support", title: "Cần hỗ trợ", sub: "Chọn chủ đề và mô tả vấn đề, đội ngũ NXX315 sẽ xử lý nhanh nhất có thể." },
+  { key: "idea", title: "Góp ý ý tưởng", sub: "Chia sẻ ý tưởng hoặc đề xuất thay đổi để NXX315 tốt hơn cho bạn." },
 ];
 
 export const ORDER_STATUS = {
