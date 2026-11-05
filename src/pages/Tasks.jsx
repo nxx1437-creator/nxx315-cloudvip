@@ -40,19 +40,22 @@ import {
 import { useI18n } from "../i18n/index.js";
 
 const WARN_KEY = "ext_link_warn_count";
-const WARN_MAX = 3;
+const WARN_MAX = 1; // chỉ nhắc "An toàn của bạn" 1 lần đầu, các lần sau vào thẳng xác minh
+let memWarn = 0; // dự phòng khi trình duyệt chặn/xoá localStorage
 
 const getWarnCount = () => {
   try {
-    return parseInt(localStorage.getItem(WARN_KEY) || "0", 10) || 0;
+    const saved = parseInt(localStorage.getItem(WARN_KEY) || "0", 10) || 0;
+    return Math.max(saved, memWarn);
   } catch {
-    return 0;
+    return memWarn;
   }
 };
 
 const bumpWarnCount = () => {
+  memWarn += 1;
   try {
-    localStorage.setItem(WARN_KEY, String(getWarnCount() + 1));
+    localStorage.setItem(WARN_KEY, String(getWarnCount()));
   } catch {
     /* bỏ qua */
   }
@@ -101,6 +104,7 @@ export default function Tasks() {
   const [userLevel, setUserLevel] = useState(null);
   const [captchaTask, setCaptchaTask] = useState(null);
   const [warnTask, setWarnTask] = useState(null);
+  const [readyLink, setReadyLink] = useState(null); // { url, task } khi trình duyệt chặn tự mở tab
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -308,6 +312,28 @@ export default function Tasks() {
   };
 
   const startTaskApi = async (task) => {
+    // Mở sẵn tab trống NGAY bây giờ (còn trong thao tác bấm của người dùng).
+    // Nếu đợi gọi API xong mới window.open thì trình duyệt coi là cửa sổ bật lên và chặn.
+    let popup = null;
+    try {
+      popup = window.open("", "_blank");
+      if (popup) {
+        popup.document.title = "Đang mở nhiệm vụ...";
+        popup.document.body.style.cssText =
+          "margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#475569";
+        popup.document.body.textContent = "Đang tạo liên kết nhiệm vụ...";
+      }
+    } catch {
+      popup = null;
+    }
+    const closePopup = () => {
+      try {
+        if (popup && !popup.closed) popup.close();
+      } catch {
+        /* bỏ qua */
+      }
+    };
+
     setIsLoading(true);
     setStartingTaskId(task.id);
 
@@ -326,11 +352,13 @@ export default function Tasks() {
         } else {
           showToast(t("tk.t.err", { msg: error.message }), "error");
         }
+        closePopup();
         return;
       }
 
       if (data?.error) {
         showToast(data.error, "error");
+        closePopup();
         return;
       }
 
@@ -340,25 +368,40 @@ export default function Tasks() {
         localStorage.setItem("pending_task_id", task.id);
         localStorage.setItem("pending_task_provider", task.provider || "");
 
-        window.open(data.shortUrl, "_blank");
+        let opened = false;
+        if (popup && !popup.closed) {
+          try {
+            popup.location.href = data.shortUrl;
+            opened = true;
+          } catch {
+            opened = false;
+          }
+        }
 
-        const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
-        showToast(
-          t(bonusPct > 0 ? "tk.t.openedBonus" : "tk.t.opened", {
-            provider: task.provider,
-            reward: finalReward,
-            pct: bonusPct,
-          })
-        );
+        if (opened) {
+          const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
+          showToast(
+            t(bonusPct > 0 ? "tk.t.openedBonus" : "tk.t.opened", {
+              provider: task.provider,
+              reward: finalReward,
+              pct: bonusPct,
+            })
+          );
+        } else {
+          // Trình duyệt vẫn chặn -> hiện nút để người dùng tự bấm mở (bấm tay thì không bao giờ bị chặn)
+          setReadyLink({ url: data.shortUrl, task });
+        }
 
         setTimeout(() => {
           reload();
           setHistoryLoaded(false);
         }, 2000);
       } else {
+        closePopup();
         showToast(t("tk.t.noLink"), "error");
       }
     } catch (err) {
+      closePopup();
       setStartingTaskId(null);
       showToast(t("tk.t.err", { msg: err.message }), "error");
     } finally {
@@ -405,6 +448,42 @@ export default function Tasks() {
             setCaptchaTask(task);
           }}
         />
+      )}
+
+      {readyLink && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 px-4 pb-6 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-sm rounded-[2rem] bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+              <CheckCircle2 size={28} className="text-emerald-500" />
+            </div>
+            <h3 className="mt-4 text-lg font-bold text-slate-900">Nhiệm vụ đã sẵn sàng</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Trình duyệt đã chặn tự mở tab mới. Bấm nút bên dưới để mở nhiệm vụ{" "}
+              {readyLink.task?.provider || ""}.
+            </p>
+            <a
+              href={readyLink.url}
+              target="_blank"
+              rel="opener"
+              onClick={() => {
+                setTimeout(() => {
+                  setReadyLink(null);
+                  reload();
+                  setHistoryLoaded(false);
+                }, 800);
+              }}
+              className="mt-5 block rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-[15px] font-bold text-white"
+            >
+              Mở nhiệm vụ
+            </a>
+            <button
+              onClick={() => setReadyLink(null)}
+              className="mt-2 w-full rounded-full py-3 text-[14px] font-semibold text-slate-500"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
       )}
 
       {captchaTask && (
@@ -524,6 +603,7 @@ export default function Tasks() {
         
         <MonthlyMissions />
 
+        
         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
             <p className="text-sm font-semibold text-rose-700">
@@ -638,4 +718,5 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-}
+        }
+          
