@@ -1,6 +1,6 @@
 // src/pages/Profile.jsx — trang Hồ sơ (đã tách nhỏ, các phần nằm trong src/components/profile/)
 import React, { useEffect, useState } from "react";
-import { Bell, Lock, Palette, ShieldAlert, User } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import useSession from "../hooks/useSession.js";
@@ -16,9 +16,9 @@ import ProfileSkeleton from "../components/ProfileSkeleton.jsx";
 import ProfileHeader from "../components/profile/ProfileHeader.jsx";
 import HelpCenterCard from "../components/profile/HelpCenterCard.jsx";
 import AppSettingsCard from "../components/profile/AppSettingsCard.jsx";
-import SecurityPanel from "../components/profile/SecurityPanel.jsx";
-import { NotifPanel, ThemePanel } from "../components/profile/PreferencePanels.jsx";
-import { TileButton } from "../components/profile/ProfileUI.jsx";
+import QuickActions from "../components/profile/QuickActions.jsx";
+import AvatarModal from "../components/profile/AvatarModal.jsx";
+import AccountSettingsScreen from "../components/profile/AccountSettingsScreen.jsx";
 import EditProfileModal from "../components/profile/EditProfileModal.jsx";
 import ChangePasswordModal from "../components/profile/ChangePasswordModal.jsx";
 import DeleteAccountModal from "../components/profile/DeleteAccountModal.jsx";
@@ -57,7 +57,8 @@ export default function ProfilePage() {
   const { themeMode, accentColor, setThemeMode, setAccentColor } = useTheme();
   const sec = useProfileSecurity(session);
 
-  const [activeSection, setActiveSection] = useState(null);
+  const [screen, setScreen] = useState(null); // null | "security" | "notif" | "theme"
+  const [showAvatar, setShowAvatar] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
@@ -97,8 +98,7 @@ export default function ProfilePage() {
     })();
   }, [uid]);
 
-  const toggleSection = (key) =>
-    setActiveSection((prev) => (prev === key ? null : key));
+  const handleQuick = (key) => (key === "profile" ? setShowEditProfile(true) : setScreen(key));
 
   const updateNotifPref = async (field, value) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
@@ -115,92 +115,17 @@ export default function ProfilePage() {
   // open: "home" | "chat" | "faq" | "idea" | "history" — trang /help có thể đọc location.state.open
   const openHelp = (open) => navigate("/help", { state: { open } });
 
-  return (
-    <div className="min-h-screen bg-[#eef2f9] pb-28 font-[Be_Vietnam_Pro] dark:bg-slate-950">
-      <style>{PAGE_STYLE}</style>
-      <TopHeader />
-
-      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-3xl">
-        {profileHookLoading && !profile?.username ? (
-          <ProfileSkeleton />
-        ) : (
-          <div className="fade-in space-y-4">
-            <ProfileHeader
-              userId={uid}
-              session={session}
-              profile={profile}
-              userLevel={userLevel}
-              onEdit={() => setShowEditProfile(true)}
-              onAvatar={(url) => setProfile((prev) => ({ ...prev, avatar_url: url }))}
-              onOpenLevel={() => navigate("/level")}
-            />
-
-            {profile?.multi_account_flag && !profile?.is_banned && (
-              <button
-                type="button"
-                onClick={() => navigate("/account-review")}
-                className="w-full rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10"
-              >
-                <div className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/20">
-                    <ShieldAlert size={16} />
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                      Tài khoản đang được xem xét
-                    </p>
-                    <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300/80">
-                      Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            )}
-
-            <section className="rounded-2xl bg-white p-4 dark:bg-slate-900">
-              <h2 className="px-1 font-display text-[20px] font-bold text-slate-900 dark:text-white">
-                Quản lý tài khoản
-              </h2>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <TileButton icon={User} label="Hồ sơ cá nhân" onClick={() => setShowEditProfile(true)} />
-                <TileButton icon={Lock} label="Bảo mật" active={activeSection === "security"} onClick={() => toggleSection("security")} />
-                <TileButton icon={Bell} label="Thông báo" active={activeSection === "notif"} onClick={() => toggleSection("notif")} />
-                <TileButton icon={Palette} label="Giao diện" active={activeSection === "theme"} onClick={() => toggleSection("theme")} />
-              </div>
-            </section>
-
-            {activeSection === "security" && (
-              <SecurityPanel
-                profile={profile}
-                session={session}
-                sec={sec}
-                onEditProfile={() => setShowEditProfile(true)}
-                onChangePassword={() => setShowChangePassword(true)}
-              />
-            )}
-            {activeSection === "notif" && (
-              <NotifPanel profile={profile} updateNotifPref={updateNotifPref} />
-            )}
-            {activeSection === "theme" && (
-              <ThemePanel
-                themeMode={themeMode}
-                accentColor={accentColor}
-                setThemeMode={setThemeMode}
-                setAccentColor={setAccentColor}
-              />
-            )}
-
-            <HelpCenterCard userId={uid} onOpen={openHelp} />
-
-            <AppSettingsCard
-              onTerms={() => navigate("/terms")}
-              onPrivacy={() => navigate("/privacy")}
-              onLogout={() => setShowLogout(true)}
-              onDelete={() => setShowDeleteAccount(true)}
-            />
-          </div>
-        )}
-      </main>
+  const dialogs = (
+    <>
+      {showAvatar && (
+        <AvatarModal
+          userId={uid}
+          currentUrl={profile?.avatar_url}
+          initial={(profile.username || "T").charAt(0).toUpperCase()}
+          onUploaded={(url) => setProfile((prev) => ({ ...prev, avatar_url: url }))}
+          onClose={() => setShowAvatar(false)}
+        />
+      )}
 
       {showEditProfile && (
         <EditProfileModal
@@ -257,8 +182,91 @@ export default function ProfilePage() {
       {showLogout && (
         <LogoutModal onCancel={() => setShowLogout(false)} onConfirm={handleLogout} />
       )}
+    </>
+  );
+
+  if (screen) {
+    return (
+      <>
+        <style>{PAGE_STYLE}</style>
+        <AccountSettingsScreen
+          onClose={() => setScreen(null)}
+          initialGroup={screen}
+          profile={profile}
+          session={session}
+          sec={sec}
+          updateNotifPref={updateNotifPref}
+          themeMode={themeMode}
+          accentColor={accentColor}
+          setThemeMode={setThemeMode}
+          setAccentColor={setAccentColor}
+          onEditProfile={() => setShowEditProfile(true)}
+          onChangePassword={() => setShowChangePassword(true)}
+        />
+        {dialogs}
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#eef2f9] pb-28 font-[Be_Vietnam_Pro] dark:bg-slate-950">
+      <style>{PAGE_STYLE}</style>
+      <TopHeader />
+
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-3xl">
+        {profileHookLoading && !profile?.username ? (
+          <ProfileSkeleton />
+        ) : (
+          <div className="fade-in space-y-4">
+            <ProfileHeader
+              session={session}
+              profile={profile}
+              userLevel={userLevel}
+              onEdit={() => setShowEditProfile(true)}
+              onAvatarClick={() => setShowAvatar(true)}
+              onOpenLevel={() => navigate("/level")}
+            />
+
+            {profile?.multi_account_flag && !profile?.is_banned && (
+              <button
+                type="button"
+                onClick={() => navigate("/account-review")}
+                className="w-full rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/20">
+                    <ShieldAlert size={16} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                      Tài khoản đang được xem xét
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300/80">
+                      Nhấn để xem chi tiết hoặc gửi giải trình nếu bạn cho rằng đây là nhầm lẫn.
+                    </p>
+                  </div>
+                </div>
+              </button>
+            )}
+
+            <QuickActions onSelect={handleQuick} />
+
+            <HelpCenterCard userId={uid} onOpen={openHelp} />
+
+            <AppSettingsCard
+              onTerms={() => navigate("/terms")}
+              onPrivacy={() => navigate("/privacy")}
+              onLogout={() => setShowLogout(true)}
+              onDelete={() => setShowDeleteAccount(true)}
+            />
+          </div>
+        )}
+      </main>
+
+      {dialogs}
 
       <BottomNav />
     </div>
   );
-}
+                }
+
