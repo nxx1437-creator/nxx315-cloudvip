@@ -47,9 +47,15 @@ export default function PublicProfile() {
     return () => {
       alive = false;
     };
-  }, [userId, session?.user?.id]);
+  }, [userId, session?.user?.id, navigate]);
 
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/leaderboard"));
+
+  // Lấy chữ cái đầu tiên của tên để làm avatar fallback
+  const getInitial = (name) => {
+    if (!name) return "?";
+    return name.trim().charAt(0).toUpperCase();
+  };
 
   return (
     <div className="min-h-screen bg-[#eef2f9] pb-10 dark:bg-slate-950">
@@ -88,13 +94,20 @@ export default function PublicProfile() {
 
               <div className="px-2 pb-1">
                 <div className="-mt-12 w-fit">
-                  <LbAvatar
-                    src={data.avatar_url}
-                    name={data.name}
-                    size="h-[96px] w-[96px]"
-                    text="text-4xl"
-                    ring="ring-4 ring-white dark:ring-slate-900"
-                  />
+                  {/* Kiểm tra nếu có avatar_url thì hiện ảnh, không thì hiện chữ */}
+                  {data.avatar_url ? (
+                    <LbAvatar
+                      src={data.avatar_url}
+                      name={data.name}
+                      size="h-[96px] w-[96px]"
+                      text="text-4xl"
+                      ring="ring-4 ring-white dark:ring-slate-900"
+                    />
+                  ) : (
+                    <div className="flex h-[96px] w-[96px] items-center justify-center rounded-full bg-[#e2e8f0] text-4xl font-bold text-slate-600 ring-4 ring-white dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-900">
+                      {getInitial(data.name)}
+                    </div>
+                  )}
                 </div>
                 <h2 className="mt-3 truncate text-[22px] font-bold text-slate-900 dark:text-white">{data.name}</h2>
                 <p className="mt-0.5 text-[14px] text-slate-500">
