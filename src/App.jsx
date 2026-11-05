@@ -22,6 +22,7 @@ const WithdrawHistory = lazy(() => import("./pages/WithdrawHistory.jsx"));
 const HistoryPage = lazy(() => import("./pages/History.jsx"));
 const HistoryDetail = lazy(() => import("./pages/HistoryDetail.jsx"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard.jsx"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile.jsx"));
 const MiniGames = lazy(() => import("./pages/MiniGames.jsx"));
 const WheelGame = lazy(() => import("./pages/games/WheelGame.jsx"));
 const ScratchGame = lazy(() => import("./pages/games/ScratchGame.jsx"));
@@ -140,6 +141,7 @@ export default function App() {
             </Route>
 
             <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+            <Route path="/u/:userId" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
             <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
@@ -208,5 +210,6 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-}
+      }
+              
 
