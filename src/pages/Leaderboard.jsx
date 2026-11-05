@@ -1,9 +1,10 @@
 // src/pages/Leaderboard.jsx — bảng xếp hạng trực tiếp (bấm avatar/tên để xem trang cá nhân)
+// - Giao diện theo trang Xếp hạng của web creator: hero chữ gradient, thẻ bo lớn, nhãn mono
 // - Tự cập nhật mỗi 8 giây; ai kiếm thêm Coin sẽ có hiệu ứng xu nhảy lên + số đếm tăng dần
 // - LbAvatar vẫn được export cho PublicProfile.jsx dùng
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Coins, Crown } from "lucide-react";
+import { ChevronRight, Coins, Crown, Flame } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -87,6 +88,33 @@ export function LbAvatar({ src, name, size = "h-12 w-12", text = "text-base", ri
   );
 }
 
+/* ---------- Thẻ trắng bo lớn + vạch xanh dưới đáy (như web creator) ---------- */
+function Card({ className = "", children }) {
+  return (
+    <section
+      className={`relative overflow-hidden rounded-[32px] bg-white shadow-[0_8px_30px_rgba(15,70,90,.06)] dark:bg-slate-900 ${className}`}
+    >
+      {children}
+      <span className="pointer-events-none absolute inset-x-10 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+    </section>
+  );
+}
+
+function Pill({ tone = "gray", children }) {
+  const tones = {
+    green:
+      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-300",
+    gray: "border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-[11.5px] font-bold uppercase tracking-[0.12em] ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
 /* ---------- Số đếm tăng dần ---------- */
 function CountUp({ value }) {
   const target = Number(value || 0);
@@ -145,47 +173,43 @@ function Burst({ delta, className = "" }) {
 /* ---------- Bục top 1-2-3 ---------- */
 const STYLE = {
   1: {
-    avatar: "h-[96px] w-[96px]",
-    text: "text-4xl",
-    frame: "p-[5px] from-amber-300 via-amber-400 to-orange-500 shadow-[0_0_44px_rgba(251,191,36,.6)]",
-    badge: "from-amber-300 to-orange-500",
-    base: "h-24 border-amber-400 from-amber-100 to-white dark:from-amber-400/20 dark:to-transparent",
-    num: "text-amber-300/80",
+    avatar: "h-[84px] w-[84px]",
+    text: "text-3xl",
+    frame: "p-[5px] from-amber-300 via-amber-400 to-orange-500 shadow-[0_0_40px_rgba(251,191,36,.55)]",
+    badge: "h-8 w-8 text-[15px] from-amber-300 to-orange-500",
+    base: "h-20 border-amber-400 from-amber-100 to-white dark:from-amber-400/20 dark:to-transparent",
+    num: "text-[40px] text-amber-300/80",
     label: "text-amber-600",
   },
   2: {
-    avatar: "h-[70px] w-[70px]",
-    text: "text-2xl",
-    frame: "p-1 from-slate-200 via-slate-300 to-slate-400 shadow-[0_0_26px_rgba(148,163,184,.55)]",
-    badge: "from-slate-300 to-slate-500",
-    base: "h-16 border-slate-300 from-slate-100 to-white dark:from-slate-400/15 dark:to-transparent",
-    num: "text-slate-300",
+    avatar: "h-[58px] w-[58px]",
+    text: "text-xl",
+    frame: "p-[3px] from-slate-200 via-slate-300 to-slate-400 shadow-[0_0_22px_rgba(148,163,184,.5)]",
+    badge: "h-6 w-6 text-[12px] from-slate-300 to-slate-500",
+    base: "h-14 border-slate-300 from-slate-100 to-white dark:from-slate-400/15 dark:to-transparent",
+    num: "text-[32px] text-slate-300",
     label: "text-slate-500",
   },
   3: {
-    avatar: "h-[70px] w-[70px]",
-    text: "text-2xl",
-    frame: "p-1 from-orange-300 via-orange-400 to-orange-600 shadow-[0_0_26px_rgba(251,146,60,.55)]",
-    badge: "from-orange-300 to-orange-600",
-    base: "h-12 border-orange-400 from-orange-100 to-white dark:from-orange-400/15 dark:to-transparent",
-    num: "text-orange-300/80",
+    avatar: "h-[58px] w-[58px]",
+    text: "text-xl",
+    frame: "p-[3px] from-orange-300 via-orange-400 to-orange-600 shadow-[0_0_22px_rgba(251,146,60,.5)]",
+    badge: "h-6 w-6 text-[12px] from-orange-300 to-orange-600",
+    base: "h-10 border-orange-400 from-orange-100 to-white dark:from-orange-400/15 dark:to-transparent",
+    num: "text-[28px] text-orange-300/80",
     label: "text-orange-600",
   },
 };
 
 function Spot({ user, rank, burst, onOpen }) {
   const s = STYLE[rank];
-  if (!user) return <div className="flex-1" />;
+  if (!user) return <div />;
   const name = nameOf(user);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center">
+    <div className="flex min-w-0 flex-col items-center">
       <div className="relative flex flex-col items-center">
-        {rank === 1 ? (
-          <Crown size={34} className="mb-1.5 fill-amber-400 text-amber-500 drop-shadow" />
-        ) : (
-          <div className="h-[22px]" />
-        )}
+        {rank === 1 && <Crown size={30} className="mb-1 fill-amber-400 text-amber-500 drop-shadow" />}
         <button
           onClick={() => onOpen(user)}
           aria-label={`Xem trang cá nhân ${name}`}
@@ -201,7 +225,7 @@ function Spot({ user, rank, burst, onOpen }) {
             />
           </span>
           <span
-            className={`absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-b ${s.badge} text-[15px] font-black text-slate-900 shadow ring-2 ring-white dark:ring-slate-900`}
+            className={`absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-gradient-to-b font-black text-slate-900 shadow ring-2 ring-white dark:ring-slate-900 ${s.badge}`}
           >
             {rank}
           </span>
@@ -209,23 +233,20 @@ function Spot({ user, rank, burst, onOpen }) {
         {burst && <Burst key={burst.key} delta={burst.delta} className="left-1/2 top-6 h-0 w-0" />}
       </div>
 
-      <span className={`mt-3 font-mono text-[11px] font-bold uppercase tracking-[0.25em] ${s.label}`}>Top {rank}</span>
-      <button onClick={() => onOpen(user)} className="mt-0.5 w-full min-w-0 px-1 transition active:scale-95">
-        <span className="block truncate text-center text-[15px] font-extrabold text-slate-900 dark:text-white">{name}</span>
+      <span className={`mt-2.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] ${s.label}`}>Top {rank}</span>
+      <button onClick={() => onOpen(user)} className="w-full min-w-0 px-1 transition active:scale-95">
+        <span className="block truncate text-center text-[13.5px] font-extrabold text-slate-900 dark:text-white">{name}</span>
       </button>
 
-      <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-mono text-[13px] font-bold text-amber-600 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300">
-        <Coins size={13} strokeWidth={2.6} />
-        <span className={burst ? "lb-bump" : ""}>
+      <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 font-mono text-[12px] font-bold text-amber-600 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300">
+        <Coins size={12} strokeWidth={2.6} className="shrink-0" />
+        <span className={`truncate ${burst ? "lb-bump" : ""}`}>
           <CountUp value={user.coins} />
         </span>
       </span>
-      <span className="mt-1 text-[11.5px] text-slate-400">Lv.{user.level || 1}</span>
 
-      <div
-        className={`mt-3 flex w-full items-start justify-center rounded-t-[26px] border-t-4 bg-gradient-to-b pt-1 ${s.base}`}
-      >
-        <span className={`text-[44px] font-black leading-none ${s.num}`}>{rank}</span>
+      <div className={`mt-2.5 flex w-full items-start justify-center rounded-t-[22px] border-t-4 bg-gradient-to-b pt-0.5 ${s.base}`}>
+        <span className={`font-black leading-none ${s.num}`}>{rank}</span>
       </div>
     </div>
   );
@@ -233,28 +254,27 @@ function Spot({ user, rank, burst, onOpen }) {
 
 function Podium({ top, bursts, onOpen }) {
   return (
-    <section className="relative overflow-hidden rounded-[28px] bg-white px-3 pt-7 shadow-sm dark:bg-slate-900">
-      {/* Ánh sáng sau top 1 */}
+    <Card className="px-3 pb-0 pt-6">
       <div
-        className="pointer-events-none absolute left-1/2 top-10 h-72 w-72 -translate-x-1/2 rounded-full opacity-70"
-        style={{ background: "radial-gradient(circle, rgba(251,191,36,.35) 0%, rgba(251,191,36,0) 70%)" }}
+        className="pointer-events-none absolute left-1/2 top-12 h-64 w-64 -translate-x-1/2 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(251,191,36,.32) 0%, rgba(251,191,36,0) 70%)" }}
       />
-      <svg className="lb-float pointer-events-none absolute left-[14%] top-24 text-amber-400" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg className="lb-float pointer-events-none absolute left-[10%] top-20 text-amber-400" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 1c.6 5.4 3.6 9.4 11 11-7.4 1.6-10.4 5.6-11 11-.6-5.4-3.6-9.4-11-11 7.4-1.6 10.4-5.6 11-11z" />
       </svg>
-      <svg className="lb-float pointer-events-none absolute right-[12%] top-16 text-amber-300" style={{ animationDelay: "1s" }} width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg className="lb-float pointer-events-none absolute right-[10%] top-14 text-amber-300" style={{ animationDelay: "1s" }} width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 1c.6 5.4 3.6 9.4 11 11-7.4 1.6-10.4 5.6-11 11-.6-5.4-3.6-9.4-11-11 7.4-1.6 10.4-5.6 11-11z" />
       </svg>
 
-      <p className="relative mb-4 text-center font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-slate-400">
+      <p className="relative mb-5 text-center font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-slate-500">
         Bảng vàng
       </p>
-      <div className="relative flex items-end gap-2">
+      <div className="relative grid grid-cols-[1fr_1.25fr_1fr] items-end gap-1.5">
         <Spot user={top[1]} rank={2} burst={top[1] && bursts[top[1].id]} onOpen={onOpen} />
         <Spot user={top[0]} rank={1} burst={top[0] && bursts[top[0].id]} onOpen={onOpen} />
         <Spot user={top[2]} rank={3} burst={top[2] && bursts[top[2].id]} onOpen={onOpen} />
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -264,8 +284,8 @@ function RankRow({ user, rank, mine, burst, onOpen }) {
   return (
     <button
       onClick={() => onOpen(user)}
-      className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[0.99] ${
-        mine ? "bg-accent-500/10 ring-1 ring-accent-500/40" : "bg-white dark:bg-slate-900"
+      className={`relative flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left transition active:scale-[0.99] ${
+        mine ? "bg-emerald-50 dark:bg-emerald-400/10" : ""
       } ${burst ? "lb-flash" : ""}`}
     >
       <span className="w-7 shrink-0 text-center font-mono text-[15px] font-bold text-slate-400">{rank}</span>
@@ -274,20 +294,19 @@ function RankRow({ user, rank, mine, burst, onOpen }) {
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[15px] font-bold text-slate-900 dark:text-white">{name}</span>
           {mine && (
-            <span className="shrink-0 rounded-md bg-accent-500 px-1.5 py-0.5 text-[10px] font-bold text-white">Bạn</span>
+            <span className="shrink-0 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white">Bạn</span>
           )}
         </span>
-        <span className="block text-[12.5px] text-slate-500">Lv.{user.level || 1}</span>
+        <span className="block font-mono text-[11.5px] uppercase tracking-wider text-slate-400">Lv.{user.level || 1}</span>
       </span>
-      <span className="relative shrink-0 text-right">
-        <span className="flex items-center justify-end gap-1 text-amber-500">
+      <span className="relative shrink-0">
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300">
           <Coins size={14} strokeWidth={2.6} />
-          <span className={`text-[15px] font-extrabold ${burst ? "lb-bump" : ""}`}>
+          <span className={`font-mono text-[14px] font-bold ${burst ? "lb-bump" : ""}`}>
             <CountUp value={user.coins} />
           </span>
         </span>
-        <span className="block text-[11px] text-slate-400">Coin kiếm được</span>
-        {burst && <Burst key={burst.key} delta={burst.delta} className="right-6 top-2 h-0 w-0" />}
+        {burst && <Burst key={burst.key} delta={burst.delta} className="left-1/2 top-3 h-0 w-0" />}
       </span>
       <ChevronRight size={16} className="shrink-0 text-slate-300" />
     </button>
@@ -395,104 +414,139 @@ export default function Leaderboard() {
   const rest = users.slice(3);
   const note = TABS.find((t) => t.key === tab)?.note;
 
+  const meta = session?.user?.user_metadata || {};
+  const myName = me ? nameOf(me) : meta.full_name || meta.name || session?.user?.email?.split("@")[0] || "Bạn";
+  const myAvatar = me?.avatar_url || meta.avatar_url || meta.picture;
+  const myBurst = me ? bursts[me.id] : null;
+
   return (
-    <div className="min-h-screen bg-[#eef2f9] pb-28 dark:bg-slate-950">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#effbf7_0%,#e6f5fb_100%)] pb-32 dark:bg-slate-950 dark:bg-none">
       <style>{CSS}</style>
       <TopHeader />
 
       <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-3xl">
-        {/* Tiêu đề + trạng thái trực tiếp */}
-        <div className="px-1">
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-slate-500">
-              Bảng xếp hạng trực tiếp
-            </p>
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-300">
+        {/* Hero */}
+        <Card className="px-6 pb-6 pt-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone="green">
               <span className="lb-live h-2 w-2 rounded-full bg-emerald-500" />
-              TRỰC TIẾP
-            </span>
+              Trực tiếp
+            </Pill>
+            <Pill>
+              <Flame size={14} className="text-orange-500" />
+              {users.length} người kiếm coin
+            </Pill>
           </div>
-          <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.15em] text-slate-400">
-            {users.length} người kiếm Coin
+          <h1 className="mt-4 bg-gradient-to-r from-emerald-500 to-cyan-500 bg-clip-text text-[38px] font-black leading-[1.1] tracking-tight text-transparent">
+            Bảng xếp hạng
+          </h1>
+          <p className="mt-2 text-[15.5px] leading-6 text-slate-500">
+            Xếp hạng theo Coin kiếm được trong {note}. Tự cập nhật liên tục.
           </p>
-        </div>
+          <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`rounded-full border px-4 py-1.5 font-mono text-[12px] font-bold uppercase tracking-[0.1em] transition ${
+                  tab === t.key
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:text-emerald-300"
+                    : "border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </Card>
 
-        <div className="flex gap-2 px-1">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`rounded-full border px-4 py-1.5 font-mono text-[12.5px] font-bold uppercase tracking-[0.12em] transition ${
-                tab === t.key
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:text-emerald-300"
-                  : "border-transparent bg-white text-slate-500 dark:bg-slate-900"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
+        {/* Hạng của bạn */}
         {!loading && myId && users.length > 0 && (
-          <div className="flex items-center gap-3 rounded-2xl bg-accent-500 p-4 text-white">
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-white/80">Hạng của bạn</p>
-              {me ? (
-                <p className="text-[24px] font-black leading-tight">#{myIndex + 1}</p>
-              ) : (
-                <p className="text-[15px] font-semibold leading-5">Chưa vào top 50, làm nhiệm vụ để lên hạng!</p>
-              )}
+          <Card className="px-6 pb-6 pt-6 text-center">
+            <div className="relative mx-auto w-fit">
+              <LbAvatar
+                src={myAvatar}
+                name={myName}
+                size="h-[76px] w-[76px]"
+                text="text-3xl"
+                ring="ring-4 ring-emerald-100 dark:ring-emerald-400/20"
+              />
+              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-700 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-white">
+                Lv.{me?.level || 1}
+              </span>
             </div>
+            <p className="mt-5 font-mono text-[12.5px] font-bold uppercase tracking-[0.18em] text-emerald-600">
+              ▸ Hạng của bạn
+            </p>
+            <p className="mt-1 text-[44px] font-black leading-tight text-slate-800 dark:text-white">
+              {me ? `#${myIndex + 1}` : "—"}
+            </p>
+            <p className="truncate text-[17px] font-bold text-slate-800 dark:text-white">{myName}</p>
+
             {me ? (
-              <div className="relative flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2">
-                <Coins size={16} strokeWidth={2.6} />
-                <span className={`text-[16px] font-extrabold ${bursts[me.id] ? "lb-bump" : ""}`}>
-                  <CountUp value={me.coins} />
-                </span>
-                {bursts[me.id] && <Burst key={bursts[me.id].key} delta={bursts[me.id].delta} className="left-1/2 top-2 h-0 w-0" />}
+              <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <p className="font-mono text-[11.5px] font-bold uppercase tracking-[0.15em] text-slate-500">
+                  Coin kiếm được
+                </p>
+                <p className="relative mt-1 inline-flex items-center gap-2 text-[34px] font-black leading-none text-cyan-500">
+                  <Coins size={26} strokeWidth={2.6} className="text-amber-500" />
+                  <span className={myBurst ? "lb-bump" : ""}>
+                    <CountUp value={me.coins} />
+                  </span>
+                  {myBurst && <Burst key={myBurst.key} delta={myBurst.delta} className="left-1/2 top-3 h-0 w-0" />}
+                </p>
               </div>
             ) : (
-              <button
-                onClick={() => navigate("/tasks")}
-                className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-[14px] font-bold text-accent-600"
-              >
-                Làm nhiệm vụ
-              </button>
+              <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <p className="text-[14.5px] leading-6 text-slate-500">
+                  Chưa vào top 50. Làm nhiệm vụ để kiếm Coin và lên bảng!
+                </p>
+                <button
+                  onClick={() => navigate("/tasks")}
+                  className="mt-3 rounded-full bg-emerald-500 px-6 py-2.5 text-[14px] font-bold text-white"
+                >
+                  Làm nhiệm vụ
+                </button>
+              </div>
             )}
-          </div>
+          </Card>
         )}
 
         {loading ? (
-          <div className="space-y-3">
-            <div className="h-80 animate-pulse rounded-[28px] bg-white dark:bg-slate-900" />
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[68px] animate-pulse rounded-2xl bg-white dark:bg-slate-900" />
-            ))}
+          <div className="space-y-4">
+            <div className="h-80 animate-pulse rounded-[32px] bg-white dark:bg-slate-900" />
+            <div className="h-64 animate-pulse rounded-[32px] bg-white dark:bg-slate-900" />
           </div>
         ) : users.length === 0 ? (
-          <div className="rounded-2xl bg-white p-8 text-center text-[15px] text-slate-500 dark:bg-slate-900">
-            Chưa có ai trên bảng xếp hạng lúc này.
-          </div>
+          <Card className="p-8 text-center text-[15px] text-slate-500">Chưa có ai trên bảng xếp hạng lúc này.</Card>
         ) : (
           <>
             <Podium top={users} bursts={bursts} onOpen={openUser} />
+
             {rest.length > 0 && (
-              <div className="space-y-2.5">
-                {rest.map((u, i) => (
-                  <RankRow
-                    key={u.id || i}
-                    user={u}
-                    rank={i + 4}
-                    mine={u.id === myId}
-                    burst={bursts[u.id]}
-                    onOpen={openUser}
-                  />
-                ))}
-              </div>
+              <Card className="px-4 pb-5 pt-5">
+                <div className="px-2">
+                  <p className="font-mono text-[12.5px] font-bold uppercase tracking-[0.16em] text-slate-700 dark:text-slate-200">
+                    Bảng xếp hạng trực tiếp
+                  </p>
+                  <p className="mt-1 font-mono text-[11.5px] uppercase tracking-[0.12em] text-slate-400">
+                    Từ hạng 4 · {note}
+                  </p>
+                </div>
+                <div className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
+                  {rest.map((u, i) => (
+                    <RankRow
+                      key={u.id || i}
+                      user={u}
+                      rank={i + 4}
+                      mine={u.id === myId}
+                      burst={bursts[u.id]}
+                      onOpen={openUser}
+                    />
+                  ))}
+                </div>
+              </Card>
             )}
-            <p className="px-2 text-center text-[12.5px] text-slate-400">
-              Xếp hạng theo Coin kiếm được trong {note}. Tự cập nhật liên tục, bấm vào avatar hoặc tên để xem trang cá nhân.
-            </p>
           </>
         )}
       </main>
@@ -500,4 +554,4 @@ export default function Leaderboard() {
       <BottomNav />
     </div>
   );
-            }
+}
