@@ -19,6 +19,7 @@ import AppSettingsCard from "../components/profile/AppSettingsCard.jsx";
 import QuickActions from "../components/profile/QuickActions.jsx";
 import AvatarModal from "../components/profile/AvatarModal.jsx";
 import AccountSettingsScreen from "../components/profile/AccountSettingsScreen.jsx";
+import ProfileDetailScreen from "../components/profile/ProfileDetailScreen.jsx";
 import EditProfileModal from "../components/profile/EditProfileModal.jsx";
 import ChangePasswordModal from "../components/profile/ChangePasswordModal.jsx";
 import DeleteAccountModal from "../components/profile/DeleteAccountModal.jsx";
@@ -57,7 +58,7 @@ export default function ProfilePage() {
   const { themeMode, accentColor, setThemeMode, setAccentColor } = useTheme();
   const sec = useProfileSecurity(session);
 
-  const [screen, setScreen] = useState(null); // null | "security" | "notif" | "theme"
+  const [screen, setScreen] = useState(null); // null | "profile" | "security" | "notif" | "theme"
   const [showAvatar, setShowAvatar] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -98,7 +99,7 @@ export default function ProfilePage() {
     })();
   }, [uid]);
 
-  const handleQuick = (key) => (key === "profile" ? setShowEditProfile(true) : setScreen(key));
+  const handleQuick = (key) => setScreen(key);
 
   const updateNotifPref = async (field, value) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
@@ -112,8 +113,11 @@ export default function ProfilePage() {
     navigate("/");
   };
 
-  // open: "home" | "chat" | "faq" | "idea" | "history" — trang /help có thể đọc location.state.open
-  const openHelp = (open) => navigate("/help", { state: { open } });
+  // chat AI nằm ở /support; câu hỏi thường gặp, gửi yêu cầu, lịch sử nằm ở /help
+  const openHelp = (open) => {
+    if (open === "chat") return navigate("/support");
+    navigate("/help", { state: { open } });
+  };
 
   const dialogs = (
     <>
@@ -185,6 +189,26 @@ export default function ProfilePage() {
     </>
   );
 
+  if (screen === "profile") {
+    return (
+      <>
+        <style>{PAGE_STYLE}</style>
+        <ProfileDetailScreen
+          onClose={() => setScreen(null)}
+          session={session}
+          profile={profile}
+          userLevel={userLevel}
+          onAvatarClick={() => setShowAvatar(true)}
+          onEdit={() => setShowEditProfile(true)}
+          onOpenSettings={() => setScreen("security")}
+          onPrivacy={() => navigate("/privacy")}
+          onOpenLevel={() => navigate("/level")}
+        />
+        {dialogs}
+      </>
+    );
+  }
+
   if (screen) {
     return (
       <>
@@ -222,7 +246,7 @@ export default function ProfilePage() {
               session={session}
               profile={profile}
               userLevel={userLevel}
-              onEdit={() => setShowEditProfile(true)}
+              onEdit={() => setScreen("profile")}
               onAvatarClick={() => setShowAvatar(true)}
               onOpenLevel={() => navigate("/level")}
             />
@@ -268,5 +292,6 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-                }
+}
+
 
