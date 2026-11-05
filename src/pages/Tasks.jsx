@@ -603,8 +603,7 @@ export default function Tasks() {
         
         <MonthlyMissions />
 
-        
-        {isBlocked && (
+         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
             <p className="text-sm font-semibold text-rose-700">
               {t("tk.lockedTitle")}
@@ -691,15 +690,29 @@ export default function Tasks() {
              {!loading && filteredTasks.length > 0 && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    boosted={getBoostedReward(task.reward_coins)}
-                    isThisStarting={startingTaskId === task.id}
-                    isBlocked={isBlocked}
-                    busy={isLoading || checkingIp}
-                    onStart={handleStart}
-                  />
+                  <div key={task.id}>
+                    <TaskCard
+                      task={task}
+                      boosted={getBoostedReward(task.reward_coins)}
+                      isThisStarting={startingTaskId === task.id}
+                      isBlocked={isBlocked}
+                      busy={isLoading || checkingIp}
+                      onStart={handleStart}
+                    />
+                    {String(task.provider || "").toUpperCase() === "LAYMA" && (
+                      <p className="mt-2 px-2 text-center text-[12px] text-slate-400">
+                        Link rút gọn Layma:{" "}
+                        <a
+                          href="https://layma.net/9jaKc8473"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-emerald-600 underline"
+                        >
+                          layma.net/9jaKc8473
+                        </a>
+                      </p>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -718,5 +731,6 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-        }
-          
+}
+
+
