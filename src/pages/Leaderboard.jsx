@@ -1,159 +1,135 @@
+// src/pages/Leaderboard.jsx — bảng xếp hạng (gộp 1 file; bấm avatar/tên để xem trang cá nhân)
 import React, { useEffect, useState } from "react";
-import { Crown, Medal, Coins } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronRight, Coins, Crown } from "lucide-react";
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 
 const TABS = [
-  { key: "week", label: "Tuần này" },
-  { key: "month", label: "Tháng này" },
+  { key: "week", label: "Tuần này", note: "7 ngày gần nhất" },
+  { key: "month", label: "Tháng này", note: "30 ngày gần nhất" },
 ];
+const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
-const formatCoins = (n) => Number(n || 0).toLocaleString("vi-VN");
-
-/* ---------- Avatar có fallback chữ cái ---------- */
-function Avatar({ src, name, size = "h-12 w-12", text = "text-sm", ring = true }) {
-  const initial = (name || "U").charAt(0).toUpperCase();
+/* ---------- Avatar có chữ cái dự phòng ---------- */
+export function LbAvatar({ src, name, size = "h-12 w-12", text = "text-base", ring = "" }) {
   const [failed, setFailed] = useState(false);
-
-  const ringClass = ring
-    ? "border-2 border-white shadow-[0_4px_14px_rgba(0,0,0,0.12)]"
-    : "";
+  const initial = (name || "U").charAt(0).toUpperCase();
 
   if (src && !failed) {
     return (
       <img
         src={src}
-        alt={name}
+        alt=""
         onError={() => setFailed(true)}
-        className={`${size} ${ringClass} shrink-0 rounded-full object-cover`}
+        className={`${size} ${ring} shrink-0 rounded-full object-cover`}
       />
     );
   }
-
   return (
     <div
-      className={`${size} ${text} ${ringClass} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500`}
+      className={`${size} ${text} ${ring} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-slate-800`}
     >
       {initial}
     </div>
   );
 }
 
-/* ---------- Icon cúp cho podium ---------- */
-function TrophyIcon({ rank, size = 26 }) {
-  if (rank === 1)
-    return <Crown className="text-amber-400 fill-amber-400" size={size} strokeWidth={2.4} />;
-  if (rank === 2)
-    return <Medal className="text-slate-400" size={size} strokeWidth={2.2} />;
-  if (rank === 3)
-    return <Medal className="text-orange-400" size={size} strokeWidth={2.2} />;
-  return null;
-}
-
-/* ---------- Icon hạng cho list 4+ ---------- */
-function RankIcon({ rank }) {
-  if (rank === 1)
-    return <Crown className="text-amber-400" size={22} strokeWidth={2.4} />;
-  if (rank === 2)
-    return <Medal className="text-slate-400" size={22} strokeWidth={2.2} />;
-  if (rank === 3)
-    return <Medal className="text-orange-400" size={22} strokeWidth={2.2} />;
-  return (
-    <span className="w-[22px] text-center text-sm font-bold text-slate-400">
-      {rank}
-    </span>
-  );
-}
-
-/* ---------- Podium styles ---------- */
-const PODIUM_STYLES = {
-  1: {
-    card: "bg-gradient-to-b from-amber-100/80 to-amber-50/30 border-amber-200/50",
-    padding: "pt-8 pb-6 -mt-6 z-10",
-    name: "text-slate-800",
-    avatarSize: "h-20 w-20",
-    avatarText: "text-2xl",
-  },
-  2: {
-    card: "bg-gradient-to-b from-slate-200/60 to-white/40 border-slate-200/50",
-    padding: "pt-6 pb-4 mt-4",
-    name: "text-slate-700",
-    avatarSize: "h-16 w-16",
-    avatarText: "text-xl",
-  },
-  3: {
-    card: "bg-gradient-to-b from-orange-100/60 to-white/40 border-orange-200/50",
-    padding: "pt-6 pb-4 mt-4",
-    name: "text-slate-700",
-    avatarSize: "h-16 w-16",
-    avatarText: "text-xl",
-  },
+/* ---------- Bục top 1-2-3 ---------- */
+const STYLE = {
+  1: { avatar: "h-[84px] w-[84px]", text: "text-3xl", ring: "ring-4 ring-amber-300", base: "h-20 from-amber-300 to-amber-100", num: "text-amber-700" },
+  2: { avatar: "h-[68px] w-[68px]", text: "text-2xl", ring: "ring-4 ring-slate-300", base: "h-14 from-slate-300 to-slate-100", num: "text-slate-600" },
+  3: { avatar: "h-[68px] w-[68px]", text: "text-2xl", ring: "ring-4 ring-orange-300", base: "h-10 from-orange-300 to-orange-100", num: "text-orange-700" },
 };
 
-function PodiumCard({ user, rank }) {
+function Spot({ user, rank, onOpen }) {
+  const s = STYLE[rank];
   if (!user) return <div className="flex-1" />;
-  const s = PODIUM_STYLES[rank];
-  const isFirst = rank === 1;
+  const name = user.display_name || user.username || "Người dùng";
 
   return (
-    <div className={`relative flex flex-1 flex-col items-center rounded-[1.5rem] border ${s.card} ${s.padding} px-2 transition shadow-sm backdrop-blur-sm`}>
-      
-      {/* Vương miện cho Top 1 */}
-      {isFirst && (
-        <div className="absolute -top-7 left-1/2 -translate-x-1/2">
-          <Crown size={38} className="text-amber-400 fill-amber-400 drop-shadow-md" />
-        </div>
-      )}
-
-      <div className="mb-2">
-        <TrophyIcon rank={rank} size={isFirst ? 28 : 24} />
-      </div>
-
-      <Avatar
-        src={user.avatar_url}
-        name={user.display_name || user.username}
-        size={s.avatarSize}
-        text={s.avatarText}
-        ring={true}
-      />
-
-      <p className={`mt-3 w-full truncate text-center text-[13px] font-bold ${s.name}`}>
-        {user.display_name || user.username}
-      </p>
-
-      <div className={`mt-2 flex flex-col items-center rounded-xl px-3 py-1.5 w-full ${isFirst ? 'bg-amber-100/60' : 'bg-slate-50/80'}`}>
-        <div className="flex items-center gap-1 text-amber-500">
-          <Coins size={isFirst ? 15 : 13} strokeWidth={2.6} />
-          <span className={`${isFirst ? "text-[15px]" : "text-[13px]"} font-black`}>
-            {formatCoins(user.coins)}
-          </span>
-        </div>
-        <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
-          Lv.{user.level || 1}
-        </p>
+    <div className="flex min-w-0 flex-1 flex-col items-center">
+      {rank === 1 && <Crown size={30} className="mb-1 fill-amber-400 text-amber-400" />}
+      <button onClick={() => onOpen(user)} className="flex w-full min-w-0 flex-col items-center transition active:scale-95">
+        <LbAvatar src={user.avatar_url} name={name} size={s.avatar} text={s.text} ring={s.ring} />
+        <span className="mt-2 w-full truncate px-1 text-center text-[13px] font-bold text-slate-900 dark:text-white">
+          {name}
+        </span>
+      </button>
+      <span className="mt-1 flex items-center gap-1 text-[13px] font-extrabold text-amber-500">
+        <Coins size={13} strokeWidth={2.6} />
+        {fmt(user.coins)}
+      </span>
+      <div className={`mt-3 flex w-full items-start justify-center rounded-t-2xl bg-gradient-to-b pt-2 ${s.base}`}>
+        <span className={`text-2xl font-black ${s.num}`}>{rank}</span>
       </div>
     </div>
   );
 }
 
+function Podium({ top, onOpen }) {
+  return (
+    <section className="overflow-hidden rounded-2xl bg-white px-3 pt-6 dark:bg-slate-900">
+      <div className="flex items-end gap-2">
+        <Spot user={top[1]} rank={2} onOpen={onOpen} />
+        <Spot user={top[0]} rank={1} onOpen={onOpen} />
+        <Spot user={top[2]} rank={3} onOpen={onOpen} />
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Dòng xếp hạng từ hạng 4 ---------- */
+function RankRow({ user, rank, mine, onOpen }) {
+  const name = user.display_name || user.username || "Người dùng";
+  return (
+    <button
+      onClick={() => onOpen(user)}
+      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[0.99] ${
+        mine ? "bg-accent-500/10 ring-1 ring-accent-500/40" : "bg-white dark:bg-slate-900"
+      }`}
+    >
+      <span className="w-7 shrink-0 text-center text-[15px] font-bold text-slate-400">{rank}</span>
+      <LbAvatar src={user.avatar_url} name={name} size="h-11 w-11" />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-[15px] font-bold text-slate-900 dark:text-white">{name}</span>
+          {mine && (
+            <span className="shrink-0 rounded-md bg-accent-500 px-1.5 py-0.5 text-[10px] font-bold text-white">Bạn</span>
+          )}
+        </span>
+        <span className="block text-[12.5px] text-slate-500">Lv.{user.level || 1}</span>
+      </span>
+      <span className="shrink-0 text-right">
+        <span className="flex items-center justify-end gap-1 text-amber-500">
+          <Coins size={14} strokeWidth={2.6} />
+          <span className="text-[15px] font-extrabold">{fmt(user.coins)}</span>
+        </span>
+        <span className="block text-[11px] text-slate-400">Coin kiếm được</span>
+      </span>
+      <ChevronRight size={16} className="shrink-0 text-slate-300" />
+    </button>
+  );
+}
+
 export default function Leaderboard() {
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const myId = session?.user?.id;
+
   const [tab, setTab] = useState("week");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     let alive = true;
-
-    const load = async () => {
+    (async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.rpc("get_leaderboard", {
-          period: tab,
-          limit_count: 50,
-        });
-
+        const { data, error } = await supabase.rpc("get_leaderboard", { period: tab, limit_count: 50 });
         if (error) throw error;
         if (alive) setUsers(data || []);
       } catch (err) {
@@ -162,121 +138,104 @@ export default function Leaderboard() {
       } finally {
         if (alive) setLoading(false);
       }
-    };
-
-    load();
+    })();
     return () => {
       alive = false;
     };
   }, [tab]);
 
-  const top1 = users[0];
-  const top2 = users[1];
-  const top3 = users[2];
+  // Bấm vào chính mình -> trang cá nhân của mình; người khác -> /u/:id
+  const openUser = (u) => {
+    if (!u?.id) return;
+    if (u.id === myId) navigate("/profile", { state: { screen: "profile" } });
+    else navigate(`/u/${u.id}`);
+  };
+
+  const myIndex = myId ? users.findIndex((u) => u.id === myId) : -1;
+  const me = myIndex >= 0 ? users[myIndex] : null;
   const rest = users.slice(3);
+  const note = TABS.find((t) => t.key === tab)?.note;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50/60 via-white to-white pb-24">
+    <div className="min-h-screen bg-[#eef2f9] pb-28 dark:bg-slate-950">
       <TopHeader />
 
-      {/* Title block */}
-      <div className="mt-4 flex items-center gap-3 px-4">
-        <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 text-white shadow-[0_6px_16px_rgba(56,130,246,0.35)]">
-          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
-            <path d="M6 4h12v3a6 6 0 0 1-12 0V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-            <path d="M6 6H4a2 2 0 0 0 0 4h2M18 6h2a2 2 0 0 1 0 4h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <path d="M9 14h6M12 14v4M9 20h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+      <main className="mx-auto max-w-md space-y-4 px-4 py-5 md:max-w-3xl">
+        <div className="px-1">
+          <h1 className="text-[26px] font-black leading-tight text-slate-900 dark:text-white">Bảng xếp hạng</h1>
+          <p className="mt-0.5 text-[14px] text-slate-500">Top người kiếm Coin nhiều nhất</p>
         </div>
-        <div className="min-w-0">
-          <h1 className="text-[22px] font-black leading-tight text-slate-900">Bảng Xếp Hạng</h1>
-          <p className="text-[13px] text-slate-500">Top user kiếm Coin nhiều nhất</p>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="mt-4 flex gap-3 px-4">
-        {TABS.map((t) => {
-          const active = tab === t.key;
-          return (
+        <div className="grid grid-cols-2 rounded-2xl bg-white p-1 dark:bg-slate-900">
+          {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`rounded-full px-5 py-2.5 text-sm font-bold transition ${
-                active
-                  ? "bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-[0_4px_14px_rgba(56,130,246,0.35)]"
-                  : "bg-white text-slate-500 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+              className={`rounded-xl py-2.5 text-[14px] font-bold transition ${
+                tab === t.key ? "bg-accent-500 text-white" : "text-slate-500"
               }`}
             >
               {t.label}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
 
-      {/* Podium (TOP 1, 2, 3) */}
-      <div className="mt-8 px-4">
+        {!loading && myId && users.length > 0 && (
+          <div className="flex items-center gap-3 rounded-2xl bg-accent-500 p-4 text-white">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-medium text-white/80">Hạng của bạn</p>
+              {me ? (
+                <p className="text-[24px] font-black leading-tight">#{myIndex + 1}</p>
+              ) : (
+                <p className="text-[15px] font-semibold leading-5">Chưa vào top 50, làm nhiệm vụ để lên hạng!</p>
+              )}
+            </div>
+            {me ? (
+              <div className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2">
+                <Coins size={16} strokeWidth={2.6} />
+                <span className="text-[16px] font-extrabold">{fmt(me.coins)}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate("/tasks")}
+                className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-[14px] font-bold text-accent-600"
+              >
+                Làm nhiệm vụ
+              </button>
+            )}
+          </div>
+        )}
+
         {loading ? (
-          <div className="flex items-end gap-3">
-            <div className="h-[150px] flex-1 animate-pulse rounded-2xl bg-slate-100 mt-4" />
-            <div className="h-[180px] flex-1 animate-pulse rounded-2xl bg-slate-100" />
-            <div className="h-[150px] flex-1 animate-pulse rounded-2xl bg-slate-100 mt-4" />
+          <div className="space-y-3">
+            <div className="h-56 animate-pulse rounded-2xl bg-white dark:bg-slate-900" />
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-[68px] animate-pulse rounded-2xl bg-white dark:bg-slate-900" />
+            ))}
           </div>
         ) : users.length === 0 ? (
-          <div className="rounded-2xl bg-white p-6 text-center text-sm text-slate-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
+          <div className="rounded-2xl bg-white p-8 text-center text-[15px] text-slate-500 dark:bg-slate-900">
             Chưa có dữ liệu xếp hạng
           </div>
         ) : (
-          <div className="flex items-end justify-center gap-2 sm:gap-3 px-2">
-            <PodiumCard user={top2} rank={2} />
-            <PodiumCard user={top1} rank={1} />
-            <PodiumCard user={top3} rank={3} />
-          </div>
+          <>
+            <Podium top={users} onOpen={openUser} />
+            {rest.length > 0 && (
+              <div className="space-y-2.5">
+                {rest.map((u, i) => (
+                  <RankRow key={u.id || i} user={u} rank={i + 4} mine={u.id === myId} onOpen={openUser} />
+                ))}
+              </div>
+            )}
+            <p className="px-2 text-center text-[12.5px] text-slate-400">
+              Xếp hạng theo Coin kiếm được trong {note}. Bấm vào avatar hoặc tên để xem trang cá nhân.
+            </p>
+          </>
         )}
-      </div>
-
-      {/* List 4+ */}
-      <div className="mt-6 space-y-3 px-4">
-        {loading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]" />
-            ))
-          : rest.map((u, idx) => {
-              const rank = idx + 4;
-              return (
-                <div key={u.id || idx} className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-                  <div className="flex w-7 shrink-0 justify-center">
-                    <RankIcon rank={rank} />
-                  </div>
-
-                  <Avatar
-                    src={u.avatar_url}
-                    name={u.display_name || u.username}
-                    size="h-12 w-12"
-                    text="text-base"
-                    ring={false}
-                  />
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-bold text-slate-800">
-                      {u.display_name || u.username}
-                    </p>
-                    <p className="text-[13px] text-slate-400">Lv.{u.level || 1}</p>
-                  </div>
-
-                  <div className="shrink-0 text-right">
-                    <div className="flex items-center justify-end gap-1 text-amber-500">
-                      <Coins size={15} strokeWidth={2.6} />
-                      <span className="text-[16px] font-black">{formatCoins(u.coins)}</span>
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-slate-400">Coin kiếm được</p>
-                  </div>
-                </div>
-              );
-            })}
-      </div>
+      </main>
 
       <BottomNav />
     </div>
   );
     }
+                          
