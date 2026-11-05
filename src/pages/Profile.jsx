@@ -59,7 +59,8 @@ export default function ProfilePage() {
   const openScreen = (key) => navigate("/profile", { state: { screen: key } });
   const closeScreen = () => navigate(-1);
   const { session } = useSession();
-  const { profile, loading: profileHookLoading, setProfile } = useProfile();
+  const { profile: rawProfile, loading: profileHookLoading, setProfile } = useProfile();
+  const profile = rawProfile || {}; // tránh crash trắng trang khi profile chưa có
   const { themeMode, accentColor, setThemeMode, setAccentColor } = useTheme();
   const sec = useProfileSecurity(session);
 
@@ -300,5 +301,6 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-          }
+    }
+              
           
