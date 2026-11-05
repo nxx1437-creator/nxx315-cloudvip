@@ -228,17 +228,20 @@ export default {
   "tk.m.creating": "Creating task link...",
   "tk.m.creatingSub":
     "Please wait a moment, a new tab will open automatically when ready.",
-  "tk.ip.title": "Can't do tasks",
-  "tk.ip.help": "Contact support to lift this",
-  "tk.ip.helpSub":
-    "If you think this is a mistake, contact us on Zalo and an admin will review it within 24h.",
-  "tk.ip.chat": "Chat Zalo 0865245988",
-  "tk.ip.attach": "📸 Please send:",
-  "tk.ip.a1": "A screenshot of this warning",
-  "tk.ip.a2": "Your account name",
-  "tk.ip.a3": "An explanation of what happened",
-  "tk.ip.tip":
-    "💡 Tip: If you share WiFi with others, turn off WiFi and use 4G to do tasks.",
+  "tk.ip.title": "Oops, let's take a little break ",
+"tk.ip.intro":
+  "Our system noticed something unusual with your connection, so tasks are paused for now to keep your account safe. Don't worry, it's usually just a mix-up and we'll sort it out quickly!",
+"tk.ip.reasonLabel": "Message from the system",
+"tk.ip.help": "Let us help you ❤️",
+"tk.ip.helpSub":
+  "If you think this is a mistake, message us on Zalo and an admin will take a look within 24h.",
+"tk.ip.chat": "Chat with us on Zalo 0865245988",
+"tk.ip.attach": "📸 To help us fix it faster, please send:",
+"tk.ip.a1": "A screenshot of this page",
+"tk.ip.a2": "Your account name",
+"tk.ip.a3": "A quick note on what happened",
+"tk.ip.tip":
+  "💡 Little tip: if you share WiFi with others, turn WiFi off and use 4G, then try again ✨",
   // Landing
   "ld.nav.how": "How it works",
   "ld.nav.features": "Features",
