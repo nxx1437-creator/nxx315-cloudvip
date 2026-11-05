@@ -40,6 +40,9 @@ import {
 import { useI18n } from "../i18n/index.js";
 
 const WARN_KEY = "ext_link_warn_count";
+// Nhà cung cấp luôn nằm cuối danh sách (bỏ khỏi mảng này để xếp lại theo thưởng)
+const PIN_LAST = ["LAYMA"];
+
 const WARN_MAX = 1; // chỉ nhắc "An toàn của bạn" 1 lần đầu, các lần sau vào thẳng xác minh
 let memWarn = 0; // dự phòng khi trình duyệt chặn/xoá localStorage
 
@@ -218,8 +221,11 @@ export default function Tasks() {
     if (onlyAvail) list = list.filter((x) => x.remainingToday > 0);
     const kw = query.trim().toLowerCase();
     if (kw) list = list.filter((x) => x.provider.toLowerCase().includes(kw));
-    // Còn lượt lên trước, thưởng cao lên trước
+    // Nhà cung cấp được ghim xuống cuối, rồi còn lượt lên trước, thưởng cao lên trước
     list.sort((a, b) => {
+      const al = PIN_LAST.includes(String(a.provider || "").toUpperCase());
+      const bl = PIN_LAST.includes(String(b.provider || "").toUpperCase());
+      if (al !== bl) return al ? 1 : -1;
       const ad = a.remainingToday <= 0;
       const bd = b.remainingToday <= 0;
       if (ad !== bd) return ad ? 1 : -1;
@@ -603,7 +609,7 @@ export default function Tasks() {
         
         <MonthlyMissions />
 
-         {isBlocked && (
+        {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
             <p className="text-sm font-semibold text-rose-700">
               {t("tk.lockedTitle")}
@@ -690,32 +696,31 @@ export default function Tasks() {
              {!loading && filteredTasks.length > 0 && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredTasks.map((task) => (
-                  <div key={task.id}>
-                    <TaskCard
-                      task={task}
-                      boosted={getBoostedReward(task.reward_coins)}
-                      isThisStarting={startingTaskId === task.id}
-                      isBlocked={isBlocked}
-                      busy={isLoading || checkingIp}
-                      onStart={handleStart}
-                    />
-                    {String(task.provider || "").toUpperCase() === "LAYMA" && (
-                      <p className="mt-2 px-2 text-center text-[12px] text-slate-400">
-                        Link rút gọn Layma:{" "}
-                        <a
-                          href="https://layma.net/9jaKc8473"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-emerald-600 underline"
-                        >
-                          layma.net/9jaKc8473
-                        </a>
-                      </p>
-                    )}
-                  </div>
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    boosted={getBoostedReward(task.reward_coins)}
+                    isThisStarting={startingTaskId === task.id}
+                    isBlocked={isBlocked}
+                    busy={isLoading || checkingIp}
+                    onStart={handleStart}
+                  />
                 ))}
               </div>
             )}
+
+            {/* Link rút gọn Layma (phục vụ xác minh nguồn) — xóa khối này khi Layma đã duyệt xong */}
+            <p className="px-2 pt-2 text-center text-[12px] text-slate-400">
+              Link rút gọn Layma:{" "}
+              <a
+                href="https://layma.net/9jaKc8473"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-emerald-600 underline"
+              >
+                layma.net/9jaKc8473
+              </a>
+            </p>
           </>
         )}
 
@@ -731,6 +736,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-}
-
-
+            }
