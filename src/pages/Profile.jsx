@@ -1,7 +1,7 @@
 // src/pages/Profile.jsx — trang Hồ sơ (đã tách nhỏ, các phần nằm trong src/components/profile/)
 import React, { useEffect, useState } from "react";
 import { ShieldAlert } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import useSession from "../hooks/useSession.js";
 import useProfile from "../hooks/useProfile.js";
@@ -53,12 +53,16 @@ const PAGE_STYLE = `
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Màn con (trang cá nhân / cài đặt) lưu trong history state -> nút Back của điện thoại quay lại đúng trang
+  const screen = location.state?.screen || null; // null | "profile" | "security" | "notif" | "theme"
+  const openScreen = (key) => navigate("/profile", { state: { screen: key } });
+  const closeScreen = () => navigate(-1);
   const { session } = useSession();
   const { profile, loading: profileHookLoading, setProfile } = useProfile();
   const { themeMode, accentColor, setThemeMode, setAccentColor } = useTheme();
   const sec = useProfileSecurity(session);
 
-  const [screen, setScreen] = useState(null); // null | "profile" | "security" | "notif" | "theme"
   const [showAvatar, setShowAvatar] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -99,7 +103,11 @@ export default function ProfilePage() {
     })();
   }, [uid]);
 
-  const handleQuick = (key) => setScreen(key);
+  useEffect(() => {
+    if (screen) window.scrollTo(0, 0);
+  }, [screen]);
+
+  const handleQuick = (key) => openScreen(key);
 
   const updateNotifPref = async (field, value) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
@@ -194,13 +202,13 @@ export default function ProfilePage() {
       <>
         <style>{PAGE_STYLE}</style>
         <ProfileDetailScreen
-          onClose={() => setScreen(null)}
+          onClose={closeScreen}
           session={session}
           profile={profile}
           userLevel={userLevel}
           onAvatarClick={() => setShowAvatar(true)}
           onEdit={() => setShowEditProfile(true)}
-          onOpenSettings={() => setScreen("security")}
+          onOpenSettings={() => openScreen("security")}
           onPrivacy={() => navigate("/privacy")}
           onOpenLevel={() => navigate("/level")}
         />
@@ -214,7 +222,7 @@ export default function ProfilePage() {
       <>
         <style>{PAGE_STYLE}</style>
         <AccountSettingsScreen
-          onClose={() => setScreen(null)}
+          onClose={closeScreen}
           initialGroup={screen}
           profile={profile}
           session={session}
@@ -246,7 +254,7 @@ export default function ProfilePage() {
               session={session}
               profile={profile}
               userLevel={userLevel}
-              onEdit={() => setScreen("profile")}
+              onEdit={() => openScreen("profile")}
               onAvatarClick={() => setShowAvatar(true)}
               onOpenLevel={() => navigate("/level")}
             />
@@ -292,6 +300,7 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-}
+          }
+        
 
 
