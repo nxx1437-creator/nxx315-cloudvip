@@ -1,9 +1,9 @@
-// src/components/profile/QuickActions.jsx — hàng 4 lối tắt (giống "Cài đặt tài khoản / Thanh toán..." của MoMo)
+// src/components/profile/QuickActions.jsx — hàng 4 lối tắt
 import React from "react";
 import { Bell, Lock, Palette, User } from "lucide-react";
 
 const ITEMS = [
-  { key: "profile", icon: User, label: "Hồ sơ cá nhân" },
+  { key: "profile", icon: User, label: "Hồ sơ" },
   { key: "security", icon: Lock, label: "Bảo mật" },
   { key: "notif", icon: Bell, label: "Thông báo" },
   { key: "theme", icon: Palette, label: "Giao diện" },
@@ -11,19 +11,20 @@ const ITEMS = [
 
 export default function QuickActions({ onSelect }) {
   return (
-    <section className="grid grid-cols-4 gap-1 rounded-2xl bg-white px-2 py-4 dark:bg-slate-900">
+    <section className="grid grid-cols-4 gap-1 rounded-2xl bg-white px-2 py-3.5 dark:bg-slate-900">
       {ITEMS.map(({ key, icon: Icon, label }) => (
         <button
           key={key}
           onClick={() => onSelect(key)}
-          className="flex flex-col items-center gap-2 rounded-xl px-1 py-1 transition active:scale-95"
+          className="flex flex-col items-center gap-1.5 rounded-xl py-1 transition active:scale-95"
         >
-          <Icon size={30} strokeWidth={1.5} className="text-slate-800 dark:text-slate-100" />
-          <span className="text-center text-[13px] font-medium leading-4 text-slate-800 dark:text-slate-200">
-            {label}
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-500/10 text-accent-600">
+            <Icon size={23} strokeWidth={1.8} />
           </span>
+          <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{label}</span>
         </button>
       ))}
     </section>
   );
 }
+
