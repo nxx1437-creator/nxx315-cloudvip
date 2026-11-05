@@ -1,6 +1,6 @@
 // src/pages/HelpCenter.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards } from "./help/HelpUI.jsx";
@@ -16,6 +16,7 @@ const givenName = (u) => {
 
 export default function HelpCenter() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -84,6 +85,18 @@ export default function HelpCenter() {
   };
 
   const openRequest = (preset = {}) => setView({ type: "request", preset });
+
+  // Mở thẳng đúng màn khi đi từ trang Hồ sơ: location.state.open = "idea" | "faq" | "history" | "chat"
+  useEffect(() => {
+    const open = location.state?.open;
+    if (!open || open === "home") return;
+    navigate(location.pathname, { replace: true, state: null }); // dùng xong thì xóa, tránh mở lại khi tải lại trang
+    if (open === "chat") navigate("/support", { replace: true });
+    else if (open === "idea") openRequest({ type: "idea" });
+    else if (open === "history") setView({ type: "history" });
+    else if (open === "faq") setTimeout(scrollToFaq, 250);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const searching = !!query.trim();
   const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
   // Thẻ đầu tiên nổi lên che nửa dưới hero; khi đang tìm kiếm thì để cách ra để tiêu đề không bị đè lên nền xanh
@@ -121,5 +134,4 @@ export default function HelpCenter() {
       <BottomNav />
     </div>
   );
-                                                                          }
-
+            }
