@@ -89,11 +89,13 @@ import VersionChecker from "./components/VersionChecker.jsx";
 import SessionGuard from "./components/SessionGuard.jsx";
 import SessionValidator from "./components/SessionValidator.jsx";
 import PageLoader from "./components/PageLoader.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 export default function App() {
   return (
     <BanGate>
       <BrowserRouter>
+        <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public */}
@@ -196,6 +198,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
 
         <VersionChecker />
         <GuideWelcomeModal />
@@ -205,4 +208,5 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-      }
+}
+
