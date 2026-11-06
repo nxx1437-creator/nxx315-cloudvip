@@ -324,10 +324,23 @@ export default function Tasks() {
     try {
       popup = window.open("", "_blank");
       if (popup) {
-        popup.document.title = "Đang mở nhiệm vụ...";
-        popup.document.body.style.cssText =
-          "margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#475569";
-        popup.document.body.textContent = "Đang tạo liên kết nhiệm vụ...";
+        popup.document.open();
+        popup.document.write(
+          '<!doctype html><html lang="vi"><head><meta charset="utf-8">' +
+            '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+            "<title>Đang mở nhiệm vụ...</title><style>" +
+            "html,body{height:100%;margin:0}" +
+            "body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;" +
+            "background:#effbf7;font-family:system-ui,-apple-system,sans-serif;color:#334155;text-align:center;padding:24px}" +
+            ".s{width:46px;height:46px;border:4px solid #bbf7d0;border-top-color:#10b981;border-radius:50%;animation:r .8s linear infinite}" +
+            "@keyframes r{to{transform:rotate(360deg)}}" +
+            "p{margin:0;font-size:18px;font-weight:700}small{font-size:14px;color:#64748b}" +
+            '</style></head><body><div class="s"></div>' +
+            "<p>Đang chuẩn bị nhiệm vụ...</p>" +
+            "<small>Bạn sẽ được chuyển hướng ngay, vui lòng đợi trong giây lát</small>" +
+            "</body></html>"
+        );
+        popup.document.close();
       }
     } catch {
       popup = null;
@@ -567,7 +580,7 @@ export default function Tasks() {
             </div>
           )}
 
-          {userLevel && userLevel.task_bonus > 0 && (
+           {userLevel && userLevel.task_bonus > 0 && (
             <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2">
               <TrendingUp size={14} className="shrink-0 text-amber-600" />
               <p className="text-xs font-semibold text-amber-700">
@@ -736,4 +749,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-            }
+        }
