@@ -322,28 +322,8 @@ export default function Tasks() {
     // Nếu đợi gọi API xong mới window.open thì trình duyệt coi là cửa sổ bật lên và chặn.
     let popup = null;
     try {
-      popup = window.open("", "_blank");
-      if (popup) {
-        // Dùng DOM thay vì document.write (một số trình duyệt di động hiện trang trắng khi dùng document.write)
-        const d = popup.document;
-        d.title = "Đang mở nhiệm vụ...";
-        const meta = d.createElement("meta");
-        meta.name = "viewport";
-        meta.content = "width=device-width, initial-scale=1";
-        d.head.appendChild(meta);
-        const style = d.createElement("style");
-        style.textContent =
-          "html,body{height:100%;margin:0}" +
-          "body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;" +
-          "background:#effbf7;font-family:system-ui,-apple-system,sans-serif;color:#334155;text-align:center;padding:24px}" +
-          ".s{width:46px;height:46px;border:4px solid #bbf7d0;border-top-color:#10b981;border-radius:50%;animation:r .8s linear infinite}" +
-          "@keyframes r{to{transform:rotate(360deg)}}" +
-          "p{margin:0;font-size:18px;font-weight:700}small{font-size:14px;color:#64748b}";
-        d.head.appendChild(style);
-        d.body.innerHTML =
-          '<div class="s"></div><p>Đang chuẩn bị nhiệm vụ...</p>' +
-          "<small>Bạn sẽ được chuyển hướng ngay, vui lòng đợi trong giây lát</small>";
-      }
+      // Mở trang chờ tĩnh (public/task-loading.html) để hiển thị đúng cỡ trên điện thoại
+      popup = window.open("/task-loading.html", "_blank");
     } catch {
       popup = null;
     }
@@ -752,3 +732,5 @@ export default function Tasks() {
     </div>
   );
 }
+
+         
