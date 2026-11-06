@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Đang mở nhiệm vụ...</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      box-sizing: border-box;
+      background: #effbf7;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #334155;
+      text-align: center;
+    }
+    .spin {
+      width: 52px;
+      height: 52px;
+      border: 5px solid #bbf7d0;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: r 0.8s linear infinite;
+    }
+    @keyframes r { to { transform: rotate(360deg); } }
+    h1 { margin: 0; font-size: 20px; font-weight: 800; }
+    p { margin: 0; font-size: 15px; line-height: 1.5; color: #64748b; max-width: 280px; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0f172a; color: #e2e8f0; }
+      p { color: #94a3b8; }
+    }
+  </style>
+</head>
+<body>
+  <div class="spin"></div>
+  <h1>Đang chuẩn bị nhiệm vụ...</h1>
+  <p>Bạn sẽ được chuyển hướng ngay, vui lòng đợi trong giây lát.</p>
+</body>
+</html>
