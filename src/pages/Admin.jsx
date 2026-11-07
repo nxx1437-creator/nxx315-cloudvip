@@ -16,6 +16,9 @@ import FreeFireOrdersTab from "../pages/FreeFireOrdersTab";
 import BroadcastForm from "../components/admin/BroadcastForm";
 import WithdrawalsTab from "../pages/WithdrawalsTab";
 import AdminSupportTab from "../pages/AdminSupportTab";
+import AdminCardOrdersTab from "../pages/AdminCardOrdersTab";
+import { MENU_GROUPS, NavList } from "../components/admin/AdminNav";
+import usePendingCounts from "../components/admin/usePendingCounts";
 
 const ADMIN_CHAT_ID = import.meta.env.VITE_ADMIN_CHAT_ID;
 
@@ -26,62 +29,34 @@ const PACKAGE_IMAGES = {
   "vng-500": "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/roblox-500.png",
 };
 
-const MENU_GROUPS = [
-  {
-    id: "orders", label: "Đơn hàng", icon: Package,
-    items: [
-      { id: "orders", label: "Đổi thưởng", icon: Gift },
-      { id: "roblox-orders", label: "Roblox", icon: Gift },
-      { id: "lienquan-orders", label: "Liên Quân", icon: Trophy },
-      { id: "playtogether-orders", label: "Play Together", icon: Gamepad2 },
-      { id: "pubg-orders", label: "PUBG Mobile", icon: Crosshair },
-      { id: "freefire-orders", label: "Free Fire", icon: Flame },
-    ],
-  },
-  {
-    id: "users", label: "Người dùng", icon: Users,
-    items: [
-      { id: "users", label: "Tài khoản", icon: Users },
-      { id: "support", label: "Hỗ trợ", icon: MessageCircle },
-      { id: "affiliate", label: "Affiliate", icon: HandCoins },
-      { id: "withdrawals", label: "Rút tiền", icon: Wallet },
-    ],
-  },
-  {
-    id: "content", label: "Nội dung", icon: FileText,
-    items: [
-      { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
-      { id: "packages", label: "Gói nạp", icon: Coins },
-      { id: "posts", label: "Bài viết", icon: FileText },
-    ],
-  },
-  {
-    id: "notify", label: "Thông báo", icon: Bell,
-    items: [{ id: "notify", label: "Gửi thông báo", icon: Bell }],
-  },
-];
-
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("orders");
   const [menuOpen, setMenuOpen] = useState(false);
   const [counts, refreshCounts] = usePendingCounts();
-  const [openGroups, setOpenGroups] = useState(() => {
-    const all = {};
-    MENU_GROUPS.forEach((g) => { all[g.id] = true; });
-    return all;
-  });
-
-  const activeItem = MENU_GROUPS.flatMap((g) => g.items).find(
-    (i) => i.id === activeTab
+  const [openGroups, setOpenGroups] = useState(() =>
+    Object.fromEntries(MENU_GROUPS.map((g) => [g.id, true]))
   );
 
-  const badges = { orders: counts.redeem, support: counts.tickets };
+  const activeItem = MENU_GROUPS.flatMap((g) => g.items).find((i) => i.id === activeTab);
+
+  const badges = { orders: counts.redeem, support: counts.tickets, "card-orders": counts.cards };
+  const totalPending = (counts.redeem || 0) + (counts.tickets || 0) + (counts.cards || 0);
 
   const handleSelectTab = (tabId) => {
     setActiveTab(tabId);
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const nav = (
+    <NavList
+      activeTab={activeTab}
+      onSelect={handleSelectTab}
+      openGroups={openGroups}
+      setOpenGroups={setOpenGroups}
+      badges={badges}
+    />
+  );
 
   return (
     <div className="min-h-screen bg-[#eef0f2]">
@@ -100,9 +75,14 @@ export default function Admin() {
           <button
             onClick={() => setMenuOpen(true)}
             aria-label="Mở menu"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50 lg:hidden"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50 lg:hidden"
           >
             <Menu size={20} />
+            {totalPending > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                {totalPending}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -121,15 +101,7 @@ export default function Admin() {
                 <X size={20} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3">
-              <NavList
-                activeTab={activeTab}
-                onSelect={handleSelectTab}
-                openGroups={openGroups}
-                setOpenGroups={setOpenGroups}
-                badges={badges}
-              />
-            </div>
+            <div className="flex-1 overflow-y-auto p-3">{nav}</div>
           </div>
         </div>
       )}
@@ -137,20 +109,10 @@ export default function Admin() {
       <div className="mx-auto w-full max-w-6xl px-4 py-5">
         <div className="flex gap-6">
           <aside className="hidden w-64 shrink-0 lg:block">
-            <div className="sticky top-24 rounded-xl border border-slate-200 bg-white p-3">
-              <NavList
-                activeTab={activeTab}
-                onSelect={handleSelectTab}
-                openGroups={openGroups}
-                setOpenGroups={setOpenGroups}
-                badges={badges}
-              />
-            </div>
+            <div className="sticky top-24 rounded-xl border border-slate-200 bg-white p-3">{nav}</div>
           </aside>
 
           <main className="min-w-0 flex-1 space-y-5">
-            <Overview counts={counts} onGo={handleSelectTab} />
-
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <span>Admin</span>
               <ChevronRight size={14} />
@@ -159,6 +121,7 @@ export default function Admin() {
 
             <div className="w-full">
               {activeTab === "orders" && <OrdersTab />}
+              {activeTab === "card-orders" && <AdminCardOrdersTab onChanged={refreshCounts} />}
               {activeTab === "roblox-orders" && <RobloxOrdersTab />}
               {activeTab === "lienquan-orders" && <LienQuanOrdersTab />}
               {activeTab === "playtogether-orders" && <PlayTogetherOrdersTab />}
@@ -178,7 +141,7 @@ export default function Admin() {
       </div>
     </div>
   );
-}
+              }
 
 // ===== Hook đếm việc cần xử lý =====
 function usePendingCounts() {
