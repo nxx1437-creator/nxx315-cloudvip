@@ -1,4 +1,4 @@
-// src/pages/CardExchange.jsx
+// src/pages/CardExchange.jsx — đổi xu thành thẻ cào (route: /cards)
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Check, Clock, Coins, CreditCard, Loader2, X } from "lucide-react";
@@ -58,6 +58,20 @@ function HistoryItem({ order }) {
           {st.label}
         </span>
       </div>
+
+      {order.status === "pending" && (
+        <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">
+          Admin sẽ gửi thẻ qua <b className="text-[#171612]">{order.contact}</b> trong vòng 24 giờ.
+        </p>
+      )}
+      {order.status === "completed" && (
+        <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">
+          Thẻ đã được gửi qua {order.contact}. Kiểm tra tin nhắn nhé!
+        </p>
+      )}
+      {order.status === "failed" && order.error_message && (
+        <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">Lý do: {order.error_message}</p>
+      )}
     </div>
   );
 }
@@ -75,7 +89,11 @@ export default function CardExchange() {
   const [telco, setTelco] = useState(params.get("telco") || "");
   const [selected, setSelected] = useState(null);
   const [contact, setContact] = useState(() => {
-    try { return localStorage.getItem(CONTACT_KEY) || ""; } catch { return ""; }
+    try {
+      return localStorage.getItem(CONTACT_KEY) || "";
+    } catch {
+      return "";
+    }
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -83,20 +101,36 @@ export default function CardExchange() {
 
   useEffect(() => {
     aliveRef.current = true;
-    return () => { aliveRef.current = false; };
+    return () => {
+      aliveRef.current = false;
+    };
   }, []);
 
   const loadAll = useCallback(async () => {
     try {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const {
+        data: { user: u },
+      } = await supabase.auth.getUser();
       if (!aliveRef.current) return;
-      if (!u) { setLoading(false); return; }
+      if (!u) {
+        setLoading(false);
+        return;
+      }
       setUser(u);
 
       const [{ data: prof }, { data: prods }, { data: ords }] = await Promise.all([
         supabase.from("profiles").select("coins").eq("id", u.id).single(),
-        supabase.from("card_products").select("id, telco, denomination, coin_price, sort_order").eq("active", true).order("sort_order", { ascending: true }),
-        supabase.from("card_orders").select("id, telco, denomination, coins_charged, status, contact, error_message, created_at").eq("user_id", u.id).order("created_at", { ascending: false }).limit(20),
+        supabase
+          .from("card_products")
+          .select("id, telco, denomination, coin_price, sort_order")
+          .eq("active", true)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("card_orders")
+          .select("id, telco, denomination, coins_charged, status, contact, error_message, created_at")
+          .eq("user_id", u.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
       ]);
 
       if (!aliveRef.current) return;
@@ -110,11 +144,19 @@ export default function CardExchange() {
     }
   }, []);
 
-  useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
 
   const telcos = useMemo(() => [...new Set(products.map((p) => p.telco))], [products]);
-  const activeTelco = useMemo(() => (telcos.includes(telco) ? telco : telcos[0] || ""), [telcos, telco]);
-  const list = useMemo(() => products.filter((p) => p.telco === activeTelco), [products, activeTelco]);
+  const activeTelco = useMemo(
+    () => (telcos.includes(telco) ? telco : telcos[0] || ""),
+    [telcos, telco]
+  );
+  const list = useMemo(
+    () => products.filter((p) => p.telco === activeTelco),
+    [products, activeTelco]
+  );
 
   const handleTelcoChange = (t) => {
     setTelco(t);
@@ -147,10 +189,15 @@ export default function CardExchange() {
         p_contact: c,
       });
       if (rpcErr) throw new Error("Không thể gửi yêu cầu, vui lòng thử lại.");
-      if (data?.error) { setError(data.error); return; }
-      
-      try { localStorage.setItem(CONTACT_KEY, c); } catch {}
-      
+      if (data?.error) {
+        setError(data.error);
+        return;
+      }
+      try {
+        localStorage.setItem(CONTACT_KEY, c);
+      } catch {
+        /* bỏ qua */
+      }
       if (typeof data?.new_balance === "number") setBalance(data.new_balance);
       setResult({ telco: selected.telco, denomination: selected.denomination, contact: c });
       setSelected(null);
@@ -197,7 +244,7 @@ export default function CardExchange() {
   return (
     <div className="relative min-h-screen bg-[#f4f3ee] pb-28 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612] overflow-hidden">
       <TopHeader />
-      
+
       {/* Lưới chấm toàn màn hình (như ảnh 3) */}
       <FullScreenDots />
 
@@ -219,7 +266,7 @@ export default function CardExchange() {
           </div>
         </div>
 
-        {/* Số dư - Thiết kế lại theo phong cách ảnh mẫu 3 */}
+        {/* Số dư */}
         <div className="relative mt-8 overflow-hidden rounded-[28px] bg-white p-6 shadow-sm border border-[#e8e6df]">
           <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a8880]">
             <Coins size={12} /> số dư khả dụng
@@ -247,7 +294,7 @@ export default function CardExchange() {
           </div>
         ) : (
           <div className="mt-6 space-y-5">
-            {/* Nút chuyển Telco - Ẩn scrollbar, thêm khoảng trống dưới */}
+            {/* Nút chuyển Telco */}
             <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {telcos.map((t) => (
                 <button
@@ -265,7 +312,7 @@ export default function CardExchange() {
               ))}
             </div>
 
-            {/* Danh sách thẻ - Grid layout gọn gàng */}
+            {/* Danh sách thẻ */}
             <div className="grid grid-cols-2 gap-3.5">
               {list.map((p) => {
                 const enough = balance >= p.coin_price;
@@ -274,10 +321,13 @@ export default function CardExchange() {
                     key={p.id}
                     type="button"
                     disabled={!enough}
-                    onClick={() => { setError(""); setSelected(p); }}
+                    onClick={() => {
+                      setError("");
+                      setSelected(p);
+                    }}
                     className={`group relative flex flex-col items-start overflow-hidden rounded-[24px] p-5 text-left transition-all ${
-                      enough 
-                        ? "bg-white border border-[#e8e6df] shadow-sm hover:border-[#ff5a00]/30 active:scale-[0.98]" 
+                      enough
+                        ? "bg-white border border-[#e8e6df] shadow-sm hover:border-[#ff5a00]/30 active:scale-[0.98]"
                         : "bg-[#ebe9e3] opacity-60"
                     }`}
                   >
@@ -286,7 +336,7 @@ export default function CardExchange() {
                       <span className="text-[#ff5a00] text-[16px] ml-0.5">đ</span>
                     </p>
                     <div className="mt-4 flex items-center gap-1.5 text-[11px] font-medium text-[#8a8880]">
-                      <Coins size={12} /> 
+                      <Coins size={12} />
                       {fmt(p.coin_price)} xu
                     </div>
                     {!enough && (
@@ -310,118 +360,132 @@ export default function CardExchange() {
             </div>
           ) : (
             <div className="rounded-[24px] bg-white border border-[#e8e6df] px-5 py-2">
-              {orders.map((o) => <HistoryItem key={o.id} order={o} />)}
+              {orders.map((o) => (
+                <HistoryItem key={o.id} order={o} />
+              ))}
             </div>
           )}
         </div>
       </main>
 
-          {/* MODAL XÁC NHẬN */}
-{selected && (
-  <div 
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/30 animate-backdrop"
-    onClick={(e) => {
-      if (e.target === e.currentTarget) closeConfirm();
-    }}
-  >
-    <div 
-      className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/90 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 overflow-hidden flex flex-col animate-modal-pop"
-      role="dialog"
-      aria-modal="true"
-    >
-      {/* ... (Giữ nguyên toàn bộ nội dung bên trong từ Header đến Footer như cũ) ... */}
-      <div className="px-6 pt-7 pb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-[26px] font-bold lowercase leading-[1.1] tracking-tight">
-              xác nhận đổi thẻ<span className="text-[#ff5a00]">.</span>
-            </h3>
-            <div className="mt-3 flex items-center gap-2.5">
-              <span className="rounded-md bg-[#e8e6df]/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#171612]">
-                {telcoName(selected.telco)}
-              </span>
-              <span className="text-[11px] font-medium text-[#8a8880] tracking-wide">thẻ cào điện thoại</span>
+      {/* MODAL XÁC NHẬN - Nổi, trong suốt, có animation */}
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeConfirm();
+          }}
+        >
+          <div
+            className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/95 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 overflow-hidden flex flex-col animate-modal-pop"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Header Modal */}
+            <div className="px-6 pt-7 pb-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-[26px] font-bold lowercase leading-[1.1] tracking-tight">
+                    xác nhận đổi thẻ<span className="text-[#ff5a00]">.</span>
+                  </h3>
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <span className="rounded-md bg-[#e8e6df]/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#171612]">
+                      {telcoName(selected.telco)}
+                    </span>
+                    <span className="text-[11px] font-medium text-[#8a8880] tracking-wide">
+                      thẻ cào điện thoại
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeConfirm}
+                  disabled={submitting}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8e6df]/80 text-[#171612] transition-transform active:scale-95 disabled:opacity-50"
+                  aria-label="Đóng"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Body Modal */}
+            <div className="px-6 pb-6">
+              <div className="flex items-center justify-between border-y border-[#e8e6df]/80 py-4 mb-6">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">mệnh giá</p>
+                  <p className="mt-1.5 text-[16px] font-bold tracking-tight">{fmt(selected.denomination)}đ</p>
+                </div>
+                <div className="w-px h-8 bg-[#e8e6df]/80" />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">khấu trừ</p>
+                  <p className="mt-1.5 text-[16px] font-bold text-[#ff5a00] tracking-tight">
+                    -{fmt(selected.coin_price)} xu
+                  </p>
+                </div>
+                <div className="w-px h-8 bg-[#e8e6df]/80" />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">còn lại</p>
+                  <p className="mt-1.5 text-[16px] font-bold tracking-tight">
+                    {fmt(Math.max(0, balance - selected.coin_price))} xu
+                  </p>
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="text-[11px] font-bold text-[#8a8880] uppercase tracking-wider">
+                  Zalo / Discord nhận thẻ
+                </span>
+                <input
+                  type="text"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="VD: 09xxxxxxxx hoặc ten_discord"
+                  maxLength={100}
+                  className="mt-2.5 w-full rounded-full border border-[#e8e6df] bg-white/60 px-5 py-3.5 text-[14px] font-medium text-[#171612] outline-none placeholder:text-[#c0beb6] focus:border-[#171612] focus:bg-white focus:ring-1 focus:ring-[#171612] transition-all"
+                />
+              </label>
+
+              <p className="mt-4 text-[11px] leading-relaxed text-[#8a8880]">
+                Xu bị trừ ngay khi gửi yêu cầu. Nếu Admin từ chối, xu sẽ được hoàn lại tự động. Vui
+                lòng kiểm tra kỹ thông tin.
+              </p>
+
+              {error && (
+                <div className="mt-3 rounded-2xl bg-[#fff0e6] px-4 py-3 text-[12px] font-bold text-[#d94a00]">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Modal */}
+            <div className="px-6 pb-7 pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={closeConfirm}
+                disabled={submitting}
+                className="flex-1 rounded-full bg-[#171612] py-3.5 text-[13px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                hủy
+              </button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={submitting}
+                className="flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-[#ff5a00] py-3.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(255,90,0,0.25)] transition-all active:scale-[0.98] disabled:opacity-60"
+              >
+                {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                {submitting ? "đang gửi..." : "gửi yêu cầu"}
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={closeConfirm}
-            disabled={submitting}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8e6df]/80 text-[#171612] transition-transform active:scale-95 disabled:opacity-50"
-            aria-label="Đóng"
-          >
-            <X size={18} />
-          </button>
         </div>
-      </div>
+      )}
 
-      <div className="px-6 pb-6">
-        <div className="flex items-center justify-between border-y border-[#e8e6df]/80 py-4 mb-6">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">mệnh giá</p>
-            <p className="mt-1.5 text-[16px] font-bold tracking-tight">{fmt(selected.denomination)}đ</p>
-          </div>
-          <div className="w-px h-8 bg-[#e8e6df]/80" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">khấu trừ</p>
-            <p className="mt-1.5 text-[16px] font-bold text-[#ff5a00] tracking-tight">-{fmt(selected.coin_price)} xu</p>
-          </div>
-          <div className="w-px h-8 bg-[#e8e6df]/80" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">còn lại</p>
-            <p className="mt-1.5 text-[16px] font-bold tracking-tight">{fmt(Math.max(0, balance - selected.coin_price))} xu</p>
-          </div>
-        </div>
-
-        <label className="block">
-          <span className="text-[11px] font-bold text-[#8a8880] uppercase tracking-wider">Zalo / Discord nhận thẻ</span>
-          <input
-            type="text"
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            placeholder="VD: 09xxxxxxxx hoặc ten_discord"
-            maxLength={100}
-            className="mt-2.5 w-full rounded-full border border-[#e8e6df] bg-white/60 px-5 py-3.5 text-[14px] font-medium text-[#171612] outline-none placeholder:text-[#c0beb6] focus:border-[#171612] focus:bg-white focus:ring-1 focus:ring-[#171612] transition-all"
-          />
-        </label>
-
-        <p className="mt-4 text-[11px] leading-relaxed text-[#8a8880]">
-          Xu bị trừ ngay khi gửi yêu cầu. Nếu Admin từ chối, xu sẽ được hoàn lại tự động. Vui lòng kiểm tra kỹ thông tin.
-        </p>
-
-        {error && (
-          <div className="mt-3 rounded-2xl bg-[#fff0e6] px-4 py-3 text-[12px] font-bold text-[#d94a00]">
-            {error}
-          </div>
-        )}
-      </div>
-
-      <div className="px-6 pb-7 pt-2 flex gap-3">
-        <button
-          type="button"
-          onClick={closeConfirm}
-          disabled={submitting}
-          className="flex-1 rounded-full bg-[#171612] py-3.5 text-[13px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
-        >
-          hủy
-        </button>
-        <button
-          type="button"
-          onClick={submit}
-          disabled={submitting}
-          className="flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-[#ff5a00] py-3.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(255,90,0,0.25)] transition-all active:scale-[0.98] disabled:opacity-60"
-        >
-          {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-          {submitting ? "đang gửi..." : "gửi yêu cầu"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
       {/* MODAL THÀNH CÔNG */}
       {result && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-md rounded-t-[32px] bg-[#f8f7f3] p-6 pb-8 sm:rounded-[32px] shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/95 backdrop-blur-2xl p-6 pb-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 animate-modal-pop flex flex-col items-start">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#ff5a00] text-white shadow-lg">
               <Check size={28} strokeWidth={3} />
             </span>
@@ -431,14 +495,15 @@ export default function CardExchange() {
             <p className="mt-2 text-[14px] font-bold">
               {telcoName(result.telco)} {fmt(result.denomination)}đ
             </p>
-            
-            <div className="mt-6 flex items-start gap-3 rounded-2xl bg-white border border-[#e8e6df] p-4 text-[12px] leading-relaxed">
+
+            <div className="mt-6 flex items-start gap-3 rounded-2xl bg-white/80 border border-[#e8e6df] p-4 text-[12px] leading-relaxed w-full">
               <Clock size={18} className="mt-0.5 shrink-0 text-[#ff5a00]" />
               <span>
-                Admin sẽ gửi thẻ qua <b>{result.contact}</b> trong vòng 24 giờ. Bạn có thể theo dõi trạng thái ở phần Lịch sử.
+                Admin sẽ gửi thẻ qua <b>{result.contact}</b> trong vòng 24 giờ. Bạn có thể theo dõi
+                trạng thái ở phần Lịch sử.
               </span>
             </div>
-            
+
             <button
               type="button"
               onClick={() => setResult(null)}
