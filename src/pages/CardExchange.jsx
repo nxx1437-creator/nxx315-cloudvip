@@ -1,59 +1,29 @@
-// src/pages/CardExchange.jsx — đổi xu thành thẻ cào điện thoại (route: /cards)
+// src/pages/CardExchange.jsx — đổi xu thành thẻ cào (route: /cards)
+// Luồng thủ công: người dùng gửi yêu cầu + Zalo/Discord, xu bị trừ ngay, admin gửi thẻ rồi bấm hoàn thành.
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check, Clock, Coins, Copy, CreditCard, Eye, EyeOff, Loader2, X } from "lucide-react";
+import { ArrowLeft, Check, Clock, Coins, CreditCard, Loader2, X } from "lucide-react";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
-import { SUPABASE_URL } from "../lib/withdrawData.js";
-
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const TELCO_NAMES = { viettel: "Viettel", mobifone: "Mobifone", vinaphone: "Vinaphone" };
 const TELCO_COLORS = { viettel: "#E2231A", mobifone: "#0067B1", vinaphone: "#00A1E4" };
+const CONTACT_KEY = "card_contact";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 const telcoName = (t) => TELCO_NAMES[t] || t;
 
 const STATUS = {
+  pending: { label: "Chờ gửi thẻ", cls: "bg-amber-50 text-amber-700" },
   processing: { label: "Đang xử lý", cls: "bg-amber-50 text-amber-700" },
-  completed: { label: "Hoàn thành", cls: "bg-emerald-50 text-emerald-700" },
   needs_review: { label: "Đang kiểm tra", cls: "bg-sky-50 text-sky-700" },
-  failed: { label: "Thất bại · đã hoàn xu", cls: "bg-slate-100 text-slate-500" },
+  completed: { label: "Đã gửi thẻ", cls: "bg-emerald-50 text-emerald-700" },
+  failed: { label: "Từ chối · đã hoàn xu", cls: "bg-slate-100 text-slate-500" },
 };
 
-function CopyRow({ label, value }) {
-  const [done, setDone] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setDone(true);
-      setTimeout(() => setDone(false), 1500);
-    } catch {
-      /* bỏ qua */
-    }
-  };
-  return (
-    <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
-      <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-        <p className="mt-0.5 break-all font-mono text-[16px] font-bold tracking-wide text-slate-900">{value}</p>
-      </div>
-      <button
-        type="button"
-        onClick={copy}
-        className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-white px-3 text-[12px] font-bold text-slate-700 shadow-sm"
-      >
-        {done ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-        {done ? "Đã chép" : "Chép"}
-      </button>
-    </div>
-  );
-}
-
 function HistoryItem({ order }) {
-  const [show, setShow] = useState(false);
-  const st = STATUS[order.status] || STATUS.processing;
+  const st = STATUS[order.status] || STATUS.pending;
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-3.5 shadow-sm">
       <div className="flex items-center gap-3">
@@ -74,28 +44,16 @@ function HistoryItem({ order }) {
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10.5px] font-bold ${st.cls}`}>{st.label}</span>
       </div>
 
-      {order.status === "completed" && order.pin_code && (
-        <div className="mt-3">
-          {show ? (
-            <div className="space-y-2">
-              {order.serial && <CopyRow label="Seri" value={order.serial} />}
-              <CopyRow label="Mã thẻ" value={order.pin_code} />
-            </div>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => setShow((v) => !v)}
-            className="mt-2 flex items-center gap-1.5 text-[12.5px] font-bold text-emerald-700"
-          >
-            {show ? <EyeOff size={14} /> : <Eye size={14} />}
-            {show ? "Ẩn mã thẻ" : "Hiện mã thẻ"}
-          </button>
-        </div>
-      )}
-      {order.status === "needs_review" && (
-        <p className="mt-2 text-[12px] text-slate-500">
-          Đơn đang được kiểm tra, thẻ sẽ hiện ở đây trong vòng 24 giờ. Xu không bị mất.
+      {order.status === "pending" && (
+        <p className="mt-2 text-[12px] leading-5 text-slate-500">
+          Admin sẽ gửi thẻ qua <b className="text-slate-700">{order.contact}</b> trong vòng 24 giờ.
         </p>
+      )}
+      {order.status === "completed" && (
+        <p className="mt-2 text-[12px] text-emerald-700">Thẻ đã được gửi qua {order.contact}. Kiểm tra tin nhắn nhé!</p>
+      )}
+      {order.status === "failed" && order.error_message && (
+        <p className="mt-2 text-[12px] text-slate-500">Lý do: {order.error_message}</p>
       )}
     </div>
   );
@@ -112,19 +70,16 @@ export default function CardExchange() {
   const [orders, setOrders] = useState([]);
   const [telco, setTelco] = useState(params.get("telco") || "");
   const [selected, setSelected] = useState(null);
+  const [contact, setContact] = useState(() => {
+    try {
+      return localStorage.getItem(CONTACT_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
-
-  const loadOrders = useCallback(async (uid) => {
-    const { data } = await supabase
-      .from("card_orders")
-      .select("id, telco, denomination, coins_charged, status, pin_code, serial, created_at")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    setOrders(data || []);
-  }, []);
 
   const loadAll = useCallback(async () => {
     try {
@@ -134,23 +89,29 @@ export default function CardExchange() {
       if (!u) return;
       setUser(u);
 
-      const [{ data: prof }, { data: prods }] = await Promise.all([
+      const [{ data: prof }, { data: prods }, { data: ords }] = await Promise.all([
         supabase.from("profiles").select("coins").eq("id", u.id).single(),
         supabase
           .from("card_products")
           .select("id, telco, denomination, coin_price, sort_order")
           .eq("active", true)
           .order("sort_order", { ascending: true }),
+        supabase
+          .from("card_orders")
+          .select("id, telco, denomination, coins_charged, status, contact, error_message, created_at")
+          .eq("user_id", u.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
       ]);
       setBalance(prof?.coins || 0);
       setProducts(prods || []);
-      await loadOrders(u.id);
+      setOrders(ords || []);
     } catch (err) {
       console.error("Load cards error:", err);
     } finally {
       setLoading(false);
     }
-  }, [loadOrders]);
+  }, []);
 
   useEffect(() => {
     loadAll();
@@ -162,37 +123,31 @@ export default function CardExchange() {
 
   const submit = async () => {
     if (!selected || submitting) return;
+    const c = contact.trim();
+    if (c.length < 3) {
+      setError("Vui lòng nhập Zalo hoặc Discord để nhận thẻ.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Vui lòng đăng nhập lại.");
-
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/buy-card`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({ product_id: selected.id }),
+      const { data, error: rpcErr } = await supabase.rpc("request_card_exchange", {
+        p_product_id: selected.id,
+        p_contact: c,
       });
-      const data = await res.json().catch(() => ({}));
-
-      if (typeof data.new_balance === "number") setBalance(data.new_balance);
-
-      if (data.error) {
-        setSelected(null);
-        setResult({ kind: "error", message: data.error });
-      } else if (data.status === "completed") {
-        setSelected(null);
-        setResult({ kind: "success", data });
-      } else {
-        setSelected(null);
-        setResult({ kind: "pending", message: data.message });
+      if (rpcErr) throw new Error("Không thể gửi yêu cầu, vui lòng thử lại.");
+      if (data?.error) {
+        setError(data.error);
+        return;
       }
+      try {
+        localStorage.setItem(CONTACT_KEY, c);
+      } catch {
+        /* bỏ qua */
+      }
+      if (typeof data?.new_balance === "number") setBalance(data.new_balance);
+      setResult({ telco: selected.telco, denomination: selected.denomination, contact: c });
+      setSelected(null);
       await loadAll();
     } catch (err) {
       setError(err?.message || "Không thể kết nối, vui lòng thử lại.");
@@ -253,6 +208,10 @@ export default function CardExchange() {
             <p className="text-[12.5px] font-medium text-white/80">Số dư của bạn</p>
             <p className="text-[24px] font-black leading-tight">{fmt(balance)} xu</p>
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-[12.5px] leading-5 text-emerald-800">
+          Chọn mệnh giá và để lại Zalo hoặc Discord. Admin sẽ gửi thẻ cho bạn trong vòng 24 giờ.
         </div>
 
         {products.length === 0 ? (
@@ -358,10 +317,23 @@ export default function CardExchange() {
               </div>
             </div>
 
-            <p className="mt-3 text-[12px] leading-5 text-slate-500">
-              Mã thẻ hiện ngay sau khi đổi và được lưu trong Lịch sử. Sau khi nhận mã, xu không thể hoàn lại.
+            <label className="mt-4 block text-[12.5px] font-bold text-slate-700">
+              Zalo hoặc Discord nhận thẻ
+              <input
+                type="text"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="VD: 09xxxxxxxx hoặc ten_discord"
+                maxLength={100}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-3 text-[14px] font-medium outline-none focus:border-emerald-400"
+              />
+            </label>
+            <p className="mt-2 text-[12px] leading-5 text-slate-500">
+              Xu bị trừ ngay khi gửi yêu cầu. Nếu admin từ chối, xu sẽ được hoàn lại. Nhập đúng thông tin để nhận thẻ nhanh.
             </p>
-            {error && <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-[12.5px] font-semibold text-rose-600">{error}</p>}
+            {error && (
+              <p className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-[12.5px] font-semibold text-rose-600">{error}</p>
+            )}
 
             <button
               type="button"
@@ -370,48 +342,29 @@ export default function CardExchange() {
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 py-3.5 text-[15px] font-black text-white shadow-md disabled:opacity-60"
             >
               {submitting ? <Loader2 size={18} className="animate-spin" /> : null}
-              {submitting ? "Đang lấy thẻ..." : "Đổi ngay"}
+              {submitting ? "Đang gửi..." : "Gửi yêu cầu"}
             </button>
           </div>
         </div>
       )}
 
-      {/* Kết quả */}
+      {/* Đã gửi yêu cầu */}
       {result && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl">
-            {result.kind === "success" ? (
-              <>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
-                  <Check size={28} className="text-emerald-600" strokeWidth={3} />
-                </div>
-                <h3 className="mt-3 text-center text-[18px] font-black">Đổi thẻ thành công!</h3>
-                <p className="mt-1 text-center text-[13px] text-slate-500">
-                  {telcoName(result.data.telco)} {fmt(result.data.denomination)}đ
-                </p>
-                <div className="mt-4 space-y-2">
-                  {result.data.serial && <CopyRow label="Seri" value={result.data.serial} />}
-                  <CopyRow label="Mã thẻ" value={result.data.pin} />
-                </div>
-                <p className="mt-3 text-center text-[11.5px] text-slate-400">Mã cũng được lưu trong Lịch sử đổi thẻ.</p>
-              </>
-            ) : result.kind === "pending" ? (
-              <>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sky-50">
-                  <Clock size={28} className="text-sky-600" />
-                </div>
-                <h3 className="mt-3 text-center text-[18px] font-black">Đơn đang được kiểm tra</h3>
-                <p className="mt-2 text-center text-[13.5px] leading-6 text-slate-500">{result.message}</p>
-              </>
-            ) : (
-              <>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
-                  <X size={28} className="text-rose-500" strokeWidth={3} />
-                </div>
-                <h3 className="mt-3 text-center text-[18px] font-black">Không đổi được thẻ</h3>
-                <p className="mt-2 text-center text-[13.5px] leading-6 text-slate-500">{result.message}</p>
-              </>
-            )}
+          <div className="w-full max-w-md rounded-t-3xl bg-white p-5 text-center shadow-2xl sm:rounded-3xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+              <Check size={28} className="text-emerald-600" strokeWidth={3} />
+            </div>
+            <h3 className="mt-3 text-[18px] font-black">Đã gửi yêu cầu!</h3>
+            <p className="mt-1 text-[13.5px] text-slate-500">
+              {telcoName(result.telco)} {fmt(result.denomination)}đ
+            </p>
+            <div className="mt-4 flex items-start gap-2 rounded-xl bg-sky-50 p-3 text-left text-[12.5px] leading-5 text-sky-800">
+              <Clock size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Admin sẽ gửi thẻ qua <b>{result.contact}</b> trong vòng 24 giờ. Bạn có thể theo dõi ở Lịch sử đổi thẻ.
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => setResult(null)}
@@ -426,4 +379,5 @@ export default function CardExchange() {
       {!selected && !result && <BottomNav />}
     </div>
   );
-}
+  }
+            
