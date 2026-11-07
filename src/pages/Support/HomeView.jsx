@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
+import "./chat.css";
 
 const ICON_COMPONENTS = {
   User, CreditCard, Package, Bug, MoreHorizontal,
@@ -31,7 +32,7 @@ export default function HomeView({ onOpenHelp }) {
       {SYSTEM_BANNER.enabled && <BannerNotice />}
 
       <div className="px-5 pb-6 pt-8">
-        <h2 className="text-center text-[22px] font-extrabold leading-[1.3] tracking-[-0.02em] text-[#161823]">
+        <h2 className="font-hero hero-shimmer text-center text-[34px] leading-[1.15] tracking-[-0.02em]">
           Chúng tôi sẵn sàng hỗ trợ!
           <br />
           Chọn loại vấn đề.
@@ -45,7 +46,7 @@ export default function HomeView({ onOpenHelp }) {
             <button
               key={cat.id}
               onClick={() => onOpenHelp(cat.id)}
-              className="flex items-center gap-3 rounded-[18px] border border-black/[0.06] bg-[#f8f8f8] px-4 py-5 text-left transition duration-150 hover:border-black/[0.12] hover:bg-[#f2f2f2] active:scale-[0.98]"
+              className="flex items-center gap-3 rounded-[18px] border border-[var(--chat-border)] bg-[var(--chat-surface)] px-4 py-5 text-left transition duration-150 hover:bg-[#eef0f6] active:scale-[0.98]"
             >
               <Icon size={22} style={{ color: cat.color }} strokeWidth={2} />
               <span className="text-[14.5px] font-semibold text-[#161823]">
@@ -82,3 +83,4 @@ export default function HomeView({ onOpenHelp }) {
     </div>
   );
 }
+
