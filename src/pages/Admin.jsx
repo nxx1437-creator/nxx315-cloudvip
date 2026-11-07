@@ -4,7 +4,6 @@ import { Menu, ShieldCheck, X } from "lucide-react";
 import RobloxOrdersTab from "../pages/RobloxOrdersTab";
 import LienQuanOrdersTab from "../pages/LienQuanOrdersTab";
 import PlayTogetherOrdersTab from "../pages/PlayTogetherOrdersTab";
-import PubgOrdersTab from "../pages/PubgOrdersTab";
 import FreeFireOrdersTab from "../pages/FreeFireOrdersTab";
 import WithdrawalsTab from "../pages/WithdrawalsTab";
 import AdminSupportTab from "../pages/AdminSupportTab";
@@ -52,7 +51,6 @@ export default function Admin() {
     "roblox-orders": <RobloxOrdersTab />,
     "lienquan-orders": <LienQuanOrdersTab />,
     "playtogether-orders": <PlayTogetherOrdersTab />,
-    "pubg-orders": <PubgOrdersTab />,
     "freefire-orders": <FreeFireOrdersTab />,
     users: <UsersTab />,
     notify: <BroadcastForm />,
