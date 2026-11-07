@@ -124,37 +124,8 @@ body {
   width: 0;
   height: 0;
 }
-/* Thêm vào file CSS toàn cục của bạn */
-@keyframes slideUpFadeScale {
-  0% {
-    opacity: 0;
-    transform: translateY(40px) scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 
-@keyframes fadeInBackdrop {
-  0% {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  100% {
-    opacity: 1;
-    backdrop-filter: blur(12px);
-  }
-}
-
-.animate-modal-pop {
-  animation: slideUpFadeScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-backdrop {
-  animation: fadeInBackdrop 0.3s ease-out forwards;
-}
-/* Tối ưu hiệu ứng cho Modal, chống nháy xám trên mobile */
+/* ============ MODAL ANIMATIONS & FIXES ============ */
 @keyframes slideUpFadeScale {
   0% {
     opacity: 0;
@@ -170,3 +141,8 @@ body {
   animation: slideUpFadeScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform, opacity;
 }
+
+/* Ngăn scroll trang phía sau khi mở Modal */
+body.modal-open {
+  overflow: hidden;
+  }
