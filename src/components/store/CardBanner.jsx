@@ -20,9 +20,9 @@ const TXT = {
 };
 
 const TELCOS = [
-  { id: "viettel", name: "Viettel", logoFile: "viettel-icon.png" },
-  { id: "mobifone", name: "Mobifone", logoFile: "mobifone-icon.png" },
-  { id: "vinaphone", name: "Vinaphone", logoFile: "vinaphone-icon.png" },
+  { id: "viettel", name: "Viettel", logoFile: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/viettel.png" },
+  { id: "mobifone", name: "Mobifone", logoFile: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/mobifone.png" },
+  { id: "vinaphone", name: "Vinaphone", logoFile: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/vinaphone.png" },
 ];
 
 function Thumb({ src, alt = "", fallback, className = "" }) {
