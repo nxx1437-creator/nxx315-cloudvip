@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { CATEGORIES } from "./constants.js";
-import "./chat.css";
+import "./chat-effects.css";
 
 const ICON_MAP = {
   HelpCircle, KeyRound, ShieldCheck, Mail, CreditCard, RotateCcw,
