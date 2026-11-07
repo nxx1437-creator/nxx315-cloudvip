@@ -28,6 +28,9 @@ import {
   formatPrice,
 } from "../../lib/freefireData.js";
 
+/* =========================================================
+ * HERO BANNER
+ * =======================================================*/
 export function FreeFireHero({ onBack }) {
   return (
     <HeroPanel
@@ -51,8 +54,9 @@ export function FreeFireHero({ onBack }) {
   );
 }
 
-/* ───────── Bước 1: chọn gói ───────── */
-
+/* =========================================================
+ * BƯỚC 1: CHỌN GÓI KIM CƯƠNG
+ * =======================================================*/
 export function PackageStep({
   selectedPackage,
   setSelectedPackage,
@@ -95,13 +99,14 @@ export function PackageStep({
         <PillButton
           onClick={onContinue}
           disabled={!selectedPackage || !agreedTerms}
-          className="h-14"
+          className="mt-4 h-14"
         >
           Tiếp tục
           <ChevronRight size={18} />
         </PillButton>
+
         {!selectedPackage && (
-          <p className="mt-3 text-center text-[13px] text-[#686868]">
+          <p className="mt-3 text-center text-[13px] text-gray-500">
             Chọn một gói để tiếp tục
           </p>
         )}
@@ -110,32 +115,33 @@ export function PackageStep({
   );
 }
 
+/* =========================================================
+ * PACKAGE CARD (Nền sáng)
+ * =======================================================*/
 function PackageCard({ pkg, active, onSelect }) {
   return (
     <button
       type="button"
       onClick={() => onSelect(pkg)}
-      className={`relative overflow-hidden rounded-[24px] border p-3.5 text-left transition ${
+      className={`relative overflow-hidden rounded-[24px] border p-3.5 text-left transition-all duration-200 ${
         active
-          ? "border-white bg-white text-[#161616]"
-          : "border-white/15 bg-[#d4d4d4]/10 text-white backdrop-blur-[4px] hover:border-white/40"
+          ? "border-gray-900 bg-white shadow-md ring-1 ring-gray-900"
+          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
       }`}
     >
       {active && (
         <CheckCircle2
-          size={18}
-          className="absolute right-3 top-3 text-[#161616]"
+          size={20}
+          className="absolute right-3 top-3 text-gray-900 fill-gray-900 text-white"
         />
       )}
 
-      <div
-        className={`mx-auto mb-3 aspect-square w-full max-w-[84px] overflow-hidden rounded-[16px] ${
-          active ? "bg-[#161616]/5" : "bg-white/10"
-        }`}
-      >
+      {/* Ảnh gói */}
+      <div className="mx-auto mb-3 aspect-square w-full max-w-[84px] overflow-hidden rounded-[16px] bg-gray-100">
         <img
           src={pkg.image}
           alt={`${pkg.diamond} Kim Cương`}
+          loading="lazy"
           className="h-full w-full object-cover"
           onError={(e) => {
             e.currentTarget.style.opacity = "0.3";
@@ -143,22 +149,15 @@ function PackageCard({ pkg, active, onSelect }) {
         />
       </div>
 
+      {/* Thông tin gói */}
       <div className="text-center">
-        <p className="text-[22px] leading-none tracking-[-0.035em]">
+        <p className="text-[22px] font-semibold leading-none tracking-[-0.035em] text-gray-900">
           {pkg.diamond.toLocaleString("vi-VN")}
         </p>
-        <p
-          className={`mt-1 text-[13px] ${
-            active ? "text-[#686868]" : "text-[#c2c2c2]"
-          }`}
-        >
+        <p className="mt-1 text-[13px] text-gray-500">
           Kim Cương
         </p>
-        <div
-          className={`mt-3 border-t pt-3 text-[15px] ${
-            active ? "border-[#161616]/10" : "border-white/10"
-          }`}
-        >
+        <div className="mt-3 border-t border-gray-100 pt-3 text-[15px] font-semibold text-gray-900">
           {formatPrice(pkg.amount)}
         </div>
       </div>
@@ -166,8 +165,9 @@ function PackageCard({ pkg, active, onSelect }) {
   );
 }
 
-/* ───────── Bước 3: thanh toán (chỉ Coin) ───────── */
-
+/* =========================================================
+ * BƯỚC 3: THANH TOÁN
+ * =======================================================*/
 export function PaymentStep({
   selectedPackage,
   uid,
@@ -181,11 +181,12 @@ export function PaymentStep({
 }) {
   if (!order) {
     return (
-      <Panel className="mx-auto max-w-2xl p-8 text-center">
-        <XCircle className="mx-auto mb-3 text-white" size={40} />
-        <h2 className="text-[20px] tracking-[-0.035em] text-white">
+      <Panel className="mx-auto max-w-2xl bg-white p-8 text-center shadow-sm border border-gray-200">
+        <XCircle className="mx-auto mb-3 text-red-500" size={40} />
+        <h2 className="text-[20px] font-semibold tracking-[-0.035em] text-gray-900">
           Không tìm thấy đơn hàng
         </h2>
+        <p className="mt-1 text-[14px] text-gray-500">Vui lòng thử lại hoặc quay lại bước trước.</p>
         <div className="mx-auto mt-5 max-w-[200px]">
           <PillButton onClick={onBack}>Quay lại</PillButton>
         </div>
@@ -202,23 +203,27 @@ export function PaymentStep({
         title="Thanh toán"
         sub="Thanh toán bằng Coin trong ví"
       />
-      <CoinPayPanel
-        amount={order.amount}
-        orderCode={order.order_code}
-        rows={[
-          {
-            label: "Gói",
-            value: `${Number(diamond || 0).toLocaleString("vi-VN")} Kim Cương`,
-          },
-          { label: "UID", value: order.ff_uid || uid },
-        ]}
-        balance={profile?.coins}
-        loading={loadingProfile}
-        paying={paying}
-        onPay={onCoinPayment}
-        onBack={onBack}
-        onEarn={onEarn}
-      />
+      
+      {/* Panel thanh toán - Nền sáng */}
+      <div className="rounded-[24px] border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <CoinPayPanel
+          amount={order.amount}
+          orderCode={order.order_code}
+          rows={[
+            {
+              label: "Gói",
+              value: `${Number(diamond || 0).toLocaleString("vi-VN")} Kim Cương`,
+            },
+            { label: "UID", value: order.ff_uid || uid },
+          ]}
+          balance={profile?.coins}
+          loading={loadingProfile}
+          paying={paying}
+          onPay={onCoinPayment}
+          onBack={onBack}
+          onEarn={onEarn}
+        />
+      </div>
     </div>
   );
-  }
+          }
