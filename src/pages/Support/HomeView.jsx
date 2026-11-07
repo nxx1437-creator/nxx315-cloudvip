@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
-import "./chat.css";
+import "./chat-effects.css";
 
 const ICON_COMPONENTS = {
   User, CreditCard, Package, Bug, MoreHorizontal,
