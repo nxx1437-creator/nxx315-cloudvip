@@ -1,12 +1,12 @@
 // src/components/store/CardBanner.jsx — khối "Đổi xu thành thẻ cào" trong trang Cửa hàng
 import React, { useState } from "react";
-import { ChevronRight, CreditCard } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { getImageUrl } from "../../lib/storeData.js";
 import { useI18n } from "../../i18n/index.js";
 
 const TXT = {
   vi: {
-    kicker: "Đổi xu thành ",
+    kicker: "Đổi xu thành thẻ cào",
     title: "Thẻ cào điện thoại",
     desc: "Thẻ từ 10.000đ, nhận mã ngay",
     btn: "Đổi",
@@ -37,50 +37,70 @@ export default function CardBanner({ navigate }) {
 
   return (
     <section>
-      <div className="border border-[#e5e5e5] bg-white">
+      <div className="overflow-hidden rounded-[28px] bg-[#fbfaf7] p-4 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612]">
         <button
           type="button"
           onClick={() => navigate("/cards")}
-          className="group flex w-full items-center gap-4 border-b border-[#e5e5e5] p-4 text-left transition active:bg-[#f6f8f7]"
+          className="flex w-full items-center gap-4 pb-4 text-left active:opacity-80"
         >
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-extralight uppercase tracking-wide text-black">
-              {s.kicker}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <h3 className="text-[24px] font-light leading-[1.15] text-black">{s.title}</h3>
-              <ChevronRight size={18} className="text-black" strokeWidth={1.25} />
-            </div>
-            <p className="mt-2 text-[13px] font-extralight leading-[1.5] text-black">{s.desc}</p>
+            <p className="text-[10.5px] uppercase tracking-[0.2em] text-[#8a8880]">{s.kicker}</p>
+            <h3 className="mt-2 text-[22px] font-bold lowercase leading-[1.15]">
+              {s.title}
+              <span className="text-[#ff5a00]">.</span>
+            </h3>
+            <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">{s.desc}</p>
           </div>
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center border border-black bg-white">
-            <CreditCard size={36} className="text-black" strokeWidth={1} />
+
+          {/* Ô họa tiết chấm */}
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-[#f6f5f1]">
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                backgroundImage: "radial-gradient(#d6d4cc 1.1px, transparent 1.3px)",
+                backgroundSize: "9px 9px",
+              }}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                backgroundImage: "radial-gradient(#ff5a00 1.2px, transparent 1.4px)",
+                backgroundSize: "9px 9px",
+                WebkitMaskImage: "linear-gradient(to bottom right, transparent 20%, #000 100%)",
+                maskImage: "linear-gradient(to bottom right, transparent 20%, #000 100%)",
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
+                <CreditCard size={20} strokeWidth={1.75} />
+              </span>
+            </div>
           </div>
         </button>
 
-        <div className="divide-y divide-[#e5e5e5]">
+        <div className="space-y-2">
           {TELCOS.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => navigate(`/cards?telco=${t.id}`)}
-              className="group flex w-full items-center gap-4 p-4 text-left transition hover:bg-[#f6f8f7] active:bg-[#f6f8f7]"
+              className="flex w-full items-center gap-3 rounded-2xl bg-[#f6f5f1] p-3 text-left active:opacity-80"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#e5e5e5] bg-white">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white">
                 <Thumb
                   src={getImageUrl(t.logoFile)}
                   alt={t.name}
                   className="h-7 w-7 object-contain"
-                  fallback={
-                    <span className="text-[17px] font-light text-black">{t.name.charAt(0)}</span>
-                  }
+                  fallback={<span className="text-[16px] font-bold">{t.name.charAt(0)}</span>}
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[19px] font-light leading-[1.15] text-black">{t.name}</p>
-                <p className="mt-1 truncate text-[13px] font-extralight text-black">{s.desc}</p>
+                <p className="truncate text-[14px] font-bold leading-tight">{t.name}</p>
+                <p className="mt-1 truncate text-[11.5px] leading-tight text-[#8a8880]">{s.desc}</p>
               </div>
-              <span className="shrink-0 border border-black px-4 py-2 text-[13px] font-light uppercase tracking-wide text-black transition group-hover:bg-black group-hover:text-white">
+              <span className="shrink-0 rounded-full bg-[#171612] px-4 py-2 text-[12px] font-bold lowercase text-white">
                 {s.btn}
               </span>
             </button>
@@ -89,4 +109,4 @@ export default function CardBanner({ navigate }) {
       </div>
     </section>
   );
-              }
+                  }
