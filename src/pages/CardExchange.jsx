@@ -184,7 +184,8 @@ export default function CardExchange() {
       setSubmitting(false);
     }
   };
-    if (loading) {
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#f6f5f1] pb-24">
         <TopHeader />
@@ -315,7 +316,8 @@ export default function CardExchange() {
             </div>
           </div>
         )}
-                 <div className="mt-10">
+
+        <div className="mt-10">
           <p className="mb-1 text-[12px] text-[#8a8880]">lịch sử đổi thẻ</p>
           {orders.length === 0 ? (
             <div className="border-t border-[#e6e4dd] py-6 text-[12px] text-[#8a8880]">
@@ -439,4 +441,4 @@ export default function CardExchange() {
       {!selected && !result && <BottomNav />}
     </div>
   );
-}             
+        }             
