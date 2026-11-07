@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Plus, X, History, FileText } from "lucide-react";
+import { Plus, X, History, FileText } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { formatRelativeTime } from "./helpers.js";
-import "./chat.css";
+import { ThinkingSpinner } from "./ThinkingIndicator.jsx";
 
 export default function HistoryDrawer({
   open,
@@ -63,7 +63,7 @@ export default function HistoryDrawer({
     if (items.length === 0) return null;
     return (
       <div className="mb-5">
-        <h3 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <h3 className="mb-1.5 px-2 text-[12.5px] font-medium text-[#7b7e90]">
           {title}
         </h3>
         <div className="space-y-0.5">
@@ -74,10 +74,10 @@ export default function HistoryDrawer({
                 onOpenConversation(conv);
                 onClose();
               }}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
                 conv.id === currentConvId
-                  ? "bg-[var(--chat-surface)] font-semibold text-[var(--chat-ink)]"
-                  : "text-slate-700 hover:bg-slate-50"
+                  ? "bg-[#f5f6fb] text-[#13141a]"
+                  : "text-[#3f4254] hover:bg-[#f5f6fb]"
               }`}
             >
               <FileText size={16} className="shrink-0 opacity-60" />
@@ -101,28 +101,28 @@ export default function HistoryDrawer({
   return (
     <>
       <div
-        className="fade-in fixed inset-0 z-[100] bg-black/25 backdrop-blur-[2px]"
+        className="nxx-fade fixed inset-0 z-[100] bg-black/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="drawer-in fixed left-0 top-0 z-[101] flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
-          <h2 className="text-[17px] font-bold text-slate-800">
+      <div className="nxx-drawer-in fixed left-0 top-0 z-[101] flex h-full w-[85%] max-w-sm flex-col rounded-r-[28px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between px-5 pb-3 pt-5">
+          <h2 className="text-[19px] font-semibold tracking-[-0.01em] text-[#13141a]">
             Lịch sử trò chuyện
           </h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"
+            className="nxx-iconbtn h-9 w-9 text-[#7b7e90] hover:bg-[#f5f6fb]"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="border-b border-slate-100 p-3">
+        <div className="px-4 pb-3">
           <button
             onClick={() => {
               onNewChat();
               onClose();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--chat-ink)] px-4 py-3 text-[14px] font-bold text-white shadow-[0_4px_12px_rgba(17,20,24,0.22)] transition active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#13141a] px-4 py-3 text-[14.5px] font-semibold text-white transition active:scale-[0.98]"
           >
             <Plus size={18} strokeWidth={2.4} />
             Cuộc trò chuyện mới
@@ -131,19 +131,19 @@ export default function HistoryDrawer({
         <div className="flex-1 overflow-y-auto p-3">
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 size={20} className="animate-spin text-slate-300" />
+              <ThinkingSpinner />
             </div>
           ) : conversations.length === 0 ? (
             <div className="px-4 py-10 text-center">
               <History
                 size={36}
-                className="mx-auto mb-3 text-slate-300"
+                className="mx-auto mb-3 text-[#c5c8dc]"
                 strokeWidth={1.5}
               />
-              <p className="text-[13px] font-medium text-slate-500">
+              <p className="text-[13.5px] font-medium text-[#3f4254]">
                 Chưa có cuộc trò chuyện nào
               </p>
-              <p className="mt-1 text-[11.5px] text-slate-400">
+              <p className="mt-1 text-[12px] text-[#7b7e90]">
                 Bắt đầu chat để lưu lịch sử
               </p>
             </div>
@@ -158,5 +158,6 @@ export default function HistoryDrawer({
       </div>
     </>
   );
-  }
+}
+
 
