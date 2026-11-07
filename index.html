@@ -259,8 +259,7 @@
         #initial-loader { transition: opacity 0.3s ease; }
       }
     </style>
-
-    <!-- ===== Structured Data (JSON-LD) — ORGANIZATION ===== -->
+        <!-- ===== Structured Data (JSON-LD) — ORGANIZATION ===== -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -286,6 +285,17 @@
     }
     </script>
     <!-- ====================================================== -->
+
+    <!-- DEBUG: hiện lỗi lên màn hình (xóa sau khi xong) -->
+    <script>
+      window.addEventListener("error", function (e) {
+        var d = document.createElement("pre");
+        d.style.cssText =
+          "position:fixed;z-index:999999;top:0;left:0;right:0;margin:0;background:#fff;color:#c00;padding:12px;font-size:12px;white-space:pre-wrap";
+        d.textContent = e.message + "\n" + (e.filename || "");
+        document.body.appendChild(d);
+      });
+    </script>
   </head>
 
   <body>
@@ -337,5 +347,4 @@
       })();
     </script>
   </body>
-      </html>
-  
+</html>
