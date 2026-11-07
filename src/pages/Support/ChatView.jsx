@@ -599,4 +599,189 @@ export default function ChatView({
             </button>
           </div>
         )}
+{/* Ô nhập dạng viên thuốc + viền sáng */}
+        <div className="relative flex h-[58px] items-center gap-2 rounded-[29px] border border-[var(--chat-border)] bg-[var(--chat-surface)] pl-2 pr-2 transition focus-within:border-[#c3c7d1] focus-within:bg-white">
+          <GlowRing active={busy} pulseKey={glowPulse} />
 
+          <button
+            onClick={() => setShowFileMenu(true)}
+            aria-label="Đính kèm ảnh"
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--chat-border)] bg-white text-[var(--chat-ink)] transition active:scale-90"
+          >
+            <Focus size={19} strokeWidth={2} />
+          </button>
+
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder={
+              hasUserMsg ? "Hỏi thêm…" : "Nhập yêu cầu của bạn tại đây nhé"
+            }
+            className="relative h-full min-w-0 flex-1 bg-transparent text-[15px] text-[var(--chat-ink)] outline-none placeholder:text-[#a9adbb]"
+          />
+
+          {!hasInput && !busy && (
+            <button
+              onClick={() => setShowEmoji(true)}
+              aria-label="Chèn emoji"
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--chat-muted)] transition active:scale-90"
+            >
+              <Smile size={21} strokeWidth={2} />
+            </button>
+          )}
+
+          {busy ? (
+            <button
+              onClick={stopGenerating}
+              aria-label="Dừng"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--chat-ink)] text-white transition active:scale-90"
+            >
+              <Square size={13} strokeWidth={0} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              onClick={() => sendMessage()}
+              disabled={!hasInput}
+              aria-label="Gửi"
+              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition active:scale-90 ${
+                hasInput
+                  ? "bg-[var(--chat-ink)] text-white"
+                  : "bg-[#d9dce5] text-white"
+              }`}
+            >
+              <ArrowUp size={20} strokeWidth={2.4} />
+            </button>
+          )}
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFileSelect(f);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFileSelect(f);
+            e.target.value = "";
+          }}
+        />
+
+        {/* FILE MENU */}
+        {showFileMenu && (
+          <>
+            <div
+              className="fade-in fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+              onClick={() => setShowFileMenu(false)}
+            />
+            <div className="sheet-up fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-2xl rounded-t-[28px] bg-white pb-[max(20px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_40px_rgba(17,20,24,0.12)]">
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+              <div className="px-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-[var(--chat-ink)]">
+                    Tải lên
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      fileInputRef.current?.click();
+                    }}
+                    className="text-sm font-semibold text-blue-500"
+                  >
+                    Tất cả ảnh
+                  </button>
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-4">
+                  {[
+                    {
+                      label: "Chụp ảnh",
+                      Icon: Camera,
+                      onClick: () => cameraInputRef.current?.click(),
+                    },
+                    {
+                      label: "Album",
+                      Icon: ImageIcon,
+                      onClick: () => fileInputRef.current?.click(),
+                    },
+                    { label: "Tệp", Icon: Paperclip, onClick: () => {} },
+                  ].map(({ label, Icon, onClick }) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        setShowFileMenu(false);
+                        onClick();
+                      }}
+                      className="flex flex-col items-center gap-3"
+                    >
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--chat-surface)] text-[var(--chat-ink)] transition active:scale-95">
+                        <Icon size={32} strokeWidth={1.8} />
+                      </div>
+                      <span className="text-[13px] font-medium text-slate-700">
+                        {label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* EMOJI PICKER */}
+        {showEmoji && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setShowEmoji(false)}
+            />
+            <div className="absolute bottom-20 right-4 z-50 overflow-hidden rounded-lg border border-slate-200 shadow-2xl">
+              <EmojiPicker
+                onEmojiClick={(e) => setInput((prev) => prev + e.emoji)}
+                theme="light"
+                height={350}
+                width={300}
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* TOAST */}
+      {toast && (
+        <div
+          key={toast.id}
+          role="status"
+          className="toast-pop pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+92px)] left-1/2 z-[80] flex items-center gap-2 rounded-full border border-[var(--chat-border)] bg-white px-4 py-2 text-[13px] font-medium text-[var(--chat-ink)] shadow-[0_8px_24px_rgba(17,20,24,0.12)]"
+        >
+          <Check size={15} strokeWidth={2.6} />
+          {toast.text}
+        </div>
+      )}
+
+      {/* FEEDBACK SHEET */}
+      <FeedbackSheet
+        open={!!feedbackFor}
+        rating={feedbackFor?.rating}
+        onClose={() => setFeedbackFor(null)}
+        onSubmit={submitFeedback}
+      />
+    </div>
+  );
+            }
