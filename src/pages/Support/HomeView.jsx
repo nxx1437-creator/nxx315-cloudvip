@@ -1,4 +1,5 @@
 // src/pages/Support/HomeView.jsx
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, ArrowUp, User, CreditCard, Package, Bug,
@@ -68,10 +69,10 @@ export default function HomeView({
         <div className="h-8 w-8" />
       </div>
 
-      {SYSTEM_BANNER?.enabled && <BannerNotice />}
+      {SYSTEM_BANNER?.enabled && <BannerNotice currentPage="support" />}
 
       <div className="px-5 pb-6 pt-10">
-        <h2 className="font-hero hero-shimmer text-center text-[34px] leading-[1.15] tracking-[-0.02em]">
+        <h2 className="nxx-hl nxx-hl--in nxx-serif text-center text-[34px] leading-[1.15] tracking-[-0.02em]">
           Chúng tôi sẵn sàng hỗ trợ!
         </h2>
       </div>
@@ -188,5 +189,5 @@ export default function HomeView({
       </div>
     </div>
   );
-      }                     
+          }                     
 
