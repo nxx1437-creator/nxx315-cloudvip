@@ -316,102 +316,112 @@ export default function CardExchange() {
         </div>
       </main>
 
-      {/* MODAL XÁC NHẬN - Thiết kế lại theo phong cách Bottom Sheet của ảnh 3 */}
-      {selected && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-md rounded-t-[32px] bg-[#f8f7f3] shadow-2xl sm:rounded-[32px] overflow-hidden animate-in slide-in-from-bottom-4">
-            {/* Header Modal */}
-            <div className="px-6 pt-6 pb-4 border-b border-[#e8e6df]/60">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-[26px] font-bold lowercase leading-[1.05] tracking-tight">
-                    xác nhận đổi thẻ<span className="text-[#ff5a00]">.</span>
-                  </h3>
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="rounded-md bg-[#e8e6df] px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-[#171612]">
-                      {telcoName(selected.telco)}
-                    </span>
-                    <span className="text-[11px] font-medium text-[#8a8880]">thẻ cào điện thoại</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeConfirm}
-                  disabled={submitting}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e8e6df]/60 text-[#171612] disabled:opacity-50"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Body Modal */}
-            <div className="px-6 py-5">
-              {/* Bảng thông số */}
-              <div className="flex items-center justify-between rounded-2xl bg-white border border-[#e8e6df] p-4 mb-5">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">mệnh giá</p>
-                  <p className="mt-1 text-[16px] font-bold">{fmt(selected.denomination)}đ</p>
-                </div>
-                <div className="w-px h-8 bg-[#e8e6df]" />
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">khấu trừ</p>
-                  <p className="mt-1 text-[16px] font-bold text-[#ff5a00]">-{fmt(selected.coin_price)} xu</p>
-                </div>
-                <div className="w-px h-8 bg-[#e8e6df]" />
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">còn lại</p>
-                  <p className="mt-1 text-[16px] font-bold">{fmt(Math.max(0, balance - selected.coin_price))} xu</p>
-                </div>
-              </div>
-
-              {/* Input */}
-              <label className="block">
-                <span className="text-[11px] font-bold text-[#8a8880] uppercase tracking-wider">Zalo / Discord nhận thẻ</span>
-                <input
-                  type="text"
-                  value={contact}
-                  onChange={(e) => setContact(e.target.value)}
-                  placeholder="VD: 09xxxxxxxx hoặc ten_discord"
-                  maxLength={100}
-                  className="mt-2 w-full rounded-full border border-[#e8e6df] bg-white px-5 py-3.5 text-[14px] font-medium text-[#171612] outline-none placeholder:text-[#c0beb6] focus:border-[#171612] focus:ring-1 focus:ring-[#171612] transition-all"
-                />
-              </label>
-
-              <p className="mt-4 text-[11px] leading-relaxed text-[#8a8880]">
-                Xu bị trừ ngay khi gửi yêu cầu. Nếu Admin từ chối, xu sẽ được hoàn lại tự động. Vui lòng kiểm tra kỹ thông tin.
-              </p>
-
-              {error && (
-                <div className="mt-4 rounded-xl bg-[#fff0e6] px-4 py-3 text-[12px] font-bold text-[#d94a00]">
-                  {error}
-                </div>
-              )}
-            </div>
-
-            {/* Footer Modal */}
-            <div className="px-6 pb-6 pt-2 flex gap-3 bg-[#f8f7f3]">
-              <button
-                type="button"
-                onClick={closeConfirm}
-                disabled={submitting}
-                className="flex-1 rounded-full bg-[#e8e6df] py-3.5 text-[13px] font-bold text-[#171612] transition-opacity disabled:opacity-50"
-              >
-                hủy
-              </button>
-              <button
-                type="button"
-                onClick={submit}
-                disabled={submitting}
-                className="flex flex-[1.8] items-center justify-center gap-2 rounded-full bg-[#ff5a00] py-3.5 text-[13px] font-bold text-white shadow-[0_4px_14px_rgba(255,90,0,0.3)] transition-transform active:scale-[0.98] disabled:opacity-60"
-              >
-                {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-                {submitting ? "đang gửi..." : "gửi yêu cầu"}
-              </button>
+          {/* MODAL XÁC NHẬN - Phong cách nổi, trong suốt (Glassmorphism) */}
+{selected && (
+  <div 
+    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/20 backdrop-blur-md transition-opacity"
+    onClick={(e) => {
+      if (e.target === e.currentTarget) closeConfirm();
+    }}
+  >
+    <div 
+      className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/85 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-white/50 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* Header Modal */}
+      <div className="px-6 pt-7 pb-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-[26px] font-bold lowercase leading-[1.1] tracking-tight">
+              xác nhận đổi thẻ<span className="text-[#ff5a00]">.</span>
+            </h3>
+            <div className="mt-3 flex items-center gap-2.5">
+              <span className="rounded-md bg-[#e8e6df]/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#171612]">
+                {telcoName(selected.telco)}
+              </span>
+              <span className="text-[11px] font-medium text-[#8a8880] tracking-wide">thẻ cào điện thoại</span>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={closeConfirm}
+            disabled={submitting}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8e6df]/80 text-[#171612] transition-transform active:scale-95 disabled:opacity-50"
+            aria-label="Đóng"
+          >
+            <X size={18} />
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* Body Modal */}
+      <div className="px-6 pb-6">
+        {/* Bảng thông số - Phong cách tối giản, có vạch chia */}
+        <div className="flex items-center justify-between border-y border-[#e8e6df]/80 py-4 mb-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">mệnh giá</p>
+            <p className="mt-1.5 text-[16px] font-bold tracking-tight">{fmt(selected.denomination)}đ</p>
+          </div>
+          <div className="w-px h-8 bg-[#e8e6df]/80" />
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">khấu trừ</p>
+            <p className="mt-1.5 text-[16px] font-bold text-[#ff5a00] tracking-tight">-{fmt(selected.coin_price)} xu</p>
+          </div>
+          <div className="w-px h-8 bg-[#e8e6df]/80" />
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">còn lại</p>
+            <p className="mt-1.5 text-[16px] font-bold tracking-tight">{fmt(Math.max(0, balance - selected.coin_price))} xu</p>
+          </div>
+        </div>
+
+        {/* Input */}
+        <label className="block">
+          <span className="text-[11px] font-bold text-[#8a8880] uppercase tracking-wider">Zalo / Discord nhận thẻ</span>
+          <input
+            type="text"
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
+            placeholder="VD: 09xxxxxxxx hoặc ten_discord"
+            maxLength={100}
+            className="mt-2.5 w-full rounded-full border border-[#e8e6df] bg-white/60 px-5 py-3.5 text-[14px] font-medium text-[#171612] outline-none placeholder:text-[#c0beb6] focus:border-[#171612] focus:bg-white focus:ring-1 focus:ring-[#171612] transition-all"
+          />
+        </label>
+
+        <p className="mt-4 text-[11px] leading-relaxed text-[#8a8880]">
+          Xu bị trừ ngay khi gửi yêu cầu. Nếu Admin từ chối, xu sẽ được hoàn lại tự động. Vui lòng kiểm tra kỹ thông tin.
+        </p>
+
+        {error && (
+          <div className="mt-3 rounded-2xl bg-[#fff0e6] px-4 py-3 text-[12px] font-bold text-[#d94a00]">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* Footer Modal - Nút bấm */}
+      <div className="px-6 pb-7 pt-2 flex gap-3">
+        <button
+          type="button"
+          onClick={closeConfirm}
+          disabled={submitting}
+          className="flex-1 rounded-full bg-[#171612] py-3.5 text-[13px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          hủy
+        </button>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={submitting}
+          className="flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-[#ff5a00] py-3.5 text-[13px] font-bold text-white shadow-[0_8px_20px_rgba(255,90,0,0.25)] transition-all active:scale-[0.98] disabled:opacity-60"
+        >
+          {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+          {submitting ? "đang gửi..." : "gửi yêu cầu"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* MODAL THÀNH CÔNG */}
       {result && (
