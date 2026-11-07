@@ -181,51 +181,54 @@ export default function FreeFire() {
   };
 
   return (
-    <PageShell>
-      <TopHeader />
+    // Thêm bg-gray-50 để cả trang có nền xám nhạt (giúp các thẻ trắng nổi bật)
+    <div className="min-h-screen bg-gray-50">
+      <PageShell>
+        <TopHeader />
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-5 sm:py-6">
-        <FreeFireHero onBack={() => navigate("/store")} />
+        <main className="mx-auto w-full max-w-3xl px-4 py-5 sm:py-6">
+          <FreeFireHero onBack={() => navigate("/store")} />
 
-        <div className="mt-5" />
+          <div className="mt-5" />
 
-        {step === "package" && (
-          <PackageStep
-            selectedPackage={selectedPackage}
-            setSelectedPackage={setSelectedPackage}
-            onContinue={() => setStep("uid")}
-            agreedTerms={agreedTerms}
-            setAgreedTerms={setAgreedTerms}
-          />
-        )}
+          {step === "package" && (
+            <PackageStep
+              selectedPackage={selectedPackage}
+              setSelectedPackage={setSelectedPackage}
+              onContinue={() => setStep("uid")}
+              agreedTerms={agreedTerms}
+              setAgreedTerms={setAgreedTerms}
+            />
+          )}
 
-        {step === "uid" && (
-          <UidStep
-            uid={uid}
-            setUid={setUid}
-            selectedPackage={selectedPackage}
-            creatingOrder={creatingOrder}
-            onBack={() => setStep("package")}
-            onContinue={continueToPayment}
-          />
-        )}
+          {step === "uid" && (
+            <UidStep
+              uid={uid}
+              setUid={setUid}
+              selectedPackage={selectedPackage}
+              creatingOrder={creatingOrder}
+              onBack={() => setStep("package")}
+              onContinue={continueToPayment}
+            />
+          )}
 
-        {step === "payment" && (
-          <PaymentStep
-            selectedPackage={selectedPackage}
-            uid={uid}
-            order={order}
-            profile={profile}
-            loadingProfile={loadingProfile}
-            paying={paying}
-            onBack={() => setStep("uid")}
-            onCoinPayment={handleCoinPayment}
-            onEarn={() => navigate("/tasks")}
-          />
-        )}
-      </main>
+          {step === "payment" && (
+            <PaymentStep
+              selectedPackage={selectedPackage}
+              uid={uid}
+              order={order}
+              profile={profile}
+              loadingProfile={loadingProfile}
+              paying={paying}
+              onBack={() => setStep("uid")}
+              onCoinPayment={handleCoinPayment}
+              onEarn={() => navigate("/tasks")}
+            />
+          )}
+        </main>
 
-      <BottomNav />
-    </PageShell>
+        <BottomNav />
+      </PageShell>
+    </div>
   );
-}
+        }
