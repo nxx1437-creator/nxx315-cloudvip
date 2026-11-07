@@ -30,7 +30,7 @@
 /* ---------- Ô nhập ---------- */
 .nxx-composer {
   position: relative;
-  isolation: isolate; /* để viền sáng nằm DƯỚI nút/chữ nhưng TRÊN nền ô nhập */
+  isolation: isolate; /* viền sáng nằm DƯỚI nút/chữ nhưng TRÊN nền ô nhập */
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -48,8 +48,7 @@
 }
 
 /* ---------- Viền sáng khi AI đang suy nghĩ / trả lời ----------
-   Giống video mẫu: quét ~2 giây quanh khung rồi nghỉ ~2 giây, lặp lại.
-   Chỉ dùng transform + opacity (chạy bằng GPU) nên không bị đơ.
+   Quay liên tục quanh khung, chỉ dùng transform + opacity (GPU) nên mượt.
    Chỉ cần 1 thẻ rỗng: <span class="nxx-glow" /> bên trong .nxx-composer */
 .nxx-glow {
   position: absolute;
@@ -59,7 +58,10 @@
   overflow: hidden;
   pointer-events: none;
   opacity: 0;
+  transition: opacity 0.3s ease;
 }
+.nxx-composer.is-busy .nxx-glow { opacity: 1; }
+
 /* lớp màu quay */
 .nxx-glow::before {
   content: "";
@@ -84,8 +86,12 @@
     rgba(242, 107, 255, 0) 360deg
   );
   will-change: transform;
+  animation: nxx-glow-turn 2.8s linear infinite;
+  animation-play-state: paused;
 }
-/* lớp phủ bên trong: chừa lại viền 3px, và để lọt chút màu tạo quầng sáng nhẹ */
+.nxx-composer.is-busy .nxx-glow::before { animation-play-state: running; }
+
+/* lớp phủ bên trong: chừa viền 3px, để lọt chút màu tạo quầng sáng nhẹ */
 .nxx-glow::after {
   content: "";
   position: absolute;
@@ -94,23 +100,8 @@
   background: var(--nxx-cover);
 }
 
-@keyframes nxx-glow-fade {
-  0%   { opacity: 0; }
-  6%   { opacity: 1; }
-  46%  { opacity: 1; }
-  56%  { opacity: 0; }
-  100% { opacity: 0; }
-}
 @keyframes nxx-glow-turn {
-  0%   { transform: rotate(0deg); }
-  56%  { transform: rotate(-360deg); }
-  100% { transform: rotate(-360deg); }
-}
-.nxx-composer.is-busy .nxx-glow {
-  animation: nxx-glow-fade 4s ease-in-out infinite;
-}
-.nxx-composer.is-busy .nxx-glow::before {
-  animation: nxx-glow-turn 4s ease-in-out infinite;
+  to { transform: rotate(-360deg); }
 }
 
 /* ---------- Khung nhập to (trang chủ, dùng sau này) ---------- */
@@ -294,16 +285,5 @@
 }
 .nxx-drawer-in { animation: nxx-drawer-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-/* ---------- Giảm chuyển động ---------- */
-@media (prefers-reduced-motion: reduce) {
-  .nxx-rise, .nxx-fade, .nxx-sheet-in, .nxx-lb-in, .nxx-drawer-in,
-  .nxx-user-pill.is-new, .nxx-user-pill.is-new::before,
-  .nxx-reveal, .nxx-hl--in, .nxx-hl--out, .nxx-skel {
-    animation: none !important;
-  }
-  .nxx-user-pill.is-new::before { display: none; }
-  .nxx-hl--in { color: var(--nxx-ink); background: none; -webkit-mask-image: none; mask-image: none; }
-  .nxx-hl--out { display: none; }
-  .nxx-glow { display: none; }
-  .nxx-spin-comet { animation: none; stroke-dashoffset: 0; }
-  }             
+/* (Đã bỏ đoạn prefers-reduced-motion: nó tắt hết hiệu ứng trên máy bật
+   "xóa hiệu ứng / tiết kiệm pin", làm viền sáng mất và cục xoắn đứng im.) */             
