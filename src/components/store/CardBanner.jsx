@@ -6,13 +6,13 @@ import { useI18n } from "../../i18n/index.js";
 
 const TXT = {
   vi: {
-    kicker: "Đổi xu thành thẻ cào",
+    kicker: "Đổi xu thành ",
     title: "Thẻ cào điện thoại",
     desc: "Thẻ từ 10.000đ, nhận mã ngay",
     btn: "Đổi",
   },
   en: {
-    kicker: "Turn Coins into phone cards",
+    kicker: "Exchange Coins For ",
     title: "Phone cards",
     desc: "Cards from 10,000đ, get your code instantly",
     btn: "Redeem",
