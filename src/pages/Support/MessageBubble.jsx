@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, LogIn } from "lucide-react";
+import {
+  Sparkles, LogIn, Copy, Check, ThumbsUp, ThumbsDown, ChevronRight,
+} from "lucide-react";
 import MarkdownText from "./MarkdownText.jsx";
 import { shouldShowLoginButton } from "./helpers.js";
 
@@ -96,18 +98,19 @@ export default function MessageBubble({
   message,
   streamingText,
   isLastAIMessage,
-  onSuggestionClick,
-  sending,
+  isFresh = false,          // tin vừa gửi → chạy hiệu ứng quét gradient
+  rating = null,            // "up" | "down" | null
+  onRate,                   // (rating) => void
+  onCopy,                   // (text) => void
   onShowLogin,
-  hiddenSuggestionIds = [],
-  onHideSuggestions,
+  hideLogin = false,
 }) {
   const navigate = useNavigate();
   const [mediaError, setMediaError] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
-  const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
 
   const hasMedia = message.image_url && !mediaError;
   const isVideo =
@@ -115,41 +118,41 @@ export default function MessageBubble({
     message.image_url?.match(/\.(mp4|webm|mov|m3u8)$/i);
 
   // ==================================================
-  // USER BUBBLE
+  // USER BUBBLE — viên thuốc đen, chữ trắng
   // ==================================================
   if (isUser) {
     return (
-      <div className="flex justify-end">
-        <div className="relative max-w-[78%]">
-          <div className="absolute -right-[5px] top-0 h-3 w-3 bg-[#FFE5EC] [clip-path:polygon(0_0,100%_0,0_100%)]" />
-          <div className="overflow-hidden rounded-[20px] rounded-tr-[6px] bg-[#FFE5EC] shadow-[0_2px_8px_rgba(254,44,85,0.08)]">
-            {hasMedia && (
-              <img
-                src={message.image_url}
-                alt="User upload"
-                className="max-h-72 w-full object-cover"
-                loading="lazy"
-              />
-            )}
-            {message.message && (
-              <p className="whitespace-pre-wrap break-words px-4 py-2.5 text-[14px] leading-6 text-[#161823]">
-                {message.message}
-              </p>
-            )}
-          </div>
+      <div className="msg-in flex justify-end">
+        <div
+          className={`relative max-w-[82%] overflow-hidden rounded-[22px] bg-[var(--chat-ink)] text-white ${
+            isFresh ? "bubble-sweep" : ""
+          }`}
+        >
+          {hasMedia && (
+            <img
+              src={message.image_url}
+              alt="Ảnh bạn gửi"
+              className="relative z-[1] max-h-72 w-full object-cover"
+              loading="lazy"
+            />
+          )}
+          {message.message && (
+            <p className="relative z-[1] whitespace-pre-wrap break-words px-4 py-2.5 text-[15px] leading-6">
+              {message.message}
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
   // ==================================================
-  // AI BUBBLE
+  // AI MESSAGE — không bong bóng, chữ nằm trực tiếp trên nền
   // ==================================================
   const displayText =
     streamingText !== null ? streamingText : message.message;
   const isStreaming = streamingText !== null;
 
-  // ✅ Actions từ backend
   const backendActions =
     message.actions &&
     Array.isArray(message.actions) &&
@@ -157,7 +160,6 @@ export default function MessageBubble({
       ? message.actions
       : [];
 
-  // ✅ Fallback: parse từ text
   const parsedActions =
     backendActions.length === 0 && !isStreaming
       ? parseActionsFromText(message.message || "")
@@ -165,24 +167,16 @@ export default function MessageBubble({
 
   const finalActions =
     backendActions.length > 0 ? backendActions : parsedActions;
-
   const hasActions = finalActions.length > 0;
 
-  const hasSuggestions =
-    isLastAIMessage &&
-    message.suggestions?.length > 0 &&
-    !isStreaming &&
-    !isSuggestionHidden;
   const showLoginButton =
     isLastAIMessage &&
     !isStreaming &&
-    !isSuggestionHidden &&
+    !hideLogin &&
     shouldShowLoginButton(message.message);
 
-  const handleSuggestionClick = (reply) => {
-    if (onHideSuggestions) onHideSuggestions();
-    onSuggestionClick(reply);
-  };
+  // Hàng 📋 👎 👍: chỉ hiện ở tin AI cuối, hoặc tin đã được đánh giá
+  const showToolbar = isAI && !isStreaming && (isLastAIMessage || rating);
 
   const handleActionClick = (action) => {
     if (!action?.path) return;
@@ -193,157 +187,164 @@ export default function MessageBubble({
     navigate(action.path);
   };
 
+  const handleCopy = () => {
+    onCopy?.(message.message || "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const iconBtn =
+    "flex h-8 w-8 items-center justify-center rounded-lg text-[var(--chat-ink)] transition active:scale-90";
+
   return (
-    <div className="flex justify-start">
-      <div className="max-w-[85%]">
-        <div className="relative">
-          <div className="absolute -left-[5px] top-0 h-3 w-3 bg-white [clip-path:polygon(0_0,100%_0,100%_100%)]" />
-
-          <div className="overflow-hidden rounded-[20px] rounded-tl-[6px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            {/* MEDIA */}
-            {hasMedia && (
-              <div className="bg-white">
-                {isVideo ? (
-                  <video
-                    src={message.image_url}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="block max-h-96 w-full bg-black object-contain"
-                    onError={() => setMediaError(true)}
-                  />
-                ) : (
-                  <img
-                    src={message.image_url}
-                    alt="Hướng dẫn"
-                    className="block max-h-96 w-full cursor-pointer object-contain"
-                    loading="lazy"
-                    onClick={() =>
-                      window.open(message.image_url, "_blank")
-                    }
-                    onError={() => setMediaError(true)}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* TEXT */}
-            {displayText && (
-              <div className="px-4 py-3">
-                <MarkdownText text={displayText} />
-                {isStreaming && (
-                  <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-slate-400 align-middle" />
-                )}
-              </div>
-            )}
-
-            {/* ACTION BUTTONS */}
-            {hasActions && !isStreaming && (
-              <div className="border-t border-slate-100 px-3 py-3">
-                <div className="space-y-2">
-                  {finalActions.map((action, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleActionClick(action)}
-                      className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
-                    >
-                      {action.icon ? (
-                        <img
-                          src={action.icon}
-                          alt=""
-                          className="h-8 w-8 shrink-0 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                          <span className="text-base">🔗</span>
-                        </div>
-                      )}
-
-                      <span className="flex-1 text-[13.5px] font-semibold leading-tight text-slate-700">
-                        {action.label}
-                      </span>
-
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className="shrink-0 text-slate-400"
-                      >
-                        <path
-                          d="M9 6l6 6-6 6"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* SUGGESTIONS */}
-            {hasSuggestions && (
-              <div className="border-t border-slate-100">
-                {message.suggestions.map((reply, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSuggestionClick(reply)}
-                    disabled={sending}
-                    className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition hover:bg-slate-50 active:bg-slate-100 disabled:opacity-50 ${
-                      idx !== message.suggestions.length - 1 ||
-                      showLoginButton
-                        ? "border-b border-slate-100"
-                        : ""
-                    }`}
-                  >
-                    <span className="text-[14px] font-medium leading-5 text-slate-700">
-                      {reply}
-                    </span>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="shrink-0 text-slate-300"
-                    >
-                      <path
-                        d="M9 6l6 6-6 6"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                ))}
-
-                {showLoginButton && (
-                  <button
-                    onClick={onShowLogin}
-                    className="flex w-full items-center justify-center gap-2 bg-[#FE2C55] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.99]"
-                  >
-                    <LogIn size={16} strokeWidth={2.4} />
-                    Đăng nhập
-                  </button>
-                )}
-              </div>
+    <div className="msg-in flex justify-start">
+      <div className="w-full max-w-[92%]">
+        {/* MEDIA */}
+        {hasMedia && (
+          <div className="mb-2 overflow-hidden rounded-[18px] border border-[var(--chat-border)] bg-white">
+            {isVideo ? (
+              <video
+                src={message.image_url}
+                controls
+                playsInline
+                preload="metadata"
+                className="block max-h-96 w-full bg-black object-contain"
+                onError={() => setMediaError(true)}
+              />
+            ) : (
+              <img
+                src={message.image_url}
+                alt="Hướng dẫn"
+                className="block max-h-96 w-full cursor-pointer object-contain"
+                loading="lazy"
+                onClick={() => window.open(message.image_url, "_blank")}
+                onError={() => setMediaError(true)}
+              />
             )}
           </div>
-        </div>
+        )}
+
+        {/* TEXT */}
+        {displayText && (
+          <div className="text-[15px] leading-7 text-[#3b3f4a]">
+            <MarkdownText text={displayText} />
+            {isStreaming && (
+              <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-[var(--chat-ink)] align-middle" />
+            )}
+          </div>
+        )}
+
+        {/* NÚT HÀNH ĐỘNG (điều hướng) — thẻ bo lớn nền xám nhạt */}
+        {hasActions && !isStreaming && (
+          <div className="mt-3 space-y-2">
+            {finalActions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleActionClick(action)}
+                style={{ "--i": idx }}
+                className="chip-in flex w-full items-center gap-3 rounded-[18px] border border-[var(--chat-border)] bg-[var(--chat-surface)] px-3.5 py-3 text-left transition hover:bg-[#eef0f6] active:scale-[0.98]"
+              >
+                {action.icon ? (
+                  <img
+                    src={action.icon}
+                    alt=""
+                    className="h-8 w-8 shrink-0 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
+                    <span className="text-base">🔗</span>
+                  </div>
+                )}
+                <span className="flex-1 text-[14px] font-semibold leading-tight text-[var(--chat-ink)]">
+                  {action.label}
+                </span>
+                <ChevronRight
+                  size={16}
+                  strokeWidth={2.2}
+                  className="shrink-0 text-[var(--chat-muted)]"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ĐĂNG NHẬP */}
+        {showLoginButton && (
+          <button
+            onClick={onShowLogin}
+            className="chip-in mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--chat-ink)] px-5 py-2.5 text-[14px] font-semibold text-white transition active:scale-95"
+          >
+            <LogIn size={16} strokeWidth={2.4} />
+            Đăng nhập
+          </button>
+        )}
+
+        {/* COPY / 👎 / 👍 */}
+        {showToolbar && (
+          <div className="label-in mt-2 flex items-center gap-1">
+            <button
+              onClick={handleCopy}
+              aria-label="Sao chép"
+              className={`${iconBtn} ${copied ? "bg-[#eceef3]" : "hover:bg-[var(--chat-surface)]"}`}
+            >
+              {copied ? (
+                <Check size={17} strokeWidth={2.2} />
+              ) : (
+                <Copy size={17} strokeWidth={2} />
+              )}
+            </button>
+            <button
+              onClick={() => onRate?.("down")}
+              aria-label="Chưa hữu ích"
+              aria-pressed={rating === "down"}
+              className={`${iconBtn} ${
+                rating === "down"
+                  ? "bg-[#F43F5E] text-white"
+                  : "hover:bg-[var(--chat-surface)]"
+              }`}
+            >
+              <ThumbsDown
+                size={17}
+                strokeWidth={2}
+                fill={rating === "down" ? "currentColor" : "none"}
+              />
+            </button>
+            <button
+              onClick={() => onRate?.("up")}
+              aria-label="Hữu ích"
+              aria-pressed={rating === "up"}
+              className={`${iconBtn} ${
+                rating === "up"
+                  ? "bg-[#10B981] text-white"
+                  : "hover:bg-[var(--chat-surface)]"
+              }`}
+            >
+              <ThumbsUp
+                size={17}
+                strokeWidth={2}
+                fill={rating === "up" ? "currentColor" : "none"}
+              />
+            </button>
+          </div>
+        )}
 
         {!isStreaming && isAI && (
-          <div className="mt-1.5 flex items-center gap-1 px-2">
-            <Sparkles size={11} className="text-slate-400" strokeWidth={2.4} />
-            <span className="text-[11px] text-[#8a8d93]">Do AI tạo</span>
+          <div className="mt-1.5 flex items-center gap-1">
+            <Sparkles
+              size={11}
+              className="text-[var(--chat-muted)]"
+              strokeWidth={2.4}
+            />
+            <span className="text-[11px] text-[var(--chat-muted)]">
+              Do AI tạo
+            </span>
           </div>
         )}
       </div>
     </div>
   );
-                }
+               }
+            
