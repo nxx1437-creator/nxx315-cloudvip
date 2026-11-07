@@ -316,20 +316,20 @@ export default function CardExchange() {
         </div>
       </main>
 
-          {/* MODAL XÁC NHẬN - Phong cách nổi, trong suốt (Glassmorphism) */}
+          {/* MODAL XÁC NHẬN */}
 {selected && (
   <div 
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/20 backdrop-blur-md transition-opacity"
+    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/30 animate-backdrop"
     onClick={(e) => {
       if (e.target === e.currentTarget) closeConfirm();
     }}
   >
     <div 
-      className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/85 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] border border-white/50 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+      className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/90 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 overflow-hidden flex flex-col animate-modal-pop"
       role="dialog"
       aria-modal="true"
     >
-      {/* Header Modal */}
+      {/* ... (Giữ nguyên toàn bộ nội dung bên trong từ Header đến Footer như cũ) ... */}
       <div className="px-6 pt-7 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -355,9 +355,7 @@ export default function CardExchange() {
         </div>
       </div>
 
-      {/* Body Modal */}
       <div className="px-6 pb-6">
-        {/* Bảng thông số - Phong cách tối giản, có vạch chia */}
         <div className="flex items-center justify-between border-y border-[#e8e6df]/80 py-4 mb-6">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#8a8880]">mệnh giá</p>
@@ -375,7 +373,6 @@ export default function CardExchange() {
           </div>
         </div>
 
-        {/* Input */}
         <label className="block">
           <span className="text-[11px] font-bold text-[#8a8880] uppercase tracking-wider">Zalo / Discord nhận thẻ</span>
           <input
@@ -399,7 +396,6 @@ export default function CardExchange() {
         )}
       </div>
 
-      {/* Footer Modal - Nút bấm */}
       <div className="px-6 pb-7 pt-2 flex gap-3">
         <button
           type="button"
@@ -422,7 +418,6 @@ export default function CardExchange() {
     </div>
   </div>
 )}
-
       {/* MODAL THÀNH CÔNG */}
       {result && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
