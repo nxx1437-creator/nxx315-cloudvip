@@ -28,9 +28,6 @@ import {
   formatPrice,
 } from "../../lib/freefireData.js";
 
-/* =========================================================
- * HERO BANNER
- * =======================================================*/
 export function FreeFireHero({ onBack }) {
   return (
     <HeroPanel
@@ -54,9 +51,8 @@ export function FreeFireHero({ onBack }) {
   );
 }
 
-/* =========================================================
- * BƯỚC 1: CHỌN GÓI KIM CƯƠNG
- * =======================================================*/
+/* ───────── Bước 1: chọn gói ───────── */
+
 export function PackageStep({
   selectedPackage,
   setSelectedPackage,
@@ -99,12 +95,11 @@ export function PackageStep({
         <PillButton
           onClick={onContinue}
           disabled={!selectedPackage || !agreedTerms}
-          className="mt-4 h-14"
+          className="mt-4 h-14 w-full"
         >
           Tiếp tục
           <ChevronRight size={18} />
         </PillButton>
-
         {!selectedPackage && (
           <p className="mt-3 text-center text-[13px] text-gray-500">
             Chọn một gói để tiếp tục
@@ -115,9 +110,6 @@ export function PackageStep({
   );
 }
 
-/* =========================================================
- * PACKAGE CARD (Nền sáng)
- * =======================================================*/
 function PackageCard({ pkg, active, onSelect }) {
   return (
     <button
@@ -132,16 +124,16 @@ function PackageCard({ pkg, active, onSelect }) {
       {active && (
         <CheckCircle2
           size={20}
-          className="absolute right-3 top-3 text-gray-900 fill-gray-900 text-white"
+          className="absolute right-3 top-3 text-gray-900"
+          fill="#111827"
+          stroke="white"
         />
       )}
 
-      {/* Ảnh gói */}
       <div className="mx-auto mb-3 aspect-square w-full max-w-[84px] overflow-hidden rounded-[16px] bg-gray-100">
         <img
           src={pkg.image}
           alt={`${pkg.diamond} Kim Cương`}
-          loading="lazy"
           className="h-full w-full object-cover"
           onError={(e) => {
             e.currentTarget.style.opacity = "0.3";
@@ -149,7 +141,6 @@ function PackageCard({ pkg, active, onSelect }) {
         />
       </div>
 
-      {/* Thông tin gói */}
       <div className="text-center">
         <p className="text-[22px] font-semibold leading-none tracking-[-0.035em] text-gray-900">
           {pkg.diamond.toLocaleString("vi-VN")}
@@ -165,9 +156,8 @@ function PackageCard({ pkg, active, onSelect }) {
   );
 }
 
-/* =========================================================
- * BƯỚC 3: THANH TOÁN
- * =======================================================*/
+/* ───────── Bước 3: thanh toán (chỉ Coin) ───────── */
+
 export function PaymentStep({
   selectedPackage,
   uid,
@@ -181,12 +171,11 @@ export function PaymentStep({
 }) {
   if (!order) {
     return (
-      <Panel className="mx-auto max-w-2xl bg-white p-8 text-center shadow-sm border border-gray-200">
+      <Panel className="mx-auto max-w-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
         <XCircle className="mx-auto mb-3 text-red-500" size={40} />
         <h2 className="text-[20px] font-semibold tracking-[-0.035em] text-gray-900">
           Không tìm thấy đơn hàng
         </h2>
-        <p className="mt-1 text-[14px] text-gray-500">Vui lòng thử lại hoặc quay lại bước trước.</p>
         <div className="mx-auto mt-5 max-w-[200px]">
           <PillButton onClick={onBack}>Quay lại</PillButton>
         </div>
@@ -204,8 +193,7 @@ export function PaymentStep({
         sub="Thanh toán bằng Coin trong ví"
       />
       
-      {/* Panel thanh toán - Nền sáng */}
-      <div className="rounded-[24px] border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-[24px] border border-gray-200 bg-white shadow-sm">
         <CoinPayPanel
           amount={order.amount}
           orderCode={order.order_code}
@@ -226,4 +214,4 @@ export function PaymentStep({
       </div>
     </div>
   );
-          }
+    }
