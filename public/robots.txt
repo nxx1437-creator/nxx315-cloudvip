@@ -17,4 +17,4 @@ Disallow: /creator
 Disallow: /notifications
 Disallow: /u/
 
-Sitemap: https://nxx315.top/sitemap.xml
+Sitemap: https://www.nxx315.com/sitemap.xml
