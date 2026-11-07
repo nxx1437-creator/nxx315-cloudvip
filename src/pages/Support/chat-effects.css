@@ -307,4 +307,46 @@
   text-align: left;
   border-radius: 22px;
         }
-               
+  /* ===== Viền sáng xoay liên tục ===== */
+@keyframes nxx-glow-spin {
+  from { --nxx-a: 0deg; }
+  to   { --nxx-a: -360deg; }
+}
+
+/* đang focus ô nhập: viền xoay chậm */
+.nxx-composer:focus-within .nxx-glow:not(.nxx-glow--pulse) {
+  opacity: 0.85;
+  animation: nxx-glow-spin 4.5s linear infinite;
+}
+
+/* AI đang trả lời: viền xoay nhanh, không nghỉ.
+   Đặt SAU rule focus để thắng; đè luôn rule is-busy cũ (kiểu quét rồi nghỉ). */
+.nxx-composer.is-busy .nxx-glow:not(.nxx-glow--pulse) {
+  opacity: 1;
+  animation: nxx-glow-spin 2.4s linear infinite;
+}
+.nxx-composer.is-busy .nxx-glow::after,
+.nxx-composer--hero:focus-within .nxx-glow::after { opacity: 0.32; }
+
+/* trình duyệt cũ không có @property: nhấp nháy */
+.nxx-composer--hero:focus-within .nxx-glow.nxx-glow--pulse {
+  --nxx-a: 200deg;
+  animation: nxx-glow-pulse 2.4s ease-in-out infinite;
+}
+
+/* ===== Khung nhập to ở trang chủ ===== */
+.nxx-composer--hero {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 176px;
+  padding: 16px 16px 12px;
+  border-radius: 32px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(19, 20, 26, 0.07);
+}
+.nxx-composer--hero:focus-within { border-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nxx-composer .nxx-glow { animation: none !important; }
+}             
