@@ -1,15 +1,28 @@
 import React from "react";
 import {
-  ChevronRight, Package, Users, ListTodo, HandCoins, FileText, Gift, Coins,
-  Wallet, Bell, Trophy, Gamepad2, Crosshair, Flame, MessageCircle, CreditCard,
+  CreditCard, Crosshair, FileText, Flame, Gamepad2, Gift, LayoutDashboard,
+  MessageCircle, Bell, Package, Trophy, Users, Wallet,
 } from "lucide-react";
 
 export const MENU_GROUPS = [
   {
-    id: "orders", label: "Đơn hàng", icon: Package,
+    id: "main", label: "",
+    items: [{ id: "home", label: "Tổng quan", icon: LayoutDashboard }],
+  },
+  {
+    id: "todo", label: "Cần xử lý",
     items: [
       { id: "orders", label: "Đổi thưởng", icon: Gift },
+      { id: "game-orders", label: "Đơn game chờ giao", icon: Package },
       { id: "card-orders", label: "Thẻ cào", icon: CreditCard },
+      { id: "withdrawals", label: "Rút tiền", icon: Wallet },
+      { id: "support", label: "Hỗ trợ", icon: MessageCircle },
+      { id: "posts", label: "Bài viết", icon: FileText },
+    ],
+  },
+  {
+    id: "game", label: "Lịch sử đơn game",
+    items: [
       { id: "roblox-orders", label: "Roblox", icon: Gift },
       { id: "lienquan-orders", label: "Liên Quân", icon: Trophy },
       { id: "playtogether-orders", label: "Play Together", icon: Gamepad2 },
@@ -18,72 +31,50 @@ export const MENU_GROUPS = [
     ],
   },
   {
-    id: "users", label: "Người dùng", icon: Users,
+    id: "manage", label: "Quản lý",
     items: [
       { id: "users", label: "Tài khoản", icon: Users },
-      { id: "support", label: "Hỗ trợ", icon: MessageCircle },
-      { id: "affiliate", label: "Affiliate", icon: HandCoins },
-      { id: "withdrawals", label: "Rút tiền", icon: Wallet },
+      { id: "notify", label: "Gửi thông báo", icon: Bell },
     ],
-  },
-  {
-    id: "content", label: "Nội dung", icon: FileText,
-    items: [
-      { id: "tasks", label: "Nhiệm vụ", icon: ListTodo },
-      { id: "packages", label: "Gói nạp", icon: Coins },
-      { id: "posts", label: "Bài viết", icon: FileText },
-    ],
-  },
-  {
-    id: "notify", label: "Thông báo", icon: Bell,
-    items: [{ id: "notify", label: "Gửi thông báo", icon: Bell }],
   },
 ];
 
-export function NavList({ activeTab, onSelect, openGroups, setOpenGroups, badges = {} }) {
+export function NavList({ activeTab, onSelect, badges = {} }) {
   return (
-    <div className="space-y-4">
-      {MENU_GROUPS.map((group) => {
-        const isOpen = openGroups[group.id];
-        return (
-          <div key={group.id}>
-            <button
-              onClick={() => setOpenGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-              className="flex w-full items-center justify-between px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400"
-            >
-              {group.label}
-              <ChevronRight size={14} className={`transition-transform ${isOpen ? "rotate-90" : ""}`} />
-            </button>
-
-            {isOpen && (
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                {group.items.map((item, index) => {
-                  const ItemIcon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => onSelect(item.id)}
-                      className={`flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm font-medium transition ${
-                        index > 0 ? "border-t border-slate-100" : ""
-                      } ${isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-50"}`}
+    <div className="space-y-5">
+      {MENU_GROUPS.map((group) => (
+        <div key={group.id}>
+          {group.label && <p className="px-4 pb-2 text-[12px] font-medium text-[#898989]">{group.label}</p>}
+          <div className="space-y-1">
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+              const n = badges[item.id];
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onSelect(item.id)}
+                  className={`flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[14px] font-medium transition ${
+                    active ? "bg-[#101010] text-white" : "text-[#242424] hover:bg-[#f4f4f4]"
+                  }`}
+                >
+                  <Icon size={17} strokeWidth={1.8} className={active ? "text-white" : "text-[#6b7280]"} />
+                  <span className="flex-1">{item.label}</span>
+                  {n > 0 && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        active ? "bg-white text-[#101010]" : "bg-[#101010] text-white"
+                      }`}
                     >
-                      <ItemIcon size={17} className={isActive ? "text-white" : "text-slate-400"} />
-                      <span className="flex-1">{item.label}</span>
-                      {badges[item.id] > 0 && (
-                        <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold leading-none text-white">
-                          {badges[item.id]}
-                        </span>
-                      )}
-                      <ChevronRight size={15} className={isActive ? "text-white/70" : "text-slate-300"} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                      {n}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
-      }
+}
