@@ -1,4 +1,5 @@
 import React from "react";
+import { cleanAIText } from "./helpers.js";
 
 /**
  * Markdown parser + filter code tool
@@ -9,43 +10,8 @@ import React from "react";
 export default function MarkdownText({ text }) {
   if (!text) return null;
 
-  // ==================================================
-  // BƯỚC 1: XOÁ CODE TOOL (không xoá path)
-  // ==================================================
-  let cleaned = text;
-
-  const TOOL_NAMES = [
-    "suggest_action",
-    "lookup_order",
-    "list_recent_orders",
-    "send_guide_image",
-  ];
-
-  for (const toolName of TOOL_NAMES) {
-    const regex = new RegExp(
-      `${toolName}\\s*\\([\\s\\S]*?\\)\\s*(?=\\n|$)`,
-      "gi"
-    );
-    cleaned = cleaned.replace(regex, "");
-  }
-
-  // Xoá dòng chứa tên tool
-  cleaned = cleaned
-    .split("\n")
-    .filter((line) => {
-      if (
-        /suggest_action|lookup_order|list_recent_orders|send_guide_image/i.test(
-          line
-        )
-      ) {
-        return false;
-      }
-      return true;
-    })
-    .join("\n");
-
-  // Xoá dòng trống liên tiếp
-  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
+  // BƯỚC 1: XOÁ CODE TOOL (không xoá path) — logic nằm trong helpers.js
+  const cleaned = cleanAIText(text);
 
   if (!cleaned) return null;
 
@@ -128,7 +94,7 @@ export default function MarkdownText({ text }) {
   // BƯỚC 3: RENDER
   // ==================================================
   return (
-    <div className="whitespace-pre-wrap break-words text-[14px] leading-6 text-[#161823]">
+    <div className="whitespace-pre-wrap break-words text-[15px] leading-7 text-[#3f4254]">
       {blocks.map((block, idx) => {
         if (block.type === "br") {
           return <div key={idx} className="h-1.5" />;
@@ -138,7 +104,7 @@ export default function MarkdownText({ text }) {
           return (
             <hr
               key={idx}
-              className="my-3 border-0 border-t border-slate-200"
+              className="my-3 border-0 border-t border-[#dde0ea]"
             />
           );
         }
@@ -147,12 +113,12 @@ export default function MarkdownText({ text }) {
           return (
             <div
               key={idx}
-              className="my-2 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-3"
+              className="my-2 rounded-2xl border border-[#dde0ea] bg-[#f5f6fb] px-3.5 py-3"
             >
               {block.lines.map((line, i) => (
                 <div
                   key={i}
-                  className="text-[13.5px] font-medium leading-6 text-sky-900"
+                  className="text-[14px] font-medium leading-6 text-[#13141a]"
                 >
                   {renderInline(line)}
                 </div>
@@ -167,9 +133,9 @@ export default function MarkdownText({ text }) {
               {block.items.map((item, i) => (
                 <li
                   key={i}
-                  className="flex gap-2.5 text-[14px] leading-6 text-[#161823]"
+                  className="flex gap-2.5 text-[15px] leading-7 text-[#3f4254]"
                 >
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                  <span className="mt-[11px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#a2a5b8]" />
                   <span className="flex-1">{renderInline(item)}</span>
                 </li>
               ))}
@@ -183,9 +149,9 @@ export default function MarkdownText({ text }) {
               {block.items.map((item, i) => (
                 <li
                   key={i}
-                  className="flex gap-2.5 text-[14px] leading-6 text-[#161823]"
+                  className="flex gap-2.5 text-[15px] leading-7 text-[#3f4254]"
                 >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600">
+                  <span className="mt-[3px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#eceef5] text-[11px] font-semibold text-[#3f4254]">
                     {i + 1}
                   </span>
                   <span className="flex-1">{renderInline(item)}</span>
@@ -243,7 +209,7 @@ function renderInline(text) {
 
     if (token.startsWith("**") && token.endsWith("**")) {
       parts.push(
-        <strong key={key} className="font-bold text-[#161823]">
+        <strong key={key} className="font-semibold text-[#13141a]">
           {token.slice(2, -2)}
         </strong>
       );
@@ -251,14 +217,14 @@ function renderInline(text) {
       parts.push(
         <code
           key={key}
-          className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-rose-600"
+          className="rounded-md bg-[#eceef5] px-1.5 py-0.5 font-mono text-[13px] font-medium text-[#13141a]"
         >
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith("*") && token.endsWith("*")) {
       parts.push(
-        <em key={key} className="italic text-slate-700">
+        <em key={key} className="italic text-[#3f4254]">
           {token.slice(1, -1)}
         </em>
       );
@@ -290,4 +256,5 @@ function renderInline(text) {
   }
 
   return parts.length > 0 ? parts : text;
-        }
+                                            }
+
