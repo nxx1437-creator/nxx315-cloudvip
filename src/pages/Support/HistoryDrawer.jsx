@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, Plus, X, History, FileText } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { formatRelativeTime } from "./helpers.js";
+import "./chat.css";
 
 export default function HistoryDrawer({
   open,
@@ -75,7 +76,7 @@ export default function HistoryDrawer({
               }}
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
                 conv.id === currentConvId
-                  ? "bg-rose-50 text-[#FE2C55]"
+                  ? "bg-[var(--chat-surface)] font-semibold text-[var(--chat-ink)]"
                   : "text-slate-700 hover:bg-slate-50"
               }`}
             >
@@ -100,10 +101,10 @@ export default function HistoryDrawer({
   return (
     <>
       <div
-        className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-sm"
+        className="fade-in fixed inset-0 z-[100] bg-black/25 backdrop-blur-[2px]"
         onClick={onClose}
       />
-      <div className="fixed left-0 top-0 z-[101] flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl">
+      <div className="drawer-in fixed left-0 top-0 z-[101] flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
           <h2 className="text-[17px] font-bold text-slate-800">
             Lịch sử trò chuyện
@@ -121,7 +122,7 @@ export default function HistoryDrawer({
               onNewChat();
               onClose();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FE2C55] px-4 py-3 text-[14px] font-bold text-white shadow-[0_4px_12px_rgba(254,44,85,0.25)] transition active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--chat-ink)] px-4 py-3 text-[14px] font-bold text-white shadow-[0_4px_12px_rgba(17,20,24,0.22)] transition active:scale-[0.98]"
           >
             <Plus size={18} strokeWidth={2.4} />
             Cuộc trò chuyện mới
@@ -157,4 +158,5 @@ export default function HistoryDrawer({
       </div>
     </>
   );
-            }
+  }
+
