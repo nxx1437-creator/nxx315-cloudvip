@@ -1,34 +1,17 @@
 // src/pages/Support/GlowRing.jsx
-// Viền sáng quét quanh ô nhập. Đặt BÊN TRONG một phần tử có `relative` và bo tròn
-// (viền kế thừa border-radius của cha).
-//  - active:   lặp liên tục khi AI đang xử lý
-//  - pulseKey: mỗi lần đổi giá trị (và không active) sẽ quét thêm đúng 1 lần
+// Viền sáng quay quanh ô nhập. Đặt BÊN TRONG phần tử có class "nxx-composer".
+// Chỉ quay khi ô nhập đang focus hoặc đang bận (is-busy), điều khiển bằng CSS.
 import React from "react";
 
-export default function GlowRing({ active, pulseKey = 0 }) {
-  if (active) {
-    return (
-      <>
-        <span className="glow-halo glow-halo--loop" aria-hidden="true" />
-        <span className="glow-ring glow-ring--loop" aria-hidden="true" />
-      </>
-    );
-  }
-  if (pulseKey > 0) {
-    return (
-      <>
-        <span
-          key={`h-${pulseKey}`}
-          className="glow-halo glow-halo--once"
-          aria-hidden="true"
-        />
-        <span
-          key={`r-${pulseKey}`}
-          className="glow-ring glow-ring--once"
-          aria-hidden="true"
-        />
-      </>
-    );
-  }
-  return null;
+export default function GlowRing() {
+  return (
+    <span className="nxx-glow" aria-hidden="true">
+      <span className="nxx-glow-ring">
+        <i className="nxx-glow-rot" />
+      </span>
+      <span className="nxx-glow-halo">
+        <i className="nxx-glow-rot" />
+      </span>
+    </span>
+  );
 }
