@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# Trang cần đăng nhập hoặc nội bộ, không cần Google đọc
+Disallow: /admin
+Disallow: /task/callback
+Disallow: /task-loading.html
+Disallow: /dashboard
+Disallow: /tasks
+Disallow: /store
+Disallow: /wallet
+Disallow: /withdraw
+Disallow: /cards
+Disallow: /profile
+Disallow: /history
+Disallow: /creator
+Disallow: /notifications
+Disallow: /u/
+
+Sitemap: https://nxx315.top/sitemap.xml
