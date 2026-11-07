@@ -1,20 +1,37 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Menu, X, Headphones, ArrowUp, Square, Smile, Focus, Camera,
-  Image as ImageIcon, Paperclip, CornerDownRight, Loader2, Check,
+  ArrowUp, Camera, CornerDownRight, Headphones, Image as ImageIcon,
+  Paperclip, Plus, Smile, Sparkles, X,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
 import { supabase } from "../../lib/supabaseClient.js";
 import { AI_ENDPOINT, QUICK_ACTIONS, SUPPORT } from "./constants.js";
+import { cleanAIText } from "./helpers.js";
 import BannerNotice from "./BannerNotice.jsx";
+import StatusBubble from "./StatusBubble.jsx";
 import HistoryDrawer from "./HistoryDrawer.jsx";
 import MessageBubble from "./MessageBubble.jsx";
-import ThinkingIndicator from "./ThinkingIndicator.jsx";
 import FeedbackSheet from "./FeedbackSheet.jsx";
-import GlowRing from "./GlowRing.jsx";
-import "./chat.css";
+import GradientHeadline from "./GradientHeadline.jsx";
+import ThinkingIndicator, { ThinkingSpinner } from "./ThinkingIndicator.jsx";
+import "./chat-effects.css";
+
+// Thanh header tự ẩn khi cuộn xuống, hiện lại khi cuộn lên (như video).
+// Đặt false nếu muốn header luôn hiện.
+const HIDE_HEADER_ON_SCROLL = true;
+
+// Các câu xoay vòng ở màn hình chào (chưa có tin nhắn nào của người dùng)
+const HERO_PHRASES = [
+  "Hỏi NXX bất cứ điều gì",
+  "Gửi ảnh lỗi, NXX xem giúp",
+  "Tra đơn, hoàn tiền, đổi thưởng",
+];
+
+// Viền sáng cần @property; trình duyệt cũ hơn sẽ dùng hiệu ứng nhấp nháy thay thế
+const GLOW_OK =
+  typeof CSS !== "undefined" && typeof CSS.registerProperty === "function";
 
 export default function ChatView({
   conversation,
@@ -37,49 +54,41 @@ export default function ChatView({
   const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState([]);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
-
-  // ── mới: hiệu ứng / phản hồi ──
-  const [freshIds, setFreshIds] = useState(() => new Set());
-  const [glowPulse, setGlowPulse] = useState(0);
-  const [ratings, setRatings] = useState({}); // { [messageId]: "up" | "down" }
-  const [feedbackFor, setFeedbackFor] = useState(null); // { msg, rating }
-  const [toast, setToast] = useState(null); // { id, text }
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const [feedback, setFeedback] = useState({}); // { [msgId]: { rating, status } }
+  const [feedbackTarget, setFeedbackTarget] = useState(null); // { message, rating }
 
   const scrollRef = useRef(null);
+  const lastScrollY = useRef(0);
+  const inputRef = useRef(null);
   const sentIds = useRef(new Set());
+  const freshIds = useRef(new Set()); // tin mới trong phiên → chạy hiệu ứng xuất hiện
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-  const typewriterRef = useRef(null);
-  const abortRef = useRef(null);
-  const stoppedRef = useRef(false);
 
-  const busy = sending || aiTyping || !!streamingMsgId;
-
-  const stopTypewriter = () => {
-    if (typewriterRef.current) {
-      clearInterval(typewriterRef.current);
-      typewriterRef.current = null;
-    }
-  };
-
-  useEffect(() => () => stopTypewriter(), []);
-
-  // ✅ Sync conv khi prop conversation đổi
+  // ✅ Sync conv khi prop conversation đổi (fix quan trọng)
   useEffect(() => {
     if (conversation?.id && conversation.id !== conv?.id) {
+      console.log(
+        "[ChatView] Switching conv:",
+        conv?.id,
+        "→",
+        conversation.id
+      );
       setConv(conversation);
       setMessages([]);
       setLoading(true);
-      stopTypewriter();
       setStreamingMsgId(null);
       setStreamingText("");
       setAiTyping(false);
       setSending(false);
       sentIds.current = new Set();
+      freshIds.current = new Set();
       setHiddenSuggestionIds([]);
       setPendingImage(null);
-      setFreshIds(new Set());
-      setRatings({});
+      setFeedback({});
+      setFeedbackTarget(null);
+      setHeaderHidden(false);
     }
   }, [conversation?.id]);
 
@@ -96,31 +105,38 @@ export default function ChatView({
 
   useEffect(() => {
     if (!loading && messages.length > 0) scrollToBottom(true);
-  }, [messages.length, loading, aiTyping]);
+  }, [messages.length, loading]);
 
-  const showToast = (text) => setToast({ id: Date.now(), text });
-
+  // Khi AI đang "gõ", giữ khung cuộn bám theo nếu người dùng đang ở gần đáy
   useEffect(() => {
-    if (!toast) return undefined;
-    const t = setTimeout(() => setToast(null), 1900);
-    return () => clearTimeout(t);
-  }, [toast]);
+    if (!streamingMsgId) return;
+    const el = scrollRef.current;
+    if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 160) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
+    }
+  }, [streamingText, streamingMsgId]);
+
+  // Ô nhập tự giãn chiều cao (tối đa ~5 dòng)
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [input]);
 
   const runTypewriter = (msg) => {
-    stopTypewriter();
     setStreamingMsgId(msg.id);
     setStreamingText("");
     let idx = 0;
     const full = msg.message;
-    typewriterRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       idx += 3;
       if (idx >= full.length) {
-        stopTypewriter();
         setStreamingText(full);
+        clearInterval(interval);
         setTimeout(() => {
           setStreamingMsgId(null);
           setStreamingText("");
-          setGlowPulse((n) => n + 1); // quét viền 1 lần khi AI trả lời xong
           scrollToBottom(true);
         }, 100);
       } else {
@@ -139,12 +155,6 @@ export default function ChatView({
         .order("created_at", { ascending: true });
       if (error) throw error;
       setMessages(data || []);
-      // khôi phục đánh giá đã lưu (nếu bảng có cột `feedback`)
-      const saved = {};
-      (data || []).forEach((m) => {
-        if (m.feedback?.rating) saved[m.id] = m.feedback.rating;
-      });
-      setRatings((prev) => ({ ...saved, ...prev }));
     } catch (error) {
       console.error("Load error:", error);
     } finally {
@@ -175,6 +185,7 @@ export default function ChatView({
         (payload) => {
           const msg = payload.new;
           if (sentIds.current.has(msg.id)) return;
+          freshIds.current.add(msg.id);
           setMessages((prev) => {
             if (prev.some((m) => m.id === msg.id)) return prev;
             if (msg.sender_type === "ai" || msg.sender_type === "system") {
@@ -229,46 +240,46 @@ export default function ChatView({
     if (!session?.access_token) throw new Error("Chưa đăng nhập");
 
     const controller = new AbortController();
-    abortRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const bodyPayload = {
+      // ✅ DÙNG PROP thay vì state conv.id
       conversation_id: conversation.id,
-      user_message: imageUrl ? "Phân tích ảnh này giúp mình" : messageText,
+      user_message: imageUrl
+        ? "Phân tích ảnh này giúp mình"
+        : messageText,
     };
     if (imageUrl) bodyPayload.image_url = imageUrl;
 
-    try {
-      const response = await fetch(AI_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify(bodyPayload),
-        signal: controller.signal,
-      });
+    const response = await fetch(AI_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify(bodyPayload),
+      signal: controller.signal,
+    });
 
-      if (!response.ok) {
-        let errData = {};
-        try {
-          errData = await response.json();
-        } catch (_) {}
-        throw new Error(errData?.error || `AI trả về lỗi ${response.status}`);
-      }
-      return await response.json();
-    } finally {
-      clearTimeout(timeoutId);
-      abortRef.current = null;
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errData = {};
+      try {
+        errData = await response.json();
+      } catch (_) {}
+      throw new Error(
+        errData?.error || `AI trả về lỗi ${response.status}`
+      );
     }
+    return response.json();
   };
 
   const sendMessage = async (customText) => {
     const content = (customText || input).trim();
-    if ((!content && !pendingImage) || busy || !user?.id) return;
+    if ((!content && !pendingImage) || sending || !user?.id) return;
 
-    stoppedRef.current = false;
     setSending(true);
     try {
       let imageUrl = null;
@@ -294,6 +305,7 @@ export default function ChatView({
       const { data: userMsg, error } = await supabase
         .from("support_messages")
         .insert({
+          // ✅ DÙNG PROP
           conversation_id: conversation.id,
           user_id: user.id,
           message: content || "",
@@ -305,8 +317,8 @@ export default function ChatView({
 
       if (error) throw error;
       sentIds.current.add(userMsg.id);
+      freshIds.current.add(userMsg.id);
 
-      setFreshIds((prev) => new Set(prev).add(userMsg.id));
       setMessages((prev) => [
         ...prev.filter((m) => m.sender_type !== "status"),
         userMsg,
@@ -319,7 +331,7 @@ export default function ChatView({
       scrollToBottom(true);
 
       if (conv.status === "ai") {
-        setAiTyping(true); // hiện "Đang suy nghĩ…" ngay lập tức
+        const typingTimer = setTimeout(() => setAiTyping(true), 1500);
         try {
           const data = await callAI(imageUrl, content);
           console.log(
@@ -331,7 +343,6 @@ export default function ChatView({
             loadMessages();
           }, 2000);
         } catch (err) {
-          if (stoppedRef.current) return; // người dùng chủ động dừng
           console.error("AI error:", err);
           setMessages((prev) =>
             prev.filter((m) => m.sender_type !== "status")
@@ -339,6 +350,7 @@ export default function ChatView({
           const { data: errMsg } = await supabase
             .from("support_messages")
             .insert({
+              // ✅ DÙNG PROP
               conversation_id: conversation.id,
               user_id: user.id,
               message:
@@ -350,10 +362,12 @@ export default function ChatView({
             .single();
           if (errMsg) {
             sentIds.current.add(errMsg.id);
+            freshIds.current.add(errMsg.id);
             setMessages((prev) => [...prev, errMsg]);
             runTypewriter(errMsg);
           }
         } finally {
+          clearTimeout(typingTimer);
           setAiTyping(false);
         }
       }
@@ -363,19 +377,6 @@ export default function ChatView({
     } finally {
       setSending(false);
     }
-  };
-
-  // Nút ■ : dừng chờ AI. (Nếu backend vẫn xử lý xong, câu trả lời vẫn có thể
-  // hiện qua realtime — xem ghi chú trong phần hướng dẫn.)
-  const stopGenerating = () => {
-    stoppedRef.current = true;
-    abortRef.current?.abort();
-    stopTypewriter();
-    setStreamingMsgId(null);
-    setStreamingText("");
-    setAiTyping(false);
-    setMessages((prev) => prev.filter((m) => m.sender_type !== "status"));
-    setGlowPulse((n) => n + 1);
   };
 
   const handleFileSelect = (file) => {
@@ -402,342 +403,484 @@ export default function ChatView({
     });
   };
 
-  // ── Copy / phản hồi ──
-  const handleCopy = async (text) => {
+  // ==================================================
+  // PHẢN HỒI 👍 / 👎
+  // ==================================================
+  const openFeedback = (message, rating) => {
+    if (feedback[message.id]?.status === "sent") return;
+    setFeedback((prev) => ({
+      ...prev,
+      [message.id]: { rating, status: "draft" },
+    }));
+    setFeedbackTarget({ message, rating });
+  };
+
+  const closeFeedback = () => {
+    if (feedbackTarget) {
+      const id = feedbackTarget.message.id;
+      // đóng sheet mà chưa gửi → bỏ trạng thái nháp
+      setFeedback((prev) => {
+        if (prev[id]?.status !== "draft") return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+    setFeedbackTarget(null);
+  };
+
+  const submitFeedback = async ({ reasons, comment }) => {
+    if (!feedbackTarget) return;
+    const { message, rating } = feedbackTarget;
+    setFeedback((prev) => ({
+      ...prev,
+      [message.id]: { rating, status: "sent" },
+    }));
+    setFeedbackTarget(null);
     try {
-      await navigator.clipboard.writeText(text);
-      showToast("Đã sao chép");
-    } catch (_) {
-      showToast("Không thể sao chép");
+      const { error } = await supabase.from("support_message_feedback").insert({
+        message_id: String(message.id),
+        conversation_id: String(conversation.id),
+        user_id: user?.id,
+        rating,
+        reasons,
+        comment: comment || null,
+      });
+      if (error) {
+        console.warn(
+          "[Feedback] Chưa lưu được vào bảng support_message_feedback:",
+          error.message
+        );
+      }
+    } catch (e) {
+      console.warn("[Feedback] Lỗi lưu phản hồi:", e);
     }
   };
 
-  const openFeedback = (msg, rating) => setFeedbackFor({ msg, rating });
-
-  const submitFeedback = async ({ rating, tags, note }) => {
-    const msg = feedbackFor?.msg;
-    if (!msg) return;
-    setRatings((prev) => ({ ...prev, [msg.id]: rating }));
-    showToast("Cảm ơn bạn đã phản hồi");
-    try {
-      // Cần cột jsonb `feedback` trên support_messages (xem SQL trong hướng dẫn)
-      const { error } = await supabase
-        .from("support_messages")
-        .update({ feedback: { rating, tags, note } })
-        .eq("id", msg.id);
-      if (error) console.warn("[Support] Chưa lưu được feedback:", error.message);
-    } catch (err) {
-      console.warn("[Support] Feedback error:", err);
-    }
+  // ==================================================
+  // HEADER TỰ ẨN KHI CUỘN
+  // ==================================================
+  const handleScroll = (e) => {
+    if (!HIDE_HEADER_ON_SCROLL) return;
+    const el = e.currentTarget;
+    const y = el.scrollTop;
+    const dy = y - lastScrollY.current;
+    if (Math.abs(dy) < 10) return;
+    const overscroll = y < 0 || y > el.scrollHeight - el.clientHeight;
+    if (overscroll) return; // bỏ qua nảy đàn hồi trên iOS
+    if (y < 48) setHeaderHidden(false);
+    else setHeaderHidden(dy > 0);
+    lastScrollY.current = y;
   };
 
-  const hasInput = !!(input.trim() || pendingImage);
+  // ==================================================
+  // TRẠNG THÁI DẪN XUẤT
+  // ==================================================
+  const hasInput = Boolean(input.trim() || pendingImage);
+  const busy = sending || aiTyping || Boolean(streamingMsgId);
+  const hasStatusMsg = messages.some((m) => m.sender_type === "status");
   const hasUserMsg = messages.some((m) => m.sender_type === "user");
+  // Màn hình chào: còn đến khi có tin nhắn đầu tiên của người dùng
+  const isHero =
+    !loading && messages.length > 0 && !hasUserMsg && !hasStatusMsg;
 
-  // ── Chip gợi ý phía trên ô nhập ──
   const lastMsg = messages[messages.length - 1];
-  const suggestionList =
+  const lastAiSuggestions =
     lastMsg?.sender_type === "ai" &&
     lastMsg.suggestions?.length > 0 &&
     !hiddenSuggestionIds.includes(lastMsg.id)
       ? lastMsg.suggestions
-      : null;
-  const chips = suggestionList
-    ? suggestionList.map((s) => ({ label: s, prompt: s }))
-    : QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt }));
-  const showChips = !loading && !busy && messages.length > 0;
-  const chipsKey = suggestionList ? lastMsg.id : "quick";
+      : [];
 
-  const statusMsg = messages.find((m) => m.sender_type === "status");
-  const showThinking = (aiTyping || !!statusMsg) && !streamingMsgId;
+  // Hàng chip phía trên ô nhập: gợi ý của AI (nếu có) hoặc thao tác nhanh
+  const chipItems = isHero
+    ? QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }))
+    : lastAiSuggestions.length > 0
+    ? lastAiSuggestions.map((s) => ({ label: s, prompt: s, suggestion: true }))
+    : QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }));
+  const chipKey = chipItems.map((c) => c.label).join("|");
+
+  const heroGreeting = isHero ? messages.find((m) => m.sender_type === "ai") : null;
+  const heroSuggestions = isHero ? heroGreeting?.suggestions || [] : [];
+
+  const pickChip = (item) => {
+    if (item.suggestion) hideAllSuggestions();
+    sendMessage(item.prompt);
+  };
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-[var(--chat-bg)]">
-      {/* HEADER: ☰ | pill tiêu đề ✕ | tai nghe */}
-      <div className="relative z-30 flex items-center gap-2 bg-[var(--chat-bg)]/90 px-3 pb-2 pt-2.5 backdrop-blur-xl">
-        <button
-          onClick={() => setShowHistoryDrawer(true)}
-          aria-label="Lịch sử trò chuyện"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--chat-border)] bg-white text-[var(--chat-ink)] transition active:scale-95"
-        >
-          <Menu size={20} strokeWidth={2.2} />
-        </button>
-
-        <div className="flex h-10 min-w-0 flex-1 items-center gap-1 rounded-full border border-[var(--chat-border)] bg-[var(--chat-surface)] pl-4 pr-1.5">
-          <h1 className="min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--chat-ink)]">
-            {conv?.title || "Chăm sóc khách hàng"}
-          </h1>
-          <button
-            onClick={onBack}
-            aria-label="Đóng cuộc trò chuyện"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--chat-muted)] transition hover:bg-black/5 active:scale-90"
-          >
-            <X size={16} strokeWidth={2.4} />
-          </button>
-        </div>
-
-        <a
-          href={SUPPORT.zaloUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Gặp nhân viên qua Zalo"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#0068FF]/20 bg-white text-[#0068FF] transition active:scale-95"
-        >
-          <Headphones size={19} strokeWidth={2} />
-        </a>
-      </div>
-
-      <BannerNotice />
-
-      <HistoryDrawer
-        open={showHistoryDrawer}
-        onClose={() => setShowHistoryDrawer(false)}
-        userId={user?.id || conversation?.user_id}
-        currentConvId={conv.id}
-        onOpenConversation={onOpenConversation}
-        onNewChat={onNewChat}
-      />
-
-      {/* MESSAGES */}
-      <div
-        ref={scrollRef}
-        className="flex-1 space-y-4 overflow-y-auto px-4 py-5"
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 size={20} className="animate-spin text-slate-300" />
-          </div>
-        ) : (
-          <>
-            {messages.map((msg, idx) => {
-              // tin "status" của backend → hiển thị bằng ThinkingIndicator bên dưới
-              if (msg.sender_type === "status") return null;
-
-              const isLastAIMessage =
-                idx === messages.length - 1 &&
-                msg.sender_type === "ai" &&
-                !streamingMsgId &&
-                !aiTyping;
-
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  streamingText={
-                    streamingMsgId === msg.id ? streamingText : null
-                  }
-                  isLastAIMessage={isLastAIMessage}
-                  isFresh={freshIds.has(msg.id)}
-                  rating={ratings[msg.id] || null}
-                  onRate={(r) => openFeedback(msg, r)}
-                  onCopy={handleCopy}
-                  onShowLogin={() => navigate("/login")}
-                  hideLogin={hiddenSuggestionIds.includes(msg.id)}
-                />
-              );
-            })}
-
-            {showThinking && <ThinkingIndicator label={statusMsg?.message} />}
-          </>
-        )}
-      </div>
-
-      {/* CHIP GỢI Ý / HÀNH ĐỘNG NHANH */}
-      {showChips && (
+    <div className="fixed inset-0 z-30 flex flex-col bg-white">
+      <div className="relative min-h-0 flex-1">
+        {/* ============ HEADER (nổi phía trên, tự ẩn khi cuộn) ============ */}
         <div
-          key={chipsKey}
-          className="no-scrollbar flex gap-2 overflow-x-auto bg-[var(--chat-bg)] px-4 pb-2 pt-1"
+          className={`absolute inset-x-0 top-0 z-20 transition-transform duration-300 ease-out ${
+            headerHidden ? "-translate-y-full" : "translate-y-0"
+          }`}
         >
-          {chips.map((c, i) => (
+          <div className="mx-auto flex w-full max-w-2xl items-center gap-2 bg-[linear-gradient(to_bottom,#fff_72%,rgba(255,255,255,0))] px-3 pb-3 pt-[max(8px,env(safe-area-inset-top))]">
             <button
-              key={`${c.label}-${i}`}
-              onClick={() => {
-                hideAllSuggestions();
-                sendMessage(c.prompt);
-              }}
-              style={{ "--i": i }}
-              className="chip-in flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-[var(--chat-border)] bg-white py-2.5 pl-3.5 pr-4 text-[14px] font-medium text-[var(--chat-ink)] transition hover:bg-[var(--chat-surface)] active:scale-95"
+              type="button"
+              onClick={() => setShowHistoryDrawer(true)}
+              aria-label="Lịch sử trò chuyện"
+              className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#13141a] shadow-[0_1px_2px_rgba(19,20,26,0.04)]"
             >
-              <CornerDownRight
-                size={16}
-                strokeWidth={2}
-                className="text-[var(--chat-muted)]"
-              />
-              {c.label}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 9h14M5 15h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
             </button>
-          ))}
-        </div>
-      )}
 
-      {/* INPUT BAR */}
-      <div className="relative bg-[var(--chat-bg)] px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-1.5">
-        {pendingImage && (
-          <div className="msg-in mb-2 flex items-center gap-3 rounded-2xl border border-[var(--chat-border)] bg-[var(--chat-surface)] p-2">
-            <img
-              src={pendingImage.previewUrl}
-              alt="Xem trước"
-              className="h-16 w-16 rounded-xl object-cover"
-            />
-            <div className="flex-1">
-              <p className="text-[13px] font-medium text-[var(--chat-ink)]">
-                Ảnh đã chọn
-              </p>
-              <p className="text-[11px] text-[var(--chat-muted)]">
-                Nhập mô tả và bấm gửi
-              </p>
+            <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#dde0ea] bg-[#f5f6fb] pl-1.5 pr-1.5">
+              <img
+                src="https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/avatar.png"
+                alt="NXX"
+                className="h-7 w-7 shrink-0 rounded-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null; // tránh lặp vô hạn nếu ảnh dự phòng cũng lỗi
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=NXX&background=13141a&color=fff&bold=true&size=80`;
+                }}
+              />
+              <h1
+                key={conv.title || "title"}
+                className="nxx-fade min-w-0 flex-1 truncate text-[15.5px] font-medium tracking-[-0.005em] text-[#13141a]"
+              >
+                {conv.title || "Chăm sóc khách hàng"}
+              </h1>
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label="Đóng cuộc trò chuyện"
+                className="nxx-iconbtn h-7 w-7 bg-[#e9ebf3] text-[#13141a]"
+              >
+                <X size={15} strokeWidth={2.4} />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                URL.revokeObjectURL(pendingImage.previewUrl);
-                setPendingImage(null);
-              }}
-              aria-label="Bỏ ảnh"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 hover:bg-slate-100"
+
+            <a
+              href={SUPPORT.zaloUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Gặp nhân viên qua Zalo"
+              className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#0068FF] shadow-[0_1px_2px_rgba(19,20,26,0.04)]"
             >
-              <X size={16} />
-            </button>
+              <Headphones size={19} strokeWidth={2} />
+            </a>
+          </div>
+        </div>
+
+        <HistoryDrawer
+          open={showHistoryDrawer}
+          onClose={() => setShowHistoryDrawer(false)}
+          userId={user?.id || conversation?.user_id}
+          currentConvId={conv.id}
+          onOpenConversation={onOpenConversation}
+          onNewChat={onNewChat}
+        />
+
+        {/* ============ KHUNG TIN NHẮN ============ */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="nxx-noscrollbar absolute inset-0 overflow-y-auto overscroll-contain"
+          style={{
+            scrollBehavior: "smooth",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col px-4 pb-6 pt-[76px]">
+            <BannerNotice />
+
+            {loading ? (
+              <div className="flex flex-1 items-center justify-center">
+                <ThinkingSpinner size={32} />
+              </div>
+            ) : isHero ? (
+              /* ---------- MÀN HÌNH CHÀO ---------- */
+              <div className="nxx-fade my-auto flex flex-col items-center pb-10 text-center">
+                <GradientHeadline phrases={HERO_PHRASES} />
+                {heroGreeting?.message && (
+                  <p className="mt-4 max-w-[21rem] whitespace-pre-line text-[15.5px] leading-6 text-[#7b7e90]">
+                    {cleanAIText(heroGreeting.message)}
+                  </p>
+                )}
+                {heroSuggestions.length > 0 && (
+                  <div className="mt-7 flex flex-wrap justify-center gap-2">
+                    {heroSuggestions.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={sending}
+                        onClick={() => {
+                          hideAllSuggestions();
+                          sendMessage(s);
+                        }}
+                        className="nxx-chip nxx-chip--wrap"
+                      >
+                        <CornerDownRight size={16} className="shrink-0 text-[#a2a5b8]" />
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-6 flex items-center gap-1">
+                  <Sparkles size={11} className="text-[#a2a5b8]" strokeWidth={2.4} />
+                  <span className="text-[11px] text-[#7b7e90]">Do AI tạo</span>
+                </div>
+              </div>
+            ) : (
+              /* ---------- HỘI THOẠI ---------- */
+              <div className="space-y-6">
+                {messages.map((msg, idx) => {
+                  if (msg.sender_type === "status")
+                    return <StatusBubble key={msg.id} message={msg} />;
+
+                  const isLastAIMessage =
+                    idx === messages.length - 1 &&
+                    msg.sender_type === "ai" &&
+                    !streamingMsgId &&
+                    !aiTyping;
+
+                  return (
+                    <MessageBubble
+                      key={msg.id}
+                      message={msg}
+                      streamingText={
+                        streamingMsgId === msg.id ? streamingText : null
+                      }
+                      isLastAIMessage={isLastAIMessage}
+                      sending={sending}
+                      onShowLogin={() => navigate("/login")}
+                      hiddenSuggestionIds={hiddenSuggestionIds}
+                      animateIn={freshIds.current.has(msg.id)}
+                      showFeedback={msg.sender_type === "ai" && idx > 0}
+                      feedback={feedback[msg.id] || null}
+                      onFeedback={(rating) => openFeedback(msg, rating)}
+                    />
+                  );
+                })}
+
+                {aiTyping && !streamingMsgId && !hasStatusMsg && (
+                  <ThinkingIndicator />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ============ CHIP GỢI Ý + Ô NHẬP ============ */}
+      <div className="relative shrink-0 bg-white">
+        {!busy && chipItems.length > 0 && (
+          <div
+            key={chipKey}
+            className="nxx-noscrollbar nxx-rise mx-auto flex w-full max-w-2xl gap-2 overflow-x-auto px-3.5 pb-2.5 pt-1"
+          >
+            {chipItems.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => pickChip(item)}
+                disabled={sending}
+                className="nxx-chip"
+              >
+                {item.suggestion ? (
+                  <CornerDownRight size={16} className="shrink-0 text-[#a2a5b8]" />
+                ) : (
+                  <span className="text-[15px]">{item.emoji}</span>
+                )}
+                <span>{item.label}</span>
+              </button>
+            ))}
           </div>
         )}
-{/* Ô nhập dạng viên thuốc + viền sáng */}
-        <div className="relative flex h-[58px] items-center gap-2 rounded-[29px] border border-[var(--chat-border)] bg-[var(--chat-surface)] pl-2 pr-2 transition focus-within:border-[#c3c7d1] focus-within:bg-white">
-          <GlowRing active={busy} pulseKey={glowPulse} />
 
-          <button
-            onClick={() => setShowFileMenu(true)}
-            aria-label="Đính kèm ảnh"
-            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--chat-border)] bg-white text-[var(--chat-ink)] transition active:scale-90"
-          >
-            <Focus size={19} strokeWidth={2} />
-          </button>
+        <div className="mx-auto w-full max-w-2xl px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-1">
+          {pendingImage && (
+            <div className="nxx-rise mb-2 flex items-center gap-3 rounded-[22px] border border-[#dde0ea] bg-[#f5f6fb] p-2">
+              <img
+                src={pendingImage.previewUrl}
+                alt="Xem trước"
+                className="h-14 w-14 rounded-2xl object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-medium text-[#13141a]">
+                  Ảnh đã chọn
+                </p>
+                <p className="text-[12px] text-[#7b7e90]">
+                  Nhập mô tả và bấm gửi
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  URL.revokeObjectURL(pendingImage.previewUrl);
+                  setPendingImage(null);
+                }}
+                aria-label="Bỏ ảnh"
+                className="nxx-iconbtn h-8 w-8 bg-white text-[#7b7e90]"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder={
-              hasUserMsg ? "Hỏi thêm…" : "Nhập yêu cầu của bạn tại đây nhé"
-            }
-            className="relative h-full min-w-0 flex-1 bg-transparent text-[15px] text-[var(--chat-ink)] outline-none placeholder:text-[#a9adbb]"
-          />
+          <div className={`nxx-composer ${busy ? "is-busy" : ""}`}>
+            <span
+              className={`nxx-glow ${GLOW_OK ? "" : "nxx-glow--pulse"}`}
+              aria-hidden="true"
+            />
 
-          {!hasInput && !busy && (
             <button
+              type="button"
+              onClick={() => setShowFileMenu(true)}
+              aria-label="Đính kèm ảnh"
+              className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#13141a]"
+            >
+              <Plus size={20} strokeWidth={2.2} />
+            </button>
+
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                // isComposing: tránh gửi nhầm khi đang gõ Telex/VNI có dấu
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              enterKeyHint="send"
+              aria-label="Nhập tin nhắn"
+              placeholder={
+                isHero ? "Bạn cần hỗ trợ gì nè?" : "Hỏi tiếp tại đây nhé"
+              }
+              className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-5 text-[#13141a] outline-none placeholder:text-[#a2a5b8]"
+            />
+
+            <button
+              type="button"
               onClick={() => setShowEmoji(true)}
               aria-label="Chèn emoji"
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--chat-muted)] transition active:scale-90"
+              className="nxx-iconbtn h-10 w-10 text-[#7b7e90]"
             >
               <Smile size={21} strokeWidth={2} />
             </button>
-          )}
 
-          {busy ? (
             <button
-              onClick={stopGenerating}
-              aria-label="Dừng"
-              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--chat-ink)] text-white transition active:scale-90"
-            >
-              <Square size={13} strokeWidth={0} fill="currentColor" />
-            </button>
-          ) : (
-            <button
+              type="button"
               onClick={() => sendMessage()}
-              disabled={!hasInput}
-              aria-label="Gửi"
-              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition active:scale-90 ${
-                hasInput
-                  ? "bg-[var(--chat-ink)] text-white"
-                  : "bg-[#d9dce5] text-white"
-              }`}
+              disabled={busy || !hasInput}
+              aria-label={busy ? "Đang trả lời" : "Gửi"}
+              className={`nxx-iconbtn h-10 w-10 ${
+                busy || hasInput
+                  ? "bg-[#13141a] text-white"
+                  : "bg-[#d9dbe6] text-white"
+              } ${busy ? "cursor-default" : ""}`}
             >
-              <ArrowUp size={20} strokeWidth={2.4} />
+              {busy ? (
+                <span className="h-3 w-3 rounded-[3px] bg-white" />
+              ) : (
+                <ArrowUp size={20} strokeWidth={2.4} />
+              )}
             </button>
-          )}
-        </div>
+          </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleFileSelect(f);
-            e.target.value = "";
-          }}
-        />
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleFileSelect(f);
-            e.target.value = "";
-          }}
-        />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFileSelect(f);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFileSelect(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
 
         {/* FILE MENU */}
         {showFileMenu && (
           <>
             <div
-              className="fade-in fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+              className="nxx-fade fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
               onClick={() => setShowFileMenu(false)}
             />
-            <div className="sheet-up fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-2xl rounded-t-[28px] bg-white pb-[max(20px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_40px_rgba(17,20,24,0.12)]">
-              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+            <div className="nxx-sheet-in fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-2xl rounded-t-[28px] border border-[#dde0ea] bg-white pb-[max(20px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_40px_rgba(19,20,26,0.12)]">
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#e3e5ee]" />
               <div className="px-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[var(--chat-ink)]">
+                  <h3 className="text-[19px] font-semibold tracking-[-0.01em] text-[#13141a]">
                     Tải lên
                   </h3>
                   <button
+                    type="button"
                     onClick={() => {
                       setShowFileMenu(false);
                       fileInputRef.current?.click();
                     }}
-                    className="text-sm font-semibold text-blue-500"
+                    className="text-sm font-semibold text-[#0068FF]"
                   >
                     Tất cả ảnh
                   </button>
                 </div>
                 <div className="mt-6 grid grid-cols-3 gap-4">
-                  {[
-                    {
-                      label: "Chụp ảnh",
-                      Icon: Camera,
-                      onClick: () => cameraInputRef.current?.click(),
-                    },
-                    {
-                      label: "Album",
-                      Icon: ImageIcon,
-                      onClick: () => fileInputRef.current?.click(),
-                    },
-                    { label: "Tệp", Icon: Paperclip, onClick: () => {} },
-                  ].map(({ label, Icon, onClick }) => (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        setShowFileMenu(false);
-                        onClick();
-                      }}
-                      className="flex flex-col items-center gap-3"
-                    >
-                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--chat-surface)] text-[var(--chat-ink)] transition active:scale-95">
-                        <Icon size={32} strokeWidth={1.8} />
-                      </div>
-                      <span className="text-[13px] font-medium text-slate-700">
-                        {label}
-                      </span>
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      cameraInputRef.current?.click();
+                    }}
+                    className="flex flex-col items-center gap-3"
+                  >
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[22px] bg-[#f5f6fb] text-[#13141a]">
+                      <Camera size={30} strokeWidth={1.8} />
+                    </div>
+                    <span className="text-[13px] font-medium text-[#3f4254]">
+                      Chụp ảnh
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFileMenu(false);
+                      fileInputRef.current?.click();
+                    }}
+                    className="flex flex-col items-center gap-3"
+                  >
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[22px] bg-[#f5f6fb] text-[#13141a]">
+                      <ImageIcon size={30} strokeWidth={1.8} />
+                    </div>
+                    <span className="text-[13px] font-medium text-[#3f4254]">
+                      Album
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowFileMenu(false)}
+                    className="flex flex-col items-center gap-3"
+                  >
+                    <div className="flex h-20 w-20 items-center justify-center rounded-[22px] bg-[#f5f6fb] text-[#13141a]">
+                      <Paperclip size={30} strokeWidth={1.8} />
+                    </div>
+                    <span className="text-[13px] font-medium text-[#3f4254]">
+                      Tệp
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -751,7 +894,7 @@ export default function ChatView({
               className="fixed inset-0 z-40"
               onClick={() => setShowEmoji(false)}
             />
-            <div className="absolute bottom-20 right-4 z-50 overflow-hidden rounded-lg border border-slate-200 shadow-2xl">
+            <div className="absolute bottom-[78px] right-4 z-50 overflow-hidden rounded-2xl border border-[#dde0ea] shadow-2xl">
               <EmojiPicker
                 onEmojiClick={(e) => setInput((prev) => prev + e.emoji)}
                 theme="light"
@@ -763,25 +906,13 @@ export default function ChatView({
         )}
       </div>
 
-      {/* TOAST */}
-      {toast && (
-        <div
-          key={toast.id}
-          role="status"
-          className="toast-pop pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+92px)] left-1/2 z-[80] flex items-center gap-2 rounded-full border border-[var(--chat-border)] bg-white px-4 py-2 text-[13px] font-medium text-[var(--chat-ink)] shadow-[0_8px_24px_rgba(17,20,24,0.12)]"
-        >
-          <Check size={15} strokeWidth={2.6} />
-          {toast.text}
-        </div>
-      )}
-
-      {/* FEEDBACK SHEET */}
       <FeedbackSheet
-        open={!!feedbackFor}
-        rating={feedbackFor?.rating}
-        onClose={() => setFeedbackFor(null)}
+        open={Boolean(feedbackTarget)}
+        rating={feedbackTarget?.rating}
+        onClose={closeFeedback}
         onSubmit={submitFeedback}
       />
     </div>
   );
-            }
+              }
+              
