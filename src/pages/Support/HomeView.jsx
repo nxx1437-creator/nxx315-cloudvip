@@ -13,11 +13,18 @@ const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
 const GLOW_OK =
   typeof CSS !== "undefined" && typeof CSS.registerProperty === "function";
 
-export default function HomeView({ onOpenHelp, onStartChat }) {
+const MAX_LENGTH = 2000;
+
+export default function HomeView({
+  onOpenHelp = () => {},
+  onStartChat,
+  onBack,
+}) {
   const [text, setText] = useState("");
   const [picked, setPicked] = useState(null);
   const ref = useRef(null);
 
+  // Auto-resize textarea
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -25,19 +32,32 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [text]);
 
+  const trimmed = text.trim();
+  const canSend = trimmed.length > 0;
+
+  const handleBack = () => {
+    if (typeof onBack === "function") return onBack();
+    if (window.history.length > 1) window.history.back();
+  };
+
   const send = () => {
-    const t = text.trim();
-    if (!t) return;
+    if (!canSend) return;
     if (typeof onStartChat === "function") {
-      onStartChat({ text: t, category: picked });
+      onStartChat({ text: trimmed, category: picked });
     }
   };
 
+  const handleChange = (e) => {
+    const v = e.target.value;
+    setText(v.length > MAX_LENGTH ? v.slice(0, MAX_LENGTH) : v);
+  };
+
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-white">
+    <div className="min-h-[calc(100dvh-72px)] bg-white">
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-black/[0.06] bg-white/95 px-4 py-3 backdrop-blur-xl">
         <button
-          onClick={() => window.history.back()}
+          onClick={handleBack}
+          aria-label="Quay lại"
           className="flex h-8 w-8 items-center justify-center text-[#161823]"
         >
           <ArrowLeft size={22} strokeWidth={2.2} />
@@ -48,7 +68,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         <div className="h-8 w-8" />
       </div>
 
-      {SYSTEM_BANNER.enabled && <BannerNotice />}
+      {SYSTEM_BANNER?.enabled && <BannerNotice />}
 
       <div className="px-5 pb-6 pt-10">
         <h2 className="font-hero hero-shimmer text-center text-[34px] leading-[1.15] tracking-[-0.02em]">
@@ -67,7 +87,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
             ref={ref}
             rows={3}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleChange}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
@@ -76,6 +96,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
             }}
             placeholder="Mô tả vấn đề hoặc đặt câu hỏi..."
             aria-label="Nhập câu hỏi"
+            maxLength={MAX_LENGTH}
             className="min-h-[84px] w-full flex-1 resize-none bg-transparent px-1 pt-1 text-[16.5px] leading-6 text-[#13141a] outline-none placeholder:text-[#a2a5b8]"
           />
 
@@ -103,15 +124,21 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
             <button
               type="button"
               onClick={send}
-              disabled={!text.trim()}
+              disabled={!canSend}
               aria-label="Gửi"
-              className={`nxx-iconbtn h-10 w-10 text-white ${
-                text.trim() ? "bg-[#13141a]" : "bg-[#d9dbe6]"
+              className={`nxx-iconbtn h-10 w-10 text-white transition disabled:cursor-not-allowed ${
+                canSend ? "bg-[#13141a]" : "bg-[#d9dbe6]"
               }`}
             >
               <ArrowUp size={20} strokeWidth={2.4} />
             </button>
           </div>
+
+          {text.length > MAX_LENGTH * 0.9 && (
+            <div className="mt-1 text-right text-[11px] text-[#a2a5b8]">
+              {text.length}/{MAX_LENGTH}
+            </div>
+          )}
         </div>
       </div>
 
@@ -140,7 +167,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
       <div className="px-4 pb-7">
         <a
-          href={SUPPORT.zaloUrl}
+          href={SUPPORT?.zaloUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]"
@@ -152,7 +179,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
                 Gặp nhân viên qua Zalo
               </p>
               <p className="mt-0.5 text-[11.5px] text-[#0068FF]/70">
-                Hỗ trợ {SUPPORT.hours}
+                Hỗ trợ {SUPPORT?.hours}
               </p>
             </div>
           </div>
@@ -161,5 +188,5 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
     </div>
   );
-                   }                     
+      }                     
 
