@@ -86,7 +86,48 @@ function HistoryItem({ order }) {
       )}
     </div>
   );
-            }
+}
+
+// Skeleton Loading Component (Hiển thị khi đang chờ API)
+function PageSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#f4f3ee] pb-28 font-['JetBrains_Mono',ui-monospace,monospace]">
+      <TopHeader />
+      <main className="mx-auto max-w-xl px-5 py-6 animate-pulse">
+        <div className="flex items-start gap-4">
+          <div className="h-10 w-10 rounded-full bg-[#e8e6df]" />
+          <div className="flex-1 pt-1 space-y-2">
+            <div className="h-3 w-16 bg-[#e8e6df] rounded" />
+            <div className="h-7 w-2/3 bg-[#e8e6df] rounded" />
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-[28px] bg-white p-6 border border-[#e8e6df] shadow-sm">
+          <div className="h-3 w-24 bg-[#e8e6df] rounded mb-4" />
+          <div className="h-10 w-1/2 bg-[#e8e6df] rounded" />
+        </div>
+
+        <div className="mt-5 h-4 w-3/4 bg-[#e8e6df] rounded" />
+
+        <div className="mt-8 flex gap-2">
+          <div className="h-9 w-20 bg-[#e8e6df] rounded-full" />
+          <div className="h-9 w-20 bg-[#e8e6df] rounded-full" />
+          <div className="h-9 w-20 bg-[#e8e6df] rounded-full" />
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3.5">
+          <div className="h-28 bg-white border border-[#e8e6df] rounded-[24px]" />
+          <div className="h-28 bg-white border border-[#e8e6df] rounded-[24px]" />
+          <div className="h-28 bg-white border border-[#e8e6df] rounded-[24px]" />
+          <div className="h-28 bg-white border border-[#e8e6df] rounded-[24px]" />
+        </div>
+        
+        <div className="mt-10 h-4 w-24 bg-[#e8e6df] rounded mb-4" />
+        <div className="h-20 bg-white border border-[#e8e6df] rounded-[24px]" />
+      </main>
+    </div>
+  );
+}
 export default function CardExchange() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -143,12 +184,13 @@ export default function CardExchange() {
     };
   }, []);
 
-  // Load dữ liệu (Xử lý lỗi từng truy vấn độc lập)
+  // Load dữ liệu (Tối ưu getSession + Promise.allSettled)
   const loadAll = useCallback(async () => {
     try {
-      const {
-        data: { user: u },
-      } = await supabase.auth.getUser();
+      // Lấy session từ bộ nhớ đệm (nhanh hơn getUser)
+      const { data: { session } } = await supabase.auth.getSession();
+      const u = session?.user;
+      
       if (!aliveRef.current) return;
       if (!u) {
         setLoading(false);
@@ -266,17 +308,12 @@ export default function CardExchange() {
 
   // --- Views ---
 
+  // 1. Màn hình Loading (Dùng Skeleton thay vì vòng xoay)
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f4f3ee] pb-24">
-        <TopHeader />
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-[#8a8880]" />
-        </div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
+  // 2. Màn hình chưa đăng nhập
   if (!user) {
     return (
       <div className="page-transition min-h-screen bg-[#f4f3ee] pb-24 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612]">
@@ -296,6 +333,7 @@ export default function CardExchange() {
     );
   }
 
+  // 3. Màn hình chính
   return (
     <div className="page-transition relative min-h-screen bg-[#f4f3ee] pb-28 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612] overflow-hidden">
       <TopHeader />
@@ -432,7 +470,6 @@ export default function CardExchange() {
             role="dialog"
             aria-modal="true"
           >
-            {/* Header Modal */}
             <div className="px-6 pt-7 pb-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -460,7 +497,6 @@ export default function CardExchange() {
               </div>
             </div>
 
-            {/* Body Modal */}
             <div className="px-6 pb-6">
               <div className="flex items-center justify-between border-y border-[#e8e6df]/80 py-4 mb-6">
                 <div>
@@ -509,7 +545,6 @@ export default function CardExchange() {
               )}
             </div>
 
-            {/* Footer Modal */}
             <div className="px-6 pb-7 pt-2 flex gap-3">
               <button
                 type="button"
@@ -569,4 +604,4 @@ export default function CardExchange() {
       {!modalOpen && <BottomNav />}
     </div>
   );
-          }
+        }
