@@ -18,24 +18,21 @@ import GradientHeadline from "./GradientHeadline.jsx";
 import ThinkingIndicator, { ThinkingSpinner } from "./ThinkingIndicator.jsx";
 import "./chat-effects.css";
 
-// Thanh header tự ẩn khi cuộn xuống, hiện lại khi cuộn lên (như video).
-// Đặt false nếu muốn header luôn hiện.
 const HIDE_HEADER_ON_SCROLL = true;
 
-// Các câu xoay vòng ở màn hình chào (chưa có tin nhắn nào của người dùng)
 const HERO_PHRASES = [
   "Hỏi NXX bất cứ điều gì",
   "Gửi ảnh lỗi, NXX xem giúp",
   "Tra đơn, hoàn tiền, đổi thưởng",
 ];
 
-// Viền sáng cần @property; trình duyệt cũ hơn sẽ dùng hiệu ứng nhấp nháy thay thế
 const GLOW_OK =
   typeof CSS !== "undefined" && typeof CSS.registerProperty === "function";
 
 export default function ChatView({
   conversation,
   user,
+  initialMessage, // NEW
   onBack,
   onNewChat,
   onOpenConversation,
@@ -55,26 +52,20 @@ export default function ChatView({
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
   const [headerHidden, setHeaderHidden] = useState(false);
-  const [feedback, setFeedback] = useState({}); // { [msgId]: { rating, status } }
-  const [feedbackTarget, setFeedbackTarget] = useState(null); // { message, rating }
+  const [feedback, setFeedback] = useState({});
+  const [feedbackTarget, setFeedbackTarget] = useState(null);
 
   const scrollRef = useRef(null);
   const lastScrollY = useRef(0);
   const inputRef = useRef(null);
   const sentIds = useRef(new Set());
-  const freshIds = useRef(new Set()); // tin mới trong phiên → chạy hiệu ứng xuất hiện
+  const freshIds = useRef(new Set());
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const initialSent = useRef(false); // NEW
 
-  // ✅ Sync conv khi prop conversation đổi (fix quan trọng)
   useEffect(() => {
     if (conversation?.id && conversation.id !== conv?.id) {
-      console.log(
-        "[ChatView] Switching conv:",
-        conv?.id,
-        "→",
-        conversation.id
-      );
       setConv(conversation);
       setMessages([]);
       setLoading(true);
@@ -107,7 +98,6 @@ export default function ChatView({
     if (!loading && messages.length > 0) scrollToBottom(true);
   }, [messages.length, loading]);
 
-  // Khi AI đang "gõ", giữ khung cuộn bám theo nếu người dùng đang ở gần đáy
   useEffect(() => {
     if (!streamingMsgId) return;
     const el = scrollRef.current;
@@ -116,7 +106,6 @@ export default function ChatView({
     }
   }, [streamingText, streamingMsgId]);
 
-  // Ô nhập tự giãn chiều cao (tối đa ~5 dòng)
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -243,7 +232,6 @@ export default function ChatView({
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const bodyPayload = {
-      // ✅ DÙNG PROP thay vì state conv.id
       conversation_id: conversation.id,
       user_message: imageUrl
         ? "Phân tích ảnh này giúp mình"
@@ -305,7 +293,6 @@ export default function ChatView({
       const { data: userMsg, error } = await supabase
         .from("support_messages")
         .insert({
-          // ✅ DÙNG PROP
           conversation_id: conversation.id,
           user_id: user.id,
           message: content || "",
@@ -338,7 +325,6 @@ export default function ChatView({
             `[Support AI] Provider: ${data.provider} (${data.model})`
           );
 
-          // ✅ FALLBACK: Reload messages sau 2s để đảm bảo có reply
           setTimeout(() => {
             loadMessages();
           }, 2000);
@@ -350,7 +336,6 @@ export default function ChatView({
           const { data: errMsg } = await supabase
             .from("support_messages")
             .insert({
-              // ✅ DÙNG PROP
               conversation_id: conversation.id,
               user_id: user.id,
               message:
@@ -379,6 +364,13 @@ export default function ChatView({
     }
   };
 
+  // NEW: tự gửi câu người dùng gõ ở khung to trang chủ
+  useEffect(() => {
+    if (!initialMessage || loading || !user?.id || initialSent.current) return;
+    initialSent.current = true;
+    sendMessage(initialMessage);
+  }, [loading, user?.id, initialMessage]);
+
   const handleFileSelect = (file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -403,9 +395,6 @@ export default function ChatView({
     });
   };
 
-  // ==================================================
-  // PHẢN HỒI 👍 / 👎
-  // ==================================================
   const openFeedback = (message, rating) => {
     if (feedback[message.id]?.status === "sent") return;
     setFeedback((prev) => ({
@@ -418,7 +407,6 @@ export default function ChatView({
   const closeFeedback = () => {
     if (feedbackTarget) {
       const id = feedbackTarget.message.id;
-      // đóng sheet mà chưa gửi → bỏ trạng thái nháp
       setFeedback((prev) => {
         if (prev[id]?.status !== "draft") return prev;
         const next = { ...prev };
@@ -457,9 +445,6 @@ export default function ChatView({
     }
   };
 
-  // ==================================================
-  // HEADER TỰ ẨN KHI CUỘN
-  // ==================================================
   const handleScroll = (e) => {
     if (!HIDE_HEADER_ON_SCROLL) return;
     const el = e.currentTarget;
@@ -467,20 +452,16 @@ export default function ChatView({
     const dy = y - lastScrollY.current;
     if (Math.abs(dy) < 10) return;
     const overscroll = y < 0 || y > el.scrollHeight - el.clientHeight;
-    if (overscroll) return; // bỏ qua nảy đàn hồi trên iOS
+    if (overscroll) return;
     if (y < 48) setHeaderHidden(false);
     else setHeaderHidden(dy > 0);
     lastScrollY.current = y;
   };
 
-  // ==================================================
-  // TRẠNG THÁI DẪN XUẤT
-  // ==================================================
   const hasInput = Boolean(input.trim() || pendingImage);
   const busy = sending || aiTyping || Boolean(streamingMsgId);
   const hasStatusMsg = messages.some((m) => m.sender_type === "status");
   const hasUserMsg = messages.some((m) => m.sender_type === "user");
-  // Màn hình chào: còn đến khi có tin nhắn đầu tiên của người dùng
   const isHero =
     !loading && messages.length > 0 && !hasUserMsg && !hasStatusMsg;
 
@@ -492,7 +473,6 @@ export default function ChatView({
       ? lastMsg.suggestions
       : [];
 
-  // Hàng chip phía trên ô nhập: gợi ý của AI (nếu có) hoặc thao tác nhanh
   const chipItems = isHero
     ? QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }))
     : lastAiSuggestions.length > 0
@@ -511,7 +491,7 @@ export default function ChatView({
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-white">
       <div className="relative min-h-0 flex-1">
-        {/* ============ HEADER (nổi phía trên, tự ẩn khi cuộn) ============ */}
+        {/* HEADER */}
         <div
           className={`absolute inset-x-0 top-0 z-20 transition-transform duration-300 ease-out ${
             headerHidden ? "-translate-y-full" : "translate-y-0"
@@ -535,7 +515,7 @@ export default function ChatView({
                 alt="NXX"
                 className="h-7 w-7 shrink-0 rounded-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.onerror = null; // tránh lặp vô hạn nếu ảnh dự phòng cũng lỗi
+                  e.currentTarget.onerror = null;
                   e.currentTarget.src = `https://ui-avatars.com/api/?name=NXX&background=13141a&color=fff&bold=true&size=80`;
                 }}
               />
@@ -576,7 +556,7 @@ export default function ChatView({
           onNewChat={onNewChat}
         />
 
-        {/* ============ KHUNG TIN NHẮN ============ */}
+        {/* KHUNG TIN NHẮN */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -594,7 +574,6 @@ export default function ChatView({
                 <ThinkingSpinner size={32} />
               </div>
             ) : isHero ? (
-              /* ---------- MÀN HÌNH CHÀO ---------- */
               <div className="nxx-fade my-auto flex flex-col items-center pb-10 text-center">
                 <GradientHeadline phrases={HERO_PHRASES} />
                 {heroGreeting?.message && (
@@ -621,13 +600,12 @@ export default function ChatView({
                     ))}
                   </div>
                 )}
-                <div className="mt-6 flex items-center gap-1">
+                   <div className="mt-6 flex items-center gap-1">
                   <Sparkles size={11} className="text-[#a2a5b8]" strokeWidth={2.4} />
                   <span className="text-[11px] text-[#7b7e90]">Do AI tạo</span>
                 </div>
               </div>
             ) : (
-              /* ---------- HỘI THOẠI ---------- */
               <div className="space-y-6">
                 {messages.map((msg, idx) => {
                   if (msg.sender_type === "status")
@@ -667,7 +645,7 @@ export default function ChatView({
         </div>
       </div>
 
-      {/* ============ CHIP GỢI Ý + Ô NHẬP ============ */}
+      {/* CHIP GỢI Ý + Ô NHẬP */}
       <div className="relative shrink-0 bg-white">
         {!busy && chipItems.length > 0 && (
           <div
@@ -744,7 +722,6 @@ export default function ChatView({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                // isComposing: tránh gửi nhầm khi đang gõ Telex/VNI có dấu
                 if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault();
                   sendMessage();
@@ -914,5 +891,4 @@ export default function ChatView({
       />
     </div>
   );
-              }
-              
+                }
