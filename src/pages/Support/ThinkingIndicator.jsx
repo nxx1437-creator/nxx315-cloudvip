@@ -1,14 +1,13 @@
 // src/pages/Support/ThinkingIndicator.jsx
-// Spinner "cuộn xoắn" + dòng trạng thái hiện dần từ trái sang phải.
+// Spinner "cuộn xoắn" + dòng trạng thái đổi dần theo thời gian chờ.
 
 import React, { useEffect, useState } from "react";
 
-// Đường xoắn 7 vòng (epitrochoid), tính 1 lần khi nạp module.
 const SPIN_PATH = (() => {
   const R = 8;
   const r = 3.2;
   const n = 7;
-  const N = 210;
+  const N = 150;
   let d = "";
   for (let i = 0; i <= N; i++) {
     const t = (2 * Math.PI * i) / N;
@@ -19,7 +18,6 @@ const SPIN_PATH = (() => {
   return `${d}Z`;
 })();
 
-// 3 lớp vệt (dài/mờ → ngắn/đậm) có cùng "đầu" nên tạo thành đuôi sao chổi.
 const COMET_LAYERS = [
   { len: 34, opacity: 0.22 },
   { len: 20, opacity: 0.5 },
@@ -61,27 +59,32 @@ export function ThinkingSpinner({ size = 28 }) {
   );
 }
 
-const DEFAULT_TEXT = "Đang suy nghĩ…";
-const SLOW_TEXT = " vẫn đang xử lý, bạn chờ chút nhé…";
+// Các dòng chờ chung (không khẳng định việc cụ thể nào), đổi theo thời gian
+const STEPS = [
+  { at: 0, text: "Đang suy nghĩ…" },
+  { at: 2400, text: "Đang đọc kỹ câu hỏi của bạn…" },
+  { at: 5200, text: "Đang soạn câu trả lời…" },
+  { at: 10000, text: "Vẫn đang xử lý, bạn chờ chút nhé…" },
+];
 
 /**
- * text: dòng trạng thái thật từ backend (nếu có). Khi text đổi, dòng mới
- * sẽ hiện dần từ trái sang phải.
- * Không có text → hiện "Đang suy nghĩ…", quá 9 giây thì đổi sang câu báo chờ
- * (không bịa các bước không có thật).
+ * text: dòng trạng thái thật từ backend (sender_type = "status"). Có text thì
+ * hiện đúng text đó. Không có thì chạy các dòng chờ chung ở trên.
  */
 export default function ThinkingIndicator({ text }) {
   const usingDefault = !text;
-  const [slow, setSlow] = useState(false);
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
-    setSlow(false);
+    setStep(0);
     if (!usingDefault) return undefined;
-    const t = setTimeout(() => setSlow(true), 9000);
-    return () => clearTimeout(t);
+    const timers = STEPS.slice(1).map((s, i) =>
+      setTimeout(() => setStep(i + 1), s.at)
+    );
+    return () => timers.forEach(clearTimeout);
   }, [usingDefault, text]);
 
-  const shown = usingDefault ? (slow ? SLOW_TEXT : DEFAULT_TEXT) : text;
+  const shown = usingDefault ? STEPS[step].text : text;
 
   return (
     <div
