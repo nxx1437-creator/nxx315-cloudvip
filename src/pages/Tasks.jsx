@@ -19,7 +19,6 @@ import useTasks from "../hooks/useTasks.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import IpBlockedScreen from "../components/tasks/IpBlockedScreen.jsx";
-import CaptchaModal from "../components/tasks/CaptchaModal.jsx";
 import ExternalLinkWarning from "../components/tasks/ExternalLinkWarning.jsx";
 import MonthlyMissions from "../components/tasks/MonthlyMissions.jsx";
 import {
@@ -43,7 +42,7 @@ const WARN_KEY = "ext_link_warn_count";
 // Nhà cung cấp luôn nằm cuối danh sách (bỏ khỏi mảng này để xếp lại theo thưởng)
 const PIN_LAST = ["LAYMA"];
 
-const WARN_MAX = 1; // chỉ nhắc "An toàn của bạn" 1 lần đầu, các lần sau vào thẳng xác minh
+const WARN_MAX = 1; // chỉ nhắc "An toàn của bạn" 1 lần đầu, các lần sau vào thẳng nhiệm vụ
 let memWarn = 0; // dự phòng khi trình duyệt chặn/xoá localStorage
 
 const getWarnCount = () => {
@@ -105,7 +104,6 @@ export default function Tasks() {
   const [ipBlocked, setIpBlocked] = useState(null);
   const [checkingIp, setCheckingIp] = useState(true);
   const [userLevel, setUserLevel] = useState(null);
-  const [captchaTask, setCaptchaTask] = useState(null);
   const [warnTask, setWarnTask] = useState(null);
   const [readyLink, setReadyLink] = useState(null); // { url, task } khi trình duyệt chặn tự mở tab
 
@@ -212,6 +210,7 @@ export default function Tasks() {
       window.removeEventListener("focus", handleVisibility);
     };
   }, [reload]);
+
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
 
@@ -299,8 +298,7 @@ export default function Tasks() {
       }
     })();
   }, [activeTab, user?.id, historyLoaded]);
-
-  const handleStart = (task) => {
+    const handleStart = (task) => {
     if (isLoading || checkingIp) return;
     if (!user?.id) {
       showToast(t("tk.t.login"), "error");
@@ -311,7 +309,7 @@ export default function Tasks() {
       return;
     }
     if (getWarnCount() >= WARN_MAX) {
-      setCaptchaTask(task);
+      startTaskApi(task);
       return;
     }
     setWarnTask(task);
@@ -446,7 +444,7 @@ export default function Tasks() {
             bumpWarnCount();
             const task = warnTask;
             setWarnTask(null);
-            setCaptchaTask(task);
+            startTaskApi(task);
           }}
         />
       )}
@@ -485,18 +483,6 @@ export default function Tasks() {
             </button>
           </div>
         </div>
-      )}
-
-      {captchaTask && (
-        <CaptchaModal
-          task={captchaTask}
-          showToast={showToast}
-          onClose={() => setCaptchaTask(null)}
-          onSolved={(task) => {
-            setCaptchaTask(null);
-            startTaskApi(task);
-          }}
-        />
       )}
 
       {isLoading && (
@@ -601,10 +587,9 @@ export default function Tasks() {
             />
           </div>
         </div>
-        
-        <MonthlyMissions />
 
-        {isBlocked && (
+        <MonthlyMissions />
+            {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
             <p className="text-sm font-semibold text-rose-700">
               {t("tk.lockedTitle")}
@@ -688,7 +673,7 @@ export default function Tasks() {
               />
             )}
 
-             {!loading && filteredTasks.length > 0 && (
+            {!loading && filteredTasks.length > 0 && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredTasks.map((task) => (
                   <TaskCard
@@ -731,6 +716,6 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-}
+              }
 
          
