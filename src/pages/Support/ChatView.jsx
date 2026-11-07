@@ -134,24 +134,26 @@ export default function ChatView({
     }, 20);
   };
 
-  const loadMessages = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("support_messages")
-        .select("*")
-        .eq("conversation_id", conversation.id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      setMessages(data || []);
-    } catch (error) {
-      console.error("Load error:", error);
-    } finally {
+  const loadMessages = async (silent = false) => {
+  if (!silent) setLoading(true);
+  try {
+    const { data, error } = await supabase
+      .from("support_messages")
+      .select("*")
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    setMessages(data || []);
+  } catch (error) {
+    console.error("Load error:", error);
+  } finally {
+    if (!silent) {
       setLoading(false);
       setTimeout(() => scrollToBottom(), 100);
     }
-  };
-
+  }
+};
+  
   useEffect(() => {
     if (conversation?.id) {
       loadMessages();
