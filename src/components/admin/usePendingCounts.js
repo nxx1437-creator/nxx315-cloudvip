@@ -1,23 +1,32 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
+const COUNTS = {
+  redeem: ["redemption_orders", (q) => q.eq("status", "pending")],
+  game: ["orders", (q) => q.eq("status", "paid")],
+  cards: ["card_orders", (q) => q.in("status", ["pending", "needs_review"])],
+  withdrawals: ["withdrawals", (q) => q.in("status", ["pending", "processing"])],
+  tickets: ["support_tickets", (q) => q.eq("status", "open")],
+  posts: ["posts", (q) => q.eq("status", "pending")],
+};
+
 export default function usePendingCounts() {
-  const [counts, setCounts] = useState({ orders: null, redeem: null, tickets: null, cards: null });
+  const [counts, setCounts] = useState({});
 
   const load = useCallback(async () => {
     try {
-      const count = (table, apply) =>
-        apply(supabase.from(table).select("id", { count: "exact", head: true }));
-
-      const [paid, redeem, tickets, cards] = await Promise.all([
-        count("orders", (q) => q.eq("status", "paid")),
-        count("redemption_orders", (q) => q.eq("status", "pending")),
-        count("support_tickets", (q) => q.eq("status", "open")),
-        count("card_orders", (q) => q.in("status", ["pending", "needs_review"])),
-      ]);
-
-      const val = (r) => (r.error ? null : r.count || 0);
-      setCounts({ orders: val(paid), redeem: val(redeem), tickets: val(tickets), cards: val(cards) });
+      const keys = Object.keys(COUNTS);
+      const results = await Promise.all(
+        keys.map((k) => {
+          const [table, apply] = COUNTS[k];
+          return apply(supabase.from(table).select("id", { count: "exact", head: true }));
+        })
+      );
+      const next = {};
+      keys.forEach((k, i) => {
+        next[k] = results[i].error ? null : results[i].count || 0;
+      });
+      setCounts(next);
     } catch (err) {
       console.error("usePendingCounts:", err);
     }
