@@ -1,15 +1,19 @@
 import React, { useMemo, useState } from "react";
-import { Check, ChevronRight, Search, X } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import {
-  EmptyState, ErrorState, InfoBox, Loading, Modal, SectionHeader, StatusBadge, StatusIcon,
-  fmtNum, useAdminList,
+  Btn, Card, EmptyState, ErrorState, FilterPills, Loading, Modal, SearchBox, SectionHeader,
+  StatusBadge, fmtNum, fmtTime, useAdminList,
 } from "../components/admin/AdminUI";
 
 const ADMIN_CHAT_ID = import.meta.env.VITE_ADMIN_CHAT_ID;
 
 const loadOrders = () =>
-  supabase.from("redemption_orders").select("*").order("created_at", { ascending: false });
+  supabase.from("redemption_orders").select("*").order("created_at", { ascending: false }).limit(200);
+
+const FILTERS = [
+  { id: "pending", label: "Chờ duyệt" },
+  { id: "all", label: "Tất cả" },
+];
 
 async function notifyTelegram(message) {
   if (!ADMIN_CHAT_ID) return;
@@ -24,150 +28,106 @@ async function notifyTelegram(message) {
   }
 }
 
-export default function AdminOrdersTab() {
+export default function AdminOrdersTab({ onChanged }) {
   const { data: orders, loading, error, reload } = useAdminList(loadOrders);
+  const [filter, setFilter] = useState("pending");
   const [search, setSearch] = useState("");
-  const [detailOrder, setDetailOrder] = useState(null);
   const [rejectOrder, setRejectOrder] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [processing, setProcessing] = useState(false);
+  const [busyId, setBusyId] = useState(null);
 
-  const filteredOrders = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return orders;
-    return orders.filter((o) =>
-      [o.id, o.order_code, o.roblox_username, o.roblox_user_id, o.status, o.package_id]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(keyword))
+  const shown = useMemo(() => {
+    const kw = search.trim().toLowerCase();
+    return orders.filter(
+      (o) =>
+        (filter === "all" || o.status === "pending") &&
+        (!kw ||
+          [o.id, o.order_code, o.package_name, o.delivery_target, o.status]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(kw)))
     );
-  }, [orders, search]);
+  }, [orders, filter, search]);
 
-  const updateOrder = async (order, patch, message) => {
-    if (processing) return false;
-    setProcessing(true);
+  const refresh = async () => {
+    await reload();
+    onChanged?.();
+  };
+
+  const deliver = async (order) => {
+    if (busyId) return;
+    setBusyId(order.id);
     const { error: err } = await supabase
       .from("redemption_orders")
-      .update({ ...patch, updated_at: new Date().toISOString() })
+      .update({ status: "delivered", delivered_at: new Date().toISOString() })
       .eq("id", order.id);
-    if (err) alert("Có lỗi: " + err.message);
-    else {
-      await notifyTelegram(message);
-      await reload();
-    }
-    setProcessing(false);
-    return !err;
+    setBusyId(null);
+    if (err) return alert("Có lỗi: " + err.message);
+    notifyTelegram(`✅ Đơn #${order.order_code || order.id} đã giao thành công.`);
+    await refresh();
   };
 
-  const handleDelivered = async (order) => {
-    const ok = await updateOrder(
-      order,
-      { status: "delivered" },
-      `✅ Đơn hàng #${order.order_code || order.id} đã giao thành công.`
-    );
-    if (ok) setDetailOrder(null);
-  };
-
-  const handleReject = async () => {
-    if (!rejectOrder) return;
-    const reason = rejectReason.trim();
-    const ok = await updateOrder(
-      rejectOrder,
-      { status: "rejected", note: reason || "Đơn hàng bị từ chối" },
-      `❌ Đơn hàng #${rejectOrder.order_code || rejectOrder.id} bị từ chối.\nLý do: ${reason || "Không có lý do"}`
-    );
-    if (ok) {
-      setRejectOrder(null);
-      setRejectReason("");
-      setDetailOrder(null);
-    }
+  // Từ chối bằng hàm reject_order trên Supabase: hoàn xu cho người dùng
+  const reject = async () => {
+    if (!rejectOrder || busyId) return;
+    setBusyId(rejectOrder.id);
+    const reason = rejectReason.trim() || "Đơn hàng bị từ chối";
+    const { data, error: err } = await supabase.rpc("reject_order", {
+      p_order_id: rejectOrder.id,
+      p_reason: reason,
+    });
+    setBusyId(null);
+    if (err || data?.success === false) return alert("Có lỗi: " + (err?.message || data?.error));
+    notifyTelegram(`❌ Đơn #${rejectOrder.order_code || rejectOrder.id} bị từ chối và đã hoàn xu.\nLý do: ${reason}`);
+    setRejectOrder(null);
+    setRejectReason("");
+    await refresh();
   };
 
   return (
     <div className="space-y-4">
-      <SectionHeader title="Đơn hàng" description="Quản lý đơn hàng đổi thưởng" onRefresh={reload} loading={loading} />
-
-      <div className="relative">
-        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm mã đơn, Roblox ID, username..."
-          className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-        />
-      </div>
+      <SectionHeader title="Đổi thưởng" description="Đơn đổi thưởng của người dùng" onRefresh={reload} loading={loading} />
+      <SearchBox value={search} onChange={setSearch} placeholder="Tìm mã đơn, gói, thông tin nhận..." />
+      <FilterPills options={FILTERS} value={filter} onChange={setFilter} />
 
       {loading ? (
         <Loading />
       ) : error ? (
         <ErrorState message={error} onRetry={reload} />
-      ) : filteredOrders.length === 0 ? (
-        <EmptyState text="Không có đơn hàng nào" />
+      ) : shown.length === 0 ? (
+        <EmptyState text={filter === "pending" ? "Không có đơn nào chờ duyệt" : "Không có đơn nào"} />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <span className="text-sm font-semibold text-slate-900">Danh sách đơn</span>
-            <span className="text-xs text-slate-400">{filteredOrders.length} đơn</span>
-          </div>
-          {filteredOrders.map((order, index) => (
-            <button
-              key={order.id}
-              onClick={() => setDetailOrder(order)}
-              className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50 ${
-                index > 0 ? "border-t border-slate-100" : ""
-              }`}
-            >
-              <StatusIcon status={order.status} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-slate-900">
-                  #{order.order_code || order.id} · {order.roblox_username || "-"}
-                </p>
-                <p className="mt-0.5 truncate text-xs text-slate-500">
-                  {order.package_id || "-"} · {fmtNum(order.amount)}đ ·{" "}
-                  {order.created_at
-                    ? new Date(order.created_at).toLocaleString("vi-VN", {
-                        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
-                      })
-                    : "-"}
-                </p>
+        <div className="space-y-3">
+          {shown.map((o) => (
+            <Card key={o.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[17px] font-semibold text-[#242424]">{o.package_name || "-"}</p>
+                  <p className="mt-0.5 text-[13px] text-[#6b7280]">
+                    #{o.order_code || String(o.id).slice(0, 8)} · {fmtNum(o.coins_charged)} xu · {fmtTime(o.created_at)}
+                  </p>
+                </div>
+                <StatusBadge status={o.status} />
               </div>
-              <StatusBadge status={order.status} />
-              <ChevronRight size={16} className="shrink-0 text-slate-300" />
-            </button>
+
+              <div className="mt-3 rounded-lg bg-[#f4f4f4] px-3 py-2.5 text-[14px] text-[#242424]">
+                <span className="text-[#6b7280]">{o.delivery_method || "Nhận qua"}: </span>
+                {o.delivery_target || "-"}
+              </div>
+              {o.admin_note && <p className="mt-2 text-[13px] text-[#6b7280]">Ghi chú: {o.admin_note}</p>}
+
+              {o.status === "pending" && (
+                <div className="mt-3 flex gap-2">
+                  <Btn className="flex-1" disabled={busyId === o.id} onClick={() => deliver(o)}>
+                    {busyId === o.id ? "Đang xử lý..." : "Đã giao"}
+                  </Btn>
+                  <Btn variant="ghost" className="flex-1" disabled={busyId === o.id} onClick={() => setRejectOrder(o)}>
+                    Từ chối
+                  </Btn>
+                </div>
+              )}
+            </Card>
           ))}
         </div>
-      )}
-
-      {detailOrder && (
-        <Modal title={`Đơn #${detailOrder.order_code || detailOrder.id}`} onClose={() => setDetailOrder(null)}>
-          <div className="space-y-3">
-            <InfoBox label="Roblox" value={detailOrder.roblox_username || detailOrder.roblox_user_id || "-"} />
-            <InfoBox label="Gói" value={detailOrder.package_id || "-"} />
-            <InfoBox label="Số tiền" value={`${fmtNum(detailOrder.amount)}đ`} />
-            <InfoBox label="Phương thức" value={detailOrder.payment_method || "-"} />
-            <InfoBox label="Trạng thái" value={<StatusBadge status={detailOrder.status} />} />
-            {detailOrder.note && <InfoBox label="Ghi chú" value={detailOrder.note} />}
-            <div className="flex gap-2 pt-3">
-              {detailOrder.status !== "delivered" && (
-                <button
-                  disabled={processing}
-                  onClick={() => handleDelivered(detailOrder)}
-                  className="flex-1 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  <Check size={17} className="mr-2 inline" />Đã giao
-                </button>
-              )}
-              {detailOrder.status !== "rejected" && (
-                <button
-                  disabled={processing}
-                  onClick={() => setRejectOrder(detailOrder)}
-                  className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                >
-                  <X size={17} className="mr-2 inline" />Từ chối
-                </button>
-              )}
-            </div>
-          </div>
-        </Modal>
       )}
 
       {rejectOrder && (
@@ -178,22 +138,21 @@ export default function AdminOrdersTab() {
             setRejectReason("");
           }}
         >
+          <p className="mb-3 text-[14px] text-[#6b7280]">
+            {fmtNum(rejectOrder.coins_charged)} xu sẽ được hoàn lại cho người dùng.
+          </p>
           <textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Nhập lý do từ chối..."
-            rows={4}
-            className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
+            rows={3}
+            className="w-full rounded-lg border border-[#e5e7eb] p-3 text-[14px] outline-none focus:border-[#101010]"
           />
-          <button
-            disabled={processing}
-            onClick={handleReject}
-            className="mt-3 w-full rounded-xl bg-red-600 py-3 font-semibold text-white disabled:opacity-50"
-          >
-            {processing ? "Đang xử lý..." : "Xác nhận từ chối"}
-          </button>
+          <Btn className="mt-3 w-full" disabled={busyId === rejectOrder.id} onClick={reject}>
+            {busyId === rejectOrder.id ? "Đang xử lý..." : "Xác nhận từ chối và hoàn xu"}
+          </Btn>
         </Modal>
       )}
     </div>
   );
-                  }
+}
