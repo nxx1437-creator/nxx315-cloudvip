@@ -15,6 +15,7 @@ import HistoryDrawer from "./HistoryDrawer.jsx";
 import MessageBubble from "./MessageBubble.jsx";
 import FeedbackSheet from "./FeedbackSheet.jsx";
 import GradientHeadline from "./GradientHeadline.jsx";
+import GlowRing from "./GlowRing.jsx";
 import ThinkingIndicator, { ThinkingSpinner } from "./ThinkingIndicator.jsx";
 import "./chat-effects.css";
 
@@ -26,13 +27,25 @@ const HERO_PHRASES = [
   "Tra đơn, hoàn tiền, đổi thưởng",
 ];
 
-const GLOW_OK =
-  typeof CSS !== "undefined" && typeof CSS.registerProperty === "function";
+// Chỉ vẽ lại bong bóng khi dữ liệu của chính nó đổi (bỏ qua hàm truyền vào).
+// Nhờ vậy lúc AI "gõ chữ", các tin cũ không bị vẽ lại → hết đơ.
+const MemoBubble = React.memo(
+  MessageBubble,
+  (a, b) =>
+    a.message === b.message &&
+    a.streamingText === b.streamingText &&
+    a.isLastAIMessage === b.isLastAIMessage &&
+    a.sending === b.sending &&
+    a.hiddenSuggestionIds === b.hiddenSuggestionIds &&
+    a.animateIn === b.animateIn &&
+    a.showFeedback === b.showFeedback &&
+    a.feedback === b.feedback
+);
 
 export default function ChatView({
   conversation,
   user,
-  initialMessage, // NEW
+  initialMessage,
   onBack,
   onNewChat,
   onOpenConversation,
@@ -62,7 +75,8 @@ export default function ChatView({
   const freshIds = useRef(new Set());
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-  const initialSent = useRef(false); // NEW
+  const initialSent = useRef(false);
+  const twRaf = useRef(0);
 
   useEffect(() => {
     if (conversation?.id && conversation.id !== conv?.id) {
@@ -82,6 +96,8 @@ export default function ChatView({
       setHeaderHidden(false);
     }
   }, [conversation?.id]);
+
+  useEffect(() => () => cancelAnimationFrame(twRaf.current), []);
 
   const scrollToBottom = (smooth = false) => {
     requestAnimationFrame(() => {
@@ -113,47 +129,60 @@ export default function ChatView({
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input]);
 
+  // Gõ chữ theo thời gian (≈110 ký tự/giây), chỉ cập nhật mỗi ≥6 ký tự
+  // → ít vẽ lại hơn bản cũ (50 lần/giây) nên hiệu ứng không bị khựng.
   const runTypewriter = (msg) => {
+    cancelAnimationFrame(twRaf.current);
     setStreamingMsgId(msg.id);
     setStreamingText("");
-    let idx = 0;
-    const full = msg.message;
-    const interval = setInterval(() => {
-      idx += 3;
-      if (idx >= full.length) {
-        setStreamingText(full);
-        clearInterval(interval);
+    const full = msg.message || "";
+    const CPS = 110;
+    const start = performance.now();
+    let last = 0;
+
+    const tick = (now) => {
+      const n = Math.min(
+        full.length,
+        Math.floor(((now - start) / 1000) * CPS)
+      );
+      if (n === full.length || n - last >= 6) {
+        last = n;
+        setStreamingText(full.slice(0, n));
+      }
+      if (n < full.length) {
+        twRaf.current = requestAnimationFrame(tick);
+      } else {
         setTimeout(() => {
           setStreamingMsgId(null);
           setStreamingText("");
           scrollToBottom(true);
         }, 100);
-      } else {
-        setStreamingText(full.slice(0, idx));
       }
-    }, 20);
+    };
+    twRaf.current = requestAnimationFrame(tick);
   };
 
+  // silent = true: tải lại âm thầm, không bật vòng xoay, không xóa khung chat
   const loadMessages = async (silent = false) => {
-  if (!silent) setLoading(true);
-  try {
-    const { data, error } = await supabase
-      .from("support_messages")
-      .select("*")
-      .eq("conversation_id", conversation.id)
-      .order("created_at", { ascending: true });
-    if (error) throw error;
-    setMessages(data || []);
-  } catch (error) {
-    console.error("Load error:", error);
-  } finally {
-    if (!silent) {
-      setLoading(false);
-      setTimeout(() => scrollToBottom(), 100);
+    if (!silent) setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("support_messages")
+        .select("*")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error("Load error:", error);
+    } finally {
+      if (!silent) {
+        setLoading(false);
+        setTimeout(() => scrollToBottom(), 100);
+      }
     }
-  }
-};
-  
+  };
+
   useEffect(() => {
     if (conversation?.id) {
       loadMessages();
@@ -320,15 +349,16 @@ export default function ChatView({
       scrollToBottom(true);
 
       if (conv.status === "ai") {
-        const typingTimer = setTimeout(() => setAiTyping(true), 1500);
+        const typingTimer = setTimeout(() => setAiTyping(true), 600);
         try {
           const data = await callAI(imageUrl, content);
           console.log(
             `[Support AI] Provider: ${data.provider} (${data.model})`
           );
 
+          // đồng bộ lại âm thầm phòng khi realtime bị lỡ tin
           setTimeout(() => {
-            loadMessages();
+            loadMessages(true);
           }, 2000);
         } catch (err) {
           console.error("AI error:", err);
@@ -366,7 +396,7 @@ export default function ChatView({
     }
   };
 
-  // NEW: tự gửi câu người dùng gõ ở khung to trang chủ
+  // tự gửi câu người dùng gõ ở trang chủ (nếu có)
   useEffect(() => {
     if (!initialMessage || loading || !user?.id || initialSent.current) return;
     initialSent.current = true;
@@ -571,7 +601,7 @@ export default function ChatView({
           <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col px-4 pb-6 pt-[76px]">
             <BannerNotice />
 
-            {loading ? (
+               {loading ? (
               <div className="flex flex-1 items-center justify-center">
                 <ThinkingSpinner size={32} />
               </div>
@@ -602,7 +632,7 @@ export default function ChatView({
                     ))}
                   </div>
                 )}
-                   <div className="mt-6 flex items-center gap-1">
+                <div className="mt-6 flex items-center gap-1">
                   <Sparkles size={11} className="text-[#a2a5b8]" strokeWidth={2.4} />
                   <span className="text-[11px] text-[#7b7e90]">Do AI tạo</span>
                 </div>
@@ -620,7 +650,7 @@ export default function ChatView({
                     !aiTyping;
 
                   return (
-                    <MessageBubble
+                    <MemoBubble
                       key={msg.id}
                       message={msg}
                       streamingText={
@@ -704,10 +734,7 @@ export default function ChatView({
           )}
 
           <div className={`nxx-composer ${busy ? "is-busy" : ""}`}>
-            <span
-              className={`nxx-glow ${GLOW_OK ? "" : "nxx-glow--pulse"}`}
-              aria-hidden="true"
-            />
+            <GlowRing />
 
             <button
               type="button"
@@ -893,4 +920,4 @@ export default function ChatView({
       />
     </div>
   );
-                }
+              }
