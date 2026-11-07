@@ -1,124 +1,119 @@
 // src/pages/Support/FeedbackSheet.jsx
-// Bottom sheet phản hồi 👍 / 👎: chip chọn nhiều + ghi chú tuỳ chọn.
-import React, { useEffect, useState } from "react";
+// Sheet trượt từ dưới lên để lấy phản hồi 👍 / 👎.
 
-const TAGS = {
-  up: [
-    "Đúng trọng tâm",
-    "Dễ hiểu",
-    "Trả lời nhanh",
-    "Hướng dẫn rõ ràng",
-    "Hữu ích",
-    "Thân thiện",
-  ],
-  down: [
-    "Sai thông tin",
-    "Không hữu ích",
-    "Chưa đúng ý mình",
-    "Quá dài dòng",
-    "Khó làm theo",
-    "Trả lời chậm",
-  ],
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+
+const COPY = {
+  up: {
+    title: "Bạn thích điều gì?",
+    reasons: [
+      "Đúng vấn đề",
+      "Dễ hiểu",
+      "Hướng dẫn rõ ràng",
+      "Trả lời nhanh",
+      "Thân thiện",
+      "Giải quyết được",
+    ],
+  },
+  down: {
+    title: "Có gì chưa ổn?",
+    reasons: [
+      "Sai thông tin",
+      "Không đúng ý mình",
+      "Khó hiểu",
+      "Quá dài dòng",
+      "Chưa giải quyết được",
+      "Trả lời chậm",
+    ],
+  },
 };
 
 export default function FeedbackSheet({ open, rating, onClose, onSubmit }) {
-  const [tags, setTags] = useState([]);
+  const [picked, setPicked] = useState([]);
   const [note, setNote] = useState("");
-  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setTags([]);
+      setPicked([]);
       setNote("");
-      setClosing(false);
     }
   }, [open, rating]);
 
-  const close = () => {
-    setClosing(true);
-    setTimeout(onClose, 200);
-  };
-
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e) => e.key === "Escape" && close();
+    const onKey = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, onClose]);
 
   if (!open || !rating) return null;
+  const copy = COPY[rating] || COPY.up;
 
-  const isUp = rating === "up";
-  const list = TAGS[isUp ? "up" : "down"];
+  const toggle = (r) =>
+    setPicked((p) => (p.includes(r) ? p.filter((x) => x !== r) : [...p, r]));
 
-  const toggle = (t) =>
-    setTags((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-    );
+  return createPortal(
+    <div className="fixed inset-0 z-[120]" role="dialog" aria-modal="true" aria-label={copy.title}>
+      <div className="nxx-fade absolute inset-0 bg-black/25" onClick={onClose} />
+      <div className="nxx-sheet-in absolute inset-x-0 bottom-0 mx-auto w-full max-w-2xl rounded-t-[28px] border border-[#dde0ea] bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-7 shadow-[0_-12px_40px_rgba(19,20,26,0.12)]">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng"
+          className="nxx-iconbtn absolute right-3 top-3 h-9 w-9 text-[#7b7e90] hover:bg-[#f5f6fb]"
+        >
+          <X size={20} />
+        </button>
 
-  const submit = () => {
-    onSubmit({ rating, tags, note: note.trim() });
-    close();
-  };
-
-  return (
-    <>
-      <div
-        className={`fixed inset-0 z-[70] bg-black/20 backdrop-blur-[2px] ${
-          closing ? "fade-out" : "fade-in"
-        }`}
-        onClick={close}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={isUp ? "Bạn thích điều gì?" : "Chưa tốt ở đâu?"}
-        className={`fixed inset-x-0 bottom-0 z-[71] mx-auto w-full max-w-2xl rounded-t-[28px] border border-[var(--chat-border)] bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-6 shadow-[0_-12px_40px_rgba(17,20,24,0.12)] ${
-          closing ? "sheet-down" : "sheet-up"
-        }`}
-      >
-        <h3 className="font-hero text-center text-[26px] leading-tight tracking-[-0.01em] text-[var(--chat-ink)]">
-          {isUp ? "Bạn thích điều gì?" : "Chưa tốt ở đâu?"}
+        <h3 className="text-center text-[22px] font-semibold tracking-[-0.01em] text-[#13141a]">
+          {copy.title}
         </h3>
-        <p className="mt-1.5 text-center text-[13px] text-[var(--chat-muted)]">
+        <p className="mt-1 text-center text-[14px] text-[#7b7e90]">
           Phản hồi của bạn giúp NXX trả lời tốt hơn.
         </p>
 
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          {list.map((t) => {
-            const on = tags.includes(t);
+        <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+          {copy.reasons.map((r) => {
+            const on = picked.includes(r);
             return (
               <button
-                key={t}
-                onClick={() => toggle(t)}
+                key={r}
+                type="button"
                 aria-pressed={on}
-                className={`rounded-full border px-4 py-2 text-[14px] font-medium transition active:scale-95 ${
+                onClick={() => toggle(r)}
+                className={`rounded-full border px-4 py-2.5 text-[15px] transition active:scale-[0.97] ${
                   on
-                    ? "border-[var(--chat-ink)] bg-[var(--chat-ink)] text-white"
-                    : "border-[var(--chat-border)] bg-white text-[var(--chat-ink)] hover:bg-[var(--chat-surface)]"
+                    ? "border-[#13141a] bg-[#13141a] text-white"
+                    : "border-[#dde0ea] bg-white text-[#13141a]"
                 }`}
               >
-                {t}
+                {r}
               </button>
             );
           })}
         </div>
 
-        <input
+        <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          maxLength={300}
+          rows={2}
+          maxLength={500}
           placeholder="Thêm chi tiết (không bắt buộc)"
-          className="mt-5 h-12 w-full rounded-xl border border-[var(--chat-border)] bg-[var(--chat-surface)] px-4 text-[14px] text-[var(--chat-ink)] outline-none transition placeholder:text-[var(--chat-muted)] focus:border-[#b9bdc5] focus:bg-white"
+          className="mt-5 w-full resize-none rounded-2xl border border-[#dde0ea] bg-[#f5f6fb] px-4 py-3 text-[15px] text-[#13141a] outline-none placeholder:text-[#a2a5b8] focus:bg-white"
         />
 
         <button
-          onClick={submit}
-          className="mt-3 h-12 w-full rounded-xl bg-[var(--chat-ink)] text-[15px] font-semibold text-white transition active:scale-[0.98]"
+          type="button"
+          onClick={() => onSubmit({ reasons: picked, comment: note.trim() })}
+          className="mt-3 h-12 w-full rounded-2xl bg-[#13141a] text-[16px] font-semibold text-white transition active:scale-[0.99]"
         >
           Gửi phản hồi
         </button>
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
+
