@@ -18,6 +18,7 @@ const Invite = lazy(() => import("./pages/Invite.jsx"));
 const Level = lazy(() => import("./pages/Level.jsx"));
 const Wallet = lazy(() => import("./pages/Wallet.jsx"));
 const Withdraw = lazy(() => import("./pages/Withdraw.jsx"));
+import CardExchange from "./pages/CardExchange.jsx";
 const WithdrawHistory = lazy(() => import("./pages/WithdrawHistory.jsx"));
 const HistoryPage = lazy(() => import("./pages/History.jsx"));
 const HistoryDetail = lazy(() => import("./pages/HistoryDetail.jsx"));
@@ -185,6 +186,7 @@ export default function App() {
             {/* Wallet */}
             <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
             <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+            <Route path="/cards" element={<CardExchange />} />
             <Route path="/withdraw/history" element={<ProtectedRoute><WithdrawHistory /></ProtectedRoute>} />
 
             {/* Marketing */}
