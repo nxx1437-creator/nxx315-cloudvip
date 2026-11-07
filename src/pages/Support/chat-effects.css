@@ -30,6 +30,7 @@
 /* ---------- Ô nhập ---------- */
 .nxx-composer {
   position: relative;
+  isolation: isolate; /* để viền sáng nằm DƯỚI nút/chữ nhưng TRÊN nền ô nhập */
   display: flex;
   align-items: flex-end;
   gap: 8px;
@@ -37,44 +38,31 @@
   border-radius: 30px;
   border: 1px solid var(--nxx-line);
   background: var(--nxx-surface);
+  --nxx-cover: rgba(245, 246, 251, 0.9);
   transition: background 0.2s, border-color 0.2s;
 }
-.nxx-composer:focus-within { background: #fff; border-color: #c4c8d6; }
+.nxx-composer:focus-within {
+  background: #fff;
+  border-color: #c4c8d6;
+  --nxx-cover: rgba(255, 255, 255, 0.9);
+}
 
-/* ---------- Viền sáng: quay bằng transform (GPU) nên không bị đơ ---------- */
+/* ---------- Viền sáng khi AI đang suy nghĩ / trả lời ----------
+   Giống video mẫu: quét ~2 giây quanh khung rồi nghỉ ~2 giây, lặp lại.
+   Chỉ dùng transform + opacity (chạy bằng GPU) nên không bị đơ.
+   Chỉ cần 1 thẻ rỗng: <span class="nxx-glow" /> bên trong .nxx-composer */
 .nxx-glow {
   position: absolute;
   inset: -2px;
+  z-index: -1;
   border-radius: inherit;
+  overflow: hidden;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.35s ease;
 }
-.nxx-composer:focus-within .nxx-glow { opacity: 0.85; }
-.nxx-composer.is-busy .nxx-glow { opacity: 1; }
-
-/* vòng viền 3px (cắt bằng mask, phần quay nằm bên trong) */
-.nxx-glow-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  padding: 3px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-}
-/* quầng sáng mờ bên trong */
-.nxx-glow-halo {
-  position: absolute;
-  inset: 4px;
-  border-radius: inherit;
-  overflow: hidden;
-  opacity: 0.3;
-}
-.nxx-glow-halo .nxx-glow-rot { filter: blur(12px); }
-
-.nxx-glow-rot {
+/* lớp màu quay */
+.nxx-glow::before {
+  content: "";
   position: absolute;
   left: 50%;
   top: 50%;
@@ -95,16 +83,34 @@
     rgba(242, 107, 255, 0) 250deg,
     rgba(242, 107, 255, 0) 360deg
   );
-  animation: nxx-glow-turn 3.2s linear infinite;
-  animation-play-state: paused;
   will-change: transform;
 }
-.nxx-composer:focus-within .nxx-glow-rot,
-.nxx-composer.is-busy .nxx-glow-rot {
-  animation-play-state: running;
+/* lớp phủ bên trong: chừa lại viền 3px, và để lọt chút màu tạo quầng sáng nhẹ */
+.nxx-glow::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 28px;
+  background: var(--nxx-cover);
+}
+
+@keyframes nxx-glow-fade {
+  0%   { opacity: 0; }
+  6%   { opacity: 1; }
+  46%  { opacity: 1; }
+  56%  { opacity: 0; }
+  100% { opacity: 0; }
 }
 @keyframes nxx-glow-turn {
-  to { transform: rotate(-360deg); }
+  0%   { transform: rotate(0deg); }
+  56%  { transform: rotate(-360deg); }
+  100% { transform: rotate(-360deg); }
+}
+.nxx-composer.is-busy .nxx-glow {
+  animation: nxx-glow-fade 4s ease-in-out infinite;
+}
+.nxx-composer.is-busy .nxx-glow::before {
+  animation: nxx-glow-turn 4s ease-in-out infinite;
 }
 
 /* ---------- Khung nhập to (trang chủ, dùng sau này) ---------- */
@@ -116,6 +122,7 @@
   padding: 16px 16px 12px;
   border-radius: 32px;
   background: #fff;
+  --nxx-cover: rgba(255, 255, 255, 0.9);
   box-shadow: 0 12px 32px rgba(19, 20, 26, 0.07);
 }
 
@@ -299,4 +306,4 @@
   .nxx-hl--out { display: none; }
   .nxx-glow { display: none; }
   .nxx-spin-comet { animation: none; stroke-dashoffset: 0; }
-}             
+  }             
