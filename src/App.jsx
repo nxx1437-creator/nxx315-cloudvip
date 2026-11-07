@@ -51,10 +51,8 @@ const Roblox = lazy(() => import("./pages/Roblox.jsx"));
 const PlayTogether = lazy(() => import("./pages/PlayTogether.jsx"));
 const LienQuan = lazy(() => import("./pages/LienQuan.jsx"));
 const FreeFire = lazy(() => import("./pages/FreeFire.jsx"));
-const PubgMobile = lazy(() => import("./pages/PubgMobile.jsx"));
 const FcMobile = lazy(() => import("./pages/FcMobile.jsx"));
 const Valorant = lazy(() => import("./pages/Valorant.jsx"));
-const CloudPhone = lazy(() => import("./pages/CloudPhone.jsx"));
 
 // Khác
 const ShopEarn = lazy(() => import("./pages/ShopEarn.jsx"));
@@ -152,10 +150,8 @@ export default function App() {
             <Route path="/store/play-together" element={<ProtectedRoute><PlayTogether /></ProtectedRoute>} />
             <Route path="/store/lien-quan" element={<ProtectedRoute><LienQuan /></ProtectedRoute>} />
             <Route path="/store/free-fire" element={<ProtectedRoute><FreeFire /></ProtectedRoute>} />
-            <Route path="/store/pubg-mobile" element={<ProtectedRoute><PubgMobile /></ProtectedRoute>} />
             <Route path="/store/fc-mobile" element={<ProtectedRoute><FcMobile /></ProtectedRoute>} />
             <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
-            <Route path="/store/cloud-phone" element={<ProtectedRoute><CloudPhone /></ProtectedRoute>} />
 
             {/* Lịch sử */}
             <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
