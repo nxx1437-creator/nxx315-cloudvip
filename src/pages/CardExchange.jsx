@@ -99,6 +99,18 @@ export default function CardExchange() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
+  const modalOpen = Boolean(selected) || Boolean(result);
+
+  // Khóa scroll khi mở modal (tránh giật/lệch layout trên mobile)
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [modalOpen]);
+
   useEffect(() => {
     aliveRef.current = true;
     return () => {
@@ -239,8 +251,6 @@ export default function CardExchange() {
     );
   }
 
-  const modalOpen = Boolean(selected) || Boolean(result);
-
   return (
     <div className="relative min-h-screen bg-[#f4f3ee] pb-28 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612] overflow-hidden">
       <TopHeader />
@@ -295,7 +305,7 @@ export default function CardExchange() {
         ) : (
           <div className="mt-6 space-y-5">
             {/* Nút chuyển Telco */}
-            <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {telcos.map((t) => (
                 <button
                   key={t}
@@ -368,7 +378,7 @@ export default function CardExchange() {
         </div>
       </main>
 
-      {/* MODAL XÁC NHẬN - Nổi, trong suốt, có animation */}
+      {/* MODAL XÁC NHẬN */}
       {selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm"
@@ -482,7 +492,7 @@ export default function CardExchange() {
         </div>
       )}
 
-      {/* MODAL THÀNH CÔNG */}
+          {/* MODAL THÀNH CÔNG */}
       {result && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-[400px] rounded-[36px] bg-[#f6f5f1]/95 backdrop-blur-2xl p-6 pb-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 animate-modal-pop flex flex-col items-start">
