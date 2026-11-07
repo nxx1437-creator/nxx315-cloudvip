@@ -13,49 +13,76 @@ const CONTACT_KEY = "card_contact";
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 const telcoName = (t) => TELCO_NAMES[t] || t;
 
-// dot: màu chấm vuông nhỏ. Chỉ "chờ" dùng màu hổ phách (màu cảnh báo duy nhất)
 const STATUS = {
-  pending: { label: "Chờ gửi thẻ", dot: "bg-[#f0a000]" },
-  processing: { label: "Đang xử lý", dot: "bg-[#f0a000]" },
-  needs_review: { label: "Đang kiểm tra", dot: "bg-[#b2b2b2]" },
-  completed: { label: "Đã gửi thẻ", dot: "bg-black" },
-  failed: { label: "Từ chối · đã hoàn xu", dot: "bg-[#b2b2b2]" },
+  pending: { label: "chờ gửi thẻ", dot: "bg-[#ff5a00]" },
+  processing: { label: "đang xử lý", dot: "bg-[#ff5a00]" },
+  needs_review: { label: "đang kiểm tra", dot: "bg-[#8a8880]" },
+  completed: { label: "đã gửi thẻ", dot: "bg-[#171612]" },
+  failed: { label: "từ chối · đã hoàn xu", dot: "bg-[#8a8880]" },
 };
+
+// Lưới chấm xám (CSS tĩnh, không tốn hiệu năng)
+function Dots() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+      style={{
+        backgroundImage: "radial-gradient(#d6d4cc 1.1px, transparent 1.3px)",
+        backgroundSize: "9px 9px",
+      }}
+    />
+  );
+}
+
+// Lưới chấm cam, mờ dần từ phải sang trái
+function OrangeDots() {
+  const mask = "linear-gradient(to left, #000 0%, transparent 75%)";
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+      style={{
+        backgroundImage: "radial-gradient(#ff5a00 1.2px, transparent 1.4px)",
+        backgroundSize: "9px 9px",
+        WebkitMaskImage: mask,
+        maskImage: mask,
+      }}
+    />
+  );
+}
 
 function HistoryItem({ order }) {
   const st = STATUS[order.status] || STATUS.pending;
   return (
-    <div className="border-t border-[#e5e5e5] py-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-black text-[15px] font-light text-black">
-          {telcoName(order.telco).charAt(0)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[19px] font-light leading-[1.15] text-black">
+    <div className="border-t border-[#e6e4dd] py-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-bold">
             {telcoName(order.telco)} {fmt(order.denomination)}đ
           </p>
-          <p className="mt-1 text-[13px] font-extralight text-black">
+          <p className="mt-1 text-[12px] text-[#8a8880]">
             {new Date(order.created_at).toLocaleString("vi-VN")} · {fmt(order.coins_charged)} xu
           </p>
         </div>
-        <span className="flex shrink-0 items-center gap-1.5 text-[13px] font-light text-black">
-          <span className={`h-2 w-2 ${st.dot}`} />
+        <span className="flex shrink-0 items-center gap-1.5 text-[12px]">
+          <span className={`h-2 w-2 rounded-full ${st.dot}`} />
           {st.label}
         </span>
       </div>
 
       {order.status === "pending" && (
-        <p className="mt-2 text-[13px] font-extralight leading-[1.5] text-black">
-          Admin sẽ gửi thẻ qua <b className="font-normal">{order.contact}</b> trong vòng 24 giờ.
+        <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">
+          Admin sẽ gửi thẻ qua <b className="text-[#171612]">{order.contact}</b> trong vòng 24 giờ.
         </p>
       )}
       {order.status === "completed" && (
-        <p className="mt-2 text-[13px] font-extralight leading-[1.5] text-black">
+        <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">
           Thẻ đã được gửi qua {order.contact}. Kiểm tra tin nhắn nhé!
         </p>
       )}
       {order.status === "failed" && order.error_message && (
-        <p className="mt-2 text-[13px] font-extralight leading-[1.5] text-black">Lý do: {order.error_message}</p>
+        <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">Lý do: {order.error_message}</p>
       )}
     </div>
   );
@@ -159,10 +186,10 @@ export default function CardExchange() {
   };
     if (loading) {
     return (
-      <div className="min-h-screen bg-white pb-24">
+      <div className="min-h-screen bg-[#f6f5f1] pb-24">
         <TopHeader />
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-[#b2b2b2]" strokeWidth={1.25} />
+          <Loader2 className="h-6 w-6 animate-spin text-[#8a8880]" />
         </div>
       </div>
     );
@@ -170,15 +197,17 @@ export default function CardExchange() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white pb-24 font-['Be_Vietnam_Pro',sans-serif] font-light text-black">
+      <div className="min-h-screen bg-[#f6f5f1] pb-24 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612]">
         <TopHeader />
-        <div className="mx-auto max-w-lg px-4 py-16">
-          <h2 className="text-[26px] font-light leading-[1.15]">Vui lòng đăng nhập</h2>
+        <div className="mx-auto max-w-lg px-5 py-16">
+          <h2 className="text-[26px] font-bold lowercase leading-[1.1]">
+            vui lòng đăng nhập<span className="text-[#ff5a00]">.</span>
+          </h2>
           <button
             onClick={() => navigate("/login")}
-            className="mt-6 bg-black px-6 py-3 text-[13px] font-light uppercase tracking-wide text-white"
+            className="mt-6 rounded-full bg-[#ff5a00] px-7 py-3.5 text-[14px] font-bold text-white shadow-[0_4px_14px_rgba(255,90,0,0.3)]"
           >
-            Đăng nhập
+            đăng nhập
           </button>
         </div>
       </div>
@@ -186,54 +215,67 @@ export default function CardExchange() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-28 font-['Be_Vietnam_Pro',sans-serif] font-light text-black">
+    <div className="min-h-screen bg-[#f6f5f1] pb-28 font-['JetBrains_Mono',ui-monospace,monospace] text-[#171612]">
       <TopHeader />
 
-      <main className="mx-auto max-w-2xl px-4 py-4">
-        <div className="flex items-center gap-3 border-b border-[#e5e5e5] pb-4">
+      <main className="mx-auto max-w-2xl px-5 py-5">
+        <div className="flex items-start gap-3">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex h-9 w-9 items-center justify-center border border-black bg-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fbfaf7] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
           >
-            <ArrowLeft size={18} strokeWidth={1.25} />
+            <ArrowLeft size={18} />
           </button>
-          <h1 className="flex-1 text-[24px] font-light leading-[1.15]">Đổi xu thành thẻ cào</h1>
-        </div>
-
-        {/* Số dư — khối tối như tủ trưng bày */}
-        <div className="mt-6 bg-[#0f0e12] p-5 text-white">
-          <div className="flex items-center gap-2 text-[#b2b2b2]">
-            <Coins size={16} strokeWidth={1.25} />
-            <p className="text-[13px] font-extralight">Số dư của bạn</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10.5px] uppercase tracking-[0.2em] text-[#8a8880]">ví xu</p>
+            <h1 className="mt-1 text-[24px] font-bold lowercase leading-[1.1]">
+              đổi xu thành thẻ cào<span className="text-[#ff5a00]">.</span>
+            </h1>
           </div>
-          <p className="mt-3 text-[40px] font-light leading-[1.11]">{fmt(balance)} xu</p>
         </div>
 
-        <p className="mt-6 border-y border-[#e5e5e5] py-3 text-[13px] font-extralight leading-[1.5]">
+        {/* Số dư */}
+        <div className="relative mt-6 overflow-hidden rounded-3xl bg-[#fbfaf7] p-5">
+          <Dots />
+          <OrangeDots />
+          <div className="relative">
+            <p className="flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.2em] text-[#8a8880]">
+              <Coins size={13} /> số dư của bạn
+            </p>
+            <p className="mt-3 text-[36px] font-bold leading-none">
+              {fmt(balance)}
+              <span className="text-[#ff5a00]"> xu</span>
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-[12px] leading-5 text-[#8a8880]">
           Chọn mệnh giá và để lại Zalo hoặc Discord. Admin sẽ gửi thẻ cho bạn trong vòng 24 giờ.
         </p>
 
         {products.length === 0 ? (
-          <div className="mt-8 border border-[#e5e5e5] p-8">
-            <CreditCard size={28} strokeWidth={1} />
-            <p className="mt-4 text-[19px] font-light leading-[1.15]">Sắp ra mắt</p>
-            <p className="mt-2 text-[13px] font-extralight leading-[1.5]">
+          <div className="mt-6 rounded-3xl bg-[#fbfaf7] p-7">
+            <CreditCard size={26} />
+            <p className="mt-4 text-[20px] font-bold lowercase leading-[1.1]">
+              sắp ra mắt<span className="text-[#ff5a00]">.</span>
+            </p>
+            <p className="mt-2 text-[12px] leading-5 text-[#8a8880]">
               Tính năng đổi xu thành thẻ cào đang được chuẩn bị. Quay lại sau nhé!
             </p>
           </div>
         ) : (
-          <div className="mt-8 space-y-4">
+          <div className="mt-6 space-y-4">
             <div className="flex gap-2 overflow-x-auto">
               {telcos.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTelco(t)}
-                  className={`shrink-0 border px-4 py-2 text-[13px] font-light transition ${
+                  className={`shrink-0 rounded-full px-5 py-2.5 text-[13px] font-bold ${
                     activeTelco === t
-                      ? "border-black bg-black text-white"
-                      : "border-[#e5e5e5] bg-white text-black"
+                      ? "bg-[#171612] text-white"
+                      : "bg-[#fbfaf7] text-[#171612] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
                   }`}
                 >
                   {telcoName(t)}
@@ -241,7 +283,7 @@ export default function CardExchange() {
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-px border border-[#e5e5e5] bg-[#e5e5e5]">
+            <div className="grid grid-cols-2 gap-3">
               {list.map((p) => {
                 const enough = balance >= p.coin_price;
                 return (
@@ -253,16 +295,19 @@ export default function CardExchange() {
                       setError("");
                       setSelected(p);
                     }}
-                    className={`bg-white p-4 text-left transition ${
-                      enough ? "hover:bg-[#f6f8f7] active:bg-[#f6f8f7]" : "text-[#b2b2b2]"
+                    className={`rounded-3xl p-4 text-left active:scale-[0.98] ${
+                      enough ? "bg-[#fbfaf7]" : "bg-[#efede7] opacity-60"
                     }`}
                   >
-                    <p className="text-[24px] font-light leading-[1.15]">{fmt(p.denomination)}đ</p>
-                    <p className="mt-2 flex items-center gap-1 text-[13px] font-light">
-                      <Coins size={13} strokeWidth={1.25} /> {fmt(p.coin_price)} xu
+                    <p className="text-[22px] font-bold leading-none">
+                      {fmt(p.denomination)}
+                      <span className="text-[#ff5a00]">đ</span>
+                    </p>
+                    <p className="mt-3 flex items-center gap-1 text-[12px] text-[#8a8880]">
+                      <Coins size={13} /> {fmt(p.coin_price)} xu
                     </p>
                     {!enough && (
-                      <p className="mt-1 text-[13px] font-extralight">Thiếu {fmt(p.coin_price - balance)} xu</p>
+                      <p className="mt-1 text-[11px] text-[#8a8880]">thiếu {fmt(p.coin_price - balance)} xu</p>
                     )}
                   </button>
                 );
@@ -270,11 +315,11 @@ export default function CardExchange() {
             </div>
           </div>
         )}
-                <div className="mt-12">
-          <h2 className="mb-3 text-[19px] font-light leading-[1.15]">Lịch sử đổi thẻ</h2>
+                 <div className="mt-10">
+          <p className="mb-1 text-[12px] text-[#8a8880]">lịch sử đổi thẻ</p>
           {orders.length === 0 ? (
-            <div className="border-t border-[#e5e5e5] py-6 text-[13px] font-extralight">
-              Bạn chưa đổi thẻ nào
+            <div className="border-t border-[#e6e4dd] py-6 text-[12px] text-[#8a8880]">
+              bạn chưa đổi thẻ nào
             </div>
           ) : (
             orders.map((o) => <HistoryItem key={o.id} order={o} />)
@@ -284,88 +329,108 @@ export default function CardExchange() {
 
       {/* Xác nhận */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
-          <div className="w-full max-w-md border-t border-black bg-white p-5 sm:border">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[24px] font-light leading-[1.15]">Xác nhận đổi thẻ</h3>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center">
+          <div className="w-full max-w-md rounded-t-[36px] bg-[#fbfaf7] p-6 pb-8 sm:rounded-[36px]">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-[28px] font-bold lowercase leading-[1.1]">
+                xác nhận đổi thẻ<span className="text-[#ff5a00]">.</span>
+              </h3>
               <button
                 type="button"
                 onClick={() => !submitting && setSelected(null)}
-                className="flex h-8 w-8 items-center justify-center border border-[#e5e5e5]"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#efede7]"
               >
-                <X size={16} strokeWidth={1.25} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="mt-5 border border-[#e5e5e5] p-4">
-              <p className="text-[13px] font-extralight">Thẻ</p>
-              <p className="text-[24px] font-light leading-[1.15]">
-                {telcoName(selected.telco)} {fmt(selected.denomination)}đ
-              </p>
-              <div className="mt-4 flex items-center justify-between border-t border-[#e5e5e5] pt-3 text-[13px]">
-                <span className="font-extralight">Số xu</span>
-                <span className="font-light">-{fmt(selected.coin_price)} xu</span>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="rounded-lg bg-[#d9d6cc] px-2.5 py-1 text-[11px] font-bold uppercase">
+                {telcoName(selected.telco)}
+              </span>
+              <span className="text-[12px] text-[#8a8880]">thẻ cào điện thoại</span>
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-2 border-b border-[#e6e4dd] pb-5">
+              <div>
+                <p className="text-[11px] text-[#8a8880]">mệnh giá</p>
+                <p className="mt-1 text-[15px] font-bold">{fmt(selected.denomination)}đ</p>
               </div>
-              <div className="mt-2 flex items-center justify-between text-[13px]">
-                <span className="font-extralight">Số dư sau khi đổi</span>
-                <span className="font-light">{fmt(balance - selected.coin_price)} xu</span>
+              <div>
+                <p className="text-[11px] text-[#8a8880]">trừ</p>
+                <p className="mt-1 text-[15px] font-bold text-[#ff5a00]">-{fmt(selected.coin_price)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-[#8a8880]">còn lại</p>
+                <p className="mt-1 text-[15px] font-bold">{fmt(balance - selected.coin_price)}</p>
               </div>
             </div>
 
-            <label className="mt-5 block text-[13px] font-light">
-              Zalo hoặc Discord nhận thẻ
+            <label className="mt-5 block text-[12px] text-[#8a8880]">
+              zalo hoặc discord nhận thẻ
               <input
                 type="text"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="VD: 09xxxxxxxx hoặc ten_discord"
                 maxLength={100}
-                className="mt-2 w-full rounded-none border border-[#e5e5e5] bg-white px-3.5 py-3 text-[14px] font-light outline-none placeholder:text-[#b2b2b2] focus:border-black"
+                className="mt-2 w-full rounded-full border border-[#e6e4dd] bg-white px-5 py-3.5 text-[14px] text-[#171612] outline-none placeholder:text-[#b5b3ab] focus:border-[#ff5a00]"
               />
             </label>
-            <p className="mt-2 text-[13px] font-extralight leading-[1.5]">
+            <p className="mt-3 text-[11.5px] leading-5 text-[#8a8880]">
               Xu bị trừ ngay khi gửi yêu cầu. Nếu admin từ chối, xu sẽ được hoàn lại. Nhập đúng thông tin để nhận thẻ nhanh.
             </p>
             {error && (
-              <p className="mt-3 border border-[#f0a000] px-3 py-2 text-[13px] font-light">{error}</p>
+              <p className="mt-3 rounded-2xl bg-[#fff0e6] px-4 py-3 text-[12.5px] font-bold text-[#d94a00]">{error}</p>
             )}
 
-            <button
-              type="button"
-              onClick={submit}
-              disabled={submitting}
-              className="mt-5 flex w-full items-center justify-center gap-2 bg-black py-3.5 text-[13px] font-light uppercase tracking-wide text-white disabled:opacity-60"
-            >
-              {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-              {submitting ? "Đang gửi..." : "Gửi yêu cầu"}
-            </button>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => !submitting && setSelected(null)}
+                className="flex-1 rounded-full bg-[#171612] py-3.5 text-[14px] font-bold text-white"
+              >
+                hủy
+              </button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={submitting}
+                className="flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-[#ff5a00] py-3.5 text-[14px] font-bold text-white shadow-[0_4px_14px_rgba(255,90,0,0.3)] disabled:opacity-60"
+              >
+                {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                {submitting ? "đang gửi..." : "gửi yêu cầu"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Đã gửi yêu cầu */}
       {result && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
-          <div className="w-full max-w-md border-t border-black bg-white p-5 sm:border">
-            <div className="flex h-12 w-12 items-center justify-center border border-black">
-              <Check size={24} strokeWidth={1.25} />
-            </div>
-            <h3 className="mt-4 text-[24px] font-light leading-[1.15]">Đã gửi yêu cầu!</h3>
-            <p className="mt-1 text-[13px] font-extralight">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center">
+          <div className="w-full max-w-md rounded-t-[36px] bg-[#fbfaf7] p-6 pb-8 sm:rounded-[36px]">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff5a00] text-white">
+              <Check size={24} strokeWidth={3} />
+            </span>
+            <h3 className="mt-4 text-[28px] font-bold lowercase leading-[1.1]">
+              đã gửi yêu cầu<span className="text-[#ff5a00]">.</span>
+            </h3>
+            <p className="mt-2 text-[13px] text-[#8a8880]">
               {telcoName(result.telco)} {fmt(result.denomination)}đ
             </p>
-            <div className="mt-5 flex items-start gap-2 border border-[#e5e5e5] p-3 text-[13px] font-extralight leading-[1.5]">
-              <Clock size={16} className="mt-0.5 shrink-0" strokeWidth={1.25} />
+            <div className="mt-5 flex items-start gap-2 rounded-2xl bg-[#f6f5f1] p-4 text-[12px] leading-5">
+              <Clock size={16} className="mt-0.5 shrink-0" />
               <span>
-                Admin sẽ gửi thẻ qua <b className="font-normal">{result.contact}</b> trong vòng 24 giờ. Bạn có thể theo dõi ở Lịch sử đổi thẻ.
+                Admin sẽ gửi thẻ qua <b>{result.contact}</b> trong vòng 24 giờ. Bạn có thể theo dõi ở Lịch sử đổi thẻ.
               </span>
             </div>
             <button
               type="button"
               onClick={() => setResult(null)}
-              className="mt-5 w-full bg-black py-3.5 text-[13px] font-light uppercase tracking-wide text-white"
+              className="mt-5 w-full rounded-full bg-[#171612] py-3.5 text-[14px] font-bold text-white"
             >
-              Đóng
+              đóng
             </button>
           </div>
         </div>
@@ -374,5 +439,4 @@ export default function CardExchange() {
       {!selected && !result && <BottomNav />}
     </div>
   );
-}            
-            
+}             
