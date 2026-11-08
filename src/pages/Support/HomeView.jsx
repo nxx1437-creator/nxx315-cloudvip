@@ -82,25 +82,33 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   };
 
   const send = async () => {
-    if (!canSend) return;
-    setSending(true);
+  if (!canSend) return;
+  setSending(true);
+  const msg = text.trim();
+  const catId = category || FALLBACK_CATEGORY;
+  
+  try {
+    const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
     
-    try {
-      const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
-      const r = await fnToCall({
-        text: text.trim(),
-        category: category || FALLBACK_CATEGORY,
-      });
-      
-      if (r && r.error) {
-        alert("LỖI TẠO CHAT:\n" + r.error);
-      }
-    } catch (e) {
-      alert("LỖI HỆ THỐNG:\n" + e.message);
-    } finally {
-      setSending(false);
+    // Đua giữa gọi hàm và đồng hồ 7 giây
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Quá 7 giây không phản hồi. Kết nối tới Supabase đang bị treo!")), 7000)
+    );
+    
+    const r = await Promise.race([
+      fnToCall({ text: msg, category: catId }),
+      timeout
+    ]);
+    
+    if (r && r.error) {
+      alert("LỖI TỪ SUPABASE:\n" + r.error);
     }
-  };
+  } catch (e) {
+    alert("LỖI TREO MẠNG:\n" + e.message);
+  } finally {
+    setSending(false);
+  }
+};
 
   const handleKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
