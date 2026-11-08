@@ -29,8 +29,8 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
-  // Trạng thái hiển thị tiến trình để bắt bệnh
   const [statusMsg, setStatusMsg] = useState(""); 
+  const [countdown, setCountdown] = useState(null); // Đồng hồ đếm ngược
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -93,13 +93,20 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     setSending(true);
     setErr("");
     setStatusMsg("Bắt đầu gửi...");
+    
+    // Bắt đầu đếm ngược 8s
+    let timeLeft = 8;
+    setCountdown(timeLeft);
+    const timer = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+    }, 1000);
 
     const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
 
     try {
-      // Chờ tối đa 8s
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Quá thời gian 8s. Supabase không phản hồi (Có thể do chặn mạng hoặc RLS).")), 8000)
+        setTimeout(() => reject(new Error("Quá thời gian 8s. Supabase không phản hồi.")), 8000)
       );
 
       const r = await Promise.race([
@@ -111,8 +118,10 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     } catch (e) {
       setErr(e?.message || "Lỗi hệ thống.");
     } finally {
+      clearInterval(timer); // Dừng đếm ngược
       setSending(false);
       setStatusMsg("");
+      setCountdown(null);
     }
   };
 
@@ -187,9 +196,14 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         </div>
       </div>
 
-      {/* HIỂN THỊ TRẠNG THÁI / LỖI */}
-      {statusMsg && <p className="px-5 pt-3 text-[13px] leading-5 text-blue-600 font-medium">{statusMsg}</p>}
-      {err && <p className="px-5 pt-3 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
+      {/* HIỂN THỊ TRẠNG THÁI VÀ ĐỒNG HỒ ĐẾM NGƯỢC */}
+      {countdown !== null && (
+        <div className="px-5 pt-3 text-[13px] leading-5 text-orange-600 font-bold">
+          Đang kết nối... ({countdown}s)
+        </div>
+      )}
+      {statusMsg && <p className="px-5 pt-1 text-[13px] leading-5 text-blue-600 font-medium">{statusMsg}</p>}
+      {err && <p className="px-5 pt-1 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
 
       <div className="px-4 pt-6">
         <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]">
@@ -232,4 +246,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-             }
+      }
