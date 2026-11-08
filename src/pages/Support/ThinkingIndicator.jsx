@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
-// Vẽ đường xoắn ốc
+// Vẽ đường xoắn ốc (giữ nguyên)
 const SPIN_PATH = (() => {
   const R = 8;
   const r = 3.2;
@@ -18,6 +18,24 @@ const SPIN_PATH = (() => {
   return `${d}Z`;
 })();
 
+// Cấu hình hiệu ứng
+const DURATION = 1.6; // giây / vòng
+const TAIL = 45; // đuôi dài bao nhiêu % đường (pathLength = 100)
+const SEGMENTS = 30; // số đoạn chia đuôi (càng nhiều càng mượt)
+const SEG_LEN = TAIL / SEGMENTS;
+const COLOR = "#13141a";
+
+const TAIL_SEGMENTS = Array.from({ length: SEGMENTS }, (_, i) => {
+  const k = i / (SEGMENTS - 1); // 0 = đầu, 1 = cuối đuôi
+  return {
+    key: i,
+    opacity: Math.pow(1 - k, 1.6), // mờ dần, đầu đậm - cuối trong suốt
+    width: 2 - k * 0.8, // đuôi thon dần
+    // lệch pha để mỗi đoạn bám sau đoạn trước
+    delay: -(DURATION - (i * SEG_LEN * DURATION) / 100),
+  };
+});
+
 export function ThinkingSpinner({ size = 36 }) {
   return (
     <svg
@@ -27,23 +45,20 @@ export function ThinkingSpinner({ size = 36 }) {
       fill="none"
       aria-hidden="true"
       className="shrink-0"
-      style={{ animation: "spin-smooth 1.5s linear infinite" }} // LỆNH QUAY TỔNG THỂ
     >
-      <defs>
-        {/* Tạo màu mờ dần cho đuôi sao chổi */}
-        <linearGradient id="spin-fade" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#13141a" stopOpacity="1" />
-          <stop offset="60%" stopColor="#13141a" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#13141a" stopOpacity="0" />
-        </linearGradient>
-
-        <style>{`
-          @keyframes spin-smooth {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </defs>
+      <style>{`
+        @keyframes spin-comet {
+          from { stroke-dashoffset: 0; }
+          to   { stroke-dashoffset: -100; }
+        }
+        .spin-seg {
+          animation: spin-comet ${DURATION}s linear infinite;
+          will-change: stroke-dashoffset;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .spin-seg { animation-duration: ${DURATION * 3}s; }
+        }
+      `}</style>
 
       {/* Lớp nền mờ (ghost) */}
       <path
@@ -54,26 +69,34 @@ export function ThinkingSpinner({ size = 36 }) {
         strokeLinejoin="round"
       />
 
-      {/* Lớp đuôi mờ dần (Dùng Gradient và cắt nét) */}
+      {/* Đuôi: nhiều đoạn nhỏ, opacity giảm dần dọc theo đường */}
+      {TAIL_SEGMENTS.slice(1).map((s) => (
+        <path
+          key={s.key}
+          className="spin-seg"
+          d={SPIN_PATH}
+          pathLength="100"
+          stroke={COLOR}
+          strokeOpacity={s.opacity}
+          strokeWidth={s.width}
+          strokeLinejoin="round"
+          // +0.25 để các đoạn chồng nhẹ lên nhau, không bị hở
+          strokeDasharray={`${SEG_LEN + 0.25} ${100 - SEG_LEN - 0.25}`}
+          style={{ animationDelay: `${s.delay}s` }}
+        />
+      ))}
+
+      {/* Đầu sao chổi: đậm, bo tròn */}
       <path
+        className="spin-seg"
         d={SPIN_PATH}
         pathLength="100"
-        stroke="url(#spin-fade)"
-        strokeWidth="2.5"
+        stroke={COLOR}
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeDasharray="85 100" // Đuôi dài 85%
-      />
-      
-      {/* Lớp lõi sắc nét ở đầu */}
-      <path
-        d={SPIN_PATH}
-        pathLength="100"
-        stroke="#13141a"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray="15 100" // Chỉ vẽ 15% đầu
+        strokeDasharray={`${SEG_LEN} ${100 - SEG_LEN}`}
+        style={{ animationDelay: `${TAIL_SEGMENTS[0].delay}s` }}
       />
     </svg>
   );
@@ -117,4 +140,4 @@ export default function ThinkingIndicator({ text }) {
       </span>
     </div>
   );
-}
+    }
