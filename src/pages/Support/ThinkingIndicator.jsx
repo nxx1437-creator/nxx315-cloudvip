@@ -179,6 +179,7 @@ export default function ThinkingIndicator({ text }) {
       </span>
     </div>
   );
-    }
+      }
+
                           
 
