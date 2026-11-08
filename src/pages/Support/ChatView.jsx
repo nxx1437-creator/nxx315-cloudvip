@@ -52,7 +52,7 @@ export default function ChatView({
 }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialMessage || "");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [aiTyping, setAiTyping] = useState(false);
@@ -396,12 +396,7 @@ export default function ChatView({
     }
   };
 
-  // tự gửi câu người dùng gõ ở trang chủ (nếu có)
-  useEffect(() => {
-    if (!initialMessage || loading || !user?.id || initialSent.current) return;
-    initialSent.current = true;
-    sendMessage(initialMessage);
-  }, [loading, user?.id, initialMessage]);
+
 
   const handleFileSelect = (file) => {
     if (!file) return;
