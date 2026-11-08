@@ -13,38 +13,21 @@ export default function Support() {
   const [conversation, setConversation] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [initialMessage, setInitialMessage] = useState(null);
+  const [globalError, setGlobalError] = useState(null); // Hứng lỗi toàn cục
 
   useEffect(() => {
-    const loadUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    loadUser();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
 
-  // Lắng nghe tín hiệu chuyển trang từ HomeView (khi nó tự gọi API)
-  useEffect(() => {
-    const handleStartChatEvent = (e) => {
-      const { conversation, category, firstText } = e.detail;
-      setSelectedCategory(category);
-      setInitialMessage(firstText);
-      setConversation(conversation);
-      setView("chat");
-    };
-    window.addEventListener("nxx-start-chat", handleStartChatEvent);
-    return () => window.removeEventListener("nxx-start-chat", handleStartChatEvent);
-  }, []);
-
-  const openHelp = (category) => {
-    setSelectedCategory(category);
-    setView("help");
-  };
-
+  // Hàm xử lý chính (Có Timeout 8 giây chống treo)
   const startAIChat = async (category, firstText = null) => {
+    setGlobalError(null);
     if (!user?.id) {
-      return { error: "Tài khoản chưa tải xong hoặc chưa đăng nhập. Hãy tải lại trang rồi thử lại." };
+      setGlobalError("Lỗi: Bạn chưa đăng nhập hoặc phiên hết hạn.");
+      return;
     }
-    try {
+
+    const doCreate = async () => {
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
         .insert({
@@ -56,32 +39,46 @@ export default function Support() {
         .select()
         .single();
 
-      if (convError) throw convError;
-
-      const greeting = getGreeting(category);
-      const suggestions = getSuggestions(category);
+      if (convError) throw new Error("Lỗi tạo cuộc trò chuyện: " + convError.message);
 
       const { error: msgError } = await supabase
         .from("support_messages")
         .insert({
           conversation_id: conv.id,
           user_id: user.id,
-          message: greeting,
+          message: getGreeting(category),
           sender_type: "ai",
-          suggestions: suggestions,
+          suggestions: getSuggestions(category),
         });
 
-      if (msgError) throw msgError;
+      if (msgError) throw new Error("Lỗi tạo tin nhắn chào: " + msgError.message);
 
+      return conv;
+    };
+
+    try {
+      // Chạy đua giữa hàm tạo chat và đồng hồ bấm giờ 8 giây
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Quá thời gian 8s! Supabase không phản hồi hoặc mạng quá yếu.")), 8000)
+      );
+      
+      const conv = await Promise.race([doCreate(), timeout]);
+
+      // Thành công thì chuyển trang
       setSelectedCategory(category);
       setInitialMessage(firstText);
       setConversation(conv);
       setView("chat");
-      return { ok: true };
-    } catch (error) {
-      console.error("Start chat error:", error);
-      return { error: error?.message || "Không thể bắt đầu cuộc trò chuyện." };
+    } catch (err) {
+      console.error(err);
+      // In lỗi thẳng lên màn hình đỏ
+      setGlobalError(err.message || "Lỗi không xác định khi tạo chat.");
     }
+  };
+
+  const openHelp = (category) => {
+    setSelectedCategory(category);
+    setView("help");
   };
 
   const openConversation = (conv) => {
@@ -91,18 +88,23 @@ export default function Support() {
     setView("chat");
   };
 
-  const handleStartChat = (payload) => {
-    return startAIChat(payload.category, payload.text);
-  };
-
   return (
-    <div className="min-h-screen bg-white pb-24 text-slate-900">
+    <div className="min-h-screen bg-white pb-24 text-slate-900 relative">
       <TopHeader />
+      
+      {/* KHUNG BÁO LỖI ĐỎ CHÓT - Luôn hiển thị trên cùng nếu có lỗi */}
+      {globalError && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-red-600 text-white p-4 rounded-xl shadow-2xl z-[9999] flex justify-between items-start">
+          <p className="text-sm font-medium">{globalError}</p>
+          <button onClick={() => setGlobalError(null)} className="ml-3 font-bold text-xl leading-none">&times;</button>
+        </div>
+      )}
+
       <main className="mx-auto w-full max-w-2xl">
         {view === "home" && (
           <HomeView
             onOpenHelp={openHelp}
-            onStartChat={handleStartChat}
+            onStartChat={({ text, category }) => startAIChat(category, text)}
           />
         )}
         {view === "help" && (
@@ -126,4 +128,4 @@ export default function Support() {
       </main>
     </div>
   );
-}
+        }
