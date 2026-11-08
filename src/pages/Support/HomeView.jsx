@@ -50,12 +50,18 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
 
-  // Hàm tự xử lý API (Dùng khi trang cha không truyền onStartChat xuống)
+  // Hàm tự xử lý API (có tích hợp Timeout chống treo)
   const handleSelfStartChat = async ({ text: msg, category: catId }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) return { error: "Vui lòng đăng nhập để chat." };
+      console.log("⏳ [Chat] Bắt đầu tạo cuộc trò chuyện...");
+      
+      // 1. Lấy user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user?.id) {
+        return { error: "Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn. Hãy đăng nhập lại." };
+      }
 
+      // 2. Tạo cuộc trò chuyện
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
         .insert({
@@ -67,8 +73,12 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         .select()
         .single();
 
-      if (convError) throw convError;
+      if (convError) {
+        console.error("Lỗi tạo conv:", convError);
+        return { error: "Không thể tạo cuộc trò chuyện. Lỗi: " + convError.message };
+      }
 
+      // 3. Tạo tin nhắn chào
       const greeting = getGreeting(catId);
       const suggestions = getSuggestions(catId);
 
@@ -82,16 +92,20 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
           suggestions: suggestions,
         });
 
-      if (msgError) throw msgError;
+      if (msgError) {
+        console.error("Lỗi tạo msg:", msgError);
+        return { error: "Không thể tạo tin nhắn chào. Lỗi: " + msgError.message };
+      }
 
-      // Gửi sự kiện để trang cha tự chuyển sang màn hình chat
+      // 4. Bắn sự kiện để trang cha chuyển màn hình
       window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
         detail: { conversation: conv, category: catId, firstText: msg } 
       }));
 
       return { ok: true };
     } catch (e) {
-      return { error: e.message || "Có lỗi xảy ra khi tạo cuộc trò chuyện." };
+      console.error("Lỗi catch:", e);
+      return { error: "Lỗi kết nối: " + (e.message || "Vui lòng thử lại sau.") };
     }
   };
 
@@ -99,14 +113,20 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     if (sending) return;
     setErr("");
     setSending(true);
+
+    // Tạo một Promise timeout 10 giây để chống treo xoay xoay
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Quá thời gian kết nối (10s). Vui lòng kiểm tra lại mạng hoặc Supabase.")), 10000)
+    );
+
     try {
-      // Nếu cha có truyền hàm thì xài, không thì tự gọi API
       const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
       
-      const r = await fnToCall({
-        text: msg,
-        category: catId || FALLBACK_CATEGORY,
-      });
+      // Đua giữa hàm gọi API và Timeout
+      const r = await Promise.race([
+        fnToCall({ text: msg, category: catId || FALLBACK_CATEGORY }),
+        timeoutPromise
+      ]);
       
       if (r?.error) setErr(r.error);
     } catch (e) {
@@ -195,7 +215,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         </div>
       </div>
 
-      {err && <p className="px-5 pt-3 text-[13px] leading-5 text-red-600">{err}</p>}
+      {err && <p className="px-5 pt-3 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
 
       <div className="px-4 pt-6">
         <a
@@ -262,4 +282,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-}
+    }
