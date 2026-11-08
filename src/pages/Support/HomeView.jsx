@@ -94,10 +94,11 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
 
       <div className="px-4 pt-8">
-        <div
+       <div
           className={`nxx-composer nxx-composer--hero ${
             sending ? "is-busy" : ""
           }`}
+          style={{ minHeight: 0, padding: "14px 14px 10px", gap: 6 }}
         >
           <span className="nxx-glow" />
           <textarea
