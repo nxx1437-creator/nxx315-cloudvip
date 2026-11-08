@@ -5,6 +5,8 @@ import {
   ArrowLeft, ArrowUp, Check, ChevronDown, ChevronRight, Headphones,
   Loader2, Sparkles, User, CreditCard, Package, Bug, MoreHorizontal,
 } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient.js";
+import { getGreeting, getSuggestions } from "./helpers.js";
 import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
 import GradientHeadline from "./GradientHeadline.jsx";
@@ -13,7 +15,13 @@ import "./chat-effects.css";
 import "./home-input.css";
 
 const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
-const HEADLINES = ["Chúng tôi sẵn sàng hỗ trợ bạn!", "Bạn đang gặp vấn đề gì?", "Hỏi NXX bất cứ điều gì."];
+
+const HEADLINES = [
+  "Chúng tôi sẵn sàng hỗ trợ bạn!",
+  "Bạn đang gặp vấn đề gì?",
+  "Hỏi NXX bất cứ điều gì.",
+];
+
 const FALLBACK_CATEGORY = CATEGORIES.find((c) => c.label === "Khác")?.id || null;
 
 const FOCUS_GLOW_CSS = `
@@ -26,6 +34,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [category, setCategory] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
+  const [err, setErr] = useState("");
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -39,26 +48,82 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
 
-  const send = async () => {
-    if (!canSend) return;
-    if (typeof onStartChat !== "function") {
-      alert("Lỗi: Không tìm thấy hàm onStartChat!");
-      return;
-    }
-
-    setSending(true);
+  // Hàm tự xử lý API dự phòng (Nếu Support.jsx không truyền hàm xuống)
+  const handleSelfStartChat = async ({ text: msg, category: catId }) => {
     try {
-      // Gọi hàm từ cha
-      await onStartChat({
-        text: text.trim(),
-        category: category || FALLBACK_CATEGORY,
-      });
+      setErr("");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên hết hạn.");
+
+      const { data: conv, error: convError } = await supabase
+        .from("support_conversations")
+        .insert({
+          user_id: user.id,
+          title: catId ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === catId)?.label}` : "Cuộc trò chuyện mới",
+          category: catId,
+          status: "ai",
+        })
+        .select()
+        .single();
+
+      if (convError) throw new Error("Lỗi tạo cuộc trò chuyện: " + convError.message);
+
+      const greeting = getGreeting(catId);
+      const suggestions = getSuggestions(catId);
+
+      const { error: msgError } = await supabase
+        .from("support_messages")
+        .insert({
+          conversation_id: conv.id,
+          user_id: user.id,
+          message: greeting,
+          sender_type: "ai",
+          suggestions: suggestions,
+        });
+
+      if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
+
+      // Phát tín hiệu để Support.jsx chuyển trang
+      window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
+        detail: { conversation: conv, category: catId, firstText: msg } 
+      }));
+      
+      return { ok: true };
     } catch (e) {
-      console.error(e);
+      return { error: e.message };
+    }
+  };
+
+  const startWith = async (msg, catId) => {
+    if (sending) return;
+    setSending(true);
+    setErr("");
+
+    // Nếu cha có truyền hàm thì xài, không thì tự gọi API
+    const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
+
+    try {
+      // Tạo timeout 10s chống treo xoay xoay
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Quá thời gian 10s. Kiểm tra lại mạng hoặc Supabase.")), 10000)
+      );
+
+      const r = await Promise.race([
+        fnToCall({ text: msg, category: catId || FALLBACK_CATEGORY }),
+        timeout
+      ]);
+      
+      if (r?.error) setErr(r.error);
+    } catch (e) {
+      setErr(e?.message || "Có lỗi xảy ra.");
     } finally {
-      // Tắt xoay sau khi gọi xong (dù lỗi hay thành công)
       setSending(false);
     }
+  };
+
+  const send = () => {
+    if (!canSend) return;
+    startWith(text.trim(), category);
   };
 
   const handleKeyDown = (e) => {
@@ -127,6 +192,8 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         </div>
       </div>
 
+      {err && <p className="px-5 pt-3 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
+
       <div className="px-4 pt-6">
         <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]">
           <div className="flex items-center gap-3">
@@ -141,7 +208,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
 
       <div className="pt-10">
-        <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => onStartChat({ text: title, category: catId })} />
+        <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => startWith(title, catId)} />
       </div>
 
       {sheetOpen && (
@@ -168,4 +235,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-        }
+    }
