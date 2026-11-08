@@ -22,18 +22,18 @@ export default function Support() {
     loadUser();
   }, []);
 
-  // Lắng nghe tín hiệu chuyển trang từ HomeView
-useEffect(() => {
-  const handleStartChatEvent = (e) => {
-    const { conversation, category, firstText } = e.detail;
-    setSelectedCategory(category);
-    setInitialMessage(firstText);
-    setConversation(conversation);
-    setView("chat");
-  };
-  window.addEventListener("nxx-start-chat", handleStartChatEvent);
-  return () => window.removeEventListener("nxx-start-chat", handleStartChatEvent);
-}, []);
+  // Lắng nghe tín hiệu chuyển trang từ HomeView (khi nó tự gọi API)
+  useEffect(() => {
+    const handleStartChatEvent = (e) => {
+      const { conversation, category, firstText } = e.detail;
+      setSelectedCategory(category);
+      setInitialMessage(firstText);
+      setConversation(conversation);
+      setView("chat");
+    };
+    window.addEventListener("nxx-start-chat", handleStartChatEvent);
+    return () => window.removeEventListener("nxx-start-chat", handleStartChatEvent);
+  }, []);
 
   const openHelp = (category) => {
     setSelectedCategory(category);
@@ -41,7 +41,6 @@ useEffect(() => {
   };
 
   const startAIChat = async (category, firstText = null) => {
-    console.log("[Support] startAIChat được gọi với:", { category, firstText });
     if (!user?.id) {
       return { error: "Tài khoản chưa tải xong hoặc chưa đăng nhập. Hãy tải lại trang rồi thử lại." };
     }
@@ -92,9 +91,7 @@ useEffect(() => {
     setView("chat");
   };
 
-  // Hàm trung gian ĐẢM BẢO truyền đúng
   const handleStartChat = (payload) => {
-    console.log("[Support] handleStartChat nhận payload:", payload);
     return startAIChat(payload.category, payload.text);
   };
 
@@ -105,7 +102,7 @@ useEffect(() => {
         {view === "home" && (
           <HomeView
             onOpenHelp={openHelp}
-            onStartChat={handleStartChat} // <--- Truyền prop chuẩn xác
+            onStartChat={handleStartChat}
           />
         )}
         {view === "help" && (
