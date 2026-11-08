@@ -19,15 +19,26 @@ const ICON_COMPONENTS = {
 // để ngoài component để GradientHeadline không bị reset khi render lại
 const HEADLINES = [
   "Chúng tôi sẵn sàng hỗ trợ bạn!",
-  "Bạn đang gặp vấn đề gì?",
+  "Bạn gặp vấn đề gì?",
   "Hỏi NXX bất cứ điều gì.",
 ];
+
+// chưa chọn chủ đề thì tính vào mục "Khác" (chat luôn cần có chủ đề)
+const FALLBACK_CATEGORY =
+  CATEGORIES.find((c) => c.label === "Khác")?.id || null;
+
+// viền màu sáng và quay ngay khi bấm vào khung nhập
+const FOCUS_GLOW_CSS = `
+.nxx-composer--hero:focus-within .nxx-glow { opacity: 1; }
+.nxx-composer--hero:focus-within .nxx-glow::before { animation-play-state: running; }
+`;
 
 export default function HomeView({ onOpenHelp, onStartChat }) {
   const [text, setText] = useState("");
   const [category, setCategory] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
+  const [err, setErr] = useState("");
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -43,9 +54,16 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
   const startWith = async (msg, catId) => {
     if (!onStartChat || sending) return;
+    setErr("");
     setSending(true);
     try {
-      await onStartChat({ text: msg, category: catId });
+      const r = await onStartChat({
+        text: msg,
+        category: catId || FALLBACK_CATEGORY,
+      });
+      if (r?.error) setErr(r.error);
+    } catch (e) {
+      setErr(e?.message || "Có lỗi xảy ra, bạn thử lại nhé.");
     } finally {
       setSending(false);
     }
@@ -73,6 +91,8 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-white">
+      <style>{FOCUS_GLOW_CSS}</style>
+
       <div className="sticky top-0 z-20 flex items-center bg-white/90 px-4 py-3 backdrop-blur-xl">
         <button
           type="button"
@@ -94,7 +114,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
 
       <div className="px-4 pt-8">
-       <div
+        <div
           className={`nxx-composer nxx-composer--hero ${
             sending ? "is-busy" : ""
           }`}
@@ -109,7 +129,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
             rows={1}
             enterKeyHint="send"
             placeholder="Mô tả vấn đề hoặc đặt câu hỏi"
-            className="block max-h-[120px] min-h-[28px] w-full flex-1 resize-none bg-transparent text-[16px] leading-6 text-[#13141a] outline-none placeholder:text-[#b4b7c2]"
+            className="block max-h-[120px] min-h-[44px] w-full flex-1 resize-none bg-transparent text-[16px] leading-6 text-[#13141a] outline-none placeholder:text-[#b4b7c2]"
           />
           <div className="flex items-center justify-between">
             <button
@@ -144,6 +164,10 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
           </div>
         </div>
       </div>
+
+      {err && (
+        <p className="px-5 pt-3 text-[13px] leading-5 text-red-600">{err}</p>
+      )}
 
       <div className="px-4 pt-6">
         <a
