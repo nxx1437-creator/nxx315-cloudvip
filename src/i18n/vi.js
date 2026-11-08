@@ -229,17 +229,20 @@ export default {
   "tk.m.creating": "Đang tạo link nhiệm vụ...",
   "tk.m.creatingSub":
     "Vui lòng chờ trong giây lát, hệ thống sẽ tự mở tab mới khi sẵn sàng.",
-  "tk.ip.title": "Không thể làm nhiệm vụ",
-  "tk.ip.help": "Liên hệ hỗ trợ để được gỡ",
-  "tk.ip.helpSub":
-    "Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ Zalo để được admin xem xét và gỡ trong 24h.",
-  "tk.ip.chat": "Chat Zalo 0865245988",
-  "tk.ip.attach": "📸 Gửi kèm:",
-  "tk.ip.a1": "Ảnh chụp màn hình cảnh báo này",
-  "tk.ip.a2": "Tên tài khoản của bạn",
-  "tk.ip.a3": "Giải thích lý do",
-  "tk.ip.tip":
-    "💡 Gợi ý: Nếu bạn dùng chung WiFi với người khác, hãy tắt WiFi và dùng 4G để làm nhiệm vụ.",
+"tk.ip.title": "Ối, mình tạm nghỉ một chút nhé! ",
+"tk.ip.intro":
+  "Hệ thống thấy kết nối của bạn hơi lạ nên đã tạm khóa nhiệm vụ để giữ an toàn cho tài khoản. Đừng lo, đa số chỉ là hiểu nhầm thôi, tụi mình gỡ cho bạn liền!",
+"tk.ip.reasonLabel": "Lời nhắn từ hệ thống",
+"tk.ip.help": "Để tụi mình giúp bạn nha ❤️",
+"tk.ip.helpSub":
+  "Nếu bạn thấy đây là nhầm lẫn, nhắn tụi mình qua Zalo nhé. Admin sẽ xem giúp bạn trong vòng 24 giờ.",
+"tk.ip.chat": "Nhắn Zalo cho tụi mình",
+"tk.ip.attach": "📸 Gửi kèm giúp tụi mình mấy thứ này để xử lý nhanh hơn nhé:",
+"tk.ip.a1": "Ảnh chụp màn hình trang này",
+"tk.ip.a2": "Tên tài khoản của bạn",
+"tk.ip.a3": "Vài dòng kể lại chuyện gì đã xảy ra",
+"tk.ip.tip":
+  "💡 Mẹo nhỏ: nếu nhà bạn dùng chung Wi-Fi với nhiều người, thử tắt Wi-Fi và dùng 4G rồi làm lại nhé ✨",
   // Trang giới thiệu
   "ld.nav.how": "Cách hoạt động",
   "ld.nav.features": "Tính năng",

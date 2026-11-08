@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { CATEGORIES } from "./constants.js";
+import "./chat-effects.css";
 
 const ICON_MAP = {
   HelpCircle, KeyRound, ShieldCheck, Mail, CreditCard, RotateCcw,
@@ -29,7 +30,13 @@ export default function HelpView({ category, onBack, onStartChat }) {
   }, [category]);
 
   const loadData = async () => {
-    if (!category) return;
+    // không có chủ đề thì không có gì để tải: tắt vòng xoay ngay
+    if (!category) {
+      setSubCards([]);
+      setFaqs([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [cardsRes, faqsRes] = await Promise.all([
@@ -72,7 +79,7 @@ export default function HelpView({ category, onBack, onStartChat }) {
       </div>
 
       <div className="px-5 pb-4 pt-6">
-        <h2 className="text-[26px] font-extrabold leading-[1.2] tracking-[-0.03em] text-[#161823]">
+        <h2 className="text-[34px] font-semibold leading-[1.15] tracking-[-0.02em] text-[#161823]">
           Chúng tôi có thể giúp gì?
         </h2>
       </div>
@@ -86,7 +93,7 @@ export default function HelpView({ category, onBack, onStartChat }) {
           {subCards.length > 0 && (
             <div className="mb-6">
               <div
-                className="scrollbar-hide flex gap-3 overflow-x-auto px-5 pb-2"
+                className="nxx-noscrollbar flex gap-3 overflow-x-auto px-5 pb-2"
                 style={{ scrollbarWidth: "none" }}
               >
                 {subCards.map((card) => {
@@ -95,7 +102,7 @@ export default function HelpView({ category, onBack, onStartChat }) {
                     <button
                       key={card.id}
                       onClick={onStartChat}
-                      className="flex w-[140px] shrink-0 flex-col items-start gap-3 rounded-[18px] bg-[#f5f5f5] p-4 text-left transition active:scale-[0.97]"
+                      className="flex w-[140px] shrink-0 flex-col items-start gap-3 rounded-[18px] border border-[#dde0ea] bg-[#f5f6fb] p-4 text-left transition active:scale-[0.97]"
                     >
                       <div
                         className="flex h-9 w-9 items-center justify-center rounded-[10px]"
@@ -178,7 +185,7 @@ export default function HelpView({ category, onBack, onStartChat }) {
       <div className="fixed bottom-4 left-1/2 z-30 w-full max-w-2xl -translate-x-1/2 px-4">
         <button
           onClick={onStartChat}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#FE2C55] px-5 py-3.5 text-[15px] font-bold text-white shadow-[0_8px_24px_rgba(254,44,85,0.35)] transition active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#13141a] px-5 py-3.5 text-[15px] font-bold text-white shadow-[0_8px_24px_rgba(17,20,24,0.28)] transition active:scale-[0.98]"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -198,4 +205,5 @@ export default function HelpView({ category, onBack, onStartChat }) {
       </div>
     </div>
   );
-}
+          }
+          

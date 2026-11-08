@@ -1,15 +1,29 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+/* =========================================================
+ * STATIC IMPORTS
+ * =======================================================*/
 import GuideWelcomeModal from "./components/GuideWelcomeModal.jsx";
 
-// ✅ Page public — load ngay
 import CloudVIPLanding from "./CloudVIPLanding.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
 
-// ✅ Page chính — lazy load
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
+import BanGate from "./components/BanGate";
+import DeviceChecker from "./components/DeviceChecker.jsx";
+import VersionChecker from "./components/VersionChecker.jsx";
+import SessionGuard from "./components/SessionGuard.jsx";
+import SessionValidator from "./components/SessionValidator.jsx";
+import PageLoader from "./components/PageLoader.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
+
+/* =========================================================
+ * LAZY IMPORTS
+ * =======================================================*/
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
 const Tasks = lazy(() => import("./pages/Tasks.jsx"));
 const Store = lazy(() => import("./pages/Store.jsx"));
@@ -22,6 +36,7 @@ const WithdrawHistory = lazy(() => import("./pages/WithdrawHistory.jsx"));
 const HistoryPage = lazy(() => import("./pages/History.jsx"));
 const HistoryDetail = lazy(() => import("./pages/HistoryDetail.jsx"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard.jsx"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile.jsx"));
 const MiniGames = lazy(() => import("./pages/MiniGames.jsx"));
 const WheelGame = lazy(() => import("./pages/games/WheelGame.jsx"));
 const ScratchGame = lazy(() => import("./pages/games/ScratchGame.jsx"));
@@ -30,29 +45,29 @@ const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
-import CreatorLayout from "./pages/creator/CreatorLayout.jsx";
-import CreatorOverview from "./pages/creator/CreatorOverview.jsx";
-import CreatorRanking from "./pages/creator/CreatorRanking.jsx";
-import CreatorVideos from "./pages/creator/CreatorVideos.jsx";
-import CreatorRewards from "./pages/creator/CreatorRewards.jsx";
-import CreatorSettings from "./pages/creator/CreatorSettings.jsx";
 
-// Hướng dẫn + Về chúng tôi
+/* Creator */
+const CreatorLayout = lazy(() => import("./pages/creator/CreatorLayout.jsx"));
+const CreatorOverview = lazy(() => import("./pages/creator/CreatorOverview.jsx"));
+const CreatorRanking = lazy(() => import("./pages/creator/CreatorRanking.jsx"));
+const CreatorVideos = lazy(() => import("./pages/creator/CreatorVideos.jsx"));
+const CreatorRewards = lazy(() => import("./pages/creator/CreatorRewards.jsx"));
+const CreatorSettings = lazy(() => import("./pages/creator/CreatorSettings.jsx"));
+
+/* Guide */
 const GuideHome = lazy(() => import("./pages/Guide/GuideHome.jsx"));
 const GuideDetail = lazy(() => import("./pages/Guide/GuideDetail.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 
-// Store games
+/* Store games */
 const Roblox = lazy(() => import("./pages/Roblox.jsx"));
 const PlayTogether = lazy(() => import("./pages/PlayTogether.jsx"));
 const LienQuan = lazy(() => import("./pages/LienQuan.jsx"));
 const FreeFire = lazy(() => import("./pages/FreeFire.jsx"));
-const PubgMobile = lazy(() => import("./pages/PubgMobile.jsx"));
 const FcMobile = lazy(() => import("./pages/FcMobile.jsx"));
 const Valorant = lazy(() => import("./pages/Valorant.jsx"));
-const CloudPhone = lazy(() => import("./pages/CloudPhone.jsx"));
 
-// Khác
+/* Khác */
 const ShopEarn = lazy(() => import("./pages/ShopEarn.jsx"));
 const LinkHistory = lazy(() => import("./pages/LinkHistory.jsx"));
 const RefundHistoryPage = lazy(() => import("./pages/RefundHistoryPage.jsx"));
@@ -76,98 +91,125 @@ const Admin = lazy(() => import("./pages/Admin.jsx"));
 const AdminNotifications = lazy(() => import("./pages/AdminNotifications.jsx"));
 const AdminChat = lazy(() => import("./pages/AdminChat.jsx"));
 
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import AdminRoute from "./components/AdminRoute.jsx";
-import BanGate from "./components/BanGate";
-import DeviceChecker from "./components/DeviceChecker.jsx";
-import VersionChecker from "./components/VersionChecker.jsx";
-import SessionGuard from "./components/SessionGuard.jsx";
-import SessionValidator from "./components/SessionValidator.jsx";
-import PageLoader from "./components/PageLoader.jsx";
+/* CardExchange — giữ eager như code gốc */
+import CardExchange from "./pages/CardExchange.jsx";
 
+/* 404 */
+const NotFound = lazy(() => import("./pages/NotFoundPage.jsx"));
+
+/* =========================================================
+ * APP
+ * =======================================================*/
 export default function App() {
   return (
     <BanGate>
       <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<CloudVIPLanding />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/guide" element={<GuideHome />} />
-            <Route path="/guide/:id" element={<GuideDetail />} />
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* ===================== PUBLIC ===================== */}
+              <Route path="/" element={<CloudVIPLanding />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/guide" element={<GuideHome />} />
+              <Route path="/guide/:id" element={<GuideDetail />} />
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/banned" element={<Banned />} />
-            <Route path="/account-review" element={<AccountReview />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+              {/* ===================== AUTH ===================== */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/banned" element={<Banned />} />
+              <Route path="/account-review" element={<AccountReview />} />
+              <Route path="/onboarding" element={<Onboarding />} />
 
-            <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
-            <Route path="/level" element={<ProtectedRoute><Level /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-            <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
-            <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
-            <Route path="/creator" element={<CreatorLayout />}>
-            <Route index element={<CreatorOverview />} />
-            <Route path="ranking" element={<CreatorRanking />} />
-            <Route path="videos" element={<CreatorVideos />} />
-            <Route path="rewards" element={<CreatorRewards />} />
-            <Route path="settings" element={<CreatorSettings />} />
-            </Route>
-            <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-            <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-            <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
-            <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
+              {/* ===================== PROTECTED ===================== */}
+              <Route path="/invite" element={<ProtectedRoute><Invite /></ProtectedRoute>} />
+              <Route path="/level" element={<ProtectedRoute><Level /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+              <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
+              <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
 
-            <Route path="/store/roblox" element={<ProtectedRoute><Roblox /></ProtectedRoute>} />
-            <Route path="/store/play-together" element={<ProtectedRoute><PlayTogether /></ProtectedRoute>} />
-            <Route path="/store/lien-quan" element={<ProtectedRoute><LienQuan /></ProtectedRoute>} />
-            <Route path="/store/free-fire" element={<ProtectedRoute><FreeFire /></ProtectedRoute>} />
-            <Route path="/store/pubg-mobile" element={<ProtectedRoute><PubgMobile /></ProtectedRoute>} />
-            <Route path="/store/fc-mobile" element={<ProtectedRoute><FcMobile /></ProtectedRoute>} />
-            <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
-            <Route path="/store/cloud-phone" element={<ProtectedRoute><CloudPhone /></ProtectedRoute>} />
+              {/* Creator */}
+              <Route
+                path="/creator"
+                element={
+                  <ProtectedRoute>
+                    <CreatorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<CreatorOverview />} />
+                <Route path="ranking" element={<CreatorRanking />} />
+                <Route path="videos" element={<CreatorVideos />} />
+                <Route path="rewards" element={<CreatorRewards />} />
+                <Route path="settings" element={<CreatorSettings />} />
+              </Route>
 
-            <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
-            <Route path="/link-history" element={<LinkHistory />} />
-            <Route path="/refund-history" element={<RefundHistoryPage />} />
+              <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+              <Route path="/u/:userId" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+              <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
+              <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
 
-            <Route path="/minigames" element={<ProtectedRoute><MiniGames /></ProtectedRoute>} />
-            <Route path="/minigames/wheel" element={<ProtectedRoute><WheelGame /></ProtectedRoute>} />
-            <Route path="/minigames/scratch" element={<ProtectedRoute><ScratchGame /></ProtectedRoute>} />
-            <Route path="/minigames/dice" element={<ProtectedRoute><DiceGame /></ProtectedRoute>} />
+              {/* Store games */}
+              <Route path="/store/roblox" element={<ProtectedRoute><Roblox /></ProtectedRoute>} />
+              <Route path="/store/play-together" element={<ProtectedRoute><PlayTogether /></ProtectedRoute>} />
+              <Route path="/store/lien-quan" element={<ProtectedRoute><LienQuan /></ProtectedRoute>} />
+              <Route path="/store/free-fire" element={<ProtectedRoute><FreeFire /></ProtectedRoute>} />
+              <Route path="/store/fc-mobile" element={<ProtectedRoute><FcMobile /></ProtectedRoute>} />
+              <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
 
-            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-            <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
-            <Route path="/admin/chat/:conversationId" element={<AdminRoute><AdminChat /></AdminRoute>} />
+              {/* History */}
+              <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
+              <Route path="/link-history" element={<ProtectedRoute><LinkHistory /></ProtectedRoute>} />
+              <Route path="/refund-history" element={<ProtectedRoute><RefundHistoryPage /></ProtectedRoute>} />
 
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/help" element={<HelpCenter />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/fraud" element={<Fraud />} />
-            <Route path="/redemption-policy" element={<RedemptionPolicy />} />
+              {/* Minigames */}
+              <Route path="/minigames" element={<ProtectedRoute><MiniGames /></ProtectedRoute>} />
+              <Route path="/minigames/wheel" element={<ProtectedRoute><WheelGame /></ProtectedRoute>} />
+              <Route path="/minigames/scratch" element={<ProtectedRoute><ScratchGame /></ProtectedRoute>} />
+              <Route path="/minigames/dice" element={<ProtectedRoute><DiceGame /></ProtectedRoute>} />
 
-            <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-            <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
-            <Route path="/withdraw/history" element={<ProtectedRoute><WithdrawHistory /></ProtectedRoute>} />
+              {/* ===================== ADMIN ===================== */}
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+              <Route path="/admin/chat/:conversationId" element={<AdminRoute><AdminChat /></AdminRoute>} />
 
-            <Route path="/marketing-video" element={<ProtectedRoute><MarketingVideo /></ProtectedRoute>} />
-            <Route path="/marketing-wallet" element={<ProtectedRoute><MarketingWallet /></ProtectedRoute>} />
+              {/* ===================== INFO PUBLIC ===================== */}
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/help" element={<HelpCenter />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/fraud" element={<Fraud />} />
+              <Route path="/redemption-policy" element={<RedemptionPolicy />} />
 
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="/task/callback" element={<TaskCallback />} />
-            <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-          </Routes>
-        </Suspense>
+              {/* ===================== WALLET ===================== */}
+              <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+              <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+              <Route path="/cards" element={<CardExchange />} />
+              <Route path="/withdraw/history" element={<ProtectedRoute><WithdrawHistory /></ProtectedRoute>} />
 
+              {/* ===================== MARKETING ===================== */}
+              <Route path="/marketing-video" element={<ProtectedRoute><MarketingVideo /></ProtectedRoute>} />
+              <Route path="/marketing-wallet" element={<ProtectedRoute><MarketingWallet /></ProtectedRoute>} />
+
+              {/* ===================== KHÁC ===================== */}
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/task/callback" element={<TaskCallback />} />
+              <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+
+              {/* ===================== 404 ===================== */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+
+        {/* Overlays — giữ nguyên vị trí như code gốc của bạn */}
         <VersionChecker />
         <GuideWelcomeModal />
         <DeviceChecker />
@@ -176,4 +218,6 @@ export default function App() {
       </BrowserRouter>
     </BanGate>
   );
-}
+  }
+              
+

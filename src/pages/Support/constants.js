@@ -1,8 +1,10 @@
 // src/pages/Support/constants.js
 
+const ZALO_PHONE = "0865245988";
+
 export const SUPPORT = {
-  zalo: "0865245988",
-  zaloUrl: "https://zalo.me/0865245988",
+  zalo: ZALO_PHONE,
+  zaloUrl: `https://zalo.me/${ZALO_PHONE}`,
   email: "nxx315hub@gmail.com",
   hours: "12:00 - 13:00 (T2 - CN)",
 };
@@ -12,9 +14,11 @@ export const AI_ENDPOINT =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/ai-support-reply";
 
 export const SYSTEM_BANNER = {
-  enabled: false,  
+  enabled: false,
   text: "",
-  page: "",
+  ctaLabel: "",       // label nút CTA, vd: "Xem chi tiết" — rỗng thì ẩn nút
+  ctaHref: "",        // link khi click CTA (nếu có)
+  pages: [],          // trang nào hiện banner, vd: ["support"] — rỗng = mọi trang
 };
 
 export const QUICK_ACTIONS = [

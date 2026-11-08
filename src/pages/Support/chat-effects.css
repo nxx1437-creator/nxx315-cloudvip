@@ -1,0 +1,289 @@
+/* src/pages/Support/chat-effects.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap");
+
+:root {
+  --nxx-ink: #13141a;
+  --nxx-surface: #f5f6fb;
+  --nxx-line: #dde0ea;
+  --nxx-muted: #7b7e90;
+  --nxx-body: #3f4254;
+  --nxx-serif: "Newsreader", "Source Serif 4", Georgia, "Times New Roman", serif;
+  --chat-ink: #13141a;
+  --chat-border: #dde0ea;
+  --chat-surface: #f5f6fb;
+}
+
+.nxx-serif { font-family: var(--nxx-serif); }
+.nxx-noscrollbar { scrollbar-width: none; }
+.nxx-noscrollbar::-webkit-scrollbar { display: none; }
+
+@keyframes nxx-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.nxx-rise { animation: nxx-rise 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@keyframes nxx-fade { from { opacity: 0; } to { opacity: 1; } }
+.nxx-fade { animation: nxx-fade 0.25s ease-out both; }
+
+/* ---------- Ô nhập ---------- */
+.nxx-composer {
+  position: relative;
+  isolation: isolate; /* viền sáng nằm DƯỚI nút/chữ nhưng TRÊN nền ô nhập */
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 30px;
+  border: 1px solid var(--nxx-line);
+  background: var(--nxx-surface);
+  --nxx-cover: rgba(245, 246, 251, 0.9);
+  transition: background 0.2s, border-color 0.2s;
+}
+.nxx-composer:focus-within {
+  background: #fff;
+  border-color: #c4c8d6;
+  --nxx-cover: rgba(255, 255, 255, 0.9);
+}
+
+/* ---------- Viền sáng khi AI đang suy nghĩ / trả lời ----------
+   Quay liên tục quanh khung, chỉ dùng transform + opacity (GPU) nên mượt.
+   Chỉ cần 1 thẻ rỗng: <span class="nxx-glow" /> bên trong .nxx-composer */
+.nxx-glow {
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.nxx-composer.is-busy .nxx-glow { opacity: 1; }
+
+/* lớp màu quay */
+.nxx-glow::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 170%;
+  aspect-ratio: 1 / 1;
+  margin-left: -85%;
+  margin-top: -85%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(26, 167, 255, 0) 0deg,
+    #8fd6ff 25deg,
+    #1aa7ff 60deg,
+    #ffc857 100deg,
+    #ff7a1a 140deg,
+    #ff3d1f 175deg,
+    #f26bff 210deg,
+    rgba(242, 107, 255, 0) 250deg,
+    rgba(242, 107, 255, 0) 360deg
+  );
+  will-change: transform;
+  animation: nxx-glow-turn 2.8s linear infinite;
+  animation-play-state: paused;
+}
+.nxx-composer.is-busy .nxx-glow::before { animation-play-state: running; }
+
+/* lớp phủ bên trong: chừa viền 3px, để lọt chút màu tạo quầng sáng nhẹ */
+.nxx-glow::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 28px;
+  background: var(--nxx-cover);
+}
+
+@keyframes nxx-glow-turn {
+  to { transform: rotate(-360deg); }
+}
+
+/* ---------- Khung nhập to (trang chủ, dùng sau này) ---------- */
+.nxx-composer--hero {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 176px;
+  padding: 16px 16px 12px;
+  border-radius: 32px;
+  background: #fff;
+  --nxx-cover: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 32px rgba(19, 20, 26, 0.07);
+}
+
+/* ---------- Nút tròn / chip ---------- */
+.nxx-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  transition: transform 0.15s, background 0.2s, opacity 0.2s;
+}
+.nxx-iconbtn:active { transform: scale(0.94); }
+
+.nxx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--nxx-line);
+  background: #fff;
+  color: var(--nxx-ink);
+  font-size: 14px;
+  line-height: 20px;
+  transition: background 0.15s, transform 0.15s;
+}
+.nxx-chip:active { background: var(--nxx-surface); transform: scale(0.98); }
+.nxx-chip:disabled { opacity: 0.5; }
+
+.nxx-chip--wrap {
+  white-space: normal;
+  text-align: left;
+  border-radius: 22px;
+}
+
+/* ---------- Bong bóng người dùng ---------- */
+.nxx-user-pill {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background: var(--nxx-ink);
+}
+.nxx-user-pill > * { position: relative; z-index: 1; }
+
+@keyframes nxx-pill-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes nxx-pill-wipe {
+  from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+  to   { -webkit-mask-position: 0% 0;   mask-position: 0% 0; }
+}
+.nxx-user-pill.is-new { animation: nxx-pill-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.nxx-user-pill.is-new::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, #14a0ff 0%, #b9c6ff 35%, #ffc4e4 65%, #ff8a1f 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 38%, #000 58%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, transparent 38%, #000 58%, #000 100%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: nxx-pill-wipe 1.1s 0.12s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ---------- Chữ hiện dần từ trái sang phải ---------- */
+@keyframes nxx-reveal {
+  from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+  to   { -webkit-mask-position: 0% 0;   mask-position: 0% 0; }
+}
+.nxx-reveal {
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 38%, transparent 58%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 38%, transparent 58%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: nxx-reveal 0.9s ease-out both;
+}
+
+/* ---------- Spinner xoắn ---------- */
+.nxx-spin-ghost { stroke: #c5c8dc; opacity: 0.5; }
+.nxx-spin-comet {
+  stroke-dasharray: var(--L) calc(100 - var(--L));
+  animation: nxx-trace 1.8s linear infinite;
+}
+@keyframes nxx-trace {
+  from { stroke-dashoffset: var(--L); }
+  to   { stroke-dashoffset: calc(var(--L) - 100); }
+}
+
+/* ---------- Tiêu đề gradient đổi chữ ---------- */
+.nxx-hl-stack { display: grid; place-items: center; }
+.nxx-hl-stack > * { grid-area: 1 / 1; }
+.nxx-hl {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--nxx-ink) 0%,
+    var(--nxx-ink) 28%,
+    #ffb23c 38%,
+    #ff5a3c 46%,
+    #e24bd6 54%,
+    #2aa8ff 62%,
+    var(--nxx-ink) 72%,
+    var(--nxx-ink) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+@keyframes nxx-hl-bg {
+  from { background-position: 100% 0; }
+  to   { background-position: 0% 0; }
+}
+@keyframes nxx-hl-out-mask {
+  from { -webkit-mask-position: 0% 0;   mask-position: 0% 0; }
+  to   { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+}
+.nxx-hl--in {
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 38%, transparent 58%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 38%, transparent 58%);
+  animation: nxx-reveal 1.1s ease-out both, nxx-hl-bg 1.3s ease-out both;
+}
+.nxx-hl--out {
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 38%, transparent 58%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 38%, transparent 58%);
+  animation: nxx-hl-out-mask 0.9s ease-in both, nxx-hl-bg 0.9s ease-in both;
+}
+
+/* ---------- Skeleton ảnh ---------- */
+@keyframes nxx-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+.nxx-skel {
+  background: linear-gradient(100deg, #eceef5 30%, #f8f9fc 50%, #eceef5 70%);
+  background-size: 200% 100%;
+  animation: nxx-shimmer 1.6s linear infinite;
+}
+
+/* ---------- Sheet / lightbox / drawer ---------- */
+@keyframes nxx-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: none; }
+}
+.nxx-sheet-in { animation: nxx-sheet-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@keyframes nxx-lb-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+.nxx-lb-in { animation: nxx-lb-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@keyframes nxx-drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: none; }
+}
+.nxx-drawer-in { animation: nxx-drawer-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+/* (Đã bỏ đoạn prefers-reduced-motion: nó tắt hết hiệu ứng trên máy bật
+   "xóa hiệu ứng / tiết kiệm pin", làm viền sáng mất và cục xoắn đứng im.) */             

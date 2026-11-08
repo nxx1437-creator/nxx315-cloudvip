@@ -43,3 +43,40 @@ export function shouldShowLoginButton(text) {
     lower.includes("xác minh")
   );
 }
+
+// ==================================================
+// Làm sạch text AI: bỏ các dòng gọi tool (suggest_action(...), lookup_order(...)...)
+// Dùng chung cho MarkdownText (hiển thị) và nút Sao chép.
+// GIỮ LẠI path như "/store/roblox" để MessageBubble parse thành nút.
+// ==================================================
+const TOOL_NAMES = [
+  "suggest_action",
+  "lookup_order",
+  "list_recent_orders",
+  "send_guide_image",
+];
+
+export function cleanAIText(text) {
+  if (!text) return "";
+  let cleaned = text;
+
+  for (const toolName of TOOL_NAMES) {
+    const regex = new RegExp(
+      `${toolName}\\s*\\([\\s\\S]*?\\)\\s*(?=\\n|$)`,
+      "gi"
+    );
+    cleaned = cleaned.replace(regex, "");
+  }
+
+  cleaned = cleaned
+    .split("\n")
+    .filter(
+      (line) =>
+        !/suggest_action|lookup_order|list_recent_orders|send_guide_image/i.test(
+          line
+        )
+    )
+    .join("\n");
+
+  return cleaned.replace(/\n{3,}/g, "\n\n").trim();
+}

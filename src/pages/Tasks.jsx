@@ -19,8 +19,6 @@ import useTasks from "../hooks/useTasks.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import IpBlockedScreen from "../components/tasks/IpBlockedScreen.jsx";
-import CaptchaModal from "../components/tasks/CaptchaModal.jsx";
-import ExternalLinkWarning from "../components/tasks/ExternalLinkWarning.jsx";
 import MonthlyMissions from "../components/tasks/MonthlyMissions.jsx";
 import {
   StatPill,
@@ -39,24 +37,11 @@ import {
 } from "../lib/taskHelpers.js";
 import { useI18n } from "../i18n/index.js";
 
-const WARN_KEY = "ext_link_warn_count";
-const WARN_MAX = 3;
+// Nhà cung cấp luôn nằm cuối danh sách (bỏ khỏi mảng này để xếp lại theo thưởng)
+const PIN_LAST = ["LAYMA"];
 
-const getWarnCount = () => {
-  try {
-    return parseInt(localStorage.getItem(WARN_KEY) || "0", 10) || 0;
-  } catch {
-    return 0;
-  }
-};
-
-const bumpWarnCount = () => {
-  try {
-    localStorage.setItem(WARN_KEY, String(getWarnCount() + 1));
-  } catch {
-    /* bỏ qua */
-  }
-};
+const SLOW_MS = 6000; // sau 6s báo "đang chậm"
+const TIMEOUT_MS = 25000; // sau 25s báo không lấy được link
 
 function Chip({ active, onClick, icon: Icon, children, count }) {
   return (
@@ -84,7 +69,7 @@ function Chip({ active, onClick, icon: Icon, children, count }) {
 }
 
 export default function Tasks() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { session } = useSession();
   const user = session?.user;
   const { profile } = useProfile();
@@ -95,12 +80,12 @@ export default function Tasks() {
   const [onlyAvail, setOnlyAvail] = useState(false);
   const [startingTaskId, setStartingTaskId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [toast, setToast] = useState(null);
   const [ipBlocked, setIpBlocked] = useState(null);
   const [checkingIp, setCheckingIp] = useState(true);
   const [userLevel, setUserLevel] = useState(null);
-  const [captchaTask, setCaptchaTask] = useState(null);
-  const [warnTask, setWarnTask] = useState(null);
+  const [readyLink, setReadyLink] = useState(null); // { url, task } khi trình duyệt chặn tự mở tab
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -108,11 +93,16 @@ export default function Tasks() {
 
   const toastTimer = useRef(null);
   const lastReloadRef = useRef(0);
+  const popupRef = useRef(null);
+  const runIdRef = useRef(0);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3500);
+    toastTimer.current = setTimeout(
+      () => setToast(null),
+      type === "error" ? 6000 : 3500
+    );
   };
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
@@ -205,6 +195,16 @@ export default function Tasks() {
       window.removeEventListener("focus", handleVisibility);
     };
   }, [reload]);
+
+  // Tự làm mới mỗi 30s khi đang xem, để trình duyệt/thiết bị khác không bị lệch lượt
+  useEffect(() => {
+    if (!user?.id || activeTab === "history") return;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible" && !isLoading) reload();
+    }, 30000);
+    return () => clearInterval(id);
+  }, [user?.id, activeTab, isLoading, reload]);
+
   const isAdmin = profile.is_admin;
   const isBlocked = profile.is_flagged && !isAdmin;
 
@@ -214,8 +214,11 @@ export default function Tasks() {
     if (onlyAvail) list = list.filter((x) => x.remainingToday > 0);
     const kw = query.trim().toLowerCase();
     if (kw) list = list.filter((x) => x.provider.toLowerCase().includes(kw));
-    // Còn lượt lên trước, thưởng cao lên trước
+    // Nhà cung cấp được ghim xuống cuối, rồi còn lượt lên trước, thưởng cao lên trước
     list.sort((a, b) => {
+      const al = PIN_LAST.includes(String(a.provider || "").toUpperCase());
+      const bl = PIN_LAST.includes(String(b.provider || "").toUpperCase());
+      if (al !== bl) return al ? 1 : -1;
       const ad = a.remainingToday <= 0;
       const bd = b.remainingToday <= 0;
       if (ad !== bd) return ad ? 1 : -1;
@@ -238,8 +241,7 @@ export default function Tasks() {
     const finalReward = Math.floor(baseReward * (1 + bonusPct / 100));
     return { finalReward, bonusAmount: finalReward - baseReward, bonusPct };
   };
-
-  // Lịch sử
+    // Lịch sử
   useEffect(() => {
     if (activeTab !== "history" || historyLoaded || !user?.id) return;
 
@@ -300,24 +302,71 @@ export default function Tasks() {
       showToast(t("tk.t.restricted"), "error");
       return;
     }
-    if (getWarnCount() >= WARN_MAX) {
-      setCaptchaTask(task);
-      return;
+    startTaskApi(task); // vào thẳng nhiệm vụ, không còn cảnh báo
+  };
+
+  const handleCancelStart = () => {
+    runIdRef.current += 1; // bỏ qua kết quả trả về muộn
+    try {
+      if (popupRef.current && !popupRef.current.closed) {
+        popupRef.current.close();
+      }
+    } catch {
+      /* bỏ qua */
     }
-    setWarnTask(task);
+    setIsLoading(false);
+    setSlowNotice(false);
+    setStartingTaskId(null);
+    setTimeout(() => reload(), 1500);
   };
 
   const startTaskApi = async (task) => {
+    // Mở sẵn tab trống NGAY bây giờ (còn trong thao tác bấm của người dùng).
+    // Nếu đợi gọi API xong mới window.open thì trình duyệt coi là cửa sổ bật lên và chặn.
+    let popup = null;
+    try {
+      // Mở trang chờ tĩnh (public/task-loading.html) để hiển thị đúng cỡ trên điện thoại
+      popup = window.open("/task-loading.html", "_blank");
+    } catch {
+      popup = null;
+    }
+    popupRef.current = popup;
+    const closePopup = () => {
+      try {
+        if (popup && !popup.closed) popup.close();
+      } catch {
+        /* bỏ qua */
+      }
+    };
+
+    const runId = ++runIdRef.current;
+    const isStale = () => runIdRef.current !== runId;
+
     setIsLoading(true);
+    setSlowNotice(false);
     setStartingTaskId(task.id);
 
+    const slowTimer = setTimeout(() => {
+      if (!isStale()) setSlowNotice(true);
+    }, SLOW_MS);
+
+    let hardTimer;
+    const timeoutPromise = new Promise((_, reject) => {
+      hardTimer = setTimeout(() => reject(new Error("TIMEOUT")), TIMEOUT_MS);
+    });
+
     try {
-      const { data, error } = await supabase.functions.invoke("start-task", {
-        body: { task_id: task.id },
-      });
+      const { data, error } = await Promise.race([
+        supabase.functions.invoke("start-task", {
+          body: { task_id: task.id },
+        }),
+        timeoutPromise,
+      ]);
+      if (isStale()) return;
       setStartingTaskId(null);
 
       if (error) {
+        closePopup();
         if (
           error.message?.includes("Quá nhiều request") ||
           error.status === 429
@@ -326,11 +375,14 @@ export default function Tasks() {
         } else {
           showToast(t("tk.t.err", { msg: error.message }), "error");
         }
+        reload();
         return;
       }
 
       if (data?.error) {
+        closePopup();
         showToast(data.error, "error");
+        reload(); // vd: hết lượt ở thiết bị khác -> thẻ cập nhật ngay
         return;
       }
 
@@ -340,34 +392,63 @@ export default function Tasks() {
         localStorage.setItem("pending_task_id", task.id);
         localStorage.setItem("pending_task_provider", task.provider || "");
 
-        window.open(data.shortUrl, "_blank");
+        let opened = false;
+        if (popup && !popup.closed) {
+          try {
+            popup.location.href = data.shortUrl;
+            opened = true;
+          } catch {
+            opened = false;
+          }
+        }
 
-        const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
-        showToast(
-          t(bonusPct > 0 ? "tk.t.openedBonus" : "tk.t.opened", {
-            provider: task.provider,
-            reward: finalReward,
-            pct: bonusPct,
-          })
-        );
+        if (opened) {
+          const { finalReward, bonusPct } = getBoostedReward(task.reward_coins);
+          showToast(
+            t(bonusPct > 0 ? "tk.t.openedBonus" : "tk.t.opened", {
+              provider: task.provider,
+              reward: finalReward,
+              pct: bonusPct,
+            })
+          );
+        } else {
+          // Trình duyệt vẫn chặn -> hiện nút để người dùng tự bấm mở
+          setReadyLink({ url: data.shortUrl, task });
+        }
 
         setTimeout(() => {
           reload();
           setHistoryLoaded(false);
         }, 2000);
       } else {
+        closePopup();
         showToast(t("tk.t.noLink"), "error");
       }
     } catch (err) {
+      if (isStale()) return;
+      closePopup();
       setStartingTaskId(null);
-      showToast(t("tk.t.err", { msg: err.message }), "error");
+      if (err?.message === "TIMEOUT") {
+        showToast(
+          "Không lấy được link sau 25 giây. Nhà cung cấp đang chậm, bạn thử lại sau ít phút nhé.",
+          "error"
+        );
+        setTimeout(() => reload(), 3000); // phòng server đã tạo phiên muộn
+      } else {
+        showToast(t("tk.t.err", { msg: err.message }), "error");
+      }
     } finally {
-      setIsLoading(false);
+      clearTimeout(slowTimer);
+      clearTimeout(hardTimer);
+      if (!isStale()) {
+        setIsLoading(false);
+        setSlowNotice(false);
+      }
     }
   };
-  if (ipBlocked) return <IpBlockedScreen reason={ipBlocked.reason} />;
 
-  return (
+  if (ipBlocked) return <IpBlockedScreen reason={ipBlocked.reason} />;
+    return (
     <div className="relative min-h-screen overflow-hidden bg-[#eefaf7] pb-32 font-[Be_Vietnam_Pro]">
       <div
         aria-hidden="true"
@@ -394,29 +475,42 @@ export default function Tasks() {
         </div>
       )}
 
-      {warnTask && (
-        <ExternalLinkWarning
-          lang={lang}
-          onCancel={() => setWarnTask(null)}
-          onConfirm={() => {
-            bumpWarnCount();
-            const task = warnTask;
-            setWarnTask(null);
-            setCaptchaTask(task);
-          }}
-        />
-      )}
-
-      {captchaTask && (
-        <CaptchaModal
-          task={captchaTask}
-          showToast={showToast}
-          onClose={() => setCaptchaTask(null)}
-          onSolved={(task) => {
-            setCaptchaTask(null);
-            startTaskApi(task);
-          }}
-        />
+      {readyLink && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 px-4 pb-6 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-sm rounded-[2rem] bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+              <CheckCircle2 size={28} className="text-emerald-500" />
+            </div>
+            <h3 className="mt-4 text-lg font-bold text-slate-900">
+              Nhiệm vụ đã sẵn sàng
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Trình duyệt đã chặn tự mở tab mới. Bấm nút bên dưới để mở nhiệm vụ{" "}
+              {readyLink.task?.provider || ""}.
+            </p>
+            <a
+              href={readyLink.url}
+              target="_blank"
+              rel="opener"
+              onClick={() => {
+                setTimeout(() => {
+                  setReadyLink(null);
+                  reload();
+                  setHistoryLoaded(false);
+                }, 800);
+              }}
+              className="mt-5 block rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-[15px] font-bold text-white"
+            >
+              Mở nhiệm vụ
+            </a>
+            <button
+              onClick={() => setReadyLink(null)}
+              className="mt-2 w-full rounded-full py-3 text-[14px] font-semibold text-slate-500"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
       )}
 
       {isLoading && (
@@ -426,11 +520,21 @@ export default function Tasks() {
               <Loader2 size={26} className="animate-spin text-emerald-500" />
             </div>
             <h3 className="mt-4 text-base font-bold text-slate-900">
-              {t("tk.m.creating")}
+              {slowNotice ? "Đang chậm hơn bình thường…" : t("tk.m.creating")}
             </h3>
             <p className="mt-2 text-sm text-slate-500">
-              {t("tk.m.creatingSub")}
+              {slowNotice
+                ? "Nhà cung cấp đang tạo link hơi lâu, bạn đợi thêm chút nhé. Quá 25 giây mình sẽ báo để bạn thử lại."
+                : t("tk.m.creatingSub")}
             </p>
+            {slowNotice && (
+              <button
+                onClick={handleCancelStart}
+                className="mt-4 w-full rounded-full border border-slate-200 py-2.5 text-sm font-semibold text-slate-600"
+              >
+                Hủy
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -521,7 +625,7 @@ export default function Tasks() {
             />
           </div>
         </div>
-        
+
         <MonthlyMissions />
 
         {isBlocked && (
@@ -608,7 +712,7 @@ export default function Tasks() {
               />
             )}
 
-             {!loading && filteredTasks.length > 0 && (
+            {!loading && filteredTasks.length > 0 && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredTasks.map((task) => (
                   <TaskCard
@@ -623,6 +727,19 @@ export default function Tasks() {
                 ))}
               </div>
             )}
+
+            {/* Link rút gọn Layma (phục vụ xác minh nguồn) — xóa khối này khi Layma đã duyệt xong */}
+            <p className="px-2 pt-2 text-center text-[12px] text-slate-400">
+              Link rút gọn Layma:{" "}
+              <a
+                href="https://layma.net/9jaKc8473"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-emerald-600 underline"
+              >
+                layma.net/9jaKc8473
+              </a>
+            </p>
           </>
         )}
 
@@ -638,4 +755,4 @@ export default function Tasks() {
       <BottomNav />
     </div>
   );
-}
+                }

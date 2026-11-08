@@ -9,10 +9,8 @@ import {
   FeaturedRow,
   CoverGrid,
 } from "../components/store/StoreCards.jsx";
-import {
-  WithdrawBanner,
-  StoreHistoryPreview,
-} from "../components/store/StoreExtras.jsx";
+import { StoreHistoryPreview } from "../components/store/StoreExtras.jsx";
+import CardBanner from "../components/store/CardBanner.jsx";
 import ForYouPackages from "../components/store/ForYouPackages.jsx";
 import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx"; 
 
@@ -142,7 +140,7 @@ export default function Store() {
           )}
         </section>
 
-        <WithdrawBanner navigate={navigate} />
+        <CardBanner navigate={navigate} />
 
         <StoreHistoryPreview />
       </main>
@@ -159,4 +157,4 @@ export default function Store() {
       />
     </div>
   );
-    }
+          }

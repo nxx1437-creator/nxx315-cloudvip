@@ -1,7 +1,7 @@
 import React from "react";
 import {
   ShieldCheck, UserCog, Users, Coins, ClipboardList, Gift, Ban, ShieldAlert,
-  Bug, Server, RefreshCw, LogOut, Scale, Mail,
+  Bug, Server, RefreshCw, LogOut, Scale, Mail, BadgeCheck,
 } from "lucide-react";
 import LegalPage from "../components/LegalKit.jsx";
 
@@ -9,13 +9,13 @@ import LegalPage from "../components/LegalKit.jsx";
 // Muốn có chú thích dưới ảnh thì viết ["ten-file.jpg", "Tiêu đề", "Mô tả ngắn"].
 const IMAGES = {
   hero: "/terms-hero.mp4", // video để trong thư mục public của repo (hoặc ảnh: ghi tên file trong game_logos)
-  "gioi-thieu": "", "dieu-kien": "", "tai-khoan": "", "xu-diem": "", "nhiem-vu": "",
+  "gioi-thieu": "", "minh-bach": "", "dieu-kien": "", "tai-khoan": "", "xu-diem": "", "nhiem-vu": "",
   "doi-thuong": "", "tu-choi": "", "chong-gian-lan": "", "loi-he-thong": "", "kha-dung": "",
   "thay-doi": "", "cham-dut": "", "trach-nhiem": "", "lien-he": "",
 };
 
 const ICONS = {
-  "gioi-thieu": ShieldCheck, "dieu-kien": UserCog, "tai-khoan": Users, "xu-diem": Coins,
+  "gioi-thieu": ShieldCheck, "minh-bach": BadgeCheck, "dieu-kien": UserCog, "tai-khoan": Users, "xu-diem": Coins,
   "nhiem-vu": ClipboardList, "doi-thuong": Gift, "tu-choi": Ban, "chong-gian-lan": ShieldAlert,
   "loi-he-thong": Bug, "kha-dung": Server, "thay-doi": RefreshCw, "cham-dut": LogOut,
   "trach-nhiem": Scale, "lien-he": Mail,
@@ -23,7 +23,7 @@ const ICONS = {
 
 // Nội dung Điều khoản sử dụng. Muốn sửa chữ thì sửa ở đây, không cần đụng giao diện.
 // Dùng **chữ đậm** để nhấn mạnh. Loại khối: p (đoạn), list (danh sách), note (ô lưu ý có nhãn).
-const UPDATED = "25/08/2026";
+const UPDATED = "04/11/2026";
 
 const INTRO = {
   tag: "Lưu ý quan trọng",
@@ -37,6 +37,15 @@ const SECTIONS = [
     { t: "p", x: "Xu/điểm có thể được sử dụng để yêu cầu đổi lấy các phần thưởng được NXX315 Studio Rewards công bố, bao gồm nhưng không giới hạn ở:" },
     { t: "list", items: ["Quân Huy", "Mã/code Robux", "Các phần thưởng khác được công bố trên hệ thống"] },
     { t: "note", tag: "Lưu ý", x: "NXX315 Studio Rewards không phải là Roblox Corporation và không đại diện, liên kết hoặc được Roblox Corporation tài trợ, chứng thực hay quản lý." },
+  ]},
+  // THÊM MỚI: Mục Minh bạch & Cam kết để trấn an người dùng
+  { id: "minh-bach", title: "Minh bạch và Cam kết", blocks: [
+    { t: "p", x: "Chúng tôi hiểu rằng sự tin tưởng của bạn là yếu tố tiên quyết. Do đó, NXX315 Studio Rewards cam kết:" },
+    { t: "list", items: [
+      "Minh bạch nguồn hàng: NXX315 Studio cam kết cung cấp Robux thông qua các kênh phân phối hợp pháp và chính thức tại Việt Nam (mua qua đối tác VNG). Chúng tôi không sử dụng tool bơm Robux lậu, cam kết không làm ảnh hưởng đến tài khoản của bạn.",
+      "Cam kết đền bù: Trong trường hợp hy hữu Robux bị Roblox thu hồi do lỗi từ phía chúng tôi, NXX315 sẽ hoàn lại số Xu tương ứng vào tài khoản của bạn.",
+      "Thời gian xử lý: Robux sẽ được nạp vào tài khoản trong vòng tối đa 24 giờ (hoặc sớm hơn) sau khi bạn đổi thưởng thành công. Vui lòng kiểm tra kỹ Username trước khi xác nhận."
+    ]},
   ]},
   { id: "dieu-kien", title: "Điều kiện sử dụng", blocks: [
     { t: "p", x: "Để sử dụng dịch vụ, người dùng phải:" },
@@ -175,5 +184,4 @@ export default function Terms() {
       accept={ACCEPT}
     />
   );
-     }
-     
+  }
