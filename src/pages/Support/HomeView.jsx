@@ -10,6 +10,7 @@ import BannerNotice from "./BannerNotice.jsx";
 import GradientHeadline from "./GradientHeadline.jsx";
 import HomeGuides from "./HomeGuides.jsx";
 import "./chat-effects.css";
+import "./home-input.css";
 
 const ICON_COMPONENTS = {
   User, CreditCard, Package, Bug, MoreHorizontal,
