@@ -32,7 +32,7 @@ export default function Support() {
   // firstText: câu người dùng gõ ở khung to trang chủ (tự gửi khi chat mở)
   const startAIChat = async (category, firstText = null) => {
     if (!user?.id) {
-      alert("Vui lòng đăng nhập để chat với AI.");
+            alert("DEBUG: chưa có user. user = " + JSON.stringify(user));
       return;
     }
     try {
@@ -72,7 +72,7 @@ export default function Support() {
       setView("chat");
     } catch (error) {
       console.error("Start chat error:", error);
-      alert("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
+            alert("DEBUG: " + (error?.message || JSON.stringify(error)));
     }
   };
 
