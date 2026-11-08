@@ -378,38 +378,36 @@ export default function MessageBubble({
               <span className="text-[11px] text-[#7b7e90]">Do AI tạo</span>
             </div>
 
-            {/* Cụm nút Like/Dislike/Copy */}
-            {showFeedback && (
-              <div className="flex items-center gap-1.5">
-                <RowButton label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
-                  {copied ? (
-                    <Check size={18} strokeWidth={2} />
-                  ) : (
-                    <Copy size={18} strokeWidth={1.8} />
-                  )}
-                </RowButton>
-                <RowButton
-                  label="Chưa hữu ích"
-                  pressed={feedback?.rating === "down"}
-                  disabled={fbLocked}
-                  onClick={() => onFeedback?.("down")}
-                  className={feedbackClass(feedback, "down")}
-                >
-                  <ThumbsDown size={18} strokeWidth={1.8} />
-                </RowButton>
-                <RowButton
-                  label="Hữu ích"
-                  pressed={feedback?.rating === "up"}
-                  disabled={fbLocked}
-                  onClick={() => onFeedback?.("up")}
-                  className={feedbackClass(feedback, "up")}
-                >
-                  <ThumbsUp size={18} strokeWidth={1.8} />
-                </RowButton>
-              </div>
-            )}
-          </div>
-        )}
+            {/* Cụm nút Like/Dislike/Copy - Chỉ hiện khi chưa đánh giá */}
+{showFeedback && feedback?.status !== "sent" && (
+  <div className="flex items-center gap-1.5">
+    <RowButton label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
+      {copied ? (
+        <Check size={18} strokeWidth={2} />
+      ) : (
+        <Copy size={18} strokeWidth={1.8} />
+      )}
+    </RowButton>
+    <RowButton
+      label="Chưa hữu ích"
+      pressed={feedback?.rating === "down"}
+      disabled={fbLocked}
+      onClick={() => onFeedback?.("down")}
+      className={feedbackClass(feedback, "down")}
+    >
+      <ThumbsDown size={18} strokeWidth={1.8} />
+    </RowButton>
+    <RowButton
+      label="Hữu ích"
+      pressed={feedback?.rating === "up"}
+      disabled={fbLocked}
+      onClick={() => onFeedback?.("up")}
+      className={feedbackClass(feedback, "up")}
+    >
+      <ThumbsUp size={18} strokeWidth={1.8} />
+    </RowButton>
+  </div>
+)}
 
         {lightbox && (
           <ImageLightbox
