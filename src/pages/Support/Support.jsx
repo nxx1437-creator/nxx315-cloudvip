@@ -22,6 +22,19 @@ export default function Support() {
     loadUser();
   }, []);
 
+  // Lắng nghe tín hiệu chuyển trang từ HomeView
+useEffect(() => {
+  const handleStartChatEvent = (e) => {
+    const { conversation, category, firstText } = e.detail;
+    setSelectedCategory(category);
+    setInitialMessage(firstText);
+    setConversation(conversation);
+    setView("chat");
+  };
+  window.addEventListener("nxx-start-chat", handleStartChatEvent);
+  return () => window.removeEventListener("nxx-start-chat", handleStartChatEvent);
+}, []);
+
   const openHelp = (category) => {
     setSelectedCategory(category);
     setView("help");
