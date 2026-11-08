@@ -2,88 +2,77 @@
 
 import React, { useEffect, useState } from "react";
 
-// Vẽ ngôi sao 4 cánh
-const STAR_PATH = (() => {
-  const points = 4; 
-  const outerR = 6; // Thu nhỏ ngôi sao lại một chút
-  const innerR = 2; 
+// Vẽ đường xoắn ốc (dựa theo code gốc ban đầu của bạn)
+const SPIN_PATH = (() => {
+  const R = 8;
+  const r = 3.2;
+  const n = 7;
+  const N = 150;
   let d = "";
-  
-  for (let i = 0; i < points * 2; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (Math.PI * i) / points - Math.PI / 2; 
-    const x = r * Math.cos(angle);
-    const y = r * Math.sin(angle);
+  for (let i = 0; i <= N; i++) {
+    const t = (2 * Math.PI * i) / N;
+    const x = R * Math.cos(t) + r * Math.cos(n * t);
+    const y = R * Math.sin(t) + r * Math.sin(n * t);
     d += `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)} `;
   }
   return `${d}Z`;
 })();
 
-export function ThinkingSpinner({ size = 40 }) {
+// Tạo các lớp đuôi mờ dần (Comet)
+const COMET_LAYERS = [
+  { len: 45, opacity: 0.1, width: 3.5 }, // Lớp khói dài nhất
+  { len: 25, opacity: 0.3, width: 2.5 }, // Lớp khói vừa
+  { len: 10, opacity: 1, width: 1.8 },   // Đầu nét sắc nét
+];
+
+export function ThinkingSpinner({ size = 36 }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="-15 -15 30 30" 
+      viewBox="-13 -13 26 26"
       fill="none"
       aria-hidden="true"
-      className="shrink-0" 
-      style={{ animation: "spin 1.5s linear infinite" }} // Quay nhanh một chút
+      className="shrink-0"
     >
       <defs>
-        {/* Tạo đuôi mờ dần (tan biến vào không trung) */}
-        <linearGradient id="comet-fade" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#13141a" stopOpacity="1" />
-          <stop offset="50%" stopColor="#13141a" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#13141a" stopOpacity="0" />
-        </linearGradient>
-
-        {/* Làm mờ đuôi (tạo khói) */}
+        {/* Bộ lọc làm mờ tạo cảm giác khói/mây */}
         <filter id="blur-tail" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
         </filter>
-
-        <style>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </defs>
 
-      {/* 1. Vòng tròn đuôi (Comet Ring) - Làm mờ và dùng gradient */}
-      <circle
-        cx="0"
-        cy="0"
-        r="11"
-        stroke="url(#comet-fade)"
-        strokeWidth="3"
-        fill="none"
-        strokeDasharray="60 100" // Cắt lấy 60% vòng tròn làm đuôi
-        strokeLinecap="round"
-        filter="url(#blur-tail)" 
-      />
-
-      {/* 2. Vòng tròn sắc nét (Lõi của đuôi) */}
-      <circle
-        cx="0"
-        cy="0"
-        r="11"
-        stroke="url(#comet-fade)"
-        strokeWidth="1.5"
-        fill="none"
-        strokeDasharray="50 100"
-        strokeLinecap="round"
-      />
-
-      {/* 3. Ngôi sao ở tâm (Đầu sao chổi) */}
+      {/* 1. Nét nền mờ (ghost) */}
       <path
-        d={STAR_PATH}
-        fill="#13141a"
-        stroke="#13141a"
-        strokeWidth="1"
+        d={SPIN_PATH}
+        pathLength="100"
+        className="nxx-spin-ghost"
+        strokeWidth="1.5"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
+
+      {/* 2. Các lớp đuôi mờ dần */}
+      {COMET_LAYERS.map((l, idx) => {
+        const isLast = idx === COMET_LAYERS.length - 1;
+        return (
+          <path
+            key={l.len}
+            d={SPIN_PATH}
+            pathLength="100"
+            className="nxx-spin-comet" // Dùng class từ file CSS của bạn
+            style={{ 
+              "--L": l.len, 
+              opacity: l.opacity,
+              filter: isLast ? "none" : "url(#blur-tail)" // Làm mờ các đuôi phía sau
+            }}
+            stroke="#1b1c24"
+            strokeWidth={l.width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        );
+      })}
     </svg>
   );
 }
