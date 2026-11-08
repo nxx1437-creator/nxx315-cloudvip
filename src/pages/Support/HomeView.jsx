@@ -61,7 +61,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         text: msg,
         category: catId || FALLBACK_CATEGORY,
       });
-      if (r?.error) setErr(r.error);
+     if (!r?.ok) {
+        setErr(r?.error || "Chưa tạo được cuộc trò chuyện. Bạn thử lại nhé.");
+            }
     } catch (e) {
       setErr(e?.message || "Có lỗi xảy ra, bạn thử lại nhé.");
     } finally {
