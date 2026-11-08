@@ -139,8 +139,11 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       <div className="px-5 pb-3 pt-8">
         <GradientHeadline phrases={HEADLINES} />
         <p className="mx-auto mt-3 max-w-[320px] text-center text-[14px] leading-6 text-[#8a8d93]">
-          Hỏi nhanh hoặc chọn chủ đề để NXX hỗ trợ bạn chính xác hơn.
-        </p>
+  Hỏi nhanh hoặc chọn chủ đề để NXX hỗ trợ bạn chính xác hơn.
+</p>
+<p className="text-center text-red-600 text-xl font-bold mt-4">
+  ĐÃ CẬP NHẬT CODE MỚI!
+</p>
       </div>
 
       <div className="px-4 pt-8">
