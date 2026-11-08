@@ -12,7 +12,9 @@ import HomeGuides from "./HomeGuides.jsx";
 import "./chat-effects.css";
 import "./home-input.css";
 
-const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
+const ICON_COMPONENTS = {
+  User, CreditCard, Package, Bug, MoreHorizontal,
+};
 
 const HEADLINES = [
   "Chúng tôi sẵn sàng hỗ trợ bạn!",
@@ -39,8 +41,14 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const PillIcon = (cat && ICON_COMPONENTS[cat.icon]) || Sparkles;
   const canSend = text.trim().length > 0 && !sending;
 
-  // --- DEBUG: Kiểm tra xem file này có đang được import đúng không ---
-  console.log("👉 [HomeView Render] onStartChat nhận được là:", typeof onStartChat);
+  // --- TẠM THỜI: Hàm an toàn để test nếu cha không truyền ---
+  const safeOnStartChat = typeof onStartChat === "function" 
+    ? onStartChat 
+    : (payload) => {
+        console.warn("⚠️ [DEBUG] Đang dùng hàm fallback! Payload nhận được:", payload);
+        alert("Đã bấm gửi thành công!\n\nNhưng trang cha (Support.jsx) chưa truyền hàm onStartChat xuống. Hãy kiểm tra lại file Support.jsx hoặc F5 lại trang.");
+        return { ok: true };
+      };
 
   const handleChange = (e) => {
     setText(e.target.value);
@@ -50,16 +58,12 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   };
 
   const startWith = async (msg, catId) => {
-    if (typeof onStartChat !== "function") {
-      setErr("Lỗi hệ thống: Chưa cấu hình hàm xử lý chat (onStartChat). Hãy F5 tải lại trang.");
-      return;
-    }
     if (sending) return;
-
     setErr("");
     setSending(true);
     try {
-      const r = await onStartChat({
+      // Dùng hàm an toàn thay vì gọi trực tiếp onStartChat
+      const r = await safeOnStartChat({
         text: msg,
         category: catId || FALLBACK_CATEGORY,
       });
@@ -217,4 +221,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-}
+            }
