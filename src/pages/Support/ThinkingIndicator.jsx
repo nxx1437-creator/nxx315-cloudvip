@@ -2,17 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 
-// Vẽ ngôi sao 4 cánh (nhìn sẽ mềm mại và hiện đại hơn 8 cánh)
+// Vẽ ngôi sao 4 cánh
 const STAR_PATH = (() => {
-  const points = 4; // 4 cánh
-  const outerR = 10; 
-  const innerR = 3.5; // Kẽ cánh sâu hơn tạo hình ngôi sao sắc nét
+  const points = 4; 
+  const outerR = 6; // Thu nhỏ ngôi sao lại một chút
+  const innerR = 2; 
   let d = "";
   
   for (let i = 0; i < points * 2; i++) {
     const r = i % 2 === 0 ? outerR : innerR;
     const angle = (Math.PI * i) / points - Math.PI / 2; 
-    // Dùng đường cong (Q) thay vì đường thẳng (L) để cánh sao mềm mại hơn
     const x = r * Math.cos(angle);
     const y = r * Math.sin(angle);
     d += `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)} `;
@@ -20,7 +19,7 @@ const STAR_PATH = (() => {
   return `${d}Z`;
 })();
 
-export function ThinkingSpinner({ size = 40 }) { // Tăng size lên 40
+export function ThinkingSpinner({ size = 40 }) {
   return (
     <svg
       width={size}
@@ -29,21 +28,20 @@ export function ThinkingSpinner({ size = 40 }) { // Tăng size lên 40
       fill="none"
       aria-hidden="true"
       className="shrink-0" 
-      style={{ animation: "spin 2.5s linear infinite" }}
+      style={{ animation: "spin 1.5s linear infinite" }} // Quay nhanh một chút
     >
       <defs>
-        {/* Làm mờ đuôi (tạo khói/mây) */}
-        <filter id="blur-tail" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-        </filter>
-
-        {/* Gradient tạo hiệu ứng mờ dần từ đuôi đến đầu */}
+        {/* Tạo đuôi mờ dần (tan biến vào không trung) */}
         <linearGradient id="comet-fade" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#13141a" stopOpacity="1" />
-          <stop offset="40%" stopColor="#13141a" stopOpacity="0.8" />
-          <stop offset="80%" stopColor="#13141a" stopOpacity="0.1" />
+          <stop offset="50%" stopColor="#13141a" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#13141a" stopOpacity="0" />
         </linearGradient>
+
+        {/* Làm mờ đuôi (tạo khói) */}
+        <filter id="blur-tail" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+        </filter>
 
         <style>{`
           @keyframes spin {
@@ -53,26 +51,38 @@ export function ThinkingSpinner({ size = 40 }) { // Tăng size lên 40
         `}</style>
       </defs>
 
-      {/* Lớp 1: Cái đuôi (to, mờ, dùng gradient) */}
-      <path
-        d={STAR_PATH}
+      {/* 1. Vòng tròn đuôi (Comet Ring) - Làm mờ và dùng gradient */}
+      <circle
+        cx="0"
+        cy="0"
+        r="11"
         stroke="url(#comet-fade)"
-        strokeWidth="4"
+        strokeWidth="3"
+        fill="none"
+        strokeDasharray="60 100" // Cắt lấy 60% vòng tròn làm đuôi
         strokeLinecap="round"
-        strokeLinejoin="round"
-        // 80 là độ dài đuôi chiếm 80% vòng tròn
-        strokeDasharray="80 100" 
         filter="url(#blur-tail)" 
       />
 
-      {/* Lớp 2: Đầu sao sắc nét (Đè lên trên) */}
+      {/* 2. Vòng tròn sắc nét (Lõi của đuôi) */}
+      <circle
+        cx="0"
+        cy="0"
+        r="11"
+        stroke="url(#comet-fade)"
+        strokeWidth="1.5"
+        fill="none"
+        strokeDasharray="50 100"
+        strokeLinecap="round"
+      />
+
+      {/* 3. Ngôi sao ở tâm (Đầu sao chổi) */}
       <path
         d={STAR_PATH}
+        fill="#13141a"
         stroke="#13141a"
-        strokeWidth="1.8"
-        strokeLinecap="round"
+        strokeWidth="1"
         strokeLinejoin="round"
-        strokeDasharray="20 100" // Chỉ vẽ phần đầu sao
       />
     </svg>
   );
