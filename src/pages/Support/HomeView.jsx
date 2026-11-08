@@ -30,7 +30,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
   const [statusMsg, setStatusMsg] = useState(""); 
-  const [countdown, setCountdown] = useState(null); // Đồng hồ đếm ngược
+  const [countdown, setCountdown] = useState(null);
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -46,10 +46,25 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
   const handleSelfStartChat = async ({ text: msg, category: catId }) => {
     try {
-      setStatusMsg("Đang kiểm tra đăng nhập...");
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) throw new Error("Bạn chưa đăng nhập.");
+      console.log("⏳ [Chat] 1. Bắt đầu kiểm tra đăng nhập...");
+      setStatusMsg("Đang kiểm tra đăng nhập (tối đa 5s)...");
+      
+      // Bọc Timeout 5s cho bước lấy user để chống treo
+      const authTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Quá 5s không lấy được thông tin đăng nhập. Mạng có thể đang chặn Supabase.")), 5000)
+      );
+      
+      const { data: { user }, error: authError } = await Promise.race([
+        supabase.auth.getUser(),
+        authTimeout
+      ]);
+      
+      if (authError || !user?.id) {
+        throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+      }
+      console.log("✅ [Chat] Đã có user:", user.id);
 
+      console.log("⏳ [Chat] 2. Bắt đầu tạo conversation...");
       setStatusMsg("Đang tạo cuộc trò chuyện...");
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
@@ -63,7 +78,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         .single();
 
       if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
+      console.log("✅ [Chat] Đã tạo conv:", conv.id);
 
+      console.log("⏳ [Chat] 3. Bắt đầu tạo tin nhắn chào...");
       setStatusMsg("Đang tạo tin nhắn chào...");
       const { error: msgError } = await supabase
         .from("support_messages")
@@ -76,6 +93,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         });
 
       if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
+      console.log("✅ [Chat] Đã tạo tin nhắn chào");
 
       setStatusMsg("Hoàn tất! Đang chuyển trang...");
       window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
@@ -84,6 +102,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       
       return { ok: true };
     } catch (e) {
+      console.error("❌ [Chat] Lỗi:", e);
       return { error: e.message };
     }
   };
@@ -94,8 +113,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     setErr("");
     setStatusMsg("Bắt đầu gửi...");
     
-    // Bắt đầu đếm ngược 8s
-    let timeLeft = 8;
+    let timeLeft = 10; // Tăng lên 10s cho toàn bộ quá trình
     setCountdown(timeLeft);
     const timer = setInterval(() => {
       timeLeft -= 1;
@@ -106,7 +124,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
     try {
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Quá thời gian 8s. Supabase không phản hồi.")), 8000)
+        setTimeout(() => reject(new Error("Quá thời gian 10s. Không thể hoàn tất quá trình tạo chat.")), 10000)
       );
 
       const r = await Promise.race([
@@ -118,7 +136,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     } catch (e) {
       setErr(e?.message || "Lỗi hệ thống.");
     } finally {
-      clearInterval(timer); // Dừng đếm ngược
+      clearInterval(timer);
       setSending(false);
       setStatusMsg("");
       setCountdown(null);
@@ -196,7 +214,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         </div>
       </div>
 
-      {/* HIỂN THỊ TRẠNG THÁI VÀ ĐỒNG HỒ ĐẾM NGƯỢC */}
       {countdown !== null && (
         <div className="px-5 pt-3 text-[13px] leading-5 text-orange-600 font-bold">
           Đang kết nối... ({countdown}s)
@@ -246,4 +263,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-                         }
+}
