@@ -115,11 +115,12 @@ export default function Support() {
 
       <main className="mx-auto w-full max-w-2xl">
         {view === "home" && (
-          <HomeView
-            onOpenHelp={openHelp}
-            onStartChat={({ text, category }) => startAIChat(category, text)}
-          />
-        )}
+  <HomeView
+    user={user} 
+    onOpenHelp={openHelp}
+    onStartChat={({ text, category }) => startAIChat(category, text)}
+  />
+)}
         {view === "help" && (
           <HelpView
             category={selectedCategory}
