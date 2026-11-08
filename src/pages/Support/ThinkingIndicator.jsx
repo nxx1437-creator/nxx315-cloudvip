@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
-// Vẽ đường xoắn ốc (dựa theo code gốc ban đầu của bạn)
+// Vẽ đường xoắn ốc
 const SPIN_PATH = (() => {
   const R = 8;
   const r = 3.2;
@@ -18,13 +18,6 @@ const SPIN_PATH = (() => {
   return `${d}Z`;
 })();
 
-// Tạo các lớp đuôi mờ dần (Comet)
-const COMET_LAYERS = [
-  { len: 45, opacity: 0.1, width: 3.5 }, // Lớp khói dài nhất
-  { len: 25, opacity: 0.3, width: 2.5 }, // Lớp khói vừa
-  { len: 10, opacity: 1, width: 1.8 },   // Đầu nét sắc nét
-];
-
 export function ThinkingSpinner({ size = 36 }) {
   return (
     <svg
@@ -34,45 +27,54 @@ export function ThinkingSpinner({ size = 36 }) {
       fill="none"
       aria-hidden="true"
       className="shrink-0"
+      style={{ animation: "spin-smooth 1.5s linear infinite" }} // LỆNH QUAY TỔNG THỂ
     >
       <defs>
-        {/* Bộ lọc làm mờ tạo cảm giác khói/mây */}
-        <filter id="blur-tail" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
-        </filter>
+        {/* Tạo màu mờ dần cho đuôi sao chổi */}
+        <linearGradient id="spin-fade" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#13141a" stopOpacity="1" />
+          <stop offset="60%" stopColor="#13141a" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#13141a" stopOpacity="0" />
+        </linearGradient>
+
+        <style>{`
+          @keyframes spin-smooth {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </defs>
 
-      {/* 1. Nét nền mờ (ghost) */}
+      {/* Lớp nền mờ (ghost) */}
       <path
         d={SPIN_PATH}
-        pathLength="100"
-        className="nxx-spin-ghost"
+        stroke="#e5e7eb"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* 2. Các lớp đuôi mờ dần */}
-      {COMET_LAYERS.map((l, idx) => {
-        const isLast = idx === COMET_LAYERS.length - 1;
-        return (
-          <path
-            key={l.len}
-            d={SPIN_PATH}
-            pathLength="100"
-            className="nxx-spin-comet" // Dùng class từ file CSS của bạn
-            style={{ 
-              "--L": l.len, 
-              opacity: l.opacity,
-              filter: isLast ? "none" : "url(#blur-tail)" // Làm mờ các đuôi phía sau
-            }}
-            stroke="#1b1c24"
-            strokeWidth={l.width}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        );
-      })}
+      {/* Lớp đuôi mờ dần (Dùng Gradient và cắt nét) */}
+      <path
+        d={SPIN_PATH}
+        pathLength="100"
+        stroke="url(#spin-fade)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="85 100" // Đuôi dài 85%
+      />
+      
+      {/* Lớp lõi sắc nét ở đầu */}
+      <path
+        d={SPIN_PATH}
+        pathLength="100"
+        stroke="#13141a"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="15 100" // Chỉ vẽ 15% đầu
+      />
     </svg>
   );
 }
