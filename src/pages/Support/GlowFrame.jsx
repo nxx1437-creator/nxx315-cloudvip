@@ -6,11 +6,17 @@
 //
 // Cách dùng (bọc ngoài khung nhập, bán kính bo phải khớp với khung bên trong):
 //
-//   <GlowFrame active={sending} radius="9999px">
-//     <form className="rounded-full border ...">...</form>
+//   <GlowFrame active={busy}>
+//     <div className="nxx-composer">...</div>
 //   </GlowFrame>
+//
+// Mặc định (radius="auto") viền tự lấy độ bo góc của phần tử con đầu tiên,
+// nên không cần khai báo lại. Muốn ép cố định thì truyền radius="28px".
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
+
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /* ------------------------------------------------------------------ */
 /*  Cấu hình hiệu ứng (đo theo video mẫu)                              */
@@ -72,11 +78,21 @@ const CSS = `
 
 export default function GlowFrame({
   active = false,
-  radius = "9999px",
+  radius = "auto",
   className = "",
   children,
 }) {
   const rootRef = useRef(null);
+
+  // radius="auto": lấy border-radius của phần tử con (khung nhập) cho viền khớp hẳn
+  useIsoLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || radius !== "auto") return;
+    const child = root.firstElementChild;
+    if (!child) return;
+    const r = window.getComputedStyle(child).borderRadius;
+    if (r) root.style.borderRadius = r;
+  }, [radius]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -115,12 +131,17 @@ export default function GlowFrame({
       ref={rootRef}
       className={`nxx-glow ${className}`}
       data-on={active ? "true" : "false"}
-      style={{ borderRadius: radius, "--tail": 0, "--len": 0 }}
+      style={{
+        borderRadius: radius === "auto" ? "9999px" : radius,
+        "--tail": 0,
+        "--len": 0,
+      }}
     >
-      <style>{CSS}</style>
       {children}
       <span className="nxx-glow__halo" aria-hidden="true" />
       <span className="nxx-glow__ring" aria-hidden="true" />
+      <style>{CSS}</style>
     </div>
   );
 }
+
