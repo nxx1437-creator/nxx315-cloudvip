@@ -30,10 +30,14 @@ export default function Support() {
   };
 
   // firstText: câu người dùng gõ ở khung to trang chủ (tự gửi khi chat mở)
+  // Trả về { ok: true } nếu thành công, { error } nếu lỗi (để trang chủ hiện chữ đỏ)
   const startAIChat = async (category, firstText = null) => {
     if (!user?.id) {
       alert("Vui lòng đăng nhập để chat với AI.");
-      return;
+      return {
+        error:
+          "Tài khoản chưa tải xong hoặc chưa đăng nhập. Hãy tải lại trang rồi thử lại.",
+      };
     }
     try {
       const { data: conv, error: convError } = await supabase
@@ -70,9 +74,11 @@ export default function Support() {
       setInitialMessage(firstText);
       setConversation(conv);
       setView("chat");
+      return { ok: true };
     } catch (error) {
       console.error("Start chat error:", error);
-          alert("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
+      alert("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
+      return { error: error?.message || "Không thể bắt đầu cuộc trò chuyện." };
     }
   };
 
@@ -115,4 +121,4 @@ export default function Support() {
       </main>
     </div>
   );
-             }
+}
