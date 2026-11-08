@@ -50,26 +50,12 @@ const LABEL_MAP = {
   "https://zalo.me/0865245988": "Chat Zalo",
 };
 
-// ✅ Parse path từ text AI
 function parseActionsFromText(text) {
   if (!text) return [];
-
   const found = [];
   const seen = new Set();
-  const pathRegex =
-    /(?:\/[a-z0-9\-]+(?:\/[a-z0-9\-]+)*|https:\/\/zalo\.me\/\d+)/gi;
-
-  const VALID = [
-    "/store",
-    "/tasks",
-    "/shop-earn",
-    "/community",
-    "/wallet",
-    "/history",
-    "/profile",
-    "/help",
-    "/contact",
-  ];
+  const pathRegex = /(?:\/[a-z0-9\-]+(?:\/[a-z0-9\-]+)*|https:\/\/zalo\.me\/\d+)/gi;
+  const VALID = ["/store", "/tasks", "/shop-earn", "/community", "/wallet", "/history", "/profile", "/help", "/contact"];
 
   let match;
   while ((match = pathRegex.exec(text)) !== null) {
@@ -77,27 +63,20 @@ function parseActionsFromText(text) {
     if (seen.has(path)) continue;
     seen.add(path);
 
-    const isValid =
-      VALID.some((p) => path === p || path.startsWith(p + "/")) ||
-      path.startsWith("https://zalo.me/");
-
+    const isValid = VALID.some((p) => path === p || path.startsWith(p + "/")) || path.startsWith("https://zalo.me/");
     if (!isValid) continue;
 
     found.push({
-      label:
-        LABEL_MAP[path] ||
-        path.replace(/^\/store\//, "Đổi ").replace(/^\//, ""),
+      label: LABEL_MAP[path] || path.replace(/^\/store\//, "Đổi ").replace(/^\//, ""),
       path,
       icon: getIconForPath(path),
     });
 
     if (found.length >= 4) break;
   }
-
   return found;
 }
 
-// Nút nhỏ trong hàng thao tác (sao chép / 👍 / 👎)
 function RowButton({ label, onClick, disabled, className = "", children, pressed }) {
   return (
     <button
@@ -114,13 +93,10 @@ function RowButton({ label, onClick, disabled, className = "", children, pressed
   );
 }
 
-// Màu nút phản hồi: nháp (chưa gửi) = pastel, đã gửi = đậm
 function feedbackClass(fb, type) {
   if (!fb || fb.rating !== type) return "";
   if (type === "up") {
-    return fb.status === "sent"
-      ? "!bg-[#16b981] !text-white"
-      : "!bg-[#bff0dc]";
+    return fb.status === "sent" ? "!bg-[#16b981] !text-white" : "!bg-[#bff0dc]";
   }
   return fb.status === "sent" ? "!bg-[#f43f5e] !text-white" : "!bg-[#ffd0d8]";
 }
@@ -148,20 +124,14 @@ export default function MessageBubble({
   const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
 
   const hasMedia = message.image_url && !mediaError;
-  const isVideo =
-    message.media_type === "video" ||
-    message.image_url?.match(/\.(mp4|webm|mov|m3u8)$/i);
+  const isVideo = message.media_type === "video" || message.image_url?.match(/\.(mp4|webm|mov|m3u8)$/i);
 
-  // Ảnh đã nằm trong cache thì onLoad có thể bắn trước khi React gắn listener
   const imgRef = (el) => {
     if (el && el.complete && el.naturalWidth > 0 && !mediaLoaded) {
       setMediaLoaded(true);
     }
   };
 
-  // ==================================================
-  // USER BUBBLE — viên thuốc đen, quét gradient khi vừa gửi
-  // ==================================================
   if (isUser) {
     return (
       <div className="flex flex-col items-end gap-1.5">
@@ -182,11 +152,7 @@ export default function MessageBubble({
           </button>
         )}
         {message.message && (
-          <div
-            className={`nxx-user-pill max-w-[84%] rounded-[24px] px-4 py-2.5 ${
-              animateIn ? "is-new" : ""
-            }`}
-          >
+          <div className={`nxx-user-pill max-w-[84%] rounded-[24px] px-4 py-2.5 ${animateIn ? "is-new" : ""}`}>
             <p className="whitespace-pre-wrap break-words text-[15px] leading-6">
               {message.message}
             </p>
@@ -204,41 +170,15 @@ export default function MessageBubble({
     );
   }
 
-  // ==================================================
-  // AI MESSAGE — chữ trực tiếp trên nền trắng, không khung
-  // ==================================================
-  const displayText =
-    streamingText !== null && streamingText !== undefined
-      ? streamingText
-      : message.message;
+  const displayText = streamingText !== null && streamingText !== undefined ? streamingText : message.message;
   const isStreaming = streamingText !== null && streamingText !== undefined;
 
-  // ✅ Actions từ backend
-  const backendActions =
-    message.actions &&
-    Array.isArray(message.actions) &&
-    message.actions.length > 0
-      ? message.actions
-      : [];
-
-  // ✅ Fallback: parse từ text
-  const parsedActions =
-    backendActions.length === 0 && !isStreaming
-      ? parseActionsFromText(message.message || "")
-      : [];
-
-  const finalActions =
-    backendActions.length > 0 ? backendActions : parsedActions;
-
+  const backendActions = message.actions && Array.isArray(message.actions) && message.actions.length > 0 ? message.actions : [];
+  const parsedActions = backendActions.length === 0 && !isStreaming ? parseActionsFromText(message.message || "") : [];
+  const finalActions = backendActions.length > 0 ? backendActions : parsedActions;
   const hasActions = finalActions.length > 0;
 
-  // Giữ nguyên điều kiện cũ: nút Đăng nhập chỉ xuất hiện cùng danh sách gợi ý
-  const showLoginButton =
-    isLastAIMessage &&
-    !isStreaming &&
-    message.suggestions?.length > 0 &&
-    !isSuggestionHidden &&
-    shouldShowLoginButton(message.message);
+  const showLoginButton = isLastAIMessage && !isStreaming && message.suggestions?.length > 0 && !isSuggestionHidden && shouldShowLoginButton(message.message);
 
   const handleActionClick = (action) => {
     if (!action?.path) return;
@@ -276,7 +216,6 @@ export default function MessageBubble({
   return (
     <div className={`flex justify-start ${animateIn ? "nxx-rise" : ""}`}>
       <div className="w-full max-w-[94%]">
-        {/* MEDIA */}
         {hasMedia && (
           <div className="mb-3 overflow-hidden rounded-[22px] border border-[#dde0ea] bg-[#f5f6fb]">
             {isVideo ? (
@@ -293,17 +232,13 @@ export default function MessageBubble({
                 type="button"
                 onClick={() => setLightbox(true)}
                 aria-label="Xem ảnh lớn"
-                className={`block w-full ${
-                  mediaLoaded ? "" : "nxx-skel min-h-[180px]"
-                }`}
+                className={`block w-full ${mediaLoaded ? "" : "nxx-skel min-h-[180px]"}`}
               >
                 <img
                   ref={imgRef}
                   src={message.image_url}
                   alt="Hướng dẫn"
-                  className={`block max-h-96 w-full object-contain transition-opacity duration-300 ${
-                    mediaLoaded ? "opacity-100" : "opacity-0"
-                  }`}
+                  className={`block max-h-96 w-full object-contain transition-opacity duration-300 ${mediaLoaded ? "opacity-100" : "opacity-0"}`}
                   loading="lazy"
                   onLoad={() => setMediaLoaded(true)}
                   onError={() => setMediaError(true)}
@@ -313,17 +248,13 @@ export default function MessageBubble({
           </div>
         )}
 
-        {/* TEXT */}
         {displayText && (
           <div className="px-0.5">
             <MarkdownText text={displayText} />
-            {isStreaming && (
-              <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-[#a2a5b8] align-middle" />
-            )}
+            {isStreaming && <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-[#a2a5b8] align-middle" />}
           </div>
         )}
 
-        {/* ACTION BUTTONS */}
         {hasActions && !isStreaming && (
           <div className="nxx-rise mt-3 space-y-2">
             {finalActions.map((action, idx) => (
@@ -338,9 +269,7 @@ export default function MessageBubble({
                     src={action.icon}
                     alt=""
                     className="h-8 w-8 shrink-0 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
                 ) : (
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#f5f6fb]">
@@ -356,7 +285,6 @@ export default function MessageBubble({
           </div>
         )}
 
-        {/* LOGIN */}
         {showLoginButton && (
           <button
             type="button"
@@ -369,45 +297,40 @@ export default function MessageBubble({
           </button>
         )}
 
-        {/* FOOTER ĐÃ ĐƯỢC GOM LẠI GỌN GÀNG */}
         {!isStreaming && isAI && (
           <div className="mt-2.5 flex flex-wrap items-center justify-end gap-3">
-            {/* Chữ Do AI tạo */}
             <div className="flex items-center gap-1 opacity-80">
               <Sparkles size={11} className="text-[#a2a5b8]" strokeWidth={2.4} />
               <span className="text-[11px] text-[#7b7e90]">Do AI tạo</span>
             </div>
 
-            {/* Cụm nút Like/Dislike/Copy - Chỉ hiện khi chưa đánh giá */}
-{showFeedback && feedback?.status !== "sent" && (
-  <div className="flex items-center gap-1.5">
-    <RowButton label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
-      {copied ? (
-        <Check size={18} strokeWidth={2} />
-      ) : (
-        <Copy size={18} strokeWidth={1.8} />
-      )}
-    </RowButton>
-    <RowButton
-      label="Chưa hữu ích"
-      pressed={feedback?.rating === "down"}
-      disabled={fbLocked}
-      onClick={() => onFeedback?.("down")}
-      className={feedbackClass(feedback, "down")}
-    >
-      <ThumbsDown size={18} strokeWidth={1.8} />
-    </RowButton>
-    <RowButton
-      label="Hữu ích"
-      pressed={feedback?.rating === "up"}
-      disabled={fbLocked}
-      onClick={() => onFeedback?.("up")}
-      className={feedbackClass(feedback, "up")}
-    >
-      <ThumbsUp size={18} strokeWidth={1.8} />
-    </RowButton>
-  </div>
-)}
+            {showFeedback && (
+              <div className="flex items-center gap-1.5">
+                <RowButton label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
+                  {copied ? <Check size={18} strokeWidth={2} /> : <Copy size={18} strokeWidth={1.8} />}
+                </RowButton>
+                <RowButton
+                  label="Chưa hữu ích"
+                  pressed={feedback?.rating === "down"}
+                  disabled={fbLocked}
+                  onClick={() => onFeedback?.("down")}
+                  className={feedbackClass(feedback, "down")}
+                >
+                  <ThumbsDown size={18} strokeWidth={1.8} />
+                </RowButton>
+                <RowButton
+                  label="Hữu ích"
+                  pressed={feedback?.rating === "up"}
+                  disabled={fbLocked}
+                  onClick={() => onFeedback?.("up")}
+                  className={feedbackClass(feedback, "up")}
+                >
+                  <ThumbsUp size={18} strokeWidth={1.8} />
+                </RowButton>
+              </div>
+            )}
+          </div>
+        )}
 
         {lightbox && (
           <ImageLightbox
@@ -420,4 +343,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-                  }
+          }
