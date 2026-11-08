@@ -15,7 +15,13 @@ import "./chat-effects.css";
 import "./home-input.css";
 
 const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
-const HEADLINES = ["Chúng tôi sẵn sàng hỗ trợ bạn!", "Bạn đang gặp vấn đề gì?", "Hỏi NXX bất cứ điều gì."];
+
+const HEADLINES = [
+  "Chúng tôi sẵn sàng hỗ trợ bạn!",
+  "Bạn đang gặp vấn đề gì?",
+  "Hỏi NXX bất cứ điều gì.",
+];
+
 const FALLBACK_CATEGORY = CATEGORIES.find((c) => c.label === "Khác")?.id || null;
 
 const FOCUS_GLOW_CSS = `
@@ -28,6 +34,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [category, setCategory] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
+  const [err, setErr] = useState(""); // Biến lưu lỗi để hiện chữ đỏ
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -41,11 +48,13 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
 
+  // Hàm tự tạo chat trực tiếp với Supabase
   const handleSelfStartChat = async ({ text: msg, category: catId }) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên hết hạn.");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
 
+      // 1. Tạo cuộc trò chuyện
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
         .insert({
@@ -57,8 +66,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         .select()
         .single();
 
-      if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
+      if (convError) throw new Error("Lỗi tạo cuộc trò chuyện: " + convError.message);
 
+      // 2. Tạo tin nhắn chào
       const { error: msgError } = await supabase
         .from("support_messages")
         .insert({
@@ -69,8 +79,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
           suggestions: getSuggestions(catId),
         });
 
-      if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
+      if (msgError) throw new Error("Lỗi tạo tin nhắn chào: " + msgError.message);
 
+      // 3. Bắn sự kiện để trang cha (Support.jsx) chuyển sang màn hình Chat
       window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
         detail: { conversation: conv, category: catId, firstText: msg } 
       }));
@@ -82,33 +93,35 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   };
 
   const send = async () => {
-  if (!canSend) return;
-  setSending(true);
-  const msg = text.trim();
-  const catId = category || FALLBACK_CATEGORY;
-  
-  try {
-    const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
+    if (!canSend) return;
+    setSending(true);
+    setErr(""); // Xóa lỗi cũ
     
-    // Đua giữa gọi hàm và đồng hồ 7 giây
+    const msg = text.trim();
+    const catId = category || FALLBACK_CATEGORY;
+    
+    // Tạo đồng hồ đếm ngược 7 giây chống treo
     const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Quá 7 giây không phản hồi. Kết nối tới Supabase đang bị treo!")), 7000)
+      setTimeout(() => reject(new Error("Quá 7 giây không phản hồi. Mạng đang chặn Supabase hoặc server bị treo.")), 7000)
     );
-    
-    const r = await Promise.race([
-      fnToCall({ text: msg, category: catId }),
-      timeout
-    ]);
-    
-    if (r && r.error) {
-      alert("LỖI TỪ SUPABASE:\n" + r.error);
+
+    try {
+      const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
+      
+      const r = await Promise.race([
+        fnToCall({ text: msg, category: catId }),
+        timeout
+      ]);
+      
+      if (r && r.error) {
+        setErr("LỖI: " + r.error);
+      }
+    } catch (e) {
+      setErr("LỖI HỆ THỐNG: " + e.message);
+    } finally {
+      setSending(false);
     }
-  } catch (e) {
-    alert("LỖI TREO MẠNG:\n" + e.message);
-  } finally {
-    setSending(false);
-  }
-};
+  };
 
   const handleKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
@@ -129,7 +142,12 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       <style>{FOCUS_GLOW_CSS}</style>
 
       <div className="sticky top-0 z-20 flex items-center bg-white/90 px-4 py-3 backdrop-blur-xl">
-        <button type="button" onClick={() => window.history.back()} aria-label="Quay lại" className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#13141a]">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          aria-label="Quay lại"
+          className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#13141a]"
+        >
           <ArrowLeft size={20} strokeWidth={2.2} />
         </button>
       </div>
@@ -139,15 +157,19 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       <div className="px-5 pb-3 pt-8">
         <GradientHeadline phrases={HEADLINES} />
         <p className="mx-auto mt-3 max-w-[320px] text-center text-[14px] leading-6 text-[#8a8d93]">
-  Hỏi nhanh hoặc chọn chủ đề để NXX hỗ trợ bạn chính xác hơn.
-</p>
-<p className="text-center text-red-600 text-xl font-bold mt-4">
-  ĐÃ CẬP NHẬT CODE MỚI!
-</p>
+          Hỏi nhanh hoặc chọn chủ đề để NXX hỗ trợ bạn chính xác hơn.
+        </p>
+        {/* Dòng chữ test code đã cập nhật */}
+        <p className="text-center text-red-600 text-xl font-bold mt-4">
+          ĐÃ CẬP NHẬT CODE MỚI!
+        </p>
       </div>
 
       <div className="px-4 pt-8">
-        <div className={`nxx-composer nxx-composer--hero ${sending ? "is-busy" : ""}`} style={{ minHeight: 0, padding: "14px 14px 10px", gap: 6 }}>
+        <div
+          className={`nxx-composer nxx-composer--hero ${sending ? "is-busy" : ""}`}
+          style={{ minHeight: 0, padding: "14px 14px 10px", gap: 6 }}
+        >
           <span className="nxx-glow" />
           <textarea
             ref={taRef}
@@ -160,8 +182,16 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
             className="block max-h-[120px] min-h-[44px] w-full flex-1 resize-none bg-transparent text-[16px] leading-6 text-[#13141a] outline-none placeholder:text-[#b4b7c2]"
           />
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => setSheetOpen(true)} className="nxx-chip">
-              <PillIcon size={17} strokeWidth={2.2} style={{ color: cat?.color || "#8a5cff" }} />
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="nxx-chip"
+            >
+              <PillIcon
+                size={17}
+                strokeWidth={2.2}
+                style={{ color: cat?.color || "#8a5cff" }}
+              />
               {cat ? cat.label : "Chọn chủ đề"}
               <ChevronDown size={16} className="text-[#8a8d93]" />
             </button>
@@ -171,21 +201,47 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
               onClick={send}
               disabled={!canSend}
               aria-label="Gửi"
-              className={`nxx-iconbtn h-10 w-10 text-white ${canSend ? "bg-[#13141a]" : "bg-[#e6e8f0]"}`}
+              className={`nxx-iconbtn h-10 w-10 text-white ${
+                canSend ? "bg-[#13141a]" : "bg-[#e6e8f0]"
+              }`}
             >
-              {sending ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={18} strokeWidth={2.6} />}
+              {sending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <ArrowUp size={18} strokeWidth={2.6} />
+              )}
             </button>
           </div>
         </div>
       </div>
 
+      {/* HIỂN THỊ LỖI BẰNG CHỮ ĐỎ TO RÕ RÀNG */}
+      {err && (
+        <div className="px-5 pt-4">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-[14px] leading-6 text-red-600 font-bold text-center">
+              {err}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="px-4 pt-6">
-        <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]">
+        <a
+          href={SUPPORT.zaloUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]"
+        >
           <div className="flex items-center gap-3">
             <Headphones size={22} className="text-[#0068FF]" strokeWidth={2} />
             <div className="text-left">
-              <p className="text-[14.5px] font-semibold text-[#0068FF]">Gặp nhân viên qua Zalo</p>
-              <p className="mt-0.5 text-[11.5px] text-[#0068FF]/70">Hỗ trợ {SUPPORT.hours}</p>
+              <p className="text-[14.5px] font-semibold text-[#0068FF]">
+                Gặp nhân viên qua Zalo
+              </p>
+              <p className="mt-0.5 text-[11.5px] text-[#0068FF]/70">
+                Hỗ trợ {SUPPORT.hours}
+              </p>
             </div>
           </div>
           <ChevronRight size={18} className="text-[#0068FF]" />
@@ -193,17 +249,43 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
 
       <div className="pt-10">
-        <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => send()} />
+        <HomeGuides
+          onOpenHelp={onOpenHelp}
+          onPickTopic={(title, catId) => {
+            setText(title);
+            setCategory(catId);
+            setTimeout(() => send(), 100);
+          }}
+        />
       </div>
 
       {sheetOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <button type="button" aria-label="Đóng" onClick={() => setSheetOpen(false)} className="nxx-fade absolute inset-0 bg-slate-900/30" />
+          <button
+            type="button"
+            aria-label="Đóng"
+            onClick={() => setSheetOpen(false)}
+            className="nxx-fade absolute inset-0 bg-slate-900/30"
+          />
           <div className="nxx-sheet-in relative w-full max-w-2xl rounded-t-[28px] bg-white px-3 pb-8 pt-3 shadow-[0_-8px_32px_rgba(17,20,24,0.12)]">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200" />
-            <SheetRow label="Tất cả chủ đề" Icon={Sparkles} color="#8a5cff" selected={!cat} onClick={() => pick(null)} />
+
+            <SheetRow
+              label="Tất cả chủ đề"
+              Icon={Sparkles}
+              color="#8a5cff"
+              selected={!cat}
+              onClick={() => pick(null)}
+            />
             {CATEGORIES.map((c) => (
-              <SheetRow key={c.id} label={c.label} Icon={ICON_COMPONENTS[c.icon] || Sparkles} color={c.color} selected={category === c.id} onClick={() => pick(c.id)} />
+              <SheetRow
+                key={c.id}
+                label={c.label}
+                Icon={ICON_COMPONENTS[c.icon] || Sparkles}
+                color={c.color}
+                selected={category === c.id}
+                onClick={() => pick(c.id)}
+              />
             ))}
           </div>
         </div>
@@ -214,10 +296,18 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
 function SheetRow({ label, Icon, color, selected, onClick }) {
   return (
-    <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 rounded-[14px] px-4 py-3.5 text-left transition active:opacity-70 ${selected ? "bg-[#f0f1f6]" : ""}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-[14px] px-4 py-3.5 text-left transition active:opacity-70 ${
+        selected ? "bg-[#f0f1f6]" : ""
+      }`}
+    >
       <Icon size={20} strokeWidth={2.1} style={{ color }} />
-      <span className="flex-1 text-[15px] font-medium text-[#13141a]">{label}</span>
+      <span className="flex-1 text-[15px] font-medium text-[#13141a]">
+        {label}
+      </span>
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-        }
+             }
