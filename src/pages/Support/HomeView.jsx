@@ -56,16 +56,16 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     );
 
     try {
-      const fnToCall = typeof onStartChat === "function" ? onStartChat : async (payload) => {
-        // BỎ QUA BƯỚC LẤY USER, GỌI THẲNG INSERT ĐỂ TEST
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        if (!userId) throw new Error("Không có User ID trong phiên đăng nhập.");
-
+      // GHI ĐÈ HOÀN TOÀN HÀM XỬ LÝ: Bỏ qua session, gán cứng ID giả
+      const fnToCall = async (payload) => {
+        const fakeUserId = "00000000-0000-0000-0000-000000000000"; 
+        
+        console.log("Bắt đầu gọi Supabase tạo conversation...");
+        
         const { data: conv, error: convError } = await supabase
           .from("support_conversations")
           .insert({
-            user_id: userId,
+            user_id: fakeUserId,
             title: payload.category ? `Hỗ trợ ${payload.category}` : "Cuộc trò chuyện mới",
             category: payload.category,
             status: "ai",
@@ -73,8 +73,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
           .select()
           .single();
 
-        if (convError) throw new Error("Lỗi DB: " + convError.message);
+        if (convError) throw new Error("Lỗi tạo conversation: " + convError.message);
         
+        console.log("Đã tạo conv thành công, bắn sự kiện chuyển trang...");
         window.dispatchEvent(new CustomEvent("nxx-start-chat", { detail: { conversation: conv, category: payload.category, firstText: payload.text } }));
         return { ok: true };
       };
@@ -120,7 +121,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         <p className="mx-auto mt-3 max-w-[320px] text-center text-[14px] leading-6 text-[#8a8d93]">
           Hỏi nhanh hoặc chọn chủ đề để NXX hỗ trợ bạn chính xác hơn.
         </p>
-        <p className="text-center text-red-600 text-xl font-bold mt-4">CODE V3 - BYPASS AUTH</p>
+        <p className="text-center text-red-600 text-xl font-bold mt-4">CODE V4 - NO AUTH</p>
       </div>
 
       <div className="px-4 pt-8">
@@ -199,4 +200,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-                }
+      }
