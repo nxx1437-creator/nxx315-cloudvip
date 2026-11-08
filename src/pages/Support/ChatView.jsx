@@ -145,6 +145,14 @@ function ChatViewContent({
     }
   }, [streamingText, streamingMsgId]);
 
+  // Tự động gửi tin nhắn đầu tiên nếu có
+useEffect(() => {
+  if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
+    initialSent.current = true;
+    sendMessage(initialMessage);
+  }
+}, [initialMessage, loading, messages.length]);
+
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
