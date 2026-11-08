@@ -9,13 +9,12 @@ import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
 import GradientHeadline from "./GradientHeadline.jsx";
 import "./chat-effects.css";
-import "./home-input.css";
 
 const ICON_COMPONENTS = {
   User, CreditCard, Package, Bug, MoreHorizontal,
 };
 
-// phải để ngoài component để GradientHeadline không bị reset
+// để ngoài component để GradientHeadline không bị reset khi render lại
 const HEADLINES = [
   "Chúng tôi sẵn sàng hỗ trợ bạn!",
   "Bạn đang gặp vấn đề gì?",
@@ -90,51 +89,52 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
 
       <div className="px-4 pt-10">
-        <div className="nxx-box">
-          <div className="relative rounded-[22px] border border-[#e3e5ee] bg-[#f7f8fc] px-4 pb-3 pt-4">
-            <textarea
-              ref={taRef}
-              value={text}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              enterKeyHint="send"
-              placeholder="Mô tả vấn đề hoặc đặt câu hỏi"
-              className="block max-h-[120px] min-h-[28px] w-full resize-none bg-transparent text-[15px] leading-6 text-[#161823] outline-none placeholder:text-[#b4b7c2]"
-            />
-            <div className="mt-3 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setSheetOpen(true)}
-                className="flex items-center gap-2 rounded-full border border-[#e3e5ee] bg-white px-3.5 py-2 text-[14px] font-medium text-[#161823] transition active:scale-[0.97]"
-              >
-                <PillIcon
-                  size={17}
-                  strokeWidth={2.2}
-                  style={{ color: cat?.color || "#8a5cff" }}
-                />
-                {cat ? cat.label : "Chọn chủ đề"}
-                <ChevronDown size={16} className="text-[#8a8d93]" />
-              </button>
+        <div
+          className={`nxx-composer nxx-composer--hero ${
+            sending ? "is-busy" : ""
+          }`}
+        >
+          <span className="nxx-glow" />
+          <textarea
+            ref={taRef}
+            value={text}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            enterKeyHint="send"
+            placeholder="Mô tả vấn đề hoặc đặt câu hỏi"
+            className="block max-h-[120px] min-h-[28px] w-full flex-1 resize-none bg-transparent text-[16px] leading-6 text-[#13141a] outline-none placeholder:text-[#b4b7c2]"
+          />
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              className="nxx-chip"
+            >
+              <PillIcon
+                size={17}
+                strokeWidth={2.2}
+                style={{ color: cat?.color || "#8a5cff" }}
+              />
+              {cat ? cat.label : "Chọn chủ đề"}
+              <ChevronDown size={16} className="text-[#8a8d93]" />
+            </button>
 
-              <button
-                type="button"
-                onClick={send}
-                disabled={!canSend}
-                aria-label="Gửi"
-                className={`flex h-9 w-9 items-center justify-center rounded-full transition ${
-                  canSend
-                    ? "bg-[#13141a] text-white active:scale-95"
-                    : "bg-[#e6e8f0] text-white"
-                }`}
-              >
-                {sending ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <ArrowUp size={18} strokeWidth={2.6} />
-                )}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={send}
+              disabled={!canSend}
+              aria-label="Gửi"
+              className={`nxx-iconbtn h-10 w-10 text-white ${
+                canSend ? "bg-[#13141a]" : "bg-[#e6e8f0]"
+              }`}
+            >
+              {sending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <ArrowUp size={18} strokeWidth={2.6} />
+              )}
+            </button>
           </div>
         </div>
 
@@ -180,9 +180,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
             type="button"
             aria-label="Đóng"
             onClick={() => setSheetOpen(false)}
-            className="nxx-sheet-backdrop absolute inset-0 bg-slate-900/30"
+            className="nxx-fade absolute inset-0 bg-slate-900/30"
           />
-          <div className="nxx-sheet-panel relative w-full max-w-2xl rounded-t-[28px] bg-white px-3 pb-8 pt-3 shadow-[0_-8px_32px_rgba(17,20,24,0.12)]">
+          <div className="nxx-sheet-in relative w-full max-w-2xl rounded-t-[28px] bg-white px-3 pb-8 pt-3 shadow-[0_-8px_32px_rgba(17,20,24,0.12)]">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200" />
 
             <SheetRow
@@ -225,4 +225,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#161823]" />}
     </button>
   );
-                                      }
+  }
