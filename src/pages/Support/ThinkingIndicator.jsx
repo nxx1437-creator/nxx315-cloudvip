@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+let maskCounter = 0; // id mask riêng cho từng spinner
+
 // Ngôi sao 4 cánh (cạnh lõm, 4 mũi hướng lên / phải / xuống / trái)
 const SPIN_PATH = (() => {
   const R = 10.5; // bán kính tới đầu mũi
@@ -26,16 +28,14 @@ const SEGMENTS = 40; // số đoạn chia đuôi (càng nhiều càng mượt)
 const TAIL_MIN = 40; // đuôi ngắn nhất (% độ dài đường)
 const TAIL_MAX = 68; // đuôi dài nhất (% độ dài đường)
 const STROKE = 1.5;
-const HEAD_RGB = [19, 20, 26]; // #13141a – màu đầu
-const GHOST_RGB = [229, 231, 235]; // #e5e7eb – màu nền mờ, đuôi tan vào đây
-const GHOST = "#e5e7eb";
+const COLOR = "#13141a"; // màu đầu sao chổi
+const OVERLAP = 0.3; // các đoạn chồng nhẹ để không hở khe
 
-// Màu đặc (không dùng opacity) từ đầu -> nền mờ.
-// Dùng màu đặc thì các đoạn chồng nhẹ lên nhau cũng không bị sậm / lem.
-const SEG_COLORS = Array.from({ length: SEGMENTS }, (_, i) => {
-  const k = i / (SEGMENTS - 1); // 0 = đầu, 1 = cuối đuôi
-  const c = HEAD_RGB.map((h, j) => Math.round(h + (GHOST_RGB[j] - h) * k));
-  return `rgb(${c[0]} ${c[1]} ${c[2]})`;
+// Đuôi được vẽ vào một <mask>: trắng = hiện rõ (đầu), đen = trong suốt (cuối đuôi).
+// Các đoạn trong mask là màu đặc nên chồng lên nhau không bị sậm / vằn như dùng opacity.
+const SEG_GRAY = Array.from({ length: SEGMENTS }, (_, i) => {
+  const v = Math.round(255 * Math.pow(1 - i / (SEGMENTS - 1), 1.3));
+  return `rgb(${v} ${v} ${v})`;
 });
 
 // Vẽ đoạn đuôi trước, đoạn đầu sau cùng để đầu luôn nằm trên
@@ -54,13 +54,15 @@ function layout(ms, duration, breathing) {
   return Array.from({ length: SEGMENTS }, (_, i) => {
     const start = head - (i + 1) * seg; // đoạn i nằm sau đầu i*seg
     const offset = -(((start % 100) + 100) % 100);
-    return { dash: `${seg.toFixed(3)} ${(100 - seg).toFixed(3)}`, offset };
+    const len = seg + (i === 0 ? 0 : OVERLAP);
+    return { dash: `${len.toFixed(3)} ${(100 - len).toFixed(3)}`, offset };
   });
 }
 
 export function ThinkingSpinner({ size = 36 }) {
   const refs = useRef([]);
   const initial = useMemo(() => layout(0, DURATION, true), []);
+  const maskId = useMemo(() => `spin-mask-${++maskCounter}`, []);
 
   useEffect(() => {
     const reduce =
@@ -97,32 +99,44 @@ export function ThinkingSpinner({ size = 36 }) {
       aria-hidden="true"
       className="shrink-0"
     >
-      {/* Lớp nền mờ (ghost) */}
-      <path
-        d={SPIN_PATH}
-        stroke={GHOST}
-        strokeWidth={STROKE}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <defs>
+        {/* Mask: nhiều đoạn nhỏ, sáng dần về phía đầu, tối hẳn ở cuối đuôi */}
+        <mask
+          id={maskId}
+          maskUnits="userSpaceOnUse"
+          x="-13"
+          y="-13"
+          width="26"
+          height="26"
+        >
+          {DRAW_ORDER.map((i) => (
+            <path
+              key={i}
+              ref={(el) => {
+                refs.current[i] = el;
+              }}
+              d={SPIN_PATH}
+              pathLength="100"
+              stroke={SEG_GRAY[i]}
+              strokeWidth={STROKE}
+              strokeLinecap={i === 0 ? "round" : "butt"}
+              strokeLinejoin="round"
+              strokeDasharray={initial[i].dash}
+              strokeDashoffset={initial[i].offset.toFixed(3)}
+            />
+          ))}
+        </mask>
+      </defs>
 
-      {/* Sao chổi: nhiều đoạn nhỏ, màu đậm dần về phía đầu */}
-      {DRAW_ORDER.map((i) => (
-        <path
-          key={i}
-          ref={(el) => {
-            refs.current[i] = el;
-          }}
-          d={SPIN_PATH}
-          pathLength="100"
-          stroke={SEG_COLORS[i]}
-          strokeWidth={STROKE}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray={initial[i].dash}
-          strokeDashoffset={initial[i].offset.toFixed(3)}
-        />
-      ))}
+      {/* Không còn lớp viền: chỉ hiện phần mask cho qua */}
+      <rect
+        x="-13"
+        y="-13"
+        width="26"
+        height="26"
+        fill={COLOR}
+        mask={`url(#${maskId})`}
+      />
     </svg>
   );
 }
@@ -165,5 +179,6 @@ export default function ThinkingIndicator({ text }) {
       </span>
     </div>
   );
-      }
+    }
+                          
 
