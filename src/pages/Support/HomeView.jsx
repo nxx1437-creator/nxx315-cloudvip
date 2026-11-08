@@ -33,6 +33,7 @@ const FOCUS_GLOW_CSS = `
 .nxx-composer--hero:focus-within .nxx-glow::before { animation-play-state: running; }
 `;
 
+// [FIX] Đảm bảo tên prop nhận vào phải khớp 100% với tên truyền từ Support.jsx
 export default function HomeView({ onOpenHelp, onStartChat }) {
   const [text, setText] = useState("");
   const [category, setCategory] = useState(null);
@@ -53,7 +54,16 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   };
 
   const startWith = async (msg, catId) => {
-    if (!onStartChat || sending) return;
+    // [FIX] Debug rõ ràng để biết tại sao nó chặn
+    console.log("[HomeView Debug] 1) Đã nhận cú bấm.");
+    console.log("[HomeView Debug] 2) onStartChat:", typeof onStartChat, "| Đang gửi:", sending);
+    
+    if (typeof onStartChat !== "function") {
+      setErr("Lỗi hệ thống: Chưa cấu hình hàm xử lý chat (onStartChat).");
+      return;
+    }
+    if (sending) return;
+
     setErr("");
     setSending(true);
     try {
@@ -249,4 +259,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-          }
+        }
