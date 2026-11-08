@@ -54,8 +54,10 @@ const GRADIENT = `conic-gradient(from calc(var(--tail) * 1deg),
   ${stop("rgba(29, 161, 255, 0)", 1)},
   rgba(29, 161, 255, 0) 360deg)`;
 
+// Lưu ý: khung bọc dùng class "nxx-gframe" (KHÔNG dùng "nxx-glow" vì
+// chat-effects.css đã có class đó, đặt opacity 0 làm ô nhập biến mất).
 const CSS = `
-.nxx-glow { position: relative; }
+.nxx-gframe { position: relative; }
 .nxx-glow__ring,
 .nxx-glow__halo {
   position: absolute;
@@ -72,8 +74,8 @@ const CSS = `
 }
 .nxx-glow__ring { inset: -1px; padding: 2px; z-index: 2; }
 .nxx-glow__halo { inset: -4px; padding: 6px; filter: blur(9px); z-index: 1; }
-.nxx-glow[data-on="true"] .nxx-glow__ring { opacity: 1; }
-.nxx-glow[data-on="true"] .nxx-glow__halo { opacity: 0.55; }
+.nxx-gframe[data-on="true"] .nxx-glow__ring { opacity: 1; }
+.nxx-gframe[data-on="true"] .nxx-glow__halo { opacity: 0.55; }
 `;
 
 export default function GlowFrame({
@@ -129,7 +131,7 @@ export default function GlowFrame({
   return (
     <div
       ref={rootRef}
-      className={`nxx-glow ${className}`}
+      className={`nxx-gframe ${className}`}
       data-on={active ? "true" : "false"}
       style={{
         borderRadius: radius === "auto" ? "9999px" : radius,
@@ -143,5 +145,5 @@ export default function GlowFrame({
       <style>{CSS}</style>
     </div>
   );
-}
+    }
 
