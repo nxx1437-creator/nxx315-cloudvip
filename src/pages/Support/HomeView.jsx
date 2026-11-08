@@ -23,7 +23,7 @@ const FOCUS_GLOW_CSS = `
 .nxx-composer--hero:focus-within .nxx-glow::before { animation-play-state: running; }
 `;
 
-export default function HomeView({ onOpenHelp, onStartChat }) {
+export default function HomeView({ user, onOpenHelp, onStartChat }) { // Nhận user từ cha
   const [text, setText] = useState("");
   const [category, setCategory] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -50,7 +50,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     const msg = text.trim();
     const catId = category || FALLBACK_CATEGORY;
     
-    // Đồng hồ đếm ngược 8 giây chống treo mạng
     const timeout = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("Quá 8s không phản hồi. Vui lòng kiểm tra lại mạng!")), 8000)
     );
@@ -58,15 +57,13 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     try {
       const fnToCall = typeof onStartChat === "function" ? onStartChat : async (payload) => {
         
-        // Lấy user thật
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+        // Dùng trực tiếp user từ prop, không gọi getUser() nữa
+        if (!user?.id) throw new Error("Chưa đăng nhập.");
 
-        // Tạo cuộc trò chuyện
         const { data: conv, error: convError } = await supabase
           .from("support_conversations")
           .insert({
-            user_id: user.id,
+            user_id: user.id, 
             title: payload.category ? `Hỗ trợ ${payload.category}` : "Cuộc trò chuyện mới",
             category: payload.category,
             status: "ai",
@@ -76,7 +73,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
         if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
         
-        // Tạo tin nhắn chào
         const { error: msgError } = await supabase
           .from("support_messages")
           .insert({
@@ -89,7 +85,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
         if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
 
-        // Bắn sự kiện chuyển trang
         window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
           detail: { conversation: conv, category: payload.category, firstText: payload.text } 
         }));
@@ -216,4 +211,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-        }
+      }
