@@ -1,3 +1,5 @@
+// src/pages/Support/MessageBubble.jsx
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -367,16 +369,18 @@ export default function MessageBubble({
           </button>
         )}
 
-        {/* FOOTER */}
+        {/* FOOTER ĐÃ ĐƯỢC GOM LẠI GỌN GÀNG */}
         {!isStreaming && isAI && (
-          <div className="mt-2.5">
-            <div className="flex items-center gap-1 px-0.5">
+          <div className="mt-2.5 flex flex-wrap items-center justify-end gap-3">
+            {/* Chữ Do AI tạo */}
+            <div className="flex items-center gap-1 opacity-80">
               <Sparkles size={11} className="text-[#a2a5b8]" strokeWidth={2.4} />
               <span className="text-[11px] text-[#7b7e90]">Do AI tạo</span>
             </div>
 
+            {/* Cụm nút Like/Dislike/Copy */}
             {showFeedback && (
-              <div className="mt-2 flex items-center justify-center gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <RowButton label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
                   {copied ? (
                     <Check size={18} strokeWidth={2} />
@@ -418,6 +422,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-  }
-    
-            
+                  }
