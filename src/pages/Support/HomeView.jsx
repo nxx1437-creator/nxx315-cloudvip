@@ -15,13 +15,7 @@ import "./chat-effects.css";
 import "./home-input.css";
 
 const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
-
-const HEADLINES = [
-  "Chúng tôi sẵn sàng hỗ trợ bạn!",
-  "Bạn đang gặp vấn đề gì?",
-  "Hỏi NXX bất cứ điều gì.",
-];
-
+const HEADLINES = ["Chúng tôi sẵn sàng hỗ trợ bạn!", "Bạn đang gặp vấn đề gì?", "Hỏi NXX bất cứ điều gì."];
 const FALLBACK_CATEGORY = CATEGORIES.find((c) => c.label === "Khác")?.id || null;
 
 const FOCUS_GLOW_CSS = `
@@ -35,6 +29,8 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
+  const [statusMsg, setStatusMsg] = useState(""); 
+  const [countdown, setCountdown] = useState(null); // Đồng hồ đếm ngược
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -48,13 +44,13 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
 
-  // Hàm tự xử lý API dự phòng (Nếu Support.jsx không truyền hàm xuống)
   const handleSelfStartChat = async ({ text: msg, category: catId }) => {
     try {
-      setErr("");
+      setStatusMsg("Đang kiểm tra đăng nhập...");
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên hết hạn.");
+      if (!user?.id) throw new Error("Bạn chưa đăng nhập.");
 
+      setStatusMsg("Đang tạo cuộc trò chuyện...");
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
         .insert({
@@ -66,24 +62,22 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         .select()
         .single();
 
-      if (convError) throw new Error("Lỗi tạo cuộc trò chuyện: " + convError.message);
+      if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
 
-      const greeting = getGreeting(catId);
-      const suggestions = getSuggestions(catId);
-
+      setStatusMsg("Đang tạo tin nhắn chào...");
       const { error: msgError } = await supabase
         .from("support_messages")
         .insert({
           conversation_id: conv.id,
           user_id: user.id,
-          message: greeting,
+          message: getGreeting(catId),
           sender_type: "ai",
-          suggestions: suggestions,
+          suggestions: getSuggestions(catId),
         });
 
       if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
 
-      // Phát tín hiệu để Support.jsx chuyển trang
+      setStatusMsg("Hoàn tất! Đang chuyển trang...");
       window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
         detail: { conversation: conv, category: catId, firstText: msg } 
       }));
@@ -98,14 +92,21 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     if (sending) return;
     setSending(true);
     setErr("");
+    setStatusMsg("Bắt đầu gửi...");
+    
+    // Bắt đầu đếm ngược 8s
+    let timeLeft = 8;
+    setCountdown(timeLeft);
+    const timer = setInterval(() => {
+      timeLeft -= 1;
+      setCountdown(timeLeft);
+    }, 1000);
 
-    // Nếu cha có truyền hàm thì xài, không thì tự gọi API
     const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
 
     try {
-      // Tạo timeout 10s chống treo xoay xoay
       const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Quá thời gian 10s. Kiểm tra lại mạng hoặc Supabase.")), 10000)
+        setTimeout(() => reject(new Error("Quá thời gian 8s. Supabase không phản hồi.")), 8000)
       );
 
       const r = await Promise.race([
@@ -115,9 +116,12 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       
       if (r?.error) setErr(r.error);
     } catch (e) {
-      setErr(e?.message || "Có lỗi xảy ra.");
+      setErr(e?.message || "Lỗi hệ thống.");
     } finally {
+      clearInterval(timer); // Dừng đếm ngược
       setSending(false);
+      setStatusMsg("");
+      setCountdown(null);
     }
   };
 
@@ -192,7 +196,14 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         </div>
       </div>
 
-      {err && <p className="px-5 pt-3 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
+      {/* HIỂN THỊ TRẠNG THÁI VÀ ĐỒNG HỒ ĐẾM NGƯỢC */}
+      {countdown !== null && (
+        <div className="px-5 pt-3 text-[13px] leading-5 text-orange-600 font-bold">
+          Đang kết nối... ({countdown}s)
+        </div>
+      )}
+      {statusMsg && <p className="px-5 pt-1 text-[13px] leading-5 text-blue-600 font-medium">{statusMsg}</p>}
+      {err && <p className="px-5 pt-1 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
 
       <div className="px-4 pt-6">
         <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]">
@@ -235,4 +246,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-    }
+                         }
