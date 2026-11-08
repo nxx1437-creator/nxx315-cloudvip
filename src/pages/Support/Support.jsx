@@ -1,3 +1,5 @@
+// src/pages/Support/Support.jsx
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import TopHeader from "../../components/TopHeader.jsx";
@@ -13,10 +15,22 @@ export default function Support() {
   const [conversation, setConversation] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [initialMessage, setInitialMessage] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(""); // Lưu lỗi để hiển thị
+  const [globalError, setGlobalError] = useState("");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const initAuth = async () => {
+      let { data: { user } } = await supabase.auth.getUser();
+      
+      // Nếu chưa đăng nhập, tự động tạo tài khoản ẩn
+      if (!user) {
+        const { data, error } = await supabase.auth.signInAnonymously();
+        if (!error && data.user) {
+          user = data.user;
+        }
+      }
+      setUser(user);
+    };
+    initAuth();
   }, []);
 
   useEffect(() => {
@@ -37,16 +51,15 @@ export default function Support() {
   };
 
   const startAIChat = async (category, firstText = null) => {
-    setErrorMsg(""); // Xóa lỗi cũ
+    setGlobalError("");
     if (!user?.id) {
-      setErrorMsg("Lỗi: Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
-      return { error: "Chưa đăng nhập." };
+      setGlobalError("Đang khởi tạo tài khoản ẩn, vui lòng thử lại sau 2 giây...");
+      return { error: "Chưa có user." };
     }
 
     try {
-      // Đồng hồ đếm ngược 10 giây
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Quá 10s không phản hồi. Vui lòng kiểm tra lại mạng.")), 10000)
+        setTimeout(() => reject(new Error("Quá 10s không phản hồi. Vui lòng kiểm tra lại mạng!")), 10000)
       );
 
       const createChatPromise = async () => {
@@ -61,7 +74,7 @@ export default function Support() {
           .select()
           .single();
 
-        if (convError) throw new Error("Lỗi tạo cuộc trò chuyện: " + convError.message);
+        if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
 
         const { error: msgError } = await supabase
           .from("support_messages")
@@ -73,13 +86,12 @@ export default function Support() {
             suggestions: getSuggestions(category),
           });
 
-        if (msgError) throw new Error("Lỗi tạo tin nhắn chào: " + msgError.message);
+        if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
         return conv;
       };
 
       const conv = await Promise.race([createChatPromise(), timeoutPromise]);
 
-      // Thành công thì chuyển trang
       setSelectedCategory(category);
       setInitialMessage(firstText);
       setConversation(conv);
@@ -87,9 +99,8 @@ export default function Support() {
       return { ok: true };
 
     } catch (error) {
-      console.error(error);
-      // Hiện lỗi lên thanh đỏ
-      setErrorMsg(error?.message || "Không thể kết nối đến máy chủ.");
+      console.error("Lỗi tạo chat:", error);
+      setGlobalError(error?.message || "Lỗi không xác định.");
       return { error: error?.message };
     }
   };
@@ -105,22 +116,21 @@ export default function Support() {
     <div className="min-h-screen bg-white pb-24 text-slate-900 relative">
       <TopHeader />
       
-      {/* THANH BÁO LỖI ĐỎ */}
-      {errorMsg && (
+      {globalError && (
         <div className="fixed top-[60px] left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-red-600 text-white p-4 rounded-xl shadow-2xl z-[9999] flex justify-between items-start">
-          <p className="text-[14px] font-medium leading-5">{errorMsg}</p>
-          <button onClick={() => setErrorMsg("")} className="ml-3 text-xl font-bold leading-none">&times;</button>
+          <p className="text-[14px] font-medium leading-5">{globalError}</p>
+          <button onClick={() => setGlobalError("")} className="ml-3 text-xl font-bold leading-none">&times;</button>
         </div>
       )}
 
       <main className="mx-auto w-full max-w-2xl">
         {view === "home" && (
-  <HomeView
-    user={user} 
-    onOpenHelp={openHelp}
-    onStartChat={({ text, category }) => startAIChat(category, text)}
-  />
-)}
+          <HomeView
+            user={user}
+            onOpenHelp={openHelp}
+            onStartChat={({ text, category }) => startAIChat(category, text)}
+          />
+        )}
         {view === "help" && (
           <HelpView
             category={selectedCategory}
