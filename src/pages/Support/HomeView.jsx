@@ -50,22 +50,23 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     const msg = text.trim();
     const catId = category || FALLBACK_CATEGORY;
     
-    // Hẹn giờ 6 giây, nếu quá thì tự động báo lỗi
+    // Đồng hồ đếm ngược 8 giây chống treo mạng
     const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Quá 6s không phản hồi. Supabase đang bị treo hoặc chặn mạng!")), 6000)
+      setTimeout(() => reject(new Error("Quá 8s không phản hồi. Vui lòng kiểm tra lại mạng!")), 8000)
     );
 
     try {
-      // GHI ĐÈ HOÀN TOÀN HÀM XỬ LÝ: Bỏ qua session, gán cứng ID giả
-      const fnToCall = async (payload) => {
-        const fakeUserId = "00000000-0000-0000-0000-000000000000"; 
+      const fnToCall = typeof onStartChat === "function" ? onStartChat : async (payload) => {
         
-        console.log("Bắt đầu gọi Supabase tạo conversation...");
-        
+        // Lấy user thật
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+
+        // Tạo cuộc trò chuyện
         const { data: conv, error: convError } = await supabase
           .from("support_conversations")
           .insert({
-            user_id: fakeUserId,
+            user_id: user.id,
             title: payload.category ? `Hỗ trợ ${payload.category}` : "Cuộc trò chuyện mới",
             category: payload.category,
             status: "ai",
@@ -73,10 +74,26 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
           .select()
           .single();
 
-        if (convError) throw new Error("Lỗi tạo conversation: " + convError.message);
+        if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
         
-        console.log("Đã tạo conv thành công, bắn sự kiện chuyển trang...");
-        window.dispatchEvent(new CustomEvent("nxx-start-chat", { detail: { conversation: conv, category: payload.category, firstText: payload.text } }));
+        // Tạo tin nhắn chào
+        const { error: msgError } = await supabase
+          .from("support_messages")
+          .insert({
+            conversation_id: conv.id,
+            user_id: user.id,
+            message: getGreeting(payload.category),
+            sender_type: "ai",
+            suggestions: getSuggestions(payload.category),
+          });
+
+        if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
+
+        // Bắn sự kiện chuyển trang
+        window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
+          detail: { conversation: conv, category: payload.category, firstText: payload.text } 
+        }));
+        
         return { ok: true };
       };
       
@@ -121,7 +138,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         <p className="mx-auto mt-3 max-w-[320px] text-center text-[14px] leading-6 text-[#8a8d93]">
           Hỏi nhanh hoặc chọn chủ đề để NXX hỗ trợ bạn chính xác hơn.
         </p>
-        <p className="text-center text-red-600 text-xl font-bold mt-4">CODE V4 - NO AUTH</p>
       </div>
 
       <div className="px-4 pt-8">
@@ -154,7 +170,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       {err && (
         <div className="px-5 pt-4">
           <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-[15px] leading-6 text-red-600 font-bold text-center">{err}</p>
+            <p className="text-[14px] leading-6 text-red-600 font-bold text-center">{err}</p>
           </div>
         </div>
       )}
@@ -200,4 +216,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-      }
+        }
