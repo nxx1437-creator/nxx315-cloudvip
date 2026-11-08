@@ -32,11 +32,10 @@ export default function Support() {
   // firstText: câu người dùng gõ ở khung to trang chủ (tự gửi khi chat mở)
   // Trả về { ok: true } nếu thành công, { error } nếu lỗi (để trang chủ hiện chữ đỏ)
   const startAIChat = async (category, firstText = null) => {
+    // [FIX 1] Bỏ alert, trả về lỗi trực tiếp để HomeView hiển thị
     if (!user?.id) {
-      alert("Vui lòng đăng nhập để chat với AI.");
       return {
-        error:
-          "Tài khoản chưa tải xong hoặc chưa đăng nhập. Hãy tải lại trang rồi thử lại.",
+        error: "Tài khoản chưa tải xong hoặc chưa đăng nhập. Hãy tải lại trang rồi thử lại.",
       };
     }
     try {
@@ -77,7 +76,7 @@ export default function Support() {
       return { ok: true };
     } catch (error) {
       console.error("Start chat error:", error);
-      alert("Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại.");
+      // [FIX 1] Bỏ alert
       return { error: error?.message || "Không thể bắt đầu cuộc trò chuyện." };
     }
   };
@@ -90,6 +89,11 @@ export default function Support() {
     setView("chat");
   };
 
+  // [FIX 2] Tạo hàm wrapper để kiểm tra prop kỹ càng, tránh truyền sai tham số
+  const handleStartChat = ({ text, category }) => {
+    return startAIChat(category, text);
+  };
+
   return (
     <div className="min-h-screen bg-white pb-24 text-slate-900">
       <TopHeader />
@@ -97,7 +101,7 @@ export default function Support() {
         {view === "home" && (
           <HomeView
             onOpenHelp={openHelp}
-            onStartChat={({ text, category }) => startAIChat(category, text)}
+            onStartChat={handleStartChat} // Đã bọc qua hàm wrapper an toàn
           />
         )}
         {view === "help" && (
@@ -121,4 +125,4 @@ export default function Support() {
       </main>
     </div>
   );
-}
+                             }
