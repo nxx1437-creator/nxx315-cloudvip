@@ -1,27 +1,32 @@
 // src/pages/Support/ThinkingIndicator.jsx
-// Spinner "cuộn xoắn" + dòng trạng thái đổi dần theo thời gian chờ.
 
 import React, { useEffect, useState } from "react";
 
-const SPIN_PATH = (() => {
-  const R = 8;
-  const r = 3.2;
-  const n = 7;
-  const N = 150;
+// Vẽ ngôi sao 8 cánh (tâm ở 0,0)
+const STAR_PATH = (() => {
+  const points = 8; // 8 cánh
+  const outerR = 10; // Bán kính ngoài (đầu cánh sao)
+  const innerR = 4; // Bán kính trong (kẽ cánh sao)
   let d = "";
-  for (let i = 0; i <= N; i++) {
-    const t = (2 * Math.PI * i) / N;
-    const x = R * Math.cos(t) + r * Math.cos(n * t);
-    const y = R * Math.sin(t) + r * Math.sin(n * t);
+  
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI * i) / points - Math.PI / 2; // Bắt đầu từ đỉnh
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle);
     d += `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)} `;
   }
   return `${d}Z`;
 })();
 
+// Tạo hiệu ứng đuôi thu nhỏ dần (Comet tail)
+// Lớp 1: Dài, mờ, nét to
+// Lớp 2: Vừa, rõ hơn
+// Lớp 3: Ngắn, sáng nhất, nét mảnh
 const COMET_LAYERS = [
-  { len: 34, opacity: 0.22 },
-  { len: 20, opacity: 0.5 },
-  { len: 9, opacity: 1 },
+  { len: 40, opacity: 0.15, width: 3, color: "#1b1c24" },
+  { len: 25, opacity: 0.4, width: 2.2, color: "#1b1c24" },
+  { len: 12, opacity: 1, width: 1.5, color: "#1b1c24" },
 ];
 
 export function ThinkingSpinner({ size = 28 }) {
@@ -29,32 +34,49 @@ export function ThinkingSpinner({ size = 28 }) {
     <svg
       width={size}
       height={size}
-      viewBox="-12.5 -12.5 25 25"
+      viewBox="-14 -14 28 28" // Mở rộng viewBox để không bị cắt
       fill="none"
       aria-hidden="true"
-      className="shrink-0"
+      className="shrink-0 nxx-star-spin" // Thêm class CSS để quay
+      style={{ animation: "spin 1.8s linear infinite" }}
     >
+      {/* Nền mờ (ghost) */}
       <path
-        d={SPIN_PATH}
+        d={STAR_PATH}
         pathLength="100"
-        className="nxx-spin-ghost"
-        strokeWidth="1.5"
+        stroke="#e5e7eb"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {COMET_LAYERS.map((l) => (
+      
+      {/* Các lớp đuôi sao chổi */}
+      {COMET_LAYERS.map((l, idx) => (
         <path
-          key={l.len}
-          d={SPIN_PATH}
+          key={idx}
+          d={STAR_PATH}
           pathLength="100"
-          className="nxx-spin-comet"
-          style={{ "--L": l.len, opacity: l.opacity }}
-          stroke="#1b1c24"
-          strokeWidth="1.7"
+          stroke={l.color}
+          strokeWidth={l.width}
           strokeLinecap="round"
           strokeLinejoin="round"
+          style={{
+            opacity: l.opacity,
+            // Hiệu ứng đứt nét tạo hình đuôi
+            strokeDasharray: `${l.len} ${100 - l.len}`,
+            // Xoay đuôi về phía sau đầu sao
+            strokeDashoffset: 0, 
+          }}
         />
       ))}
+
+      {/* Thêm CSS nội tuyến cho keyframes xoay */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </svg>
   );
 }
