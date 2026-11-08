@@ -39,6 +39,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
+  const [dbg, setDbg] = useState("");
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -53,18 +54,23 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   };
 
   const startWith = async (msg, catId) => {
-    if (!onStartChat || sending) return;
     setErr("");
+    setDbg(
+      `1) Đã nhận cú bấm. onStartChat: ${onStartChat ? "có" : "KHÔNG CÓ"}. đang gửi: ${sending ? "có" : "không"}`
+    );
+    if (!onStartChat || sending) return;
     setSending(true);
     try {
       const r = await onStartChat({
         text: msg,
         category: catId || FALLBACK_CATEGORY,
       });
-     if (!r?.ok) {
+      setDbg(`2) Xong. Kết quả trả về: ${JSON.stringify(r) ?? "undefined"}`);
+      if (!r?.ok) {
         setErr(r?.error || "Chưa tạo được cuộc trò chuyện. Bạn thử lại nhé.");
-            }
+      }
     } catch (e) {
+      setDbg(`2) Bị lỗi: ${e?.message || String(e)}`);
       setErr(e?.message || "Có lỗi xảy ra, bạn thử lại nhé.");
     } finally {
       setSending(false);
@@ -136,6 +142,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
           <div className="flex items-center justify-between">
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => setSheetOpen(true)}
               className="nxx-chip"
             >
@@ -148,8 +155,10 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
               <ChevronDown size={16} className="text-[#8a8d93]" />
             </button>
 
+            {/* onMouseDown preventDefault: giữ bàn phím, nút không bị trượt mất cú bấm */}
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={send}
               disabled={!canSend}
               aria-label="Gửi"
@@ -169,6 +178,11 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
       {err && (
         <p className="px-5 pt-3 text-[13px] leading-5 text-red-600">{err}</p>
+      )}
+      {dbg && (
+        <p className="break-words px-5 pt-2 text-[12px] leading-5 text-slate-500">
+          [debug] {dbg}
+        </p>
       )}
 
       <div className="px-4 pt-6">
@@ -251,4 +265,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-                }
+}
