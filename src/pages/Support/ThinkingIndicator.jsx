@@ -2,16 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 
-// Vẽ ngôi sao 8 cánh (tâm ở 0,0)
+// Vẽ ngôi sao 4 cánh (nhìn sẽ mềm mại và hiện đại hơn 8 cánh)
 const STAR_PATH = (() => {
-  const points = 8; 
-  const outerR = 9; 
-  const innerR = 4; 
+  const points = 4; // 4 cánh
+  const outerR = 10; 
+  const innerR = 3.5; // Kẽ cánh sâu hơn tạo hình ngôi sao sắc nét
   let d = "";
   
   for (let i = 0; i < points * 2; i++) {
     const r = i % 2 === 0 ? outerR : innerR;
     const angle = (Math.PI * i) / points - Math.PI / 2; 
+    // Dùng đường cong (Q) thay vì đường thẳng (L) để cánh sao mềm mại hơn
     const x = r * Math.cos(angle);
     const y = r * Math.sin(angle);
     d += `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)} `;
@@ -19,7 +20,7 @@ const STAR_PATH = (() => {
   return `${d}Z`;
 })();
 
-export function ThinkingSpinner({ size = 32 }) {
+export function ThinkingSpinner({ size = 40 }) { // Tăng size lên 40
   return (
     <svg
       width={size}
@@ -28,18 +29,18 @@ export function ThinkingSpinner({ size = 32 }) {
       fill="none"
       aria-hidden="true"
       className="shrink-0" 
-      style={{ animation: "spin 2.5s linear infinite" }} // Quay mượt mà
+      style={{ animation: "spin 2.5s linear infinite" }}
     >
       <defs>
-        {/* Tạo hiệu ứng mờ ảo (như mây) */}
+        {/* Làm mờ đuôi (tạo khói/mây) */}
         <filter id="blur-tail" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
         </filter>
 
-        {/* Gradient màu tự mờ dần để làm đuôi sao chổi */}
-        <linearGradient id="comet-fade" x1="100%" y1="100%" x2="0%" y2="0%">
+        {/* Gradient tạo hiệu ứng mờ dần từ đuôi đến đầu */}
+        <linearGradient id="comet-fade" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#13141a" stopOpacity="1" />
-          <stop offset="40%" stopColor="#13141a" stopOpacity="0.6" />
+          <stop offset="40%" stopColor="#13141a" stopOpacity="0.8" />
           <stop offset="80%" stopColor="#13141a" stopOpacity="0.1" />
           <stop offset="100%" stopColor="#13141a" stopOpacity="0" />
         </linearGradient>
@@ -52,35 +53,26 @@ export function ThinkingSpinner({ size = 32 }) {
         `}</style>
       </defs>
 
-      {/* 1. Ngôi sao chính (Sáng rõ) */}
+      {/* Lớp 1: Cái đuôi (to, mờ, dùng gradient) */}
+      <path
+        d={STAR_PATH}
+        stroke="url(#comet-fade)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        // 80 là độ dài đuôi chiếm 80% vòng tròn
+        strokeDasharray="80 100" 
+        filter="url(#blur-tail)" 
+      />
+
+      {/* Lớp 2: Đầu sao sắc nét (Đè lên trên) */}
       <path
         d={STAR_PATH}
         stroke="#13141a"
-        strokeWidth="1.5"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-      
-      {/* 2. Đuôi sao chổi (Dùng nét đứt dài và gradient để mờ dần) */}
-      <path
-        d={STAR_PATH}
-        stroke="url(#comet-fade)"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        // 75 là chiều dài đuôi (trên tổng 100), 25 là khoảng trống
-        strokeDasharray="75 100" 
-        filter="url(#blur-tail)" // Làm mờ ảo như mây
-      />
-
-      {/* 3. Một lớp đuôi mỏng hơn ở trên cùng để tăng độ sắc nét */}
-      <path
-        d={STAR_PATH}
-        stroke="url(#comet-fade)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray="60 100" 
+        strokeDasharray="20 100" // Chỉ vẽ phần đầu sao
       />
     </svg>
   );
@@ -125,4 +117,3 @@ export default function ThinkingIndicator({ text }) {
     </div>
   );
 }
-  
