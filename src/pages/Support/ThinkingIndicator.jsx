@@ -1,42 +1,93 @@
 // src/pages/Support/ThinkingIndicator.jsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-// Vẽ đường xoắn ốc (giữ nguyên)
+// Ngôi sao 4 cánh (cạnh lõm, 4 mũi hướng lên / phải / xuống / trái)
 const SPIN_PATH = (() => {
-  const R = 8;
-  const r = 3.2;
-  const n = 7;
-  const N = 150;
+  const R = 10.5; // bán kính tới đầu mũi
+  const P = 2.6; // 3 = sao nhọn mảnh (astroid), nhỏ hơn thì cánh đầy hơn
+  const N = 160;
+  const pw = (v) => Math.sign(v) * Math.abs(v) ** P;
   let d = "";
   for (let i = 0; i <= N; i++) {
-    const t = (2 * Math.PI * i) / N;
-    const x = R * Math.cos(t) + r * Math.cos(n * t);
-    const y = R * Math.sin(t) + r * Math.sin(n * t);
+    const t = (2 * Math.PI * i) / N - Math.PI / 2; // bắt đầu từ mũi trên
+    const x = R * pw(Math.cos(t));
+    const y = R * pw(Math.sin(t));
     d += `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)} `;
   }
   return `${d}Z`;
 })();
 
-// Cấu hình hiệu ứng
-const DURATION = 1.6; // giây / vòng
-const TAIL = 45; // đuôi dài bao nhiêu % đường (pathLength = 100)
-const SEGMENTS = 30; // số đoạn chia đuôi (càng nhiều càng mượt)
-const SEG_LEN = TAIL / SEGMENTS;
-const COLOR = "#13141a";
+/* ------------------------------------------------------------------ */
+/*  Cấu hình hiệu ứng (đo theo video mẫu)                              */
+/* ------------------------------------------------------------------ */
+const DURATION = 2.2; // giây / vòng: đầu sao chổi chạy hết 1 vòng
+const SEGMENTS = 40; // số đoạn chia đuôi (càng nhiều càng mượt)
+const TAIL_MIN = 40; // đuôi ngắn nhất (% độ dài đường)
+const TAIL_MAX = 68; // đuôi dài nhất (% độ dài đường)
+const STROKE = 1.5;
+const HEAD_RGB = [19, 20, 26]; // #13141a – màu đầu
+const GHOST_RGB = [229, 231, 235]; // #e5e7eb – màu nền mờ, đuôi tan vào đây
+const GHOST = "#e5e7eb";
 
-const TAIL_SEGMENTS = Array.from({ length: SEGMENTS }, (_, i) => {
+// Màu đặc (không dùng opacity) từ đầu -> nền mờ.
+// Dùng màu đặc thì các đoạn chồng nhẹ lên nhau cũng không bị sậm / lem.
+const SEG_COLORS = Array.from({ length: SEGMENTS }, (_, i) => {
   const k = i / (SEGMENTS - 1); // 0 = đầu, 1 = cuối đuôi
-  return {
-    key: i,
-    opacity: Math.pow(1 - k, 1.6), // mờ dần, đầu đậm - cuối trong suốt
-    width: 2 - k * 0.8, // đuôi thon dần
-    // lệch pha để mỗi đoạn bám sau đoạn trước
-    delay: -(DURATION - (i * SEG_LEN * DURATION) / 100),
-  };
+  const c = HEAD_RGB.map((h, j) => Math.round(h + (GHOST_RGB[j] - h) * k));
+  return `rgb(${c[0]} ${c[1]} ${c[2]})`;
 });
 
+// Vẽ đoạn đuôi trước, đoạn đầu sau cùng để đầu luôn nằm trên
+const DRAW_ORDER = Array.from({ length: SEGMENTS }, (_, i) => SEGMENTS - 1 - i);
+
+// Tính dasharray / dashoffset của từng đoạn tại thời điểm `ms`.
+// pathLength = 100 nên mọi giá trị là % của đường xoắn.
+function layout(ms, duration, breathing) {
+  const phase = ((ms / 1000) / duration) % 1;
+  const head = phase * 100;
+  // đuôi dài ra rồi co lại theo từng vòng, giống video
+  const breathe = breathing ? 0.5 - 0.5 * Math.cos(2 * Math.PI * phase) : 0.5;
+  const tail = TAIL_MIN + (TAIL_MAX - TAIL_MIN) * breathe;
+  const seg = tail / SEGMENTS;
+
+  return Array.from({ length: SEGMENTS }, (_, i) => {
+    const start = head - (i + 1) * seg; // đoạn i nằm sau đầu i*seg
+    const offset = -(((start % 100) + 100) % 100);
+    return { dash: `${seg.toFixed(3)} ${(100 - seg).toFixed(3)}`, offset };
+  });
+}
+
 export function ThinkingSpinner({ size = 36 }) {
+  const refs = useRef([]);
+  const initial = useMemo(() => layout(0, DURATION, true), []);
+
+  useEffect(() => {
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const duration = reduce ? DURATION * 2.5 : DURATION;
+
+    let raf = 0;
+    let t0 = null;
+
+    const tick = (now) => {
+      if (t0 === null) t0 = now;
+      const frame = layout(now - t0, duration, !reduce);
+      for (let i = 0; i < SEGMENTS; i++) {
+        const el = refs.current[i];
+        if (!el) continue;
+        el.setAttribute("stroke-dasharray", frame[i].dash);
+        el.setAttribute("stroke-dashoffset", frame[i].offset.toFixed(3));
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   return (
     <svg
       width={size}
@@ -46,58 +97,32 @@ export function ThinkingSpinner({ size = 36 }) {
       aria-hidden="true"
       className="shrink-0"
     >
-      <style>{`
-        @keyframes spin-comet {
-          from { stroke-dashoffset: 0; }
-          to   { stroke-dashoffset: -100; }
-        }
-        .spin-seg {
-          animation: spin-comet ${DURATION}s linear infinite;
-          will-change: stroke-dashoffset;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .spin-seg { animation-duration: ${DURATION * 3}s; }
-        }
-      `}</style>
-
       {/* Lớp nền mờ (ghost) */}
       <path
         d={SPIN_PATH}
-        stroke="#e5e7eb"
-        strokeWidth="1.5"
+        stroke={GHOST}
+        strokeWidth={STROKE}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* Đuôi: nhiều đoạn nhỏ, opacity giảm dần dọc theo đường */}
-      {TAIL_SEGMENTS.slice(1).map((s) => (
+      {/* Sao chổi: nhiều đoạn nhỏ, màu đậm dần về phía đầu */}
+      {DRAW_ORDER.map((i) => (
         <path
-          key={s.key}
-          className="spin-seg"
+          key={i}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
           d={SPIN_PATH}
           pathLength="100"
-          stroke={COLOR}
-          strokeOpacity={s.opacity}
-          strokeWidth={s.width}
+          stroke={SEG_COLORS[i]}
+          strokeWidth={STROKE}
+          strokeLinecap="round"
           strokeLinejoin="round"
-          // +0.25 để các đoạn chồng nhẹ lên nhau, không bị hở
-          strokeDasharray={`${SEG_LEN + 0.25} ${100 - SEG_LEN - 0.25}`}
-          style={{ animationDelay: `${s.delay}s` }}
+          strokeDasharray={initial[i].dash}
+          strokeDashoffset={initial[i].offset.toFixed(3)}
         />
       ))}
-
-      {/* Đầu sao chổi: đậm, bo tròn */}
-      <path
-        className="spin-seg"
-        d={SPIN_PATH}
-        pathLength="100"
-        stroke={COLOR}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeDasharray={`${SEG_LEN} ${100 - SEG_LEN}`}
-        style={{ animationDelay: `${TAIL_SEGMENTS[0].delay}s` }}
-      />
     </svg>
   );
 }
@@ -140,4 +165,5 @@ export default function ThinkingIndicator({ text }) {
       </span>
     </div>
   );
-    }
+      }
+
