@@ -1,3 +1,5 @@
+// src/pages/Support/ChatView.jsx
+
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -27,8 +29,6 @@ const HERO_PHRASES = [
   "Tra đơn, hoàn tiền, đổi thưởng",
 ];
 
-// Chỉ vẽ lại bong bóng khi dữ liệu của chính nó đổi (bỏ qua hàm truyền vào).
-// Nhờ vậy lúc AI "gõ chữ", các tin cũ không bị vẽ lại → hết đơ.
 const MemoBubble = React.memo(
   MessageBubble,
   (a, b) =>
@@ -77,6 +77,14 @@ export default function ChatView({
   const cameraInputRef = useRef(null);
   const initialSent = useRef(false);
   const twRaf = useRef(0);
+
+  if (!conversation?.id) {
+    return (
+      <div className="p-6 text-center text-red-600 font-bold">
+        Lỗi: Không tìm thấy ID cuộc trò chuyện. Vui lòng thử lại!
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (conversation?.id && conversation.id !== conv?.id) {
@@ -129,8 +137,6 @@ export default function ChatView({
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input]);
 
-  // Gõ chữ theo thời gian (≈110 ký tự/giây), chỉ cập nhật mỗi ≥6 ký tự
-  // → ít vẽ lại hơn bản cũ (50 lần/giây) nên hiệu ứng không bị khựng.
   const runTypewriter = (msg) => {
     cancelAnimationFrame(twRaf.current);
     setStreamingMsgId(msg.id);
@@ -141,10 +147,7 @@ export default function ChatView({
     let last = 0;
 
     const tick = (now) => {
-      const n = Math.min(
-        full.length,
-        Math.floor(((now - start) / 1000) * CPS)
-      );
+      const n = Math.min(full.length, Math.floor(((now - start) / 1000) * CPS));
       if (n === full.length || n - last >= 6) {
         last = n;
         setStreamingText(full.slice(0, n));
@@ -162,7 +165,6 @@ export default function ChatView({
     twRaf.current = requestAnimationFrame(tick);
   };
 
-  // silent = true: tải lại âm thầm, không bật vòng xoay, không xóa khung chat
   const loadMessages = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -209,9 +211,7 @@ export default function ChatView({
           setMessages((prev) => {
             if (prev.some((m) => m.id === msg.id)) return prev;
             if (msg.sender_type === "ai" || msg.sender_type === "system") {
-              const withoutStatus = prev.filter(
-                (m) => m.sender_type !== "status"
-              );
+              const withoutStatus = prev.filter((m) => m.sender_type !== "status");
               return [...withoutStatus, msg];
             }
             return [...prev, msg];
@@ -230,9 +230,7 @@ export default function ChatView({
         },
         (payload) => {
           const msg = payload.new;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m))
-          );
+          setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, ...msg } : m)));
         }
       )
       .on(
@@ -244,276 +242,231 @@ export default function ChatView({
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          setMessages((prev) =>
-            prev.filter((m) => m.id !== payload.old.id)
-          );
+          setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
         }
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [conversation?.id]);
+  
+const callAI = async (imageUrl, messageText) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("Chưa đăng nhập");
 
-  const callAI = async (imageUrl, messageText) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.access_token) throw new Error("Chưa đăng nhập");
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-    const bodyPayload = {
-      conversation_id: conversation.id,
-      user_message: imageUrl
-        ? "Phân tích ảnh này giúp mình"
-        : messageText,
-    };
-    if (imageUrl) bodyPayload.image_url = imageUrl;
-
-    const response = await fetch(AI_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify(bodyPayload),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      let errData = {};
-      try {
-        errData = await response.json();
-      } catch (_) {}
-      throw new Error(
-        errData?.error || `AI trả về lỗi ${response.status}`
-      );
-    }
-    return response.json();
+  const bodyPayload = {
+    conversation_id: conversation.id,
+    user_message: imageUrl ? "Phân tích ảnh này giúp mình" : messageText,
   };
+  if (imageUrl) bodyPayload.image_url = imageUrl;
 
-  const sendMessage = async (customText) => {
-    const content = (customText || input).trim();
-    if ((!content && !pendingImage) || sending || !user?.id) return;
+  const response = await fetch(AI_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(bodyPayload),
+    signal: controller.signal,
+  });
 
-    setSending(true);
-    try {
-      let imageUrl = null;
+  clearTimeout(timeoutId);
 
-      if (pendingImage) {
-        const file = pendingImage.file;
-        const fileExt = file.name.split(".").pop() || "jpg";
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("support-images")
-          .upload(fileName, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage
-          .from("support-images")
-          .getPublicUrl(fileName);
-        imageUrl = urlData?.publicUrl;
-        if (!imageUrl) throw new Error("Không lấy được URL ảnh");
-      }
+  if (!response.ok) {
+    let errData = {};
+    try { errData = await response.json(); } catch (_) {}
+    throw new Error(errData?.error || `AI trả về lỗi ${response.status}`);
+  }
+  return response.json();
+};
 
-      const { data: userMsg, error } = await supabase
-        .from("support_messages")
-        .insert({
-          conversation_id: conversation.id,
-          user_id: user.id,
-          message: content || "",
-          sender_type: "user",
-          image_url: imageUrl,
-        })
-        .select()
-        .single();
+const sendMessage = async (customText) => {
+  const content = (customText || input).trim();
+  if ((!content && !pendingImage) || sending || !user?.id) return;
 
-      if (error) throw error;
-      sentIds.current.add(userMsg.id);
-      freshIds.current.add(userMsg.id);
+  setSending(true);
+  try {
+    let imageUrl = null;
 
-      setMessages((prev) => [
-        ...prev.filter((m) => m.sender_type !== "status"),
-        userMsg,
-      ]);
-      setInput("");
-      if (pendingImage) URL.revokeObjectURL(pendingImage.previewUrl);
-      setPendingImage(null);
-      setShowEmoji(false);
-      setShowFileMenu(false);
-      scrollToBottom(true);
-
-      if (conv.status === "ai") {
-        const typingTimer = setTimeout(() => setAiTyping(true), 600);
-        try {
-          const data = await callAI(imageUrl, content);
-          console.log(
-            `[Support AI] Provider: ${data.provider} (${data.model})`
-          );
-
-          // đồng bộ lại âm thầm phòng khi realtime bị lỡ tin
-          setTimeout(() => {
-            loadMessages(true);
-          }, 2000);
-        } catch (err) {
-          console.error("AI error:", err);
-          setMessages((prev) =>
-            prev.filter((m) => m.sender_type !== "status")
-          );
-          const { data: errMsg } = await supabase
-            .from("support_messages")
-            .insert({
-              conversation_id: conversation.id,
-              user_id: user.id,
-              message:
-                "Xin lỗi bạn, mình đang gặp sự cố kỹ thuật. Bạn thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ trực tiếp nha 🌸",
-              sender_type: "ai",
-              suggestions: [],
-            })
-            .select()
-            .single();
-          if (errMsg) {
-            sentIds.current.add(errMsg.id);
-            freshIds.current.add(errMsg.id);
-            setMessages((prev) => [...prev, errMsg]);
-            runTypewriter(errMsg);
-          }
-        } finally {
-          clearTimeout(typingTimer);
-          setAiTyping(false);
-        }
-      }
-    } catch (error) {
-      console.error("Send error:", error);
-      alert("Không thể gửi tin nhắn.");
-    } finally {
-      setSending(false);
+    if (pendingImage) {
+      const file = pendingImage.file;
+      const fileExt = file.name.split(".").pop() || "jpg";
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from("support-images")
+        .upload(fileName, file, { cacheControl: "3600", upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("support-images").getPublicUrl(fileName);
+      imageUrl = urlData?.publicUrl;
+      if (!imageUrl) throw new Error("Không lấy được URL ảnh");
     }
-  };
 
+    const { data: userMsg, error } = await supabase
+      .from("support_messages")
+      .insert({
+        conversation_id: conversation.id,
+        user_id: user.id,
+        message: content || "",
+        sender_type: "user",
+        image_url: imageUrl,
+      })
+      .select()
+      .single();
 
+    if (error) throw error;
+    sentIds.current.add(userMsg.id);
+    freshIds.current.add(userMsg.id);
 
-  const handleFileSelect = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Chỉ hỗ trợ file ảnh");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ảnh không được vượt quá 5MB");
-      return;
-    }
-    const previewUrl = URL.createObjectURL(file);
-    setPendingImage({ file, previewUrl });
+    setMessages((prev) => [...prev.filter((m) => m.sender_type !== "status"), userMsg]);
+    setInput("");
+    if (pendingImage) URL.revokeObjectURL(pendingImage.previewUrl);
+    setPendingImage(null);
+    setShowEmoji(false);
     setShowFileMenu(false);
-  };
+    scrollToBottom(true);
 
-  const hideAllSuggestions = () => {
-    setHiddenSuggestionIds((prev) => {
-      const allIds = messages
-        .filter((m) => m.suggestions?.length > 0)
-        .map((m) => m.id);
-      return [...new Set([...prev, ...allIds])];
-    });
-  };
-
-  const openFeedback = (message, rating) => {
-    if (feedback[message.id]?.status === "sent") return;
-    setFeedback((prev) => ({
-      ...prev,
-      [message.id]: { rating, status: "draft" },
-    }));
-    setFeedbackTarget({ message, rating });
-  };
-
-  const closeFeedback = () => {
-    if (feedbackTarget) {
-      const id = feedbackTarget.message.id;
-      setFeedback((prev) => {
-        if (prev[id]?.status !== "draft") return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }
-    setFeedbackTarget(null);
-  };
-
-  const submitFeedback = async ({ reasons, comment }) => {
-    if (!feedbackTarget) return;
-    const { message, rating } = feedbackTarget;
-    setFeedback((prev) => ({
-      ...prev,
-      [message.id]: { rating, status: "sent" },
-    }));
-    setFeedbackTarget(null);
-    try {
-      const { error } = await supabase.from("support_message_feedback").insert({
-        message_id: String(message.id),
-        conversation_id: String(conversation.id),
-        user_id: user?.id,
-        rating,
-        reasons,
-        comment: comment || null,
-      });
-      if (error) {
-        console.warn(
-          "[Feedback] Chưa lưu được vào bảng support_message_feedback:",
-          error.message
-        );
+    if (conv.status === "ai") {
+      const typingTimer = setTimeout(() => setAiTyping(true), 600);
+      try {
+        const data = await callAI(imageUrl, content);
+        console.log(`[Support AI] Provider: ${data.provider} (${data.model})`);
+        setTimeout(() => { loadMessages(true); }, 2000);
+      } catch (err) {
+        console.error("AI error:", err);
+        setMessages((prev) => prev.filter((m) => m.sender_type !== "status"));
+        const { data: errMsg } = await supabase
+          .from("support_messages")
+          .insert({
+            conversation_id: conversation.id,
+            user_id: user.id,
+            message: "Xin lỗi bạn, mình đang gặp sự cố kỹ thuật. Bạn thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ trực tiếp nha 🌸",
+            sender_type: "ai",
+            suggestions: [],
+          })
+          .select()
+          .single();
+        if (errMsg) {
+          sentIds.current.add(errMsg.id);
+          freshIds.current.add(errMsg.id);
+          setMessages((prev) => [...prev, errMsg]);
+          runTypewriter(errMsg);
+        }
+      } finally {
+        clearTimeout(typingTimer);
+        setAiTyping(false);
       }
-    } catch (e) {
-      console.warn("[Feedback] Lỗi lưu phản hồi:", e);
     }
-  };
+  } catch (error) {
+    console.error("Send error:", error);
+    alert("Không thể gửi tin nhắn.");
+  } finally {
+    setSending(false);
+  }
+};
 
-  const handleScroll = (e) => {
-    if (!HIDE_HEADER_ON_SCROLL) return;
-    const el = e.currentTarget;
-    const y = el.scrollTop;
-    const dy = y - lastScrollY.current;
-    if (Math.abs(dy) < 10) return;
-    const overscroll = y < 0 || y > el.scrollHeight - el.clientHeight;
-    if (overscroll) return;
-    if (y < 48) setHeaderHidden(false);
-    else setHeaderHidden(dy > 0);
-    lastScrollY.current = y;
-  };
+const handleFileSelect = (file) => {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("Chỉ hỗ trợ file ảnh");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Ảnh không được vượt quá 5MB");
+    return;
+  }
+  const previewUrl = URL.createObjectURL(file);
+  setPendingImage({ file, previewUrl });
+  setShowFileMenu(false);
+};
 
-  const hasInput = Boolean(input.trim() || pendingImage);
-  const busy = sending || aiTyping || Boolean(streamingMsgId);
-  const hasStatusMsg = messages.some((m) => m.sender_type === "status");
-  const hasUserMsg = messages.some((m) => m.sender_type === "user");
-  const isHero =
-    !loading && messages.length > 0 && !hasUserMsg && !hasStatusMsg;
+const hideAllSuggestions = () => {
+  setHiddenSuggestionIds((prev) => {
+    const allIds = messages.filter((m) => m.suggestions?.length > 0).map((m) => m.id);
+    return [...new Set([...prev, ...allIds])];
+  });
+};
 
-  const lastMsg = messages[messages.length - 1];
-  const lastAiSuggestions =
-    lastMsg?.sender_type === "ai" &&
-    lastMsg.suggestions?.length > 0 &&
-    !hiddenSuggestionIds.includes(lastMsg.id)
-      ? lastMsg.suggestions
-      : [];
+const openFeedback = (message, rating) => {
+  if (feedback[message.id]?.status === "sent") return;
+  setFeedback((prev) => ({ ...prev, [message.id]: { rating, status: "draft" } }));
+  setFeedbackTarget({ message, rating });
+};
 
-  const chipItems = isHero
-    ? QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }))
-    : lastAiSuggestions.length > 0
-    ? lastAiSuggestions.map((s) => ({ label: s, prompt: s, suggestion: true }))
-    : QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }));
-  const chipKey = chipItems.map((c) => c.label).join("|");
+const closeFeedback = () => {
+  if (feedbackTarget) {
+    const id = feedbackTarget.message.id;
+    setFeedback((prev) => {
+      if (prev[id]?.status !== "draft") return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+  setFeedbackTarget(null);
+};
 
-  const heroGreeting = isHero ? messages.find((m) => m.sender_type === "ai") : null;
-  const heroSuggestions = isHero ? heroGreeting?.suggestions || [] : [];
+const submitFeedback = async ({ reasons, comment }) => {
+  if (!feedbackTarget) return;
+  const { message, rating } = feedbackTarget;
+  setFeedback((prev) => ({ ...prev, [message.id]: { rating, status: "sent" } }));
+  setFeedbackTarget(null);
+  try {
+    await supabase.from("support_message_feedback").insert({
+      message_id: String(message.id),
+      conversation_id: String(conversation.id),
+      user_id: user?.id,
+      rating,
+      reasons,
+      comment: comment || null,
+    });
+  } catch (e) {
+    console.warn("[Feedback] Lỗi lưu phản hồi:", e);
+  }
+};
 
-  const pickChip = (item) => {
-    if (item.suggestion) hideAllSuggestions();
-    sendMessage(item.prompt);
-  };
+const handleScroll = (e) => {
+  if (!HIDE_HEADER_ON_SCROLL) return;
+  const el = e.currentTarget;
+  const y = el.scrollTop;
+  const dy = y - lastScrollY.current;
+  if (Math.abs(dy) < 10) return;
+  const overscroll = y < 0 || y > el.scrollHeight - el.clientHeight;
+  if (overscroll) return;
+  if (y < 48) setHeaderHidden(false);
+  else setHeaderHidden(dy > 0);
+  lastScrollY.current = y;
+};
+
+const hasInput = Boolean(input.trim() || pendingImage);
+const busy = sending || aiTyping || Boolean(streamingMsgId);
+const hasStatusMsg = messages.some((m) => m.sender_type === "status");
+const hasUserMsg = messages.some((m) => m.sender_type === "user");
+const isHero = !loading && messages.length > 0 && !hasUserMsg && !hasStatusMsg;
+
+const lastMsg = messages[messages.length - 1];
+const lastAiSuggestions =
+  lastMsg?.sender_type === "ai" && lastMsg.suggestions?.length > 0 && !hiddenSuggestionIds.includes(lastMsg.id)
+    ? lastMsg.suggestions
+    : [];
+
+const chipItems = isHero
+  ? QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }))
+  : lastAiSuggestions.length > 0
+  ? lastAiSuggestions.map((s) => ({ label: s, prompt: s, suggestion: true }))
+  : QUICK_ACTIONS.map((q) => ({ label: q.label, prompt: q.prompt, emoji: q.icon }));
+
+const chipKey = chipItems.map((c) => c.label).join("|");
+
+const heroGreeting = isHero ? messages.find((m) => m.sender_type === "ai") : null;
+const heroSuggestions = isHero ? heroGreeting?.suggestions || [] : [];
+
+const pickChip = (item) => {
+  if (item.suggestion) hideAllSuggestions();
+  sendMessage(item.prompt);
+};
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-white">
@@ -596,7 +549,7 @@ export default function ChatView({
           <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col px-4 pb-6 pt-[76px]">
             <BannerNotice />
 
-               {loading ? (
+            {loading ? (
               <div className="flex flex-1 items-center justify-center">
                 <ThinkingSpinner size={32} />
               </div>
@@ -648,9 +601,7 @@ export default function ChatView({
                     <MemoBubble
                       key={msg.id}
                       message={msg}
-                      streamingText={
-                        streamingMsgId === msg.id ? streamingText : null
-                      }
+                      streamingText={streamingMsgId === msg.id ? streamingText : null}
                       isLastAIMessage={isLastAIMessage}
                       sending={sending}
                       onShowLogin={() => navigate("/login")}
@@ -753,9 +704,7 @@ export default function ChatView({
               }}
               enterKeyHint="send"
               aria-label="Nhập tin nhắn"
-              placeholder={
-                isHero ? "Bạn cần hỗ trợ gì nè?" : "Hỏi tiếp tại đây nhé"
-              }
+              placeholder={isHero ? "Bạn cần hỗ trợ gì nè?" : "Hỏi tiếp tại đây nhé"}
               className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-5 text-[#13141a] outline-none placeholder:text-[#a2a5b8]"
             />
 
@@ -774,9 +723,7 @@ export default function ChatView({
               disabled={busy || !hasInput}
               aria-label={busy ? "Đang trả lời" : "Gửi"}
               className={`nxx-iconbtn h-10 w-10 ${
-                busy || hasInput
-                  ? "bg-[#13141a] text-white"
-                  : "bg-[#d9dbe6] text-white"
+                busy || hasInput ? "bg-[#13141a] text-white" : "bg-[#d9dbe6] text-white"
               } ${busy ? "cursor-default" : ""}`}
             >
               {busy ? (
@@ -915,4 +862,4 @@ export default function ChatView({
       />
     </div>
   );
-              }
+                }
