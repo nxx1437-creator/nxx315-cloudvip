@@ -28,9 +28,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const [category, setCategory] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [err, setErr] = useState("");
-  const [statusMsg, setStatusMsg] = useState(""); 
-  const [countdown, setCountdown] = useState(null);
   const taRef = useRef(null);
 
   const cat = CATEGORIES.find((c) => c.id === category) || null;
@@ -46,26 +43,9 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
 
   const handleSelfStartChat = async ({ text: msg, category: catId }) => {
     try {
-      console.log("⏳ [Chat] 1. Bắt đầu kiểm tra đăng nhập...");
-      setStatusMsg("Đang kiểm tra đăng nhập (tối đa 5s)...");
-      
-      // Bọc Timeout 5s cho bước lấy user để chống treo
-      const authTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Quá 5s không lấy được thông tin đăng nhập. Mạng có thể đang chặn Supabase.")), 5000)
-      );
-      
-      const { data: { user }, error: authError } = await Promise.race([
-        supabase.auth.getUser(),
-        authTimeout
-      ]);
-      
-      if (authError || !user?.id) {
-        throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
-      }
-      console.log("✅ [Chat] Đã có user:", user.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error("Bạn chưa đăng nhập hoặc phiên hết hạn.");
 
-      console.log("⏳ [Chat] 2. Bắt đầu tạo conversation...");
-      setStatusMsg("Đang tạo cuộc trò chuyện...");
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
         .insert({
@@ -78,10 +58,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         .single();
 
       if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
-      console.log("✅ [Chat] Đã tạo conv:", conv.id);
 
-      console.log("⏳ [Chat] 3. Bắt đầu tạo tin nhắn chào...");
-      setStatusMsg("Đang tạo tin nhắn chào...");
       const { error: msgError } = await supabase
         .from("support_messages")
         .insert({
@@ -93,59 +70,36 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         });
 
       if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
-      console.log("✅ [Chat] Đã tạo tin nhắn chào");
 
-      setStatusMsg("Hoàn tất! Đang chuyển trang...");
       window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
         detail: { conversation: conv, category: catId, firstText: msg } 
       }));
       
       return { ok: true };
     } catch (e) {
-      console.error("❌ [Chat] Lỗi:", e);
       return { error: e.message };
     }
   };
 
-  const startWith = async (msg, catId) => {
-    if (sending) return;
-    setSending(true);
-    setErr("");
-    setStatusMsg("Bắt đầu gửi...");
-    
-    let timeLeft = 10; // Tăng lên 10s cho toàn bộ quá trình
-    setCountdown(timeLeft);
-    const timer = setInterval(() => {
-      timeLeft -= 1;
-      setCountdown(timeLeft);
-    }, 1000);
-
-    const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
-
-    try {
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Quá thời gian 10s. Không thể hoàn tất quá trình tạo chat.")), 10000)
-      );
-
-      const r = await Promise.race([
-        fnToCall({ text: msg, category: catId || FALLBACK_CATEGORY }),
-        timeout
-      ]);
-      
-      if (r?.error) setErr(r.error);
-    } catch (e) {
-      setErr(e?.message || "Lỗi hệ thống.");
-    } finally {
-      clearInterval(timer);
-      setSending(false);
-      setStatusMsg("");
-      setCountdown(null);
-    }
-  };
-
-  const send = () => {
+  const send = async () => {
     if (!canSend) return;
-    startWith(text.trim(), category);
+    setSending(true);
+    
+    try {
+      const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
+      const r = await fnToCall({
+        text: text.trim(),
+        category: category || FALLBACK_CATEGORY,
+      });
+      
+      if (r && r.error) {
+        alert("LỖI TẠO CHAT:\n" + r.error);
+      }
+    } catch (e) {
+      alert("LỖI HỆ THỐNG:\n" + e.message);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -214,14 +168,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
         </div>
       </div>
 
-      {countdown !== null && (
-        <div className="px-5 pt-3 text-[13px] leading-5 text-orange-600 font-bold">
-          Đang kết nối... ({countdown}s)
-        </div>
-      )}
-      {statusMsg && <p className="px-5 pt-1 text-[13px] leading-5 text-blue-600 font-medium">{statusMsg}</p>}
-      {err && <p className="px-5 pt-1 text-[13px] leading-5 text-red-600 font-medium">{err}</p>}
-
       <div className="px-4 pt-6">
         <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-between rounded-[18px] border border-[#0068FF]/25 bg-[#0068FF]/[0.04] px-4 py-4 transition hover:bg-[#0068FF]/[0.08] active:scale-[0.98]">
           <div className="flex items-center gap-3">
@@ -236,7 +182,7 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
       </div>
 
       <div className="pt-10">
-        <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => startWith(title, catId)} />
+        <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => send()} />
       </div>
 
       {sheetOpen && (
@@ -263,4 +209,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-}
+        }
