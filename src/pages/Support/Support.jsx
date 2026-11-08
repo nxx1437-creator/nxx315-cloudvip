@@ -18,7 +18,6 @@ export default function Support() {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
 
-  // Lắng nghe tín hiệu chuyển trang từ HomeView (nếu nó tự xử lý)
   useEffect(() => {
     const handleStartChatEvent = (e) => {
       const { conversation, category, firstText } = e.detail;
@@ -37,7 +36,11 @@ export default function Support() {
   };
 
   const startAIChat = async (category, firstText = null) => {
-    if (!user?.id) return { error: "Chưa đăng nhập." };
+    console.log("⏳ [Support] 1. Đang chuẩn bị tạo chat...");
+    if (!user?.id) {
+      alert("LỖI: Bạn chưa đăng nhập hoặc phiên hết hạn.");
+      return { error: "Chưa đăng nhập." };
+    }
     try {
       const { data: conv, error: convError } = await supabase
         .from("support_conversations")
@@ -50,7 +53,9 @@ export default function Support() {
         .select()
         .single();
 
-      if (convError) throw convError;
+      if (convError) throw new Error("Lỗi tạo conv: " + convError.message);
+
+      console.log("✅ [Support] 2. Đã tạo conv:", conv.id);
 
       const { error: msgError } = await supabase
         .from("support_messages")
@@ -62,14 +67,18 @@ export default function Support() {
           suggestions: getSuggestions(category),
         });
 
-      if (msgError) throw msgError;
+      if (msgError) throw new Error("Lỗi tạo msg: " + msgError.message);
 
+      console.log("✅ [Support] 3. Đã tạo tin nhắn chào. Đang chuyển trang...");
+      
       setSelectedCategory(category);
       setInitialMessage(firstText);
       setConversation(conv);
       setView("chat");
       return { ok: true };
     } catch (error) {
+      console.error(error);
+      alert("LỖI TẠO CHAT: " + (error?.message || "Không rõ nguyên nhân"));
       return { error: error?.message || "Lỗi tạo chat." };
     }
   };
