@@ -1,5 +1,5 @@
 // src/pages/Support/ChatView.jsx
- 
+
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,7 +21,7 @@ import GlowFrame from "./GlowFrame.jsx";
 import ThinkingIndicator, { ThinkingSpinner } from "./ThinkingIndicator.jsx";
 import "./chat-effects.css";
 
-// LƯỚI BẮT LỖI: Nếu có component con bị lỗi, nó sẽ hiện khung đỏ thay vì sập app
+// LƯỚI BẮT LỖI
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -145,13 +145,12 @@ function ChatViewContent({
     }
   }, [streamingText, streamingMsgId]);
 
-  // Tự động gửi tin nhắn đầu tiên nếu có
-useEffect(() => {
-  if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
-    initialSent.current = true;
-    sendMessage(initialMessage);
-  }
-}, [initialMessage, loading, messages.length]);
+  useEffect(() => {
+    if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
+      initialSent.current = true;
+      sendMessage(initialMessage);
+    }
+  }, [initialMessage, loading, messages.length]);
 
   useEffect(() => {
     const el = inputRef.current;
@@ -247,7 +246,7 @@ useEffect(() => {
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [conversation?.id]);
-  
+ 
 const callAI = async (imageUrl, messageText) => {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error("Chưa đăng nhập");
@@ -464,8 +463,8 @@ if (!conversation?.id) {
       Lỗi: Không tìm thấy ID cuộc trò chuyện. Vui lòng thử lại!
     </div>
   );
-            }
-  
+     }
+   
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-white">
       <div className="relative min-h-0 flex-1">
@@ -551,14 +550,14 @@ if (!conversation?.id) {
           )}
 
           <GlowFrame active={busy}>
-          <div className={`nxx-composer ${busy ? "is-busy" : ""}`}>
-            <button type="button" onClick={() => setShowFileMenu(true)} aria-label="Đính kèm ảnh" className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#13141a]"><Plus size={20} strokeWidth={2.2} /></button>
-            <textarea ref={inputRef} rows={1} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); sendMessage(); } }} enterKeyHint="send" aria-label="Nhập tin nhắn" placeholder={isHero ? "Bạn cần hỗ trợ gì nè?" : "Hỏi tiếp tại đây nhé"} className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-5 text-[#13141a] outline-none placeholder:text-[#a2a5b8]" />
-            <button type="button" onClick={() => setShowEmoji(true)} aria-label="Chèn emoji" className="nxx-iconbtn h-10 w-10 text-[#7b7e90]"><Smile size={21} strokeWidth={2} /></button>
-            <button type="button" onClick={() => sendMessage()} disabled={busy || !hasInput} aria-label={busy ? "Đang trả lời" : "Gửi"} className={`nxx-iconbtn h-10 w-10 ${busy || hasInput ? "bg-[#13141a] text-white" : "bg-[#d9dbe6] text-white"} ${busy ? "cursor-default" : ""}`}>
-              {busy ? <span className="h-3 w-3 rounded-[3px] bg-white" /> : <ArrowUp size={20} strokeWidth={2.4} />}
-            </button>
-          </div>
+            <div className={`nxx-composer ${busy ? "is-busy" : ""}`}>
+              <button type="button" onClick={() => setShowFileMenu(true)} aria-label="Đính kèm ảnh" className="nxx-iconbtn h-10 w-10 border border-[#dde0ea] bg-white text-[#13141a]"><Plus size={20} strokeWidth={2.2} /></button>
+              <textarea ref={inputRef} rows={1} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); sendMessage(); } }} enterKeyHint="send" aria-label="Nhập tin nhắn" placeholder={isHero ? "Bạn cần hỗ trợ gì nè?" : "Hỏi tiếp tại đây nhé"} className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none bg-transparent py-2.5 text-[15.5px] leading-5 text-[#13141a] outline-none placeholder:text-[#a2a5b8]" />
+              <button type="button" onClick={() => setShowEmoji(true)} aria-label="Chèn emoji" className="nxx-iconbtn h-10 w-10 text-[#7b7e90]"><Smile size={21} strokeWidth={2} /></button>
+              <button type="button" onClick={() => sendMessage()} disabled={busy || !hasInput} aria-label={busy ? "Đang trả lời" : "Gửi"} className={`nxx-iconbtn h-10 w-10 ${busy || hasInput ? "bg-[#13141a] text-white" : "bg-[#d9dbe6] text-white"} ${busy ? "cursor-default" : ""}`}>
+                {busy ? <span className="h-3 w-3 rounded-[3px] bg-white" /> : <ArrowUp size={20} strokeWidth={2.4} />}
+              </button>
+            </div>
           </GlowFrame>
 
           <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); e.target.value = ""; }} />
@@ -616,4 +615,4 @@ export default function ChatView(props) {
       <ChatViewContent {...props} />
     </ErrorBoundary>
   );
-                }
+}      
