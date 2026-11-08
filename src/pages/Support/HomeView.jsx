@@ -5,6 +5,8 @@ import {
   ArrowLeft, ArrowUp, Check, ChevronDown, ChevronRight, Headphones,
   Loader2, Sparkles, User, CreditCard, Package, Bug, MoreHorizontal,
 } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient.js";
+import { getGreeting, getSuggestions } from "./helpers.js";
 import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
 import GradientHeadline from "./GradientHeadline.jsx";
@@ -41,15 +43,6 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
   const PillIcon = (cat && ICON_COMPONENTS[cat.icon]) || Sparkles;
   const canSend = text.trim().length > 0 && !sending;
 
-  // --- TẠM THỜI: Hàm an toàn để test nếu cha không truyền ---
-  const safeOnStartChat = typeof onStartChat === "function" 
-    ? onStartChat 
-    : (payload) => {
-        console.warn("⚠️ [DEBUG] Đang dùng hàm fallback! Payload nhận được:", payload);
-        alert("Đã bấm gửi thành công!\n\nNhưng trang cha (Support.jsx) chưa truyền hàm onStartChat xuống. Hãy kiểm tra lại file Support.jsx hoặc F5 lại trang.");
-        return { ok: true };
-      };
-
   const handleChange = (e) => {
     setText(e.target.value);
     const el = e.target;
@@ -57,16 +50,64 @@ export default function HomeView({ onOpenHelp, onStartChat }) {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
 
+  // Hàm tự xử lý API (Dùng khi trang cha không truyền onStartChat xuống)
+  const handleSelfStartChat = async ({ text: msg, category: catId }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return { error: "Vui lòng đăng nhập để chat." };
+
+      const { data: conv, error: convError } = await supabase
+        .from("support_conversations")
+        .insert({
+          user_id: user.id,
+          title: catId ? `Hỗ trợ ${CATEGORIES.find((c) => c.id === catId)?.label}` : "Cuộc trò chuyện mới",
+          category: catId,
+          status: "ai",
+        })
+        .select()
+        .single();
+
+      if (convError) throw convError;
+
+      const greeting = getGreeting(catId);
+      const suggestions = getSuggestions(catId);
+
+      const { error: msgError } = await supabase
+        .from("support_messages")
+        .insert({
+          conversation_id: conv.id,
+          user_id: user.id,
+          message: greeting,
+          sender_type: "ai",
+          suggestions: suggestions,
+        });
+
+      if (msgError) throw msgError;
+
+      // Gửi sự kiện để trang cha tự chuyển sang màn hình chat
+      window.dispatchEvent(new CustomEvent("nxx-start-chat", { 
+        detail: { conversation: conv, category: catId, firstText: msg } 
+      }));
+
+      return { ok: true };
+    } catch (e) {
+      return { error: e.message || "Có lỗi xảy ra khi tạo cuộc trò chuyện." };
+    }
+  };
+
   const startWith = async (msg, catId) => {
     if (sending) return;
     setErr("");
     setSending(true);
     try {
-      // Dùng hàm an toàn thay vì gọi trực tiếp onStartChat
-      const r = await safeOnStartChat({
+      // Nếu cha có truyền hàm thì xài, không thì tự gọi API
+      const fnToCall = typeof onStartChat === "function" ? onStartChat : handleSelfStartChat;
+      
+      const r = await fnToCall({
         text: msg,
         category: catId || FALLBACK_CATEGORY,
       });
+      
       if (r?.error) setErr(r.error);
     } catch (e) {
       setErr(e?.message || "Có lỗi xảy ra, bạn thử lại nhé.");
@@ -221,4 +262,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#13141a]" />}
     </button>
   );
-            }
+}
