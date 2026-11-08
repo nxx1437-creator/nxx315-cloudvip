@@ -10,6 +10,7 @@ import BannerNotice from "./BannerNotice.jsx";
 import GradientHeadline from "./GradientHeadline.jsx";
 import HomeGuides from "./HomeGuides.jsx";
 import "./chat-effects.css";
+import "./home-input.css";
 
 const ICON_COMPONENTS = {
   User, CreditCard, Package, Bug, MoreHorizontal,
@@ -18,7 +19,7 @@ const ICON_COMPONENTS = {
 // để ngoài component để GradientHeadline không bị reset khi render lại
 const HEADLINES = [
   "Chúng tôi sẵn sàng hỗ trợ bạn!",
-  "Bạn gặp vấn đề gì?",
+  "Bạn đang gặp vấn đề gì?",
   "Hỏi NXX bất cứ điều gì.",
 ];
 
