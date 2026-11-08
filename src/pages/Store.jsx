@@ -1,160 +1,129 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-
-import TopHeader from "../components/TopHeader.jsx";
-import BottomNav from "../components/BottomNav.jsx";
-import {
-  SectionTitle,
-  FeaturedRow,
-  CoverGrid,
-} from "../components/store/StoreCards.jsx";
-import { StoreHistoryPreview } from "../components/store/StoreExtras.jsx";
-import CardBanner from "../components/store/CardBanner.jsx";
-import ForYouPackages from "../components/store/ForYouPackages.jsx";
-import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx"; 
-
-import useProfile from "../hooks/useProfile.js";
-import { GAMES, trackGameView, getImageUrl } from "../lib/storeData.js";
-import { useI18n } from "../i18n/index.js";
-
-export default function Store() {
-  const { t, lang } = useI18n();
-  const en = lang === "en";
-  const navigate = useNavigate();
-  const { profile } = useProfile();
-  const [activeTab, setActiveTab] = useState("all");
-  
-  const [showScanAI, setShowScanAI] = useState(false);
-
-  // Chỉ hiển thị Modal 1 lần duy nhất
-  useEffect(() => {
-    const hasSeenScanAI = localStorage.getItem("hasSeenScanAI");
-    if (!hasSeenScanAI) {
-      const timer = setTimeout(() => setShowScanAI(true), 1000);
-      return () => clearTimeout(timer);
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Đang mở nhiệm vụ...</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      box-sizing: border-box;
+      background: #effbf7;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #334155;
+      text-align: center;
     }
-  }, []);
+    .spin {
+      width: 52px;
+      height: 52px;
+      border: 5px solid #bbf7d0;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: r 0.8s linear infinite;
+    }
+    @keyframes r { to { transform: rotate(360deg); } }
+    h1 { margin: 0; font-size: 20px; font-weight: 800; }
+    .bar {
+      width: 100%;
+      max-width: 260px;
+      height: 8px;
+      border-radius: 999px;
+      background: #d1fae5;
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #10b981, #2dd4bf);
+      transition: width 0.9s ease-out;
+    }
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: left;
+      font-size: 15px;
+      color: #94a3b8;
+    }
+    .steps li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.3s;
+    }
+    .steps li .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      box-sizing: border-box;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      line-height: 1;
+      color: #fff;
+      transition: all 0.3s;
+    }
+    .steps li.active { color: #0f766e; font-weight: 700; }
+    .steps li.active .dot { border-color: #10b981; border-top-color: transparent; animation: r 0.8s linear infinite; }
+    .steps li.done { color: #334155; }
+    .steps li.done .dot { background: #10b981; border-color: #10b981; animation: none; }
+    .steps li.done .dot::after { content: "✓"; }
+    .slow { margin: 0; min-height: 20px; font-size: 14px; color: #64748b; max-width: 280px; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0f172a; color: #e2e8f0; }
+      .bar { background: #134e4a; }
+      .steps li.active { color: #5eead4; }
+      .steps li.done { color: #e2e8f0; }
+      .slow { color: #94a3b8; }
+    }
+  </style>
+</head>
+<body>
+  <div class="spin"></div>
+  <h1>Đang chuẩn bị nhiệm vụ...</h1>
+  <div class="bar"><i id="bar"></i></div>
+  <ul class="steps" id="steps">
+    <li><span class="dot"></span>Kiểm tra tài khoản</li>
+    <li><span class="dot"></span>Tạo link nhiệm vụ</li>
+    <li><span class="dot"></span>Mở nhiệm vụ cho bạn</li>
+  </ul>
+  <p class="slow" id="slow"></p>
 
-  const handleCloseScanAI = () => {
-    setShowScanAI(false);
-    // Lưu trạng thái đã xem vào trình duyệt
-    localStorage.setItem("hasSeenScanAI", "true"); 
-  };
+  <script>
+    (function () {
+      var items = document.querySelectorAll("#steps li");
+      var bar = document.getElementById("bar");
+      var slow = document.getElementById("slow");
 
-  const tabs = useMemo(
-    () => [
-      { id: "all", key: "st.tabAll", count: GAMES.length },
-      { id: "hot", key: "st.tabHot", count: GAMES.filter((g) => g.hot).length },
-      {
-        id: "mobile",
-        key: "st.tabMobile",
-        count: GAMES.filter((g) => g.category === "mobile").length,
-      },
-      {
-        id: "pc",
-        key: "st.tabPc",
-        count: GAMES.filter((g) => g.category === "pc").length,
-      },
-    ],
-    []
-  );
-
-  const filteredGames = useMemo(
-    () =>
-      GAMES.filter((game) =>
-        activeTab === "all"
-          ? true
-          : activeTab === "hot"
-          ? game.hot
-          : game.category === activeTab
-      ),
-    [activeTab]
-  );
-
-  const handleGameClick = (game) => {
-    trackGameView(game.id);
-    navigate(game.path);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
-      <TopHeader />
-
-      <main className="mx-auto max-w-5xl space-y-7 px-4 py-4">
-        <FeaturedRow
-          navigate={navigate}
-          onTitleClick={() =>
-            document
-              .getElementById("store-list")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
-        />
-
-        <ForYouPackages
-          coins={profile?.coins}
-          games={GAMES}
-          navigate={navigate}
-        />
-
-        <section id="store-list">
-          <SectionTitle
-            accent={en ? "Game" : "Danh sách"}
-            rest={en ? "categories" : "game"}
-            right={
-              <span className="pb-0.5 font-mono text-[11px] text-slate-400">
-                {t("st.count", { n: filteredGames.length })}
-              </span>
-            }
-          />
-
-          <div className="mb-4 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {tabs.map((tab) => {
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-mono text-[11px] font-extrabold uppercase tracking-wider transition ${
-                    active
-                      ? "bg-emerald-600 text-white"
-                      : "bg-white text-slate-500 shadow-sm"
-                  }`}
-                >
-                  {t(tab.key)}
-                  <span className={active ? "text-emerald-100" : "text-slate-400"}>
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {filteredGames.length > 0 ? (
-            <CoverGrid games={filteredGames} onSelect={handleGameClick} />
-          ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center">
-              <Search size={30} className="mx-auto mb-2 text-slate-300" />
-              <p className="font-bold text-slate-700">{t("st.noGame")}</p>
-            </div>
-          )}
-        </section>
-
-        <CardBanner navigate={navigate} />
-
-        <StoreHistoryPreview />
-      </main>
-
-      <BottomNav />
-
-      {/* Component Modal Giới thiệu */}
-      <ScanAIIntroModal
-        isOpen={showScanAI}
-        onClose={handleCloseScanAI}
-        description="Nxx315 Studio chính thức ra mắt giao diện Store mới. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực." 
-        imageSrc={getImageUrl("store-preview.png")} 
-        buttonText="Đã hiểu"
-      />
-    </div>
-  );
+      function setStep(n) {
+        for (var i = 0; i < items.length; i++) {
+          items[i].className = i < n ? "done" : i === n ? "active" : "";
+        }
       }
+
+      // Thanh tiến độ chạy dần nhưng không bao giờ tới 100% khi chưa có link
+      setStep(0);
+      bar.style.width = "20%";
+      setTimeout(function () { setStep(1); bar.style.width = "55%"; }, 900);
+      setTimeout(function () { setStep(2); bar.style.width = "85%"; }, 2600);
+      setTimeout(function () { bar.style.width = "92%"; }, 5000);
+      setTimeout(function () {
+        slow.textContent = "Nhà cung cấp phản hồi hơi chậm, bạn đợi thêm chút nhé...";
+      }, 8000);
+    })();
+  </script>
+</body>
+</html>
