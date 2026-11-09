@@ -213,8 +213,27 @@ export default function MessageBubble({
 
   const fbLocked = feedback?.status === "sent";
 
+  // CSS nội tuyến cho hiệu ứng con trỏ mượt mà
+  const cursorCss = `
+    @keyframes nxx-cursor-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .nxx-streaming-cursor {
+      display: inline-block;
+      width: 6px;
+      height: 16px;
+      background-color: #13141a;
+      border-radius: 2px;
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      animation: nxx-cursor-blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  `;
+
   return (
     <div className={`flex justify-start ${animateIn ? "nxx-rise" : ""}`}>
+      <style>{cursorCss}</style>
       <div className="w-full max-w-[94%]">
         {hasMedia && (
           <div className="mb-3 overflow-hidden rounded-[22px] border border-[#dde0ea] bg-[#f5f6fb]">
@@ -248,22 +267,11 @@ export default function MessageBubble({
           </div>
         )}
 
-               
-      {displayText && (
-          <div
-            className="px-0.5"
-            style={
-              isStreaming
-                ? {
-                    WebkitMaskImage:
-                      "linear-gradient(to bottom, #000 calc(100% - 34px), rgba(0,0,0,0.25) 100%)",
-                    maskImage:
-                      "linear-gradient(to bottom, #000 calc(100% - 34px), rgba(0,0,0,0.25) 100%)",
-                  }
-                : undefined
-            }
-          >
+        {displayText && (
+          <div className="px-0.5 relative">
             <MarkdownText text={displayText} />
+            {/* Con trỏ mượt mà thay cho cục gạch nhấp nháy */}
+            {isStreaming && <span className="nxx-streaming-cursor" />}
           </div>
         )}
 
@@ -355,4 +363,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-          }
+    }
