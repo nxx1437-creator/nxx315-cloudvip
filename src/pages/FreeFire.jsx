@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabaseClient.js";
+import { FREEFIRE_LOGO } from "../lib/freefireData.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { PageShell } from "../components/pay/DimensionKit.jsx";
