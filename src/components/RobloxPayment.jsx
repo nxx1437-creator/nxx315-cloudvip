@@ -9,6 +9,7 @@ import {
   PillButton,
   SectionHeader,
 } from "./pay/DimensionKit.jsx";
+import { GAME_INFO } from "../lib/robloxData.js";
 
 // Bước 3: Thanh toán (chỉ Coin)
 export default function PaymentSection({ order, onBack, onPaid, onEarn }) {
@@ -101,17 +102,23 @@ export default function PaymentSection({ order, onBack, onPaid, onEarn }) {
 
       onPaid?.({ ...order, status: "paid", payment_method: "coin" });
 
-      alert(
-        `🎉 Thanh toán thành công!\n\n` +
-          `Mã đơn: ${order.order_code}\n` +
-          `Robux: ${Number(order.robux).toLocaleString("vi-VN")} RB\n` +
-          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Coin còn lại: ${Number(
-            paymentResult?.remaining_coins ?? coinBalance - requiredCoins
-          ).toLocaleString("vi-VN")} Coin`
-      );
-
-      navigate(`/history/order/${order.id}`);
+      navigate(`/thanh-toan-thanh-cong/${order.id}`, {
+        replace: true,
+        state: {
+          game: "Roblox",
+          logo: GAME_INFO.icon,
+          packageLabel: `${Number(order.robux || 0).toLocaleString(
+            "vi-VN"
+          )} Robux`,
+          accountLabel: "Tài khoản Roblox",
+          accountValue: order.roblox_username,
+          amount: requiredCoins,
+          orderCode: order.order_code,
+          remainingCoins:
+            paymentResult?.remaining_coins ?? coinBalance - requiredCoins,
+          paidAt: new Date().toISOString(),
+        },
+      });
     } catch (error) {
       alert(error?.message || "Không thể thanh toán bằng Coin. Vui lòng thử lại.");
     } finally {
@@ -146,4 +153,4 @@ export default function PaymentSection({ order, onBack, onPaid, onEarn }) {
       />
     </div>
   );
-        }
+}
