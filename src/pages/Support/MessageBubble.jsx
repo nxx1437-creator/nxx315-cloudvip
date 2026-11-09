@@ -248,10 +248,22 @@ export default function MessageBubble({
           </div>
         )}
 
-        {displayText && (
-          <div className="px-0.5">
+               
+      {displayText && (
+          <div
+            className="px-0.5"
+            style={
+              isStreaming
+                ? {
+                    WebkitMaskImage:
+                      "linear-gradient(to bottom, #000 calc(100% - 34px), rgba(0,0,0,0.25) 100%)",
+                    maskImage:
+                      "linear-gradient(to bottom, #000 calc(100% - 34px), rgba(0,0,0,0.25) 100%)",
+                  }
+                : undefined
+            }
+          >
             <MarkdownText text={displayText} />
-            {isStreaming && <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-[#a2a5b8] align-middle" />}
           </div>
         )}
 
