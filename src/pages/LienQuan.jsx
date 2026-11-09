@@ -687,17 +687,23 @@ function PaymentSection({ order, onBack, onPaid, onEarn }) {
 
       onPaid?.({ ...order, status: "paid", payment_method: "coin" });
 
-      alert(
-        `🎉 Thanh toán thành công!\n\n` +
-          `Mã đơn: ${order.order_code}\n` +
-          `Quân Huy: ${Number(order.quanhuy).toLocaleString("vi-VN")} QH\n` +
-          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Coin còn lại: ${Number(
-            paymentResult?.remaining_coins ?? coinBalance - requiredCoins
-          ).toLocaleString("vi-VN")} Coin`
-      );
-
-      navigate(`/history/order/${order.id}`);
+      navigate(`/thanh-toan-thanh-cong/${order.id}`, {
+        replace: true,
+        state: {
+          game: "Liên Quân Mobile",
+          logo: LIENQUAN_LOGO,
+          packageLabel: `${Number(order.quanhuy || 0).toLocaleString(
+            "vi-VN"
+          )} Quân Huy`,
+          accountLabel: "ID người chơi",
+          accountValue: order.uid,
+          amount: requiredCoins,
+          orderCode: order.order_code,
+          remainingCoins:
+            paymentResult?.remaining_coins ?? coinBalance - requiredCoins,
+          paidAt: new Date().toISOString(),
+        },
+      });
     } catch (error) {
       alert(
         error?.message || "Không thể thanh toán bằng Coin. Vui lòng thử lại."
