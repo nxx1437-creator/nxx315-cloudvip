@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabaseClient.js";
-import { FREEFIRE_LOGO } from "../lib/freefireData.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { PageShell } from "../components/pay/DimensionKit.jsx";
@@ -12,6 +11,7 @@ import {
   PaymentStep,
 } from "../components/freefire/FreeFireSteps.jsx";
 import UidStep from "../components/freefire/FreeFireUid.jsx";
+import { FREEFIRE_LOGO } from "../lib/freefireData.js";
 
 export default function FreeFire() {
   const navigate = useNavigate();
@@ -164,25 +164,31 @@ export default function FreeFire() {
         throw new Error("Thanh toán thất bại: " + err);
       }
 
-      
       navigate(`/thanh-toan-thanh-cong/${order.id}`, {
-  replace: true,
-  state: {
-    game: "Free Fire",
-    logo: FREEFIRE_LOGO,
-    packageLabel: `${Number(
-      selectedPackage?.diamond ?? order.ff_diamond ?? 0
-    ).toLocaleString("vi-VN")} Kim Cương`,
-    accountLabel: "UID Free Fire",
-    accountValue: order.ff_uid || uid,
-    amount: requiredCoins,
-    orderCode: order.order_code,
-    remainingCoins: paymentResult.remaining_coins,
-    paidAt: new Date().toISOString(),
-  },
-});
+        replace: true,
+        state: {
+          game: "Free Fire",
+          logo: FREEFIRE_LOGO,
+          packageLabel: `${Number(
+            selectedPackage?.diamond ?? order.ff_diamond ?? 0
+          ).toLocaleString("vi-VN")} Kim Cương`,
+          accountLabel: "UID Free Fire",
+          accountValue: order.ff_uid || uid,
+          amount: requiredCoins,
+          orderCode: order.order_code,
+          remainingCoins: paymentResult.remaining_coins,
+          paidAt: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      alert(error?.message || "Không thể thanh toán bằng Coin.");
+    } finally {
+      payingRef.current = false;
+      setPaying(false);
+    }
+  };
+
   return (
-    // Thêm bg-gray-50 để cả trang có nền xám nhạt (giúp các thẻ trắng nổi bật)
     <div className="min-h-screen bg-white">
       <PageShell>
         <TopHeader />
@@ -232,4 +238,4 @@ export default function FreeFire() {
       </PageShell>
     </div>
   );
-        }
+              }
