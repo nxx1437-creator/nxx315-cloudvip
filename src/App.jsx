@@ -66,6 +66,8 @@ const LienQuan = lazy(() => import("./pages/LienQuan.jsx"));
 const FreeFire = lazy(() => import("./pages/FreeFire.jsx"));
 const FcMobile = lazy(() => import("./pages/FcMobile.jsx"));
 const Valorant = lazy(() => import("./pages/Valorant.jsx"));
+import OrderSuccess from "./pages/OrderSuccess.jsx";
+
 
 /* Khác */
 const ShopEarn = lazy(() => import("./pages/ShopEarn.jsx"));
@@ -161,6 +163,7 @@ export default function App() {
               <Route path="/store/free-fire" element={<ProtectedRoute><FreeFire /></ProtectedRoute>} />
               <Route path="/store/fc-mobile" element={<ProtectedRoute><FcMobile /></ProtectedRoute>} />
               <Route path="/store/valorant" element={<ProtectedRoute><Valorant /></ProtectedRoute>} />
+              <Route path="/thanh-toan-thanh-cong/:orderId" element={<OrderSuccess />} />
 
               {/* History */}
               <Route path="/nap-thanh-cong/:orderId" element={<ProtectedRoute><NapThanhCong /></ProtectedRoute>} />
