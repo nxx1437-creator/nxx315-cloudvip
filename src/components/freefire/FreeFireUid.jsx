@@ -46,8 +46,8 @@ export default function UidStep({
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       {selectedPackage && (
-        <Glass className="flex items-center gap-3 border border-gray-200 bg-gray-50 p-4">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[16px] bg-gray-200">
+        <Glass className="flex items-center gap-3 border border-gray-200 bg-white p-4">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[16px] bg-gray-100">
             <img
               src={selectedPackage.image}
               alt=""
@@ -59,7 +59,7 @@ export default function UidStep({
             <p className="text-[13px] text-gray-500">Gói đã chọn</p>
             <p className="mt-0.5 flex items-center gap-1.5 text-[20px] font-semibold leading-none tracking-[-0.035em] text-gray-900">
               {selectedPackage.diamond.toLocaleString("vi-VN")}
-              <Gem size={14} className="text-blue-500" />
+              <Gem size={14} className="text-gray-900" />
             </p>
           </div>
           <p className="shrink-0 text-[17px] font-semibold text-gray-900">
@@ -96,19 +96,19 @@ export default function UidStep({
         <button
           type="button"
           onClick={() => setShowGuide(true)}
-          className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-blue-600 underline-offset-4 transition hover:text-blue-700 hover:underline"
+          className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gray-900 underline underline-offset-4 transition hover:text-gray-600"
         >
           <Info size={13} />
           Hướng dẫn lấy UID Free Fire
         </button>
 
-        <div className="mt-5 flex gap-3 rounded-[16px] border border-yellow-200 bg-yellow-50 p-4">
-          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-yellow-600" />
+        <div className="mt-5 flex gap-3 rounded-[16px] border border-gray-200 bg-gray-50 p-4">
+          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-gray-900" />
           <div>
-            <p className="text-[14px] font-semibold text-yellow-900">
+            <p className="text-[14px] font-semibold text-gray-900">
               Kiểm tra chính xác trước khi thanh toán
             </p>
-            <p className="mt-1 text-[13px] leading-5 text-yellow-700">
+            <p className="mt-1 text-[13px] leading-5 text-gray-600">
               Kim Cương sẽ được nạp theo UID đã xác nhận — sai UID không hoàn
               tiền.
             </p>
@@ -147,11 +147,11 @@ export default function UidStep({
 
 function GuideModal({ onClose, steps }) {
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
-      <div 
+      <div
         className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[32px] border border-gray-200 bg-white shadow-xl sm:rounded-[32px]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -181,7 +181,9 @@ function GuideModal({ onClose, steps }) {
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-[13px] font-semibold text-white">
                   {item.step}
                 </span>
-                <p className="text-[15px] font-medium text-gray-900">{item.title}</p>
+                <p className="text-[15px] font-medium text-gray-900">
+                  {item.title}
+                </p>
               </div>
               <div className="overflow-hidden rounded-[16px] border border-gray-100 bg-gray-50">
                 <img
@@ -200,4 +202,4 @@ function GuideModal({ onClose, steps }) {
       </div>
     </div>
   );
-          }
+        }
