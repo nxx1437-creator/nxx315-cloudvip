@@ -163,23 +163,23 @@ export default function FreeFire() {
         throw new Error("Thanh toán thất bại: " + err);
       }
 
-      alert(
-        `🎉 Thanh toán thành công!\n\n` +
-          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Coin còn lại: ${Number(
-            paymentResult.remaining_coins
-          ).toLocaleString("vi-VN")} Coin`
-      );
-
-      navigate(`/history/order/${order.id}`);
-    } catch (error) {
-      alert(error?.message || "Không thể thanh toán bằng Coin.");
-    } finally {
-      payingRef.current = false;
-      setPaying(false);
-    }
-  };
-
+      
+      navigate(`/thanh-toan-thanh-cong/${order.id}`, {
+  replace: true,
+  state: {
+    game: "Free Fire",
+    logo: FREEFIRE_LOGO,
+    packageLabel: `${Number(
+      selectedPackage?.diamond ?? order.ff_diamond ?? 0
+    ).toLocaleString("vi-VN")} Kim Cương`,
+    accountLabel: "UID Free Fire",
+    accountValue: order.ff_uid || uid,
+    amount: requiredCoins,
+    orderCode: order.order_code,
+    remainingCoins: paymentResult.remaining_coins,
+    paidAt: new Date().toISOString(),
+  },
+});
   return (
     // Thêm bg-gray-50 để cả trang có nền xám nhạt (giúp các thẻ trắng nổi bật)
     <div className="min-h-screen bg-white">
