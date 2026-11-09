@@ -182,7 +182,7 @@ export default function FreeFire() {
 
   return (
     // Thêm bg-gray-50 để cả trang có nền xám nhạt (giúp các thẻ trắng nổi bật)
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <PageShell>
         <TopHeader />
 
