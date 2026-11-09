@@ -1,4 +1,4 @@
-// src/pages/Support/GlowFrame.jsx
+// src/pages/Support/GlowFrame.jsx 
 
 import React, { useEffect, useLayoutEffect, useRef } from "react";
 
