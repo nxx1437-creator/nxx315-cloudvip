@@ -16,6 +16,16 @@ import {
 
 import { supabase } from "../lib/supabaseClient.js";
 import TermsCheckbox from "./TermsCheckbox.jsx";
+import {
+  Caption,
+  GhostButton,
+  IconBox,
+  Panel,
+  PillButton,
+  SectionHeader,
+  TermsPanel,
+  TextField,
+} from "./pay/DimensionKit.jsx";
 import { useI18n } from "../i18n/index.js";
 import {
   PACKAGES,
@@ -52,17 +62,21 @@ export function Stepper({ step, onJump }) {
               className="flex items-center gap-2"
             >
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition ${
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] transition ${
                   done || active
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-100 text-slate-400"
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-400"
                 }`}
               >
                 {done ? <CheckCircle2 size={15} strokeWidth={2.5} /> : i + 1}
               </span>
               <span
-                className={`text-xs font-semibold sm:text-sm ${
-                  active ? "text-slate-900" : done ? "text-slate-600" : "text-slate-400"
+                className={`text-[13px] sm:text-sm ${
+                  active
+                    ? "text-gray-900"
+                    : done
+                    ? "text-gray-600"
+                    : "text-gray-400"
                 }`}
               >
                 {s.label}
@@ -71,7 +85,7 @@ export function Stepper({ step, onJump }) {
             {i < steps.length - 1 && (
               <div
                 className={`mx-2 h-px flex-1 transition ${
-                  i < current ? "bg-emerald-500" : "bg-slate-200"
+                  i < current ? "bg-gray-900" : "bg-gray-200"
                 }`}
               />
             )}
@@ -86,27 +100,38 @@ export function Stepper({ step, onJump }) {
 function GuideModal({ onClose }) {
   const { t } = useI18n();
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-        <div className="mb-3 flex items-start justify-between">
-          <h3 className="text-base font-bold">{t("rb.guideTitle")}</h3>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[32px] border border-gray-200 bg-white shadow-xl sm:rounded-[32px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between border-b border-gray-100 p-5">
+          <h3 className="text-[20px] font-semibold leading-tight tracking-[-0.035em] text-gray-900">
+            {t("rb.guideTitle")}
+          </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100"
+            aria-label="Đóng"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200"
           >
             <X size={16} />
           </button>
         </div>
-        <p className="text-sm leading-6 text-slate-600">{t("rb.guideBody")}</p>
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-          <img src={ROBLOX_GUIDE_URL} alt="" className="w-full object-contain" />
+        <div className="flex-1 overflow-y-auto p-5">
+          <p className="text-[14px] leading-6 text-gray-600">
+            {t("rb.guideBody")}
+          </p>
+          <div className="mt-4 overflow-hidden rounded-[16px] border border-gray-100 bg-gray-50">
+            <img src={ROBLOX_GUIDE_URL} alt="" className="w-full object-contain" />
+          </div>
         </div>
-        <button
-          onClick={onClose}
-          className="mt-4 w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
-        >
-          {t("rb.guideOk")}
-        </button>
+        <div className="border-t border-gray-100 p-5">
+          <PillButton onClick={onClose}>{t("rb.guideOk")}</PillButton>
+        </div>
       </div>
     </div>
   );
@@ -121,40 +146,40 @@ function PackageRow({ pkg, active, onSelect, coins }) {
     <button
       type="button"
       onClick={() => onSelect(pkg)}
-      className={`flex w-full items-center gap-3.5 rounded-xl border bg-white p-3 text-left transition ${
+      className={`flex w-full items-center gap-3.5 rounded-[20px] border bg-white p-3 text-left transition ${
         active
-          ? "border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-600"
-          : "border-slate-200 hover:border-slate-300"
+          ? "border-gray-900 shadow-md ring-1 ring-gray-900"
+          : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
       }`}
     >
       <img
         src={pkg.image}
         alt=""
-        className="h-16 w-16 shrink-0 rounded-lg border border-slate-100 object-cover"
+        className="h-16 w-16 shrink-0 rounded-[14px] border border-gray-100 bg-gray-100 object-cover"
       />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[15px] font-bold text-slate-900">
+          <p className="text-[16px] font-semibold tracking-[-0.02em] text-gray-900">
             {t("rb.robux", { n: fmt(pkg.robux) })}
           </p>
-          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">
             {pkg.method}
           </span>
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-2">
-          <span className="text-base font-extrabold text-emerald-700">
+          <span className="text-[16px] font-semibold text-gray-900">
             {formatCoin(pkg.price)}
           </span>
-          <span className="text-xs text-slate-400 line-through">
+          <span className="text-[12px] text-gray-400 line-through">
             {formatCoin(pkg.originalPrice)}
           </span>
-          <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600">
+          <span className="rounded-full bg-gray-900 px-2 py-0.5 text-[11px] text-white">
             -{pkg.discount}%
           </span>
         </div>
         <p
-          className={`mt-1 text-[11px] font-medium ${
-            enough ? "text-emerald-600" : "text-slate-400"
+          className={`mt-1 text-[12px] ${
+            enough ? "text-gray-700" : "text-gray-400"
           }`}
         >
           {enough
@@ -164,7 +189,7 @@ function PackageRow({ pkg, active, onSelect, coins }) {
       </div>
       <span
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
-          active ? "border-emerald-600 bg-emerald-600" : "border-slate-300 bg-white"
+          active ? "border-gray-900 bg-gray-900" : "border-gray-300 bg-white"
         }`}
       >
         {active && <CheckCircle2 size={12} className="text-white" strokeWidth={3} />}
@@ -173,22 +198,20 @@ function PackageRow({ pkg, active, onSelect, coins }) {
   );
 }
 
-function PackageGroup({ icon: Icon, title, desc, list, selected, onSelect, coins }) {
+function PackageGroup({ icon, title, desc, list, selected, onSelect, coins }) {
   const { t } = useI18n();
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="mb-3 flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-          <Icon size={19} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[15px] font-bold">{title}</h2>
-          <p className="mt-0.5 text-xs text-slate-500">{desc}</p>
-        </div>
-        <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
-          {t("rb.pkgCount", { n: list.length })}
-        </span>
-      </div>
+    <Panel className="space-y-3 p-4">
+      <SectionHeader
+        icon={icon}
+        title={title}
+        sub={desc}
+        right={
+          <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[12px] text-gray-600">
+            {t("rb.pkgCount", { n: list.length })}
+          </span>
+        }
+      />
       <div className="space-y-2">
         {list.map((pkg) => (
           <PackageRow
@@ -200,7 +223,7 @@ function PackageGroup({ icon: Icon, title, desc, list, selected, onSelect, coins
           />
         ))}
       </div>
-    </section>
+    </Panel>
   );
 }
 
@@ -211,16 +234,16 @@ export function PackageStep({ selected, onSelect, onNext, coins }) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-extrabold">{t("rb.pickTitle")}</h2>
-        <p className="mt-0.5 text-sm text-slate-500">{t("rb.pickSub")}</p>
+      <div className="px-1">
+        <h2 className="text-[22px] font-semibold leading-tight tracking-[-0.035em] text-gray-900">
+          {t("rb.pickTitle")}
+        </h2>
+        <p className="mt-0.5 text-[13px] text-gray-500">{t("rb.pickSub")}</p>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
-        <span className="text-xs font-semibold text-emerald-800">
-          {t("rb.yourCoins")}
-        </span>
-        <span className="text-sm font-extrabold text-emerald-700">
+      <div className="flex items-center justify-between rounded-full border border-gray-200 bg-gray-50 px-5 py-3">
+        <span className="text-[13px] text-gray-600">{t("rb.yourCoins")}</span>
+        <span className="text-[15px] font-semibold text-gray-900">
           {fmt(coins)} {t("dash.coin")}
         </span>
       </div>
@@ -244,46 +267,38 @@ export function PackageStep({ selected, onSelect, onNext, coins }) {
         coins={coins}
       />
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <Panel className="p-4">
         {selected ? (
-          <div className="mb-3 flex items-center gap-3">
+          <div className="mb-4 flex items-center gap-3">
             <img
               src={selected.image}
               alt=""
-              className="h-11 w-11 rounded-lg object-cover"
+              className="h-12 w-12 rounded-[14px] bg-gray-100 object-cover"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-slate-500">{t("rb.selected")}</p>
-              <p className="text-sm font-bold">
+              <p className="text-[13px] text-gray-500">{t("rb.selected")}</p>
+              <p className="text-[15px] font-semibold text-gray-900">
                 {t("rb.robux", { n: fmt(selected.robux) })}
               </p>
             </div>
-            <p className="text-base font-extrabold text-emerald-700">
+            <p className="text-[17px] font-semibold text-gray-900">
               {formatCoin(selected.price)}
             </p>
           </div>
         ) : (
-          <p className="mb-3 text-center text-xs text-slate-400">
+          <p className="mb-4 text-center text-[13px] text-gray-500">
             {t("rb.pickFirst")}
           </p>
         )}
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!selected}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-extrabold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <PillButton onClick={onNext} disabled={!selected} className="h-14">
           {t("rb.next")} <ChevronRight size={17} />
-        </button>
-      </div>
+        </PillButton>
+      </Panel>
     </div>
   );
 }
 
 // =============== BƯỚC 2: TÀI KHOẢN NHẬN ===============
-const inputCls =
-  "h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100";
-
 export function AccountStep({
   pkg,
   username,
@@ -362,45 +377,45 @@ export function AccountStep({
   return (
     <div className="space-y-4">
       {error && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-rose-600" />
-          <p className="text-sm font-medium text-rose-700">{error}</p>
+        <div className="flex items-start gap-2.5 rounded-[20px] border border-red-200 bg-red-50 p-4">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-600" />
+          <p className="text-[14px] text-red-700">{error}</p>
         </div>
       )}
 
       {/* Tài khoản Roblox */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-            <User size={19} />
-          </span>
+      <Panel className="p-5 shadow-sm">
+        <div className="mb-5 flex items-center gap-3">
+          <IconBox icon={User} />
           <div>
-            <h2 className="text-[15px] font-bold">{t("rb.accTitle")}</h2>
-            <p className="text-xs text-slate-500">{t("rb.accSub")}</p>
+            <h2 className="text-[20px] font-semibold leading-tight tracking-[-0.035em] text-gray-900">
+              {t("rb.accTitle")}
+            </h2>
+            <p className="text-[13px] text-gray-500">{t("rb.accSub")}</p>
           </div>
         </div>
 
-        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-          {t("rb.username")}
-        </label>
+        <Caption>{t("rb.username")}</Caption>
         <div className="flex gap-2">
-          <input
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-              if (robloxUser) setRobloxUser(null);
-            }}
-            onKeyDown={(e) => e.key === "Enter" && checkUser()}
-            placeholder={t("rb.usernamePh")}
-            autoComplete="off"
-            autoCapitalize="none"
-            className={`${inputCls} min-w-0 flex-1`}
-          />
+          <div className="min-w-0 flex-1">
+            <TextField
+              icon={User}
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (robloxUser) setRobloxUser(null);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && checkUser()}
+              placeholder={t("rb.usernamePh")}
+              autoComplete="off"
+              autoCapitalize="none"
+            />
+          </div>
           <button
             type="button"
             onClick={checkUser}
             disabled={checking || !username.trim()}
-            className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-gray-900 px-5 text-[14px] text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {checking ? (
               <Loader2 size={16} className="animate-spin" />
@@ -416,53 +431,55 @@ export function AccountStep({
         <button
           type="button"
           onClick={() => setShowGuide(true)}
-          className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline"
+          className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-gray-900 underline underline-offset-4 transition hover:text-gray-600"
         >
           <Info size={13} /> {t("rb.guide")}
         </button>
 
         {robloxUser && (
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <div className="mt-4 flex items-center gap-3 rounded-[16px] border border-gray-200 bg-gray-50 p-3">
             {robloxUser.avatar ? (
               <img
                 src={robloxUser.avatar}
                 alt=""
-                className="h-12 w-12 rounded-lg object-cover"
+                className="h-12 w-12 rounded-[12px] object-cover"
               />
             ) : (
-              <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <span className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-gray-200 text-gray-600">
                 <User size={20} />
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+              <p className="flex items-center gap-1.5 text-[13px] text-gray-900">
                 <CheckCircle2 size={14} /> {t("rb.verified")}
               </p>
-              <p className="truncate text-sm font-semibold">
+              <p className="truncate text-[15px] font-semibold text-gray-900">
                 {robloxUser.displayName || robloxUser.username}
               </p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-[12px] text-gray-500">
                 @{robloxUser.username} · ID: {robloxUser.id}
               </p>
             </div>
           </div>
         )}
-      </section>
+      </Panel>
 
       {/* Cách nhận code (chỉ Card Robux) */}
       {isCard && (
-        <section className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-5">
-          <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
-              <Mail size={19} />
-            </span>
+        <Panel className="p-5 shadow-sm">
+          <div className="mb-5 flex items-start gap-3">
+            <IconBox icon={Mail} />
             <div className="min-w-0 flex-1">
-              <h2 className="text-[15px] font-bold">{t("rb.recvTitle")}</h2>
-              <p className="mt-0.5 text-xs text-slate-600">{t("rb.recvSub")}</p>
+              <h2 className="text-[20px] font-semibold leading-tight tracking-[-0.035em] text-gray-900">
+                {t("rb.recvTitle")}
+              </h2>
+              <p className="mt-0.5 text-[13px] text-gray-500">
+                {t("rb.recvSub")}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {[
               ["zalo", Phone, t("rb.zalo")],
               ["email", Mail, t("rb.email")],
@@ -473,22 +490,22 @@ export function AccountStep({
                   key={key}
                   type="button"
                   onClick={() => pickMethod(key)}
-                  className={`flex flex-col items-center gap-2 rounded-xl border-2 bg-white p-4 transition ${
+                  className={`flex flex-col items-center gap-2 rounded-[20px] border bg-white p-4 transition ${
                     on
-                      ? "border-emerald-600 shadow-md"
-                      : "border-slate-200 hover:border-slate-300"
+                      ? "border-gray-900 shadow-md ring-1 ring-gray-900"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
                   <span
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                      on ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"
+                      on ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"
                     }`}
                   >
-                    <Icon size={19} />
+                    <Icon size={18} />
                   </span>
                   <span
-                    className={`text-sm font-bold ${
-                      on ? "text-emerald-700" : "text-slate-700"
+                    className={`text-[14px] ${
+                      on ? "text-gray-900" : "text-gray-600"
                     }`}
                   >
                     {label}
@@ -500,51 +517,59 @@ export function AccountStep({
 
           {receiveMethod && (
             <div className="mt-4">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <Caption>
                 {receiveMethod === "zalo" ? t("rb.zaloLabel") : t("rb.emailLabel")}
-              </label>
-              <input
+              </Caption>
+              <TextField
+                icon={receiveMethod === "zalo" ? Phone : Mail}
                 type={receiveMethod === "zalo" ? "tel" : "email"}
                 value={contactValue}
                 onChange={(e) => setContactValue(e.target.value)}
                 placeholder={
                   receiveMethod === "zalo" ? t("rb.zaloPh") : t("rb.emailPh")
                 }
-                className={inputCls}
               />
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-2 text-[12px] text-gray-500">
                 {receiveMethod === "zalo" ? t("rb.zaloHint") : t("rb.emailHint")}
               </p>
             </div>
           )}
 
-          <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" />
-            <p className="text-xs font-medium text-amber-800">{t("rb.recvWarn")}</p>
+          <div className="mt-4 flex items-start gap-2.5 rounded-[16px] border border-gray-200 bg-gray-50 p-3.5">
+            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-gray-900" />
+            <p className="text-[13px] leading-5 text-gray-600">
+              {t("rb.recvWarn")}
+            </p>
           </div>
-        </section>
+        </Panel>
       )}
 
       {/* Tóm tắt + điều khoản + tạo đơn */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+      <Panel className="p-5 shadow-sm">
+        <p className="text-[13px] uppercase tracking-[0.05em] text-gray-400">
           {t("rb.summary")}
         </p>
         {pkg && (
           <div className="mt-3 flex items-center gap-3">
-            <img src={pkg.image} alt="" className="h-12 w-12 rounded-lg object-cover" />
+            <img
+              src={pkg.image}
+              alt=""
+              className="h-12 w-12 rounded-[14px] bg-gray-100 object-cover"
+            />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold">{t("rb.robux", { n: fmt(pkg.robux) })}</p>
-              <p className="text-xs text-slate-500">{pkg.method}</p>
+              <p className="text-[15px] font-semibold text-gray-900">
+                {t("rb.robux", { n: fmt(pkg.robux) })}
+              </p>
+              <p className="text-[13px] text-gray-500">{pkg.method}</p>
             </div>
             <div className="text-right">
-              <p className="text-base font-extrabold text-emerald-700">
+              <p className="text-[17px] font-semibold text-gray-900">
                 {formatCoin(pkg.price)}
               </p>
               <button
                 type="button"
                 onClick={onBack}
-                className="text-xs font-semibold text-emerald-700 hover:underline"
+                className="text-[13px] text-gray-900 underline underline-offset-4 hover:text-gray-600"
               >
                 {t("rb.edit")}
               </button>
@@ -552,31 +577,31 @@ export function AccountStep({
           </div>
         )}
 
-        <div className="mt-4 border-t border-slate-100 pt-4">
-          <TermsCheckbox checked={agreed} onChange={setAgreed} accentColor="blue" />
+        <div className="mt-5">
+          <TermsPanel>
+            <TermsCheckbox
+              checked={agreed}
+              onChange={setAgreed}
+              accentColor="gray"
+            />
+          </TermsPanel>
         </div>
 
         {missing.length > 0 && (
-          <p className="mt-3 text-xs text-amber-600">
+          <p className="mt-1 text-[13px] text-gray-500">
             {t("rb.missPrefix")} {missing.join(" · ")}
           </p>
         )}
 
-        <div className="mt-4 grid grid-cols-[auto_1fr] gap-2.5">
-          <button
-            type="button"
-            onClick={onBack}
-            className="h-12 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-                {t("rb.back")}
-          </button>
-          <button
-            type="button"
+        <div className="mt-5 grid grid-cols-[auto_1fr] gap-3">
+          <GhostButton onClick={onBack} disabled={creating} className="px-6">
+            {t("rb.back")}
+          </GhostButton>
+          <PillButton
             onClick={onCreate}
             disabled={missing.length > 0 || creating}
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-extrabold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {creating ? (
+                 {creating ? (
               <>
                 <Loader2 size={16} className="animate-spin" /> {t("rb.creating")}
               </>
@@ -585,15 +610,14 @@ export function AccountStep({
                 {t("rb.create")} <ChevronRight size={17} />
               </>
             )}
-          </button>
+          </PillButton>
         </div>
-        <p className="mt-2 text-center text-[11px] text-slate-400">
+        <p className="mt-3 text-center text-[12px] text-gray-400">
           {t("rb.hintAfter")}
         </p>
-      </section>
+      </Panel>
 
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
     </div>
   );
 }
-
