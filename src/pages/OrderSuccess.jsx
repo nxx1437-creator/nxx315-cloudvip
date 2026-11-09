@@ -179,7 +179,7 @@ export default function OrderSuccess() {
               <div className="mt-3 flex items-start gap-2.5 rounded-[16px] border border-gray-200 bg-gray-50 p-3.5">
                 <Zap size={16} className="mt-0.5 shrink-0 text-gray-900" />
                 <p className="text-[13px] leading-5 text-gray-600">
-                  Đơn hàng đang được xử lý tự động. Bạn có thể theo dõi trạng
+                  Đơn hàng đang được xử lý. Bạn có thể theo dõi trạng
                   thái trong lịch sử đơn hàng.
                 </p>
               </div>
