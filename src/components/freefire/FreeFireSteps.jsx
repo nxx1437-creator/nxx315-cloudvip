@@ -86,10 +86,10 @@ export function PackageStep({
       <div className="pt-2">
         <TermsPanel>
           <TermsCheckbox
-            checked={agreedTerms}
-            onChange={setAgreedTerms}
-            accentColor="orange"
-          />
+  checked={agreedTerms}
+  onChange={setAgreedTerms}
+  accentColor="gray"   // hiện đang là "orange"
+/>
         </TermsPanel>
 
         <PillButton
