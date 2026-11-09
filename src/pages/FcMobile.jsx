@@ -232,15 +232,20 @@ export default function FcMobile() {
         throw new Error("Thanh toán thất bại: " + err);
       }
 
-      alert(
-        `🎉 Thanh toán thành công!\n\n` +
-          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Coin còn lại: ${Number(paymentResult.remaining_coins).toLocaleString(
-            "vi-VN"
-          )} Coin`
-      );
-
-      navigate(`/history/order/${order.id}`);
+      navigate(`/thanh-toan-thanh-cong/${order.id}`, {
+        replace: true,
+        state: {
+          game: "FC Mobile VN",
+          logo: FCM_LOGO,
+          packageLabel: `${Number(order.fco_fc || 0).toLocaleString("vi-VN")} FC`,
+          accountLabel: "Character Name",
+          accountValue: order.fco_character_id,
+          amount: requiredCoins,
+          orderCode: order.order_code,
+          remainingCoins: paymentResult.remaining_coins,
+          paidAt: new Date().toISOString(),
+        },
+      });
     } catch (error) {
       alert(error?.message || "Không thể thanh toán bằng Coin.");
     } finally {
@@ -611,4 +616,4 @@ function PaymentStep({
       />
     </div>
   );
-  }
+}
