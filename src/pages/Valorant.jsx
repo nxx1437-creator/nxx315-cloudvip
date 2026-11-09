@@ -215,15 +215,20 @@ export default function Valorant() {
         throw new Error("Thanh toán thất bại: " + err);
       }
 
-      alert(
-        `🎉 Thanh toán thành công!\n\n` +
-          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Coin còn lại: ${Number(paymentResult.remaining_coins).toLocaleString(
-            "vi-VN"
-          )} Coin`
-      );
-
-      navigate(`/history/order/${order.id}`);
+      navigate(`/thanh-toan-thanh-cong/${order.id}`, {
+        replace: true,
+        state: {
+          game: "VALORANT",
+          logo: VALORANT_LOGO,
+          packageLabel: `${Number(order.vp || 0).toLocaleString("vi-VN")} VP`,
+          accountLabel: "Riot ID",
+          accountValue: order.riot_id,
+          amount: requiredCoins,
+          orderCode: order.order_code,
+          remainingCoins: paymentResult.remaining_coins,
+          paidAt: new Date().toISOString(),
+        },
+      });
     } catch (error) {
       alert(error?.message || "Không thể thanh toán bằng Coin.");
     } finally {
@@ -515,4 +520,4 @@ function PaymentStep({
       />
     </div>
   );
-         }
+}
