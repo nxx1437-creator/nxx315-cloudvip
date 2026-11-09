@@ -255,22 +255,25 @@ export default function PlayTogether() {
         throw new Error("Thanh toán thất bại: " + err);
       }
 
-      alert(
-        `🎉 Thanh toán thành công!\n\n` +
-          `Đã trừ: ${requiredCoins.toLocaleString("vi-VN")} Coin\n` +
-          `Coin còn lại: ${Number(paymentResult.remaining_coins).toLocaleString(
-            "vi-VN"
-          )} Coin`
-      );
+      
+      
 
-      navigate(`/history/order/${order.id}`);
-    } catch (error) {
-      alert(error?.message || "Không thể thanh toán bằng Coin.");
-    } finally {
-      payingRef.current = false;
-      setPaying(false);
-    }
-  };
+      navigate(`/thanh-toan-thanh-cong/${order.id}`, {
+  replace: true,
+  state: {
+    game: "Play Together",
+    logo: PLAYTOGETHER_LOGO,
+    packageLabel: `${Number(
+      selectedPackage?.gold ?? order.pt_gold ?? 0
+    )} thỏi vàng`,
+    accountLabel: "UID Play Together",
+    accountValue: order.pt_uid || uid,
+    amount: requiredCoins,
+    orderCode: order.order_code,
+    remainingCoins: paymentResult.remaining_coins,
+    paidAt: new Date().toISOString(),
+  },
+});
 
   return (
     <div className="min-h-screen bg-white">
