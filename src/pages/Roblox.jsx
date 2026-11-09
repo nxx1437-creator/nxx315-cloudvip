@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
+import { PageShell, Panel } from "../components/pay/DimensionKit.jsx";
 import useProfile from "../hooks/useProfile.js";
 import PaymentSection from "../components/RobloxPayment.jsx";
 import {
@@ -165,89 +166,89 @@ export default function Roblox() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 font-['Be_Vietnam_Pro',sans-serif] text-slate-900">
-      <TopHeader />
+    <div className="min-h-screen bg-white">
+      <PageShell>
+        <TopHeader />
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-5">
-        {/* Tiêu đề */}
-        <div className="mb-4 flex items-center gap-3">
-          <button
-            onClick={() =>
-              step === "account"
-                ? goStep("package")
-                : step === "payment"
-                ? goStep("account")
-                : navigate("/store")
-            }
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
-            aria-label="Back"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+        <main className="mx-auto w-full max-w-3xl px-4 py-5 sm:py-6">
+          {/* Tiêu đề */}
+          <Panel className="mb-4 flex items-center gap-3 p-3.5">
+            <button
+              type="button"
+              onClick={() =>
+                step === "account"
+                  ? goStep("package")
+                  : step === "payment"
+                  ? goStep("account")
+                  : navigate("/store")
+              }
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-900 transition hover:bg-gray-100"
+              aria-label="Back"
+            >
+              <ArrowLeft size={18} />
+            </button>
             <img
               src={GAME_INFO.icon}
               alt=""
-              className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
+              className="h-11 w-11 shrink-0 rounded-[14px] border border-gray-200 object-cover"
             />
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-extrabold leading-tight">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-[20px] leading-tight tracking-[-0.035em] text-gray-900">
                 {t("rb.title")}
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-[13px] text-gray-500">
                 {GAME_INFO.name} · {GAME_INFO.server}
               </p>
             </div>
-          </div>
-        </div>
+          </Panel>
 
-        {/* Các bước */}
-        <div className="mb-4 rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <Stepper step={step} onJump={goStep} />
-        </div>
+          {/* Các bước */}
+          <Panel className="mb-4 px-4 py-4">
+            <Stepper step={step} onJump={goStep} />
+          </Panel>
 
-        {step === "package" && (
-          <PackageStep
-            selected={selectedPackage}
-            onSelect={(pkg) => setSelectedId(pkg.id)}
-            onNext={() => goStep("account")}
-            coins={coins}
-          />
-        )}
+          {step === "package" && (
+            <PackageStep
+              selected={selectedPackage}
+              onSelect={(pkg) => setSelectedId(pkg.id)}
+              onNext={() => goStep("account")}
+              coins={coins}
+            />
+          )}
 
-        {step === "account" && (
-          <AccountStep
-            pkg={selectedPackage}
-            username={username}
-            setUsername={setUsername}
-            robloxUser={robloxUser}
-            setRobloxUser={setRobloxUser}
-            receiveMethod={receiveMethod}
-            setReceiveMethod={setReceiveMethod}
-            contactValue={contactValue}
-            setContactValue={setContactValue}
-            agreed={agreed}
-            setAgreed={setAgreed}
-            onBack={() => goStep("package")}
-            onCreate={createOrder}
-            creating={creating}
-            error={error}
-            setError={setError}
-          />
-        )}
+          {step === "account" && (
+            <AccountStep
+              pkg={selectedPackage}
+              username={username}
+              setUsername={setUsername}
+              robloxUser={robloxUser}
+              setRobloxUser={setRobloxUser}
+              receiveMethod={receiveMethod}
+              setReceiveMethod={setReceiveMethod}
+              contactValue={contactValue}
+              setContactValue={setContactValue}
+              agreed={agreed}
+              setAgreed={setAgreed}
+              onBack={() => goStep("package")}
+              onCreate={createOrder}
+              creating={creating}
+              error={error}
+              setError={setError}
+            />
+          )}
 
-        {step === "payment" && (
-          <PaymentSection
-            order={order}
-            onBack={() => goStep("account")}
-            onPaid={(updated) => setOrder(updated)}
-          />
-        )}
-      </main>
+          {step === "payment" && (
+            <PaymentSection
+              order={order}
+              onBack={() => goStep("account")}
+              onPaid={(updated) => setOrder(updated)}
+              onEarn={() => navigate("/tasks")}
+            />
+          )}
+        </main>
 
-      <BottomNav />
+        <BottomNav />
+      </PageShell>
     </div>
   );
-                                           }
-    
-  
+}
