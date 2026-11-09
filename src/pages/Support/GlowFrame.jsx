@@ -51,16 +51,8 @@ export default function GlowFrame({ active = false, className = "", children }) 
     const root = rootRef.current;
     if (!root || !active) return undefined;
 
-    // Người dùng tắt chuyển động: vệt đứng yên
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      root.style.setProperty("--tail", "200");
-      return undefined;
-    }
-
+    // Cố ý KHÔNG tôn trọng "giảm chuyển động": máy bật tiết kiệm pin
+    // sẽ làm viền đứng im, trong khi đây là hiệu ứng báo AI đang trả lời.
     let raf = 0;
     let t0 = null;
     const tick = (now) => {
