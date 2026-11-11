@@ -4,7 +4,9 @@ import { supabase } from "../lib/supabaseClient.js";
 import { validateAvatarFile, uploadAvatar, checkAvatarUploadLimit } from "../lib/avatarUpload.js";
 
 // Kích thước khung cắt hiển thị (px)
-const CROP_SIZE = 280; 
+const CROP_SIZE = 280;
+// Đường kính vòng tròn hiển thị — chỉ phần trong vòng này được lưu
+const CIRCLE_SIZE = 220;
 // Kích thước ảnh đầu ra (px) - Ảnh vuông
 const OUTPUT_SIZE = 400;
 
@@ -34,6 +36,28 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       setLimit({ remaining: res.remaining, limit: res.limit });
     });
   }, [userId, success]);
+
+  // Giới hạn kéo: ảnh luôn phủ kín vòng tròn
+  const getBounds = (z) => {
+    if (!imgDimensions.width) return { maxX: 0, maxY: 0 };
+    const baseScale = Math.max(
+      CROP_SIZE / imgDimensions.width,
+      CROP_SIZE / imgDimensions.height
+    );
+    const finalScale = baseScale * z;
+    return {
+      maxX: Math.max(0, (imgDimensions.width * finalScale - CIRCLE_SIZE) / 2),
+      maxY: Math.max(0, (imgDimensions.height * finalScale - CIRCLE_SIZE) / 2),
+    };
+  };
+
+  const clampOffset = (o, z) => {
+    const { maxX, maxY } = getBounds(z);
+    return {
+      x: Math.min(maxX, Math.max(-maxX, o.x)),
+      y: Math.min(maxY, Math.max(-maxY, o.y)),
+    };
+  };
 
   const handlePick = () => {
     if (limit.remaining <= 0) {
@@ -81,13 +105,21 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
   const handlePointerMove = (e) => {
     if (!isDragging) return;
-    setOffset({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    setOffset(
+      clampOffset(
+        { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y },
+        zoom
+      )
+    );
   };
 
   const handlePointerUp = () => setIsDragging(false);
+
+  const handleZoomChange = (e) => {
+    const z = Number(e.target.value);
+    setZoom(z);
+    setOffset((o) => clampOffset(o, z));
+  };
 
   // Cắt ảnh & Upload
   const handleSaveCroppedImage = async () => {
@@ -106,8 +138,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       img.src = imageSrc;
       await new Promise((resolve) => (img.onload = resolve));
 
-      // Tính toán tỷ lệ dựa trên kích thước hiển thị của ảnh gốc
-      // Ảnh gốc được scale để vừa với khung CROP_SIZE, sau đó nhân với zoom
+      // Ảnh gốc được scale để vừa khung CROP_SIZE, sau đó nhân với zoom
       const baseScale = Math.max(CROP_SIZE / imgDimensions.width, CROP_SIZE / imgDimensions.height);
       const finalScale = baseScale * zoom;
 
@@ -118,11 +149,14 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       const left = (CROP_SIZE - scaledWidth) / 2 + offset.x;
       const top = (CROP_SIZE - scaledHeight) / 2 + offset.y;
 
-      // Tọa độ trên ảnh gốc cần cắt
-      const sourceX = -left / finalScale;
-      const sourceY = -top / finalScale;
-      const sourceWidth = CROP_SIZE / finalScale;
-      const sourceHeight = CROP_SIZE / finalScale;
+      // Chỉ cắt phần nằm trong vòng tròn (căn giữa trong khung 280)
+      const circleLeft = (CROP_SIZE - CIRCLE_SIZE) / 2;
+      const circleTop = (CROP_SIZE - CIRCLE_SIZE) / 2;
+
+      const sourceX = (circleLeft - left) / finalScale;
+      const sourceY = (circleTop - top) / finalScale;
+      const sourceWidth = CIRCLE_SIZE / finalScale;
+      const sourceHeight = CIRCLE_SIZE / finalScale;
 
       ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
 
@@ -189,11 +223,11 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
         </div>
       )}
 
-      {/* --- MODAL CẮT ẢNH XỊN --- */}
+      {/* --- MODAL CẮT ẢNH --- */}
       {imageSrc && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-[340px] overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-slate-900">
-            
+
             {/* Header */}
             <div className="px-5 pt-5 pb-3">
               <h3 className="font-display text-center text-lg font-bold text-slate-900 dark:text-white">Cắt ảnh đại diện</h3>
@@ -201,7 +235,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
 
             {/* Vùng Crop ảnh */}
             <div className="relative flex justify-center px-4">
-              <div 
+              <div
                 className="relative h-[280px] w-[280px] overflow-hidden rounded-2xl bg-slate-900"
                 style={{ touchAction: "none" }}
               >
@@ -221,9 +255,12 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
                     height: imgDimensions.height >= imgDimensions.width ? "auto" : "100%",
                   }}
                 />
-                
-                {/* Khung tròn che mờ (Mask) - Đã fix lỗi tràn viền */}
-                <div className="pointer-events-none absolute inset-0 m-auto h-[220px] w-[220px] rounded-full border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]" />
+
+                {/* Khung tròn che mờ (Mask) - đúng bằng CIRCLE_SIZE */}
+                <div
+                  className="pointer-events-none absolute inset-0 m-auto rounded-full border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]"
+                  style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+                />
               </div>
             </div>
 
@@ -237,7 +274,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
                   min={1}
                   max={3}
                   step={0.1}
-                  onChange={(e) => setZoom(Number(e.target.value))}
+                  onChange={handleZoomChange}
                   className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 dark:bg-slate-700"
                 />
                 <ZoomIn size={18} className="text-slate-400" />
@@ -267,4 +304,4 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       )}
     </div>
   );
-                 }
+        }
