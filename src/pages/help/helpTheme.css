@@ -1,0 +1,172 @@
+/* helpTheme.css — bảng màu sáng/tối cho Trung tâm Trợ giúp */
+
+html[data-help-theme="light"] {
+  color-scheme: light;
+  --h-canvas: #f3f8f5;
+  --h-card: #ffffff;
+  --h-glass: #ffffff;
+  --h-soft: #eaf4ee;
+  --h-input: #eef5f0;
+  --h-text: #10261b;
+  --h-text2: #41564b;
+  --h-muted: #5d7066;
+  --h-faint: #8ea096;
+  --h-line: rgba(16, 38, 27, 0.12);
+  --h-line2: rgba(16, 38, 27, 0.07);
+  --h-edge: rgba(16, 38, 27, 0.12);
+  --h-accent: #08874f;
+  --h-accent-text: #08874f;
+  --h-accent-line: rgba(8, 135, 79, 0.4);
+  --h-on-accent: #ffffff;
+  --h-accent-soft: #e0f4e9;
+  --h-accent-soft2: #c9ecd8;
+  --h-hover: #f1faf5;
+  --h-bar: rgba(255, 255, 255, 0.88);
+  --h-nav: rgba(255, 255, 255, 0.9);
+  --h-nav-line: rgba(16, 38, 27, 0.14);
+  --h-navbtn: rgba(16, 38, 27, 0.06);
+  --h-navbtn-on: rgba(16, 38, 27, 0.14);
+  --h-bubble: #eef3f0;
+  --h-pill: rgba(8, 135, 79, 0.06);
+  --h-pill-r: rgba(16, 38, 27, 0.3);
+  --h-glow: none;
+  --h-halo: rgba(120, 214, 170, 0.55);
+  --h-hero: linear-gradient(180deg, #05643a 0%, #0a8a52 34%, #7fd3a8 66%, #ffffff 100%);
+  --h-cta: linear-gradient(160deg, #05643a 0%, #0a8a52 100%);
+  --h-rose-bg: #fff1f2;
+  --h-rose: #e11d48;
+}
+
+html[data-help-theme="dark"] {
+  color-scheme: dark;
+  --h-canvas: #0a0c0b;
+  --h-card: #131715;
+  --h-glass: rgba(255, 255, 255, 0.07);
+  --h-soft: #1c211e;
+  --h-input: rgba(255, 255, 255, 0.1);
+  --h-text: #f4f7f5;
+  --h-text2: #c8d3ce;
+  --h-muted: #93a39b;
+  --h-faint: #6f7d76;
+  --h-line: rgba(255, 255, 255, 0.14);
+  --h-line2: rgba(255, 255, 255, 0.08);
+  --h-edge: #3fbf8a;
+  --h-accent: #34e58a;
+  --h-accent-text: #34e58a;
+  --h-accent-line: rgba(52, 229, 138, 0.4);
+  --h-on-accent: #06130c;
+  --h-accent-soft: rgba(52, 229, 138, 0.14);
+  --h-accent-soft2: rgba(52, 229, 138, 0.28);
+  --h-hover: #1c211e;
+  --h-bar: rgba(10, 12, 11, 0.85);
+  --h-nav: rgba(0, 0, 0, 0.4);
+  --h-nav-line: rgba(255, 255, 255, 0.4);
+  --h-navbtn: rgba(255, 255, 255, 0.1);
+  --h-navbtn-on: rgba(255, 255, 255, 0.4);
+  --h-bubble: rgba(255, 255, 255, 0.1);
+  --h-pill: rgba(52, 229, 138, 0.05);
+  --h-pill-r: rgba(255, 255, 255, 0.5);
+  --h-glow: 0 0 28px rgba(52, 229, 138, 0.22);
+  --h-halo: rgba(31, 191, 117, 0.45);
+  --h-hero: linear-gradient(180deg, #0b3d28 0%, #0a2a1c 38%, #0a0c0b 100%);
+  --h-cta: linear-gradient(160deg, #0f5a38 0%, #0a3d27 100%);
+  --h-rose-bg: rgba(244, 63, 94, 0.12);
+  --h-rose: #fda4af;
+}
+
+html[data-help-theme] body { background: var(--h-canvas); }
+
+/* ===== Lớp dùng cho màn mới (HelpScreen, HelpTicket) ===== */
+.hc-sans { font-family: "Whyte Inktrap", "Inter", Arial, sans-serif; }
+.hc-serif { font-family: "GrandSlang", "Bodoni Moda", Georgia, serif; font-style: italic; font-weight: 400; color: var(--h-accent-text); }
+.hc-mono { font-family: "Whyte Inktrap Mono", "Space Mono", ui-monospace, monospace; }
+.hc-canvas { background: var(--h-canvas); color: var(--h-text); font-family: "Whyte Inktrap", "Inter", Arial, sans-serif; }
+.hc-halo {
+  position: absolute; inset: 0 0 auto 0; height: 440px; pointer-events: none;
+  background-image:
+    linear-gradient(180deg, transparent 55%, var(--h-canvas) 100%),
+    radial-gradient(circle closest-corner at 12% 0%, var(--h-halo), transparent 60%);
+}
+.hc-nav { background: var(--h-nav); border-bottom: 0.5px solid var(--h-nav-line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.hc-navbtn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 4px; background: var(--h-navbtn); color: var(--h-text); font-size: 12px; text-transform: uppercase; transition: background 0.15s; }
+.hc-navbtn:active { background: var(--h-navbtn-on); }
+.hc-vr { width: 1px; height: 20px; background: var(--h-nav-line); }
+.hc-bar { background: var(--h-bar); border-top: 0.5px solid var(--h-line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.hc-card { background: var(--h-glass); border: 0.5px solid var(--h-line); border-top-color: var(--h-edge); border-radius: 20px; backdrop-filter: blur(11px); -webkit-backdrop-filter: blur(11px); }
+.hc-text { color: var(--h-text); }
+.hc-text2 { color: var(--h-text2); }
+.hc-muted { color: var(--h-muted); }
+.hc-accent { color: var(--h-accent-text); }
+.hc-rule { border-color: var(--h-line); }
+.hc-skel { background: var(--h-soft); }
+.hc-avatar { background: var(--h-soft); border: 1px solid var(--h-line); color: var(--h-text); }
+.hc-iconbtn { color: var(--h-text); }
+.hc-iconbtn:active { background: var(--h-soft); }
+.hc-me { background: var(--h-accent); color: var(--h-on-accent); box-shadow: var(--h-glow); }
+.hc-cs { background: var(--h-bubble); border: 1px solid var(--h-line); color: var(--h-text); backdrop-filter: blur(11px); -webkit-backdrop-filter: blur(11px); }
+.hc-badge { border: 1px solid var(--h-accent-line); color: var(--h-accent-text); }
+.hc-chip { background: var(--h-input); border: 1px solid var(--h-line); color: var(--h-text); }
+.hc-chip[aria-pressed="true"] { background: var(--h-accent); color: var(--h-on-accent); box-shadow: var(--h-glow); }
+.hc-input { background: var(--h-input); border: 1px solid var(--h-line); color: var(--h-text); outline: none; }
+.hc-input::placeholder { color: var(--h-muted); }
+.hc-input:focus { border-color: var(--h-accent); box-shadow: 0 0 0 1px var(--h-accent); }
+.hc-send { background: var(--h-accent); color: var(--h-on-accent); box-shadow: var(--h-glow); }
+.hc-send:disabled { background: var(--h-soft); color: var(--h-muted); box-shadow: none; }
+.hc-err { background: var(--h-rose-bg); color: var(--h-rose); }
+.hc-pill {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 56px; border-radius: 9999px;
+  border: 0.5px solid var(--h-line); border-right-color: var(--h-pill-r); border-bottom-color: var(--h-accent-line);
+  background: var(--h-pill); color: var(--h-text); font-size: 18px; font-weight: 300;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: box-shadow 0.15s;
+}
+.hc-pill:active:not(:disabled) { box-shadow: inset 0 0 0 2px var(--h-accent); }
+.hc-pill:disabled { opacity: 0.4; }
+
+/* ===== Đổi màu các lớp Tailwind cũ (HelpUI, HelpFaq, HelpHistory, HelpRequest, trang cha) ===== */
+html[data-help-theme] [class~="bg-[#eef2f9]"] { background-color: var(--h-soft) !important; }
+html[data-help-theme] [class~="fixed"][class~="bg-[#eef2f9]"],
+html[data-help-theme] [class~="min-h-screen"][class~="bg-[#eef2f9]"] { background-color: var(--h-canvas) !important; }
+html[data-help-theme] [class~="from-[#eef2f9]"] {
+  --tw-gradient-from: var(--h-canvas) !important; --tw-gradient-to: transparent !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+html[data-help-theme] [class~="bg-white"],
+html[data-help-theme] [class~="bg-[#ffffff]"] { background-color: var(--h-card) !important; }
+html[data-help-theme] [class~="bg-white/85"] { background-color: var(--h-bar) !important; }
+html[data-help-theme] [class~="focus-within:bg-white"]:focus-within { background-color: var(--h-card) !important; }
+html[data-help-theme] [class~="bg-[#2b59e0]"] { background-color: var(--h-accent) !important; color: var(--h-on-accent) !important; }
+html[data-help-theme] [class~="bg-[#eaf1ff]"] { background-color: var(--h-accent-soft) !important; }
+html[data-help-theme] [class~="bg-[#dbe7ff]"] { background-color: var(--h-accent-soft2) !important; }
+html[data-help-theme] [class~="bg-rose-50"] { background-color: var(--h-rose-bg) !important; }
+html[data-help-theme] [class~="active:bg-[#eef2f9]"]:active { background-color: var(--h-soft) !important; }
+html[data-help-theme] [class~="active:bg-[#f5f8ff]"]:active { background-color: var(--h-hover) !important; }
+html[data-help-theme] [class~="disabled:bg-[#16213e]/10"]:disabled { background-color: var(--h-line) !important; }
+
+html[data-help-theme] [class~="text-[#16213e]"] { color: var(--h-text) !important; }
+html[data-help-theme] [class~="text-[#4a5368]"] { color: var(--h-text2) !important; }
+html[data-help-theme] [class~="text-[#6b7488]"] { color: var(--h-muted) !important; }
+html[data-help-theme] [class~="text-[#8b93a7]"] { color: var(--h-faint) !important; }
+html[data-help-theme] [class~="text-[#2b59e0]"] { color: var(--h-accent-text) !important; }
+html[data-help-theme] [class~="text-[#2347d1]"] { color: var(--h-accent-text) !important; }
+html[data-help-theme] [class~="text-rose-500"],
+html[data-help-theme] [class~="text-rose-600"] { color: var(--h-rose) !important; }
+html[data-help-theme] [class~="focus:text-[#16213e]"]:focus { color: var(--h-text) !important; }
+html[data-help-theme] [class~="disabled:text-[#16213e]/35"]:disabled { color: var(--h-muted) !important; }
+html[data-help-theme] [class~="placeholder:text-[#6b7488]"]::placeholder { color: var(--h-muted) !important; }
+html[data-help-theme] [class~="focus:placeholder:text-[#8b93a7]"]:focus::placeholder { color: var(--h-faint) !important; }
+html[data-help-theme] .group:focus-within [class~="group-focus-within:text-[#6b7488]"] { color: var(--h-muted) !important; }
+
+html[data-help-theme] [class~="border-[#e4e9f2]"] { border-color: var(--h-line) !important; }
+html[data-help-theme] [class~="border-[#16213e]/10"],
+html[data-help-theme] [class~="border-[#16213e]/20"],
+html[data-help-theme] [class~="border-[#16213e]/30"] { border-color: var(--h-line) !important; }
+html[data-help-theme] [class~="border-[#16213e]/5"],
+html[data-help-theme] [class~="border-[#16213e]/[0.07]"] { border-color: var(--h-line2) !important; }
+html[data-help-theme] [class~="divide-[#16213e]/10"] > * + * { border-color: var(--h-line) !important; }
+html[data-help-theme] [class~="border-[#2b59e0]"] { border-color: var(--h-accent) !important; }
+html[data-help-theme] [class~="focus:border-[#2b59e0]"]:focus { border-color: var(--h-accent) !important; }
+html[data-help-theme] [class~="ring-[#2b59e0]"],
+html[data-help-theme] [class~="focus:ring-[#2b59e0]"]:focus { --tw-ring-color: var(--h-accent) !important; }
+
+html[data-help-theme] [style*="linear-gradient(180deg"] { background: var(--h-hero) !important; }
+html[data-help-theme] [style*="linear-gradient(160deg"] { background: var(--h-cta) !important; }
