@@ -6,7 +6,22 @@ import { useHelpTheme } from "./helpTheme.jsx";
 
 export const MAX_IMAGES = 3;
 export const MAX_MB = 5;
-export const statusOf = (s) => TICKET_STATUS[s] || { label: s, dot: "bg-slate-400" };
+
+/* Trạng thái ticket */
+export const statusOf = (s) =>
+  TICKET_STATUS[s] || { label: s, dot: "bg-slate-400" };
+
+/* Nguồn gửi ticket */
+const SOURCES = {
+  help_center: { label: "Trung tâm trợ giúp", dot: "bg-sky-400" },
+  profile:     { label: "Hồ sơ",              dot: "bg-violet-400" },
+  order:       { label: "Đơn hàng",           dot: "bg-amber-400" },
+  chat:        { label: "Trò chuyện",         dot: "bg-emerald-400" },
+  landing:     { label: "Trang chủ",          dot: "bg-slate-400" },
+};
+
+export const sourceOf = (s) =>
+  SOURCES[s] || { label: s || "Khác", dot: "bg-slate-400" };
 
 function Title({ text }) {
   const parts = String(text).split(" ");
@@ -23,19 +38,26 @@ export function Screen({ title, big = true, onClose, right, footer, children }) 
   useHelpTheme();
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, []);
   return (
     <div className="hc-canvas fixed inset-0 z-50 flex flex-col">
       <div aria-hidden className="hc-halo" />
-      <header className="hc-nav relative z-10" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <header
+        className="hc-nav relative z-10"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <div className="mx-auto flex h-[54px] w-full max-w-md items-center gap-3 px-4 md:max-w-xl">
           <button onClick={onClose} aria-label="Quay lại" className="hc-navbtn">
             <Icon name="back" size={14} />
             Quay lại
           </button>
           <span className="hc-vr" />
-          <span className="hc-text2 flex-1 truncate text-[12px] uppercase">{big ? "Trợ giúp" : title}</span>
+          <span className="hc-text2 flex-1 truncate text-[12px] uppercase">
+            {big ? "Trợ giúp" : title}
+          </span>
           {right}
         </div>
       </header>
