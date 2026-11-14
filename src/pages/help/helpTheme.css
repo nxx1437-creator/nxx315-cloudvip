@@ -170,3 +170,71 @@ html[data-help-theme] [class~="focus:ring-[#2b59e0]"]:focus { --tw-ring-color: v
 
 html[data-help-theme] [style*="linear-gradient(180deg"] { background: var(--h-hero) !important; }
 html[data-help-theme] [style*="linear-gradient(160deg"] { background: var(--h-cta) !important; }
+/* ===== KIỂU LOOM ===== */
+html[data-help-theme="light"] {
+  --h-hero-bg:
+    radial-gradient(90% 75% at 100% 0%, rgba(150, 220, 184, 0.8), transparent 65%),
+    radial-gradient(70% 60% at 0% 8%, rgba(186, 232, 206, 0.85), transparent 70%),
+    linear-gradient(180deg, #f3faf6 0%, #f6f9f7 100%);
+  --h-band: #e7f3ec;
+  --h-tile0-a: #ece8ff; --h-tile0-b: #d8d1fb; --h-tile0-i: #3b2f8f;
+  --h-tile1-a: #e3edff; --h-tile1-b: #cddefc; --h-tile1-i: #1e3a8a;
+  --h-tile2-a: #e2f6e9; --h-tile2-b: #c7ead5; --h-tile2-i: #14532d;
+  --h-tile3-a: #ffeedd; --h-tile3-b: #fbd8b9; --h-tile3-i: #7a3b10;
+  --h-tile4-a: #ffe7e4; --h-tile4-b: #fbcdc8; --h-tile4-i: #7f1d1d;
+  --h-tile5-a: #fde7f3; --h-tile5-b: #f6cde5; --h-tile5-i: #831843;
+  --h-tile-border: rgba(255, 255, 255, 0.85);
+  --h-tile-hi: rgba(255, 255, 255, 0.6);
+}
+html[data-help-theme="dark"] {
+  --h-hero-bg:
+    radial-gradient(80% 60% at 100% 0%, rgba(31, 191, 117, 0.28), transparent 65%),
+    radial-gradient(60% 50% at 0% 8%, rgba(20, 120, 80, 0.3), transparent 70%),
+    linear-gradient(180deg, #0d1814 0%, #0b0d0c 100%);
+  --h-band: #101714;
+  --h-tile0-a: rgba(167, 139, 250, 0.2); --h-tile0-b: rgba(167, 139, 250, 0.06); --h-tile0-i: #c4b5fd;
+  --h-tile1-a: rgba(96, 165, 250, 0.2); --h-tile1-b: rgba(96, 165, 250, 0.06); --h-tile1-i: #93c5fd;
+  --h-tile2-a: rgba(63, 214, 139, 0.2); --h-tile2-b: rgba(63, 214, 139, 0.06); --h-tile2-i: #86efac;
+  --h-tile3-a: rgba(251, 146, 60, 0.2); --h-tile3-b: rgba(251, 146, 60, 0.06); --h-tile3-i: #fdba74;
+  --h-tile4-a: rgba(248, 113, 113, 0.2); --h-tile4-b: rgba(248, 113, 113, 0.06); --h-tile4-i: #fca5a5;
+  --h-tile5-a: rgba(244, 114, 182, 0.2); --h-tile5-b: rgba(244, 114, 182, 0.06); --h-tile5-i: #f9a8d4;
+  --h-tile-border: rgba(255, 255, 255, 0.1);
+  --h-tile-hi: transparent;
+}
+
+.hc-hero h1 { font-weight: 700; letter-spacing: -0.03em; }
+.hc-btn-solid, .hc-btn-cta, .hc-btn-ghost { border-radius: 9999px; }
+.hc-search { border-radius: 9999px; }
+.hc-search .hc-btn-solid { height: 40px; padding: 0 20px; border-radius: 9999px; }
+.hc-topic { text-decoration: underline; text-underline-offset: 3px; color: var(--h-text2); }
+
+/* tên lửa phía sau đầu trang: chỉnh vị trí/cỡ ở đây */
+.hc-rocket { position: absolute; z-index: 0; top: 84px; right: 6px; width: 132px; max-width: 34%; transform: rotate(8deg); pointer-events: none; user-select: none; -webkit-user-drag: none; }
+@media (min-width: 768px) { .hc-rocket { right: 8%; top: 56px; width: 200px; } }
+
+/* thẻ chủ đề kiểu Loom */
+.hc-tile-0 { --ta: var(--h-tile0-a); --tb: var(--h-tile0-b); --ti: var(--h-tile0-i); }
+.hc-tile-1 { --ta: var(--h-tile1-a); --tb: var(--h-tile1-b); --ti: var(--h-tile1-i); }
+.hc-tile-2 { --ta: var(--h-tile2-a); --tb: var(--h-tile2-b); --ti: var(--h-tile2-i); }
+.hc-tile-3 { --ta: var(--h-tile3-a); --tb: var(--h-tile3-b); --ti: var(--h-tile3-i); }
+.hc-tile-4 { --ta: var(--h-tile4-a); --tb: var(--h-tile4-b); --ti: var(--h-tile4-i); }
+.hc-tile-5 { --ta: var(--h-tile5-a); --tb: var(--h-tile5-b); --ti: var(--h-tile5-i); }
+.hc-tile {
+  gap: 10px; padding: 18px 8px 14px; border-radius: 18px;
+  color: var(--ti, var(--h-tile0-i));
+  background: linear-gradient(160deg, var(--ta, var(--h-tile0-a)), var(--tb, var(--h-tile0-b)));
+  border: 1px solid var(--h-tile-border);
+  box-shadow: inset 0 1px 0 var(--h-tile-hi);
+}
+.hc-tile[aria-pressed="true"] {
+  background: linear-gradient(160deg, var(--ta, var(--h-tile0-a)), var(--tb, var(--h-tile0-b)));
+  border-color: var(--ti, var(--h-tile0-i));
+  box-shadow: 0 0 0 2px var(--ti, var(--h-tile0-i));
+}
+.hc-tile-sub { opacity: 0.7; }
+
+/* dải tràn bề ngang */
+.hc-band { background: var(--h-band); padding: 40px 0 44px; }
+.hc-link { display: block; width: 100%; padding: 11px 0; border-bottom: 0.5px solid var(--h-line); text-align: left; font-size: 15px; line-height: 22px; color: var(--h-text2); }
+.hc-link:active { color: var(--h-accent-text); }
+.hc-ctaband { position: relative; overflow: hidden; margin-top: 40px; padding: 56px 0 150px; background: var(--h-cta-bg); color: var(--h-cta-fg); }
