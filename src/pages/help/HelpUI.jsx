@@ -1,10 +1,14 @@
-// src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ
-// Phong cách Intercom Help Center: hero chuyển trắng, thẻ trắng viền mảnh bo nhẹ, chữ đậm.
-// Màu sáng/tối được đổi bởi helpTheme.css (đọc từ profiles.theme_mode).
+// src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ (trắng / đen, xanh lá)
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
 import { useHelpTheme } from "./helpTheme.jsx";
+
+/* Ảnh minh hoạ: tải lên Supabase Storage rồi dán link vào đây (để trống = không hiện) */
+export const HELP_IMAGES = {
+  hero: "",
+  cta: "",
+};
 
 /* ============ ICON ============ */
 const P = {
@@ -24,6 +28,8 @@ const P = {
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
   camera: (<><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></>),
   lock: (<><rect x="4" y="11" width="16" height="10" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>),
+  info: (<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
+  folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
 };
 
 export function Icon({ name, size = 20, stroke = 2, className = "" }) {
@@ -35,16 +41,14 @@ export function Icon({ name, size = 20, stroke = 2, className = "" }) {
   );
 }
 
-/* ============ DÙNG CHUNG ============ */
+/* ============ DÙNG CHUNG (giữ nguyên tên cũ cho các file khác) ============ */
 export const surface = "rounded-xl border border-[#e4e9f2] bg-white";
 export const ring = "shadow-[0_0_0_0.5px_rgba(22,33,62,0.12),0_1px_2px_0_rgba(22,33,62,0.1)]";
 export const hairline = "divide-y divide-[#16213e]/10";
-const rowHover = "transition active:bg-[#f5f8ff]";
-const lift = "shadow-[0_8px_28px_-14px_rgba(22,33,62,0.28)]";
 
 export function StatusDot({ st }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] text-[#4a5368]">
+    <span className="hc-text2 inline-flex shrink-0 items-center gap-1.5 text-[13px]">
       <span className={`h-2 w-2 rounded-full ${st.dot || "bg-slate-400"}`} />
       {st.label}
     </span>
@@ -53,7 +57,7 @@ export function StatusDot({ st }) {
 
 export function IconBox({ name, size = 20 }) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf1ff] text-[#2b59e0]">
+    <span className="hc-iconbox">
       <Icon name={name} size={size} />
     </span>
   );
@@ -63,11 +67,11 @@ export function SectionTitle({ title, hint, action, onAction }) {
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
       <div>
-        <h2 className="text-[20px] font-semibold leading-tight tracking-[-0.02em] text-[#16213e]">{title}</h2>
-        {hint && <p className="mt-0.5 text-[13px] text-[#6b7488]">{hint}</p>}
+        <h2 className="hc-text text-[22px] font-medium leading-tight tracking-[-0.02em]">{title}</h2>
+        {hint && <p className="hc-muted mt-0.5 text-[13px]">{hint}</p>}
       </div>
       {action && (
-        <button onClick={onAction} className="shrink-0 text-[14px] font-medium text-[#2b59e0]">{action}</button>
+        <button onClick={onAction} className="hc-accent shrink-0 text-[14px] font-medium">{action}</button>
       )}
     </div>
   );
@@ -76,44 +80,53 @@ export function SectionTitle({ title, hint, action, onAction }) {
 /* ============ HERO: thanh trên + lời chào + tìm kiếm ============ */
 export function Hero({ query, onQuery, name, onBack }) {
   useHelpTheme();
-  const greet = name ? `Chào ${name}, chúng tôi có thể giúp gì cho bạn?` : "Chúng tôi có thể giúp gì cho bạn?";
   return (
-    <header className="pb-24 pt-3 text-white"
-      style={{ background: "linear-gradient(180deg,#2347d1 0%,#3359e0 34%,#7f9df0 66%,#ffffff 100%)" }}>
-      <div className="mx-auto max-w-md px-4 md:max-w-4xl">
+    <header className="hc-hero relative overflow-hidden pb-24 pt-3">
+      {HELP_IMAGES.hero && (
+        <img src={HELP_IMAGES.hero} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30" />
+      )}
+      <div className="relative mx-auto max-w-md px-4 md:max-w-4xl">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <button onClick={onBack} aria-label="Quay lại"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 transition active:bg-white/25">
+            <button onClick={onBack} aria-label="Quay lại" className="hc-roundbtn">
               <Icon name="back" size={18} />
             </button>
-            <span className="truncate text-[15px] font-semibold tracking-[-0.01em]">NXX315</span>
-            <span className="h-4 w-px shrink-0 bg-white/40" />
-            <span className="truncate text-[14px] text-white/85">Trợ giúp</span>
+            <span className="hc-text truncate text-[15px] font-bold tracking-[-0.01em]">NXX315</span>
+            <span className="hc-vr shrink-0" />
+            <span className="hc-muted truncate text-[14px]">Trợ giúp</span>
           </div>
-          <nav className="flex shrink-0 items-center gap-4 text-[13px] text-white/90">
+          <nav className="hc-text2 flex shrink-0 items-center gap-4 text-[13px]">
             <Link to="/guide" className="transition active:opacity-70">Hướng dẫn</Link>
             <Link to="/contact" className="transition active:opacity-70">Liên hệ</Link>
           </nav>
         </div>
 
-        <h1 className="mt-10 max-w-[560px] text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[34px]">{greet}</h1>
+        <div className="mt-10 text-center">
+          <span className="hc-badge2 hc-mono">Trung tâm trợ giúp</span>
+          <h1 className="hc-text mx-auto mt-5 max-w-[520px] text-[34px] font-medium leading-[1.05] tracking-[-0.03em] sm:text-[44px]">
+            {name ? `Chào ${name}, chúng tôi có thể ` : "Chúng tôi có thể "}
+            <span className="hc-serif">giúp gì cho bạn?</span>
+          </h1>
 
-        <div className="group relative mt-6 rounded-xl border border-white/30 bg-white/20 backdrop-blur-sm transition focus-within:border-transparent focus-within:bg-white focus-within:shadow-lg">
-          <Icon name="search" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/90 group-focus-within:text-[#6b7488]" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => onQuery(e.target.value)}
-            placeholder="Tìm câu hỏi thường gặp..."
-            className="h-12 w-full rounded-xl bg-transparent pl-11 pr-11 text-[16px] text-white outline-none placeholder:text-white/85 focus:text-[#16213e] focus:placeholder:text-[#8b93a7]"
-          />
-          {query && (
-            <button onClick={() => onQuery("")} aria-label="Xoá"
-              className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-white/80 group-focus-within:text-[#6b7488]">
-              <Icon name="x" size={16} />
+          <div className="hc-search mx-auto mt-7 max-w-[520px] text-left">
+            <Icon name="search" size={18} className="hc-muted shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => onQuery(e.target.value)}
+              placeholder="Tìm câu hỏi thường gặp..."
+            />
+            {query && (
+              <button onClick={() => onQuery("")} aria-label="Xoá"
+                className="hc-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                <Icon name="x" size={16} />
+              </button>
+            )}
+            <button type="button" onClick={() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth" })}
+              className="hc-btn-solid h-11 shrink-0 px-5 text-[15px]">
+              Tìm
             </button>
-          )}
+          </div>
         </div>
       </div>
     </header>
@@ -125,14 +138,14 @@ export function PopularFaqs({ faqs, onPick }) {
   const items = faqs.slice(0, 6);
   if (!items.length) return null;
   return (
-    <section className={`${surface} ${lift} px-5 pb-2 pt-5`}>
-      <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-[#16213e]">Câu hỏi phổ biến</h2>
+    <section className="hc-card hc-lift px-5 pb-2 pt-5">
+      <h2 className="hc-text text-[18px] font-medium tracking-[-0.01em]">Câu hỏi phổ biến</h2>
       <ul className="mt-2 md:grid md:grid-cols-2 md:gap-x-12">
         {items.map((f) => (
-          <li key={f.id} className="border-b border-[#16213e]/[0.07] last:border-b-0 md:border-b-0">
-            <button onClick={() => onPick(f)} className="flex w-full items-center justify-between gap-4 py-3 text-left text-[15px] leading-6 text-[#16213e]">
+          <li key={f.id} className="hc-rule border-b-[0.5px] last:border-b-0 md:border-b-0">
+            <button onClick={() => onPick(f)} className="hc-text flex w-full items-center justify-between gap-4 py-3 text-left text-[15px] leading-6">
               <span className="line-clamp-2">{f.question}</span>
-              <Icon name="chevR" size={14} stroke={2.5} className="shrink-0 text-[#2b59e0]" />
+              <Icon name="chevR" size={14} stroke={2.5} className="hc-accent shrink-0" />
             </button>
           </li>
         ))}
@@ -149,16 +162,19 @@ export function QuickActions({ onChat, onRequest, onHistory }) {
     { icon: "history", title: "Lịch sử yêu cầu", sub: "Theo dõi trạng thái và phản hồi", on: onHistory },
   ];
   return (
-    <section className={`${surface} ${hairline} overflow-hidden`}>
+    <section className="hc-card overflow-hidden">
       {items.map((it) => (
-        <button key={it.title} onClick={() => it.on()} className={`flex w-full items-center gap-3.5 px-5 py-3.5 text-left ${rowHover}`}>
+        <button key={it.title} onClick={() => it.on()}
+          className="hc-row hc-rule flex w-full items-center gap-3.5 border-b-[0.5px] px-5 py-3.5 text-left last:border-b-0">
           <IconBox name={it.icon} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[16px] font-semibold leading-6 tracking-[-0.01em] text-[#16213e]">{it.title}</span>
-            <span className="block truncate text-[13px] text-[#6b7488]">{it.sub}</span>
+            <span className="hc-text block text-[16px] font-medium leading-6 tracking-[-0.01em]">{it.title}</span>
+            <span className="hc-muted block truncate text-[13px]">{it.sub}</span>
           </span>
-          {it.tag && <span className="rounded-full bg-[#eaf1ff] px-2.5 py-1 text-[12px] font-medium text-[#2b59e0]">{it.tag}</span>}
-          <Icon name="chevR" size={15} className="shrink-0 text-[#8b93a7]" />
+          {it.tag && (
+            <span className="hc-badge hc-mono rounded-full px-2.5 py-0.5 text-[11px] uppercase tracking-[0.07em]">{it.tag}</span>
+          )}
+          <Icon name="chevR" size={15} className="hc-muted shrink-0" />
         </button>
       ))}
     </section>
@@ -170,20 +186,20 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
   const note = (icon, text) => (
     <div className="flex items-center gap-3.5 px-5 py-4">
       <IconBox name={icon} />
-      <p className="text-[14px] leading-6 text-[#6b7488]">{text}</p>
+      <p className="hc-muted text-[14px] leading-6">{text}</p>
     </div>
   );
   return (
     <section>
       <SectionTitle title="Giao dịch gần đây" hint="Chọn một đơn để báo vấn đề" action={signedIn ? "Xem tất cả" : null} onAction={onAll} />
-      <div className={`${surface} ${hairline} overflow-hidden`}>
+      <div className="hc-card overflow-hidden">
         {loading ? (
           [0, 1].map((i) => (
             <div key={i} className="flex animate-pulse items-center gap-3.5 px-5 py-3.5">
-              <div className="h-10 w-10 rounded-xl bg-[#eef2f9]" />
+              <div className="hc-skel h-10 w-10 rounded-xl" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-1/2 rounded bg-[#eef2f9]" />
-                <div className="h-3 w-3/4 rounded bg-[#eef2f9]" />
+                <div className="hc-skel h-4 w-1/2 rounded" />
+                <div className="hc-skel h-3 w-3/4 rounded" />
               </div>
             </div>
           ))
@@ -195,14 +211,15 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
           orders.slice(0, 3).map((o) => {
             const st = ORDER_STATUS[o.status] || { label: o.status, dot: "bg-slate-400" };
             return (
-              <button key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })} className={`flex w-full items-center gap-3.5 px-5 py-3.5 text-left ${rowHover}`}>
+              <button key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })}
+                className="hc-row hc-rule flex w-full items-center gap-3.5 border-b-[0.5px] px-5 py-3.5 text-left last:border-b-0">
                 <IconBox name="box" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold tracking-[-0.01em] text-[#16213e]">{o.package_name}</span>
-                  <span className="block truncate text-[13px] text-[#6b7488]">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
+                  <span className="hc-text block truncate text-[15px] font-medium tracking-[-0.01em]">{o.package_name}</span>
+                  <span className="hc-muted block truncate text-[13px]">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
                 </span>
                 <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-[15px] font-semibold text-[#16213e]">{fmtCoins(o.coins_charged)}</span>
+                  <span className="hc-text text-[15px] font-medium">{fmtCoins(o.coins_charged)}</span>
                   <StatusDot st={st} />
                 </span>
               </button>
@@ -214,22 +231,20 @@ export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
   );
 }
 
-/* ============ THẺ CHỦ ĐỀ ============ */
+/* ============ THẺ CHỦ ĐỀ (lưới 3 cột, kiểu Loom) ============ */
 export function CategoryCards({ faqs, active, onPick }) {
   const count = (k) => faqs.filter((f) => f.category === k).length;
   return (
     <section>
       <SectionTitle title="Duyệt theo chủ đề" />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {CATEGORIES.map((c) => {
+      <div className="grid grid-cols-3 gap-3">
+        {CATEGORIES.map((c, i) => {
           const on = active === c.key;
           return (
-            <button key={c.key} onClick={() => onPick(on ? null : c.key)}
-              className={`flex flex-col items-start rounded-xl border p-4 text-left transition active:scale-[0.99] [&:last-child:nth-child(odd)]:col-span-2 md:[&:last-child:nth-child(odd)]:col-span-1 ${on ? "border-[#2b59e0] bg-[#eaf1ff]" : "border-[#e4e9f2] bg-white"}`}>
-              <Icon name={c.icon} size={22} className="text-[#2b59e0]" />
-              <span className="mt-4 text-[15px] font-semibold leading-tight tracking-[-0.01em] text-[#16213e]">{c.label}</span>
-              <span className="mt-1 line-clamp-3 text-[13px] leading-5 text-[#6b7488]">{c.desc}</span>
-              <span className="mt-4 text-[12px] text-[#8b93a7]">{count(c.key)} câu hỏi</span>
+            <button key={c.key} aria-pressed={on} onClick={() => onPick(on ? null : c.key)} className={`hc-tile hc-tile-${i % 6}`}>
+              <Icon name={c.icon} size={30} stroke={1.6} className="hc-accent" />
+              <span className="hc-text text-[13px] font-medium leading-tight">{c.label}</span>
+              <span className="hc-muted text-[11px]">{count(c.key)} câu hỏi</span>
             </button>
           );
         })}
@@ -249,7 +264,7 @@ function Hl({ text, q }) {
     const j = ft.indexOf(fq, i);
     if (j < 0) { parts.push(text.slice(i)); break; }
     parts.push(text.slice(i, j));
-    parts.push(<mark key={j} className="rounded-sm bg-[#dbe7ff] px-0.5 text-inherit">{text.slice(j, j + fq.length)}</mark>);
+    parts.push(<mark key={j} className="rounded-sm px-0.5" style={{ background: "var(--h-accent-soft2)", color: "inherit" }}>{text.slice(j, j + fq.length)}</mark>);
     i = j + fq.length;
   }
   return <>{parts}</>;
@@ -257,23 +272,23 @@ function Hl({ text, q }) {
 
 function FaqItem({ faq, open, onToggle, query, onAsk }) {
   const [vote, setVote] = useState(null);
-  const vbtn = "rounded-lg border border-[#e4e9f2] bg-white px-4 py-2 text-[14px] font-medium text-[#16213e] transition active:bg-[#f5f8ff]";
+  const vbtn = "hc-chip rounded-full px-4 py-1.5 text-[14px] font-medium transition active:scale-95";
   return (
-    <div>
+    <div className="hc-rule border-b-[0.5px] last:border-b-0">
       <button onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-4 px-5 py-4 text-left">
-        <span className="flex-1 text-[16px] font-medium leading-6 text-[#16213e]"><Hl text={faq.question} q={query} /></span>
-        <Icon name="chevD" size={18} className={`mt-1 shrink-0 text-[#2b59e0] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <span className="hc-text flex-1 text-[16px] font-medium leading-6"><Hl text={faq.question} q={query} /></span>
+        <Icon name="chevD" size={18} className={`hc-accent mt-1 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
           <div className="px-5 pb-5">
-            <p className="whitespace-pre-line text-[15px] leading-7 text-[#4a5368]">{faq.answer}</p>
+            <p className="hc-text2 whitespace-pre-line text-[15px] font-light leading-7">{faq.answer}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {vote === "yes" ? (
-                <span className="text-[14px] font-medium text-[#16213e]">Cảm ơn bạn đã phản hồi.</span>
+                <span className="hc-text text-[14px] font-medium">Cảm ơn bạn đã phản hồi.</span>
               ) : (
                 <>
-                  <span className="mr-1 text-[14px] text-[#6b7488]">Câu trả lời này có hữu ích không?</span>
+                  <span className="hc-muted mr-1 text-[14px]">Câu trả lời này có hữu ích không?</span>
                   <button onClick={() => setVote("yes")} className={vbtn}>Có</button>
                   <button onClick={() => setVote("no")} className={vbtn}>Không</button>
                 </>
@@ -281,7 +296,7 @@ function FaqItem({ faq, open, onToggle, query, onAsk }) {
             </div>
             {vote === "no" && (
               <button onClick={() => onAsk({ category: faq.category, about: faq.question })}
-                className="mt-4 text-[15px] font-semibold text-[#2b59e0]">
+                className="hc-accent mt-4 text-[15px] font-medium">
                 Gửi yêu cầu hỗ trợ
               </button>
             )}
@@ -309,17 +324,17 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
         action={cat && !q ? "Xoá bộ lọc" : null}
         onAction={() => setCat(null)}
       />
-      <div className={`${surface} ${hairline} overflow-hidden`}>
+      <div className="hc-card overflow-hidden">
         {loading ? (
           <div className="animate-pulse space-y-5 p-5">
-            {[0, 1, 2].map((i) => <div key={i} className="h-4 rounded bg-[#eef2f9]" />)}
+            {[0, 1, 2].map((i) => <div key={i} className="hc-skel h-4 rounded" />)}
           </div>
         ) : shown.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-[17px] font-semibold tracking-[-0.01em] text-[#16213e]">Không tìm thấy câu hỏi phù hợp</p>
-            <p className="mt-1 text-[14px] text-[#6b7488]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
+            <p className="hc-text text-[17px] font-medium tracking-[-0.01em]">Không tìm thấy câu hỏi phù hợp</p>
+            <p className="hc-muted mt-1 text-[14px]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
             <button onClick={() => onAsk({ category: cat || null, description: q })}
-              className="mt-5 rounded-xl bg-[#2b59e0] px-6 py-3 text-[15px] font-semibold text-white transition active:scale-[0.98]">
+              className="hc-btn-solid mt-5 h-12 px-6 text-[15px]">
               Gửi yêu cầu hỗ trợ
             </button>
           </div>
@@ -329,7 +344,7 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
           ))
         )}
         {!filtering && !loading && faqs.length > 5 && openIdx < 5 && (
-          <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center justify-center gap-1.5 py-3.5 text-[15px] font-semibold text-[#2b59e0]">
+          <button onClick={() => setExpanded(!expanded)} className="hc-accent flex w-full items-center justify-center gap-1.5 py-3.5 text-[15px] font-medium">
             {expanded ? "Thu gọn" : `Xem thêm ${faqs.length - 5} câu hỏi`}
             <Icon name="chevD" size={15} className={expanded ? "rotate-180" : ""} />
           </button>
@@ -339,21 +354,30 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   );
 }
 
-/* ============ VẪN CẦN HỖ TRỢ (thẻ màu duy nhất ở cuối trang) ============ */
+/* ============ VẪN CẦN HỖ TRỢ (khối tối ở cuối trang, kiểu Loom / n8n) ============ */
 export function ContactCard({ onRequest }) {
   return (
-    <section className="rounded-xl px-6 pb-6 pt-7 text-white" style={{ background: "linear-gradient(160deg,#2347d1 0%,#3b63e6 100%)" }}>
-      <h3 className="text-[24px] font-semibold leading-[1.15] tracking-[-0.02em]">Vẫn cần hỗ trợ?</h3>
-      <p className="mt-2 text-[15px] leading-6 text-white/85">Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.</p>
-      <div className="mt-5 flex gap-3">
-        <button onClick={() => onRequest()} className="flex-1 rounded-xl bg-white py-3 text-[15px] font-semibold text-[#2347d1] transition active:scale-[0.98]">
-          Gửi yêu cầu
-        </button>
-        <a href={ZALO_URL} target="_blank" rel="noopener noreferrer"
-          className="flex-1 rounded-xl border border-white/50 py-3 text-center text-[15px] font-semibold text-white transition active:scale-[0.98]">
-          Nhắn Zalo
-        </a>
+    <section className="hc-cta px-6 pb-7 pt-9 text-center">
+      {HELP_IMAGES.cta && (
+        <img src={HELP_IMAGES.cta} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25" />
+      )}
+      <div className="relative">
+        <h3 className="text-[30px] font-medium leading-[1.1] tracking-[-0.03em]">
+          Vẫn cần <span className="hc-serif-cta">hỗ trợ?</span>
+        </h3>
+        <p className="hc-cta-sub mx-auto mt-3 max-w-[320px] text-[15px] font-light leading-6">
+          Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button onClick={() => onRequest()} className="hc-btn-cta h-12 px-6 text-[15px]">
+            Gửi yêu cầu
+          </button>
+          <a href={ZALO_URL} target="_blank" rel="noopener noreferrer"
+            className="hc-btn-ghost flex h-12 items-center px-6 text-[15px]">
+            Nhắn Zalo
+          </a>
+        </div>
       </div>
     </section>
   );
-          }
+}
