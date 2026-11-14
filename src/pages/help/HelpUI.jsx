@@ -1,9 +1,10 @@
 // src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ
-// Phong cách Intercom Help Center: hero xanh chuyển trắng, thẻ trắng viền mảnh bo nhẹ, chữ xanh than,
-// màu xanh #2b59e0 chỉ dùng cho nút, liên kết và icon.
+// Phong cách Intercom Help Center: hero chuyển trắng, thẻ trắng viền mảnh bo nhẹ, chữ đậm.
+// Màu sáng/tối được đổi bởi helpTheme.css (đọc từ profiles.theme_mode).
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
+import { useHelpTheme } from "./helpTheme.js";
 
 /* ============ ICON ============ */
 const P = {
@@ -74,6 +75,7 @@ export function SectionTitle({ title, hint, action, onAction }) {
 
 /* ============ HERO: thanh trên + lời chào + tìm kiếm ============ */
 export function Hero({ query, onQuery, name, onBack }) {
+  useHelpTheme();
   const greet = name ? `Chào ${name}, chúng tôi có thể giúp gì cho bạn?` : "Chúng tôi có thể giúp gì cho bạn?";
   return (
     <header className="pb-24 pt-3 text-white"
@@ -337,7 +339,7 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   );
 }
 
-/* ============ VẪN CẦN HỖ TRỢ (thẻ xanh duy nhất ở cuối trang) ============ */
+/* ============ VẪN CẦN HỖ TRỢ (thẻ màu duy nhất ở cuối trang) ============ */
 export function ContactCard({ onRequest }) {
   return (
     <section className="rounded-xl px-6 pb-6 pt-7 text-white" style={{ background: "linear-gradient(160deg,#2347d1 0%,#3b63e6 100%)" }}>
@@ -354,5 +356,4 @@ export function ContactCard({ onRequest }) {
       </div>
     </section>
   );
-                                    }
-      
+          }
