@@ -1,7 +1,7 @@
 // src/pages/help/HelpTicket.jsx — chi tiết một yêu cầu + nhắn tin với CSKH
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
-import { Icon, StatusDot, ring } from "./HelpUI.jsx";
+import { Icon, StatusDot } from "./HelpUI.jsx";
 import { MAX_IMAGES, MAX_MB, statusOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
 
@@ -263,19 +263,19 @@ export function ChatScreen({ ticket, onClose }) {
   return (
     <>
     <div className="fixed inset-0 z-50 flex flex-col bg-[#eef2f9]">
-      <header className="relative z-10 bg-[#eef2f9] pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="mx-auto flex w-full max-w-md items-center gap-3 px-3 md:max-w-xl">
+      {/* Thanh đầu trang: trắng, gọn, có đường kẻ mảnh bên dưới */}
+      <header className="z-10 border-b border-[#16213e]/10 bg-white pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
+        <div className="mx-auto flex w-full max-w-md items-center gap-1 px-2 md:max-w-xl">
           <button onClick={onClose} aria-label="Quay lại"
-            className={`flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#16213e] shadow-[0_1px_3px_rgba(22,33,62,0.12)] ${ring}`}>
-            <Icon name="back" size={18} />
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9]">
+            <Icon name="back" size={20} />
           </button>
           <h1 className="flex-1 text-[17px] font-semibold tracking-[-0.2px] text-[#16213e]">Chi tiết yêu cầu</h1>
         </div>
-        <div className="pointer-events-none absolute inset-x-0 -bottom-4 h-4 bg-gradient-to-b from-[#eef2f9] to-transparent" />
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-md space-y-3 px-3 pb-6 pt-2 md:max-w-xl">
+        <div className="mx-auto max-w-md space-y-3 px-3 pb-6 pt-3 md:max-w-xl">
           <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
             <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
@@ -377,4 +377,4 @@ export function ChatScreen({ ticket, onClose }) {
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-  }
+    }
