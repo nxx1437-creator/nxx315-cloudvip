@@ -4,7 +4,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { Icon } from "./HelpUI.jsx";
 import { MAX_IMAGES, MAX_MB, statusOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
-import { useHelpTheme } from "./helpTheme.js";
+import { useHelpTheme } from "./helpTheme.jsx";
 
 const CLOSED = ["resolved", "closed"];
 const QUALITY = { 1: "Không hài lòng", 2: "Bình thường", 3: "Hài lòng", 4: "Rất hài lòng" };
