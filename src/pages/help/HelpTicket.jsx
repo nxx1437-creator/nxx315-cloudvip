@@ -1,22 +1,38 @@
-// src/pages/help/HelpTicket.jsx — chi tiết một yêu cầu + nhắn tin với CSKH
+// src/pages/help/HelpTicket.jsx — chi tiết một yêu cầu + nhắn tin với CSKH (nền đen, xanh lá phát sáng)
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
-import { Icon, StatusDot } from "./HelpUI.jsx";
+import { Icon } from "./HelpUI.jsx";
 import { MAX_IMAGES, MAX_MB, statusOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
 
 const CLOSED = ["resolved", "closed"];
 const QUALITY = { 1: "Không hài lòng", 2: "Bình thường", 3: "Hài lòng", 4: "Rất hài lòng" };
+
+const sans = { fontFamily: '"Whyte Inktrap","Inter",Arial,sans-serif' };
+const serif = { fontFamily: '"GrandSlang","Bodoni Moda",Georgia,serif' };
+const mono = { fontFamily: '"Whyte Inktrap Mono","Space Mono",ui-monospace,monospace' };
+
 const chip = (on) =>
-  `rounded-full px-3.5 py-2 text-[14px] font-medium transition active:scale-95 ${on ? "bg-[#2b59e0] text-white" : "bg-[#eef2f9] text-[#16213e]"}`;
+  `rounded-full border border-white/10 px-4 py-2 text-[14px] font-medium transition active:scale-95 ${
+    on ? "bg-[#34e58a] text-[#090909] shadow-[0_0_20px_rgba(52,229,138,0.3)]" : "bg-white/10 text-white"
+  }`;
+
+function StatusPill({ st }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-[14px] text-[#f7f9fa]">
+      <span className={`h-2 w-2 rounded-full ${st.dot || "bg-slate-400"}`} />
+      {st.label}
+    </span>
+  );
+}
 
 function CskhAvatar() {
   const [bad, setBad] = useState(false);
   if (CSKH_AVATAR && !bad) {
-    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="mt-6 h-9 w-9 shrink-0 rounded-full object-cover" />;
+    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="mt-6 h-9 w-9 shrink-0 rounded-full border border-white/20 object-cover" />;
   }
   return (
-    <span className="mt-6 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[14px] font-semibold text-[#16213e]">
+    <span className="mt-6 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-[14px] font-semibold text-white">
       {CSKH_NAME.slice(0, 1)}
     </span>
   );
@@ -24,9 +40,9 @@ function CskhAvatar() {
 
 function Lightbox({ url, onClose }) {
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
       <button aria-label="Đóng" onClick={onClose}
-        className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[#16213e]">
+        className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white">
         <Icon name="x" size={20} />
       </button>
       <img src={url} alt="Ảnh đính kèm" onClick={(e) => e.stopPropagation()} className="max-h-full max-w-full rounded-2xl object-contain" />
@@ -38,9 +54,9 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
   if (mine) {
     return (
       <div className="flex flex-col items-end">
-        {time && <span className="mb-1.5 pr-1.5 text-[13px] text-[#6b7488]">{time}</span>}
+        {time && <span className="mb-1.5 pr-1 text-[12px] text-white/40" style={mono}>{time}</span>}
         {hasText ? (
-          <div className="max-w-[84%] space-y-2 whitespace-pre-line break-words rounded-[22px] rounded-br-[6px] bg-[#2b59e0] px-4 py-3 text-[15px] leading-[21px] text-white">{children}</div>
+          <div className="max-w-[84%] space-y-2 whitespace-pre-line break-words rounded-[20px] rounded-br-[6px] bg-[#34e58a] px-4 py-3 text-[15px] leading-[22px] text-[#04140b] shadow-[0_0_28px_rgba(52,229,138,0.22)]">{children}</div>
         ) : (
           <div className="max-w-[84%]">{children}</div>
         )}
@@ -48,15 +64,19 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
     );
   }
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex items-start gap-2.5">
       <CskhAvatar />
       <div className="min-w-0 max-w-[80%]">
-        <p className="mb-1.5 pl-2 text-[13px] text-[#6b7488]">
-          <span className="font-semibold text-[#16213e]">{label || CSKH_NAME}</span>
-          {time ? `  ${time}` : ""}
+        <p className="mb-1.5 pl-1 text-[12px] text-white/40">
+          <span className="text-[14px] font-bold text-white">{label || CSKH_NAME}</span>
+          {time ? <span style={mono}>{"  "}{time}</span> : null}
         </p>
-        <div className="whitespace-pre-line break-words rounded-[22px] rounded-tl-[6px] bg-[#ececf1] px-4 py-3 text-[15px] leading-[21px] text-[#16213e]">
-          {auto && <span className="mb-2 block w-fit rounded-full bg-[#dbe7ff] px-3 py-1 text-[13px] font-medium text-[#2b59e0]">Tin nhắn tự động</span>}
+        <div className="whitespace-pre-line break-words rounded-[20px] rounded-tl-[6px] border border-white/10 bg-white/10 px-4 py-3 text-[15px] font-light leading-[22px] text-[#f7f9fa] backdrop-blur-[11px]">
+          {auto && (
+            <span className="mb-2 block w-fit rounded-full border border-[#34e58a]/40 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.07em] text-[#34e58a]" style={mono}>
+              Tin nhắn tự động
+            </span>
+          )}
           {children}
         </div>
       </div>
@@ -66,12 +86,12 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
 
 function Card({ title, open, onToggle, children }) {
   return (
-    <section className="rounded-2xl bg-white px-4 shadow-[0_1px_2px_rgba(22,33,62,0.06)]">
+    <section className="rounded-[20px] border-[0.5px] border-white/20 border-t-[#3fbf8a] bg-white/[0.07] px-4 backdrop-blur-[11px]">
       <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 py-4 text-left">
-        <span className="text-[18px] font-semibold tracking-[-0.2px] text-[#16213e]">{title}</span>
-        <Icon name="chevD" size={19} className={`shrink-0 text-[#16213e] transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="text-[19px] font-normal text-white">{title}</span>
+        <Icon name="chevD" size={19} className={`shrink-0 text-white/60 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && <div className="border-t border-[#16213e]/10">{children}</div>}
+      {open && <div className="border-t-[0.5px] border-white/15">{children}</div>}
     </section>
   );
 }
@@ -252,47 +272,65 @@ export function ChatScreen({ ticket, onClose }) {
               <img src={u} alt="Ảnh đính kèm" className={list.length === 1 ? "max-h-64 w-auto max-w-full rounded-2xl" : "h-28 w-28 rounded-2xl object-cover"} />
             </button>
           ) : (
-            <span key={i} className="h-28 w-28 animate-pulse rounded-2xl bg-black/5" />
+            <span key={i} className="h-28 w-28 animate-pulse rounded-2xl bg-white/10" />
           )
         )}
       </span>
     ) : null;
 
-  const row = "flex items-center justify-between gap-4 border-b border-[#16213e]/10 py-3.5 text-[15px] last:border-b-0";
+  const row = "flex items-center justify-between gap-4 border-b-[0.5px] border-white/15 py-3.5 text-[15px] last:border-b-0";
 
   return (
     <>
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#eef2f9]">
-      {/* Thanh đầu trang: trắng, gọn, có đường kẻ mảnh bên dưới */}
-      <header className="z-10 border-b border-[#16213e]/10 bg-white pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
-        <div className="mx-auto flex w-full max-w-md items-center gap-1 px-2 md:max-w-xl">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#090909] text-[#f7f9fa]" style={{ ...sans, colorScheme: "dark" }}>
+      {/* ánh sáng xanh lá phía sau phần đầu trang */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[440px] opacity-[0.45]"
+        style={{ backgroundImage: "radial-gradient(circle closest-corner at 12% 0%, #1fbf75, rgba(0,0,0,0) 60%)" }} />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[440px]"
+        style={{ backgroundImage: "linear-gradient(180deg, rgba(9,9,9,0) 55%, #090909 100%)" }} />
+
+      {/* thanh điều hướng 54px, đường kẻ mảnh */}
+      <header className="relative z-10 border-b-[0.5px] border-white/40 bg-black/40 backdrop-blur-[12px]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+        <div className="mx-auto flex h-[54px] w-full max-w-md items-center gap-3 px-4 md:max-w-xl">
           <button onClick={onClose} aria-label="Quay lại"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9]">
-            <Icon name="back" size={20} />
+            className="flex h-8 items-center gap-1.5 rounded-[4px] bg-white/10 px-3 text-[12px] uppercase text-white transition active:bg-white/40">
+            <Icon name="back" size={14} />
+            Quay lại
           </button>
-          <h1 className="flex-1 text-[17px] font-semibold tracking-[-0.2px] text-[#16213e]">Chi tiết yêu cầu</h1>
+          <span className="h-5 w-px bg-white/40" />
+          <span className="text-[12px] uppercase text-white/75">Trợ giúp</span>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-md space-y-3 px-3 pb-6 pt-3 md:max-w-xl">
+      <div className="relative z-10 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-md space-y-3 px-3 pb-8 pt-7 md:max-w-xl">
+          {/* tiêu đề: chữ thẳng + chữ serif nghiêng */}
+          <div className="px-2 pb-3">
+            <p className="mb-3 text-[12px] uppercase tracking-[0.2em] text-white/40" style={mono}>
+              #{ticket.ticket_code}
+            </p>
+            <h1 className="text-[46px] font-medium leading-[0.9] tracking-[-0.03em] text-white">
+              Chi tiết <span className="font-normal italic text-[#34e58a]" style={serif}>yêu cầu</span>
+            </h1>
+          </div>
+
           <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
-            <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
+            <div className={row}><span className="text-white/40">Mã yêu cầu</span><span className="font-medium text-white" style={mono}>#{ticket.ticket_code}</span></div>
+            <div className={row}><span className="text-white/40">Thời gian gửi</span><span className="font-medium text-white">{fmtDate(ticket.created_at)}</span></div>
+            <div className={row}><span className="text-white/40">Trạng thái</span><StatusPill st={statusOf(status)} /></div>
           </Card>
 
           {closed && (
             <Card title="Đánh giá của bạn" open={rateOpen} onToggle={() => setRateOpen(!rateOpen)}>
               {rating.done ? (
                 <>
-                  <div className={row}><span className="text-[#6b7488]">Chất lượng hỗ trợ</span><span className="font-semibold text-[#16213e]">{QUALITY[rating.q]}</span></div>
-                  <div className={row}><span className="text-[#6b7488]">Mức độ giải quyết</span><span className="font-semibold text-[#16213e]">{rating.r ? "Đã giải quyết" : "Chưa giải quyết"}</span></div>
+                  <div className={row}><span className="text-white/40">Chất lượng hỗ trợ</span><span className="font-medium text-white">{QUALITY[rating.q]}</span></div>
+                  <div className={row}><span className="text-white/40">Mức độ giải quyết</span><span className="font-medium text-white">{rating.r ? "Đã giải quyết" : "Chưa giải quyết"}</span></div>
                 </>
               ) : (
-                <div className="space-y-4 py-4">
+                <div className="space-y-5 py-5">
                   <div>
-                    <p className="mb-2 text-[14px] text-[#6b7488]">Chất lượng hỗ trợ</p>
+                    <p className="mb-2.5 text-[14px] text-white/40">Chất lượng hỗ trợ</p>
                     <div className="flex flex-wrap gap-2">
                       {[4, 3, 2, 1].map((v) => (
                         <button key={v} type="button" onClick={() => setPickQ(v)} className={chip(pickQ === v)}>{QUALITY[v]}</button>
@@ -300,15 +338,15 @@ export function ChatScreen({ ticket, onClose }) {
                     </div>
                   </div>
                   <div>
-                    <p className="mb-2 text-[14px] text-[#6b7488]">Mức độ giải quyết</p>
+                    <p className="mb-2.5 text-[14px] text-white/40">Mức độ giải quyết</p>
                     <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => setPickR(true)} className={chip(pickR === true)}>Đã giải quyết</button>
                       <button type="button" onClick={() => setPickR(false)} className={chip(pickR === false)}>Chưa giải quyết</button>
                     </div>
                   </div>
-                  {rateErr && <p className="rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{rateErr}</p>}
+                  {rateErr && <p className="rounded-2xl bg-rose-500/10 px-4 py-2 text-[13px] font-medium text-rose-300">{rateErr}</p>}
                   <button onClick={submitRating} disabled={pickQ === null || pickR === null || rateBusy}
-                    className="h-11 w-full rounded-xl bg-[#2b59e0] text-[15px] font-semibold text-white transition active:scale-[0.99] disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
+                    className="flex h-14 w-full items-center justify-center rounded-full border-[0.5px] border-white/25 border-r-white/50 border-b-[#34e58a]/30 bg-[#34e58a]/5 text-[18px] font-light text-white backdrop-blur-[12px] transition active:shadow-[inset_0_0_0_2px_#34e58a] disabled:opacity-40">
                     {rateBusy ? "Đang gửi..." : "Gửi đánh giá"}
                   </button>
                 </div>
@@ -341,32 +379,32 @@ export function ChatScreen({ ticket, onClose }) {
       </div>
 
       {!closed && (
-        <div className="border-t border-[#16213e]/5 bg-white/85 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-[9px]">
+        <div className="relative z-10 border-t-[0.5px] border-white/15 bg-[#090909]/85 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-[12px]">
           <div className="mx-auto max-w-md md:max-w-xl">
-            {err && <p className="mb-2 rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{err}</p>}
+            {err && <p className="mb-2 rounded-2xl bg-rose-500/10 px-4 py-2 text-[13px] font-medium text-rose-300">{err}</p>}
             {files.length > 0 && (
               <div className="mb-3 flex gap-3">
                 {files.map((f, i) => (
                   <div key={f.url} className="relative h-16 w-16">
                     <img src={f.url} alt={`Ảnh ${i + 1}`} className="h-full w-full rounded-2xl object-cover" />
                     <button type="button" onClick={() => removeFile(i)} aria-label="Xoá ảnh"
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#2b59e0] text-white">
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#34e58a] text-[#090909]">
                       <Icon name="x" size={13} stroke={3} />
                     </button>
                   </div>
                 ))}
               </div>
             )}
-            <div className="flex items-end gap-2">
+               <div className="flex items-end gap-2">
               <button type="button" onClick={() => pick.current?.click()} disabled={files.length >= MAX_IMAGES} aria-label="Thêm ảnh"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9] disabled:opacity-40">
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition active:bg-white/10 disabled:opacity-40">
                 <Icon name="camera" size={22} />
               </button>
               <input ref={pick} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
               <textarea value={text} rows={1} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder="Nhập tin nhắn..."
-                className="max-h-28 min-h-[40px] flex-1 resize-none rounded-[20px] bg-[#eef2f9] px-4 py-2 text-[15px] text-[#16213e] outline-none placeholder:text-[#6b7488] focus:ring-1 focus:ring-[#2b59e0]" />
+                className="max-h-28 min-h-[40px] flex-1 resize-none rounded-[20px] border border-white/10 bg-white/10 px-4 py-2 text-[15px] font-light text-white outline-none placeholder:text-white/40 focus:border-[#34e58a]/60 focus:ring-1 focus:ring-[#34e58a]/60" />
               <button onClick={send} disabled={(!text.trim() && files.length === 0) || busy} aria-label="Gửi"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2b59e0] text-white transition active:scale-95 disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#34e58a] text-[#090909] shadow-[0_0_20px_rgba(52,229,138,0.35)] transition active:scale-95 disabled:bg-white/10 disabled:text-white/35 disabled:shadow-none">
                 <Icon name="send" size={17} />
               </button>
             </div>
@@ -377,4 +415,4 @@ export function ChatScreen({ ticket, onClose }) {
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-    }
+}
