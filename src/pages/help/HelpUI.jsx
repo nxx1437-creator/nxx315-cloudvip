@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
-import { useHelpTheme } from "./helpTheme.js";
+import { useHelpTheme } from "./helpTheme.jsx";
 
 /* ============ ICON ============ */
 const P = {
