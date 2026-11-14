@@ -1,6 +1,6 @@
 // src/pages/HelpCenter.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
 import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards } from "./help/HelpUI.jsx";
@@ -17,6 +17,7 @@ const givenName = (u) => {
 export default function HelpCenter() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -26,7 +27,23 @@ export default function HelpCenter() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [name, setName] = useState("");
-  const [view, setView] = useState(null); // {type:"request", preset} | {type:"history"}
+  const [preset, setPreset] = useState(() => (params.get("ty") ? { type: params.get("ty") } : {}));
+
+  // Màn đang mở nằm trên đường dẫn: ?m=request | ?m=history  (tải lại trang vẫn ở đúng màn)
+  const mode = params.get("m");
+  const view = mode === "history" ? { type: "history" } : mode === "request" ? { type: "request", preset } : null;
+
+  const setUrl = (updates) => {
+    const next = new URLSearchParams(params);
+    Object.entries(updates).forEach(([k, v]) => (v === null ? next.delete(k) : next.set(k, v)));
+    setParams(next, { replace: true });
+  };
+  const closeView = () => setUrl({ m: null, ty: null, g: null, t: null });
+  const openHistory = () => setUrl({ m: "history", ty: null, g: null, t: null });
+  const openRequest = (p = {}) => {
+    setPreset(p);
+    setUrl({ m: "request", ty: p.type || null, g: null, t: null });
+  };
 
   useEffect(() => {
     let alive = true;
@@ -84,22 +101,25 @@ export default function HelpCenter() {
     scrollToFaq();
   };
 
-  const openRequest = (preset = {}) => setView({ type: "request", preset });
-
   // Mở thẳng đúng màn khi đi từ trang Hồ sơ: location.state.open = "idea" | "faq" | "history" | "chat"
   useEffect(() => {
     const open = location.state?.open;
     if (!open || open === "home") return;
-    navigate(location.pathname, { replace: true, state: null }); // dùng xong thì xóa, tránh mở lại khi tải lại trang
+    const base = location.pathname;
     if (open === "chat") navigate("/support", { replace: true });
-    else if (open === "idea") openRequest({ type: "idea" });
-    else if (open === "history") setView({ type: "history" });
-    else if (open === "faq") setTimeout(scrollToFaq, 250);
+    else if (open === "idea") {
+      setPreset({ type: "idea" });
+      navigate(`${base}?m=request&ty=idea`, { replace: true, state: null });
+    } else if (open === "history") navigate(`${base}?m=history`, { replace: true, state: null });
+    else {
+      navigate(base, { replace: true, state: null }); // dùng xong thì xóa, tránh mở lại khi tải lại trang
+      if (open === "faq") setTimeout(scrollToFaq, 250);
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const searching = !!query.trim();
   const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
-  // Thẻ đầu tiên nổi lên che nửa dưới hero; khi đang tìm kiếm thì để cách ra để tiêu đề không bị đè lên nền xanh
+  // Thẻ đầu tiên nổi lên che nửa dưới hero; khi đang tìm kiếm thì để cách ra
   const overlap = !searching && faqs.length > 0 ? "-mt-14" : "mt-6";
 
   return (
@@ -109,7 +129,7 @@ export default function HelpCenter() {
       <main className={`relative mx-auto max-w-md space-y-8 px-4 md:max-w-4xl ${overlap}`}>
         {!searching && <PopularFaqs faqs={faqs} onPick={pickFaq} />}
         {!searching && (
-          <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={() => setView({ type: "history" })} />
+          <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={openHistory} />
         )}
         {!searching && (
           <OrderList orders={orders} loading={ordersLoading} signedIn={signedIn} onAsk={openRequest} onAll={() => navigate("/history")} />
@@ -124,14 +144,14 @@ export default function HelpCenter() {
         <RequestScreen
           preset={view.preset}
           orders={orders}
-          onClose={() => setView(null)}
-          onHistory={() => setView({ type: "history" })}
+          onClose={closeView}
+          onHistory={openHistory}
           onChat={() => navigate("/support")}
         />
       )}
-      {view?.type === "history" && <HistoryFlow onClose={() => setView(null)} onNew={() => openRequest()} />}
+      {view?.type === "history" && <HistoryFlow onClose={closeView} onNew={() => openRequest()} />}
 
       <BottomNav />
     </div>
   );
-            }
+      }
