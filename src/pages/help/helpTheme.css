@@ -252,3 +252,4 @@ html[data-help-theme="dark"] .hc-tile-5 { background: linear-gradient(145deg, rg
 .hc-folder { position: relative; margin-top: 16px; }
 .hc-folder::before { content: ""; position: absolute; left: 0; top: -14px; width: 104px; height: 16px; border-radius: 14px 14px 0 0; background: var(--h-card); border: 0.5px solid var(--h-line); border-bottom: 0; }
 .hc-mini { border-radius: 18px; background: var(--h-soft); border: 0.5px solid var(--h-line); padding: 14px; }
+html[data-help-theme] [class~="min-h-screen"][class~="bg-white"] { background-color: var(--h-canvas) !important; }
