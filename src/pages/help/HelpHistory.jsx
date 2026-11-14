@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { Icon, StatusDot } from "./HelpUI.jsx";
-import { Screen, statusOf } from "./HelpScreen.jsx";
+import { Screen, statusOf, sourceOf } from "./HelpScreen.jsx";
 import { ChatScreen } from "./HelpTicket.jsx";
 import { CATEGORIES, fmtDate } from "./helpData.js";
 
@@ -26,6 +26,7 @@ function GroupCard({ label, items, onOpenGroup, onOpenTicket }) {
             className="min-w-[76%] snap-start rounded-[22px] bg-[#eef2f9] p-4 text-left">
             <span className="block text-[18px] font-semibold tracking-[-0.3px] text-[#16213e]">#{t.ticket_code}</span>
             <span className="mt-0.5 block text-[13px] text-[#6b7488]">{fmtDate(t.created_at)}</span>
+            <span className="block text-[13px] text-[#6b7488]">Nguồn tiếp nhận: {sourceOf(t.source)}</span>
             <span className="mt-4 flex items-center justify-between gap-3">
               <span className="min-w-0 flex-1 truncate text-[15px] text-[#4a5368]">{t.title}</span>
               <StatusDot st={statusOf(t.status)} />
@@ -53,7 +54,7 @@ export function HistoryFlow({ onClose, onNew }) {
       since.setMonth(since.getMonth() - 6);
       const { data } = await supabase
         .from("support_tickets")
-        .select("id,ticket_code,title,category,type,status,description,images,admin_reply,created_at")
+        .select("*")
         .eq("user_id", uid)
         .gte("created_at", since.toISOString())
         .order("created_at", { ascending: false })
@@ -84,6 +85,7 @@ export function HistoryFlow({ onClose, onNew }) {
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[18px] font-semibold tracking-[-0.3px] text-[#16213e]">{t.title}</span>
                 <span className="mt-1 block text-[14px] text-[#6b7488]">#{t.ticket_code} · {fmtDate(t.created_at)}</span>
+                <span className="mt-0.5 block text-[14px] text-[#6b7488]">Nguồn tiếp nhận: {sourceOf(t.source)}</span>
                 <span className="mt-2 block"><StatusDot st={statusOf(t.status)} /></span>
               </span>
               <Icon name="chevR" size={17} className="shrink-0 text-[#6b7488]" />
@@ -110,4 +112,4 @@ export function HistoryFlow({ onClose, onNew }) {
       {rows && rows.length > 0 && <p className="px-2 text-[14px] leading-5 text-[#6b7488]">Yêu cầu sau 6 tháng sẽ được tự động ẩn để bạn dễ quản lý hơn.</p>}
     </Screen>
   );
-}
+            }
