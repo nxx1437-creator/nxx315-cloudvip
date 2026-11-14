@@ -25,15 +25,15 @@ export const sourceOf = (s) =>
 
 function Title({ text }) {
   const parts = String(text).split(" ");
-  const last = parts.pop();
+  const n = parts.length >= 3 ? 2 : 1;
+  const tail = parts.splice(parts.length - n, n).join(" ");
   return (
     <>
       {parts.length > 0 && `${parts.join(" ")} `}
-      <span className="hc-serif">{last}</span>
+      <span className="hc-serif">{tail}</span>
     </>
   );
 }
-
 export function Screen({ title, big = true, onClose, right, footer, children }) {
   useHelpTheme();
   useEffect(() => {
