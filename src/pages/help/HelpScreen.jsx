@@ -6,6 +6,8 @@ import { TICKET_STATUS } from "./helpData.js";
 export const MAX_IMAGES = 3;
 export const MAX_MB = 5;
 export const statusOf = (s) => TICKET_STATUS[s] || { label: s, dot: "bg-slate-400" };
+export const SOURCES = { web: "Web", zalo: "Zalo", email: "Email", facebook: "Facebook", phone: "Tổng đài" };
+export const sourceOf = (s) => SOURCES[s] || s || "Web";
 
 /* ---------- Khung toàn màn hình ---------- */
 export function Screen({ title, big = true, onClose, right, footer, children }) {
