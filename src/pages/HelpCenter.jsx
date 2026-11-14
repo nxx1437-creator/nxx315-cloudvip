@@ -1,166 +1,165 @@
-import React, { useEffect, useState } from "react";
+// src/pages/HelpCenter.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-
-// Import các component từ đúng file chứa chúng
-import { Hero, PopularFaqs, CategoryCards, FaqSection, ContactCard } from "./help/HelpUI.jsx";
-import { QuickActions, OrderList } from "./help/HelpSections.jsx";
+import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards } from "./help/HelpUI.jsx";
+import { FaqSection, ContactCard } from "./help/HelpFaq.jsx";
 import { RequestScreen, HistoryFlow } from "./help/HelpRequest.jsx";
-import { useHelpTheme } from "./help/helpTheme.jsx";
+import { CATEGORIES, fold } from "./help/helpData.js";
+
+// Tên gọi: lấy từ tài khoản đăng nhập (tên Việt thì lấy chữ cuối). Không có thì chào chung.
+const givenName = (u) => {
+  const full = (u?.user_metadata?.full_name || u?.user_metadata?.name || "").trim();
+  return full ? full.split(/\s+/).slice(-1)[0] : "";
+};
 
 export default function HelpCenter() {
-  useHelpTheme(); // Kích hoạt theme cho toàn bộ trang
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState("");
-  const [activeCat, setActiveCat] = useState(null);
-  const [openFaqId, setOpenFaqId] = useState(null);
-  
-  // Các state quản lý dữ liệu
+  const [cat, setCat] = useState(null);
+  const [openId, setOpenId] = useState(null);
   const [faqs, setFaqs] = useState([]);
-  const [loadingFaqs, setLoadingFaqs] = useState(true);
+  const [faqLoading, setFaqLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-  const [user, setUser] = useState(null);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const [name, setName] = useState("");
+  const [preset, setPreset] = useState(() => (params.get("ty") ? { type: params.get("ty") } : {}));
 
-  // Các state quản lý màn hình (Gửi yêu cầu / Lịch sử)
-  const [showRequest, setShowRequest] = useState(false);
-  const [requestPreset, setRequestPreset] = useState({});
-  const [showHistory, setShowHistory] = useState(false);
+  // Màn đang mở nằm trên đường dẫn: ?m=request | ?m=history  (tải lại trang vẫn ở đúng màn)
+  const mode = params.get("m");
+  const view = mode === "history" ? { type: "history" } : mode === "request" ? { type: "request", preset } : null;
 
-  // Lấy dữ liệu người dùng, đơn hàng và câu hỏi
-  useEffect(() => {
-    let isMounted = true;
-    
-    async function loadData() {
-      // 1. Lấy session
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user || null;
-      if (isMounted) setUser(currentUser);
-
-      // 2. Lấy danh sách FAQ (giả lập hoặc từ DB)
-      // Nếu bạn có bảng faqs trên Supabase thì thay thế đoạn này bằng supabase.from('faqs').select('*')
-      if (isMounted) {
-        setFaqs([
-          { id: 1, question: "Làm sao để nạp Coin vào tài khoản?", answer: "Bạn có thể nạp qua thẻ cào, chuyển khoản hoặc ví điện tử ở mục Nạp Coin.", category: "payment" },
-          { id: 2, question: "Tôi chuyển khoản nhưng chưa nhận được Coin?", answer: "Vui lòng chờ 5-10 phút. Nếu vẫn chưa có, hãy gửi yêu cầu hỗ trợ kèm ảnh chụp màn hình biên lai.", category: "payment" },
-          { id: 3, question: "Làm sao để đổi thưởng?", answer: "Vào mục Đổi thưởng, chọn phần quà và nhấn Đổi. Coin sẽ bị trừ ngay lập tức.", category: "order" },
-        ]);
-        setLoadingFaqs(false);
-      }
-
-      // 3. Lấy danh sách đơn hàng gần đây (nếu đã đăng nhập)
-      if (currentUser) {
-        const { data: ordersData } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .order("created_at", { ascending: false })
-          .limit(3);
-        
-        if (isMounted) {
-          setOrders(ordersData || []);
-          setLoadingOrders(false);
-        }
-      } else {
-        if (isMounted) setLoadingOrders(false);
-      }
-    }
-
-    loadData();
-    return () => { isMounted = false; };
-  }, []);
-
-  // Mở form gửi yêu cầu với dữ liệu có sẵn (từ FAQ, Đơn hàng...)
-  const handleAsk = (preset = {}) => {
-    setRequestPreset(preset);
-    setShowRequest(true);
+  const setUrl = (updates) => {
+    const next = new URLSearchParams(params);
+    Object.entries(updates).forEach(([k, v]) => (v === null ? next.delete(k) : next.set(k, v)));
+    setParams(next, { replace: true });
+  };
+  const closeView = () => setUrl({ m: null, ty: null, g: null, t: null });
+  const openHistory = () => setUrl({ m: "history", ty: null, g: null, t: null });
+  const openRequest = (p = {}) => {
+    setPreset(p);
+    setUrl({ m: "request", ty: p.type || null, g: null, t: null });
   };
 
-  // Lọc FAQ theo từ khóa tìm kiếm và danh mục
-  const filteredFaqs = faqs.filter(f => {
-    const matchQuery = query.trim() === "" || 
-      f.question.toLowerCase().includes(query.toLowerCase()) || 
-      f.answer.toLowerCase().includes(query.toLowerCase());
-    const matchCat = !activeCat || f.category === activeCat;
-    return matchQuery && matchCat;
-  });
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("support_faqs")
+        .select("id,category,question,answer,order")
+        .eq("is_active", true)
+        .order("order", { ascending: true });
+      if (!alive) return;
+      setFaqs(data || []);
+      setFaqLoading(false);
+    })();
+    (async () => {
+      const { data: s } = await supabase.auth.getSession();
+      const user = s?.session?.user;
+      if (!alive) return;
+      setSignedIn(!!user);
+      setName(givenName(user));
+      if (!user) return setOrdersLoading(false);
+      const { data } = await supabase
+        .from("redemption_orders")
+        .select("id,order_code,package_name,coins_charged,status,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      if (!alive) return;
+      setOrders(data || []);
+      setOrdersLoading(false);
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = fold(query.trim());
+    return faqs.filter((f) => {
+      if (q) return fold(f.question).includes(q) || fold(f.answer || "").includes(q);
+      return cat ? f.category === cat : true;
+    });
+  }, [faqs, query, cat]);
+
+  const scrollToFaq = () =>
+    setTimeout(() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+
+  const pickCategory = (key) => {
+    setQuery("");
+    setOpenId(null);
+    setCat(key);
+    if (key) scrollToFaq();
+  };
+  const pickFaq = (f) => {
+    setQuery("");
+    setCat(null);
+    setOpenId(f.id);
+    scrollToFaq();
+  };
+
+  // Mở thẳng đúng màn khi đi từ trang Hồ sơ: location.state.open = "idea" | "faq" | "history" | "chat"
+  useEffect(() => {
+    const open = location.state?.open;
+    if (!open || open === "home") return;
+    const base = location.pathname;
+    if (open === "chat") navigate("/support", { replace: true });
+    else if (open === "idea") {
+      setPreset({ type: "idea" });
+      navigate(`${base}?m=request&ty=idea`, { replace: true, state: null });
+    } else if (open === "history") navigate(`${base}?m=history`, { replace: true, state: null });
+    else {
+      navigate(base, { replace: true, state: null }); // dùng xong thì xóa, tránh mở lại khi tải lại trang
+      if (open === "faq") setTimeout(scrollToFaq, 250);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const searching = !!query.trim();
+  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* 1. Phần Hero với thanh tìm kiếm */}
-      <Hero 
-        query={query} 
-        onQuery={setQuery} 
-        name={user?.user_metadata?.full_name || user?.email?.split('@')[0]} 
-        onBack={() => window.history.back()} 
-      />
+    <div className="min-h-screen bg-white">
+      <Hero query={query} onQuery={setQuery} name={name} onBack={goBack}
+        topics={CATEGORIES.slice(0, 3)} onTopic={pickCategory} />
 
-      <main className="mx-auto max-w-md px-4 md:max-w-xl relative -mt-6">
-        
-        {/* 2. Câu hỏi phổ biến (Nổi lên trên Hero) */}
-        <PopularFaqs 
-          faqs={filteredFaqs} 
-          onPick={(f) => setOpenFaqId(f.id)} 
-        />
+      {!searching && (
+        <main className="mx-auto max-w-md space-y-4 px-4 pt-2 md:max-w-4xl">
+          <CategoryCards faqs={faqs} active={cat} onPick={pickCategory} />
+          <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={openHistory} />
+        </main>
+      )}
 
-        {/* 3. Các nút thao tác nhanh */}
-        <QuickActions 
-          onChat={() => alert("Tính năng Chat AI đang phát triển")} 
-          onTicket={() => handleAsk()} 
-          onHistory={() => setShowHistory(true)} 
-        />
+      {!searching && (
+        <div className="mt-10">
+          <PopularFaqs faqs={faqs} onPick={pickFaq} />
+        </div>
+      )}
 
-        {/* 4. Giao dịch gần đây */}
-        <OrderList 
-          orders={orders} 
-          loading={loadingOrders} 
-          signedIn={!!user} 
-          onAsk={handleAsk} 
-          onAll={() => alert("Chuyển đến trang Lịch sử đơn hàng")} 
-        />
+      <div className={`mx-auto max-w-md space-y-8 px-4 md:max-w-4xl ${searching ? "pt-6" : "pt-10"}`}>
+        {!searching && (
+          <OrderList orders={orders} loading={ordersLoading} signedIn={signedIn} onAsk={openRequest} onAll={() => navigate("/history")} />
+        )}
+        <FaqSection faqs={filtered} loading={faqLoading} cat={cat} setCat={setCat} query={query}
+          openId={openId} setOpenId={setOpenId} onAsk={openRequest} />
+      </div>
 
-        {/* 5. Duyệt theo chủ đề (Grid 2 cột) */}
-        <CategoryCards 
-          faqs={faqs} 
-          active={activeCat} 
-          onPick={setActiveCat} 
-        />
+      {!searching ? <ContactCard onRequest={openRequest} /> : <div className="h-32" />}
 
-        {/* 6. Danh sách FAQ chi tiết */}
-        <FaqSection 
-          faqs={filteredFaqs}
-          loading={loadingFaqs}
-          cat={activeCat}
-          setCat={setActiveCat}
-          query={query}
-          openId={openFaqId}
-          setOpenId={setOpenFaqId}
-          onAsk={handleAsk}
-        />
-
-        {/* 7. Khối CTA liên hệ màu tím than */}
-        <ContactCard onRequest={() => handleAsk()} />
-      </main>
-
-      {/* Các màn hình Overlay */}
-      {showRequest && (
-        <RequestScreen 
-          preset={requestPreset} 
+      {view?.type === "request" && (
+        <RequestScreen
+          preset={view.preset}
           orders={orders}
-          onClose={() => setShowRequest(false)} 
-          onHistory={() => { setShowRequest(false); setShowHistory(true); }}
-          onChat={() => alert("Tính năng Chat AI đang phát triển")}
+          onClose={closeView}
+          onHistory={openHistory}
+          onChat={() => navigate("/support")}
         />
       )}
+      {view?.type === "history" && <HistoryFlow onClose={closeView} onNew={() => openRequest()} />}
 
-      {showHistory && (
-        <HistoryFlow 
-          onClose={() => setShowHistory(false)} 
-          onNew={() => { setShowHistory(false); handleAsk(); }} 
-        />
-      )}
-
-      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );
-                                          }
+    }
