@@ -10,12 +10,11 @@ export const statusOf = (s) => TICKET_STATUS[s] || { label: s, dot: "bg-slate-40
 
 function Title({ text }) {
   const parts = String(text).split(" ");
-  const n = parts.length >= 3 ? 2 : 1;
-  const tail = parts.splice(parts.length - n, n).join(" ");
+  const last = parts.pop();
   return (
     <>
       {parts.length > 0 && `${parts.join(" ")} `}
-      <span className="hc-serif">{tail}</span>
+      <span className="hc-serif">{last}</span>
     </>
   );
 }
