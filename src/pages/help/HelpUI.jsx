@@ -1,8 +1,8 @@
-// src/pages/help/HelpUI.jsx
+// src/pages/help/HelpUI.jsx — icon + hero + danh mục + FAQ + liên hệ (trắng / đen, xanh lá)
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
-import { useHelpTheme } from "./helpTheme.jsx";
+import { useHelpTheme } from "./helpTheme.js";
 
 /* Ảnh minh hoạ: tải lên Supabase Storage rồi dán link vào đây (để trống = không hiện) */
 export const HELP_IMAGES = {
@@ -41,9 +41,10 @@ export function Icon({ name, size = 20, stroke = 2, className = "" }) {
   );
 }
 
-export const surface = "rounded-2xl border border-[#e5e7eb] bg-white";
-export const ring = "shadow-[0_0_0_0.5px_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.05)]";
-export const hairline = "divide-y divide-gray-100";
+/* ============ DÙNG CHUNG (giữ nguyên tên cũ cho các file khác) ============ */
+export const surface = "rounded-xl border border-[#e4e9f2] bg-white";
+export const ring = "shadow-[0_0_0_0.5px_rgba(22,33,62,0.12),0_1px_2px_0_rgba(22,33,62,0.1)]";
+export const hairline = "divide-y divide-[#16213e]/10";
 
 export function StatusDot({ st }) {
   return (
@@ -64,13 +65,13 @@ export function IconBox({ name, size = 20 }) {
 
 export function SectionTitle({ title, hint, action, onAction }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
+    <div className="mb-3 flex items-end justify-between gap-3">
       <div>
-        <h2 className="hc-text text-[20px] font-bold leading-tight tracking-[-0.02em] text-[#1e1e2f]">{title}</h2>
-        {hint && <p className="hc-muted mt-1 text-[13px]">{hint}</p>}
+        <h2 className="hc-text text-[22px] font-medium leading-tight tracking-[-0.02em]">{title}</h2>
+        {hint && <p className="hc-muted mt-0.5 text-[13px]">{hint}</p>}
       </div>
       {action && (
-        <button onClick={onAction} className="text-[#625df5] shrink-0 text-[14px] font-semibold hover:underline">{action}</button>
+        <button onClick={onAction} className="hc-accent shrink-0 text-[14px] font-medium">{action}</button>
       )}
     </div>
   );
@@ -80,50 +81,51 @@ export function SectionTitle({ title, hint, action, onAction }) {
 export function Hero({ query, onQuery, name, onBack }) {
   useHelpTheme();
   return (
-    <header className="hc-hero relative overflow-hidden pb-16 pt-6">
+    <header className="hc-hero relative overflow-hidden pb-24 pt-3">
       {HELP_IMAGES.hero && (
-        <img src={HELP_IMAGES.hero} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-overlay" />
+        <img src={HELP_IMAGES.hero} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30" />
       )}
-      <div className="relative mx-auto max-w-md px-4 md:max-w-xl">
+      <div className="relative mx-auto max-w-md px-4 md:max-w-4xl">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <button onClick={onBack} aria-label="Quay lại" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/60 shadow-sm hover:bg-white">
+            <button onClick={onBack} aria-label="Quay lại" className="hc-roundbtn">
               <Icon name="back" size={18} />
             </button>
-            <span className="truncate text-[16px] font-bold tracking-[-0.01em] text-[#1e1e2f]">NXX315</span>
+            <span className="hc-text truncate text-[15px] font-bold tracking-[-0.01em]">NXX315</span>
+            <span className="hc-vr shrink-0" />
+            <span className="hc-muted truncate text-[14px]">Trợ giúp</span>
           </div>
-          <nav className="flex shrink-0 items-center gap-4 text-[14px] font-medium text-gray-600">
-            <Link to="/guide" className="hover:text-[#625df5]">Hướng dẫn</Link>
-            <Link to="/contact" className="hover:text-[#625df5]">Liên hệ</Link>
+          <nav className="hc-text2 flex shrink-0 items-center gap-4 text-[13px]">
+            <Link to="/guide" className="transition active:opacity-70">Hướng dẫn</Link>
+            <Link to="/contact" className="transition active:opacity-70">Liên hệ</Link>
           </nav>
         </div>
 
         <div className="mt-10 text-center">
-          <h1 className="mx-auto mt-2 max-w-[520px] text-[32px] font-bold leading-[1.1] tracking-tight text-[#1e1e2f] sm:text-[40px]">
-            {name ? `Chào ${name}, ` : ""}Chúng tôi có thể <span className="text-[#625df5]">giúp gì?</span>
+          <span className="hc-badge2 hc-mono">Trung tâm trợ giúp</span>
+          <h1 className="hc-text mx-auto mt-5 max-w-[520px] text-[34px] font-medium leading-[1.05] tracking-[-0.03em] sm:text-[44px]">
+            {name ? `Chào ${name}, chúng tôi có thể ` : "Chúng tôi có thể "}
+            <span className="hc-serif">giúp gì cho bạn?</span>
           </h1>
 
-          <div className="mx-auto mt-8 max-w-[540px]">
-            <div className="hc-search">
-              <Icon name="search" size={20} className="text-gray-400 shrink-0 ml-1" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => onQuery(e.target.value)}
-                placeholder="Tìm kiếm bài viết, câu hỏi..."
-              />
-              {query && (
-                <button onClick={() => onQuery("")} aria-label="Xoá" className="text-gray-400 hover:text-gray-600 flex h-8 w-8 items-center justify-center rounded-full">
-                  <Icon name="x" size={16} />
-                </button>
-              )}
-              <button type="button" onClick={() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth" })} className="hc-btn-solid">
-                Tìm
+          <div className="hc-search mx-auto mt-7 max-w-[520px] text-left">
+            <Icon name="search" size={18} className="hc-muted shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => onQuery(e.target.value)}
+              placeholder="Tìm câu hỏi thường gặp..."
+            />
+            {query && (
+              <button onClick={() => onQuery("")} aria-label="Xoá"
+                className="hc-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                <Icon name="x" size={16} />
               </button>
-            </div>
-            <div className="mt-4 text-center text-[13px] text-gray-500">
-              Chủ đề phổ biến: <span className="underline cursor-pointer hover:text-[#625df5]">Đơn hàng</span>, <span className="underline cursor-pointer hover:text-[#625df5]">Nạp tiền</span>, <span className="underline cursor-pointer hover:text-[#625df5]">Tài khoản</span>
-            </div>
+            )}
+            <button type="button" onClick={() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth" })}
+              className="hc-btn-solid h-11 shrink-0 px-5 text-[15px]">
+              Tìm
+            </button>
           </div>
         </div>
       </div>
@@ -131,19 +133,19 @@ export function Hero({ query, onQuery, name, onBack }) {
   );
 }
 
-/* ============ CÂU HỎI PHỔ BIẾN ============ */
+/* ============ CÂU HỎI PHỔ BIẾN (thẻ nổi lên hero) ============ */
 export function PopularFaqs({ faqs, onPick }) {
-  const items = faqs.slice(0, 4);
+  const items = faqs.slice(0, 6);
   if (!items.length) return null;
   return (
-    <section className="hc-card relative z-10 -mt-8 px-5 pb-2 pt-5 shadow-lg">
-      <h2 className="mb-2 text-[18px] font-bold text-[#1e1e2f]">Câu hỏi phổ biến</h2>
-      <ul>
+    <section className="hc-card hc-lift px-5 pb-2 pt-5">
+      <h2 className="hc-text text-[18px] font-medium tracking-[-0.01em]">Câu hỏi phổ biến</h2>
+      <ul className="mt-2 md:grid md:grid-cols-2 md:gap-x-12">
         {items.map((f) => (
-          <li key={f.id} className="border-b border-gray-100 last:border-0">
-            <button onClick={() => onPick(f)} className="flex w-full items-center justify-between gap-4 py-3 text-left text-[15px] font-medium leading-6 text-[#1e1e2f] hover:text-[#625df5]">
+          <li key={f.id} className="hc-rule border-b-[0.5px] last:border-b-0 md:border-b-0">
+            <button onClick={() => onPick(f)} className="hc-text flex w-full items-center justify-between gap-4 py-3 text-left text-[15px] leading-6">
               <span className="line-clamp-2">{f.question}</span>
-              <Icon name="chevR" size={16} stroke={2.5} className="text-gray-400 shrink-0" />
+              <Icon name="chevR" size={14} stroke={2.5} className="hc-accent shrink-0" />
             </button>
           </li>
         ))}
@@ -152,23 +154,97 @@ export function PopularFaqs({ faqs, onPick }) {
   );
 }
 
-/* ============ THẺ CHỦ ĐỀ ============ */
+/* ============ LIÊN HỆ NHANH ============ */
+export function QuickActions({ onChat, onRequest, onHistory }) {
+  const items = [
+    { icon: "chat", title: "Chat với trợ lý AI", sub: "Phản hồi ngay, hoạt động 24/7", on: onChat, tag: "Trực tuyến" },
+    { icon: "send", title: "Gửi yêu cầu hỗ trợ", sub: "Báo lỗi, hỏi đơn hàng hoặc góp ý", on: onRequest },
+    { icon: "history", title: "Lịch sử yêu cầu", sub: "Theo dõi trạng thái và phản hồi", on: onHistory },
+  ];
+  return (
+    <section className="hc-card overflow-hidden">
+      {items.map((it) => (
+        <button key={it.title} onClick={() => it.on()}
+          className="hc-row hc-rule flex w-full items-center gap-3.5 border-b-[0.5px] px-5 py-3.5 text-left last:border-b-0">
+          <IconBox name={it.icon} />
+          <span className="min-w-0 flex-1">
+            <span className="hc-text block text-[16px] font-medium leading-6 tracking-[-0.01em]">{it.title}</span>
+            <span className="hc-muted block truncate text-[13px]">{it.sub}</span>
+          </span>
+          {it.tag && (
+            <span className="hc-badge hc-mono rounded-full px-2.5 py-0.5 text-[11px] uppercase tracking-[0.07em]">{it.tag}</span>
+          )}
+          <Icon name="chevR" size={15} className="hc-muted shrink-0" />
+        </button>
+      ))}
+    </section>
+  );
+}
+
+/* ============ GIAO DỊCH GẦN ĐÂY ============ */
+export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
+  const note = (icon, text) => (
+    <div className="flex items-center gap-3.5 px-5 py-4">
+      <IconBox name={icon} />
+      <p className="hc-muted text-[14px] leading-6">{text}</p>
+    </div>
+  );
+  return (
+    <section>
+      <SectionTitle title="Giao dịch gần đây" hint="Chọn một đơn để báo vấn đề" action={signedIn ? "Xem tất cả" : null} onAction={onAll} />
+      <div className="hc-card overflow-hidden">
+        {loading ? (
+          [0, 1].map((i) => (
+            <div key={i} className="flex animate-pulse items-center gap-3.5 px-5 py-3.5">
+              <div className="hc-skel h-10 w-10 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <div className="hc-skel h-4 w-1/2 rounded" />
+                <div className="hc-skel h-3 w-3/4 rounded" />
+              </div>
+            </div>
+          ))
+        ) : !signedIn ? (
+          note("lock", "Đăng nhập để xem và báo vấn đề về các đơn đổi thưởng của bạn.")
+        ) : orders.length === 0 ? (
+          note("box", "Bạn chưa có đơn đổi thưởng nào.")
+        ) : (
+          orders.slice(0, 3).map((o) => {
+            const st = ORDER_STATUS[o.status] || { label: o.status, dot: "bg-slate-400" };
+            return (
+              <button key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })}
+                className="hc-row hc-rule flex w-full items-center gap-3.5 border-b-[0.5px] px-5 py-3.5 text-left last:border-b-0">
+                <IconBox name="box" />
+                <span className="min-w-0 flex-1">
+                  <span className="hc-text block truncate text-[15px] font-medium tracking-[-0.01em]">{o.package_name}</span>
+                  <span className="hc-muted block truncate text-[13px]">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="hc-text text-[15px] font-medium">{fmtCoins(o.coins_charged)}</span>
+                  <StatusDot st={st} />
+                </span>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ============ THẺ CHỦ ĐỀ (lưới 3 cột, kiểu Loom) ============ */
 export function CategoryCards({ faqs, active, onPick }) {
   const count = (k) => faqs.filter((f) => f.category === k).length;
-  const tileColors = ["tile-blue", "tile-purple", "tile-green", "tile-orange", "tile-pink"];
-
   return (
-    <section className="mt-8">
+    <section>
       <SectionTitle title="Duyệt theo chủ đề" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {CATEGORIES.map((c, i) => {
           const on = active === c.key;
-          const colorClass = tileColors[i % tileColors.length];
           return (
-            <button key={c.key} onClick={() => onPick(on ? null : c.key)} className={`hc-tile-loom ${colorClass} ${on ? "ring-2 ring-[#625df5] ring-offset-2" : ""}`}>
-              <Icon name={c.icon} size={28} stroke={1.8} />
-              <span className="text-[14px] font-bold leading-tight mt-1 text-center">{c.label}</span>
-              <span className="text-[11px] opacity-70">{count(c.key)} câu hỏi</span>
+            <button key={c.key} aria-pressed={on} onClick={() => onPick(on ? null : c.key)} className={`hc-tile hc-tile-${i % 6}`}>
+              <Icon name={c.icon} size={30} stroke={1.6} className="hc-accent" />
+              <span className="hc-text text-[13px] font-medium leading-tight">{c.label}</span>
+              <span className="hc-muted text-[11px]">{count(c.key)} câu hỏi</span>
             </button>
           );
         })}
@@ -188,7 +264,7 @@ function Hl({ text, q }) {
     const j = ft.indexOf(fq, i);
     if (j < 0) { parts.push(text.slice(i)); break; }
     parts.push(text.slice(i, j));
-    parts.push(<mark key={j} className="rounded-sm px-0.5 bg-[#e0e7ff] text-[#625df5]">{text.slice(j, j + fq.length)}</mark>);
+    parts.push(<mark key={j} className="rounded-sm px-0.5" style={{ background: "var(--h-accent-soft2)", color: "inherit" }}>{text.slice(j, j + fq.length)}</mark>);
     i = j + fq.length;
   }
   return <>{parts}</>;
@@ -201,12 +277,12 @@ function FaqItem({ faq, open, onToggle, query, onAsk }) {
     <div className="hc-rule border-b-[0.5px] last:border-b-0">
       <button onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-4 px-5 py-4 text-left">
         <span className="hc-text flex-1 text-[16px] font-medium leading-6"><Hl text={faq.question} q={query} /></span>
-        <Icon name="chevD" size={18} className={`text-[#625df5] mt-1 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <Icon name="chevD" size={18} className={`hc-accent mt-1 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
           <div className="px-5 pb-5">
-            <p className="hc-text2 whitespace-pre-line text-[15px] font-normal leading-7">{faq.answer}</p>
+            <p className="hc-text2 whitespace-pre-line text-[15px] font-light leading-7">{faq.answer}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {vote === "yes" ? (
                 <span className="hc-text text-[14px] font-medium">Cảm ơn bạn đã phản hồi.</span>
@@ -220,7 +296,7 @@ function FaqItem({ faq, open, onToggle, query, onAsk }) {
             </div>
             {vote === "no" && (
               <button onClick={() => onAsk({ category: faq.category, about: faq.question })}
-                className="text-[#625df5] mt-4 text-[15px] font-semibold hover:underline">
+                className="hc-accent mt-4 text-[15px] font-medium">
                 Gửi yêu cầu hỗ trợ
               </button>
             )}
@@ -241,7 +317,7 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   const catLabel = CATEGORIES.find((c) => c.key === cat)?.label;
 
   return (
-    <section id="help-faq" className="scroll-mt-4 mt-8">
+    <section id="help-faq" className="scroll-mt-4">
       <SectionTitle
         title={q ? `Kết quả cho “${q}”` : catLabel || "Tất cả câu hỏi"}
         hint={filtering && !loading ? `${faqs.length} câu hỏi` : null}
@@ -255,10 +331,10 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
           </div>
         ) : shown.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="hc-text text-[17px] font-bold tracking-[-0.01em]">Không tìm thấy câu hỏi phù hợp</p>
-            <p className="hc-muted mt-2 text-[14px]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
+            <p className="hc-text text-[17px] font-medium tracking-[-0.01em]">Không tìm thấy câu hỏi phù hợp</p>
+            <p className="hc-muted mt-1 text-[14px]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
             <button onClick={() => onAsk({ category: cat || null, description: q })}
-              className="hc-btn-solid mt-5 h-12 px-6 text-[15px] rounded-xl">
+              className="hc-btn-solid mt-5 h-12 px-6 text-[15px]">
               Gửi yêu cầu hỗ trợ
             </button>
           </div>
@@ -268,7 +344,7 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
           ))
         )}
         {!filtering && !loading && faqs.length > 5 && openIdx < 5 && (
-          <button onClick={() => setExpanded(!expanded)} className="text-[#625df5] flex w-full items-center justify-center gap-1.5 py-4 text-[15px] font-semibold hover:bg-gray-50 transition-colors">
+          <button onClick={() => setExpanded(!expanded)} className="hc-accent flex w-full items-center justify-center gap-1.5 py-3.5 text-[15px] font-medium">
             {expanded ? "Thu gọn" : `Xem thêm ${faqs.length - 5} câu hỏi`}
             <Icon name="chevD" size={15} className={expanded ? "rotate-180" : ""} />
           </button>
@@ -278,33 +354,30 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   );
 }
 
-/* ============ VẪN CẦN HỖ TRỢ ============ */
+/* ============ VẪN CẦN HỖ TRỢ (khối tối ở cuối trang, kiểu Loom / n8n) ============ */
 export function ContactCard({ onRequest }) {
   return (
-    <section className="hc-cta mt-8 px-6 pb-10 pt-12 text-center relative overflow-hidden">
-      <div className="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-[#625df5] blur-[80px] opacity-40 pointer-events-none"></div>
-      <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-[#818cf8] blur-[80px] opacity-20 pointer-events-none"></div>
-      
+    <section className="hc-cta px-6 pb-7 pt-9 text-center">
       {HELP_IMAGES.cta && (
-        <img src={HELP_IMAGES.cta} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-overlay" />
+        <img src={HELP_IMAGES.cta} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25" />
       )}
-      <div className="relative z-10">
-        <h3 className="text-[28px] font-bold leading-[1.1] tracking-[-0.02em] text-white">
-          Bạn cần <span className="text-[#818cf8]">hỗ trợ thêm?</span>
+      <div className="relative">
+        <h3 className="text-[30px] font-medium leading-[1.1] tracking-[-0.03em]">
+          Vẫn cần <span className="hc-serif-cta">hỗ trợ?</span>
         </h3>
-        <p className="hc-cta-sub mx-auto mt-3 max-w-[320px] text-[15px] font-normal leading-6">
-          Đội ngũ NXX315 luôn sẵn sàng giải đáp mọi thắc mắc của bạn.
+        <p className="hc-cta-sub mx-auto mt-3 max-w-[320px] text-[15px] font-light leading-6">
+          Chưa tìm được câu trả lời? Gửi yêu cầu hoặc nhắn trực tiếp cho NXX315.
         </p>
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <button onClick={() => onRequest()} className="hc-btn-cta h-12 px-8 text-[15px]">
-            Gửi yêu cầu hỗ trợ
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button onClick={() => onRequest()} className="hc-btn-cta h-12 px-6 text-[15px]">
+            Gửi yêu cầu
           </button>
           <a href={ZALO_URL} target="_blank" rel="noopener noreferrer"
-            className="hc-btn-ghost flex h-12 items-center justify-center px-8 text-[15px]">
+            className="hc-btn-ghost flex h-12 items-center px-6 text-[15px]">
             Nhắn Zalo
           </a>
         </div>
       </div>
     </section>
   );
-  }
+      }
