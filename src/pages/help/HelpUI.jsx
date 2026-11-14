@@ -4,8 +4,13 @@ import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
 import { useHelpTheme } from "./helpTheme.jsx";
 
-export const HELP_IMAGES = { hero: "", cta: "" };
+/* Ảnh minh hoạ: tải lên Supabase Storage rồi dán link vào đây (để trống = không hiện) */
+export const HELP_IMAGES = {
+  hero: "",
+  cta: "",
+};
 
+/* ============ ICON ============ */
 const P = {
   back: <path d="M19 12H5M12 19l-7-7 7-7" />,
   search: (<><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>),
@@ -61,43 +66,44 @@ export function SectionTitle({ title, hint, action, onAction }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <div>
-        <h2 className="hc-text text-[20px] font-bold leading-tight tracking-[-0.02em]">{title}</h2>
+        <h2 className="hc-text text-[20px] font-bold leading-tight tracking-[-0.02em] text-[#1e1e2f]">{title}</h2>
         {hint && <p className="hc-muted mt-1 text-[13px]">{hint}</p>}
       </div>
       {action && (
-        <button onClick={onAction} className="hc-accent shrink-0 text-[14px] font-semibold hover:underline">{action}</button>
+        <button onClick={onAction} className="text-[#625df5] shrink-0 text-[14px] font-semibold hover:underline">{action}</button>
       )}
     </div>
   );
 }
 
+/* ============ HERO: thanh trên + lời chào + tìm kiếm ============ */
 export function Hero({ query, onQuery, name, onBack }) {
   useHelpTheme();
   return (
-    <header className="relative overflow-hidden pb-16 pt-6 bg-gradient-to-b from-[#e0f2fe] to-[#f8f9fc]">
+    <header className="hc-hero relative overflow-hidden pb-16 pt-6">
       {HELP_IMAGES.hero && (
         <img src={HELP_IMAGES.hero} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-overlay" />
       )}
-      <div className="relative mx-auto max-w-md px-4 md:max-w-4xl">
+      <div className="relative mx-auto max-w-md px-4 md:max-w-xl">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <button onClick={onBack} aria-label="Quay lại" className="hc-roundbtn bg-white/50 hover:bg-white shadow-sm">
+            <button onClick={onBack} aria-label="Quay lại" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/60 shadow-sm hover:bg-white">
               <Icon name="back" size={18} />
             </button>
-            <span className="hc-text truncate text-[16px] font-bold tracking-[-0.01em] text-[#1e1e2f]">NXX315</span>
+            <span className="truncate text-[16px] font-bold tracking-[-0.01em] text-[#1e1e2f]">NXX315</span>
           </div>
-          <nav className="hc-text2 flex shrink-0 items-center gap-4 text-[14px] font-medium text-gray-600">
-            <Link to="/guide" className="transition hover:text-[#625df5]">Hướng dẫn</Link>
-            <Link to="/contact" className="transition hover:text-[#625df5]">Liên hệ</Link>
+          <nav className="flex shrink-0 items-center gap-4 text-[14px] font-medium text-gray-600">
+            <Link to="/guide" className="hover:text-[#625df5]">Hướng dẫn</Link>
+            <Link to="/contact" className="hover:text-[#625df5]">Liên hệ</Link>
           </nav>
         </div>
 
         <div className="mt-10 text-center">
-          <h1 className="hc-text mx-auto mt-2 max-w-[520px] text-[32px] font-bold leading-[1.1] tracking-tight text-[#1e1e2f] sm:text-[42px]">
+          <h1 className="mx-auto mt-2 max-w-[520px] text-[32px] font-bold leading-[1.1] tracking-tight text-[#1e1e2f] sm:text-[40px]">
             {name ? `Chào ${name}, ` : ""}Chúng tôi có thể <span className="text-[#625df5]">giúp gì?</span>
           </h1>
 
-          <div className="mx-auto mt-8 max-w-[540px] text-left">
+          <div className="mx-auto mt-8 max-w-[540px]">
             <div className="hc-search">
               <Icon name="search" size={20} className="text-gray-400 shrink-0 ml-1" />
               <input
@@ -111,13 +117,12 @@ export function Hero({ query, onQuery, name, onBack }) {
                   <Icon name="x" size={16} />
                 </button>
               )}
-              <button type="button" onClick={() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth" })}
-                className="hc-btn-solid h-10 px-6 text-[15px] rounded-full">
+              <button type="button" onClick={() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth" })} className="hc-btn-solid">
                 Tìm
               </button>
             </div>
             <div className="mt-4 text-center text-[13px] text-gray-500">
-              Chủ đề phổ biến: <span className="underline decoration-gray-300 cursor-pointer hover:text-[#625df5]">Đơn hàng</span>, <span className="underline decoration-gray-300 cursor-pointer hover:text-[#625df5]">Nạp tiền</span>, <span className="underline decoration-gray-300 cursor-pointer hover:text-[#625df5]">Tài khoản</span>
+              Chủ đề phổ biến: <span className="underline cursor-pointer hover:text-[#625df5]">Đơn hàng</span>, <span className="underline cursor-pointer hover:text-[#625df5]">Nạp tiền</span>, <span className="underline cursor-pointer hover:text-[#625df5]">Tài khoản</span>
             </div>
           </div>
         </div>
@@ -126,16 +131,17 @@ export function Hero({ query, onQuery, name, onBack }) {
   );
 }
 
+/* ============ CÂU HỎI PHỔ BIẾN ============ */
 export function PopularFaqs({ faqs, onPick }) {
-  const items = faqs.slice(0, 6);
+  const items = faqs.slice(0, 4);
   if (!items.length) return null;
   return (
-    <section className="hc-card hc-lift px-5 pb-2 pt-5 relative -mt-6 z-10">
-      <h2 className="hc-text text-[18px] font-bold tracking-[-0.01em] mb-2">Câu hỏi phổ biến</h2>
-      <ul className="mt-1 md:grid md:grid-cols-2 md:gap-x-8">
+    <section className="hc-card relative z-10 -mt-8 px-5 pb-2 pt-5 shadow-lg">
+      <h2 className="mb-2 text-[18px] font-bold text-[#1e1e2f]">Câu hỏi phổ biến</h2>
+      <ul>
         {items.map((f) => (
-          <li key={f.id} className="hc-rule border-b-[0.5px] last:border-b-0 md:border-b-0 py-1">
-            <button onClick={() => onPick(f)} className="hc-text flex w-full items-center justify-between gap-4 py-3 text-left text-[15px] font-medium leading-6 hover:text-[#625df5] transition-colors">
+          <li key={f.id} className="border-b border-gray-100 last:border-0">
+            <button onClick={() => onPick(f)} className="flex w-full items-center justify-between gap-4 py-3 text-left text-[15px] font-medium leading-6 text-[#1e1e2f] hover:text-[#625df5]">
               <span className="line-clamp-2">{f.question}</span>
               <Icon name="chevR" size={16} stroke={2.5} className="text-gray-400 shrink-0" />
             </button>
@@ -146,25 +152,22 @@ export function PopularFaqs({ faqs, onPick }) {
   );
 }
 
+/* ============ THẺ CHỦ ĐỀ ============ */
 export function CategoryCards({ faqs, active, onPick }) {
   const count = (k) => faqs.filter((f) => f.category === k).length;
-  const tileColors = ["tile-blue", "tile-purple", "tile-green", "tile-orange", "tile-pink", "tile-yellow"];
+  const tileColors = ["tile-blue", "tile-purple", "tile-green", "tile-orange", "tile-pink"];
 
   return (
-    <section className="mt-6">
+    <section className="mt-8">
       <SectionTitle title="Duyệt theo chủ đề" />
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3">
         {CATEGORIES.map((c, i) => {
           const on = active === c.key;
           const colorClass = tileColors[i % tileColors.length];
           return (
-            <button 
-              key={c.key} 
-              onClick={() => onPick(on ? null : c.key)} 
-              className={`hc-tile-loom ${colorClass} ${on ? "ring-2 ring-[#625df5] ring-offset-2" : ""}`}
-            >
-              <Icon name={c.icon} size={32} stroke={1.8} />
-              <span className="text-[14px] font-bold leading-tight mt-2 text-center">{c.label}</span>
+            <button key={c.key} onClick={() => onPick(on ? null : c.key)} className={`hc-tile-loom ${colorClass} ${on ? "ring-2 ring-[#625df5] ring-offset-2" : ""}`}>
+              <Icon name={c.icon} size={28} stroke={1.8} />
+              <span className="text-[14px] font-bold leading-tight mt-1 text-center">{c.label}</span>
               <span className="text-[11px] opacity-70">{count(c.key)} câu hỏi</span>
             </button>
           );
@@ -174,7 +177,7 @@ export function CategoryCards({ faqs, active, onPick }) {
   );
 }
 
-// Giữ nguyên hàm Hl, FaqItem, FaqSection từ file gốc của bạn...
+/* ============ FAQ ============ */
 function Hl({ text, q }) {
   const fq = fold((q || "").trim());
   if (!fq) return text;
@@ -275,10 +278,10 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   );
 }
 
+/* ============ VẪN CẦN HỖ TRỢ ============ */
 export function ContactCard({ onRequest }) {
   return (
     <section className="hc-cta mt-8 px-6 pb-10 pt-12 text-center relative overflow-hidden">
-      {/* Hiệu ứng ánh sáng mờ (glow) phía sau giống Loom */}
       <div className="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-[#625df5] blur-[80px] opacity-40 pointer-events-none"></div>
       <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-[#818cf8] blur-[80px] opacity-20 pointer-events-none"></div>
       
@@ -304,4 +307,4 @@ export function ContactCard({ onRequest }) {
       </div>
     </section>
   );
-}
+  }
