@@ -1,8 +1,8 @@
 // src/pages/help/HelpTicket.jsx — chi tiết một yêu cầu + nhắn tin với CSKH
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
-import { Icon, StatusDot } from "./HelpUI.jsx";
-import { Screen, MAX_IMAGES, MAX_MB, statusOf, sourceOf } from "./HelpScreen.jsx";
+import { Icon, StatusDot, ring } from "./HelpUI.jsx";
+import { MAX_IMAGES, MAX_MB, statusOf, sourceOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
 
 const CLOSED = ["resolved", "closed"];
@@ -10,10 +10,10 @@ const CLOSED = ["resolved", "closed"];
 function CskhAvatar() {
   const [bad, setBad] = useState(false);
   if (CSKH_AVATAR && !bad) {
-    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="h-11 w-11 shrink-0 rounded-full object-cover" />;
+    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="h-9 w-9 shrink-0 rounded-full object-cover" />;
   }
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[16px] font-semibold text-[#16213e]">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[14px] font-semibold text-[#16213e]">
       {CSKH_NAME.slice(0, 1)}
     </span>
   );
@@ -35,9 +35,9 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
   if (mine) {
     return (
       <div className="flex flex-col items-end">
-        {time && <span className="mb-1.5 text-[14px] text-[#6b7488]">{time}</span>}
+        {time && <span className="mb-1 text-[12.5px] text-[#6b7488]">{time}</span>}
         {hasText ? (
-          <div className="max-w-[88%] space-y-2 whitespace-pre-line break-words rounded-[20px] rounded-br-md bg-[#2b59e0] px-4 py-3 text-[16px] leading-6 text-white">{children}</div>
+          <div className="max-w-[88%] space-y-2 whitespace-pre-line break-words rounded-[18px] rounded-br-md bg-[#2b59e0] px-3.5 py-2.5 text-[15px] leading-[22px] text-white">{children}</div>
         ) : (
           <div className="max-w-[88%]">{children}</div>
         )}
@@ -45,15 +45,15 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
     );
   }
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-2.5">
       <CskhAvatar />
-      <div className="min-w-0 max-w-[85%]">
-        <p className="mb-1.5 text-[14px] text-[#6b7488]">
+      <div className="min-w-0 max-w-[86%]">
+        <p className="mb-1 text-[12.5px] text-[#6b7488]">
           <span className="font-semibold text-[#16213e]">{label || CSKH_NAME}</span>
           {time ? `  ${time}` : ""}
         </p>
-        <div className="whitespace-pre-line break-words rounded-[20px] rounded-tl-md bg-[#f1f3f8] px-4 py-3 text-[16px] leading-6 text-[#16213e]">
-          {auto && <span className="mb-2 block w-fit rounded-full bg-[#dbe7ff] px-3 py-1 text-[13px] font-medium text-[#16213e]">Tin nhắn tự động</span>}
+        <div className="whitespace-pre-line break-words rounded-[18px] rounded-tl-md bg-[#f1f3f8] px-3.5 py-2.5 text-[15px] leading-[22px] text-[#16213e]">
+          {auto && <span className="mb-1.5 block w-fit rounded-full bg-[#dbe7ff] px-2.5 py-0.5 text-[12px] font-medium text-[#16213e]">Tin nhắn tự động</span>}
           {children}
         </div>
       </div>
@@ -61,13 +61,12 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
   );
 }
 
-/* Thẻ có tiêu đề + mũi tên thu gọn, giống ảnh mẫu */
 function Card({ title, open, onToggle, children }) {
   return (
-    <section className="rounded-2xl bg-white px-5">
-      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 py-[18px] text-left">
-        <span className="text-[19px] font-semibold tracking-[-0.3px] text-[#16213e]">{title}</span>
-        <Icon name="chevD" size={20} className={`shrink-0 text-[#16213e] transition-transform ${open ? "rotate-180" : ""}`} />
+    <section className="rounded-2xl bg-white px-3.5">
+      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 py-3.5 text-left">
+        <span className="text-[17px] font-semibold tracking-[-0.2px] text-[#16213e]">{title}</span>
+        <Icon name="chevD" size={18} className={`shrink-0 text-[#16213e] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && <div className="border-t border-[#16213e]/10">{children}</div>}
     </section>
@@ -97,6 +96,11 @@ export function ChatScreen({ ticket, onClose }) {
   const filesRef = useRef(files);
   filesRef.current = files;
   useEffect(() => () => filesRef.current.forEach((f) => URL.revokeObjectURL(f.url)), []);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -222,73 +226,91 @@ export function ChatScreen({ ticket, onClose }) {
       </span>
     ) : null;
 
-  const row = "flex items-center justify-between gap-4 border-b border-[#16213e]/10 py-4 text-[16px] last:border-b-0";
-
-  const footer = closed ? undefined : (
-    <>
-      {err && <p className="mb-2 rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{err}</p>}
-      {files.length > 0 && (
-        <div className="mb-3 flex gap-3">
-          {files.map((f, i) => (
-            <div key={f.url} className="relative h-16 w-16">
-              <img src={f.url} alt={`Ảnh ${i + 1}`} className="h-full w-full rounded-2xl object-cover" />
-              <button type="button" onClick={() => removeFile(i)} aria-label="Xoá ảnh"
-                className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#2b59e0] text-white">
-                <Icon name="x" size={13} stroke={3} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="flex items-end gap-2">
-        <button type="button" onClick={() => pick.current?.click()} disabled={files.length >= MAX_IMAGES} aria-label="Thêm ảnh"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9] disabled:opacity-40">
-          <Icon name="camera" size={24} />
-        </button>
-        <input ref={pick} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-        <textarea value={text} rows={1} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder="Nhập tin nhắn..."
-          className="max-h-28 min-h-[44px] flex-1 resize-none rounded-[22px] bg-[#eef2f9] px-4 py-2.5 text-[16px] text-[#16213e] outline-none placeholder:text-[#6b7488] focus:ring-1 focus:ring-[#2b59e0]" />
-        <button onClick={send} disabled={(!text.trim() && files.length === 0) || busy} aria-label="Gửi"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2b59e0] text-white transition active:scale-95 disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
-          <Icon name="send" size={18} />
-        </button>
-      </div>
-    </>
-  );
+  const row = "flex items-center justify-between gap-4 border-b border-[#16213e]/10 py-3 text-[15px] last:border-b-0";
 
   return (
     <>
-    <Screen title="Chi tiết yêu cầu" big={false} onClose={onClose} footer={footer}>
-      <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
-        <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
-        <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
-        <div className={row}><span className="text-[#6b7488]">Nguồn tiếp nhận</span><span className="font-semibold text-[#16213e]">{sourceOf(ticket.source)}</span></div>
-        <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
-      </Card>
-
-      <Card title="Chi tiết vấn đề" open={chat} onToggle={() => setChat(!chat)}>
-        <div className="space-y-6 py-6">
-          <ChatBubble mine time={fmtDate(ticket.created_at)} hasText={!!ticket.description && ticket.description.trim().length > 0}>
-            {ticket.description}
-            {thumbs(imgs)}
-          </ChatBubble>
-
-          <ChatBubble auto time={fmtDate(ticket.created_at)}>{AUTO_REPLY}</ChatBubble>
-          {ticket.admin_reply && <ChatBubble>{ticket.admin_reply}</ChatBubble>}
-
-          {msgs.map((m) => (
-            <ChatBubble key={m.id} mine={m.sender === "user"} time={fmtDate(m.created_at)} hasText={!!m.body && m.body.trim().length > 0}>
-              {m.body}
-              {thumbs((m.images || []).map((p) => urls[p] || null))}
-            </ChatBubble>
-          ))}
-
-          {showFollowUp && <ChatBubble auto time={fmtDate(followUpTime)}>{followUpText(name)}</ChatBubble>}
-          <div ref={endRef} />
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#eef2f9]">
+      {/* Đầu trang có dải màu chuyển */}
+      <div className="bg-gradient-to-b from-[#bcd2ff] to-[#eef2f9] pb-4">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3 px-3 pt-3 md:max-w-xl">
+          <button onClick={onClose} aria-label="Quay lại"
+            className={`flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#16213e] ${ring}`}>
+            <Icon name="back" size={18} />
+          </button>
+          <h1 className="flex-1 text-[16px] font-semibold tracking-[-0.2px] text-[#16213e]">Chi tiết yêu cầu</h1>
         </div>
-      </Card>
-    </Screen>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-md space-y-3 px-3 pb-6 md:max-w-xl">
+          <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
+            <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
+            <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
+            <div className={row}><span className="text-[#6b7488]">Nguồn tiếp nhận</span><span className="font-semibold text-[#16213e]">{sourceOf(ticket.source)}</span></div>
+            <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
+          </Card>
+
+          <Card title="Chi tiết vấn đề" open={chat} onToggle={() => setChat(!chat)}>
+            <div className="space-y-5 py-5">
+              <ChatBubble mine time={fmtDate(ticket.created_at)} hasText={!!ticket.description && ticket.description.trim().length > 0}>
+                {ticket.description}
+                {thumbs(imgs)}
+              </ChatBubble>
+
+              <ChatBubble auto time={fmtDate(ticket.created_at)}>{AUTO_REPLY}</ChatBubble>
+              {ticket.admin_reply && <ChatBubble>{ticket.admin_reply}</ChatBubble>}
+
+              {msgs.map((m) => (
+                <ChatBubble key={m.id} mine={m.sender === "user"} time={fmtDate(m.created_at)} hasText={!!m.body && m.body.trim().length > 0}>
+                  {m.body}
+                  {thumbs((m.images || []).map((p) => urls[p] || null))}
+                </ChatBubble>
+              ))}
+
+              {showFollowUp && <ChatBubble auto time={fmtDate(followUpTime)}>{followUpText(name)}</ChatBubble>}
+              <div ref={endRef} />
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Ô nhập tin nhắn: tự mất khi yêu cầu đã giải quyết */}
+      {!closed && (
+        <div className="border-t border-[#16213e]/5 bg-white/85 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-[9px]">
+          <div className="mx-auto max-w-md md:max-w-xl">
+            {err && <p className="mb-2 rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{err}</p>}
+            {files.length > 0 && (
+              <div className="mb-3 flex gap-3">
+                {files.map((f, i) => (
+                  <div key={f.url} className="relative h-16 w-16">
+                    <img src={f.url} alt={`Ảnh ${i + 1}`} className="h-full w-full rounded-2xl object-cover" />
+                    <button type="button" onClick={() => removeFile(i)} aria-label="Xoá ảnh"
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#2b59e0] text-white">
+                      <Icon name="x" size={13} stroke={3} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-end gap-2">
+              <button type="button" onClick={() => pick.current?.click()} disabled={files.length >= MAX_IMAGES} aria-label="Thêm ảnh"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9] disabled:opacity-40">
+                <Icon name="camera" size={22} />
+              </button>
+              <input ref={pick} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
+              <textarea value={text} rows={1} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder="Nhập tin nhắn..."
+                className="max-h-28 min-h-[40px] flex-1 resize-none rounded-[20px] bg-[#eef2f9] px-4 py-2 text-[15px] text-[#16213e] outline-none placeholder:text-[#6b7488] focus:ring-1 focus:ring-[#2b59e0]" />
+              <button onClick={send} disabled={(!text.trim() && files.length === 0) || busy} aria-label="Gửi"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2b59e0] text-white transition active:scale-95 disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
+                <Icon name="send" size={17} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-     }
+    }
