@@ -2,8 +2,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { Icon, StatusDot } from "./HelpUI.jsx";
-import { Screen, MAX_IMAGES, MAX_MB, statusOf } from "./HelpScreen.jsx";
+import { Screen, MAX_IMAGES, MAX_MB, statusOf, sourceOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
+
+const CLOSED = ["resolved", "closed"];
 
 function CskhAvatar() {
   const [bad, setBad] = useState(false);
@@ -31,7 +33,6 @@ function Lightbox({ url, onClose }) {
 
 function ChatBubble({ mine, time, label, auto, children, hasText }) {
   if (mine) {
-    // Nếu KHÔNG có chữ (chỉ có ảnh), render ảnh trần không viền
     if (!hasText) {
       return (
         <div className="flex flex-col items-end">
@@ -40,8 +41,6 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
         </div>
       );
     }
-    
-    // Nếu CÓ chữ, giữ nguyên bong bóng chat màu xanh
     return (
       <div className="flex flex-col items-end">
         {time && <span className="mb-1.5 text-[13px] text-[#6b7488]">{time}</span>}
@@ -65,6 +64,9 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
 
 const AUTO_REPLY = "Xin chào bạn,\nNXX315 đã nhận được yêu cầu của bạn. Đội ngũ CSKH sẽ phản hồi tại đây sớm nhất có thể. Bạn có thể nhắn thêm thông tin bất cứ lúc nào.";
 
+const followUpText = (name) =>
+  `Xin chào bạn${name ? ` ${name}` : ""},\nNếu bạn vẫn cần trợ giúp về vấn đề trên, hãy để lại phản hồi để đội ngũ CSKH của Nxx315 Studio kịp thời hỗ trợ bạn nhé.\n\nTrong 12 giờ tiếp theo, Nxx315 Studio xin được phép đóng yêu cầu trợ giúp này nếu không có thêm phản hồi nào khác từ bạn. Cảm ơn bạn đã sử dụng dịch vụ!`;
+
 export function ChatScreen({ ticket, onClose }) {
   const [msgs, setMsgs] = useState([]);
   const [imgs, setImgs] = useState([]);
@@ -72,6 +74,8 @@ export function ChatScreen({ ticket, onClose }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [status, setStatus] = useState(ticket.status);
+  const [name, setName] = useState("");
   const endRef = useRef(null);
   const pick = useRef(null);
   const [view, setView] = useState(null);
@@ -80,6 +84,19 @@ export function ChatScreen({ ticket, onClose }) {
   const filesRef = useRef(files);
   filesRef.current = files;
   useEffect(() => () => filesRef.current.forEach((f) => URL.revokeObjectURL(f.url)), []);
+
+  // tên người dùng cho tin nhắn tự động
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: s } = await supabase.auth.getSession();
+      const uid = s?.session?.user?.id;
+      if (!uid) return;
+      const { data } = await supabase.from("profiles").select("display_name,username").eq("id", uid).maybeSingle();
+      if (alive && data) setName(data.display_name || data.username || "");
+    })();
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -91,6 +108,8 @@ export function ChatScreen({ ticket, onClose }) {
       .channel(`ticket-${ticket.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_ticket_messages", filter: `ticket_id=eq.${ticket.id}` },
         (p) => setMsgs((cur) => (cur.some((m) => m.id === p.new.id) ? cur : [...cur, p.new])))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "support_tickets", filter: `id=eq.${ticket.id}` },
+        (p) => setStatus(p.new.status))
       .subscribe();
     return () => { alive = false; supabase.removeChannel(ch); };
   }, [ticket.id]);
@@ -123,6 +142,12 @@ export function ChatScreen({ ticket, onClose }) {
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs.length, imgs.length]);
 
+  const closed = CLOSED.includes(status);
+  const last = msgs[msgs.length - 1];
+  const lastIsStaff = last ? last.sender !== "user" : !!ticket.admin_reply;
+  const showFollowUp = !closed && lastIsStaff;
+  const followUpTime = last?.created_at || ticket.updated_at || ticket.created_at;
+
   const addFiles = (list) => {
     setErr("");
     const ok = [];
@@ -141,7 +166,7 @@ export function ChatScreen({ ticket, onClose }) {
 
   const send = async () => {
     const body = text.trim();
-    if ((!body && files.length === 0) || busy) return;
+    if ((!body && files.length === 0) || busy || closed) return;
     setErr("");
     setBusy(true);
     const { data: s } = await supabase.auth.getSession();
@@ -185,54 +210,53 @@ export function ChatScreen({ ticket, onClose }) {
     ) : null;
 
   const row = "flex items-center justify-between gap-4 border-t border-[#16213e]/10 py-4 text-[17px]";
+
+  const footer = closed ? undefined : (
+    <>
+      {err && <p className="mb-2 rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{err}</p>}
+      {files.length > 0 && (
+        <div className="mb-3 flex gap-3">
+          {files.map((f, i) => (
+            <div key={f.url} className="relative h-16 w-16">
+              <img src={f.url} alt={`Ảnh ${i + 1}`} className="h-full w-full rounded-2xl object-cover" />
+              <button type="button" onClick={() => removeFile(i)} aria-label="Xoá ảnh"
+                className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#2b59e0] text-white">
+                <Icon name="x" size={13} stroke={3} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex items-end gap-2">
+        <button type="button" onClick={() => pick.current?.click()} disabled={files.length >= MAX_IMAGES} aria-label="Thêm ảnh"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9] disabled:opacity-40">
+          <Icon name="camera" size={24} />
+        </button>
+        <input ref={pick} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
+        <textarea value={text} rows={1} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder="Nhập tin nhắn..."
+          className="max-h-28 min-h-[44px] flex-1 resize-none rounded-[22px] bg-[#eef2f9] px-4 py-2.5 text-[16px] text-[#16213e] outline-none placeholder:text-[#6b7488] focus:ring-1 focus:ring-[#2b59e0]" />
+        <button onClick={send} disabled={(!text.trim() && files.length === 0) || busy} aria-label="Gửi"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2b59e0] text-white transition active:scale-95 disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
+          <Icon name="send" size={18} />
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <>
-    <Screen
-      title="Chi tiết yêu cầu"
-      big={false}
-      onClose={onClose}
-      footer={
-        <>
-          {err && <p className="mb-2 rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{err}</p>}
-          {files.length > 0 && (
-            <div className="mb-3 flex gap-3">
-              {files.map((f, i) => (
-                <div key={f.url} className="relative h-16 w-16">
-                  <img src={f.url} alt={`Ảnh ${i + 1}`} className="h-full w-full rounded-2xl object-cover" />
-                  <button type="button" onClick={() => removeFile(i)} aria-label="Xoá ảnh"
-                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#2b59e0] text-white">
-                    <Icon name="x" size={13} stroke={3} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="flex items-end gap-2">
-            <button type="button" onClick={() => pick.current?.click()} disabled={files.length >= MAX_IMAGES} aria-label="Thêm ảnh"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#16213e] transition active:bg-[#eef2f9] disabled:opacity-40">
-              <Icon name="camera" size={24} />
-            </button>
-            <input ref={pick} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-            <textarea value={text} rows={1} maxLength={1000} onChange={(e) => setText(e.target.value)} placeholder="Nhập tin nhắn..."
-              className="max-h-28 min-h-[44px] flex-1 resize-none rounded-[22px] bg-[#eef2f9] px-4 py-2.5 text-[16px] text-[#16213e] outline-none placeholder:text-[#6b7488] focus:ring-1 focus:ring-[#2b59e0]" />
-            <button onClick={send} disabled={(!text.trim() && files.length === 0) || busy} aria-label="Gửi"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2b59e0] text-white transition active:scale-95 disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
-              <Icon name="send" size={18} />
-            </button>
-          </div>
-        </>
-      }
-    >
+    <Screen title="Chi tiết yêu cầu" big={false} onClose={onClose} footer={footer}>
       <section className="rounded-xl bg-[#ffffff] px-6">
         <button onClick={() => setInfo(!info)} className="flex w-full items-center justify-between gap-3 py-5 text-left">
           <span className="text-[22px] font-semibold leading-tight tracking-[-0.5px] text-[#16213e]">{ticket.title}</span>
           <Icon name="chevD" size={20} className={`shrink-0 text-[#6b7488] transition-transform ${info ? "rotate-180" : ""}`} />
         </button>
-                {info && (
+        {info && (
           <>
             <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(ticket.status)} /></div>
+            <div className={row}><span className="text-[#6b7488]">Nguồn tiếp nhận</span><span className="font-semibold text-[#16213e]">{sourceOf(ticket.source)}</span></div>
+            <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
           </>
         )}
       </section>
@@ -240,29 +264,22 @@ export function ChatScreen({ ticket, onClose }) {
       <section className="rounded-xl bg-[#ffffff] p-6">
         <h2 className="border-b border-[#16213e]/10 pb-4 text-[22px] font-semibold tracking-[-0.5px] text-[#16213e]">Chi tiết vấn đề</h2>
         <div className="space-y-6 pt-5">
-          <ChatBubble 
-            mine 
-            time={fmtDate(ticket.created_at)} 
-            hasText={!!ticket.description && ticket.description.trim().length > 0}
-          >
+          <ChatBubble mine time={fmtDate(ticket.created_at)} hasText={!!ticket.description && ticket.description.trim().length > 0}>
             {ticket.description}
             {thumbs(imgs)}
           </ChatBubble>
-          
+
           <ChatBubble auto time={fmtDate(ticket.created_at)}>{AUTO_REPLY}</ChatBubble>
           {ticket.admin_reply && <ChatBubble>{ticket.admin_reply}</ChatBubble>}
-          
+
           {msgs.map((m) => (
-            <ChatBubble 
-              key={m.id} 
-              mine={m.sender === "user"} 
-              time={fmtDate(m.created_at)}
-              hasText={!!m.body && m.body.trim().length > 0}
-            >
+            <ChatBubble key={m.id} mine={m.sender === "user"} time={fmtDate(m.created_at)} hasText={!!m.body && m.body.trim().length > 0}>
               {m.body}
               {thumbs((m.images || []).map((p) => urls[p] || null))}
             </ChatBubble>
           ))}
+
+          {showFollowUp && <ChatBubble auto time={fmtDate(followUpTime)}>{followUpText(name)}</ChatBubble>}
           <div ref={endRef} />
         </div>
       </section>
@@ -270,4 +287,4 @@ export function ChatScreen({ ticket, onClose }) {
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-}
+            }
