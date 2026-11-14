@@ -3,17 +3,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { Icon, StatusDot } from "./HelpUI.jsx";
 import { Screen, MAX_IMAGES, MAX_MB, statusOf, sourceOf } from "./HelpScreen.jsx";
-import { ATTACH_BUCKET, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
+import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
 
 const CLOSED = ["resolved", "closed"];
 
 function CskhAvatar() {
   const [bad, setBad] = useState(false);
   if (CSKH_AVATAR && !bad) {
-    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="h-10 w-10 shrink-0 rounded-full object-cover" />;
+    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="h-11 w-11 shrink-0 rounded-full object-cover" />;
   }
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[16px] font-semibold text-[#16213e]">
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[16px] font-semibold text-[#16213e]">
       {CSKH_NAME.slice(0, 1)}
     </span>
   );
@@ -33,32 +33,44 @@ function Lightbox({ url, onClose }) {
 
 function ChatBubble({ mine, time, label, auto, children, hasText }) {
   if (mine) {
-    if (!hasText) {
-      return (
-        <div className="flex flex-col items-end">
-          {time && <span className="mb-1.5 text-[13px] text-[#6b7488]">{time}</span>}
-          <div className="max-w-[88%]">{children}</div>
-        </div>
-      );
-    }
     return (
       <div className="flex flex-col items-end">
-        {time && <span className="mb-1.5 text-[13px] text-[#6b7488]">{time}</span>}
-        <div className="max-w-[88%] space-y-2 whitespace-pre-line break-words rounded-[22px] rounded-br-md bg-[#dbe7ff] px-4 py-3 text-[16px] leading-6 text-[#16213e]">{children}</div>
+        {time && <span className="mb-1.5 text-[14px] text-[#6b7488]">{time}</span>}
+        {hasText ? (
+          <div className="max-w-[88%] space-y-2 whitespace-pre-line break-words rounded-[20px] rounded-br-md bg-[#2b59e0] px-4 py-3 text-[16px] leading-6 text-white">{children}</div>
+        ) : (
+          <div className="max-w-[88%]">{children}</div>
+        )}
       </div>
     );
   }
   return (
     <div className="flex items-start gap-3">
       <CskhAvatar />
-      <div className="min-w-0 max-w-[88%]">
-        <p className="mb-1.5 text-[13px] text-[#6b7488]"><span className="font-semibold text-[#16213e]">{label || CSKH_NAME}</span>{time ? `  ${time}` : ""}</p>
-        <div className="whitespace-pre-line break-words rounded-[22px] rounded-tl-md bg-[#eef2f9] px-4 py-3 text-[16px] leading-6 text-[#16213e]">
-          {auto && <span className="mb-2 block w-fit rounded-full bg-[#eaf1ff] px-3 py-1 text-[13px] font-medium text-[#16213e]">Tin nhắn tự động</span>}
+      <div className="min-w-0 max-w-[85%]">
+        <p className="mb-1.5 text-[14px] text-[#6b7488]">
+          <span className="font-semibold text-[#16213e]">{label || CSKH_NAME}</span>
+          {time ? `  ${time}` : ""}
+        </p>
+        <div className="whitespace-pre-line break-words rounded-[20px] rounded-tl-md bg-[#f1f3f8] px-4 py-3 text-[16px] leading-6 text-[#16213e]">
+          {auto && <span className="mb-2 block w-fit rounded-full bg-[#dbe7ff] px-3 py-1 text-[13px] font-medium text-[#16213e]">Tin nhắn tự động</span>}
           {children}
         </div>
       </div>
     </div>
+  );
+}
+
+/* Thẻ có tiêu đề + mũi tên thu gọn, giống ảnh mẫu */
+function Card({ title, open, onToggle, children }) {
+  return (
+    <section className="rounded-2xl bg-white px-5">
+      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 py-[18px] text-left">
+        <span className="text-[19px] font-semibold tracking-[-0.3px] text-[#16213e]">{title}</span>
+        <Icon name="chevD" size={20} className={`shrink-0 text-[#16213e] transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="border-t border-[#16213e]/10">{children}</div>}
+    </section>
   );
 }
 
@@ -71,6 +83,7 @@ export function ChatScreen({ ticket, onClose }) {
   const [msgs, setMsgs] = useState([]);
   const [imgs, setImgs] = useState([]);
   const [info, setInfo] = useState(true);
+  const [chat, setChat] = useState(true);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -85,7 +98,6 @@ export function ChatScreen({ ticket, onClose }) {
   filesRef.current = files;
   useEffect(() => () => filesRef.current.forEach((f) => URL.revokeObjectURL(f.url)), []);
 
-  // tên người dùng cho tin nhắn tự động
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -147,6 +159,7 @@ export function ChatScreen({ ticket, onClose }) {
   const lastIsStaff = last ? last.sender !== "user" : !!ticket.admin_reply;
   const showFollowUp = !closed && lastIsStaff;
   const followUpTime = last?.created_at || ticket.updated_at || ticket.created_at;
+  const typeLabel = ticket.type === "idea" ? "Góp ý ý tưởng" : CATEGORIES.find((c) => c.key === ticket.category)?.label || "Hỗ trợ";
 
   const addFiles = (list) => {
     setErr("");
@@ -209,7 +222,7 @@ export function ChatScreen({ ticket, onClose }) {
       </span>
     ) : null;
 
-  const row = "flex items-center justify-between gap-4 border-t border-[#16213e]/10 py-4 text-[17px]";
+  const row = "flex items-center justify-between gap-4 border-b border-[#16213e]/10 py-4 text-[16px] last:border-b-0";
 
   const footer = closed ? undefined : (
     <>
@@ -246,24 +259,15 @@ export function ChatScreen({ ticket, onClose }) {
   return (
     <>
     <Screen title="Chi tiết yêu cầu" big={false} onClose={onClose} footer={footer}>
-      <section className="rounded-xl bg-[#ffffff] px-6">
-        <button onClick={() => setInfo(!info)} className="flex w-full items-center justify-between gap-3 py-5 text-left">
-          <span className="text-[22px] font-semibold leading-tight tracking-[-0.5px] text-[#16213e]">{ticket.title}</span>
-          <Icon name="chevD" size={20} className={`shrink-0 text-[#6b7488] transition-transform ${info ? "rotate-180" : ""}`} />
-        </button>
-        {info && (
-          <>
-            <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Nguồn tiếp nhận</span><span className="font-semibold text-[#16213e]">{sourceOf(ticket.source)}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
-          </>
-        )}
-      </section>
+      <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
+        <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
+        <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
+        <div className={row}><span className="text-[#6b7488]">Nguồn tiếp nhận</span><span className="font-semibold text-[#16213e]">{sourceOf(ticket.source)}</span></div>
+        <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
+      </Card>
 
-      <section className="rounded-xl bg-[#ffffff] p-6">
-        <h2 className="border-b border-[#16213e]/10 pb-4 text-[22px] font-semibold tracking-[-0.5px] text-[#16213e]">Chi tiết vấn đề</h2>
-        <div className="space-y-6 pt-5">
+      <Card title="Chi tiết vấn đề" open={chat} onToggle={() => setChat(!chat)}>
+        <div className="space-y-6 py-6">
           <ChatBubble mine time={fmtDate(ticket.created_at)} hasText={!!ticket.description && ticket.description.trim().length > 0}>
             {ticket.description}
             {thumbs(imgs)}
@@ -282,9 +286,9 @@ export function ChatScreen({ ticket, onClose }) {
           {showFollowUp && <ChatBubble auto time={fmtDate(followUpTime)}>{followUpText(name)}</ChatBubble>}
           <div ref={endRef} />
         </div>
-      </section>
+      </Card>
     </Screen>
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-            }
+     }
