@@ -1,5 +1,5 @@
 // src/pages/HelpCenter.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
@@ -18,6 +18,7 @@ export default function HelpCenter() {
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
+
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -27,26 +28,56 @@ export default function HelpCenter() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [name, setName] = useState("");
+
+  // preset được khôi phục từ URL (?ty=...) để F5 vẫn mở đúng form
   const [preset, setPreset] = useState(() => (params.get("ty") ? { type: params.get("ty") } : {}));
 
-  // Màn đang mở nằm trên đường dẫn: ?m=request | ?m=history  (tải lại trang vẫn ở đúng màn)
+  // Màn đang mở nằm trên đường dẫn: ?m=request | ?m=history
   const mode = params.get("m");
-  const view = mode === "history" ? { type: "history" } : mode === "request" ? { type: "request", preset } : null;
+  const view =
+    mode === "history"
+      ? { type: "history" }
+      : mode === "request"
+      ? { type: "request", preset }
+      : null;
 
-  const setUrl = (updates) => {
-    const next = new URLSearchParams(params);
-    Object.entries(updates).forEach(([k, v]) => (v === null ? next.delete(k) : next.set(k, v)));
-    setParams(next, { replace: true });
-  };
-  const closeView = () => setUrl({ m: null, ty: null, g: null, t: null });
-  const openHistory = () => setUrl({ m: "history", ty: null, g: null, t: null });
-  const openRequest = (p = {}) => {
-    setPreset(p);
-    setUrl({ m: "request", ty: p.type || null, g: null, t: null });
-  };
+  // ----- URL helpers (dùng useCallback để ổn định identity) -----
+  const setUrl = useCallback(
+    (updates) => {
+      setParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([k, v]) =>
+            v === null || v === undefined ? next.delete(k) : next.set(k, v)
+          );
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setParams]
+  );
 
+  const closeView = useCallback(
+    () => setUrl({ m: null, ty: null, g: null, t: null }),
+    [setUrl]
+  );
+  const openHistory = useCallback(
+    () => setUrl({ m: "history", ty: null, g: null, t: null }),
+    [setUrl]
+  );
+  const openRequest = useCallback(
+    (p = {}) => {
+      setPreset(p);
+      setUrl({ m: "request", ty: p.type || null, g: null, t: null });
+    },
+    [setUrl]
+  );
+
+  // ----- Load dữ liệu -----
   useEffect(() => {
     let alive = true;
+
     (async () => {
       const { data } = await supabase
         .from("support_faqs")
@@ -57,13 +88,17 @@ export default function HelpCenter() {
       setFaqs(data || []);
       setFaqLoading(false);
     })();
+
     (async () => {
       const { data: s } = await supabase.auth.getSession();
       const user = s?.session?.user;
       if (!alive) return;
       setSignedIn(!!user);
       setName(givenName(user));
-      if (!user) return setOrdersLoading(false);
+      if (!user) {
+        setOrdersLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("redemption_orders")
         .select("id,order_code,package_name,coins_charged,status,created_at")
@@ -74,9 +109,13 @@ export default function HelpCenter() {
       setOrders(data || []);
       setOrdersLoading(false);
     })();
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
+  // ----- Filter -----
   const filtered = useMemo(() => {
     const q = fold(query.trim());
     return faqs.filter((f) => {
@@ -85,50 +124,85 @@ export default function HelpCenter() {
     });
   }, [faqs, query, cat]);
 
-  const scrollToFaq = () =>
-    setTimeout(() => document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  // ----- Scroll -----
+  const scrollToFaq = useCallback(
+    () =>
+      setTimeout(
+        () =>
+          document
+            .getElementById("help-faq")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        60
+      ),
+    []
+  );
 
-  const pickCategory = (key) => {
-    setQuery("");
-    setOpenId(null);
-    setCat(key);
-    if (key) scrollToFaq();
-  };
-  const pickFaq = (f) => {
-    setQuery("");
-    setCat(null);
-    setOpenId(f.id);
-    scrollToFaq();
-  };
+  const pickCategory = useCallback(
+    (key) => {
+      setQuery("");
+      setOpenId(null);
+      setCat(key);
+      if (key) scrollToFaq();
+    },
+    [scrollToFaq]
+  );
 
-  // Mở thẳng đúng màn khi đi từ trang Hồ sơ: location.state.open = "idea" | "faq" | "history" | "chat"
+  const pickFaq = useCallback(
+    (f) => {
+      setQuery("");
+      setCat(null);
+      setOpenId(f.id);
+      scrollToFaq();
+    },
+    [scrollToFaq]
+  );
+
+  // ----- Điều hướng từ trang Hồ sơ: location.state.open -----
   useEffect(() => {
     const open = location.state?.open;
     if (!open || open === "home") return;
+
     const base = location.pathname;
-    if (open === "chat") navigate("/support", { replace: true });
-    else if (open === "idea") {
+    if (open === "chat") {
+      navigate("/support", { replace: true });
+    } else if (open === "idea") {
       setPreset({ type: "idea" });
       navigate(`${base}?m=request&ty=idea`, { replace: true, state: null });
-    } else if (open === "history") navigate(`${base}?m=history`, { replace: true, state: null });
-    else {
-      navigate(base, { replace: true, state: null }); // dùng xong thì xóa, tránh mở lại khi tải lại trang
+    } else if (open === "history") {
+      navigate(`${base}?m=history`, { replace: true, state: null });
+    } else {
+      navigate(base, { replace: true, state: null });
       if (open === "faq") setTimeout(scrollToFaq, 250);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const searching = !!query.trim();
-  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
+  const goBack = useCallback(
+    () => (window.history.length > 1 ? navigate(-1) : navigate("/")),
+    [navigate]
+  );
 
   return (
     <div className="min-h-screen bg-white">
-      <Hero query={query} onQuery={setQuery} name={name} onBack={goBack}
-        topics={CATEGORIES.slice(0, 3)} onTopic={pickCategory} />
+      <Hero
+        query={query}
+        onQuery={setQuery}
+        name={name}
+        onBack={goBack}
+        topics={CATEGORIES.slice(0, 3)}
+        onTopic={pickCategory}
+        canSearch={!faqLoading && faqs.length > 0}
+      />
 
       {!searching && (
         <main className="mx-auto max-w-md space-y-4 px-4 pt-2 md:max-w-4xl">
           <CategoryCards faqs={faqs} active={cat} onPick={pickCategory} />
-          <QuickActions onChat={() => navigate("/support")} onRequest={() => openRequest()} onHistory={openHistory} />
+          <QuickActions
+            onChat={() => navigate("/support")}
+            onRequest={() => openRequest()}
+            onHistory={openHistory}
+          />
         </main>
       )}
 
@@ -138,12 +212,30 @@ export default function HelpCenter() {
         </div>
       )}
 
-      <div className={`mx-auto max-w-md space-y-8 px-4 md:max-w-4xl ${searching ? "pt-6" : "pt-10"}`}>
+      <div
+        className={`mx-auto max-w-md space-y-8 px-4 md:max-w-4xl ${
+          searching ? "pt-6" : "pt-10"
+        }`}
+      >
         {!searching && (
-          <OrderList orders={orders} loading={ordersLoading} signedIn={signedIn} onAsk={openRequest} onAll={() => navigate("/history")} />
+          <OrderList
+            orders={orders}
+            loading={ordersLoading}
+            signedIn={signedIn}
+            onAsk={openRequest}
+            onAll={() => navigate("/history")}
+          />
         )}
-        <FaqSection faqs={filtered} loading={faqLoading} cat={cat} setCat={setCat} query={query}
-          openId={openId} setOpenId={setOpenId} onAsk={openRequest} />
+        <FaqSection
+          faqs={filtered}
+          loading={faqLoading}
+          cat={cat}
+          setCat={setCat}
+          query={query}
+          openId={openId}
+          setOpenId={setOpenId}
+          onAsk={openRequest}
+        />
       </div>
 
       {!searching ? <ContactCard onRequest={openRequest} /> : <div className="h-32" />}
@@ -157,9 +249,11 @@ export default function HelpCenter() {
           onChat={() => navigate("/support")}
         />
       )}
-      {view?.type === "history" && <HistoryFlow onClose={closeView} onNew={() => openRequest()} />}
+      {view?.type === "history" && (
+        <HistoryFlow onClose={closeView} onNew={() => openRequest()} />
+      )}
 
       <BottomNav />
     </div>
   );
-    }
+         }
