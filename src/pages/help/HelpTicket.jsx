@@ -2,18 +2,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { Icon, StatusDot, ring } from "./HelpUI.jsx";
-import { MAX_IMAGES, MAX_MB, statusOf, sourceOf } from "./HelpScreen.jsx";
+import { MAX_IMAGES, MAX_MB, statusOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
 
 const CLOSED = ["resolved", "closed"];
+const QUALITY = { 1: "Không hài lòng", 2: "Bình thường", 3: "Hài lòng", 4: "Rất hài lòng" };
+const chip = (on) =>
+  `rounded-full px-3.5 py-2 text-[14px] font-medium transition active:scale-95 ${on ? "bg-[#2b59e0] text-white" : "bg-[#eef2f9] text-[#16213e]"}`;
 
 function CskhAvatar() {
   const [bad, setBad] = useState(false);
   if (CSKH_AVATAR && !bad) {
-    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="h-9 w-9 shrink-0 rounded-full object-cover" />;
+    return <img src={CSKH_AVATAR} alt={CSKH_NAME} onError={() => setBad(true)} className="mt-6 h-9 w-9 shrink-0 rounded-full object-cover" />;
   }
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[14px] font-semibold text-[#16213e]">
+    <span className="mt-6 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbe7ff] text-[14px] font-semibold text-[#16213e]">
       {CSKH_NAME.slice(0, 1)}
     </span>
   );
@@ -35,25 +38,25 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
   if (mine) {
     return (
       <div className="flex flex-col items-end">
-        {time && <span className="mb-1 text-[12.5px] text-[#6b7488]">{time}</span>}
+        {time && <span className="mb-1.5 pr-1.5 text-[13px] text-[#6b7488]">{time}</span>}
         {hasText ? (
-          <div className="max-w-[88%] space-y-2 whitespace-pre-line break-words rounded-[18px] rounded-br-md bg-[#2b59e0] px-3.5 py-2.5 text-[15px] leading-[22px] text-white">{children}</div>
+          <div className="max-w-[84%] space-y-2 whitespace-pre-line break-words rounded-[22px] rounded-br-[6px] bg-[#2b59e0] px-4 py-3 text-[15px] leading-[21px] text-white">{children}</div>
         ) : (
-          <div className="max-w-[88%]">{children}</div>
+          <div className="max-w-[84%]">{children}</div>
         )}
       </div>
     );
   }
   return (
-    <div className="flex items-start gap-2.5">
+    <div className="flex items-start gap-2">
       <CskhAvatar />
-      <div className="min-w-0 max-w-[86%]">
-        <p className="mb-1 text-[12.5px] text-[#6b7488]">
+      <div className="min-w-0 max-w-[80%]">
+        <p className="mb-1.5 pl-2 text-[13px] text-[#6b7488]">
           <span className="font-semibold text-[#16213e]">{label || CSKH_NAME}</span>
           {time ? `  ${time}` : ""}
         </p>
-        <div className="whitespace-pre-line break-words rounded-[18px] rounded-tl-md bg-[#f1f3f8] px-3.5 py-2.5 text-[15px] leading-[22px] text-[#16213e]">
-          {auto && <span className="mb-1.5 block w-fit rounded-full bg-[#dbe7ff] px-2.5 py-0.5 text-[12px] font-medium text-[#16213e]">Tin nhắn tự động</span>}
+        <div className="whitespace-pre-line break-words rounded-[22px] rounded-tl-[6px] bg-[#ececf1] px-4 py-3 text-[15px] leading-[21px] text-[#16213e]">
+          {auto && <span className="mb-2 block w-fit rounded-full bg-[#dbe7ff] px-3 py-1 text-[13px] font-medium text-[#2b59e0]">Tin nhắn tự động</span>}
           {children}
         </div>
       </div>
@@ -63,10 +66,10 @@ function ChatBubble({ mine, time, label, auto, children, hasText }) {
 
 function Card({ title, open, onToggle, children }) {
   return (
-    <section className="rounded-2xl bg-white px-3.5">
-      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 py-3.5 text-left">
-        <span className="text-[17px] font-semibold tracking-[-0.2px] text-[#16213e]">{title}</span>
-        <Icon name="chevD" size={18} className={`shrink-0 text-[#16213e] transition-transform ${open ? "rotate-180" : ""}`} />
+    <section className="rounded-2xl bg-white px-4 shadow-[0_1px_2px_rgba(22,33,62,0.06)]">
+      <button onClick={onToggle} className="flex w-full items-center justify-between gap-3 py-4 text-left">
+        <span className="text-[18px] font-semibold tracking-[-0.2px] text-[#16213e]">{title}</span>
+        <Icon name="chevD" size={19} className={`shrink-0 text-[#16213e] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && <div className="border-t border-[#16213e]/10">{children}</div>}
     </section>
@@ -88,6 +91,12 @@ export function ChatScreen({ ticket, onClose }) {
   const [err, setErr] = useState("");
   const [status, setStatus] = useState(ticket.status);
   const [name, setName] = useState("");
+  const [rating, setRating] = useState({ q: ticket.rating_quality ?? null, r: ticket.rating_resolved ?? null, done: !!ticket.rated_at });
+  const [pickQ, setPickQ] = useState(null);
+  const [pickR, setPickR] = useState(null);
+  const [rateBusy, setRateBusy] = useState(false);
+  const [rateErr, setRateErr] = useState("");
+  const [rateOpen, setRateOpen] = useState(true);
   const endRef = useRef(null);
   const pick = useRef(null);
   const [view, setView] = useState(null);
@@ -113,6 +122,19 @@ export function ChatScreen({ ticket, onClose }) {
     })();
     return () => { alive = false; };
   }, []);
+
+  // làm mới trạng thái + đánh giá mỗi lần mở phiếu
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase.from("support_tickets")
+        .select("status,rating_quality,rating_resolved,rated_at").eq("id", ticket.id).maybeSingle();
+      if (!alive || !data) return;
+      setStatus(data.status);
+      setRating({ q: data.rating_quality, r: data.rating_resolved, done: !!data.rated_at });
+    })();
+    return () => { alive = false; };
+  }, [ticket.id]);
 
   useEffect(() => {
     let alive = true;
@@ -181,6 +203,16 @@ export function ChatScreen({ ticket, onClose }) {
   };
   const removeFile = (i) => setFiles((cur) => { URL.revokeObjectURL(cur[i].url); return cur.filter((_, k) => k !== i); });
 
+  const submitRating = async () => {
+    if (pickQ === null || pickR === null || rateBusy) return;
+    setRateErr("");
+    setRateBusy(true);
+    const { error } = await supabase.rpc("rate_support_ticket", { p_ticket_id: ticket.id, p_quality: pickQ, p_resolved: pickR });
+    setRateBusy(false);
+    if (error) return setRateErr("Chưa gửi được đánh giá, thử lại sau nhé.");
+    setRating({ q: pickQ, r: pickR, done: true });
+  };
+
   const send = async () => {
     const body = text.trim();
     if ((!body && files.length === 0) || busy || closed) return;
@@ -226,19 +258,18 @@ export function ChatScreen({ ticket, onClose }) {
       </span>
     ) : null;
 
-  const row = "flex items-center justify-between gap-4 border-b border-[#16213e]/10 py-3 text-[15px] last:border-b-0";
+  const row = "flex items-center justify-between gap-4 border-b border-[#16213e]/10 py-3.5 text-[15px] last:border-b-0";
 
   return (
     <>
     <div className="fixed inset-0 z-50 flex flex-col bg-[#eef2f9]">
-      {/* Đầu trang có dải màu chuyển */}
-      <div className="bg-gradient-to-b from-[#bcd2ff] to-[#eef2f9] pb-4">
+      <div className="bg-gradient-to-b from-[#a9c3ff] via-[#d3e0ff] to-[#eef2f9] pb-5">
         <div className="mx-auto flex w-full max-w-md items-center gap-3 px-3 pt-3 md:max-w-xl">
           <button onClick={onClose} aria-label="Quay lại"
-            className={`flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#16213e] ${ring}`}>
-            <Icon name="back" size={18} />
+            className={`flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#16213e] ${ring}`}>
+            <Icon name="back" size={19} />
           </button>
-          <h1 className="flex-1 text-[16px] font-semibold tracking-[-0.2px] text-[#16213e]">Chi tiết yêu cầu</h1>
+          <h1 className="flex-1 text-[18px] font-semibold tracking-[-0.2px] text-[#16213e]">Chi tiết yêu cầu</h1>
         </div>
       </div>
 
@@ -247,12 +278,45 @@ export function ChatScreen({ ticket, onClose }) {
           <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
             <div className={row}><span className="text-[#6b7488]">Mã yêu cầu</span><span className="font-semibold text-[#16213e]">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="text-[#6b7488]">Thời gian gửi</span><span className="font-semibold text-[#16213e]">{fmtDate(ticket.created_at)}</span></div>
-            <div className={row}><span className="text-[#6b7488]">Nguồn tiếp nhận</span><span className="font-semibold text-[#16213e]">{sourceOf(ticket.source)}</span></div>
             <div className={row}><span className="text-[#6b7488]">Trạng thái</span><StatusDot st={statusOf(status)} /></div>
           </Card>
 
+          {closed && (
+            <Card title="Đánh giá của bạn" open={rateOpen} onToggle={() => setRateOpen(!rateOpen)}>
+              {rating.done ? (
+                <>
+                  <div className={row}><span className="text-[#6b7488]">Chất lượng hỗ trợ</span><span className="font-semibold text-[#16213e]">{QUALITY[rating.q]}</span></div>
+                  <div className={row}><span className="text-[#6b7488]">Mức độ giải quyết</span><span className="font-semibold text-[#16213e]">{rating.r ? "Đã giải quyết" : "Chưa giải quyết"}</span></div>
+                </>
+              ) : (
+                <div className="space-y-4 py-4">
+                  <div>
+                    <p className="mb-2 text-[14px] text-[#6b7488]">Chất lượng hỗ trợ</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[4, 3, 2, 1].map((v) => (
+                        <button key={v} type="button" onClick={() => setPickQ(v)} className={chip(pickQ === v)}>{QUALITY[v]}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-[14px] text-[#6b7488]">Mức độ giải quyết</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => setPickR(true)} className={chip(pickR === true)}>Đã giải quyết</button>
+                      <button type="button" onClick={() => setPickR(false)} className={chip(pickR === false)}>Chưa giải quyết</button>
+                    </div>
+                  </div>
+                  {rateErr && <p className="rounded-2xl bg-rose-50 px-4 py-2 text-[13px] font-medium text-rose-600">{rateErr}</p>}
+                  <button onClick={submitRating} disabled={pickQ === null || pickR === null || rateBusy}
+                    className="h-11 w-full rounded-xl bg-[#2b59e0] text-[15px] font-semibold text-white transition active:scale-[0.99] disabled:bg-[#16213e]/10 disabled:text-[#16213e]/35">
+                    {rateBusy ? "Đang gửi..." : "Gửi đánh giá"}
+                  </button>
+                </div>
+              )}
+            </Card>
+          )}
+
           <Card title="Chi tiết vấn đề" open={chat} onToggle={() => setChat(!chat)}>
-            <div className="space-y-5 py-5">
+            <div className="space-y-6 py-6">
               <ChatBubble mine time={fmtDate(ticket.created_at)} hasText={!!ticket.description && ticket.description.trim().length > 0}>
                 {ticket.description}
                 {thumbs(imgs)}
@@ -275,7 +339,6 @@ export function ChatScreen({ ticket, onClose }) {
         </div>
       </div>
 
-      {/* Ô nhập tin nhắn: tự mất khi yêu cầu đã giải quyết */}
       {!closed && (
         <div className="border-t border-[#16213e]/5 bg-white/85 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-[9px]">
           <div className="mx-auto max-w-md md:max-w-xl">
@@ -313,4 +376,4 @@ export function ChatScreen({ ticket, onClose }) {
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-    }
+         }
