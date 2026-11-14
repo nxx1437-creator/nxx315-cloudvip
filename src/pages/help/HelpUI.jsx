@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, ORDER_STATUS, fmtDate, fmtCoins, fold } from "./helpData.js";
-import { useHelpTheme } from "./helpTheme.js";
+import { useHelpTheme } from "./helpTheme.jsx";
 
 /* Ảnh minh hoạ: tải lên Supabase Storage (bucket công khai) rồi dán link vào đây.
    rocket = tên lửa phía sau đầu trang (nên dùng PNG/WebP nền trong suốt). Để trống = không hiện. */
