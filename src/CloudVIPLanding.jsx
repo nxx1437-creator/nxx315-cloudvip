@@ -108,11 +108,11 @@ export default function CloudVIPLanding() {
         {/* ===== 3. HƯỚNG DẪN TẠO TÀI KHOẢN (các bước được ghim) ===== */}
         <section id="onboarding" className="dp-sec">
           <div className="dp-wrap">
-            <Reveal className="dp-head">
+            <div className="dp-head">
               <Scramble className="dp-lbl" text={c.obLabel} />
               <SplitTitle a={c.obTitleA} b={c.obTitleB} />
-              <p className="dp-body" style={{ marginTop: 20 }}>{c.obBody}</p>
-            </Reveal>
+              <InView as="p" className="dp-body fx-fade" style={{ marginTop: 20 }}>{c.obBody}</InView>
+            </div>
 
             <PinnedSteps steps={c.obSteps} icons={STEP_ICONS} />
 
@@ -130,11 +130,11 @@ export default function CloudVIPLanding() {
         {/* ===== 4. MỜI BẠN ===== */}
         <section id="invite" className="dp-sec">
           <div className="dp-wrap">
-            <Reveal className="dp-head">
+            <div className="dp-head">
               <Scramble className="dp-lbl" text={c.iLabel} />
               <SplitTitle a={c.iTitleA} b={c.iTitleB} />
-              <p className="dp-body" style={{ marginTop: 20 }}>{c.iBody}</p>
-            </Reveal>
+              <InView as="p" className="dp-body fx-fade" style={{ marginTop: 20 }}>{c.iBody}</InView>
+            </div>
             <div className="dp-trip">
               {c.iCols.map(([big, d], i) => (
                 <Reveal key={big} delay={i * 80}>
@@ -156,11 +156,11 @@ export default function CloudVIPLanding() {
         {/* ===== 5. BẢNG XẾP HẠNG ===== */}
         <section id="rank" className="dp-sec">
           <div className="dp-wrap">
-            <Reveal className="dp-head">
+            <div className="dp-head">
               <Scramble className="dp-lbl" text={c.rLabel} />
               <SplitTitle a={c.rTitleA} b={c.rTitleB} />
-              <p className="dp-body" style={{ marginTop: 20 }}>{c.rSub}</p>
-            </Reveal>
+              <InView as="p" className="dp-body fx-fade" style={{ marginTop: 20 }}>{c.rSub}</InView>
+            </div>
           </div>
           {state(board) === "load" && <div className="dp-rail"><Skeletons /></div>}
           {state(board) === "ok" && (
@@ -187,11 +187,11 @@ export default function CloudVIPLanding() {
         {/* ===== 6. ĐƠN ĐÃ DUYỆT ===== */}
         <section id="orders" className="dp-sec">
           <div className="dp-wrap">
-            <Reveal className="dp-head">
+            <div className="dp-head">
               <Scramble className="dp-lbl" text={c.oLabel} />
               <SplitTitle a={c.oTitleA} b={c.oTitleB} />
-              <p className="dp-body" style={{ marginTop: 20 }}>{c.oSub}</p>
-            </Reveal>
+              <InView as="p" className="dp-body fx-fade" style={{ marginTop: 20 }}>{c.oSub}</InView>
+            </div>
           </div>
           {state(orders) === "load" && <div className="dp-rail"><Skeletons n={4} /></div>}
           {state(orders) === "ok" && (
@@ -207,10 +207,10 @@ export default function CloudVIPLanding() {
         {/* ===== 7. THÔNG TIN CHI TIẾT + FAQ ===== */}
         <section id="details" className="dp-sec">
           <div className="dp-wrap">
-            <Reveal className="dp-head">
+            <div className="dp-head">
               <Scramble className="dp-lbl" text={c.dLabel} />
               <SplitTitle a={c.dTitleA} b={c.dTitleB} />
-            </Reveal>
+            </div>
 
             <div className="dp-dgrid">
               {c.dItems.map(([t, d], i) => (
@@ -237,13 +237,13 @@ export default function CloudVIPLanding() {
             <div className="dp-feature-box">
               <div className="dp-feature-glow"></div>
 
-              <Reveal className="dp-head" style={{ position: "relative", zIndex: 2 }}>
+              <div className="dp-head" style={{ position: "relative", zIndex: 2 }}>
                 <p className="dp-lbl" style={{ color: "#af50ff" }}>
                   <Sparkles size={14} style={{ display: "inline", marginRight: 6 }} />
                   <Scramble as="span" text={c.cLabel} />
                 </p>
                 <SplitTitle a={c.cTitleA} b={c.cTitleB} />
-              </Reveal>
+              </div>
 
               <div className="dp-creator-showcase" style={{ position: "relative", zIndex: 2 }}>
                 <div className="dp-creator-text">
@@ -295,9 +295,9 @@ export default function CloudVIPLanding() {
       <footer className="dp-end">
         <div className="dp-glow" /><div className="dp-grain" /><div className="dp-horizon" />
         <div className="dp-close">
-          <Reveal>
+          <div>
             <SplitTitle as="h2" className="" a={c.closeA} b={c.closeB} />
-            <p>{c.closeSub}</p>
+            <InView as="p" className="fx-fade">{c.closeSub}</InView>
             <div className="acts">
               <Magnetic>
                 <Link to="/register" className="dp-pill big"><span>{c.ctaAccount}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
@@ -306,7 +306,7 @@ export default function CloudVIPLanding() {
                 <a href={CREATOR_URL} className="dp-pill big"><span>{c.ctaCreator}</span><ArrowUpRight size={20} strokeWidth={1.5} /></a>
               </Magnetic>
             </div>
-          </Reveal>
+          </div>
         </div>
 
         <div className="dp-wrap">
@@ -340,5 +340,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-            }
+              }
             
