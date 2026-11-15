@@ -127,6 +127,23 @@ html:not(.dark) .au-card{box-shadow:0 20px 60px rgba(40,30,80,.1)}
 .au-sent .au-btn2{margin-top:6px}
 .au-sent .au-link{background:none;font-size:14px}
 
+/* ===== SỬA LỖI: tràn ngang + bị reset đè ===== */
+.au-main{grid-template-columns:minmax(0,1fr)}
+@media(min-width:960px){.au-main{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
+.au-main>*{min-width:0}
+.au-card{min-width:0}
+.au-google{width:100%;overflow:hidden}
+.au-h1{font-size:clamp(26px,7vw,34px)}
+
+.au .au-btn{background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff}
+.au .au-btn2{border:1px solid var(--line);color:var(--fg)}
+.au .au-ghost{border:1px solid var(--line)}
+.au .au-link{color:var(--accfg)}
+.au .au-note.error .au-link,.au .au-note.bad .au-link{color:inherit}
+.au .au-mini{color:#fff;background:#f59e0b}
+.au .au-note.bad .au-mini{background:#f43f5e}
+.au .au-sent .au-link{background:none}
+
 @media(prefers-reduced-motion:reduce){
   .au *{animation:none!important;transition:none!important}
 }
