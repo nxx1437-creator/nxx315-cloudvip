@@ -5,7 +5,8 @@ import { useI18n } from "../i18n/index.js";
 
 /* Nút "Đăng nhập với Google" chính thức: tự hiện ảnh đại diện, tên và email
    của tài khoản Google đang đăng nhập trong trình duyệt (như trang mẫu).
-   Cần biến môi trường VITE_GOOGLE_CLIENT_ID. Thiếu hoặc lỗi thì dùng nút cũ. */
+   Cần biến môi trường VITE_GOOGLE_CLIENT_ID. Thiếu hoặc lỗi thì dùng nút dự phòng.
+   Nút tự đổi giao diện theo chế độ sáng/tối (class "dark" trên <html>). */
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 let gsiPromise = null;
@@ -38,6 +39,20 @@ async function makeNonce() {
   return { raw, hashed };
 }
 
+// Theo dõi chế độ tối: <html class="dark">
+const readDark = () =>
+  typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+
+function useIsDark() {
+  const [dark, setDark] = useState(readDark);
+  useEffect(() => {
+    const mo = new MutationObserver(() => setDark(readDark()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
+
 export default function GoogleButton({
   text = "continue_with", // signin_with | signup_with | continue_with
   label,
@@ -45,6 +60,7 @@ export default function GoogleButton({
   onError,
 }) {
   const { lang } = useI18n();
+  const dark = useIsDark();
   const boxRef = useRef(null);
   const errRef = useRef(onError);
   errRef.current = onError;
@@ -74,7 +90,7 @@ export default function GoogleButton({
         boxRef.current.innerHTML = "";
         window.google.accounts.id.renderButton(boxRef.current, {
           type: "standard",
-          theme: "outline",
+          theme: dark ? "filled_black" : "outline",
           size: "large",
           text,
           shape: "rectangular",
@@ -91,24 +107,24 @@ export default function GoogleButton({
     return () => {
       dead = true;
     };
-  }, [lang, text]);
+  }, [lang, text, dark]);
 
   return (
     <>
       <div
         ref={boxRef}
-        className={mode === "fallback" ? "hidden" : "flex min-h-[44px] justify-center"}
+        style={
+          mode === "fallback"
+            ? { display: "none" }
+            : { display: "flex", justifyContent: "center", minHeight: 44, width: "100%" }
+        }
       />
       {mode === "fallback" && (
-        <button
-          type="button"
-          onClick={onFallbackClick}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
-        >
+        <button type="button" onClick={onFallbackClick} className="au-btn2 au-gbtn">
           <IconGoogle size={20} />
           {label}
         </button>
       )}
     </>
   );
-}
+       }
