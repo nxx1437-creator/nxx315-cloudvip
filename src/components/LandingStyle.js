@@ -169,4 +169,38 @@ export const CSS = `
   .dp *{animation:none!important;transition:none!important}
   .dp-rv{opacity:1;transform:none}
 }
+:root[data-theme="light"] .dp{--cv:#f7f9fa;--paper:#111;--mut:rgba(0,0,0,.5);background:#f7f9fa;color:#111}
+:root[data-theme="light"] .dp-stage,
+:root[data-theme="light"] .dp-end,
+:root[data-theme="light"] .dp-nav{color:#f7f9fa}
+:root[data-theme="light"] .dp-nav{background:rgba(9,9,9,.75)}
+:root[data-theme="light"] .dp-sec .dp-body,
+:root[data-theme="light"] .dp-sec .dp-trip p,
+:root[data-theme="light"] .dp-creator-text p{color:rgba(17,17,17,.75)}
+:root[data-theme="light"] .dp-sec .dp-lbl,
+:root[data-theme="light"] .dp-trip .num,
+:root[data-theme="light"] .dp-note{color:rgba(0,0,0,.5)}
+:root[data-theme="light"] .dp-sec .dp-pill{background:rgba(0,0,0,.06);color:#111;border-color:rgba(0,0,0,.18)}
+:root[data-theme="light"] .dp-row,
+:root[data-theme="light"] .dp-oc,
+:root[data-theme="light"] .dp-dcard,
+:root[data-theme="light"] .dp-faq details{background:#fff;border-color:rgba(0,0,0,.12)}
+:root[data-theme="light"] .dp-oc .ft{color:rgba(0,0,0,.6)}
+:root[data-theme="light"] .dp-row .cn{color:#8a2be2}
+:root[data-theme="light"] .dp-creator-perks li{color:#111;background:#fff;border-color:rgba(0,0,0,.1)}
+:root[data-theme="light"] .dp-feature-box{background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.08)}
+:root[data-theme="light"] .dp-console{background:#fff;border-color:rgba(0,0,0,.15)}
+:root[data-theme="light"] .dp-cbar{color:#111}
+
+/* Thông tin chi tiết */
+.dp-dgrid{display:grid;gap:20px;margin-top:clamp(40px,7vw,72px)}
+@media(min-width:900px){.dp-dgrid{grid-template-columns:repeat(2,1fr)}}
+.dp-dcard{padding:28px;border-radius:20px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
+.dp-dcard h3{font-size:clamp(20px,2.6vw,26px);font-weight:500;margin-bottom:10px}
+.dp-dcard p{font-size:16px;line-height:1.6;opacity:.75}
+.dp-faq{max-width:820px;margin-top:48px;display:grid;gap:10px}
+.dp-faq details{padding:18px 22px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
+.dp-faq summary{cursor:pointer;font-size:18px;font-weight:400;list-style:none}
+.dp-faq summary::-webkit-details-marker{display:none}
+.dp-faq details p{margin-top:12px;font-size:16px;line-height:1.6;opacity:.75}
 `;
