@@ -31,9 +31,9 @@ export const CSS = `
 .dp-nbtn.ghost{opacity:.7;padding:0 8px}
 @media(min-width:900px){.dp-nav-links{display:flex}.dp-nav-actions{margin-left:0}}
 
-/* HERO */
+/* ===== HERO MỚI (FULL-BLEED VIDEO) ===== */
 .dp-stage{position:relative;min-height:100svh;overflow:hidden;padding:96px 0 72px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#0a1668 0%,#1d3bb0 34%,#5a4acf 60%,#c25fb8 86%,#f0a0c0 100%)}
-.dp-sky{position:absolute;inset:0;pointer-events:none}
+.dp-sky{position:absolute;inset:0;pointer-events:none;z-index:0}
 .dp-cloud{position:absolute;border-radius:50%;filter:blur(34px);opacity:.85;animation:dpDrift 26s ease-in-out infinite alternate}
 .dp-cloud.c1{left:-15%;bottom:-8%;width:70%;height:36%;background:radial-gradient(closest-side,#ffd3e6,rgba(255,170,210,0))}
 .dp-cloud.c2{right:-12%;bottom:4%;width:64%;height:40%;background:radial-gradient(closest-side,#e3b8ff,rgba(150,90,230,0));animation-duration:32s}
@@ -42,11 +42,32 @@ export const CSS = `
 .dp-halo{position:absolute;inset:0;background:radial-gradient(circle closest-corner at 10% 50%,#6c4bd6,rgba(0,0,0,0) 55%);opacity:.437}
 .dp-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,12,60,.7),rgba(6,12,60,0) 62%),linear-gradient(0deg,#090909 0%,rgba(9,9,9,0) 24%)}
 @keyframes dpDrift{from{transform:translateX(-3%)}to{transform:translateX(4%)}}
-.dp-trail{position:absolute;left:0;top:46%;width:100%;pointer-events:none;opacity:.9}
+
+/* VIDEO NỀN VÀ LỚP PHỦ */
+.dp-hero-bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  opacity: 0.85;
+}
+.dp-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(9,9,9,0.85) 0%, rgba(9,9,9,0.3) 50%, rgba(9,9,9,0.7) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.dp-trail{position:absolute;left:0;top:46%;width:100%;pointer-events:none;opacity:.9;z-index:2}
 .dp-trail svg{display:block;width:min(260px,52vw);height:18px;animation:dpFly 11s linear infinite}
 @keyframes dpFly{from{transform:translateX(-30vw)}to{transform:translateX(105vw)}}
 .dp-hero{position:relative;z-index:2;display:grid;gap:40px;align-items:center}
 @media(min-width:900px){.dp-hero{grid-template-columns:1.1fr .9fr}}
+.dp-hero-text-container{width:100%}
 .dp-h1{font-weight:500;font-size:clamp(46px,10.5vw,88px);line-height:.98;letter-spacing:-.03em}
 .dp-h1 span{display:block}
 .dp-h1 .dp-serif{letter-spacing:-.02em}
@@ -161,48 +182,6 @@ export const CSS = `
 .dp-foot ul{margin:0;padding:0}
 .dp-foot li a,.dp-foot li button{display:inline-block;padding:7px 0 4px;font-size:18px;font-weight:400;color:#fff;text-align:left}
 .dp-bottom{position:relative;margin-top:48px;padding-top:20px;border-top:1px solid rgba(255,255,255,.2);display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
-
-/* ===== CSS MỚI CHO HERO VIDEO NỀN ===== */
-.dp-hero-content-wrapper {
-  position: relative;
-  width: 100%;
-  min-height: 400px; 
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  border-radius: 24px; 
-  /* Thêm hiệu ứng đổ bóng nhẹ để khối video nổi bật hơn */
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
-}
-
-.dp-hero-bg-video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-  z-index: 0;
-  opacity: 0.6; /* Tăng độ sáng của video lên một chút (0.6) */
-}
-
-/* Lớp phủ tối (overlay) tạo độ tương phản cho chữ */
-.dp-hero-content-wrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%);
-  z-index: 1;
-  pointer-events: none; 
-}
-
-.dp-hero-text {
-  position: relative;
-  z-index: 2; 
-  padding: 40px;
-  width: 100%;
-  max-width: 800px; 
-}
 
 @media(prefers-reduced-motion:reduce){
   .dp *{animation:none!important;transition:none!important}
