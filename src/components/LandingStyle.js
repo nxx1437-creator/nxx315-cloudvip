@@ -284,11 +284,20 @@ html:not(.dark) .dp .dp-oc,
 html:not(.dark) .dp .dp-row,
 html:not(.dark) .dp .fx-pin-card{box-shadow:0 4px 18px rgba(0,0,0,.05)}
 
-/* ===== BẢN ĐIỆN THOẠI: đơn giản, không ghim, bỏ hiệu ứng nặng ===== */
-.fx-sw-static{padding:clamp(72px,14vw,120px) 0}
-.fx-sw-static .fx-sw-p span{opacity:1}
-.fx-pin-static{display:grid;gap:16px;margin-top:32px}
-.fx-pin-static .fx-pin-card{animation:none;min-height:0}
+/* ===== BẢN ĐIỆN THOẠI: hiệu ứng chạy bằng CSS scroll-driven (mượt, không dùng JS) ===== */
+.dp{--cardsolid:#13131b}
+html:not(.dark) .dp{--cardsolid:#ffffff}
+
+/* câu dẫn */
+.fx-sw-static{padding:clamp(80px,22vw,140px) 0}
+.fx-sw-static .fx-sw-p{font-size:clamp(32px,9vw,72px)}
+
+/* các bước: thẻ chồng lên nhau */
+.fx-pin-static{display:block;margin-top:32px}
+.fx-pin-static .fx-pin-card{position:sticky;top:calc(72px + var(--i,0) * 16px);margin-bottom:20vh;min-height:280px;background:var(--cardsolid);animation:none}
+.fx-pin-static .fx-pin-card:last-child{margin-bottom:0}
+
+/* bỏ các lớp làm mờ nền nặng trên cảm ứng */
 @media(hover:none){
   .dp-pill,.dp-badge,.dp-ticket{backdrop-filter:none;-webkit-backdrop-filter:none}
   .dp-ticket{background:rgba(20,20,30,.85);-webkit-mask:none;mask:none}
@@ -296,6 +305,28 @@ html:not(.dark) .dp .fx-pin-card{box-shadow:0 4px 18px rgba(0,0,0,.05)}
   .dp-tk::before,.dp-tk::after{filter:blur(28px)}
   .dp-float{animation:none}
   .fx-mq-set span{font-size:clamp(40px,12vw,64px)}
+}
+
+@supports (animation-timeline: view()){
+  /* thanh tiến độ chạy theo cuộn */
+  .fx-bar i{animation:fxBar linear both;animation-timeline:scroll(root)}
+  @keyframes fxBar{to{transform:scaleX(1)}}
+
+  /* từng chữ sáng dần khi trôi lên giữa màn hình */
+  .fx-sw-static .fx-sw-p span{opacity:.16;animation:fxLit linear both;animation-timeline:view();animation-range:entry 55% cover 48%}
+  @keyframes fxLit{from{opacity:.16}to{opacity:1}}
+
+  /* thẻ bước trượt vào, phóng lên */
+  .fx-pin-static .fx-pin-card{animation:fxStackIn linear both;animation-timeline:view();animation-range:entry 0% entry 70%}
+  @keyframes fxStackIn{from{opacity:.2;transform:translateY(70px) scale(.9)}}
+
+  @media(hover:none){
+    /* hero: ảnh trôi + phóng dần, nội dung mờ và bay lên khi cuộn đi */
+    .dp-hero-bg-image{animation:fxHeroImg linear both;animation-timeline:scroll(root);animation-range:0 100vh}
+    .dp-hero{animation:fxHeroOut linear both;animation-timeline:scroll(root);animation-range:0 60vh}
+    @keyframes fxHeroImg{from{transform:scale(1.08)}to{transform:translateY(14%) scale(1.2)}}
+    @keyframes fxHeroOut{to{opacity:0;transform:translateY(-50px)}}
+  }
 }
 
 /* ===== GIẢM CHUYỂN ĐỘNG (cài đặt của thiết bị) ===== */
