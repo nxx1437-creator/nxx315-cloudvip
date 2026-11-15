@@ -1,8 +1,7 @@
 // src/components/LandingFx.jsx
 import React, { useEffect, useRef, useState } from "react";
 
-const mq = (q) =>
-  typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
+const mq = (q) => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
 const reduced = () => mq("(prefers-reduced-motion: reduce)");
 const FINE = "(hover: hover) and (pointer: fine)";
 
@@ -13,19 +12,14 @@ function useFancy() {
     const m = window.matchMedia(FINE);
     const fn = () => setF(m.matches && !reduced());
     if (m.addEventListener) m.addEventListener("change", fn);
-    return () => {
-      if (m.removeEventListener) m.removeEventListener("change", fn);
-    };
+    return () => { if (m.removeEventListener) m.removeEventListener("change", fn); };
   }, []);
   return f;
 }
 
 function onScroll(fn) {
   let raf = 0;
-  const run = () => {
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(fn);
-  };
+  const run = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fn); };
   fn();
   window.addEventListener("scroll", run, { passive: true });
   window.addEventListener("resize", run);
@@ -36,26 +30,16 @@ function onScroll(fn) {
   };
 }
 
-/* ---------- Hook: Thấy trên màn hình thì bật ---------- */
 export function useInView(threshold = 0.2) {
   const ref = useRef(null);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (!("IntersectionObserver" in window)) {
-      setSeen(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setSeen(true);
-          io.disconnect();
-        }
-      },
-      { threshold }
-    );
+    if (!("IntersectionObserver" in window)) { setSeen(true); return; }
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setSeen(true); io.disconnect(); }
+    }, { threshold });
     io.observe(el);
     return () => io.disconnect();
   }, [threshold]);
@@ -71,7 +55,53 @@ export function InView({ as: Tag = "div", className = "", threshold, children, .
   );
 }
 
-/* ---------- Thanh tiến độ cuộn ---------- */
+/* ====== COMPONENT MỚI: Trượt lên (Dùng cho phần Tạo Tài Khoản) ====== */
+export function RevealUp({ children, delay = 0, className = "" }) {
+  const [ref, seen] = useInView(0.15);
+  return (
+    <div ref={ref} className={`fx-reveal-up ${seen ? "in" : ""} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
+/* ====== COMPONENT MỚI: Tự động trượt 3s (Dùng cho Bảng Xếp Hạng) ====== */
+export function AutoCarousel({ children, interval = 3000 }) {
+  const containerRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (isHovered) return;
+    const timer = setInterval(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      const items = el.children;
+      if (items.length === 0) return;
+      const firstItem = items[0];
+      const itemWidth = firstItem.clientWidth + 24; // 24 là gap
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      let nextScroll = el.scrollLeft + itemWidth;
+      if (el.scrollLeft >= maxScroll - 10) nextScroll = 0;
+      el.scrollTo({ left: nextScroll, behavior: "smooth" });
+    }, interval);
+    return () => clearInterval(timer);
+  }, [interval, isHovered]);
+
+  return (
+    <div
+      className="dp-rail"
+      ref={containerRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+      onTouchEnd={() => setIsHovered(false)}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ====== CÁC COMPONENT CŨ GIỮ NGUYÊN ====== */
 export function ScrollBar() {
   const fancy = useFancy();
   const r = useRef(null);
@@ -84,26 +114,19 @@ export function ScrollBar() {
       if (r.current) r.current.style.transform = `scaleX(${p})`;
     });
   }, [fancy]);
-  return (
-    <div className="fx-bar" aria-hidden="true">
-      <i ref={r} />
-    </div>
-  );
+  return <div className="fx-bar" aria-hidden="true"><i ref={r} /></div>;
 }
 
-/* ---------- Chữ Scramble ---------- */
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/=;+";
 export function Scramble({ text, as: Tag = "p", className = "", style }) {
   const ref = useRef(null);
   const [out, setOut] = useState(text);
-
   useEffect(() => {
     setOut(text);
     const el = ref.current;
     if (reduced() || !el || !("IntersectionObserver" in window)) return;
     let raf = 0;
     let seen = false;
-
     const run = () => {
       const t0 = performance.now();
       const D = 800;
@@ -114,85 +137,42 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
         if (t - last > 40 || k === 1) {
           last = t;
           const fixed = Math.floor(k * chars.length);
-          setOut(
-            k === 1
-              ? text
-              : chars
-                  .map((ch, i) =>
-                    ch === " " || i < fixed ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
-                  )
-                  .join("")
-          );
+          setOut(k === 1 ? text : chars.map((ch, i) => ch === " " || i < fixed ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]).join(""));
         }
         if (k < 1) raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     };
-
-    const io = new IntersectionObserver(
-      (es) => {
-        if (es[0].isIntersecting && !seen) {
-          seen = true;
-          run();
-        }
-      },
-      { threshold: 0.6 }
-    );
+    const io = new IntersectionObserver((es) => { if (es[0].isIntersecting && !seen) { seen = true; run(); } }, { threshold: 0.6 });
     io.observe(el);
-    return () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
-    };
+    return () => { io.disconnect(); cancelAnimationFrame(raf); };
   }, [text]);
-
-  return (
-    <Tag ref={ref} className={className} style={style} aria-label={text}>
-      {out}
-    </Tag>
-  );
+  return <Tag ref={ref} className={className} style={style} aria-label={text}>{out}</Tag>;
 }
 
-/* ---------- Tiêu đề hiện từng chữ ---------- */
 export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2", style }) {
   const [ref, seen] = useInView(0.3);
   let i = 0;
-  const words = (s, serif) =>
-    s
-      .split(" ")
-      .filter(Boolean)
-      .map((w) => (
-        <React.Fragment key={`${serif ? "b" : "a"}${i}`}>
-          <span className={"fx-w" + (serif ? " dp-serif" : "")} style={{ "--i": i++ }}>
-            {w}
-          </span>{" "}
-        </React.Fragment>
-      ));
+  const words = (s, serif) => s.split(" ").filter(Boolean).map((w) => (
+    <React.Fragment key={`${serif ? "b" : "a"}${i}`}>
+      <span className={"fx-w" + (serif ? " dp-serif" : "")} style={{ "--i": i++ }}>{w}</span>{" "}
+    </React.Fragment>
+  ));
   return (
-    <Tag
-      ref={ref}
-      className={`${className} fx-split${seen ? " in" : ""}`}
-      style={style}
-      aria-label={`${a} ${b}`.trim()}
-    >
-      {words(a, false)}
-      {words(b, true)}
+    <Tag ref={ref} className={`${className} fx-split${seen ? " in" : ""}`} style={style} aria-label={`${a} ${b}`.trim()}>
+      {words(a, false)}{words(b, true)}
     </Tag>
   );
 }
 
-/* ---------- Số chạy từ 0 ---------- */
 export function CountUp({ value }) {
   const m = String(value).match(/^(\d+)(.*)$/);
   const [ref, seen] = useInView(0.5);
   const [n, setN] = useState(0);
-
   useEffect(() => {
     if (!m || !seen) return;
     const to = Number(m[1]);
-    if (reduced()) {
-      setN(to);
-      return;
-    }
+    if (reduced()) { setN(to); return; }
     const t0 = performance.now();
     let raf = 0;
     const tick = (t) => {
@@ -203,17 +183,10 @@ export function CountUp({ value }) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [seen, value]);
-
   if (!m) return <span ref={ref}>{value}</span>;
-  return (
-    <span ref={ref}>
-      {seen ? n : 0}
-      {m[2]}
-    </span>
-  );
+  return <span ref={ref}>{seen ? n : 0}{m[2]}</span>;
 }
 
-/* ---------- Thẻ nghiêng 3D ---------- */
 export function Tilt({ children, max = 8, className = "" }) {
   const ref = useRef(null);
   const move = (e) => {
@@ -227,17 +200,10 @@ export function Tilt({ children, max = 8, className = "" }) {
     el.style.setProperty("--gx", `${(x + 0.5) * 100}%`);
     el.style.setProperty("--gy", `${(y + 0.5) * 100}%`);
   };
-  const leave = () => {
-    if (ref.current) ref.current.style.transform = "";
-  };
-  return (
-    <div ref={ref} className={"fx-tilt " + className} onPointerMove={move} onPointerLeave={leave}>
-      {children}
-    </div>
-  );
+  const leave = () => { if (ref.current) ref.current.style.transform = ""; };
+  return <div ref={ref} className={"fx-tilt " + className} onPointerMove={move} onPointerLeave={leave}>{children}</div>;
 }
 
-/* ---------- Nút hút về con trỏ ---------- */
 export function Magnetic({ children }) {
   const ref = useRef(null);
   const move = (e) => {
@@ -249,17 +215,10 @@ export function Magnetic({ children }) {
     const dy = (e.clientY - (r.top + r.height / 2)) * 0.3;
     el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
   };
-  const leave = () => {
-    if (ref.current) ref.current.style.transform = "";
-  };
-  return (
-    <span ref={ref} className="fx-mag" onPointerMove={move} onPointerLeave={leave}>
-      {children}
-    </span>
-  );
+  const leave = () => { if (ref.current) ref.current.style.transform = ""; };
+  return <span ref={ref} className="fx-mag" onPointerMove={move} onPointerLeave={leave}>{children}</span>;
 }
 
-/* ---------- Ảnh nền Parallax ---------- */
 export function ParallaxImg({ src, alt, className }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -267,22 +226,12 @@ export function ParallaxImg({ src, alt, className }) {
     if (!fancy) return;
     return onScroll(() => {
       const y = Math.min(window.scrollY, window.innerHeight);
-      if (ref.current)
-        ref.current.style.transform = `translate3d(0,${(y * 0.25).toFixed(1)}px,0) scale(1.12)`;
+      if (ref.current) ref.current.style.transform = `translate3d(0,${(y * 0.25).toFixed(1)}px,0) scale(1.12)`;
     });
   }, [fancy]);
-  return (
-    <img
-      ref={ref}
-      className={className}
-      src={src}
-      alt={alt}
-      style={fancy ? { transform: "scale(1.12)", willChange: "transform" } : undefined}
-    />
-  );
+  return <img ref={ref} className={className} src={src} alt={alt} style={fancy ? { transform: "scale(1.12)", willChange: "transform" } : undefined} />;
 }
 
-/* ---------- Vệt sáng theo con trỏ ---------- */
 export function Spotlight() {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -302,7 +251,6 @@ export function Spotlight() {
   return <div ref={ref} className="fx-spot" aria-hidden="true" />;
 }
 
-/* ---------- Câu dẫn: sáng dần ---------- */
 export function ScrollWords({ text }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -324,37 +272,25 @@ export function ScrollWords({ text }) {
     });
   }, [fancy, words.length]);
 
-  const render = (allOn) =>
-    words.map((w, i) => {
-      const serif = w.startsWith("*");
-      return (
-        <React.Fragment key={i}>
-          <span className={(allOn || i < lit ? "on" : "") + (serif ? " dp-serif" : "")}>
-            {serif ? w.slice(1) : w}
-          </span>{" "}
-        </React.Fragment>
-      );
-    });
-
-  // ĐÃ FIX: Nếu không phải máy tính, chạy hiệu ứng tự động sáng dần bằng CSS thay vì để mờ tịt
-  if (!fancy) {
+  const render = (allOn) => words.map((w, i) => {
+    const serif = w.startsWith("*");
     return (
-      <div className="fx-sw-static">
-        <p className="fx-sw-p">{render(true)}</p>
-      </div>
+      <React.Fragment key={i}>
+        <span className={(allOn || i < lit ? "on" : "") + (serif ? " dp-serif" : "")}>{serif ? w.slice(1) : w}</span>{" "}
+      </React.Fragment>
     );
-  }
+  });
 
+  if (!fancy) {
+    return <div className="fx-sw-static"><p className="fx-sw-p">{render(true)}</p></div>;
+  }
   return (
     <div className="fx-sw" ref={ref}>
-      <div className="fx-sw-in" ref={inRef}>
-        <p className="fx-sw-p">{render(false)}</p>
-      </div>
+      <div className="fx-sw-in" ref={inRef}><p className="fx-sw-p">{render(false)}</p></div>
     </div>
   );
 }
 
-/* ---------- Các bước (Onboarding) ---------- */
 export function PinnedSteps({ steps, icons }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -388,7 +324,6 @@ export function PinnedSteps({ steps, icons }) {
     const top = m.r.top + window.scrollY;
     window.scrollTo({ top: top + (i / steps.length) * m.total + 4, behavior: "smooth" });
   };
-
   const bigOf = (num, i) => (num.match(/\d+/) || [String(i + 1).padStart(2, "0")])[0];
 
   if (!fancy) {
@@ -419,31 +354,22 @@ export function PinnedSteps({ steps, icons }) {
         <div className="fx-pin-list">
           <div className="fx-track" aria-hidden="true"><i ref={fill} /></div>
           {steps.map(([n, t], i) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => jump(i)}
-              className={"fx-step" + (i === active ? " on" : i < active ? " done" : "")}
-            >
-              <b>{bigOf(n, i)}</b>
-              <span>{t}</span>
+            <button key={n} type="button" onClick={() => jump(i)} className={"fx-step" + (i === active ? " on" : i < active ? " done" : "")}>
+              <b>{bigOf(n, i)}</b><span>{t}</span>
             </button>
           ))}
         </div>
-
         <div className="fx-pin-card" key={active}>
           <span className="fx-big" aria-hidden="true">{bigOf(num, active)}</span>
           <div className="ico-wrap"><Icon size={30} strokeWidth={1.5} /></div>
           <p className="dp-mono fx-num">{num}</p>
-          <h3>{title}</h3>
-          <p>{desc}</p>
+          <h3>{title}</h3><p>{desc}</p>
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------- Chữ chạy ngang ---------- */
 export function Marquee({ items }) {
   const set = [...items, ...items];
   const row = (rev, k) => (
@@ -452,10 +378,7 @@ export function Marquee({ items }) {
         {[0, 1].map((d) => (
           <div className="fx-mq-set" key={d} aria-hidden={d ? "true" : undefined}>
             {set.map((t, i) => (
-              <span key={i} className={(i + (rev ? 1 : 0)) % 2 ? "fill" : "line"}>
-                {t}
-                <b>✦</b>
-              </span>
+              <span key={i} className={(i + (rev ? 1 : 0)) % 2 ? "fill" : "line"}>{t}<b>✦</b></span>
             ))}
           </div>
         ))}
@@ -463,70 +386,4 @@ export function Marquee({ items }) {
     </div>
   );
   return <div className="fx-marquee">{row(false, 0)}{row(true, 1)}</div>;
-}
-
-/* ========================================================= */
-/* ===== CÁC COMPONENT MỚI BỔ SUNG THEO YÊU CẦU CỦA BẠN ===== */
-/* ========================================================= */
-
-/* 1. Hiệu ứng trượt lên cho khối (Dùng cho phần Tạo tài khoản / ROBUX) */
-export function RevealUp({ children, delay = 0, className = "" }) {
-  const [ref, seen] = useInView(0.15);
-  return (
-    <div
-      ref={ref}
-      className={`fx-reveal-up ${seen ? "in" : ""} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* 2. Tự động chuyển Top 1-2-3 (Carousel 3s) */
-export function AutoCarousel({ children, interval = 3000 }) {
-  const containerRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Logic tự động cuộn
-  useEffect(() => {
-    if (isHovered) return; // Dừng khi người dùng đang xem (hover)
-    
-    const timer = setInterval(() => {
-      const el = containerRef.current;
-      if (!el) return;
-      
-      const items = el.children;
-      if (items.length === 0) return;
-      
-      const firstItem = items[0];
-      // Tính toán vị trí item tiếp theo
-      const itemWidth = firstItem.clientWidth + 24; // 24 là gap
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      
-      let nextScroll = el.scrollLeft + itemWidth;
-      
-      // Nếu cuộn hết thì quay lại đầu
-      if (el.scrollLeft >= maxScroll - 10) {
-        nextScroll = 0;
-      }
-      
-      el.scrollTo({ left: nextScroll, behavior: "smooth" });
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [interval, isHovered]);
-
-  return (
-    <div 
-      className="dp-rail" 
-      ref={containerRef}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onTouchStart={() => setIsHovered(true)}
-      onTouchEnd={() => setIsHovered(false)}
-    >
-      {children}
-    </div>
-  );
       }
