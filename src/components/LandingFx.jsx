@@ -1,10 +1,10 @@
 // src/components/LandingFx.jsx
 import React, { useEffect, useRef, useState } from "react";
 
-const reduced = () =>
-  typeof window !== "undefined" &&
-  !!window.matchMedia &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mq = (q) =>
+  typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
+const reduced = () => mq("(prefers-reduced-motion: reduce)");
+const coarse = () => mq("(hover: none)"); // điện thoại / máy cảm ứng
 
 // chạy fn mỗi khi cuộn / đổi kích thước (gộp theo khung hình), trả về hàm dọn dẹp
 function onScroll(fn) {
@@ -95,20 +95,26 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
 
     const run = () => {
       const t0 = performance.now();
-      const D = 900;
+      const D = 800;
       const chars = text.split("");
+      let last = 0;
       const tick = (t) => {
         const k = Math.min(1, (t - t0) / D);
-        const fixed = Math.floor(k * chars.length);
-        setOut(
-          chars
-            .map((ch, i) =>
-              ch === " " || i < fixed ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
-            )
-            .join("")
-        );
+        // chỉ cập nhật ~30 lần/giây cho nhẹ
+        if (t - last > 33 || k === 1) {
+          last = t;
+          const fixed = Math.floor(k * chars.length);
+          setOut(
+            k === 1
+              ? text
+              : chars
+                  .map((ch, i) =>
+                    ch === " " || i < fixed ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
+                  )
+                  .join("")
+          );
+        }
         if (k < 1) raf = requestAnimationFrame(tick);
-        else setOut(text);
       };
       raf = requestAnimationFrame(tick);
     };
@@ -136,7 +142,7 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
   );
 }
 
-/* ---------- tiêu đề hiện từng chữ (blur -> rõ) ---------- */
+/* ---------- tiêu đề hiện từng chữ ---------- */
 export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2", style }) {
   const [ref, seen] = useInView(0.3);
   let i = 0;
@@ -221,7 +227,7 @@ export function Tilt({ children, max = 8, className = "" }) {
   );
 }
 
-/* ---------- nút "hút" về phía con trỏ ---------- */
+/* ---------- nút "hút" về phía con trỏ (chỉ chuột) ---------- */
 export function Magnetic({ children }) {
   const ref = useRef(null);
   const move = (e) => {
@@ -243,15 +249,15 @@ export function Magnetic({ children }) {
   );
 }
 
-/* ---------- ảnh nền hero trôi chậm hơn khi cuộn (parallax) ---------- */
+/* ---------- ảnh nền hero parallax (tắt trên điện thoại cho khỏi rung) ---------- */
 export function ParallaxImg({ src, alt, className }) {
   const ref = useRef(null);
   useEffect(() => {
-    if (reduced()) return;
+    if (reduced() || coarse()) return;
     return onScroll(() => {
-      const y = Math.min(window.scrollY, window.innerHeight * 1.2);
+      const y = Math.min(window.scrollY, window.innerHeight);
       if (ref.current)
-        ref.current.style.transform = `translate3d(0,${(y * 0.25).toFixed(1)}px,0) scale(${(1.12 + y * 0.00015).toFixed(4)})`;
+        ref.current.style.transform = `translate3d(0,${(y * 0.25).toFixed(1)}px,0) scale(1.12)`;
     });
   }, []);
   return (
@@ -265,10 +271,11 @@ export function ParallaxImg({ src, alt, className }) {
   );
 }
 
-/* ---------- vệt sáng theo con trỏ trong hero ---------- */
+/* ---------- vệt sáng theo con trỏ trong hero (ẩn trên điện thoại bằng CSS) ---------- */
 export function Spotlight() {
   const ref = useRef(null);
   useEffect(() => {
+    if (coarse()) return;
     const host = ref.current && ref.current.parentElement;
     if (!host) return;
     const mv = (e) => {
@@ -285,6 +292,7 @@ export function Spotlight() {
 /* ---------- đoạn chữ sáng dần theo lúc cuộn (ghim màn hình) ---------- */
 export function ScrollWords({ text }) {
   const ref = useRef(null);
+  const inRef = useRef(null);
   const words = text.split(" ").filter(Boolean);
   const [lit, setLit] = useState(0);
 
@@ -294,7 +302,9 @@ export function ScrollWords({ text }) {
         const el = ref.current;
         if (!el) return;
         const r = el.getBoundingClientRect();
-        const total = r.height - window.innerHeight;
+        // dùng đúng chiều cao của khung được ghim, không dùng innerHeight (đổi khi thanh trình duyệt ẩn/hiện)
+        const vh = inRef.current ? inRef.current.offsetHeight : window.innerHeight;
+        const total = r.height - vh;
         const p = Math.min(1, Math.max(0, -r.top / (total > 0 ? total : 1)));
         const l = Math.min(words.length, Math.ceil(p * 1.15 * words.length));
         setLit((a) => (a === l ? a : l));
@@ -304,7 +314,7 @@ export function ScrollWords({ text }) {
 
   return (
     <div className="fx-sw" ref={ref}>
-      <div className="fx-sw-in">
+      <div className="fx-sw-in" ref={inRef}>
         <p className="fx-sw-p">
           {words.map((w, i) => {
             const serif = w.startsWith("*");
@@ -325,17 +335,24 @@ export function ScrollWords({ text }) {
 /* ---------- các bước được ghim, cuộn để đổi bước ---------- */
 export function PinnedSteps({ steps, icons }) {
   const ref = useRef(null);
+  const inRef = useRef(null);
   const fill = useRef(null);
   const [active, setActive] = useState(0);
+
+  const measure = () => {
+    const el = ref.current;
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const vh = inRef.current ? inRef.current.offsetHeight : window.innerHeight;
+    return { r, total: r.height - vh };
+  };
 
   useEffect(
     () =>
       onScroll(() => {
-        const el = ref.current;
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        const total = r.height - window.innerHeight;
-        const p = Math.min(1, Math.max(0, -r.top / (total > 0 ? total : 1)));
+        const m = measure();
+        if (!m) return;
+        const p = Math.min(1, Math.max(0, -m.r.top / (m.total > 0 ? m.total : 1)));
         if (fill.current) fill.current.style.transform = `scaleY(${p})`;
         const idx = Math.min(steps.length - 1, Math.floor(p * steps.length));
         setActive((a) => (a === idx ? a : idx));
@@ -344,11 +361,10 @@ export function PinnedSteps({ steps, icons }) {
   );
 
   const jump = (i) => {
-    const el = ref.current;
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    const total = el.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: top + (i / steps.length) * total + 4, behavior: "smooth" });
+    const m = measure();
+    if (!m) return;
+    const top = m.r.top + window.scrollY;
+    window.scrollTo({ top: top + (i / steps.length) * m.total + 4, behavior: "smooth" });
   };
 
   const Icon = icons[active];
@@ -357,7 +373,7 @@ export function PinnedSteps({ steps, icons }) {
 
   return (
     <div className="fx-pin" ref={ref} style={{ "--n": steps.length }}>
-      <div className="fx-pin-in">
+      <div className="fx-pin-in" ref={inRef}>
         <div className="fx-pin-list">
           <div className="fx-track" aria-hidden="true"><i ref={fill} /></div>
           {steps.map(([n, t], i) => (
@@ -405,4 +421,4 @@ export function Marquee({ items }) {
     </div>
   );
   return <div className="fx-marquee">{row(false, 0)}{row(true, 1)}</div>;
-               }
+            }
