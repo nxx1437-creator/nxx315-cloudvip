@@ -8,9 +8,9 @@ import { useI18n } from "./i18n/index.js";
 import { COPY, CREATOR_URL } from "./lib/landingData.js";
 import { CSS } from "./components/LandingStyle.js";
 import {
-  FloatingNav, Reveal, Trail, VideoSlot, Barcode, Flap, RankTicket, OrderCard,
+  FloatingNav, Reveal, Trail, Barcode, Flap, RankTicket, OrderCard,
   Skeletons, Wordmark, scrollToId,
-} from "./components/LandingBits.jsx";
+} from "./components/LandingBits.jsx"; // Đã xóa VideoSlot ở đây vì không dùng nữa
 
 /* 👇 DÁN LINK VIDEO HERO VÀO ĐÂY (Bắt buộc phải là link .mp4) */
 const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/video-hero.mp4"; 
@@ -72,10 +72,10 @@ export default function CloudVIPLanding() {
             <source src={HERO_VIDEO_URL} type="video/mp4" />
           </video>
           
-          {/* LỚP PHỦ TỐI GIÚP CHỮ NỔI BẬT */}
+          {/* LỚP PHỦ TỐI GIÚP CHỮ NỔI BẬT (Sẽ được làm mỏng đi trong CSS) */}
           <div className="dp-hero-overlay"></div>
 
-          {/* MÂY TRANG TRÍ (Giữ nguyên hiệu ứng cũ) */}
+          {/* MÂY TRANG TRÍ */}
           <div className="dp-sky" aria-hidden="true">
             <i className="dp-cloud c4" /><i className="dp-cloud c2" /><i className="dp-cloud c1" /><i className="dp-cloud c3" />
             <div className="dp-halo" /><div className="dp-shade" />
@@ -94,11 +94,13 @@ export default function CloudVIPLanding() {
               <p className="dp-hs">{c.heroSub}</p>
             </div>
 
-            {/* CỘT PHẢI: VÉ THAM GIA */}
-            <aside className="dp-ticket" id="hero-video">
+            {/* CỘT PHẢI: VÉ THAM GIA (Đã bỏ Video) */}
+            <aside className="dp-ticket">
               <p className="meta dp-mono"><span>{c.ticketMeta}</span><span>No. 01</span></p>
-              <VideoSlot url={HERO_VIDEO_URL} poster={HERO_POSTER} soon={c.videoSoon} />
-              <h3>{c.ticketTitle}</h3>
+              
+              {/* Đã xóa thẻ <VideoSlot> ở đây */}
+              
+              <h3 style={{ marginTop: '0px' }}>{c.ticketTitle}</h3>
               <p className="note">{c.ticketNote}</p>
               <Link to="/register" className="dp-pill"><span>{c.ctaAccount}</span><ArrowRight size={18} strokeWidth={1.5} /></Link>
               <a href={CREATOR_URL} className="dp-pill"><span>{c.ctaCreator}</span><ArrowUpRight size={18} strokeWidth={1.5} /></a>
@@ -109,7 +111,7 @@ export default function CloudVIPLanding() {
           <div className="dp-wrap dp-tele dp-mono"><span>+ NXX315 · STUDIO REWARDS</span><span>↓ {c.scroll}</span></div>
         </section>
 
-        {/* ===== BẢNG TÍNH NĂNG (split-flap) ===== */}
+        {/* ===== CÁC PHẦN CÒN LẠI GIỮ NGUYÊN ===== */}
         <section className="dp-sec">
           <div className="dp-wrap">
             <p className="dp-lbl">{c.flapLabel}</p>
@@ -121,7 +123,6 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ===== 01 QUAY VIDEO ===== */}
         <section id="video" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -168,7 +169,6 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ===== 02 MỜI BẠN ===== */}
         <section id="invite" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -192,7 +192,6 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ===== 03 XẾP HẠNG ===== */}
         <section id="rank" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -219,7 +218,6 @@ export default function CloudVIPLanding() {
           )}
         </section>
 
-        {/* ===== 04 ĐƠN ĐÃ DUYỆT ===== */}
         <section id="orders" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -238,7 +236,6 @@ export default function CloudVIPLanding() {
         </section>
       </main>
 
-      {/* ===== KẾT + FOOTER ===== */}
       <footer className="dp-end">
         <div className="dp-glow" /><div className="dp-grain" /><div className="dp-horizon" />
         <div className="dp-close">
@@ -284,3 +281,4 @@ export default function CloudVIPLanding() {
     </div>
   );
                 }
+            
