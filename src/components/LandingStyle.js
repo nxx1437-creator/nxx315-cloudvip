@@ -52,9 +52,6 @@ export const CSS = `
 .dp-h1 .dp-serif{letter-spacing:-.02em}
 .dp-h1 .dim{opacity:.55;padding-bottom:.14em}
 .dp-hs{margin-top:20px;font-weight:700;font-size:clamp(20px,3vw,28px);line-height:1.2;letter-spacing:-.01em;max-width:320px}
-.dp-watch{margin-top:20px;display:inline-flex;align-items:center;gap:20px;font-size:clamp(17px,2.4vw,22px)}
-.dp-play{width:64px;height:64px;border:1px solid #fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--vio);backdrop-filter:blur(7px);transition:background .1s}
-.dp-watch:hover .dp-play{background:rgba(255,255,255,.12)}
 .dp-tele{position:absolute;left:0;right:0;bottom:22px;z-index:2;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.7)}
 
 /* TICKET (glass pass) */
@@ -164,19 +161,18 @@ export const CSS = `
 .dp-foot ul{margin:0;padding:0}
 .dp-foot li a,.dp-foot li button{display:inline-block;padding:7px 0 4px;font-size:18px;font-weight:400;color:#fff;text-align:left}
 .dp-bottom{position:relative;margin-top:48px;padding-top:20px;border-top:1px solid rgba(255,255,255,.2);display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
-@media(prefers-reduced-motion:reduce){.dp *{animation:none!important;transition:none!important}.dp-rv{opacity:1;transform:none}}
-`;
 
-/* ===== CSS CHO HERO VIDEO NỀN ===== */
+/* ===== CSS MỚI CHO HERO VIDEO NỀN ===== */
 .dp-hero-content-wrapper {
   position: relative;
   width: 100%;
-  min-height: 450px; /* Bạn có thể tăng/giảm chiều cao này tùy ý */
+  min-height: 400px; 
   display: flex;
   align-items: center;
   overflow: hidden;
-  border-radius: 24px; /* Bo góc cho đẹp */
-  margin-bottom: 40px;
+  border-radius: 24px; 
+  /* Thêm hiệu ứng đổ bóng nhẹ để khối video nổi bật hơn */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
 }
 
 .dp-hero-bg-video {
@@ -185,9 +181,9 @@ export const CSS = `
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Phủ kín khung hình */
+  object-fit: cover; 
   z-index: 0;
-  opacity: 0.5; /* Làm mờ video để chữ dễ đọc (chỉnh từ 0.2 đến 0.8) */
+  opacity: 0.6; /* Tăng độ sáng của video lên một chút (0.6) */
 }
 
 /* Lớp phủ tối (overlay) tạo độ tương phản cho chữ */
@@ -195,15 +191,21 @@ export const CSS = `
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%);
   z-index: 1;
-  pointer-events: none; /* Không chặn click chuột */
+  pointer-events: none; 
 }
 
 .dp-hero-text {
   position: relative;
-  z-index: 2; /* Chữ nổi lên trên cùng */
+  z-index: 2; 
   padding: 40px;
   width: 100%;
-  max-width: 800px; /* Giới hạn độ rộng của chữ */
-  }
+  max-width: 800px; 
+}
+
+@media(prefers-reduced-motion:reduce){
+  .dp *{animation:none!important;transition:none!important}
+  .dp-rv{opacity:1;transform:none}
+}
+`;
