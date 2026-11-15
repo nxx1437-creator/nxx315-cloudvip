@@ -31,19 +31,23 @@ export const CSS = `
 .dp-nbtn.ghost{opacity:.7;padding:0 8px}
 @media(min-width:900px){.dp-nav-links{display:flex}.dp-nav-actions{margin-left:0}}
 
-/* ===== HERO MỚI (FULL-BLEED VIDEO) ===== */
-.dp-stage{position:relative;min-height:100svh;overflow:hidden;padding:96px 0 72px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#0a1668 0%,#1d3bb0 34%,#5a4acf 60%,#c25fb8 86%,#f0a0c0 100%)}
-.dp-sky{position:absolute;inset:0;pointer-events:none;z-index:0}
-.dp-cloud{position:absolute;border-radius:50%;filter:blur(34px);opacity:.85;animation:dpDrift 26s ease-in-out infinite alternate}
-.dp-cloud.c1{left:-15%;bottom:-8%;width:70%;height:36%;background:radial-gradient(closest-side,#ffd3e6,rgba(255,170,210,0))}
-.dp-cloud.c2{right:-12%;bottom:4%;width:64%;height:40%;background:radial-gradient(closest-side,#e3b8ff,rgba(150,90,230,0));animation-duration:32s}
-.dp-cloud.c3{left:20%;bottom:-14%;width:80%;height:30%;background:radial-gradient(closest-side,#fff,rgba(255,200,230,0));opacity:.7;animation-duration:38s}
-.dp-cloud.c4{right:8%;top:14%;width:40%;height:22%;background:radial-gradient(closest-side,rgba(160,130,255,.6),rgba(80,60,200,0));animation-duration:30s}
-.dp-halo{position:absolute;inset:0;background:radial-gradient(circle closest-corner at 10% 50%,#6c4bd6,rgba(0,0,0,0) 55%);opacity:.437}
-.dp-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,12,60,.7),rgba(6,12,60,0) 62%),linear-gradient(0deg,#090909 0%,rgba(9,9,9,0) 24%)}
-@keyframes dpDrift{from{transform:translateX(-3%)}to{transform:translateX(4%)}}
+/* ===== HERO MỚI (XÓA MÂY MÙ, VIDEO SẮC NÉT) ===== */
+.dp-stage{position:relative;min-height:100svh;overflow:hidden;padding:96px 0 72px;display:flex;flex-direction:column;justify-content:center;background:#090909; /* Nền đen làm chủ đạo */}
+.dp-trail{position:absolute;left:0;top:46%;width:100%;pointer-events:none;opacity:.9;z-index:2}
+.dp-trail svg{display:block;width:min(260px,52vw);height:18px;animation:dpFly 11s linear infinite}
+@keyframes dpFly{from{transform:translateX(-30vw)}to{transform:translateX(105vw)}}
 
-/* VIDEO NỀN VÀ LỚP PHỦ (Đã giảm độ tối để thấy rõ video) */
+.dp-hero{position:relative;z-index:2;display:grid;gap:40px;align-items:center}
+@media(min-width:900px){.dp-hero{grid-template-columns:1.1fr .9fr}}
+.dp-hero-text-container{width:100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7)); /* Đổ bóng đậm cho chữ dễ đọc */ }
+.dp-h1{font-weight:500;font-size:clamp(46px,10.5vw,88px);line-height:.98;letter-spacing:-.03em}
+.dp-h1 span{display:block}
+.dp-h1 .dp-serif{letter-spacing:-.02em}
+.dp-h1 .dim{opacity:.55;padding-bottom:.14em}
+.dp-hs{margin-top:20px;font-weight:700;font-size:clamp(20px,3vw,28px);line-height:1.2;letter-spacing:-.01em;max-width:320px}
+.dp-tele{position:absolute;left:0;right:0;bottom:22px;z-index:2;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.7)}
+
+/* VIDEO NỀN VÀ LỚP PHỦ */
 .dp-hero-bg-video {
   position: absolute;
   top: 0;
@@ -52,35 +56,22 @@ export const CSS = `
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  opacity: 1; /* Tăng độ sáng của video lên tối đa */
+  opacity: 1; /* Không làm mờ video */
 }
 .dp-hero-overlay {
   position: absolute;
   inset: 0;
-  /* Lớp phủ mỏng hơn: Tối ở bên trái để đọc chữ, trong suốt ở giữa và bên phải để lộ video */
-  background: linear-gradient(90deg, rgba(9,9,9,0.7) 0%, rgba(9,9,9,0.1) 50%, rgba(9,9,9,0.4) 100%);
+  /* Chỉ tối ở bên trái để đọc chữ, bên phải trong suốt hoàn toàn để thấy rõ video */
+  background: linear-gradient(90deg, rgba(9,9,9,0.85) 0%, rgba(9,9,9,0.2) 40%, rgba(9,9,9,0) 100%);
   z-index: 1;
   pointer-events: none;
 }
 
-.dp-trail{position:absolute;left:0;top:46%;width:100%;pointer-events:none;opacity:.9;z-index:2}
-.dp-trail svg{display:block;width:min(260px,52vw);height:18px;animation:dpFly 11s linear infinite}
-@keyframes dpFly{from{transform:translateX(-30vw)}to{transform:translateX(105vw)}}
-.dp-hero{position:relative;z-index:2;display:grid;gap:40px;align-items:center}
-@media(min-width:900px){.dp-hero{grid-template-columns:1.1fr .9fr}}
-.dp-hero-text-container{width:100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); /* Đổ bóng cho chữ để dễ đọc */ }
-.dp-h1{font-weight:500;font-size:clamp(46px,10.5vw,88px);line-height:.98;letter-spacing:-.03em}
-.dp-h1 span{display:block}
-.dp-h1 .dp-serif{letter-spacing:-.02em}
-.dp-h1 .dim{opacity:.55;padding-bottom:.14em}
-.dp-hs{margin-top:20px;font-weight:700;font-size:clamp(20px,3vw,28px);line-height:1.2;letter-spacing:-.01em;max-width:320px}
-.dp-tele{position:absolute;left:0;right:0;bottom:22px;z-index:2;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.7)}
-
 /* TICKET (glass pass) */
-.dp-ticket{position:relative;border-radius:20px;padding:32px 24px 28px 44px; /* Tăng padding top vì đã bỏ video */ background:rgba(255,255,255,.08);border-top:.5px solid rgba(255,255,255,.45);border-right:.5px solid rgba(255,255,255,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000)}
+.dp-ticket{position:relative;border-radius:20px;padding:32px 24px 28px 44px; background:rgba(255,255,255,.08);border-top:.5px solid rgba(255,255,255,.45);border-right:.5px solid rgba(255,255,255,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000)}
 .dp-ticket::before{content:"";position:absolute;left:20px;top:8%;bottom:8%;border-left:2px dotted rgba(255,255,255,.35)}
 .dp-ticket .meta{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.6);display:flex;justify-content:space-between;margin-bottom:14px}
-.dp-ticket h3{font-weight:400;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:0 0 6px} /* Bỏ margin-top */
+.dp-ticket h3{font-weight:400;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:0 0 6px}
 .dp-ticket .note{font-size:15px;line-height:1.5;color:rgba(255,255,255,.75);margin-bottom:24px}
 .dp-bars{display:none;position:absolute;right:12px;top:18px;bottom:18px;width:18px;opacity:.55}
 @media(min-width:1100px){.dp-bars{display:block}.dp-ticket{padding-right:48px}}
@@ -91,7 +82,7 @@ export const CSS = `
 .dp-pill:hover{background:rgba(255,255,255,.1);border-color:transparent;box-shadow:inset 0 0 0 2px #af50ff,inset 1px 1px 0 1px rgba(255,255,255,.6),inset -1px -1px 0 1px rgba(255,255,255,.35)}
 .dp-pill.big{height:64px;font-size:clamp(18px,2.6vw,28px);width:auto;min-width:min(100%,300px)}
 
-/* SPLIT-FLAP BOARD */
+/* CÁC PHẦN CÒN LẠI GIỮ NGUYÊN */
 .dp-board{margin-top:48px}
 .dp-flap{display:block;width:100%;height:clamp(64px,11vw,100px);padding:1px;border-radius:8px;background:linear-gradient(rgba(255,255,255,.2),rgba(255,255,255,0));margin-bottom:16px;text-align:left}
 .dp-flap-in{display:flex;align-items:center;justify-content:space-between;height:100%;padding:0 clamp(14px,3vw,32px);background:#0b0b0b;border-radius:7px;overflow:hidden}
@@ -107,7 +98,6 @@ export const CSS = `
 @keyframes dpFlapB{from{transform:translateY(1px) rotateX(90deg)}to{transform:translateY(1px) rotateX(0)}}
 .dp-flap:hover .dp-flap-in{background:#121018;box-shadow:inset 0 0 0 1px rgba(175,80,255,.7)}
 
-/* FEATURE SCENE */
 .dp-head{max-width:760px}
 .dp-scene{position:relative;margin:clamp(40px,7vw,64px) auto 0;max-width:907px}
 .dp-console{border:1px solid rgba(255,255,255,.25);border-radius:24px;overflow:hidden;background:#0d0d12}
@@ -130,7 +120,6 @@ export const CSS = `
 .dp-trip p{margin-top:16px;font-size:17px;line-height:1.5;color:rgba(247,249,250,.75)}
 .dp-cta-row{margin-top:48px;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
 
-/* TICKET RAIL */
 .dp-rail{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px max(20px,5vw) 24px;margin-top:48px;scrollbar-width:none}
 .dp-rail::-webkit-scrollbar{display:none}
 .dp-tk{position:relative;flex:0 0 min(423px,82vw);height:297px;border-radius:20px;overflow:hidden;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:space-between;padding:22px 24px;background:#0f0f14;-webkit-mask:radial-gradient(circle 10px at 0 33%,#0000 98%,#000),radial-gradient(circle 10px at 100% 33%,#0000 98%,#000);-webkit-mask-composite:source-in;mask:radial-gradient(circle 10px at 0 33%,#0000 98%,#000),radial-gradient(circle 10px at 100% 33%,#0000 98%,#000);mask-composite:intersect}
@@ -159,7 +148,6 @@ export const CSS = `
 .dp-oc .ft{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:rgba(255,255,255,.65)}
 .dp-note{text-align:center;color:var(--mut);padding:32px 20px;font-size:16px}
 
-/* ENDING */
 .dp-end{position:relative;overflow:hidden;margin-top:clamp(72px,12vw,160px);background:#090909;padding-bottom:24px}
 .dp-glow{position:absolute;inset:0;background:radial-gradient(60% 55% at 10% 100%,rgba(175,80,255,.55),transparent 70%),radial-gradient(60% 55% at 92% 100%,rgba(40,100,210,.65),transparent 70%),radial-gradient(50% 40% at 50% 70%,rgba(210,80,150,.2),transparent 70%)}
 .dp-grain{position:absolute;inset:0;opacity:.18;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
