@@ -1,5 +1,5 @@
 // src/components/AuthShell.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Sun, ChevronDown } from "lucide-react";
 import useTheme from "../hooks/useTheme.js";
@@ -13,11 +13,22 @@ const LANGS = [
 ];
 
 const DARK_Q = "(prefers-color-scheme: dark)";
+const KEY = "nxx-auth-theme"; // "dark" | "light"; chưa có = theo thiết bị
+
 const sysDark = () =>
   typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(DARK_Q).matches;
 
+const readPref = () => {
+  try {
+    const v = localStorage.getItem(KEY);
+    return v === "dark" || v === "light" ? v : null;
+  } catch {
+    return null;
+  }
+};
+
 export default function AuthShell({ title, subtitle, footer, children }) {
-  const { themeMode, setThemeMode } = useTheme();
+  const { setThemeMode } = useTheme();
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
@@ -25,6 +36,9 @@ export default function AuthShell({ title, subtitle, footer, children }) {
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+
+  // lựa chọn của người dùng: đọc ngay lúc tạo trang (không bị nháy sáng rồi mới tối)
+  const [pref, setPref] = useState(readPref);
 
   // chế độ của thiết bị, cập nhật trực tiếp khi thiết bị đổi
   const [sys, setSys] = useState(sysDark);
@@ -41,12 +55,11 @@ export default function AuthShell({ title, subtitle, footer, children }) {
     };
   }, []);
 
-  // lựa chọn rõ ràng của người dùng (Hồ sơ) thắng; còn lại theo thiết bị
-  const explicit = themeMode === "dark" || themeMode === "light" ? themeMode : null;
-  const dark = explicit ? explicit === "dark" : sys;
+  // đã chọn thì theo lựa chọn, chưa chọn thì theo thiết bị
+  const dark = pref ? pref === "dark" : sys;
 
-  // báo cho các thành phần khác trong trang (ví dụ nút Google) biết đang sáng hay tối
-  useEffect(() => {
+  // báo cho nút Google biết đang sáng hay tối (đặt trước khi vẽ nút)
+  useLayoutEffect(() => {
     const el = document.documentElement;
     el.dataset.auTheme = dark ? "dark" : "light";
     return () => {
@@ -65,7 +78,15 @@ export default function AuthShell({ title, subtitle, footer, children }) {
   }, [open]);
 
   const toggleTheme = () => {
-    if (typeof setThemeMode === "function") setThemeMode(dark ? "light" : "dark");
+    const next = dark ? "light" : "dark";
+    setPref(next);
+    try {
+      localStorage.setItem(KEY, next);
+    } catch {
+      /* trình duyệt chặn lưu: vẫn đổi được trong lần này */
+    }
+    // đồng bộ cho phần còn lại của web
+    if (typeof setThemeMode === "function") setThemeMode(next);
   };
 
   const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
@@ -136,4 +157,4 @@ export default function AuthShell({ title, subtitle, footer, children }) {
       </main>
     </div>
   );
-                    }
+    }
