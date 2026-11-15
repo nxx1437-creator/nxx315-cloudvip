@@ -12,7 +12,7 @@ import {
   Skeletons, Wordmark, scrollToId,
 } from "./components/LandingBits.jsx"; // Đã xóa Barcode khỏi import
 
-const HERO_IMAGE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Banner-hero.gif";
+const HERO_IMAGE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero-banner.jpg";
 
 export default function CloudVIPLanding() {
   const i18n = useI18n();
