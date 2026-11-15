@@ -24,7 +24,7 @@ export const CSS = `
 .dp-nav-links button{font:400 12px/1 "Inter",sans-serif;text-transform:uppercase;opacity:.9;border-bottom:4px solid transparent}
 .dp-nav-links button:hover{opacity:.75;border-bottom-color:rgba(255,255,255,.75)}
 .dp-nav-actions{display:flex;gap:8px;margin-left:auto;align-items:center}
-.dp-nbtn{font:400 12px/1 "Inter",sans-serif;text-transform:uppercase;height:32px;padding:0 14px;border-radius:4px;display:inline-flex;align-items:center;transition:background .15s}
+.dp-nbtn{white-space:nowrap;font:400 12px/1 "Inter",sans-serif;text-transform:uppercase;height:32px;padding:0 14px;border-radius:4px;display:inline-flex;align-items:center;transition:background .15s}
 .dp-nbtn.fill{background:rgba(255,255,255,.1)}
 .dp-nbtn.fill:hover{background:rgba(255,255,255,.4)}
 .dp-nbtn.line{border:.5px solid #fff}
@@ -50,8 +50,8 @@ export const CSS = `
 .dp-h1{font-weight:500;font-size:clamp(46px,10.5vw,88px);line-height:.98;letter-spacing:-.03em}
 .dp-h1 span{display:block}
 .dp-h1 .dp-serif{letter-spacing:-.02em}
-.dp-h1 .dim{opacity:.55}
-.dp-hs{margin-top:24px;font-weight:700;font-size:clamp(20px,3vw,28px);line-height:1.2;letter-spacing:-.01em;max-width:320px}
+.dp-h1 .dim{opacity:.55;padding-bottom:.14em}
+.dp-hs{margin-top:20px;font-weight:700;font-size:clamp(20px,3vw,28px);line-height:1.2;letter-spacing:-.01em;max-width:320px}
 .dp-watch{margin-top:20px;display:inline-flex;align-items:center;gap:20px;font-size:clamp(17px,2.4vw,22px)}
 .dp-play{width:64px;height:64px;border:1px solid #fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--vio);backdrop-filter:blur(7px);transition:background .1s}
 .dp-watch:hover .dp-play{background:rgba(255,255,255,.12)}
@@ -166,3 +166,4 @@ export const CSS = `
 .dp-bottom{position:relative;margin-top:48px;padding-top:20px;border-top:1px solid rgba(255,255,255,.2);display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
 @media(prefers-reduced-motion:reduce){.dp *{animation:none!important;transition:none!important}.dp-rv{opacity:1;transform:none}}
 `;
+
