@@ -6,7 +6,7 @@ const mq = (q) =>
 const reduced = () => mq("(prefers-reduced-motion: reduce)");
 const FINE = "(hover: hover) and (pointer: fine)";
 
-// true = máy tính có chuột (hiệu ứng đầy đủ), false = điện thoại/cảm ứng (bản nhẹ)
+// true = máy tính có chuột. Điện thoại dùng CSS scroll-driven (không cần JS đo cuộn)
 function useFancy() {
   const [f, setF] = useState(() => mq(FINE) && !reduced());
   useEffect(() => {
@@ -74,7 +74,7 @@ export function InView({ as: Tag = "div", className = "", threshold, children, .
   );
 }
 
-/* ---------- thanh tiến độ cuộn (chỉ máy tính) ---------- */
+/* ---------- thanh tiến độ cuộn: máy tính dùng JS, điện thoại dùng CSS ---------- */
 export function ScrollBar() {
   const fancy = useFancy();
   const r = useRef(null);
@@ -87,7 +87,6 @@ export function ScrollBar() {
       if (r.current) r.current.style.transform = `scaleX(${p})`;
     });
   }, [fancy]);
-  if (!fancy) return null;
   return (
     <div className="fx-bar" aria-hidden="true">
       <i ref={r} />
@@ -95,18 +94,17 @@ export function ScrollBar() {
   );
 }
 
-/* ---------- chữ "giải mã" kiểu scramble (điện thoại: chữ thường) ---------- */
+/* ---------- chữ "giải mã" kiểu scramble ---------- */
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/=;+";
 
 export function Scramble({ text, as: Tag = "p", className = "", style }) {
-  const fancy = useFancy();
   const ref = useRef(null);
   const [out, setOut] = useState(text);
 
   useEffect(() => {
     setOut(text);
     const el = ref.current;
-    if (!fancy || !el || !("IntersectionObserver" in window)) return;
+    if (reduced() || !el || !("IntersectionObserver" in window)) return;
     let raf = 0;
     let seen = false;
 
@@ -117,7 +115,7 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
       let last = 0;
       const tick = (t) => {
         const k = Math.min(1, (t - t0) / D);
-        if (t - last > 33 || k === 1) {
+        if (t - last > 40 || k === 1) {
           last = t;
           const fixed = Math.floor(k * chars.length);
           setOut(
@@ -149,7 +147,7 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
       io.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [text, fancy]);
+  }, [text]);
 
   return (
     <Tag ref={ref} className={className} style={style} aria-label={text}>
@@ -158,21 +156,9 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
   );
 }
 
-/* ---------- tiêu đề: máy tính hiện từng chữ, điện thoại chỉ mờ -> rõ ---------- */
+/* ---------- tiêu đề hiện từng chữ (chỉ mờ + trượt, nhẹ cho điện thoại) ---------- */
 export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2", style }) {
-  const fancy = useFancy();
   const [ref, seen] = useInView(0.3);
-
-  if (!fancy) {
-    return (
-      <Tag ref={ref} className={`${className} fx-fade${seen ? " in" : ""}`} style={style}>
-        {a}
-        {b ? " " : ""}
-        {b ? <span className="dp-serif">{b}</span> : null}
-      </Tag>
-    );
-  }
-
   let i = 0;
   const words = (s, serif) =>
     s
@@ -198,16 +184,19 @@ export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2"
   );
 }
 
-/* ---------- số chạy từ 0 (điện thoại: hiện số luôn) ---------- */
+/* ---------- số chạy từ 0 (15%, 1 mã...) ---------- */
 export function CountUp({ value }) {
-  const fancy = useFancy();
   const m = String(value).match(/^(\d+)(.*)$/);
   const [ref, seen] = useInView(0.5);
   const [n, setN] = useState(0);
 
   useEffect(() => {
-    if (!fancy || !m || !seen) return;
+    if (!m || !seen) return;
     const to = Number(m[1]);
+    if (reduced()) {
+      setN(to);
+      return;
+    }
     const t0 = performance.now();
     let raf = 0;
     const tick = (t) => {
@@ -217,9 +206,9 @@ export function CountUp({ value }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [seen, value, fancy]);
+  }, [seen, value]);
 
-  if (!fancy || !m) return <span ref={ref}>{value}</span>;
+  if (!m) return <span ref={ref}>{value}</span>;
   return (
     <span ref={ref}>
       {seen ? n : 0}
@@ -274,7 +263,7 @@ export function Magnetic({ children }) {
   );
 }
 
-/* ---------- ảnh nền hero parallax (chỉ máy tính) ---------- */
+/* ---------- ảnh nền hero: máy tính dùng JS, điện thoại dùng CSS ---------- */
 export function ParallaxImg({ src, alt, className }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -317,7 +306,7 @@ export function Spotlight() {
   return <div ref={ref} className="fx-spot" aria-hidden="true" />;
 }
 
-/* ---------- câu dẫn: máy tính ghim + sáng dần, điện thoại hiện luôn ---------- */
+/* ---------- câu dẫn: máy tính ghim + sáng dần (JS), điện thoại sáng dần bằng CSS ---------- */
 export function ScrollWords({ text }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -339,12 +328,12 @@ export function ScrollWords({ text }) {
     });
   }, [fancy, words.length]);
 
-  const render = (on) =>
+  const render = (allOn) =>
     words.map((w, i) => {
       const serif = w.startsWith("*");
       return (
         <React.Fragment key={i}>
-          <span className={(on || i < lit ? "on" : "") + (serif ? " dp-serif" : "")}>
+          <span className={(allOn || i < lit ? "on" : "") + (serif ? " dp-serif" : "")}>
             {serif ? w.slice(1) : w}
           </span>{" "}
         </React.Fragment>
@@ -353,9 +342,9 @@ export function ScrollWords({ text }) {
 
   if (!fancy) {
     return (
-      <InView className="fx-sw-static fx-fade">
+      <div className="fx-sw-static">
         <p className="fx-sw-p">{render(true)}</p>
-      </InView>
+      </div>
     );
   }
 
@@ -368,7 +357,7 @@ export function ScrollWords({ text }) {
   );
 }
 
-/* ---------- các bước: máy tính ghim + đổi theo cuộn, điện thoại xếp thẻ dọc ---------- */
+/* ---------- các bước: máy tính ghim + đổi theo cuộn, điện thoại là thẻ chồng lên nhau ---------- */
 export function PinnedSteps({ steps, icons }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -405,20 +394,20 @@ export function PinnedSteps({ steps, icons }) {
 
   const bigOf = (num, i) => (num.match(/\d+/) || [String(i + 1).padStart(2, "0")])[0];
 
-  // ===== điện thoại: thẻ xếp dọc, mỗi thẻ hiện nhẹ một lần =====
+  // ===== điện thoại: thẻ dính trên đầu, thẻ sau trượt đè lên thẻ trước =====
   if (!fancy) {
     return (
       <div className="fx-pin-static">
         {steps.map(([num, title, desc], i) => {
           const Icon = icons[i];
           return (
-            <InView key={num} className="fx-pin-card fx-fade">
+            <div key={num} className="fx-pin-card" style={{ "--i": i }}>
               <span className="fx-big" aria-hidden="true">{bigOf(num, i)}</span>
               <div className="ico-wrap"><Icon size={28} strokeWidth={1.5} /></div>
               <p className="dp-mono fx-num">{num}</p>
               <h3>{title}</h3>
               <p>{desc}</p>
-            </InView>
+            </div>
           );
         })}
       </div>
@@ -479,4 +468,4 @@ export function Marquee({ items }) {
     </div>
   );
   return <div className="fx-marquee">{row(false, 0)}{row(true, 1)}</div>;
-                                      }
+          }
