@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Play } from "lucide-react";
-import { supabase } from "./lib/supabase.js"; // 👈 đổi đường dẫn nếu file supabase của bạn ở chỗ khác
+import { supabase } from "./lib/supabaseClient.js"; 
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
 import { COPY, CREATOR_URL } from "./lib/landingData.js";
