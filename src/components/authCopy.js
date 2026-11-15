@@ -1,17 +1,7 @@
 // src/components/authCopy.js
 export const AUTH_COPY = {
   vi: {
-    home: "Trang chủ",
-    langBtn: "EN",
-    side: {
-      login: { eyebrow: "NXX315 · Studio Rewards", a: "Chào mừng", b: "quay lại." },
-      register: { eyebrow: "NXX315 · Studio Rewards", a: "Bắt đầu kiếm xu,", b: "miễn phí." },
-    },
-    perks: [
-      "Không cần mật khẩu, chỉ cần email hoặc Google",
-      "Làm nhiệm vụ mỗi ngày, nhận xu",
-      "Đổi Robux, Quân Huy, Kim Cương và nhiều quà khác",
-    ],
+    tagline: "Làm nhiệm vụ mỗi ngày, đổi xu lấy quà thật.",
     sentTitle: "Kiểm tra email của bạn",
     sentTo: "Mình đã gửi liên kết tới",
     sentHint:
@@ -20,19 +10,10 @@ export const AUTH_COPY = {
     resendIn: (s) => `Gửi lại sau ${s}s`,
     resent: "Đã gửi lại liên kết.",
     changeEmail: "Dùng email khác",
+    themeAria: "Đổi chế độ sáng/tối",
   },
   en: {
-    home: "Home",
-    langBtn: "VI",
-    side: {
-      login: { eyebrow: "NXX315 · Studio Rewards", a: "Welcome", b: "back." },
-      register: { eyebrow: "NXX315 · Studio Rewards", a: "Start earning coins,", b: "for free." },
-    },
-    perks: [
-      "No password, just your email or Google",
-      "Do daily tasks, earn coins",
-      "Redeem Robux, game currency and more",
-    ],
+    tagline: "Do daily tasks, redeem coins for real rewards.",
     sentTitle: "Check your email",
     sentTo: "We sent a link to",
     sentHint:
@@ -41,5 +22,6 @@ export const AUTH_COPY = {
     resendIn: (s) => `Resend in ${s}s`,
     resent: "Link sent again.",
     changeEmail: "Use another email",
+    themeAria: "Toggle light/dark mode",
   },
 };
