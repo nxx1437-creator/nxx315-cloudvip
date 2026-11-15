@@ -7,31 +7,52 @@ import { useI18n } from "../i18n/index.js";
 import { AUTH_CSS } from "./AuthStyle.js";
 import { AUTH_COPY } from "./authCopy.js";
 
-const readDark = () =>
-  typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-
 const LANGS = [
   ["vi", "🇻🇳", "Tiếng Việt"],
   ["en", "🇬🇧", "English"],
 ];
 
+const DARK_Q = "(prefers-color-scheme: dark)";
+const sysDark = () =>
+  typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(DARK_Q).matches;
+
 export default function AuthShell({ title, subtitle, footer, children }) {
-  const { setThemeMode } = useTheme();
+  const { themeMode, setThemeMode } = useTheme();
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
   const c = AUTH_COPY[lang];
 
-  const [dark, setDark] = useState(readDark);
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // theo dõi chế độ sáng/tối hiện tại (class "dark" trên <html>)
+  // chế độ của thiết bị, cập nhật trực tiếp khi thiết bị đổi
+  const [sys, setSys] = useState(sysDark);
   useEffect(() => {
-    const mo = new MutationObserver(() => setDark(readDark()));
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => mo.disconnect();
+    if (!window.matchMedia) return;
+    const m = window.matchMedia(DARK_Q);
+    const fn = () => setSys(m.matches);
+    fn();
+    if (m.addEventListener) m.addEventListener("change", fn);
+    else if (m.addListener) m.addListener(fn);
+    return () => {
+      if (m.removeEventListener) m.removeEventListener("change", fn);
+      else if (m.removeListener) m.removeListener(fn);
+    };
   }, []);
+
+  // lựa chọn rõ ràng của người dùng (Hồ sơ) thắng; còn lại theo thiết bị
+  const explicit = themeMode === "dark" || themeMode === "light" ? themeMode : null;
+  const dark = explicit ? explicit === "dark" : sys;
+
+  // báo cho các thành phần khác trong trang (ví dụ nút Google) biết đang sáng hay tối
+  useEffect(() => {
+    const el = document.documentElement;
+    el.dataset.auTheme = dark ? "dark" : "light";
+    return () => {
+      delete el.dataset.auTheme;
+    };
+  }, [dark]);
 
   // bấm ra ngoài thì đóng menu ngôn ngữ
   useEffect(() => {
@@ -50,7 +71,7 @@ export default function AuthShell({ title, subtitle, footer, children }) {
   const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
 
   return (
-    <div className="au">
+    <div className="au" data-theme={dark ? "dark" : "light"}>
       <style>{AUTH_CSS}</style>
       <div className="au-bg" aria-hidden="true" />
 
@@ -115,4 +136,4 @@ export default function AuthShell({ title, subtitle, footer, children }) {
       </main>
     </div>
   );
-                              }
+                    }
