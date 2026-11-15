@@ -9,7 +9,7 @@ export const SITE = {
 
   zalo: "0865245988",
   zaloUrl: "https://zalo.me/0865245988",
-  email: "nxx315hub@gmail.com",
+  email: "support@nxx315.com",
 
   // Nếu có đăng ký kinh doanh, ghi vào đây. Ví dụ: "Hộ kinh doanh ... - MST ..."
   business: "",
