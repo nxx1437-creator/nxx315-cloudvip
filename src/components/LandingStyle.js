@@ -43,7 +43,7 @@ export const CSS = `
 .dp-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,12,60,.7),rgba(6,12,60,0) 62%),linear-gradient(0deg,#090909 0%,rgba(9,9,9,0) 24%)}
 @keyframes dpDrift{from{transform:translateX(-3%)}to{transform:translateX(4%)}}
 
-/* VIDEO NỀN VÀ LỚP PHỦ */
+/* VIDEO NỀN VÀ LỚP PHỦ (Đã giảm độ tối để thấy rõ video) */
 .dp-hero-bg-video {
   position: absolute;
   top: 0;
@@ -52,12 +52,13 @@ export const CSS = `
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  opacity: 0.85;
+  opacity: 1; /* Tăng độ sáng của video lên tối đa */
 }
 .dp-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(9,9,9,0.85) 0%, rgba(9,9,9,0.3) 50%, rgba(9,9,9,0.7) 100%);
+  /* Lớp phủ mỏng hơn: Tối ở bên trái để đọc chữ, trong suốt ở giữa và bên phải để lộ video */
+  background: linear-gradient(90deg, rgba(9,9,9,0.7) 0%, rgba(9,9,9,0.1) 50%, rgba(9,9,9,0.4) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -67,7 +68,7 @@ export const CSS = `
 @keyframes dpFly{from{transform:translateX(-30vw)}to{transform:translateX(105vw)}}
 .dp-hero{position:relative;z-index:2;display:grid;gap:40px;align-items:center}
 @media(min-width:900px){.dp-hero{grid-template-columns:1.1fr .9fr}}
-.dp-hero-text-container{width:100%}
+.dp-hero-text-container{width:100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); /* Đổ bóng cho chữ để dễ đọc */ }
 .dp-h1{font-weight:500;font-size:clamp(46px,10.5vw,88px);line-height:.98;letter-spacing:-.03em}
 .dp-h1 span{display:block}
 .dp-h1 .dp-serif{letter-spacing:-.02em}
@@ -76,14 +77,11 @@ export const CSS = `
 .dp-tele{position:absolute;left:0;right:0;bottom:22px;z-index:2;display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.7)}
 
 /* TICKET (glass pass) */
-.dp-ticket{position:relative;border-radius:20px;padding:24px 24px 28px 44px;background:rgba(255,255,255,.08);border-top:.5px solid rgba(255,255,255,.45);border-right:.5px solid rgba(255,255,255,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000)}
+.dp-ticket{position:relative;border-radius:20px;padding:32px 24px 28px 44px; /* Tăng padding top vì đã bỏ video */ background:rgba(255,255,255,.08);border-top:.5px solid rgba(255,255,255,.45);border-right:.5px solid rgba(255,255,255,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000)}
 .dp-ticket::before{content:"";position:absolute;left:20px;top:8%;bottom:8%;border-left:2px dotted rgba(255,255,255,.35)}
 .dp-ticket .meta{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.6);display:flex;justify-content:space-between;margin-bottom:14px}
-.dp-vid{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#05050a;object-fit:cover}
-.dp-vid-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:.5px dashed rgba(255,255,255,.45);background:rgba(5,5,20,.35);text-align:center;padding:12px}
-.dp-vid-empty p{font-size:12px;color:rgba(255,255,255,.7)}
-.dp-ticket h3{font-weight:400;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:22px 0 6px}
-.dp-ticket .note{font-size:15px;line-height:1.5;color:rgba(255,255,255,.75);margin-bottom:18px}
+.dp-ticket h3{font-weight:400;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:0 0 6px} /* Bỏ margin-top */
+.dp-ticket .note{font-size:15px;line-height:1.5;color:rgba(255,255,255,.75);margin-bottom:24px}
 .dp-bars{display:none;position:absolute;right:12px;top:18px;bottom:18px;width:18px;opacity:.55}
 @media(min-width:1100px){.dp-bars{display:block}.dp-ticket{padding-right:48px}}
 
