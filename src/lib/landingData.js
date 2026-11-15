@@ -110,5 +110,21 @@ export const COPY = {
     fExplore: [["video", "Film videos"], ["invite", "Invite"], ["rank", "Ranking"], ["orders", "Approved orders"]],
     fAccount: [["/login", "Log in"], ["/register", "Sign up"], ["/guide", "Guide"]],
     fLegal: [["/terms", "Terms"], ["/privacy", "Privacy"], ["/refund", "Refunds"], ["/about", "About"]],
+    // trong COPY.vi
+dLabel: "05 · Thông tin chi tiết",
+dTitleA: "Mọi thứ bạn cần biết,", dTitleB: "rõ ràng.",
+dItems: [
+  ["Xu hoạt động thế nào?", "Mỗi nhiệm vụ hoàn thành, video được duyệt hoặc lượt mời thành công đều cộng xu thẳng vào ví của bạn."],
+  ["Đổi được những gì?", "Robux, Quân Huy, Kim Cương và nhiều phần quà khác, xem danh sách trong mục Đổi quà sau khi đăng nhập."],
+  ["Duyệt đơn ra sao?", "Đơn đổi thưởng được kiểm tra thủ công trước khi giao để đảm bảo công bằng."],
+  ["Thông tin của bạn", "Tên trên bảng xếp hạng và đơn đã duyệt được ẩn một phần để bảo mật."],
+],
+faqTitle: "Câu hỏi thường gặp",
+faq: [
+  ["Tham gia có mất phí không?", "Không. Tạo tài khoản và làm nhiệm vụ hoàn toàn miễn phí."],
+  ["Bao lâu thì đơn được duyệt?", "Thời gian duyệt hiển thị trong chi tiết đơn của bạn. Nếu chờ lâu, hãy liên hệ qua Zalo hoặc email ở cuối trang."],
+  ["Video của mình bị từ chối thì sao?", "Kiểm tra video đã có đúng hashtag #Nxx315Studio và đã liên kết đúng kênh chưa, rồi đăng lại."],
+  ["Mã mời hoạt động thế nào?", "Mỗi tài khoản có một mã mời riêng. Bạn nhận 15% xu hoa hồng từ nhiệm vụ của người được mời."],
+],
   },
 };
