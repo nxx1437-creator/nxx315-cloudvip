@@ -167,3 +167,43 @@ export const CSS = `
 @media(prefers-reduced-motion:reduce){.dp *{animation:none!important;transition:none!important}.dp-rv{opacity:1;transform:none}}
 `;
 
+/* ===== CSS CHO HERO VIDEO NỀN ===== */
+.dp-hero-content-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 450px; /* Bạn có thể tăng/giảm chiều cao này tùy ý */
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 24px; /* Bo góc cho đẹp */
+  margin-bottom: 40px;
+}
+
+.dp-hero-bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Phủ kín khung hình */
+  z-index: 0;
+  opacity: 0.5; /* Làm mờ video để chữ dễ đọc (chỉnh từ 0.2 đến 0.8) */
+}
+
+/* Lớp phủ tối (overlay) tạo độ tương phản cho chữ */
+.dp-hero-content-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 100%);
+  z-index: 1;
+  pointer-events: none; /* Không chặn click chuột */
+}
+
+.dp-hero-text {
+  position: relative;
+  z-index: 2; /* Chữ nổi lên trên cùng */
+  padding: 40px;
+  width: 100%;
+  max-width: 800px; /* Giới hạn độ rộng của chữ */
+  }
