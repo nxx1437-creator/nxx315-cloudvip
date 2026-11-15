@@ -1,7 +1,7 @@
 // src/CloudVIPLanding.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUpRight } from "lucide-react"; // Đã bỏ icon Play vì không dùng nữa
+import { ArrowRight, ArrowUpRight } from "lucide-react"; 
 import { supabase } from "./lib/supabaseClient.js"; 
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
@@ -24,7 +24,7 @@ export default function CloudVIPLanding() {
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
   const c = COPY[lang];
   const navigate = useNavigate();
-  const [board, setBoard] = useState(undefined); // undefined = đang tải, null = lỗi
+  const [board, setBoard] = useState(undefined);
   const [orders, setOrders] = useState(undefined);
 
   useEffect(() => {
@@ -59,41 +59,42 @@ export default function CloudVIPLanding() {
       <main>
         {/* ===== HERO ===== */}
         <section className="dp-stage">
+          
+          {/* LỚP VIDEO NỀN TRÀN VIỀN */}
+          <video 
+            className="dp-hero-bg-video" 
+            autoPlay 
+            loop 
+            muted 
+            playsInline
+            poster={HERO_POSTER}
+          >
+            <source src={HERO_VIDEO_URL} type="video/mp4" />
+          </video>
+          
+          {/* LỚP PHỦ TỐI GIÚP CHỮ NỔI BẬT */}
+          <div className="dp-hero-overlay"></div>
+
+          {/* MÂY TRANG TRÍ (Giữ nguyên hiệu ứng cũ) */}
           <div className="dp-sky" aria-hidden="true">
             <i className="dp-cloud c4" /><i className="dp-cloud c2" /><i className="dp-cloud c1" /><i className="dp-cloud c3" />
             <div className="dp-halo" /><div className="dp-shade" />
           </div>
+          
           <Trail />
           
           <div className="dp-wrap dp-hero">
-            {/* 👇 KHỐI CHỨA VIDEO NỀN VÀ CHỮ MỚI 👇 */}
-            <div className="dp-hero-content-wrapper">
-              
-              {/* Thẻ video làm nền */}
-              <video 
-                className="dp-hero-bg-video" 
-                autoPlay 
-                loop 
-                muted 
-                playsInline
-                poster={HERO_POSTER}
-              >
-                <source src={HERO_VIDEO_URL} type="video/mp4" />
-              </video>
-
-              {/* Phần chữ (Đã xóa nút Play) */}
-              <div className="dp-hero-text">
-                <h1 className="dp-h1">
-                  <span>{c.h1a} <em className="dp-serif">{c.h1b}</em></span>
-                  <span>{c.h1c}</span>
-                  <span className="dp-serif dim">{c.h1d}</span>
-                </h1>
-                <p className="dp-hs">{c.heroSub}</p>
-              </div>
-              
+            {/* CỘT TRÁI: CHỮ */}
+            <div className="dp-hero-text-container">
+              <h1 className="dp-h1">
+                <span>{c.h1a} <em className="dp-serif">{c.h1b}</em></span>
+                <span>{c.h1c}</span>
+                <span className="dp-serif dim">{c.h1d}</span>
+              </h1>
+              <p className="dp-hs">{c.heroSub}</p>
             </div>
-            {/* 👆 KẾT THÚC KHỐI CHỨA VIDEO NỀN 👆 */}
 
+            {/* CỘT PHẢI: VÉ THAM GIA */}
             <aside className="dp-ticket" id="hero-video">
               <p className="meta dp-mono"><span>{c.ticketMeta}</span><span>No. 01</span></p>
               <VideoSlot url={HERO_VIDEO_URL} poster={HERO_POSTER} soon={c.videoSoon} />
@@ -104,6 +105,7 @@ export default function CloudVIPLanding() {
               <Barcode />
             </aside>
           </div>
+          
           <div className="dp-wrap dp-tele dp-mono"><span>+ NXX315 · STUDIO REWARDS</span><span>↓ {c.scroll}</span></div>
         </section>
 
@@ -282,4 +284,3 @@ export default function CloudVIPLanding() {
     </div>
   );
                 }
-              
