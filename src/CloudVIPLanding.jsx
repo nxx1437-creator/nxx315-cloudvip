@@ -7,11 +7,16 @@ import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
 import useTheme from "./hooks/useTheme.js";
 import { COPY, CREATOR_URL } from "./lib/landingData.js";
+import { FX } from "./lib/landingFxCopy.js";
 import { CSS } from "./components/LandingStyle.js";
 import {
   FloatingNav, Reveal, Trail, RankTicket, OrderCard,
   Skeletons, Wordmark, scrollToId,
 } from "./components/LandingBits.jsx";
+import {
+  ScrollBar, Scramble, SplitTitle, CountUp, Tilt, Magnetic, ParallaxImg,
+  Spotlight, ScrollWords, PinnedSteps, Marquee, InView,
+} from "./components/LandingFx.jsx";
 
 const HERO_IMAGE_URL = "https://i.postimg.cc/SspRfjP1/2820b7c3993087b1613784521f440e45.jpg";
 // Dán link ảnh chụp trang Creator vào đây, để trống thì hiện khung minh họa
@@ -21,11 +26,12 @@ const STEP_ICONS = [UserPlus, PlaySquare, Gift];
 const PERK_ICONS = [Sparkles, Video, ArrowUpRight];
 
 export default function CloudVIPLanding() {
-  useTheme(); // đảm bảo chế độ sáng/tối đã chọn trong Hồ sơ được áp dụng ở trang giới thiệu
+  useTheme(); // áp dụng chế độ sáng/tối đã chọn trong Hồ sơ
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
   const c = COPY[lang];
+  const fx = FX[lang];
   const navigate = useNavigate();
   const [board, setBoard] = useState(undefined);
   const [orders, setOrders] = useState(undefined);
@@ -55,6 +61,7 @@ export default function CloudVIPLanding() {
   return (
     <div className="dp">
       <style>{CSS}</style>
+      <ScrollBar />
 
       <FloatingNav
         items={c.nav}
@@ -68,8 +75,9 @@ export default function CloudVIPLanding() {
       <main>
         {/* ===== 1. HERO ===== */}
         <section className="dp-stage">
-          <img className="dp-hero-bg-image" src={HERO_IMAGE_URL} alt={c.heroAlt} />
+          <ParallaxImg className="dp-hero-bg-image" src={HERO_IMAGE_URL} alt={c.heroAlt} />
           <div className="dp-hero-overlay"></div>
+          <Spotlight />
           <Trail />
 
           <div className="dp-wrap dp-hero">
@@ -94,70 +102,72 @@ export default function CloudVIPLanding() {
           <div className="dp-wrap dp-tele dp-mono"><span>+ NXX315 · STUDIO REWARDS</span><span>↓ {c.scroll}</span></div>
         </section>
 
-        {/* ===== 2. HƯỚNG DẪN TẠO TÀI KHOẢN ===== */}
+        {/* ===== 2. CÂU DẪN (chữ sáng dần theo cuộn) ===== */}
+        <ScrollWords text={fx.story} />
+
+        {/* ===== 3. HƯỚNG DẪN TẠO TÀI KHOẢN (các bước được ghim) ===== */}
         <section id="onboarding" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
-              <p className="dp-lbl">{c.obLabel}</p>
-              <h2 className="dp-h2">{c.obTitleA} <span className="dp-serif">{c.obTitleB}</span></h2>
+              <Scramble className="dp-lbl" text={c.obLabel} />
+              <SplitTitle a={c.obTitleA} b={c.obTitleB} />
               <p className="dp-body" style={{ marginTop: 20 }}>{c.obBody}</p>
             </Reveal>
 
-            <div className="dp-trip">
-              {c.obSteps.map(([num, title, desc], i) => {
-                const Icon = STEP_ICONS[i];
-                return (
-                  <Reveal key={num} delay={80 + i * 80}>
-                    <Icon className="ico" size={40} />
-                    <p className="num dp-mono">{num}</p>
-                    <h3>{title}</h3>
-                    <p>{desc}</p>
-                  </Reveal>
-                );
-              })}
-            </div>
+            <PinnedSteps steps={c.obSteps} icons={STEP_ICONS} />
 
             <div className="dp-cta-row">
-              <Link to="/register" className="dp-pill big"><span>{c.obCta}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
+              <Magnetic>
+                <Link to="/register" className="dp-pill big"><span>{c.obCta}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
+              </Magnetic>
             </div>
           </div>
         </section>
 
-        {/* ===== 3. MỜI BẠN ===== */}
+        {/* ===== CHỮ CHẠY NGANG ===== */}
+        <Marquee items={fx.marquee} />
+
+        {/* ===== 4. MỜI BẠN ===== */}
         <section id="invite" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
-              <p className="dp-lbl">{c.iLabel}</p>
-              <h2 className="dp-h2">{c.iTitleA} <span className="dp-serif">{c.iTitleB}</span></h2>
+              <Scramble className="dp-lbl" text={c.iLabel} />
+              <SplitTitle a={c.iTitleA} b={c.iTitleB} />
               <p className="dp-body" style={{ marginTop: 20 }}>{c.iBody}</p>
             </Reveal>
             <div className="dp-trip">
               {c.iCols.map(([big, d], i) => (
                 <Reveal key={big} delay={i * 80}>
-                  <h3 style={{ fontSize: "clamp(40px,7vw,64px)" }}>{big}</h3>
+                  <h3 style={{ fontSize: "clamp(40px,7vw,64px)" }}><CountUp value={big} /></h3>
                   <p>{d}</p>
                 </Reveal>
               ))}
             </div>
             <div className="dp-cta-row">
-              <button type="button" className="dp-pill big" onClick={() => navigate("/register")}>
-                <span>{c.iCta}</span><ArrowRight size={20} strokeWidth={1.5} />
-              </button>
+              <Magnetic>
+                <button type="button" className="dp-pill big" onClick={() => navigate("/register")}>
+                  <span>{c.iCta}</span><ArrowRight size={20} strokeWidth={1.5} />
+                </button>
+              </Magnetic>
             </div>
           </div>
         </section>
 
-        {/* ===== 4. BẢNG XẾP HẠNG ===== */}
+        {/* ===== 5. BẢNG XẾP HẠNG ===== */}
         <section id="rank" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
-              <p className="dp-lbl">{c.rLabel}</p>
-              <h2 className="dp-h2">{c.rTitleA} <span className="dp-serif">{c.rTitleB}</span></h2>
+              <Scramble className="dp-lbl" text={c.rLabel} />
+              <SplitTitle a={c.rTitleA} b={c.rTitleB} />
               <p className="dp-body" style={{ marginTop: 20 }}>{c.rSub}</p>
             </Reveal>
           </div>
           {state(board) === "load" && <div className="dp-rail"><Skeletons /></div>}
-          {state(board) === "ok" && <div className="dp-rail">{top3.map((r) => <RankTicket key={r.rank} row={r} c={c} />)}</div>}
+          {state(board) === "ok" && (
+            <InView className="dp-rail fx-rise">
+              {top3.map((r) => <RankTicket key={r.rank} row={r} c={c} />)}
+            </InView>
+          )}
           {(state(board) === "empty" || state(board) === "err") && (
             <p className="dp-note">{state(board) === "err" ? c.failed : c.empty}</p>
           )}
@@ -174,41 +184,45 @@ export default function CloudVIPLanding() {
           )}
         </section>
 
-        {/* ===== 5. ĐƠN ĐÃ DUYỆT ===== */}
+        {/* ===== 6. ĐƠN ĐÃ DUYỆT ===== */}
         <section id="orders" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
-              <p className="dp-lbl">{c.oLabel}</p>
-              <h2 className="dp-h2">{c.oTitleA} <span className="dp-serif">{c.oTitleB}</span></h2>
+              <Scramble className="dp-lbl" text={c.oLabel} />
+              <SplitTitle a={c.oTitleA} b={c.oTitleB} />
               <p className="dp-body" style={{ marginTop: 20 }}>{c.oSub}</p>
             </Reveal>
           </div>
           {state(orders) === "load" && <div className="dp-rail"><Skeletons n={4} /></div>}
           {state(orders) === "ok" && (
-            <div className="dp-rail">{orders.map((o, i) => <OrderCard key={`${o.approved_at}-${i}`} row={o} c={c} />)}</div>
+            <InView className="dp-rail fx-rise">
+              {orders.map((o, i) => <OrderCard key={`${o.approved_at}-${i}`} row={o} c={c} />)}
+            </InView>
           )}
           {(state(orders) === "empty" || state(orders) === "err") && (
             <p className="dp-note">{state(orders) === "err" ? c.failed : c.empty}</p>
           )}
         </section>
 
-        {/* ===== 6. THÔNG TIN CHI TIẾT + FAQ ===== */}
+        {/* ===== 7. THÔNG TIN CHI TIẾT + FAQ ===== */}
         <section id="details" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
-              <p className="dp-lbl">{c.dLabel}</p>
-              <h2 className="dp-h2">{c.dTitleA} <span className="dp-serif">{c.dTitleB}</span></h2>
+              <Scramble className="dp-lbl" text={c.dLabel} />
+              <SplitTitle a={c.dTitleA} b={c.dTitleB} />
             </Reveal>
 
             <div className="dp-dgrid">
               {c.dItems.map(([t, d], i) => (
                 <Reveal key={t} delay={i * 80}>
-                  <div className="dp-dcard"><h3>{t}</h3><p>{d}</p></div>
+                  <Tilt>
+                    <div className="dp-dcard"><h3>{t}</h3><p>{d}</p></div>
+                  </Tilt>
                 </Reveal>
               ))}
             </div>
 
-            <h3 className="dp-faq-title">{c.faqTitle}</h3>
+            <SplitTitle as="h3" className="dp-faq-title" a={c.faqTitle} />
             <div className="dp-faq">
               {c.faq.map(([q, a]) => (
                 <details key={q}><summary>{q}</summary><p>{a}</p></details>
@@ -217,7 +231,7 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ===== 7. CREATOR ===== */}
+        {/* ===== 8. CREATOR ===== */}
         <section id="creator" className="dp-sec">
           <div className="dp-wrap">
             <div className="dp-feature-box">
@@ -225,9 +239,10 @@ export default function CloudVIPLanding() {
 
               <Reveal className="dp-head" style={{ position: "relative", zIndex: 2 }}>
                 <p className="dp-lbl" style={{ color: "#af50ff" }}>
-                  <Sparkles size={14} style={{ display: "inline", marginRight: 6 }} />{c.cLabel}
+                  <Sparkles size={14} style={{ display: "inline", marginRight: 6 }} />
+                  <Scramble as="span" text={c.cLabel} />
                 </p>
-                <h2 className="dp-h2">{c.cTitleA} <span className="dp-serif">{c.cTitleB}</span></h2>
+                <SplitTitle a={c.cTitleA} b={c.cTitleB} />
               </Reveal>
 
               <div className="dp-creator-showcase" style={{ position: "relative", zIndex: 2 }}>
@@ -235,35 +250,39 @@ export default function CloudVIPLanding() {
                   <h3>{c.cH3}</h3>
                   <p>{c.cBody}</p>
 
-                  <ul className="dp-creator-perks">
+                  <InView as="ul" className="dp-creator-perks fx-stag">
                     {c.cPerks.map((t, i) => {
                       const Icon = PERK_ICONS[i];
                       return <li key={t}><Icon size={18} /> {t}</li>;
                     })}
-                  </ul>
+                  </InView>
 
                   <div className="dp-cta-row" style={{ marginTop: 32 }}>
-                    <a href={CREATOR_URL} className="dp-pill big" style={{ width: "fit-content" }}>
-                      <span>{c.cCta}</span><ArrowUpRight size={20} strokeWidth={1.5} />
-                    </a>
+                    <Magnetic>
+                      <a href={CREATOR_URL} className="dp-pill big" style={{ width: "fit-content" }}>
+                        <span>{c.cCta}</span><ArrowUpRight size={20} strokeWidth={1.5} />
+                      </a>
+                    </Magnetic>
                   </div>
                 </div>
 
                 <div className="dp-creator-visual">
-                  <div className="dp-console">
-                    <div className="dp-cbar">
-                      <i /><i /><i />
-                      <span className="dp-url dp-mono">creator.nxx315.com</span>
-                      <span className="dp-badge">{c.mockTag}</span>
+                  <Tilt max={6}>
+                    <div className="dp-console">
+                      <div className="dp-cbar">
+                        <i /><i /><i />
+                        <span className="dp-url dp-mono">creator.nxx315.com</span>
+                        <span className="dp-badge">{c.mockTag}</span>
+                      </div>
+                      <div className="dp-cbody" style={{ alignItems: "center", justifyContent: "center" }}>
+                        {CREATOR_IMAGE_URL ? (
+                          <img src={CREATOR_IMAGE_URL} alt="Creator" loading="lazy" />
+                        ) : (
+                          <p style={{ opacity: 0.6, fontStyle: "italic", color: "var(--paper)" }}>{c.mockPlaceholder}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="dp-cbody" style={{ alignItems: "center", justifyContent: "center" }}>
-                      {CREATOR_IMAGE_URL ? (
-                        <img src={CREATOR_IMAGE_URL} alt="Creator" loading="lazy" />
-                      ) : (
-                        <p style={{ opacity: 0.6, fontStyle: "italic", color: "var(--paper)" }}>{c.mockPlaceholder}</p>
-                      )}
-                    </div>
-                  </div>
+                  </Tilt>
                   <span className="dp-float f1 dp-badge">+ {c.mockGift}</span>
                 </div>
               </div>
@@ -277,11 +296,15 @@ export default function CloudVIPLanding() {
         <div className="dp-glow" /><div className="dp-grain" /><div className="dp-horizon" />
         <div className="dp-close">
           <Reveal>
-            <h2>{c.closeA} <span className="dp-serif">{c.closeB}</span></h2>
+            <SplitTitle as="h2" className="" a={c.closeA} b={c.closeB} />
             <p>{c.closeSub}</p>
             <div className="acts">
-              <Link to="/register" className="dp-pill big"><span>{c.ctaAccount}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
-              <a href={CREATOR_URL} className="dp-pill big"><span>{c.ctaCreator}</span><ArrowUpRight size={20} strokeWidth={1.5} /></a>
+              <Magnetic>
+                <Link to="/register" className="dp-pill big"><span>{c.ctaAccount}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
+              </Magnetic>
+              <Magnetic>
+                <a href={CREATOR_URL} className="dp-pill big"><span>{c.ctaCreator}</span><ArrowUpRight size={20} strokeWidth={1.5} /></a>
+              </Magnetic>
             </div>
           </Reveal>
         </div>
@@ -317,5 +340,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
- }
+            }
             
