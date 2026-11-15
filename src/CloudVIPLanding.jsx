@@ -1,7 +1,7 @@
 // src/CloudVIPLanding.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Video, Sparkles } from "lucide-react"; 
+import { ArrowRight, ArrowUpRight, Video, Sparkles, UserPlus, PlaySquare, Gift } from "lucide-react"; 
 import { supabase } from "./lib/supabaseClient.js"; 
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
@@ -10,9 +10,9 @@ import { CSS } from "./components/LandingStyle.js";
 import {
   FloatingNav, Reveal, Trail, Flap, RankTicket, OrderCard,
   Skeletons, Wordmark, scrollToId,
-} from "./components/LandingBits.jsx"; // Đã xóa Barcode khỏi import
+} from "./components/LandingBits.jsx";
 
-const HERO_IMAGE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hero-banner.jpg";
+const HERO_IMAGE_URL = "https://i.postimg.cc/SspRfjP1/2820b7c3993087b1613784521f440e45.jpg";
 
 export default function CloudVIPLanding() {
   const i18n = useI18n();
@@ -53,23 +53,13 @@ export default function CloudVIPLanding() {
         langLabel={c.langBtn} onLang={typeof setLang === "function" ? () => setLang(lang === "vi" ? "en" : "vi") : undefined} />
 
       <main>
-        {/* ===== HERO ===== */}
+        {/* ===== 1. HERO ===== */}
         <section className="dp-stage">
-          
-          {/* ẢNH NỀN */}
-          <img 
-            className="dp-hero-bg-image" 
-            src={HERO_IMAGE_URL} 
-            alt="Hero Background" 
-          />
-          
-          {/* LỚP PHỦ TỐI GIÚP CHỮ NỔI BẬT */}
+          <img className="dp-hero-bg-image" src={HERO_IMAGE_URL} alt="Hero Background" />
           <div className="dp-hero-overlay"></div>
-
           <Trail />
           
           <div className="dp-wrap dp-hero">
-            {/* CỘT TRÁI: CHỮ */}
             <div className="dp-hero-text-container">
               <h1 className="dp-h1">
                 <span>{c.h1a} <em className="dp-serif">{c.h1b}</em></span>
@@ -79,78 +69,55 @@ export default function CloudVIPLanding() {
               <p className="dp-hs">{c.heroSub}</p>
             </div>
 
-            {/* CỘT PHẢI: VÉ THAM GIA */}
             <aside className="dp-ticket">
               <p className="meta dp-mono"><span>{c.ticketMeta}</span><span>No. 01</span></p>
               <h3>{c.ticketTitle}</h3>
               <p className="note">{c.ticketNote}</p>
               <Link to="/register" className="dp-pill"><span>{c.ctaAccount}</span><ArrowRight size={18} strokeWidth={1.5} /></Link>
               <a href={CREATOR_URL} className="dp-pill"><span>{c.ctaCreator}</span><ArrowUpRight size={18} strokeWidth={1.5} /></a>
-              
-              {/* ĐÃ XÓA THẺ <Barcode /> Ở ĐÂY ĐỂ KHÔNG BỊ LỖI KHỐI TRẮNG */}
-              
             </aside>
           </div>
           
           <div className="dp-wrap dp-tele dp-mono"><span>+ NXX315 · STUDIO REWARDS</span><span>↓ {c.scroll}</span></div>
         </section>
 
-        {/* ===== GIỚI THIỆU CREATOR ===== */}
-        <section id="creator" className="dp-sec">
+        {/* ===== 2. HƯỚNG DẪN TẠO TÀI KHOẢN ===== */}
+        <section id="onboarding" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
-              <p className="dp-lbl">TÍNH NĂNG MỚI</p>
-              <h2 className="dp-h2">Trở thành Creator <span className="dp-serif">kiếm xu thật.</span></h2>
+              <p className="dp-lbl">BẮT ĐẦU NGAY</p>
+              <h2 className="dp-h2">Tạo tài khoản <span className="dp-serif">tại nxx315.com</span></h2>
+              <p className="dp-body" style={{ marginTop: 20 }}>Chỉ mất 30 giây để bắt đầu hành trình kiếm xu và đổi quà cùng NXX315 Studio.</p>
             </Reveal>
 
-            <div className="dp-creator-showcase">
-              <div className="dp-creator-text">
-                <h3>Quay video, nhận thưởng</h3>
-                <p>{c.vBody}</p>
-                
-                <ul className="dp-creator-perks">
-                  <li><Sparkles size={18} /> Nhận ngay xu thưởng khi video được duyệt.</li>
-                  <li><Video size={18} /> Không giới hạn số lượng video mỗi ngày.</li>
-                  <li><ArrowUpRight size={18} /> Kết nối trực tiếp với hệ thống NXX315 Studio.</li>
-                </ul>
-
-                <div className="dp-cta-row" style={{ marginTop: '32px' }}>
-                  <a href={CREATOR_URL} className="dp-pill big" style={{ width: 'fit-content' }}>
-                    <span>Khám phá Creator Hub</span><ArrowUpRight size={20} strokeWidth={1.5} />
-                  </a>
-                </div>
-              </div>
-
-              <div className="dp-creator-visual">
-                <div className="dp-console">
-                  <div className="dp-cbar">
-                    <i /><i /><i />
-                    <span className="dp-url dp-mono">creator.nxx315.com</span>
-                    <span className="dp-badge">{c.mockTag}</span>
-                  </div>
-                  <div className="dp-cbody" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <p style={{ opacity: 0.6, fontStyle: 'italic' }}>[Hình ảnh minh họa giao diện Creator]</p>
-                  </div>
-                </div>
-                <span className="dp-float f1 dp-badge">+ {c.mockGift}</span>
-              </div>
+            <div className="dp-trip">
+              <Reveal delay={80}>
+                <UserPlus size={40} color="#af50ff" style={{ marginBottom: 16 }} />
+                <p className="num dp-mono">BƯỚC 01</p>
+                <h3>Truy cập & Đăng ký</h3>
+                <p>Truy cập <b>www.nxx315.com</b>, nhấn nút "Bắt đầu" ở góc trên bên phải và điền thông tin tài khoản.</p>
+              </Reveal>
+              <Reveal delay={160}>
+                <PlaySquare size={40} color="#af50ff" style={{ marginBottom: 16 }} />
+                <p className="num dp-mono">BƯỚC 02</p>
+                <h3>Làm nhiệm vụ</h3>
+                <p>Sau khi đăng nhập, hãy vào mục "Nhiệm vụ" để nhận xu miễn phí hàng ngày hoặc tham gia các sự kiện.</p>
+              </Reveal>
+              <Reveal delay={240}>
+                <Gift size={40} color="#af50ff" style={{ marginBottom: 16 }} />
+                <p className="num dp-mono">BƯỚC 03</p>
+                <h3>Đổi quà</h3>
+                <p>Dùng số xu tích lũy được để đổi thành Robux, Quân Huy, Kim Cương hoặc nhiều phần quà hấp dẫn khác.</p>
+              </Reveal>
+            </div>
+            
+            <div className="dp-cta-row">
+              <Link to="/register" className="dp-pill big"><span>Tạo tài khoản ngay</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
             </div>
           </div>
         </section>
 
-        {/* ===== BẢNG TÍNH NĂNG ===== */}
-        <section className="dp-sec">
-          <div className="dp-wrap">
-            <p className="dp-lbl">{c.flapLabel}</p>
-            <div className="dp-board">
-              {c.flap.map(([text, kind, target], i) => (
-                <Flap key={text} text={text} kind={kind} target={target} onId={scrollToId} delay={i * 80} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ===== 02 MỜI BẠN ===== */}
+        {/* ===== 3. MỜI BẠN ===== */}
         <section id="invite" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -174,7 +141,7 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* ===== 03 XẾP HẠNG ===== */}
+        {/* ===== 4. BẢNG XẾP HẠNG ===== */}
         <section id="rank" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -201,7 +168,7 @@ export default function CloudVIPLanding() {
           )}
         </section>
 
-        {/* ===== 04 ĐƠN ĐÃ DUYỆT ===== */}
+        {/* ===== 5. ĐƠN ĐÃ DUYỆT (Lịch sử đổi quà) ===== */}
         <section id="orders" className="dp-sec">
           <div className="dp-wrap">
             <Reveal className="dp-head">
@@ -218,6 +185,55 @@ export default function CloudVIPLanding() {
             <p className="dp-note">{state(orders) === "err" ? c.failed : c.empty}</p>
           )}
         </section>
+
+        {/* ===== 6. TÍNH NĂNG MỚI (CREATOR) - CÓ LỚP BỌC KHÁC BIỆT ===== */}
+        <section id="creator" className="dp-sec">
+          <div className="dp-wrap">
+            {/* Lớp bọc (Wrapper) tạo sự khác biệt */}
+            <div className="dp-feature-box">
+              <div className="dp-feature-glow"></div>
+              
+              <Reveal className="dp-head" style={{ position: 'relative', zIndex: 2 }}>
+                <p className="dp-lbl" style={{ color: '#af50ff' }}><Sparkles size={14} style={{ display: 'inline', marginRight: 6 }}/> TÍNH NĂNG MỚI</p>
+                <h2 className="dp-h2">Trở thành Creator <span className="dp-serif">kiếm xu thật.</span></h2>
+              </Reveal>
+
+              <div className="dp-creator-showcase" style={{ position: 'relative', zIndex: 2 }}>
+                <div className="dp-creator-text">
+                  <h3>Quay video, nhận thưởng</h3>
+                  <p>{c.vBody}</p>
+                  
+                  <ul className="dp-creator-perks">
+                    <li><Sparkles size={18} /> Nhận ngay xu thưởng khi video được duyệt.</li>
+                    <li><Video size={18} /> Không giới hạn số lượng video mỗi ngày.</li>
+                    <li><ArrowUpRight size={18} /> Kết nối trực tiếp với hệ thống NXX315 Studio.</li>
+                  </ul>
+
+                  <div className="dp-cta-row" style={{ marginTop: '32px' }}>
+                    <a href={CREATOR_URL} className="dp-pill big" style={{ width: 'fit-content' }}>
+                      <span>Khám phá Creator Hub</span><ArrowUpRight size={20} strokeWidth={1.5} />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="dp-creator-visual">
+                  <div className="dp-console">
+                    <div className="dp-cbar">
+                      <i /><i /><i />
+                      <span className="dp-url dp-mono">creator.nxx315.com</span>
+                      <span className="dp-badge">{c.mockTag}</span>
+                    </div>
+                    <div className="dp-cbody" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       <p style={{ opacity: 0.6, fontStyle: 'italic' }}>[Hình ảnh minh họa giao diện Creator]</p>
+                    </div>
+                  </div>
+                  <span className="dp-float f1 dp-badge">+ {c.mockGift}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       {/* FOOTER */}
@@ -265,5 +281,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-                  }
+}
             
