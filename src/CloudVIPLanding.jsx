@@ -10,12 +10,9 @@ import { CSS } from "./components/LandingStyle.js";
 import {
   FloatingNav, Reveal, Trail, Barcode, Flap, RankTicket, OrderCard,
   Skeletons, Wordmark, scrollToId,
-} from "./components/LandingBits.jsx"; // Đã xóa VideoSlot ở đây vì không dùng nữa
+} from "./components/LandingBits.jsx";
 
-/* 👇 DÁN LINK VIDEO HERO VÀO ĐÂY (Bắt buộc phải là link .mp4) */
 const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/video-hero.mp4"; 
-
-/* 👇 DÁN LINK ẢNH BÌA (Poster) VÀO ĐÂY (Có thể dùng file .gif hoặc .png/.jpg) */
 const HERO_POSTER = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Banner-hero.gif";
 
 export default function CloudVIPLanding() {
@@ -72,14 +69,10 @@ export default function CloudVIPLanding() {
             <source src={HERO_VIDEO_URL} type="video/mp4" />
           </video>
           
-          {/* LỚP PHỦ TỐI GIÚP CHỮ NỔI BẬT (Sẽ được làm mỏng đi trong CSS) */}
+          {/* LỚP PHỦ TỐI (Đã làm mỏng, chỉ tối bên trái) */}
           <div className="dp-hero-overlay"></div>
 
-          {/* MÂY TRANG TRÍ */}
-          <div className="dp-sky" aria-hidden="true">
-            <i className="dp-cloud c4" /><i className="dp-cloud c2" /><i className="dp-cloud c1" /><i className="dp-cloud c3" />
-            <div className="dp-halo" /><div className="dp-shade" />
-          </div>
+          {/* ĐÃ XÓA TOÀN BỘ MÂY VÀ HẠT SÁNG (dp-sky) Ở ĐÂY */}
           
           <Trail />
           
@@ -94,13 +87,10 @@ export default function CloudVIPLanding() {
               <p className="dp-hs">{c.heroSub}</p>
             </div>
 
-            {/* CỘT PHẢI: VÉ THAM GIA (Đã bỏ Video) */}
+            {/* CỘT PHẢI: VÉ THAM GIA */}
             <aside className="dp-ticket">
               <p className="meta dp-mono"><span>{c.ticketMeta}</span><span>No. 01</span></p>
-              
-              {/* Đã xóa thẻ <VideoSlot> ở đây */}
-              
-              <h3 style={{ marginTop: '0px' }}>{c.ticketTitle}</h3>
+              <h3>{c.ticketTitle}</h3>
               <p className="note">{c.ticketNote}</p>
               <Link to="/register" className="dp-pill"><span>{c.ctaAccount}</span><ArrowRight size={18} strokeWidth={1.5} /></Link>
               <a href={CREATOR_URL} className="dp-pill"><span>{c.ctaCreator}</span><ArrowUpRight size={18} strokeWidth={1.5} /></a>
@@ -280,5 +270,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-                }
+          }
             
