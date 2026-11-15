@@ -4,7 +4,22 @@ import React, { useEffect, useRef, useState } from "react";
 const mq = (q) =>
   typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches;
 const reduced = () => mq("(prefers-reduced-motion: reduce)");
-const coarse = () => mq("(hover: none)"); // điện thoại / máy cảm ứng
+const FINE = "(hover: hover) and (pointer: fine)";
+
+// true = máy tính có chuột (hiệu ứng đầy đủ), false = điện thoại/cảm ứng (bản nhẹ)
+function useFancy() {
+  const [f, setF] = useState(() => mq(FINE) && !reduced());
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const m = window.matchMedia(FINE);
+    const fn = () => setF(m.matches && !reduced());
+    if (m.addEventListener) m.addEventListener("change", fn);
+    return () => {
+      if (m.removeEventListener) m.removeEventListener("change", fn);
+    };
+  }, []);
+  return f;
+}
 
 // chạy fn mỗi khi cuộn / đổi kích thước (gộp theo khung hình), trả về hàm dọn dẹp
 function onScroll(fn) {
@@ -59,19 +74,20 @@ export function InView({ as: Tag = "div", className = "", threshold, children, .
   );
 }
 
-/* ---------- thanh tiến độ cuộn trên cùng ---------- */
+/* ---------- thanh tiến độ cuộn (chỉ máy tính) ---------- */
 export function ScrollBar() {
+  const fancy = useFancy();
   const r = useRef(null);
-  useEffect(
-    () =>
-      onScroll(() => {
-        const h = document.documentElement;
-        const max = h.scrollHeight - h.clientHeight;
-        const p = max > 0 ? h.scrollTop / max : 0;
-        if (r.current) r.current.style.transform = `scaleX(${p})`;
-      }),
-    []
-  );
+  useEffect(() => {
+    if (!fancy) return;
+    return onScroll(() => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? h.scrollTop / max : 0;
+      if (r.current) r.current.style.transform = `scaleX(${p})`;
+    });
+  }, [fancy]);
+  if (!fancy) return null;
   return (
     <div className="fx-bar" aria-hidden="true">
       <i ref={r} />
@@ -79,17 +95,18 @@ export function ScrollBar() {
   );
 }
 
-/* ---------- chữ "giải mã" kiểu scramble ---------- */
+/* ---------- chữ "giải mã" kiểu scramble (điện thoại: chữ thường) ---------- */
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/=;+";
 
 export function Scramble({ text, as: Tag = "p", className = "", style }) {
+  const fancy = useFancy();
   const ref = useRef(null);
   const [out, setOut] = useState(text);
 
   useEffect(() => {
     setOut(text);
     const el = ref.current;
-    if (!el || reduced() || !("IntersectionObserver" in window)) return;
+    if (!fancy || !el || !("IntersectionObserver" in window)) return;
     let raf = 0;
     let seen = false;
 
@@ -100,7 +117,6 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
       let last = 0;
       const tick = (t) => {
         const k = Math.min(1, (t - t0) / D);
-        // chỉ cập nhật ~30 lần/giây cho nhẹ
         if (t - last > 33 || k === 1) {
           last = t;
           const fixed = Math.floor(k * chars.length);
@@ -133,7 +149,7 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
       io.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [text]);
+  }, [text, fancy]);
 
   return (
     <Tag ref={ref} className={className} style={style} aria-label={text}>
@@ -142,9 +158,21 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
   );
 }
 
-/* ---------- tiêu đề hiện từng chữ ---------- */
+/* ---------- tiêu đề: máy tính hiện từng chữ, điện thoại chỉ mờ -> rõ ---------- */
 export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2", style }) {
+  const fancy = useFancy();
   const [ref, seen] = useInView(0.3);
+
+  if (!fancy) {
+    return (
+      <Tag ref={ref} className={`${className} fx-fade${seen ? " in" : ""}`} style={style}>
+        {a}
+        {b ? " " : ""}
+        {b ? <span className="dp-serif">{b}</span> : null}
+      </Tag>
+    );
+  }
+
   let i = 0;
   const words = (s, serif) =>
     s
@@ -170,19 +198,16 @@ export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2"
   );
 }
 
-/* ---------- số chạy từ 0 (15%, 1 mã...) ---------- */
+/* ---------- số chạy từ 0 (điện thoại: hiện số luôn) ---------- */
 export function CountUp({ value }) {
+  const fancy = useFancy();
   const m = String(value).match(/^(\d+)(.*)$/);
   const [ref, seen] = useInView(0.5);
   const [n, setN] = useState(0);
 
   useEffect(() => {
-    if (!m || !seen) return;
+    if (!fancy || !m || !seen) return;
     const to = Number(m[1]);
-    if (reduced()) {
-      setN(to);
-      return;
-    }
     const t0 = performance.now();
     let raf = 0;
     const tick = (t) => {
@@ -192,9 +217,9 @@ export function CountUp({ value }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [seen, value]);
+  }, [seen, value, fancy]);
 
-  if (!m) return <span ref={ref}>{value}</span>;
+  if (!fancy || !m) return <span ref={ref}>{value}</span>;
   return (
     <span ref={ref}>
       {seen ? n : 0}
@@ -249,33 +274,35 @@ export function Magnetic({ children }) {
   );
 }
 
-/* ---------- ảnh nền hero parallax (tắt trên điện thoại cho khỏi rung) ---------- */
+/* ---------- ảnh nền hero parallax (chỉ máy tính) ---------- */
 export function ParallaxImg({ src, alt, className }) {
+  const fancy = useFancy();
   const ref = useRef(null);
   useEffect(() => {
-    if (reduced() || coarse()) return;
+    if (!fancy) return;
     return onScroll(() => {
       const y = Math.min(window.scrollY, window.innerHeight);
       if (ref.current)
         ref.current.style.transform = `translate3d(0,${(y * 0.25).toFixed(1)}px,0) scale(1.12)`;
     });
-  }, []);
+  }, [fancy]);
   return (
     <img
       ref={ref}
       className={className}
       src={src}
       alt={alt}
-      style={{ transform: "scale(1.12)", willChange: "transform" }}
+      style={fancy ? { transform: "scale(1.12)", willChange: "transform" } : undefined}
     />
   );
 }
 
-/* ---------- vệt sáng theo con trỏ trong hero (ẩn trên điện thoại bằng CSS) ---------- */
+/* ---------- vệt sáng theo con trỏ trong hero (chỉ máy tính) ---------- */
 export function Spotlight() {
+  const fancy = useFancy();
   const ref = useRef(null);
   useEffect(() => {
-    if (coarse()) return;
+    if (!fancy) return;
     const host = ref.current && ref.current.parentElement;
     if (!host) return;
     const mv = (e) => {
@@ -285,55 +312,65 @@ export function Spotlight() {
     };
     host.addEventListener("pointermove", mv);
     return () => host.removeEventListener("pointermove", mv);
-  }, []);
+  }, [fancy]);
+  if (!fancy) return null;
   return <div ref={ref} className="fx-spot" aria-hidden="true" />;
 }
 
-/* ---------- đoạn chữ sáng dần theo lúc cuộn (ghim màn hình) ---------- */
+/* ---------- câu dẫn: máy tính ghim + sáng dần, điện thoại hiện luôn ---------- */
 export function ScrollWords({ text }) {
+  const fancy = useFancy();
   const ref = useRef(null);
   const inRef = useRef(null);
   const words = text.split(" ").filter(Boolean);
   const [lit, setLit] = useState(0);
 
-  useEffect(
-    () =>
-      onScroll(() => {
-        const el = ref.current;
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        // dùng đúng chiều cao của khung được ghim, không dùng innerHeight (đổi khi thanh trình duyệt ẩn/hiện)
-        const vh = inRef.current ? inRef.current.offsetHeight : window.innerHeight;
-        const total = r.height - vh;
-        const p = Math.min(1, Math.max(0, -r.top / (total > 0 ? total : 1)));
-        const l = Math.min(words.length, Math.ceil(p * 1.15 * words.length));
-        setLit((a) => (a === l ? a : l));
-      }),
-    [words.length]
-  );
+  useEffect(() => {
+    if (!fancy) return;
+    return onScroll(() => {
+      const el = ref.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const vh = inRef.current ? inRef.current.offsetHeight : window.innerHeight;
+      const total = r.height - vh;
+      const p = Math.min(1, Math.max(0, -r.top / (total > 0 ? total : 1)));
+      const l = Math.min(words.length, Math.ceil(p * 1.15 * words.length));
+      setLit((a) => (a === l ? a : l));
+    });
+  }, [fancy, words.length]);
+
+  const render = (on) =>
+    words.map((w, i) => {
+      const serif = w.startsWith("*");
+      return (
+        <React.Fragment key={i}>
+          <span className={(on || i < lit ? "on" : "") + (serif ? " dp-serif" : "")}>
+            {serif ? w.slice(1) : w}
+          </span>{" "}
+        </React.Fragment>
+      );
+    });
+
+  if (!fancy) {
+    return (
+      <InView className="fx-sw-static fx-fade">
+        <p className="fx-sw-p">{render(true)}</p>
+      </InView>
+    );
+  }
 
   return (
     <div className="fx-sw" ref={ref}>
       <div className="fx-sw-in" ref={inRef}>
-        <p className="fx-sw-p">
-          {words.map((w, i) => {
-            const serif = w.startsWith("*");
-            return (
-              <React.Fragment key={i}>
-                <span className={(i < lit ? "on" : "") + (serif ? " dp-serif" : "")}>
-                  {serif ? w.slice(1) : w}
-                </span>{" "}
-              </React.Fragment>
-            );
-          })}
-        </p>
+        <p className="fx-sw-p">{render(false)}</p>
       </div>
     </div>
   );
 }
 
-/* ---------- các bước được ghim, cuộn để đổi bước ---------- */
+/* ---------- các bước: máy tính ghim + đổi theo cuộn, điện thoại xếp thẻ dọc ---------- */
 export function PinnedSteps({ steps, icons }) {
+  const fancy = useFancy();
   const ref = useRef(null);
   const inRef = useRef(null);
   const fill = useRef(null);
@@ -347,18 +384,17 @@ export function PinnedSteps({ steps, icons }) {
     return { r, total: r.height - vh };
   };
 
-  useEffect(
-    () =>
-      onScroll(() => {
-        const m = measure();
-        if (!m) return;
-        const p = Math.min(1, Math.max(0, -m.r.top / (m.total > 0 ? m.total : 1)));
-        if (fill.current) fill.current.style.transform = `scaleY(${p})`;
-        const idx = Math.min(steps.length - 1, Math.floor(p * steps.length));
-        setActive((a) => (a === idx ? a : idx));
-      }),
-    [steps.length]
-  );
+  useEffect(() => {
+    if (!fancy) return;
+    return onScroll(() => {
+      const m = measure();
+      if (!m) return;
+      const p = Math.min(1, Math.max(0, -m.r.top / (m.total > 0 ? m.total : 1)));
+      if (fill.current) fill.current.style.transform = `scaleY(${p})`;
+      const idx = Math.min(steps.length - 1, Math.floor(p * steps.length));
+      setActive((a) => (a === idx ? a : idx));
+    });
+  }, [fancy, steps.length]);
 
   const jump = (i) => {
     const m = measure();
@@ -367,9 +403,31 @@ export function PinnedSteps({ steps, icons }) {
     window.scrollTo({ top: top + (i / steps.length) * m.total + 4, behavior: "smooth" });
   };
 
+  const bigOf = (num, i) => (num.match(/\d+/) || [String(i + 1).padStart(2, "0")])[0];
+
+  // ===== điện thoại: thẻ xếp dọc, mỗi thẻ hiện nhẹ một lần =====
+  if (!fancy) {
+    return (
+      <div className="fx-pin-static">
+        {steps.map(([num, title, desc], i) => {
+          const Icon = icons[i];
+          return (
+            <InView key={num} className="fx-pin-card fx-fade">
+              <span className="fx-big" aria-hidden="true">{bigOf(num, i)}</span>
+              <div className="ico-wrap"><Icon size={28} strokeWidth={1.5} /></div>
+              <p className="dp-mono fx-num">{num}</p>
+              <h3>{title}</h3>
+              <p>{desc}</p>
+            </InView>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ===== máy tính: ghim màn hình =====
   const Icon = icons[active];
   const [num, title, desc] = steps[active];
-  const big = (num.match(/\d+/) || [String(active + 1).padStart(2, "0")])[0];
 
   return (
     <div className="fx-pin" ref={ref} style={{ "--n": steps.length }}>
@@ -383,14 +441,14 @@ export function PinnedSteps({ steps, icons }) {
               onClick={() => jump(i)}
               className={"fx-step" + (i === active ? " on" : i < active ? " done" : "")}
             >
-              <b>{(n.match(/\d+/) || [i + 1])[0]}</b>
+              <b>{bigOf(n, i)}</b>
               <span>{t}</span>
             </button>
           ))}
         </div>
 
         <div className="fx-pin-card" key={active}>
-          <span className="fx-big" aria-hidden="true">{big}</span>
+          <span className="fx-big" aria-hidden="true">{bigOf(num, active)}</span>
           <div className="ico-wrap"><Icon size={30} strokeWidth={1.5} /></div>
           <p className="dp-mono fx-num">{num}</p>
           <h3>{title}</h3>
@@ -421,4 +479,4 @@ export function Marquee({ items }) {
     </div>
   );
   return <div className="fx-marquee">{row(false, 0)}{row(true, 1)}</div>;
-            }
+                                      }
