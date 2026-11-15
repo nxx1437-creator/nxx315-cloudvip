@@ -1,7 +1,7 @@
 // src/CloudVIPLanding.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Play } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react"; // Đã bỏ icon Play vì không dùng nữa
 import { supabase } from "./lib/supabaseClient.js"; 
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
@@ -12,9 +12,11 @@ import {
   Skeletons, Wordmark, scrollToId,
 } from "./components/LandingBits.jsx";
 
-/* 👇 DÁN LINK VIDEO HERO VÀO ĐÂY (link YouTube hoặc link .mp4). Để "" thì hiện khung chờ. */
-const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/video-hero.mp4";
-const HERO_POSTER = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Banner-hero.gif"; // (tuỳ chọn) ảnh bìa cho video .mp4
+/* 👇 DÁN LINK VIDEO HERO VÀO ĐÂY (Bắt buộc phải là link .mp4) */
+const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/video-hero.mp4"; 
+
+/* 👇 DÁN LINK ẢNH BÌA (Poster) VÀO ĐÂY (Có thể dùng file .gif hoặc .png/.jpg) */
+const HERO_POSTER = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Banner-hero.gif";
 
 export default function CloudVIPLanding() {
   const i18n = useI18n();
@@ -62,19 +64,35 @@ export default function CloudVIPLanding() {
             <div className="dp-halo" /><div className="dp-shade" />
           </div>
           <Trail />
+          
           <div className="dp-wrap dp-hero">
-            <div>
-              <h1 className="dp-h1">
-                <span>{c.h1a} <em className="dp-serif">{c.h1b}</em></span>
-                <span>{c.h1c}</span>
-                <span className="dp-serif dim">{c.h1d}</span>
-              </h1>
-              <p className="dp-hs">{c.heroSub}</p>
-              <button type="button" className="dp-watch" onClick={() => scrollToId("hero-video")}>
-                <span>{c.watch}</span>
-                <span className="dp-play"><Play size={18} fill="currentColor" /></span>
-              </button>
+            {/* 👇 KHỐI CHỨA VIDEO NỀN VÀ CHỮ MỚI 👇 */}
+            <div className="dp-hero-content-wrapper">
+              
+              {/* Thẻ video làm nền */}
+              <video 
+                className="dp-hero-bg-video" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                poster={HERO_POSTER}
+              >
+                <source src={HERO_VIDEO_URL} type="video/mp4" />
+              </video>
+
+              {/* Phần chữ (Đã xóa nút Play) */}
+              <div className="dp-hero-text">
+                <h1 className="dp-h1">
+                  <span>{c.h1a} <em className="dp-serif">{c.h1b}</em></span>
+                  <span>{c.h1c}</span>
+                  <span className="dp-serif dim">{c.h1d}</span>
+                </h1>
+                <p className="dp-hs">{c.heroSub}</p>
+              </div>
+              
             </div>
+            {/* 👆 KẾT THÚC KHỐI CHỨA VIDEO NỀN 👆 */}
 
             <aside className="dp-ticket" id="hero-video">
               <p className="meta dp-mono"><span>{c.ticketMeta}</span><span>No. 01</span></p>
@@ -143,7 +161,6 @@ export default function CloudVIPLanding() {
               ))}
             </div>
             <div className="dp-cta-row">
-              {/* Bấm vào là chuyển sang trang creator */}
               <a href={CREATOR_URL} className="dp-pill big"><span>{c.vCta}</span><ArrowUpRight size={20} strokeWidth={1.5} /></a>
             </div>
           </div>
@@ -264,5 +281,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-                  }
+                }
               
