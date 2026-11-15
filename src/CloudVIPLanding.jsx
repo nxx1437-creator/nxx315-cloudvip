@@ -16,17 +16,17 @@ import {
 import {
   ScrollBar, Scramble, SplitTitle, CountUp, Tilt, Magnetic, ParallaxImg,
   Spotlight, ScrollWords, PinnedSteps, Marquee, InView,
+  RevealUp, AutoCarousel, // <-- Thêm 2 component mới
 } from "./components/LandingFx.jsx";
 
 const HERO_IMAGE_URL = "https://i.postimg.cc/SspRfjP1/2820b7c3993087b1613784521f440e45.jpg";
-// Dán link ảnh chụp trang Creator vào đây, để trống thì hiện khung minh họa
 const CREATOR_IMAGE_URL = "";
 
 const STEP_ICONS = [UserPlus, PlaySquare, Gift];
 const PERK_ICONS = [Sparkles, Video, ArrowUpRight];
 
 export default function CloudVIPLanding() {
-  useTheme(); // áp dụng chế độ sáng/tối đã chọn trong Hồ sơ
+  useTheme();
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
@@ -102,10 +102,10 @@ export default function CloudVIPLanding() {
           <div className="dp-wrap dp-tele dp-mono"><span>+ NXX315 · STUDIO REWARDS</span><span>↓ {c.scroll}</span></div>
         </section>
 
-        {/* ===== 2. CÂU DẪN (chữ sáng dần theo cuộn) ===== */}
+        {/* ===== 2. CÂU DẪN ===== */}
         <ScrollWords text={fx.story} />
 
-        {/* ===== 3. HƯỚNG DẪN TẠO TÀI KHOẢN (các bước được ghim) ===== */}
+        {/* ===== 3. HƯỚNG DẪN TẠO TÀI KHOẢN ===== */}
         <section id="onboarding" className="dp-sec">
           <div className="dp-wrap">
             <div className="dp-head">
@@ -116,11 +116,14 @@ export default function CloudVIPLanding() {
 
             <PinnedSteps steps={c.obSteps} icons={STEP_ICONS} />
 
-            <div className="dp-cta-row">
-              <Magnetic>
-                <Link to="/register" className="dp-pill big"><span>{c.obCta}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
-              </Magnetic>
-            </div>
+            {/* ĐÃ THÊM HIỆU ỨNG TRƯỢT LÊN (REVEAL UP) CHO NÚT TẠO TÀI KHOẢN */}
+            <RevealUp delay={100}>
+              <div className="dp-cta-row">
+                <Magnetic>
+                  <Link to="/register" className="dp-pill big"><span>{c.obCta}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
+                </Magnetic>
+              </div>
+            </RevealUp>
           </div>
         </section>
 
@@ -143,17 +146,19 @@ export default function CloudVIPLanding() {
                 </Reveal>
               ))}
             </div>
-            <div className="dp-cta-row">
-              <Magnetic>
-                <button type="button" className="dp-pill big" onClick={() => navigate("/register")}>
-                  <span>{c.iCta}</span><ArrowRight size={20} strokeWidth={1.5} />
-                </button>
-              </Magnetic>
-            </div>
+            <RevealUp delay={150}>
+              <div className="dp-cta-row">
+                <Magnetic>
+                  <button type="button" className="dp-pill big" onClick={() => navigate("/register")}>
+                    <span>{c.iCta}</span><ArrowRight size={20} strokeWidth={1.5} />
+                  </button>
+                </Magnetic>
+              </div>
+            </RevealUp>
           </div>
         </section>
 
-        {/* ===== 5. BẢNG XẾP HẠNG ===== */}
+        {/* ===== 5. BẢNG XẾP HẠNG (TỰ ĐỘNG TRƯỢT 3S) ===== */}
         <section id="rank" className="dp-sec">
           <div className="dp-wrap">
             <div className="dp-head">
@@ -162,15 +167,20 @@ export default function CloudVIPLanding() {
               <InView as="p" className="dp-body fx-fade" style={{ marginTop: 20 }}>{c.rSub}</InView>
             </div>
           </div>
+          
           {state(board) === "load" && <div className="dp-rail"><Skeletons /></div>}
+          
+          {/* SỬ DỤNG AUTOCAROUSEL ĐỂ TỰ ĐỘNG CHẠY TOP 1-2-3 */}
           {state(board) === "ok" && (
-            <InView className="dp-rail fx-rise">
+            <AutoCarousel interval={3000}>
               {top3.map((r) => <RankTicket key={r.rank} row={r} c={c} />)}
-            </InView>
+            </AutoCarousel>
           )}
+          
           {(state(board) === "empty" || state(board) === "err") && (
             <p className="dp-note">{state(board) === "err" ? c.failed : c.empty}</p>
           )}
+          
           {rest.length > 0 && (
             <div className="dp-list">
               {rest.map((r) => (
@@ -340,5 +350,4 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-              }
-            
+    }
