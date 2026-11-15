@@ -1,33 +1,63 @@
+// src/components/AuthShell.jsx
 import React from "react";
 import { Link } from "react-router-dom";
+import useTheme from "../hooks/useTheme.js";
+import { useI18n } from "../i18n/index.js";
+import { AUTH_CSS } from "./AuthStyle.js";
+import { AUTH_COPY } from "./authCopy.js";
 
-export default function AuthShell({ title, subtitle, children }) {
+export default function AuthShell({ mode = "login", title, subtitle, footer, children }) {
+  useTheme(); // áp dụng chế độ sáng/tối đã chọn trong Hồ sơ
+  const i18n = useI18n();
+  const lang = i18n.lang === "en" ? "en" : "vi";
+  const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
+  const c = AUTH_COPY[lang];
+  const side = c.side[mode] || c.side.login;
+
   return (
-    <div className="min-h-screen bg-white font-[Be_Vietnam_Pro] text-slate-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-6 py-10">
-        {/* Title */}
-        <h1 className="text-3xl font-bold leading-tight tracking-tight text-slate-900">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="mt-3 text-sm leading-relaxed text-slate-500">
-            {subtitle}
-          </p>
-        )}
+    <div className="au">
+      <style>{AUTH_CSS}</style>
+      <div className="au-bg" aria-hidden="true" />
 
-        <div className="mt-8">{children}</div>
+      <header className="au-top">
+        <Link to="/" className="au-wm">NXX315<em>.Studio</em></Link>
+        <div className="au-top-r">
+          <Link to="/" className="au-ghost">← {c.home}</Link>
+          {typeof setLang === "function" && (
+            <button
+              type="button"
+              className="au-ghost"
+              onClick={() => setLang(lang === "vi" ? "en" : "vi")}
+            >
+              {c.langBtn}
+            </button>
+          )}
+        </div>
+      </header>
 
-        {/* Footer */}
-        <p className="mt-10 text-center text-xs text-slate-400">
-          <Link to="/terms" className="underline hover:text-slate-600">
-            Điều khoản sử dụng
-          </Link>{" "}
-          |{" "}
-          <Link to="/privacy" className="underline hover:text-slate-600">
-            Chính sách bảo mật
-          </Link>
-        </p>
-      </div>
+      <main className="au-main">
+        <section className="au-side">
+          <p className="au-eyebrow">+ {side.eyebrow}</p>
+          <h2 className="au-big">
+            {side.a}
+            <em>{side.b}</em>
+          </h2>
+          <ul className="au-perks">
+            {c.perks.map((p) => (
+              <li key={p}><span className="au-dot" />{p}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section>
+          <div className="au-card">
+            <h1 className="au-h1">{title}</h1>
+            {subtitle ? <p className="au-sub">{subtitle}</p> : null}
+            <div className="au-body">{children}</div>
+            {footer ? <div className="au-foot">{footer}</div> : null}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
