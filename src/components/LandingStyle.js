@@ -32,13 +32,22 @@ export const CSS = `
 @media(min-width:900px){.dp-nav-links{display:flex}.dp-nav-actions{margin-left:0}}
 
 /* ===== HERO ===== */
-.dp-stage{position:relative;min-height:100svh;overflow:hidden;padding:96px 0 72px;display:flex;flex-direction:column;justify-content:center;background:#090909;}
+.dp-stage{
+  position:relative;
+  min-height:100svh;
+  overflow:hidden;
+  padding:120px 0 72px; /* Tăng padding-top lên 120px để không bị đè dưới thanh Nav */
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  background:#090909;
+}
 .dp-trail{position:absolute;left:0;top:46%;width:100%;pointer-events:none;opacity:.9;z-index:2}
 .dp-trail svg{display:block;width:min(260px,52vw);height:18px;animation:dpFly 11s linear infinite}
 @keyframes dpFly{from{transform:translateX(-30vw)}to{transform:translateX(105vw)}}
 .dp-hero{position:relative;z-index:2;display:grid;gap:40px;align-items:center}
 @media(min-width:900px){.dp-hero{grid-template-columns:1.1fr .9fr}}
-.dp-hero-text-container{width:100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7)); }
+.dp-hero-text-container{width:100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8)); } /* Tăng bóng đổ cho chữ */
 .dp-h1{font-weight:500;font-size:clamp(46px,10.5vw,88px);line-height:.98;letter-spacing:-.03em}
 .dp-h1 span{display:block}
 .dp-h1 .dp-serif{letter-spacing:-.02em}
@@ -55,76 +64,54 @@ export const CSS = `
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  /* Thêm filter tối và mờ nhẹ nếu ảnh gốc quá sáng */
+  filter: brightness(0.7); 
 }
 .dp-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(9,9,9,0.85) 0%, rgba(9,9,9,0.2) 40%, rgba(9,9,9,0) 100%);
+  /* Lớp phủ đen mạnh hơn ở bên trái và góc dưới để chữ và nút dễ đọc */
+  background: linear-gradient(90deg, rgba(9,9,9,0.9) 0%, rgba(9,9,9,0.3) 50%, rgba(9,9,9,0.1) 100%), 
+              linear-gradient(0deg, rgba(9,9,9,0.8) 0%, transparent 40%);
   z-index: 1;
   pointer-events: none;
 }
 
 /* TICKET */
-.dp-ticket{position:relative;border-radius:20px;padding:32px 24px 28px 44px; background:rgba(255,255,255,.08);border-top:.5px solid rgba(255,255,255,.45);border-right:.5px solid rgba(255,255,255,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);-webkit-mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000)}
+.dp-ticket{
+  position:relative;
+  border-radius:20px;
+  padding:32px 24px 28px 44px; 
+  background:rgba(20,20,30,.6); /* Nền tối hơn cho vé để không bị chìm khi ảnh nền sáng */
+  border-top:.5px solid rgba(255,255,255,.45);
+  border-right:.5px solid rgba(255,255,255,.45);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  -webkit-mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);
+  mask:radial-gradient(circle 12px at 0 14%,#0000 98%,#000);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3); /* Đổ bóng cho vé */
+}
 .dp-ticket::before{content:"";position:absolute;left:20px;top:8%;bottom:8%;border-left:2px dotted rgba(255,255,255,.35)}
 .dp-ticket .meta{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.6);display:flex;justify-content:space-between;margin-bottom:14px}
 .dp-ticket h3{font-weight:400;font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:0 0 6px}
 .dp-ticket .note{font-size:15px;line-height:1.5;color:rgba(255,255,255,.75);margin-bottom:24px}
 
 /* GLASS PILL */
-.dp-pill{display:flex;align-items:center;justify-content:center;gap:14px;height:56px;padding:0 28px;border-radius:9999px;background:rgba(237,195,196,.05);color:#fff;font-weight:300;font-size:clamp(17px,2.4vw,22px);border-top:.5px solid rgba(255,255,255,.25);border-right:.5px solid rgba(255,255,255,.5);border-bottom:.5px solid rgba(237,195,196,.25);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:all .2s;width:100%}
+.dp-pill{display:flex;align-items:center;justify-content:center;gap:14px;height:56px;padding:0 28px;border-radius:9999px;background:rgba(255,255,255,.1); /* Nền nút sáng hơn chút */color:#fff;font-weight:300;font-size:clamp(17px,2.4vw,22px);border-top:.5px solid rgba(255,255,255,.25);border-right:.5px solid rgba(255,255,255,.5);border-bottom:.5px solid rgba(237,195,196,.25);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:all .2s;width:100%}
 .dp-pill+.dp-pill{margin-top:12px}
-.dp-pill:hover{background:rgba(255,255,255,.1);border-color:transparent;box-shadow:inset 0 0 0 2px #af50ff,inset 1px 1px 0 1px rgba(255,255,255,.6),inset -1px -1px 0 1px rgba(255,255,255,.35)}
+.dp-pill:hover{background:rgba(255,255,255,.2);border-color:transparent;box-shadow:inset 0 0 0 2px #af50ff,inset 1px 1px 0 1px rgba(255,255,255,.6),inset -1px -1px 0 1px rgba(255,255,255,.35)}
 .dp-pill.big{height:64px;font-size:clamp(18px,2.6vw,28px);width:auto;min-width:min(100%,300px)}
 
-/* ===== CREATOR SHOWCASE ===== */
-.dp-creator-showcase {
-  display: grid;
-  gap: 48px;
-  margin-top: 48px;
-  align-items: center;
-}
-@media(min-width: 900px) {
-  .dp-creator-showcase { grid-template-columns: 1fr 1fr; }
-}
-.dp-creator-text h3 {
-  font-size: clamp(24px, 3vw, 32px);
-  font-weight: 500;
-  margin-bottom: 16px;
-}
-.dp-creator-text p {
-  font-size: 18px;
-  line-height: 1.6;
-  color: rgba(255,255,255,.7);
-  margin-bottom: 24px;
-}
-.dp-creator-perks {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.dp-creator-perks li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 16px;
-  color: rgba(255,255,255,.9);
-  background: rgba(255,255,255,.05);
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.1);
-}
-.dp-creator-perks li svg {
-  color: #af50ff;
-  flex-shrink: 0;
-}
-.dp-creator-visual {
-  position: relative;
-}
-
 /* CÁC PHẦN KHÁC GIỮ NGUYÊN */
+.dp-creator-showcase {display: grid;gap: 48px;margin-top: 48px;align-items: center;}
+@media(min-width: 900px) {.dp-creator-showcase { grid-template-columns: 1fr 1fr; }}
+.dp-creator-text h3 {font-size: clamp(24px, 3vw, 32px);font-weight: 500;margin-bottom: 16px;}
+.dp-creator-text p {font-size: 18px;line-height: 1.6;color: rgba(255,255,255,.7);margin-bottom: 24px;}
+.dp-creator-perks {list-style: none;padding: 0;display: flex;flex-direction: column;gap: 16px;}
+.dp-creator-perks li {display: flex;align-items: center;gap: 12px;font-size: 16px;color: rgba(255,255,255,.9);background: rgba(255,255,255,.05);padding: 16px;border-radius: 12px;border: 1px solid rgba(255,255,255,.1);}
+.dp-creator-perks li svg {color: #af50ff;flex-shrink: 0;}
+.dp-creator-visual {position: relative;}
+
 .dp-board{margin-top:48px}
 .dp-flap{display:block;width:100%;height:clamp(64px,11vw,100px);padding:1px;border-radius:8px;background:linear-gradient(rgba(255,255,255,.2),rgba(255,255,255,0));margin-bottom:16px;text-align:left}
 .dp-flap-in{display:flex;align-items:center;justify-content:space-between;height:100%;padding:0 clamp(14px,3vw,32px);background:#0b0b0b;border-radius:7px;overflow:hidden}
