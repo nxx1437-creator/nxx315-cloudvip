@@ -284,6 +284,20 @@ html:not(.dark) .dp .dp-oc,
 html:not(.dark) .dp .dp-row,
 html:not(.dark) .dp .fx-pin-card{box-shadow:0 4px 18px rgba(0,0,0,.05)}
 
+/* ===== BẢN ĐIỆN THOẠI: đơn giản, không ghim, bỏ hiệu ứng nặng ===== */
+.fx-sw-static{padding:clamp(72px,14vw,120px) 0}
+.fx-sw-static .fx-sw-p span{opacity:1}
+.fx-pin-static{display:grid;gap:16px;margin-top:32px}
+.fx-pin-static .fx-pin-card{animation:none;min-height:0}
+@media(hover:none){
+  .dp-pill,.dp-badge,.dp-ticket{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .dp-ticket{background:rgba(20,20,30,.85);-webkit-mask:none;mask:none}
+  .dp-pill::after{display:none}
+  .dp-tk::before,.dp-tk::after{filter:blur(28px)}
+  .dp-float{animation:none}
+  .fx-mq-set span{font-size:clamp(40px,12vw,64px)}
+}
+
 /* ===== GIẢM CHUYỂN ĐỘNG (cài đặt của thiết bị) ===== */
 @media(prefers-reduced-motion:reduce){
   .dp *{animation:none!important;transition:none!important}
