@@ -13,8 +13,8 @@ import {
 } from "./components/LandingBits.jsx";
 
 /* 👇 DÁN LINK VIDEO HERO VÀO ĐÂY (link YouTube hoặc link .mp4). Để "" thì hiện khung chờ. */
-const HERO_VIDEO_URL = "";
-const HERO_POSTER = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/video-hero.mp4"; // (tuỳ chọn) ảnh bìa cho video .mp4
+const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/video-hero.mp4";
+const HERO_POSTER = ""; // (tuỳ chọn) ảnh bìa cho video .mp4
 
 export default function CloudVIPLanding() {
   const i18n = useI18n();
