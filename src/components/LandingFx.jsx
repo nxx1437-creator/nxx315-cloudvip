@@ -6,7 +6,6 @@ const mq = (q) =>
 const reduced = () => mq("(prefers-reduced-motion: reduce)");
 const FINE = "(hover: hover) and (pointer: fine)";
 
-// true = máy tính có chuột. Điện thoại dùng CSS scroll-driven (không cần JS đo cuộn)
 function useFancy() {
   const [f, setF] = useState(() => mq(FINE) && !reduced());
   useEffect(() => {
@@ -21,7 +20,6 @@ function useFancy() {
   return f;
 }
 
-// chạy fn mỗi khi cuộn / đổi kích thước (gộp theo khung hình), trả về hàm dọn dẹp
 function onScroll(fn) {
   let raf = 0;
   const run = () => {
@@ -38,7 +36,7 @@ function onScroll(fn) {
   };
 }
 
-/* ---------- hook: thấy trên màn hình thì bật (chỉ một lần) ---------- */
+/* ---------- Hook: Thấy trên màn hình thì bật ---------- */
 export function useInView(threshold = 0.2) {
   const ref = useRef(null);
   const [seen, setSeen] = useState(false);
@@ -64,7 +62,6 @@ export function useInView(threshold = 0.2) {
   return [ref, seen];
 }
 
-/* ---------- bọc bất kỳ thẻ nào, thêm class "in" khi thấy ---------- */
 export function InView({ as: Tag = "div", className = "", threshold, children, ...rest }) {
   const [ref, seen] = useInView(threshold ?? 0.15);
   return (
@@ -74,7 +71,7 @@ export function InView({ as: Tag = "div", className = "", threshold, children, .
   );
 }
 
-/* ---------- thanh tiến độ cuộn: máy tính dùng JS, điện thoại dùng CSS ---------- */
+/* ---------- Thanh tiến độ cuộn ---------- */
 export function ScrollBar() {
   const fancy = useFancy();
   const r = useRef(null);
@@ -94,9 +91,8 @@ export function ScrollBar() {
   );
 }
 
-/* ---------- chữ "giải mã" kiểu scramble ---------- */
+/* ---------- Chữ Scramble ---------- */
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/=;+";
-
 export function Scramble({ text, as: Tag = "p", className = "", style }) {
   const ref = useRef(null);
   const [out, setOut] = useState(text);
@@ -156,7 +152,7 @@ export function Scramble({ text, as: Tag = "p", className = "", style }) {
   );
 }
 
-/* ---------- tiêu đề hiện từng chữ (chỉ mờ + trượt, nhẹ cho điện thoại) ---------- */
+/* ---------- Tiêu đề hiện từng chữ ---------- */
 export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2", style }) {
   const [ref, seen] = useInView(0.3);
   let i = 0;
@@ -184,7 +180,7 @@ export function SplitTitle({ a = "", b = "", as: Tag = "h2", className = "dp-h2"
   );
 }
 
-/* ---------- số chạy từ 0 (15%, 1 mã...) ---------- */
+/* ---------- Số chạy từ 0 ---------- */
 export function CountUp({ value }) {
   const m = String(value).match(/^(\d+)(.*)$/);
   const [ref, seen] = useInView(0.5);
@@ -217,7 +213,7 @@ export function CountUp({ value }) {
   );
 }
 
-/* ---------- thẻ nghiêng 3D theo con trỏ (chỉ chuột) ---------- */
+/* ---------- Thẻ nghiêng 3D ---------- */
 export function Tilt({ children, max = 8, className = "" }) {
   const ref = useRef(null);
   const move = (e) => {
@@ -241,7 +237,7 @@ export function Tilt({ children, max = 8, className = "" }) {
   );
 }
 
-/* ---------- nút "hút" về phía con trỏ (chỉ chuột) ---------- */
+/* ---------- Nút hút về con trỏ ---------- */
 export function Magnetic({ children }) {
   const ref = useRef(null);
   const move = (e) => {
@@ -263,7 +259,7 @@ export function Magnetic({ children }) {
   );
 }
 
-/* ---------- ảnh nền hero: máy tính dùng JS, điện thoại dùng CSS ---------- */
+/* ---------- Ảnh nền Parallax ---------- */
 export function ParallaxImg({ src, alt, className }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -286,7 +282,7 @@ export function ParallaxImg({ src, alt, className }) {
   );
 }
 
-/* ---------- vệt sáng theo con trỏ trong hero (chỉ máy tính) ---------- */
+/* ---------- Vệt sáng theo con trỏ ---------- */
 export function Spotlight() {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -306,7 +302,7 @@ export function Spotlight() {
   return <div ref={ref} className="fx-spot" aria-hidden="true" />;
 }
 
-/* ---------- câu dẫn: máy tính ghim + sáng dần (JS), điện thoại sáng dần bằng CSS ---------- */
+/* ---------- Câu dẫn: sáng dần ---------- */
 export function ScrollWords({ text }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -340,6 +336,7 @@ export function ScrollWords({ text }) {
       );
     });
 
+  // ĐÃ FIX: Nếu không phải máy tính, chạy hiệu ứng tự động sáng dần bằng CSS thay vì để mờ tịt
   if (!fancy) {
     return (
       <div className="fx-sw-static">
@@ -357,7 +354,7 @@ export function ScrollWords({ text }) {
   );
 }
 
-/* ---------- các bước: máy tính ghim + đổi theo cuộn, điện thoại là thẻ chồng lên nhau ---------- */
+/* ---------- Các bước (Onboarding) ---------- */
 export function PinnedSteps({ steps, icons }) {
   const fancy = useFancy();
   const ref = useRef(null);
@@ -394,7 +391,6 @@ export function PinnedSteps({ steps, icons }) {
 
   const bigOf = (num, i) => (num.match(/\d+/) || [String(i + 1).padStart(2, "0")])[0];
 
-  // ===== điện thoại: thẻ dính trên đầu, thẻ sau trượt đè lên thẻ trước =====
   if (!fancy) {
     return (
       <div className="fx-pin-static">
@@ -414,7 +410,6 @@ export function PinnedSteps({ steps, icons }) {
     );
   }
 
-  // ===== máy tính: ghim màn hình =====
   const Icon = icons[active];
   const [num, title, desc] = steps[active];
 
@@ -448,7 +443,7 @@ export function PinnedSteps({ steps, icons }) {
   );
 }
 
-/* ---------- 2 hàng chữ chạy ngang ngược chiều ---------- */
+/* ---------- Chữ chạy ngang ---------- */
 export function Marquee({ items }) {
   const set = [...items, ...items];
   const row = (rev, k) => (
@@ -468,4 +463,70 @@ export function Marquee({ items }) {
     </div>
   );
   return <div className="fx-marquee">{row(false, 0)}{row(true, 1)}</div>;
-          }
+}
+
+/* ========================================================= */
+/* ===== CÁC COMPONENT MỚI BỔ SUNG THEO YÊU CẦU CỦA BẠN ===== */
+/* ========================================================= */
+
+/* 1. Hiệu ứng trượt lên cho khối (Dùng cho phần Tạo tài khoản / ROBUX) */
+export function RevealUp({ children, delay = 0, className = "" }) {
+  const [ref, seen] = useInView(0.15);
+  return (
+    <div
+      ref={ref}
+      className={`fx-reveal-up ${seen ? "in" : ""} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* 2. Tự động chuyển Top 1-2-3 (Carousel 3s) */
+export function AutoCarousel({ children, interval = 3000 }) {
+  const containerRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Logic tự động cuộn
+  useEffect(() => {
+    if (isHovered) return; // Dừng khi người dùng đang xem (hover)
+    
+    const timer = setInterval(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      
+      const items = el.children;
+      if (items.length === 0) return;
+      
+      const firstItem = items[0];
+      // Tính toán vị trí item tiếp theo
+      const itemWidth = firstItem.clientWidth + 24; // 24 là gap
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      
+      let nextScroll = el.scrollLeft + itemWidth;
+      
+      // Nếu cuộn hết thì quay lại đầu
+      if (el.scrollLeft >= maxScroll - 10) {
+        nextScroll = 0;
+      }
+      
+      el.scrollTo({ left: nextScroll, behavior: "smooth" });
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [interval, isHovered]);
+
+  return (
+    <div 
+      className="dp-rail" 
+      ref={containerRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+      onTouchEnd={() => setIsHovered(false)}
+    >
+      {children}
+    </div>
+  );
+      }
