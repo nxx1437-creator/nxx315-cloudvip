@@ -2,8 +2,9 @@
 export const AUTH_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
 
-/* ===== màu: mặc định SÁNG (như web mẫu), html.dark = TỐI ===== */
+/* ===== màu: SÁNG mặc định, data-theme="dark" = TỐI (do AuthShell quyết định theo sở thích người dùng) ===== */
 .au{
+  color-scheme:light;
   --bg:#f6f9f7;--fg:#0e1a14;--mut:#5d6b64;--line:#dfe7e2;
   --card:#ffffff;--in:#ffffff;--in2:#f1f5f3;
   --acc:#1ba575;--acc2:#0f8a5c;--accfg:#0d8f5f;--glow:rgba(22,160,107,.2);--grid:rgba(15,60,40,.05);
@@ -13,7 +14,8 @@ export const AUTH_CSS = `
   font-family:"Inter",Arial,sans-serif;font-weight:400;overflow-x:hidden;-webkit-font-smoothing:antialiased;
   transition:background .3s,color .3s
 }
-html.dark .au{
+.au[data-theme="dark"]{
+  color-scheme:dark;
   --bg:#07110d;--fg:#eaf5ef;--mut:#93a69c;--line:rgba(255,255,255,.12);
   --card:#0d1914;--in:rgba(255,255,255,.05);--in2:rgba(255,255,255,.08);
   --acc:#1fb882;--acc2:#12936a;--accfg:#4ee0a5;--glow:rgba(47,211,154,.16);--grid:rgba(255,255,255,.04);
@@ -41,7 +43,7 @@ html.dark .au{
 .au-tbtn{height:48px;min-width:48px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;border:1px solid var(--line);background:var(--in);color:var(--fg);transition:background .2s}
 .au-tbtn:hover{background:var(--in2)}
 .au-tbtn.theme{background:#fdf1cf;border-color:#f3d77c;color:#d99a00}
-html.dark .au-tbtn.theme{background:rgba(255,200,60,.14);border-color:rgba(255,200,60,.4);color:#ffcf4a}
+.au[data-theme="dark"] .au-tbtn.theme{background:rgba(255,200,60,.14);border-color:rgba(255,200,60,.4);color:#ffcf4a}
 .au-flag{font-size:20px;line-height:1}
 .au-lang{position:relative}
 .au-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:170px;padding:6px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.14);z-index:10}
@@ -60,7 +62,7 @@ html.dark .au-tbtn.theme{background:rgba(255,200,60,.14);border-color:rgba(255,2
 .au-card{position:relative;overflow:hidden;width:100%;min-width:0;max-width:480px;margin-top:28px;padding:clamp(24px,6vw,36px);border-radius:24px;border:1px solid var(--line);
   background:linear-gradient(180deg,rgba(22,160,107,.08),transparent 150px),var(--card);
   box-shadow:0 18px 50px rgba(15,60,40,.1);animation:auUp .7s cubic-bezier(.2,.8,.2,1) both}
-html.dark .au-card{box-shadow:0 18px 60px rgba(0,0,0,.45)}
+.au[data-theme="dark"] .au-card{box-shadow:0 18px 60px rgba(0,0,0,.45)}
 .au-card::before{content:"";position:absolute;top:0;left:12%;right:12%;height:2px;background:linear-gradient(90deg,transparent,var(--acc),transparent)}
 .au-h1{font-weight:800;font-size:clamp(26px,7vw,32px);line-height:1.15;letter-spacing:-.02em}
 .au-sub{margin-top:8px;color:var(--mut);font-size:15px;line-height:1.55}
