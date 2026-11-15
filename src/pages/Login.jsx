@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import AuthLayout from "../components/AuthLayout.jsx";
-import AuthField from "../components/AuthField.jsx";
-import LoginAlerts from "../components/LoginAlerts.jsx";
-import MagicLinkSent from "../components/MagicLinkSent.jsx";
+import AuthShell from "../components/AuthShell.jsx";
+import AuthInput from "../components/AuthInput.jsx";
+import AuthNotice from "../components/AuthNotice.jsx";
+import AuthSent from "../components/AuthSent.jsx";
 import GoogleButton from "../components/GoogleButton.jsx";
 import { AT, EMAIL_RE, mapAuthError, callbackUrl } from "../components/authText.js";
 import { supabase } from "../lib/supabaseClient.js";
@@ -12,6 +12,7 @@ import {
   IconMail,
   IconArrow,
   IconSpinner,
+  IconWarning,
 } from "../components/AuthIcons.jsx";
 
 export default function Login() {
@@ -94,30 +95,30 @@ export default function Login() {
   };
 
   const hideInlineError = ["ip_duplicate", "session_expired"].includes(errorType);
+  const errText = error ? error.text ?? t(error.key, error.vars) : null;
 
   return (
-    <AuthLayout
+    <AuthShell
+      mode="login"
       title={t("login.title")}
       footer={
         <>
           {t("login.noAccount")}{" "}
-          <Link to="/register" className="font-bold text-emerald-700 hover:underline">
+          <Link to="/register" className="au-link">
             {t("login.signUp")}
           </Link>
         </>
       }
     >
-      <LoginAlerts
-        errorType={errorType}
-        isLocked={false}
-        remainingSec={0}
-        maxAttempts={5}
-        ipInfo={null}
-        formatTime={(s) => String(s)}
-      />
+      {/* Cảnh báo do trang khác chuyển về (trùng IP, hết phiên) */}
+      {error && hideInlineError && (
+        <AuthNotice tone="warn" icon={<IconWarning size={18} />}>
+          {errText}
+        </AuthNotice>
+      )}
 
       {sent ? (
-        <MagicLinkSent
+        <AuthSent
           email={email}
           onChangeEmail={() => setSent(false)}
           onResend={async () => {
@@ -127,8 +128,8 @@ export default function Login() {
         />
       ) : (
         <>
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            <AuthField
+          <form onSubmit={handleSubmit} className="au-form">
+            <AuthInput
               id="login-email"
               label={t("login.email")}
               icon={<IconMail size={18} />}
@@ -139,42 +140,34 @@ export default function Login() {
               autoComplete="email"
               disabled={loading}
             />
-            <p className="text-[12.5px] leading-5 text-slate-500">{x.hintLogin}</p>
+            <p className="au-hint">{x.hintLogin}</p>
 
-            <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-slate-500">
+            <label className="au-check">
               <input
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-1 h-5 w-5 shrink-0 rounded accent-emerald-600"
               />
               <span>
                 {t("login.agreePre")}
-                <Link
-                  to="/terms"
-                  className="font-semibold text-emerald-700 underline decoration-emerald-300 underline-offset-2"
-                >
+                <Link to="/terms" className="au-link">
                   {t("login.terms")}
                 </Link>
               </span>
             </label>
 
             {error && !hideInlineError && (
-              <p className="rounded-xl bg-rose-50 px-4 py-2.5 text-xs font-medium text-rose-600">
-                {error.text ?? t(error.key, error.vars)}
+              <AuthNotice tone="error">
+                {errText}
                 {error.register && (
-                  <Link to="/register" className="ml-1.5 font-bold underline">
+                  <Link to="/register" className="au-link" style={{ marginLeft: 6 }}>
                     {x.goRegister}
                   </Link>
                 )}
-              </p>
+              </AuthNotice>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading} className="au-btn">
               {loading ? (
                 <>
                   <IconSpinner size={18} />
@@ -189,25 +182,18 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                {t("login.orContinue")}
-              </span>
-            </div>
-          </div>
+          <div className="au-or">{t("login.orContinue")}</div>
 
-          <GoogleButton
-            text="signin_with"
-            label={t("login.google")}
-            onFallbackClick={handleGoogle}
-            onError={(m) => setError({ text: m })}
-          />
+          <div className="au-google">
+            <GoogleButton
+              text="signin_with"
+              label={t("login.google")}
+              onFallbackClick={handleGoogle}
+              onError={(m) => setError({ text: m })}
+            />
+          </div>
         </>
       )}
-    </AuthLayout>
+    </AuthShell>
   );
-          }
+        }
