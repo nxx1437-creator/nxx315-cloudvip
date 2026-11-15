@@ -39,15 +39,23 @@ async function makeNonce() {
   return { raw, hashed };
 }
 
-// Theo dõi chế độ tối: <html class="dark">
-const readDark = () =>
-  typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+// Theo dõi chế độ tối: trang đăng nhập/đăng ký đặt data-au-theme trên <html>,
+// nếu không có thì theo class "dark"
+const readDark = () => {
+  if (typeof document === "undefined") return false;
+  const el = document.documentElement;
+  return el.dataset.auTheme ? el.dataset.auTheme === "dark" : el.classList.contains("dark");
+};
 
 function useIsDark() {
   const [dark, setDark] = useState(readDark);
   useEffect(() => {
     const mo = new MutationObserver(() => setDark(readDark()));
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-au-theme"],
+    });
+    setDark(readDark());
     return () => mo.disconnect();
   }, []);
   return dark;
