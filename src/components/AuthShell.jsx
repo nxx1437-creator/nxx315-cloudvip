@@ -1,63 +1,118 @@
 // src/components/AuthShell.jsx
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Moon, Sun, ChevronDown } from "lucide-react";
 import useTheme from "../hooks/useTheme.js";
 import { useI18n } from "../i18n/index.js";
 import { AUTH_CSS } from "./AuthStyle.js";
 import { AUTH_COPY } from "./authCopy.js";
 
-export default function AuthShell({ mode = "login", title, subtitle, footer, children }) {
-  useTheme(); // áp dụng chế độ sáng/tối đã chọn trong Hồ sơ
+const readDark = () =>
+  typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+
+const LANGS = [
+  ["vi", "🇻🇳", "Tiếng Việt"],
+  ["en", "🇬🇧", "English"],
+];
+
+export default function AuthShell({ title, subtitle, footer, children }) {
+  const { setThemeMode } = useTheme();
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
   const c = AUTH_COPY[lang];
-  const side = c.side[mode] || c.side.login;
+
+  const [dark, setDark] = useState(readDark);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // theo dõi chế độ sáng/tối hiện tại (class "dark" trên <html>)
+  useEffect(() => {
+    const mo = new MutationObserver(() => setDark(readDark()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => mo.disconnect();
+  }, []);
+
+  // bấm ra ngoài thì đóng menu ngôn ngữ
+  useEffect(() => {
+    if (!open) return;
+    const off = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", off);
+    return () => document.removeEventListener("pointerdown", off);
+  }, [open]);
+
+  const toggleTheme = () => {
+    if (typeof setThemeMode === "function") setThemeMode(dark ? "light" : "dark");
+  };
+
+  const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
 
   return (
     <div className="au">
       <style>{AUTH_CSS}</style>
       <div className="au-bg" aria-hidden="true" />
 
-      <header className="au-top">
-        <Link to="/" className="au-wm">NXX315<em>.Studio</em></Link>
-        <div className="au-top-r">
-          <Link to="/" className="au-ghost">← {c.home}</Link>
-          {typeof setLang === "function" && (
+      <main className="au-main">
+        <div className="au-top">
+          <button
+            type="button"
+            className="au-tbtn theme"
+            onClick={toggleTheme}
+            aria-label={c.themeAria}
+          >
+            {dark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
+          <div className="au-lang" ref={menuRef}>
             <button
               type="button"
-              className="au-ghost"
-              onClick={() => setLang(lang === "vi" ? "en" : "vi")}
+              className="au-tbtn"
+              onClick={() => setOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={open}
             >
-              {c.langBtn}
+              <span className="au-flag">{cur[1]}</span>
+              <ChevronDown size={16} />
             </button>
-          )}
-        </div>
-      </header>
-
-      <main className="au-main">
-        <section className="au-side">
-          <p className="au-eyebrow">+ {side.eyebrow}</p>
-          <h2 className="au-big">
-            {side.a}
-            <em>{side.b}</em>
-          </h2>
-          <ul className="au-perks">
-            {c.perks.map((p) => (
-              <li key={p}><span className="au-dot" />{p}</li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          <div className="au-card">
-            <h1 className="au-h1">{title}</h1>
-            {subtitle ? <p className="au-sub">{subtitle}</p> : null}
-            <div className="au-body">{children}</div>
-            {footer ? <div className="au-foot">{footer}</div> : null}
+            {open && (
+              <div className="au-menu" role="listbox">
+                {LANGS.map(([code, flag, name]) => (
+                  <button
+                    key={code}
+                    type="button"
+                    role="option"
+                    aria-selected={code === lang}
+                    className={"au-mi" + (code === lang ? " on" : "")}
+                    onClick={() => {
+                      if (typeof setLang === "function") setLang(code);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="au-flag">{flag}</span>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        </section>
+        </div>
+
+        <div className="au-brand">
+          <Link to="/" className="au-logo">
+            NXX315<em>.Studio</em>
+          </Link>
+          <p className="au-tag">{c.tagline}</p>
+        </div>
+
+        <div className="au-card">
+          <h1 className="au-h1">{title}</h1>
+          {subtitle ? <p className="au-sub">{subtitle}</p> : null}
+          <div className="au-body">{children}</div>
+          {footer ? <div className="au-foot">{footer}</div> : null}
+        </div>
       </main>
     </div>
   );
-}
+                              }
