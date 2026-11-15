@@ -1,106 +1,116 @@
 // src/components/AuthStyle.js
 export const AUTH_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;1,400&family=Space+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
+
+/* ===== màu: mặc định SÁNG (như web mẫu), html.dark = TỐI ===== */
 .au{
-  --bg:#090909;--fg:#f7f9fa;--mut:rgba(255,255,255,.58);--line:rgba(255,255,255,.16);
-  --card:rgba(20,20,30,.72);--in:rgba(255,255,255,.06);
-  --acc:#af50ff;--acc2:#6a5cff;--accfg:#d4a0ff;
-  --warn-bg:rgba(245,158,11,.12);--warn-bd:rgba(245,158,11,.35);--warn-fg:#fcd34d;
-  --bad-bg:rgba(244,63,94,.12);--bad-bd:rgba(244,63,94,.38);--bad-fg:#fda4af;
+  --bg:#f6f9f7;--fg:#0e1a14;--mut:#5d6b64;--line:#dfe7e2;
+  --card:#ffffff;--in:#ffffff;--in2:#f1f5f3;
+  --acc:#1ba575;--acc2:#0f8a5c;--accfg:#0d8f5f;--glow:rgba(22,160,107,.2);--grid:rgba(15,60,40,.05);
+  --warn-bg:#fffbeb;--warn-bd:#fcd34d;--warn-fg:#92400e;
+  --bad-bg:#fff1f2;--bad-bd:#fda4af;--bad-fg:#be123c;
   position:relative;min-height:100vh;min-height:100svh;background:var(--bg);color:var(--fg);
-  font-family:"Inter",Arial,sans-serif;font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  font-family:"Inter",Arial,sans-serif;font-weight:400;overflow-x:hidden;-webkit-font-smoothing:antialiased;
   transition:background .3s,color .3s
 }
-html:not(.dark) .au{
-  --bg:#f4f5f9;--fg:#0f1115;--mut:rgba(15,17,21,.62);--line:rgba(15,17,21,.13);
-  --card:#ffffff;--in:#f3f4f8;--accfg:#8a2be2;
-  --warn-bg:#fffbeb;--warn-bd:#fcd34d;--warn-fg:#92400e;
-  --bad-bg:#fff1f2;--bad-bd:#fda4af;--bad-fg:#be123c
+html.dark .au{
+  --bg:#07110d;--fg:#eaf5ef;--mut:#93a69c;--line:rgba(255,255,255,.12);
+  --card:#0d1914;--in:rgba(255,255,255,.05);--in2:rgba(255,255,255,.08);
+  --acc:#1fb882;--acc2:#12936a;--accfg:#4ee0a5;--glow:rgba(47,211,154,.16);--grid:rgba(255,255,255,.04);
+  --warn-bg:rgba(245,158,11,.12);--warn-bd:rgba(245,158,11,.35);--warn-fg:#fcd34d;
+  --bad-bg:rgba(244,63,94,.12);--bad-bd:rgba(244,63,94,.38);--bad-fg:#fda4af
 }
-.au *,.au *::before,.au *::after{box-sizing:border-box}
-.au a{color:inherit;text-decoration:none}
-.au button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
-.au h1,.au h2,.au p,.au ul{margin:0}
-.au-serif{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400}
 
-/* nền */
+/* reset độ ưu tiên thấp, không đè lên class bên dưới */
+:where(.au) *,:where(.au) *::before,:where(.au) *::after{box-sizing:border-box}
+:where(.au) a{color:inherit;text-decoration:none}
+:where(.au) button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:where(.au) h1,:where(.au) h2,:where(.au) p,:where(.au) ul{margin:0}
+
+/* nền: vầng xanh + lưới mờ */
 .au-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(55% 50% at 10% 100%,rgba(175,80,255,.45),transparent 70%),
-             radial-gradient(55% 50% at 96% 0%,rgba(40,100,210,.4),transparent 70%),
-             radial-gradient(40% 35% at 55% 55%,rgba(210,80,150,.14),transparent 70%)}
-html:not(.dark) .au-bg{opacity:.5}
-
-/* thanh trên */
-.au-top{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(16px,5vw,72px)}
-.au-wm{font-weight:700;font-size:15px;letter-spacing:.02em;white-space:nowrap}
-.au-wm em{font-family:"Playfair Display",Georgia,serif;font-weight:400;font-size:16px;opacity:.85}
-.au-top-r{display:flex;align-items:center;gap:8px}
-.au-ghost{font:400 12px/1 "Inter",sans-serif;text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;border-radius:8px;border:1px solid var(--line);color:var(--fg);transition:background .2s}
-.au-ghost:hover{background:var(--in)}
+  background:
+    radial-gradient(60% 38% at 50% 12%,var(--glow),transparent 70%),
+    radial-gradient(45% 30% at 0% 0%,var(--glow),transparent 70%),
+    linear-gradient(var(--grid) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/48px 48px}
 
 /* bố cục */
-.au-main{position:relative;z-index:1;max-width:1200px;margin:0 auto;min-height:100vh;min-height:100svh;display:grid;align-items:center;gap:48px;padding:84px clamp(16px,5vw,72px) 40px}
-@media(min-width:960px){.au-main{grid-template-columns:1.05fr .95fr}}
-.au-side{display:none}
-@media(min-width:960px){.au-side{display:block;padding-right:24px}}
-.au-eyebrow{font:400 12px/1 "Space Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
-.au-big{margin-top:18px;font-weight:500;font-size:clamp(44px,5.4vw,76px);line-height:1;letter-spacing:-.04em}
-.au-big em{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.02em;display:block;opacity:.7}
-.au-perks{list-style:none;padding:0;margin-top:36px;display:grid;gap:14px}
-.au-perks li{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:400}
-.au-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+.au-main{position:relative;z-index:1;width:100%;max-width:520px;margin:0 auto;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;padding:16px 20px 40px}
+.au-top{align-self:stretch;display:flex;justify-content:flex-end;gap:10px;padding-bottom:6px}
+.au-tbtn{height:48px;min-width:48px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;border:1px solid var(--line);background:var(--in);color:var(--fg);transition:background .2s}
+.au-tbtn:hover{background:var(--in2)}
+.au-tbtn.theme{background:#fdf1cf;border-color:#f3d77c;color:#d99a00}
+html.dark .au-tbtn.theme{background:rgba(255,200,60,.14);border-color:rgba(255,200,60,.4);color:#ffcf4a}
+.au-flag{font-size:20px;line-height:1}
+.au-lang{position:relative}
+.au-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:170px;padding:6px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 14px 34px rgba(0,0,0,.14);z-index:10}
+.au-mi{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:10px;text-align:left;font-size:14px}
+.au-mi:hover{background:var(--in2)}
+.au-mi.on{font-weight:700;color:var(--accfg)}
+
+/* logo + dòng giới thiệu */
+.au-brand{position:relative;isolation:isolate;margin-top:14px;text-align:center}
+.au-brand::before{content:"";position:absolute;left:50%;top:38%;width:min(360px,90vw);height:120px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,var(--glow),transparent);z-index:-1}
+.au-logo{display:inline-block;font-weight:800;font-size:clamp(34px,10vw,44px);letter-spacing:-.03em;line-height:1.1}
+.au-logo em{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.01em;color:var(--accfg)}
+.au-tag{margin:12px auto 0;max-width:420px;color:var(--mut);font-size:clamp(15px,4vw,18px);line-height:1.55}
 
 /* thẻ */
-.au-card{width:100%;max-width:480px;margin:0 auto;padding:clamp(24px,5vw,40px);border-radius:20px;background:var(--card);border:1px solid var(--line);box-shadow:0 20px 70px rgba(0,0,0,.35);animation:auUp .7s cubic-bezier(.2,.8,.2,1) both}
-html:not(.dark) .au-card{box-shadow:0 20px 60px rgba(40,30,80,.1)}
-@media(hover:hover) and (pointer:fine){.au-card{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}}
-.au-h1{font-weight:500;font-size:clamp(28px,4vw,34px);line-height:1.1;letter-spacing:-.03em}
-.au-sub{margin-top:8px;color:var(--mut);font-size:15px;line-height:1.5;font-weight:400}
-.au-body{margin-top:24px}
-.au-foot{margin-top:26px;padding-top:20px;border-top:1px solid var(--line);text-align:center;font-size:14px;color:var(--mut);font-weight:400}
-.au-link{color:var(--accfg);font-weight:600;text-decoration:underline;text-decoration-color:rgba(175,80,255,.4);text-underline-offset:3px}
+.au-card{position:relative;overflow:hidden;width:100%;min-width:0;max-width:480px;margin-top:28px;padding:clamp(24px,6vw,36px);border-radius:24px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(22,160,107,.08),transparent 150px),var(--card);
+  box-shadow:0 18px 50px rgba(15,60,40,.1);animation:auUp .7s cubic-bezier(.2,.8,.2,1) both}
+html.dark .au-card{box-shadow:0 18px 60px rgba(0,0,0,.45)}
+.au-card::before{content:"";position:absolute;top:0;left:12%;right:12%;height:2px;background:linear-gradient(90deg,transparent,var(--acc),transparent)}
+.au-h1{font-weight:800;font-size:clamp(26px,7vw,32px);line-height:1.15;letter-spacing:-.02em}
+.au-sub{margin-top:8px;color:var(--mut);font-size:15px;line-height:1.55}
+.au-body{margin-top:26px}
+.au-foot{margin-top:26px;padding-top:20px;border-top:1px solid var(--line);text-align:center;font-size:15px;color:var(--mut)}
+.au-link{color:var(--accfg);font-weight:600;text-decoration:underline;text-decoration-color:rgba(22,160,107,.35);text-underline-offset:3px}
 .au-link:hover{text-decoration-color:currentColor}
 @keyframes auUp{from{opacity:0;transform:translateY(24px)}}
 
 /* form */
-.au-form{display:grid;gap:16px}
+.au-form{display:grid;gap:18px}
 .au-form>*{animation:auUp .6s cubic-bezier(.2,.8,.2,1) both}
 .au-form>*:nth-child(2){animation-delay:.06s}
 .au-form>*:nth-child(3){animation-delay:.12s}
 .au-form>*:nth-child(4){animation-delay:.18s}
 .au-form>*:nth-child(n+5){animation-delay:.24s}
-.au-lab{display:flex;justify-content:space-between;align-items:center;font:500 13px/1 "Inter",sans-serif;color:var(--mut);margin-bottom:8px}
+.au-lab{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg)}
+.au-lab>span:nth-child(2){text-transform:none;letter-spacing:0;font-weight:500;color:var(--mut)}
 .au-inwrap{position:relative}
-.au-ic{position:absolute;left:16px;top:50%;transform:translateY(-50%);display:flex;color:var(--mut);pointer-events:none}
-.au-in{width:100%;height:54px;padding:0 16px 0 46px;border-radius:12px;border:1px solid var(--line);background:var(--in);color:var(--fg);font:400 16px "Inter",sans-serif;outline:0;transition:border-color .2s,box-shadow .2s}
-.au-in::placeholder{color:var(--mut);opacity:.7}
-.au-in:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(175,80,255,.18)}
+.au-ic{position:absolute;left:18px;top:50%;transform:translateY(-50%);display:flex;color:var(--mut);pointer-events:none}
+.au-in{width:100%;height:56px;padding:0 16px 0 50px;border-radius:16px;border:1px solid var(--line);background:var(--in);color:var(--fg);font:400 16px "Inter",sans-serif;outline:0;transition:border-color .2s,box-shadow .2s}
+.au-in::placeholder{color:var(--mut);opacity:.75}
+.au-in:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(22,160,107,.16)}
 .au-in:disabled{opacity:.55;cursor:not-allowed}
 .au-in.up{text-transform:uppercase;letter-spacing:.08em}
 .au-in.gift{border-style:dashed}
-.au-hint{font-size:13px;line-height:1.5;color:var(--mut);font-weight:400}
-.au-check{display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.55;color:var(--mut);cursor:pointer;font-weight:400}
-.au-check input{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:var(--acc)}
-.au-center{text-align:center;font-size:13px;line-height:1.5;color:var(--mut);font-weight:400}
+.au-hint{font-size:14px;line-height:1.55;color:var(--mut)}
+.au-check{display:flex;align-items:flex-start;gap:12px;font-size:15px;line-height:1.55;color:var(--mut);cursor:pointer}
+.au-check input{width:22px;height:22px;margin-top:1px;flex-shrink:0;accent-color:var(--acc)}
+.au-center{text-align:center;font-size:13px;line-height:1.55;color:var(--mut)}
 
-/* nút chính */
-.au-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;border-radius:14px;color:#fff;font:700 15px "Inter",sans-serif;background:linear-gradient(90deg,var(--acc),var(--acc2));box-shadow:0 10px 30px rgba(175,80,255,.35);transition:filter .2s,transform .1s,box-shadow .2s}
-.au-btn::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .6s ease;pointer-events:none}
-@media(hover:hover){.au-btn:hover:not(:disabled)::after{left:130%}.au-btn:hover:not(:disabled){filter:brightness(1.1)}}
+/* nút chính (xanh lá) */
+.au-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;border-radius:16px;color:#fff;font:700 16px "Inter",sans-serif;background:linear-gradient(180deg,var(--acc),var(--acc2));box-shadow:0 10px 24px rgba(22,160,107,.3);transition:filter .2s,transform .1s}
+.au-btn::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent);transform:skewX(-20deg);transition:left .6s ease;pointer-events:none}
+@media(hover:hover){.au-btn:hover:not(:disabled)::after{left:130%}.au-btn:hover:not(:disabled){filter:brightness(1.07)}}
 .au-btn:active:not(:disabled){transform:scale(.99)}
 .au-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
-.au-btn2{display:flex;align-items:center;justify-content:center;width:100%;height:50px;border-radius:14px;border:1px solid var(--line);font:500 14px "Inter",sans-serif;color:var(--fg);transition:background .2s}
-.au-btn2:hover:not(:disabled){background:var(--in)}
+.au-btn2{display:flex;align-items:center;justify-content:center;width:100%;height:52px;border-radius:16px;border:1px solid var(--line);background:var(--in);font:600 14px "Inter",sans-serif;color:var(--fg);transition:background .2s}
+.au-btn2:hover:not(:disabled){background:var(--in2)}
 .au-btn2:disabled{opacity:.5;cursor:not-allowed}
+.au-gbtn{gap:12px}
 
 /* ngăn cách + Google */
-.au-or{display:flex;align-items:center;gap:12px;margin:22px 0;font:700 11px/1 "Inter",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.au-or{display:flex;align-items:center;gap:14px;margin:24px 0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .au-or::before,.au-or::after{content:"";flex:1;height:1px;background:var(--line)}
-.au-google{display:flex;justify-content:center;min-height:44px}
+.au-google{display:flex;justify-content:center;width:100%;min-height:44px;overflow:hidden;color-scheme:light}
 .au-google.off{pointer-events:none;opacity:.5}
 
 /* thông báo */
-.au-note{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--in);color:var(--mut);font-size:13px;line-height:1.55;font-weight:400;margin-bottom:18px}
+.au-note{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--in2);color:var(--mut);font-size:13px;line-height:1.55;margin-bottom:18px}
 .au-form .au-note{margin:0}
 .au-note-ic{margin-top:2px;flex-shrink:0;display:flex}
 .au-note-bd{flex:1;min-width:0}
@@ -118,31 +128,13 @@ html:not(.dark) .au-card{box-shadow:0 20px 60px rgba(40,30,80,.1)}
 
 /* màn đã gửi liên kết */
 .au-sent{text-align:center;display:grid;gap:14px;justify-items:center;animation:auUp .6s cubic-bezier(.2,.8,.2,1) both}
-.au-sent-ic{width:68px;height:68px;border-radius:20px;display:grid;place-items:center;background:rgba(175,80,255,.16);color:var(--accfg)}
-.au-sent h2{font-weight:500;font-size:26px;letter-spacing:-.02em}
+.au-sent-ic{width:68px;height:68px;border-radius:20px;display:grid;place-items:center;background:rgba(22,160,107,.14);color:var(--accfg)}
+.au-sent h2{font-weight:800;font-size:26px;letter-spacing:-.02em}
 .au-sent .mail{font-weight:700;font-size:16px;word-break:break-all;color:var(--fg)}
-.au-sent p{color:var(--mut);font-size:14px;line-height:1.6;font-weight:400;max-width:340px}
+.au-sent p{color:var(--mut);font-size:14px;line-height:1.6;max-width:340px}
 .au-sent .ok{color:var(--accfg)}
 .au-sent .no{color:var(--bad-fg)}
 .au-sent .au-btn2{margin-top:6px}
-.au-sent .au-link{background:none;font-size:14px}
-
-/* ===== SỬA LỖI: tràn ngang + bị reset đè ===== */
-.au-main{grid-template-columns:minmax(0,1fr)}
-@media(min-width:960px){.au-main{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
-.au-main>*{min-width:0}
-.au-card{min-width:0}
-.au-google{width:100%;overflow:hidden}
-.au-h1{font-size:clamp(26px,7vw,34px)}
-
-.au .au-btn{background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff}
-.au .au-btn2{border:1px solid var(--line);color:var(--fg)}
-.au .au-ghost{border:1px solid var(--line)}
-.au .au-link{color:var(--accfg)}
-.au .au-note.error .au-link,.au .au-note.bad .au-link{color:inherit}
-.au .au-mini{color:#fff;background:#f59e0b}
-.au .au-note.bad .au-mini{background:#f43f5e}
-.au .au-sent .au-link{background:none}
 
 @media(prefers-reduced-motion:reduce){
   .au *{animation:none!important;transition:none!important}
