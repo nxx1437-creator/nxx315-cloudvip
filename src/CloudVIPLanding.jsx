@@ -8,11 +8,10 @@ import { useI18n } from "./i18n/index.js";
 import { COPY, CREATOR_URL } from "./lib/landingData.js";
 import { CSS } from "./components/LandingStyle.js";
 import {
-  FloatingNav, Reveal, Trail, Barcode, Flap, RankTicket, OrderCard,
+  FloatingNav, Reveal, Trail, Flap, RankTicket, OrderCard,
   Skeletons, Wordmark, scrollToId,
-} from "./components/LandingBits.jsx";
+} from "./components/LandingBits.jsx"; // Đã xóa Barcode khỏi import
 
-/* 👇 DÁN LINK ẢNH NỀN VÀO ĐÂY (Có thể dùng .gif, .png, .jpg) */
 const HERO_IMAGE_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Banner-hero.gif";
 
 export default function CloudVIPLanding() {
@@ -57,7 +56,7 @@ export default function CloudVIPLanding() {
         {/* ===== HERO ===== */}
         <section className="dp-stage">
           
-          {/* ẢNH NỀN TRÀN VIỀN */}
+          {/* ẢNH NỀN */}
           <img 
             className="dp-hero-bg-image" 
             src={HERO_IMAGE_URL} 
@@ -87,7 +86,9 @@ export default function CloudVIPLanding() {
               <p className="note">{c.ticketNote}</p>
               <Link to="/register" className="dp-pill"><span>{c.ctaAccount}</span><ArrowRight size={18} strokeWidth={1.5} /></Link>
               <a href={CREATOR_URL} className="dp-pill"><span>{c.ctaCreator}</span><ArrowUpRight size={18} strokeWidth={1.5} /></a>
-              <Barcode />
+              
+              {/* ĐÃ XÓA THẺ <Barcode /> Ở ĐÂY ĐỂ KHÔNG BỊ LỖI KHỐI TRẮNG */}
+              
             </aside>
           </div>
           
@@ -219,7 +220,7 @@ export default function CloudVIPLanding() {
         </section>
       </main>
 
-      {/* FOOTER GIỮ NGUYÊN */}
+      {/* FOOTER */}
       <footer className="dp-end">
         <div className="dp-glow" /><div className="dp-grain" /><div className="dp-horizon" />
         <div className="dp-close">
@@ -264,5 +265,5 @@ export default function CloudVIPLanding() {
       </footer>
     </div>
   );
-          }
+                  }
             
