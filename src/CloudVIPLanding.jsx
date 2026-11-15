@@ -1,285 +1,268 @@
-import React, { useState } from "react";
+// src/CloudVIPLanding.jsx
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowDown, Lock, ShieldCheck, Bot, KeyRound } from "lucide-react";
-import { LandingFooter, BackToTop, scrollToId } from "./components/LandingNav.jsx";
+import { ArrowRight, ArrowUpRight, Play } from "lucide-react";
+import { supabase } from "./lib/supabase.js"; // 👈 đổi đường dẫn nếu file supabase của bạn ở chỗ khác
 import { SITE } from "./lib/siteInfo.js";
 import { useI18n } from "./i18n/index.js";
-import { COPY, LABELS } from "./lib/landingCopy.js";
-import { CSS } from "./components/LandingTheme.js";
+import { COPY, CREATOR_URL } from "./lib/landingData.js";
+import { CSS } from "./components/LandingStyle.js";
 import {
-  FloatingNav, HeroVideo, Reveal, Head, FaqRow, Row,
-} from "./components/LandingParts.jsx";
+  FloatingNav, Reveal, Trail, VideoSlot, Barcode, Flap, RankTicket, OrderCard,
+  Skeletons, Wordmark, scrollToId,
+} from "./components/LandingBits.jsx";
 
-/* Media đầu trang */
-const HERO_MEDIA = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero.gif";
-// 👇 Đã cập nhật link ảnh hoa sen của bạn
-const HERO_FG = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/hero2.png";
-const HERO_POSTER = undefined;
-
-const SAFETY = [
-  { icon: Lock, t: "ld.b1t", d: "ld.b1d" },
-  { icon: ShieldCheck, t: "ld.b2t", d: "ld.b2d" },
-  { icon: Bot, t: "ld.b3t", d: "ld.b3d" },
-  { icon: KeyRound, t: "ld.b4t", d: "ld.b4d" },
-];
-const FEATURE_TAGS = ["A¹", "B¹", "C¹", "D¹"];
-const FAQ_ORDER = [1, 2, 7, 3, 4, 5, 6];
-const SECTION = "mx-auto max-w-[1200px] px-5 py-16 sm:py-[94px]";
+/* 👇 DÁN LINK VIDEO HERO VÀO ĐÂY (link YouTube hoặc link .mp4). Để "" thì hiện khung chờ. */
+const HERO_VIDEO_URL = "";
+const HERO_POSTER = undefined; // (tuỳ chọn) ảnh bìa cho video .mp4
 
 export default function CloudVIPLanding() {
   const i18n = useI18n();
-  const { t, lang } = i18n;
+  const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
-  const c = COPY[lang] || COPY.vi;
-  const L = LABELS[lang] || LABELS.vi;
+  const c = COPY[lang];
   const navigate = useNavigate();
-  const [openFaq, setOpenFaq] = useState(FAQ_ORDER[0]);
+  const [board, setBoard] = useState(undefined); // undefined = đang tải, null = lỗi
+  const [orders, setOrders] = useState(undefined);
 
-  const launchedText = typeof SITE.launched === "object"
-    ? SITE.launched[lang] || SITE.launched.vi
-    : SITE.launched ?? "—";
+  useEffect(() => {
+    let off = false;
+    (async () => {
+      try {
+        const [lb, od] = await Promise.all([
+          supabase.rpc("get_landing_leaderboard", { p_limit: 10 }),
+          supabase.rpc("get_landing_recent_orders", { p_limit: 8 }),
+        ]);
+        if (off) return;
+        setBoard(lb.error ? null : lb.data || []);
+        setOrders(od.error ? null : od.data || []);
+      } catch {
+        if (!off) { setBoard(null); setOrders(null); }
+      }
+    })();
+    return () => { off = true; };
+  }, []);
 
-  const canSwitchLang = typeof setLang === "function";
+  const top3 = Array.isArray(board) ? board.slice(0, 3) : [];
+  const rest = Array.isArray(board) ? board.slice(3) : [];
+  const state = (v) => (v === undefined ? "load" : v === null ? "err" : v.length ? "ok" : "empty");
 
   return (
-    <div className="lp min-h-screen">
+    <div className="dp">
       <style>{CSS}</style>
 
-      <FloatingNav
-        items={c.nav}
-        onItem={scrollToId}
-        loginLabel={t("ld.login")}
-        onLogin={() => navigate("/login")}
-        langLabel={lang === "vi" ? "EN" : "VI"}
-        onLang={canSwitchLang ? () => setLang(lang === "vi" ? "en" : "vi") : undefined}
-      />
+      <FloatingNav items={c.nav} onItem={scrollToId} loginLabel={c.login} startLabel={c.start}
+        langLabel={c.langBtn} onLang={typeof setLang === "function" ? () => setLang(lang === "vi" ? "en" : "vi") : undefined} />
 
       <main>
-        {/* ============ HERO ============ */}
-        <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-white">
-          <div className="relative z-10 flex flex-1 flex-col">
-            <div className="lp-rise lp-d2 flex justify-center px-3 pt-[76px] sm:pt-[104px]">
-              <Link to="/register" className="lp-banner lp-press">
-                <span>{c.banner}</span>
-                <span className="lp-arrow"><ArrowRight size={12} strokeWidth={1.5} /></span>
-              </Link>
-            </div>
-
-            <div className="relative min-h-[300px] flex-1 md:static md:min-h-0">
-              {/* 👇 Truyền cả ảnh nền và ảnh hoa sen vào */}
-              <HeroVideo src={HERO_MEDIA} fgSrc={HERO_FG} poster={HERO_POSTER} />
-            </div>
-
-            <div className="mx-auto w-full max-w-[1200px] px-5 pb-8 sm:pb-12">
-              <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-                <div className="max-w-[520px]">
-                  <p className="lp-rise lp-label">{t("ld.badge")}</p>
-                  <h1 className="lp-rise lp-d1 mt-3 text-[clamp(27px,3.6vw,44px)] leading-[1.2] tracking-[-0.03em]">
-                    {c.h1a}<br />{c.h1b}
-                  </h1>
-                  <p className="lp-rise lp-d2 lp-body mt-3">{c.heroSub}</p>
-                  <div className="lp-rise lp-d3 mt-5 flex flex-wrap items-center gap-1.5">
-                    <span className="mr-1 text-[16px] text-[var(--ash)]">{c.explore}</span>
-                    {c.tags.map(([k, label], i) => (
-                      <button key={`${k}-${i}`} type="button" onClick={() => scrollToId("features")} className="lp-tag lp-press">
-                        {k} {label}
-                      </button>
-                    ))}
-                  </div>
-                  <button type="button" onClick={() => scrollToId("overview")} aria-label="Scroll to overview"
-                    className="lp-glass lp-press mt-8 hidden h-10 w-6 md:flex items-center justify-center rounded-full">
-                    <ArrowDown size={12} strokeWidth={1.5} />
-                  </button>
-                </div>
-
-                <Link to="/register" className="lp-cta lp-press lp-rise lp-d3 w-fit">
-                  <span>{t("ld.ctaStart")}</span>
-                  <ArrowRight size={16} strokeWidth={1.5} />
-                </Link>
-              </div>
-            </div>
+        {/* ===== HERO ===== */}
+        <section className="dp-stage">
+          <div className="dp-sky" aria-hidden="true">
+            <i className="dp-cloud c4" /><i className="dp-cloud c2" /><i className="dp-cloud c1" /><i className="dp-cloud c3" />
+            <div className="dp-halo" /><div className="dp-shade" />
           </div>
-        </section>
-
-        {/* ============ TỔNG QUAN ============ */}
-        <section id="overview" className="scroll-mt-24">
-          <div className={SECTION}>
-            <Reveal>
-              <div className="grid gap-6 lg:grid-cols-[180px_1fr_340px] lg:gap-12">
-                <p className="lp-label">01 · {L.over}</p>
-                <div>
-                  <h2 className="lp-h2 max-w-[560px]">{c.overTitle}</h2>
-                  <ul className="mt-6 flex flex-wrap gap-1.5">
-                    {[t("ld.check1"), t("ld.check2"), t("ld.check3")].map((x, i) => (
-                      <li key={i} className="lp-tag">{x}</li>
-                    ))}
-                  </ul>
-                </div>
-                <p className="lp-body">{c.note}</p>
-              </div>
-            </Reveal>
-
-            <dl className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              {c.facts.map(([v, l], i) => (
-                <Reveal key={`${v}-${i}`} delay={i * 60} className="h-full">
-                  <div className="lp-card h-full p-6 sm:p-8">
-                    <dt className="text-[22px] leading-[1.2] tracking-[-0.44px] sm:text-[27px]">{v}</dt>
-                    <dd className="lp-label mt-3 leading-[1.4]">{l}</dd>
-                  </div>
-                </Reveal>
-              ))}
-            </dl>
-          </div>
-        </section>
-
-        {/* ============ TÍNH NĂNG ============ */}
-        <section id="features" className="scroll-mt-24">
-          <div className={SECTION}>
-            <Head n="02" label={L.feat} title={c.featTitle} />
-            <div className="mt-12 grid gap-3 sm:gap-4 md:grid-cols-2">
-              {c.features.map((f, i) => (
-                <Reveal key={f.to} delay={(i % 2) * 70} className="h-full">
-                  <div className="lp-card flex h-full flex-col p-7 sm:p-[69px]">
-                    {FEATURE_TAGS[i] && <span className="lp-tag w-fit">{FEATURE_TAGS[i]}</span>}
-                    <h3 className="mt-10 text-[24px] leading-[1.2] tracking-[-0.48px] sm:text-[27px]">{f.title}</h3>
-                    <p className="lp-body mt-3 flex-1">{f.body}</p>
-                    <Link to={f.to} className="lp-link mt-8 inline-flex items-center gap-1 text-[16px]">
-                      {c.guide} <ArrowRight size={14} strokeWidth={1.5} />
-                    </Link>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ============ CÁCH HOẠT ĐỘNG ============ */}
-        <section id="how" className="scroll-mt-24">
-          <div className={SECTION}>
-            <Head n="03" label={L.how} title={c.howTitle} />
-            <ol className="mt-12 grid gap-3 sm:gap-4 md:grid-cols-3">
-              {[1, 2, 3].map((n) => (
-                <li key={n}>
-                  <Reveal delay={n * 60} className="h-full">
-                    <div className="lp-card h-full p-7 sm:p-10">
-                      <span className="lp-tag">0{n}</span>
-                      <h3 className="mt-10 text-[24px] leading-[1.2] tracking-[-0.48px]">{t(`ld.s${n}t`)}</h3>
-                      <p className="lp-body mt-3">{t(`ld.s${n}d`)}</p>
-                    </div>
-                  </Reveal>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ============ AN TOÀN ============ */}
-        <section id="safety" className="scroll-mt-24">
-          <div className={SECTION}>
-            <Head n="04" label={L.safe} title={t("ld.safeTitle")} sub={t("ld.safeSub")} />
-            <Reveal>
-              <div className="lp-card mt-12 p-7 sm:p-[69px]">
-                <div className="grid gap-x-16 gap-y-10 sm:grid-cols-2">
-                  {SAFETY.map(({ icon: Icon, t: tk, d }) => (
-                    <div key={tk}>
-                      <Icon size={22} strokeWidth={1.1} aria-hidden="true" />
-                      <h3 className="lp-sub mt-5">{t(tk)}</h3>
-                      <p className="lp-body mt-2">{t(d)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ============ MINH BẠCH ============ */}
-        <section>
-          <div className={`${SECTION} grid gap-12 md:grid-cols-2 md:gap-20`}>
+          <Trail />
+          <div className="dp-wrap dp-hero">
             <div>
-              <p className="lp-label">05 · {L.who}</p>
-              <h2 className="lp-h2 mt-2">{c.whoTitle}</h2>
-              <p className="lp-body mt-5 max-w-md">{c.whoBody}</p>
-              <ul className="mt-6 flex flex-wrap gap-1.5">
-                {c.whoPoints.map((p, i) => (
-                  <li key={`${p}-${i}`} className="lp-tag lp-tag-lg">{p}</li>
-                ))}
-              </ul>
-              <Link to="/about" className="lp-link mt-6 inline-flex items-center gap-1 text-[16px]">
-                {c.whoMore} <ArrowRight size={14} strokeWidth={1.5} />
-              </Link>
-              <div className="mt-10 border-t-[.5px] border-[var(--hair)] pt-6">
-                <p className="lp-label">{c.whoLegal}</p>
-                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
-                  <Link to="/terms" className="lp-link">{c.terms}</Link>
-                  <Link to="/privacy" className="lp-link">{c.privacy}</Link>
-                  <Link to="/refund" className="lp-link">{c.refund}</Link>
-                </div>
-              </div>
+              <h1 className="dp-h1">
+                <span>{c.h1a} <em className="dp-serif">{c.h1b}</em></span>
+                <span>{c.h1c}</span>
+                <span className="dp-serif dim">{c.h1d}</span>
+              </h1>
+              <p className="dp-hs">{c.heroSub}</p>
+              <button type="button" className="dp-watch" onClick={() => scrollToId("hero-video")}>
+                <span>{c.watch}</span>
+                <span className="dp-play"><Play size={18} fill="currentColor" /></span>
+              </button>
             </div>
 
-            <Reveal>
-              <dl className="lp-card px-7 py-3 sm:px-10">
-                <Row k={c.whoOperator}>{SITE.operator ?? "—"}</Row>
-                {SITE.address && <Row k={c.address}>{SITE.address}</Row>}
-                {SITE.business && <Row k={c.business}>{SITE.business}</Row>}
-                {SITE.youtube && (
-                  <Row k="YouTube">
-                    <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="lp-link">
-                      {SITE.youtube.replace("https://www.youtube.com/", "")}
-                    </a>
-                  </Row>
-                )}
-                {SITE.zaloUrl && (
-                  <Row k="Zalo">
-                    <a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer" className="lp-link">
-                      {SITE.zalo ?? "Zalo"}
-                    </a>
-                  </Row>
-                )}
-                {SITE.email && <Row k="Email"><span className="break-all">{SITE.email}</span></Row>}
-                <Row k={c.whoSince}>{launchedText}</Row>
-              </dl>
-            </Reveal>
+            <aside className="dp-ticket" id="hero-video">
+              <p className="meta dp-mono"><span>{c.ticketMeta}</span><span>No. 01</span></p>
+              <VideoSlot url={HERO_VIDEO_URL} poster={HERO_POSTER} soon={c.videoSoon} />
+              <h3>{c.ticketTitle}</h3>
+              <p className="note">{c.ticketNote}</p>
+              <Link to="/register" className="dp-pill"><span>{c.ctaAccount}</span><ArrowRight size={18} strokeWidth={1.5} /></Link>
+              <a href={CREATOR_URL} className="dp-pill"><span>{c.ctaCreator}</span><ArrowUpRight size={18} strokeWidth={1.5} /></a>
+              <Barcode />
+            </aside>
           </div>
+          <div className="dp-wrap dp-tele dp-mono"><span>+ NXX315 · STUDIO REWARDS</span><span>↓ {c.scroll}</span></div>
         </section>
 
-        {/* ============ HỎI ĐÁP ============ */}
-        <section id="faq" className="scroll-mt-24">
-          <div className="mx-auto max-w-3xl px-5 py-16 sm:py-[94px]">
-            <Head n="06" label={L.faq} title={t("ld.faqTitle")} />
-            <div className="mt-10 border-t-[.5px] border-[var(--hair)]">
-              {FAQ_ORDER.map((faqKey, idx) => (
-                <FaqRow key={faqKey} id={faqKey} n={String(idx + 1).padStart(2, "0")}
-                  q={t(`ld.faq${faqKey}q`)} a={t(`ld.faq${faqKey}a`)}
-                  open={openFaq === faqKey} onToggle={() => setOpenFaq(openFaq === faqKey ? null : faqKey)} />
+        {/* ===== BẢNG TÍNH NĂNG (split-flap) ===== */}
+        <section className="dp-sec">
+          <div className="dp-wrap">
+            <p className="dp-lbl">{c.flapLabel}</p>
+            <div className="dp-board">
+              {c.flap.map(([text, kind, target], i) => (
+                <Flap key={text} text={text} kind={kind} target={target} onId={scrollToId} delay={i * 80} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* ============ KÊU GỌI CUỐI ============ */}
-        <section>
-          <div className="mx-auto max-w-[1200px] px-5 pb-16 sm:pb-[94px]">
+        {/* ===== 01 QUAY VIDEO ===== */}
+        <section id="video" className="dp-sec">
+          <div className="dp-wrap">
+            <Reveal className="dp-head">
+              <p className="dp-lbl">{c.vLabel}</p>
+              <h2 className="dp-h2">{c.vTitleA} <span className="dp-serif">{c.vTitleB}</span></h2>
+              <p className="dp-body" style={{ marginTop: 20 }}>{c.vBody}</p>
+            </Reveal>
+
             <Reveal>
-              <div className="lp-card p-7 sm:p-[69px]">
-                <h2 className="max-w-[560px] text-[clamp(27px,4vw,44px)] leading-[1.2] tracking-[-0.03em]">{c.ctaTitle}</h2>
-                <p className="lp-body mt-4 max-w-md">{t("ld.ctaSub")}</p>
-                <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-                  <Link to="/register" className="lp-cta lp-press">
-                    <span>{t("ld.ctaReg")}</span>
-                    <ArrowRight size={16} strokeWidth={1.5} />
-                  </Link>
-                  <Link to="/login" className="lp-link text-[16px]">{t("ld.login")}</Link>
+              <div className="dp-scene">
+                <div className="dp-console">
+                  <div className="dp-cbar">
+                    <i /><i /><i />
+                    <span className="dp-url dp-mono">creator.nxx315.com</span>
+                    <span className="dp-badge">{c.mockTag}</span>
+                  </div>
+                  <div className="dp-cbody">
+                    {[["ok", 1], ["wait", 2], ["ok", 3]].map(([k, n]) => (
+                      <div key={n} className="dp-crow">
+                        <span className="dp-mono" style={{ opacity: 0.5 }}>0{n}</span>
+                        <span className="dp-line" />
+                        <span className={`dp-chip ${k}`}>{c.st[k]}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+                <span className="dp-float f1 dp-badge">+ {c.mockGift}</span>
+                <span className="dp-float f2 dp-badge">{c.mockScan}</span>
               </div>
             </Reveal>
+
+            <div className="dp-trip">
+              {c.vSteps.map(([t, d], i) => (
+                <Reveal key={t} delay={i * 80}>
+                  <p className="num dp-mono">0{i + 1}</p>
+                  <h3>{t}</h3>
+                  <p>{d}</p>
+                </Reveal>
+              ))}
+            </div>
+            <div className="dp-cta-row">
+              {/* Bấm vào là chuyển sang trang creator */}
+              <a href={CREATOR_URL} className="dp-pill big"><span>{c.vCta}</span><ArrowUpRight size={20} strokeWidth={1.5} /></a>
+            </div>
           </div>
+        </section>
+
+        {/* ===== 02 MỜI BẠN ===== */}
+        <section id="invite" className="dp-sec">
+          <div className="dp-wrap">
+            <Reveal className="dp-head">
+              <p className="dp-lbl">{c.iLabel}</p>
+              <h2 className="dp-h2">{c.iTitleA} <span className="dp-serif">{c.iTitleB}</span></h2>
+              <p className="dp-body" style={{ marginTop: 20 }}>{c.iBody}</p>
+            </Reveal>
+            <div className="dp-trip">
+              {c.iCols.map(([big, d], i) => (
+                <Reveal key={big} delay={i * 80}>
+                  <h3 style={{ fontSize: "clamp(40px,7vw,64px)" }}>{big}</h3>
+                  <p>{d}</p>
+                </Reveal>
+              ))}
+            </div>
+            <div className="dp-cta-row">
+              <button type="button" className="dp-pill big" onClick={() => navigate("/register")}>
+                <span>{c.iCta}</span><ArrowRight size={20} strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== 03 XẾP HẠNG ===== */}
+        <section id="rank" className="dp-sec">
+          <div className="dp-wrap">
+            <Reveal className="dp-head">
+              <p className="dp-lbl">{c.rLabel}</p>
+              <h2 className="dp-h2">{c.rTitleA} <span className="dp-serif">{c.rTitleB}</span></h2>
+              <p className="dp-body" style={{ marginTop: 20 }}>{c.rSub}</p>
+            </Reveal>
+          </div>
+          {state(board) === "load" && <div className="dp-rail"><Skeletons /></div>}
+          {state(board) === "ok" && <div className="dp-rail">{top3.map((r) => <RankTicket key={r.rank} row={r} c={c} />)}</div>}
+          {(state(board) === "empty" || state(board) === "err") && (
+            <p className="dp-note">{state(board) === "err" ? c.failed : c.empty}</p>
+          )}
+          {rest.length > 0 && (
+            <div className="dp-list">
+              {rest.map((r) => (
+                <div key={r.rank} className="dp-row">
+                  <span className="rk dp-mono">{String(r.rank).padStart(2, "0")}</span>
+                  <span className="nm">{r.name}</span>
+                  <span className="cn">{Number(r.coins).toLocaleString("vi-VN")} {c.unit}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ===== 04 ĐƠN ĐÃ DUYỆT ===== */}
+        <section id="orders" className="dp-sec">
+          <div className="dp-wrap">
+            <Reveal className="dp-head">
+              <p className="dp-lbl">{c.oLabel}</p>
+              <h2 className="dp-h2">{c.oTitleA} <span className="dp-serif">{c.oTitleB}</span></h2>
+              <p className="dp-body" style={{ marginTop: 20 }}>{c.oSub}</p>
+            </Reveal>
+          </div>
+          {state(orders) === "load" && <div className="dp-rail"><Skeletons n={4} /></div>}
+          {state(orders) === "ok" && (
+            <div className="dp-rail">{orders.map((o, i) => <OrderCard key={`${o.approved_at}-${i}`} row={o} c={c} />)}</div>
+          )}
+          {(state(orders) === "empty" || state(orders) === "err") && (
+            <p className="dp-note">{state(orders) === "err" ? c.failed : c.empty}</p>
+          )}
         </section>
       </main>
 
-      <LandingFooter />
-      <BackToTop />
+      {/* ===== KẾT + FOOTER ===== */}
+      <footer className="dp-end">
+        <div className="dp-glow" /><div className="dp-grain" /><div className="dp-horizon" />
+        <div className="dp-close">
+          <Reveal>
+            <h2>{c.closeA} <span className="dp-serif">{c.closeB}</span></h2>
+            <p>{c.closeSub}</p>
+            <div className="acts">
+              <Link to="/register" className="dp-pill big"><span>{c.ctaAccount}</span><ArrowRight size={20} strokeWidth={1.5} /></Link>
+              <a href={CREATOR_URL} className="dp-pill big"><span>{c.ctaCreator}</span><ArrowUpRight size={20} strokeWidth={1.5} /></a>
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="dp-wrap">
+          <div className="dp-foot">
+            <div className="brand"><Wordmark /><p>{c.manifesto}</p></div>
+            <div>
+              <h4>{c.fCols[0]}</h4>
+              <ul>{c.fExplore.map(([id, l]) => <li key={id}><button type="button" onClick={() => scrollToId(id)}>{l}</button></li>)}</ul>
+            </div>
+            <div>
+              <h4>{c.fCols[1]}</h4>
+              <ul>{c.fAccount.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
+              <h4 style={{ marginTop: 24 }}>{c.fCols[2]}</h4>
+              <ul>{c.fLegal.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
+            </div>
+            <div>
+              <h4>{c.fCols[3]}</h4>
+              <ul>
+                {SITE?.youtube && <li><a href={SITE.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></li>}
+                {SITE?.zaloUrl && <li><a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer">Zalo</a></li>}
+                {SITE?.email && <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>}
+                <li><a href={CREATOR_URL}>Creator</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="dp-bottom dp-mono">
+            <span>© {new Date().getFullYear()} Nxx315 Studio</span>
+            <span>Roblox · Creator · Rewards</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
-                    }
+                  }
+              
