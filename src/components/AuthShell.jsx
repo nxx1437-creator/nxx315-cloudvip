@@ -143,10 +143,9 @@ export default function AuthShell({ title, subtitle, footer, children }) {
 
         <div className="au-brand">
           <Link to="/" className="au-logo">
-            NXX315<em>.Studio</em>
-          </Link>
-          <p className="au-tag">{c.tagline}</p>
-        </div>
+  NXX315 <span>Studio</span>
+</Link>
+          </div>
 
         <div className="au-card">
           <h1 className="au-h1">{title}</h1>
