@@ -1,6 +1,7 @@
 // src/components/profile/ProfileHeader.jsx — thẻ hồ sơ gọn (kiểu MoMo) + hàng cấp độ mỏng
 import React from "react";
 import { Camera, ChevronRight } from "lucide-react";
+import VerifiedBadge from "../VerifiedBadge.jsx";
 
 const pct = (a, b) => Math.min(100, Math.round(((a || 0) / (b || 1)) * 100));
 
@@ -41,8 +42,9 @@ export default function ProfileHeader({ session, profile, userLevel, onEdit, onA
 
           <button onClick={onEdit} className="flex min-w-0 flex-1 items-center gap-2 text-left">
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[19px] font-bold leading-6 text-slate-900 dark:text-white">
-                {displayName}
+                            <span className="flex min-w-0 items-center gap-1.5 text-[19px] font-bold leading-6 text-slate-900 dark:text-white">
+                <span className="truncate">{displayName}</span>
+                {profile.is_verified === true && <VerifiedBadge size={18} />}
               </span>
               <span className="block text-[12.5px] text-slate-500">Thành viên từ {memberSince}</span>
             </span>
