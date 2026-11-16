@@ -52,11 +52,13 @@ export const AUTH_CSS = `
 .au-mi:hover{background:var(--in2)}
 .au-mi.on{font-weight:700;color:var(--accfg)}
 
-/* logo + dòng giới thiệu */
+/* logo (ngôi sao + chữ) + dòng giới thiệu */
 .au-brand{position:relative;isolation:isolate;margin-top:18px;text-align:center}
 .au-brand::before{content:"";position:absolute;left:50%;top:36%;width:min(320px,90vw);height:100px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,var(--glow),transparent);z-index:-1}
-.au-logo{display:inline-block;font-weight:800;font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em;line-height:1.1}
-.au-logo span{font-weight:500;color:var(--accfg)}
+.au-logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em;line-height:1.1}
+.au-logo em{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.01em;color:var(--accfg)}
+.au-star{display:block;height:1.35em;width:auto;flex-shrink:0;filter:drop-shadow(0 4px 10px rgba(80,160,255,.35));animation:auStar 5s ease-in-out infinite alternate}
+@keyframes auStar{from{transform:rotate(-7deg) translateY(1px)}to{transform:rotate(7deg) translateY(-2px)}}
 .au-tag{margin:10px auto 0;max-width:300px;color:var(--mut);font-size:14px;line-height:1.5}
 
 /* thẻ */
@@ -89,6 +91,7 @@ export const AUTH_CSS = `
 .au-in:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(22,160,107,.16)}
 .au-in:disabled{opacity:.55;cursor:not-allowed}
 .au-in.up{text-transform:uppercase;letter-spacing:.08em}
+.au-in.up::placeholder{text-transform:none;letter-spacing:0}
 .au-in.gift{border-style:dashed}
 .au-hint{font-size:13px;line-height:1.5;color:var(--mut)}
 .au-check{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5;color:var(--mut);cursor:pointer}
