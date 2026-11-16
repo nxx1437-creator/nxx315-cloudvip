@@ -143,8 +143,19 @@ export default function AuthShell({ title, subtitle, footer, children }) {
           <Link to="/" className="au-logo" aria-label="NXX315.Studio">
             <img className="au-star" src={LOGO_STAR} alt="" aria-hidden="true" />
             <span>
-              NXX315<em>.Studio</em>
-            </span>
+  <span style={{ color: "var(--accfg)" }}>NXX315</span>
+  <em
+    style={{
+      fontFamily: "inherit",
+      fontStyle: "normal",
+      fontWeight: 800,
+      letterSpacing: "inherit",
+      color: "inherit",
+    }}
+  >
+    STUDIO
+  </em>
+</span>
           </Link>
           <p className="au-tag">{c.tagline}</p>
         </div>
