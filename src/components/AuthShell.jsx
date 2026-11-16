@@ -153,7 +153,7 @@ export default function AuthShell({ title, subtitle, footer, children }) {
       color: "inherit",
     }}
   >
-     STUDIO
+     .STUDIO
   </em>
 </span>
           </Link>
