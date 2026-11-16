@@ -56,7 +56,6 @@ export const AUTH_CSS = `
 .au-brand{position:relative;isolation:isolate;margin-top:18px;text-align:center}
 .au-brand::before{content:"";position:absolute;left:50%;top:36%;width:min(320px,90vw);height:100px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,var(--glow),transparent);z-index:-1}
 .au-logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em;line-height:1.1}
-.au-logo em{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.01em;color:var(--accfg)}
 .au-star{display:block;height:1.35em;width:auto;flex-shrink:0;filter:drop-shadow(0 4px 10px rgba(80,160,255,.35));animation:auStar 5s ease-in-out infinite alternate}
 @keyframes auStar{from{transform:rotate(-7deg) translateY(1px)}to{transform:rotate(7deg) translateY(-2px)}}
 .au-tag{margin:10px auto 0;max-width:300px;color:var(--mut);font-size:14px;line-height:1.5}
