@@ -56,7 +56,7 @@ export const AUTH_CSS = `
 .au-brand{position:relative;isolation:isolate;margin-top:18px;text-align:center}
 .au-brand::before{content:"";position:absolute;left:50%;top:36%;width:min(320px,90vw);height:100px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,var(--glow),transparent);z-index:-1}
 .au-logo{display:inline-block;font-weight:800;font-size:clamp(28px,8.4vw,34px);letter-spacing:-.03em;line-height:1.1}
-.au-logo em{font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.01em;color:var(--accfg)}
+.au-logo span{font-weight:500;color:var(--accfg)}
 .au-tag{margin:10px auto 0;max-width:300px;color:var(--mut);font-size:14px;line-height:1.5}
 
 /* thẻ */
