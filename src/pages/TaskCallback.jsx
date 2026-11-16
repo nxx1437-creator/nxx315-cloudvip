@@ -11,6 +11,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
+import StreakCelebration from "../components/StreakCelebration.jsx";
 
 const RECAPTCHA_SITE_KEY = "6LdDVZQtAAAAAPtq_OTF3sAMkjmUphIIQkRPbwWh";
 const CANCEL_TIMEOUT_SECONDS = 30;
@@ -33,6 +34,7 @@ export default function TaskCallback() {
   const [captchaReady, setCaptchaReady] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(5);
   const [userRank, setUserRank] = useState(null);
+  const [streakBusy, setStreakBusy] = useState(true);
 
   const widgetIdRef = useRef(null);
   const timerRef = useRef(null);
@@ -175,9 +177,10 @@ export default function TaskCallback() {
     loadRank();
   }, [state.status]);
 
-  // ✅ Auto redirect 5s
+  // ✅ Auto redirect 5s (tạm dừng khi màn hình chuỗi ngày đang mở)
   useEffect(() => {
     if (state.status !== "success" && state.status !== "pending_review") return;
+    if (state.status === "success" && streakBusy) return;
     setRedirectCountdown(5);
     redirectTimerRef.current = setInterval(() => {
       setRedirectCountdown((c) => {
@@ -190,7 +193,7 @@ export default function TaskCallback() {
       });
     }, 1000);
     return () => clearInterval(redirectTimerRef.current);
-  }, [state.status, navigate]);
+  }, [state.status, navigate, streakBusy]);
 
   // Cleanup
   useEffect(() => {
@@ -259,8 +262,7 @@ export default function TaskCallback() {
       setState({ status: "error", message: err.message, reward: 0 });
     }
   };
-
-  return (
+    return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 py-6 text-center font-[Be_Vietnam_Pro]">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
         {/* ================= IDLE ================= */}
@@ -391,9 +393,7 @@ export default function TaskCallback() {
             <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-4 py-2 text-lg font-bold text-amber-600">
               <Coins size={20} /> {state.reward} Coin (đang chờ duyệt)
             </p>
-            <p className="mt-3 text-xs text-slate-400">
-              {state.message}
-            </p>
+            <p className="mt-3 text-xs text-slate-400">{state.message}</p>
             <p className="mt-1 text-xs text-slate-400">
               Xu sẽ được cộng vào ví sau khi hệ thống duyệt xong (tối đa 10 ngày)
             </p>
@@ -439,14 +439,22 @@ export default function TaskCallback() {
         {state.status !== "idle" &&
           state.status !== "success" &&
           state.status !== "pending_review" && (
-          <button
-            onClick={() => navigate("/tasks")}
-            className="mt-6 w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
-          >
-            Quay lại Nhiệm vụ
-          </button>
-        )}
+            <button
+              onClick={() => navigate("/tasks")}
+              className="mt-6 w-full rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
+            >
+              Quay lại Nhiệm vụ
+            </button>
+          )}
       </div>
+
+      {/* 🔥 Màn hình chuỗi ngày + nhận xu điểm danh (chỉ hiện khi hôm nay chưa điểm danh) */}
+      {state.status === "success" && streakBusy && (
+        <StreakCelebration
+          taskReward={state.reward}
+          onDone={() => setStreakBusy(false)}
+        />
+      )}
     </div>
   );
-                                  }
+        }
