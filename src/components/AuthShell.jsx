@@ -15,10 +15,13 @@ const LANGS = [
 const DARK_Q = "(prefers-color-scheme: dark)";
 const KEY = "theme_mode"; // cùng khóa với hooks/useTheme.js: "light" | "dark" | "system"
 
+const isBrowser = typeof window !== "undefined";
+
 const sysDark = () =>
-  typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(DARK_Q).matches;
+  isBrowser && !!window.matchMedia && window.matchMedia(DARK_Q).matches;
 
 const readMode = () => {
+  if (!isBrowser) return "system";
   try {
     const v = localStorage.getItem(KEY);
     return v === "dark" || v === "light" || v === "system" ? v : "system";
@@ -27,11 +30,14 @@ const readMode = () => {
   }
 };
 
+// SSR-safe layout effect (tránh warning "useLayoutEffect does nothing on the server")
+const useIsoLayoutEffect = isBrowser ? useLayoutEffect : useEffect;
+
 export default function AuthShell({ title, subtitle, footer, children }) {
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
-  const c = AUTH_COPY[lang];
+  const c = AUTH_COPY[lang] || AUTH_COPY.vi || {};
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -42,7 +48,7 @@ export default function AuthShell({ title, subtitle, footer, children }) {
   // chế độ của thiết bị, cập nhật trực tiếp khi thiết bị đổi
   const [sys, setSys] = useState(sysDark);
   useEffect(() => {
-    if (!window.matchMedia) return;
+    if (!isBrowser || !window.matchMedia) return;
     const m = window.matchMedia(DARK_Q);
     const fn = () => setSys(m.matches);
     fn();
@@ -57,24 +63,39 @@ export default function AuthShell({ title, subtitle, footer, children }) {
   // light/dark là lựa chọn rõ ràng, system hoặc chưa chọn thì theo thiết bị
   const dark = mode === "dark" ? true : mode === "light" ? false : sys;
 
-  // áp dụng ngay trước khi vẽ: class "dark" trên <html> (như useTheme) + báo cho nút Google
-  useLayoutEffect(() => {
+  // áp dụng ngay trước khi vẽ: class "dark" trên <html> + báo cho nút Google
+  // cleanup: restore đúng trạng thái class "dark" trước khi mount thay vì để dính
+  useIsoLayoutEffect(() => {
+    if (!isBrowser) return;
     const el = document.documentElement;
+    const prevClass = el.classList.contains("dark");
+    const prevDs = el.dataset.auTheme;
+
     el.classList.toggle("dark", dark);
     el.dataset.auTheme = dark ? "dark" : "light";
+
     return () => {
-      delete el.dataset.auTheme;
+      el.classList.toggle("dark", prevClass);
+      if (prevDs === undefined) delete el.dataset.auTheme;
+      else el.dataset.auTheme = prevDs;
     };
   }, [dark]);
 
-  // bấm ra ngoài thì đóng menu ngôn ngữ
+  // bấm ra ngoài thì đóng menu ngôn ngữ + Esc để đóng (a11y)
   useEffect(() => {
     if (!open) return;
-    const off = (e) => {
+    const onPointer = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("pointerdown", off);
-    return () => document.removeEventListener("pointerdown", off);
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   const toggleTheme = () => {
@@ -100,7 +121,7 @@ export default function AuthShell({ title, subtitle, footer, children }) {
             type="button"
             className="au-tbtn theme"
             onClick={toggleTheme}
-            aria-label={c.themeAria}
+            aria-label={c.themeAria || (dark ? "Chuyển sang sáng" : "Chuyển sang tối")}
           >
             {dark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -112,6 +133,7 @@ export default function AuthShell({ title, subtitle, footer, children }) {
               onClick={() => setOpen((v) => !v)}
               aria-haspopup="listbox"
               aria-expanded={open}
+              aria-label={c.langAria || "Chọn ngôn ngữ"}
             >
               <span className="au-flag">{cur[1]}</span>
               <ChevronDown size={16} />
@@ -141,9 +163,9 @@ export default function AuthShell({ title, subtitle, footer, children }) {
 
         <div className="au-brand">
           <Link to="/" className="au-logo" aria-label="NXX315 Studio">
-  <img className="au-star" src={LOGO_STAR} alt="" aria-hidden="true" />
-  <span>NXX315 Studio</span>
-</Link>
+            <img className="au-star" src={LOGO_STAR} alt="" aria-hidden="true" />
+            <span>NXX315 Studio</span>
+          </Link>
           <p className="au-tag">{c.tagline}</p>
         </div>
 
@@ -156,4 +178,4 @@ export default function AuthShell({ title, subtitle, footer, children }) {
       </main>
     </div>
   );
-      }
+            }
