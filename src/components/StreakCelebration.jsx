@@ -87,7 +87,6 @@ export default function StreakCelebration({ onDone }) {
   };
 
   return (
-    // Thêm font-sans để nó dùng font chữ hiện đại của Tailwind (Inter/San Francisco)
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 px-5 backdrop-blur-sm font-sans">
       
       <style>{`
@@ -134,7 +133,6 @@ export default function StreakCelebration({ onDone }) {
 
         {/* PHẦN DƯỚI: Nội dung và Nút */}
         <div className="px-6 pb-7 pt-5 text-center">
-          {/* Đổi font-extrabold thành font-bold và tracking-tight để nhìn mềm mại hơn */}
           <h2 className="text-[22px] font-bold tracking-tight text-gray-900 leading-tight">
             {phase === "claimed" 
               ? (en ? "Check-in Successful!" : "Điểm danh thành công!") 
@@ -152,14 +150,12 @@ export default function StreakCelebration({ onDone }) {
           <div className="mt-7 flex flex-col gap-3">
             {phase === "ready" && (
               <>
-                {/* Nút chính: Bo tròn hoàn toàn (rounded-full), chữ font-medium, bóng đổ mềm */}
                 <button
                   onClick={claim}
                   className="flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-[#3B82F6] text-[15px] font-medium text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(59,130,246,0.3)] hover:bg-blue-600"
                 >
                   {en ? "Claim now" : "Nhận ngay"}
                 </button>
-                {/* Nút phụ: Bo tròn, màu xám nhạt */}
                 <button
                   onClick={onDone}
                   className="h-[50px] w-full rounded-full bg-[#F3F4F6] text-[15px] font-medium text-gray-600 transition-all active:scale-95 hover:bg-gray-200"
@@ -182,8 +178,10 @@ export default function StreakCelebration({ onDone }) {
               >
                 {en ? "Awesome!" : "Tuyệt vời!"}
               </button>
-        </div>
-      </div>
-    </div>
+            )}
+          </div>
+        </div> {/* <--- Đã đóng thẻ div phần dưới */}
+      </div> {/* <--- Đã đóng thẻ div khung trắng */}
+    </div> /* <--- Đã đóng thẻ div nền đen */
   );
-                }
+}
