@@ -140,12 +140,10 @@ export default function AuthShell({ title, subtitle, footer, children }) {
         </div>
 
         <div className="au-brand">
-          <Link to="/" className="au-logo" aria-label="NXX315.Studio">
-            <img className="au-star" src={LOGO_STAR} alt="" aria-hidden="true" />
-            <span>
-              NXX315<em>.Studio</em>
-            </span>
-          </Link>
+          <Link to="/" className="au-logo" aria-label="NXX315 Studio">
+  <img className="au-star" src={LOGO_STAR} alt="" aria-hidden="true" />
+  <span>NXX315 Studio</span>
+</Link>
           <p className="au-tag">{c.tagline}</p>
         </div>
 
