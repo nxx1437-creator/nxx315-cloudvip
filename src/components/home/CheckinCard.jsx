@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { useI18n } from "../../i18n/index.js";
 import { Panel } from "./HomeUI.jsx";
 
-// Thưởng theo ngày trong chuỗi (khớp hàm claim_daily_checkin trong database)
+// Thưởng mặc định, sẽ được thay bằng dữ liệu bảng checkin_rewards trên Supabase
 const DEFAULT_REWARDS = [100, 150, 200, 300, 400, 500, 600];
 
 const vnDate = (offsetDays = 0) =>
@@ -21,7 +21,8 @@ export default function CheckinCard({ userId, onClaimed }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [needTask, setNeedTask] = useState(false);
-  const nextReward = rewards[filled % 7];
+  const [rewards, setRewards] = useState(DEFAULT_REWARDS);
+
   useEffect(() => {
     supabase
       .from("checkin_rewards")
@@ -56,7 +57,7 @@ export default function CheckinCard({ userId, onClaimed }) {
   const streak = alive ? info.streak || 0 : 0;
   // Đủ 7 ngày mà chưa điểm danh hôm nay -> bắt đầu chuỗi mới
   const filled = !doneToday && streak >= 7 ? 0 : streak;
-  const nextReward = REWARDS[filled % 7];
+  const nextReward = rewards[filled % 7];
 
   const claim = async () => {
     if (busy || doneToday) return;
