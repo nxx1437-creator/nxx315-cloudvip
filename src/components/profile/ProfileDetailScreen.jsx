@@ -2,6 +2,7 @@
 import React from "react";
 import { ArrowLeft, Calendar, Camera, Lock, Mail, Pencil, Settings, Star, User } from "lucide-react";
 import { Group, Row } from "./SettingsParts.jsx";
+import VerifiedBadge from "../VerifiedBadge.jsx";
 
 const COVER =
   "bg-[linear-gradient(135deg,#dbeafe_0%,#e0f2fe_45%,#ccfbf1_100%)] dark:bg-[linear-gradient(135deg,#0f2a44_0%,#0b3a4a_100%)]";
@@ -74,7 +75,10 @@ export default function ProfileDetailScreen({
               </span>
             </button>
 
-            <h2 className="mt-3 truncate text-[22px] font-bold text-slate-900 dark:text-white">{displayName}</h2>
+                         <h2 className="mt-3 flex min-w-0 items-center gap-2 text-[22px] font-bold text-slate-900 dark:text-white">
+              <span className="truncate">{displayName}</span>
+              {profile.is_verified === true && <VerifiedBadge size={22} />}
+            </h2>
             <p className="mt-0.5 truncate text-[14px] text-slate-500">{email}</p>
 
             <div className="mt-4 grid grid-cols-4 divide-x divide-slate-100 dark:divide-slate-800">
