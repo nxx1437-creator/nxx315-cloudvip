@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { useI18n } from "../../i18n/index.js";
 import { Panel } from "./HomeUI.jsx";
 
-// Thưởng mặc định, sẽ được thay bằng dữ liệu bảng checkin_rewards trên Supabase
+// Thưởng theo ngày trong chuỗi (khớp hàm claim_daily_checkin trong database)
 const DEFAULT_REWARDS = [100, 150, 200, 300, 400, 500, 600];
 
 const vnDate = (offsetDays = 0) =>
@@ -17,11 +17,17 @@ export default function CheckinCard({ userId, onClaimed }) {
   const navigate = useNavigate();
   const { lang } = useI18n();
   const en = lang === "en";
+  
   const [info, setInfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [needTask, setNeedTask] = useState(false);
+  
+  // 1. KHAI BÁO STATE REWARDS
   const [rewards, setRewards] = useState(DEFAULT_REWARDS);
+
+  // 2. XÓA DÒNG NÀY (Vì nó nằm ngoài hàm và gây lỗi)
+  // const nextReward = rewards[filled % 7]; 
 
   useEffect(() => {
     supabase
@@ -55,8 +61,11 @@ export default function CheckinCard({ userId, onClaimed }) {
   const doneToday = info.last_date === today;
   const alive = doneToday || info.last_date === vnDate(-1);
   const streak = alive ? info.streak || 0 : 0;
+  
   // Đủ 7 ngày mà chưa điểm danh hôm nay -> bắt đầu chuỗi mới
   const filled = !doneToday && streak >= 7 ? 0 : streak;
+  
+  // 3. SỬ DỤNG ĐÚNG BIẾN STATE 'rewards' THAY VÌ 'REWARDS'
   const nextReward = rewards[filled % 7];
 
   const claim = async () => {
@@ -94,7 +103,7 @@ export default function CheckinCard({ userId, onClaimed }) {
       right={<span className="text-xs tabular-nums text-[#6F6F6F]">{filled}/7</span>}
     >
       <div className="grid grid-cols-7 gap-1.5">
-        {rewards.map((r, i) => {
+        {rewards.map((r, i) => {  // Đã sửa thành rewards.map
           const done = i < filled;
           return (
             <div
@@ -155,4 +164,4 @@ export default function CheckinCard({ userId, onClaimed }) {
       )}
     </Panel>
   );
-        }
+            }
