@@ -17,17 +17,14 @@ export default function CheckinCard({ userId, onClaimed }) {
   const navigate = useNavigate();
   const { lang } = useI18n();
   const en = lang === "en";
+
+  // 1. Khai báo State cho rewards (LỖI CŨ CỦA BẠN LÀ THIẾU DÒNG NÀY)
+  const [rewards, setRewards] = useState(DEFAULT_REWARDS);
   
   const [info, setInfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [needTask, setNeedTask] = useState(false);
-  
-  // 1. KHAI BÁO STATE REWARDS
-  const [rewards, setRewards] = useState(DEFAULT_REWARDS);
-
-  // 2. XÓA DÒNG NÀY (Vì nó nằm ngoài hàm và gây lỗi)
-  // const nextReward = rewards[filled % 7]; 
 
   useEffect(() => {
     supabase
@@ -61,11 +58,10 @@ export default function CheckinCard({ userId, onClaimed }) {
   const doneToday = info.last_date === today;
   const alive = doneToday || info.last_date === vnDate(-1);
   const streak = alive ? info.streak || 0 : 0;
-  
   // Đủ 7 ngày mà chưa điểm danh hôm nay -> bắt đầu chuỗi mới
   const filled = !doneToday && streak >= 7 ? 0 : streak;
   
-  // 3. SỬ DỤNG ĐÚNG BIẾN STATE 'rewards' THAY VÌ 'REWARDS'
+  // 2. SỬ DỤNG BIẾN rewards (viết thường), KHÔNG PHẢI REWARDS (viết hoa)
   const nextReward = rewards[filled % 7];
 
   const claim = async () => {
@@ -103,7 +99,8 @@ export default function CheckinCard({ userId, onClaimed }) {
       right={<span className="text-xs tabular-nums text-[#6F6F6F]">{filled}/7</span>}
     >
       <div className="grid grid-cols-7 gap-1.5">
-        {rewards.map((r, i) => {  // Đã sửa thành rewards.map
+        {/* 3. Dùng rewards.map thay vì REWARDS.map */}
+        {rewards.map((r, i) => { 
           const done = i < filled;
           return (
             <div
@@ -164,4 +161,4 @@ export default function CheckinCard({ userId, onClaimed }) {
       )}
     </Panel>
   );
-            }
+              }
