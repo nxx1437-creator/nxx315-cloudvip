@@ -6,7 +6,7 @@ import { useI18n } from "../../i18n/index.js";
 import { Panel } from "./HomeUI.jsx";
 
 // Thưởng theo ngày trong chuỗi (khớp hàm claim_daily_checkin trong database)
-const REWARDS = [100, 150, 200, 300, 400, 500, 1000];
+const DEFAULT_REWARDS = [100, 150, 200, 300, 400, 500, 600];
 
 const vnDate = (offsetDays = 0) =>
   new Date(Date.now() + offsetDays * 86400000).toLocaleDateString("en-CA", {
