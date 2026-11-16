@@ -87,56 +87,61 @@ export default function StreakCelebration({ onDone }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+    // Thêm font-sans để nó dùng font chữ hiện đại của Tailwind (Inter/San Francisco)
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 px-5 backdrop-blur-sm font-sans">
       
       <style>{`
         @keyframes floatUp {
           0% { transform: translateY(0) scale(0.8); opacity: 0; }
           20% { opacity: 1; }
-          100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+          100% { transform: translateY(-80px) scale(1.1); opacity: 0; }
+        }
+        @keyframes popIn {
+          0% { transform: scale(0.9); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
 
-      <div className="relative w-full max-w-[340px] rounded-[28px] bg-white overflow-hidden shadow-2xl">
+      <div 
+        className="relative w-full max-w-[320px] rounded-[32px] bg-white overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+        style={{ animation: "popIn 0.3s ease-out" }}
+      >
         
-        {/* NỬA TRÊN: Nền cam nhạt + Lửa */}
-        <div className={`relative flex justify-center pt-8 pb-14 transition-colors duration-500 ${phase === 'claimed' ? 'bg-[#FFE4D6]' : 'bg-[#FFF3EA]'}`}>
-          
-          <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-[#FFD2B7]">
-            
+        {/* PHẦN TRÊN: Nền cam + Lửa */}
+        <div className={`relative flex justify-center pt-8 pb-10 transition-colors duration-500 ${phase === 'claimed' ? 'bg-[#FFEBE1]' : 'bg-[#FFF4EE]'}`}>
+          <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-[#FFD8C2]">
             <Icon3D 
               file="fire_3d.png" 
               fallback="🔥" 
-              className="relative z-10 h-[90px] w-[90px] object-contain drop-shadow-md"
+              className="relative z-10 h-[95px] w-[95px] object-contain drop-shadow-lg"
             />
-            
-            {/* Số ngày nằm trong lửa */}
-            <span className="absolute bottom-[18px] z-20 text-[32px] font-extrabold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+            <span 
+              className="absolute bottom-[12px] z-20 text-[36px] font-extrabold text-white"
+              style={{ textShadow: "0px 2px 4px rgba(0,0,0,0.4)" }}
+            >
               {streak}
             </span>
 
-            {/* Hiệu ứng bay lên của đồng xu (chỉ khi claim thành công) */}
             {phase === "claimed" && (
               <>
-                <img src={getImageUrl("coin_3d.png")} alt="" className="absolute top-0 -left-6 h-8 w-8 object-contain" style={{ animation: "floatUp 1.5s ease-out 0.1s both" }} onError={(e) => e.target.style.display='none'} />
-                <img src={getImageUrl("coin_3d.png")} alt="" className="absolute top-2 -right-4 h-6 w-6 object-contain" style={{ animation: "floatUp 1.8s ease-out 0.3s both" }} onError={(e) => e.target.style.display='none'} />
-                <img src={getImageUrl("coin_3d.png")} alt="" className="absolute -top-4 right-8 h-10 w-10 object-contain" style={{ animation: "floatUp 2s ease-out 0.5s both" }} onError={(e) => e.target.style.display='none'} />
-                {/* Chồng xu 3D bên phải (nếu có ảnh) */}
-                <div className="absolute -right-12 bottom-0 h-16 w-16 bg-no-repeat bg-contain" style={{ backgroundImage: `url(${getImageUrl("coin_stack_3d.png")})` }}></div>
+                <img src={getImageUrl("coin_3d.png")} alt="" className="absolute top-0 -left-4 h-8 w-8 object-contain drop-shadow-md" style={{ animation: "floatUp 1.5s ease-out 0.1s both" }} onError={(e) => e.target.style.display='none'} />
+                <img src={getImageUrl("coin_3d.png")} alt="" className="absolute top-4 -right-2 h-7 w-7 object-contain drop-shadow-md" style={{ animation: "floatUp 1.8s ease-out 0.3s both" }} onError={(e) => e.target.style.display='none'} />
+                <img src={getImageUrl("coin_3d.png")} alt="" className="absolute -top-3 right-6 h-10 w-10 object-contain drop-shadow-md" style={{ animation: "floatUp 2s ease-out 0.5s both" }} onError={(e) => e.target.style.display='none'} />
               </>
             )}
           </div>
         </div>
 
-        {/* NỬA DƯỚI: Nội dung và Nút */}
-        <div className="px-6 pb-8 pt-4 text-center">
-          <h2 className="text-xl font-extrabold text-gray-900">
+        {/* PHẦN DƯỚI: Nội dung và Nút */}
+        <div className="px-6 pb-7 pt-5 text-center">
+          {/* Đổi font-extrabold thành font-bold và tracking-tight để nhìn mềm mại hơn */}
+          <h2 className="text-[22px] font-bold tracking-tight text-gray-900 leading-tight">
             {phase === "claimed" 
               ? (en ? "Check-in Successful!" : "Điểm danh thành công!") 
               : (en ? "Daily Check-in" : "Điểm danh hằng ngày")}
           </h2>
 
-          <p className="mt-2 text-[15px] text-gray-600">
+          <p className="mt-2 text-[15px] text-gray-500 font-normal">
             {phase === "claimed" 
               ? (en ? `You received +${reward} coins!` : `Bạn nhận được +${reward} xu! 🪙`) 
               : (en ? `Current streak: ${streak} days` : `Chuỗi hiện tại: ${streak} ngày`)}
@@ -144,18 +149,20 @@ export default function StreakCelebration({ onDone }) {
 
           {msg && <p className="mt-2 text-sm font-semibold text-red-500">{msg}</p>}
 
-          <div className="mt-6 flex flex-col gap-3">
+          <div className="mt-7 flex flex-col gap-3">
             {phase === "ready" && (
               <>
+                {/* Nút chính: Bo tròn hoàn toàn (rounded-full), chữ font-medium, bóng đổ mềm */}
                 <button
                   onClick={claim}
-                  className="flex h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#3B82F6] font-bold text-white transition active:scale-95 hover:bg-blue-600"
+                  className="flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-[#3B82F6] text-[15px] font-medium text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(59,130,246,0.3)] hover:bg-blue-600"
                 >
                   {en ? "Claim now" : "Nhận ngay"}
                 </button>
+                {/* Nút phụ: Bo tròn, màu xám nhạt */}
                 <button
                   onClick={onDone}
-                  className="h-[48px] w-full rounded-xl bg-[#F3F4F6] font-bold text-gray-700 transition active:scale-95 hover:bg-gray-200"
+                  className="h-[50px] w-full rounded-full bg-[#F3F4F6] text-[15px] font-medium text-gray-600 transition-all active:scale-95 hover:bg-gray-200"
                 >
                   {en ? "Later" : "Để sau"}
                 </button>
@@ -163,23 +170,20 @@ export default function StreakCelebration({ onDone }) {
             )}
 
             {phase === "busy" && (
-              <button disabled className="flex h-[48px] w-full items-center justify-center rounded-xl bg-blue-400 font-bold text-white">
-                <Loader2 size={20} className="animate-spin" />
+              <button disabled className="flex h-[50px] w-full items-center justify-center rounded-full bg-blue-400 font-medium text-white">
+                <Loader2 size={22} className="animate-spin" />
               </button>
             )}
 
             {phase === "claimed" && (
               <button
                 onClick={onDone}
-                className="h-[48px] w-full rounded-xl bg-[#3B82F6] font-bold text-white transition active:scale-95 hover:bg-blue-600"
+                className="h-[50px] w-full rounded-full bg-[#3B82F6] text-[15px] font-medium text-white transition-all active:scale-95 shadow-[0_4px_15px_rgba(59,130,246,0.3)] hover:bg-blue-600"
               >
                 {en ? "Awesome!" : "Tuyệt vời!"}
               </button>
-            )}
-          </div>
         </div>
-
       </div>
     </div>
   );
-    }
+                }
