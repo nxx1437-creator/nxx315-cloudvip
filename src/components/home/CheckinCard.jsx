@@ -21,7 +21,7 @@ export default function CheckinCard({ userId, onClaimed }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [needTask, setNeedTask] = useState(false);
-  const [rewards, setRewards] = useState(DEFAULT_REWARDS);
+  const nextReward = rewards[filled % 7];
   useEffect(() => {
     supabase
       .from("checkin_rewards")
@@ -93,7 +93,7 @@ export default function CheckinCard({ userId, onClaimed }) {
       right={<span className="text-xs tabular-nums text-[#6F6F6F]">{filled}/7</span>}
     >
       <div className="grid grid-cols-7 gap-1.5">
-        {REWARDS.map((r, i) => {
+        {rewards.map((r, i) => {
           const done = i < filled;
           return (
             <div
