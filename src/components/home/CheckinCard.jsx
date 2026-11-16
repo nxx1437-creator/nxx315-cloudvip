@@ -21,6 +21,16 @@ export default function CheckinCard({ userId, onClaimed }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [needTask, setNeedTask] = useState(false);
+  const [rewards, setRewards] = useState(DEFAULT_REWARDS);
+  useEffect(() => {
+    supabase
+      .from("checkin_rewards")
+      .select("day, coins")
+      .order("day")
+      .then(({ data }) => {
+        if (data && data.length === 7) setRewards(data.map((r) => r.coins));
+      });
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
