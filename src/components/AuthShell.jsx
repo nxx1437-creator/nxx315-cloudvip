@@ -2,10 +2,10 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Sun, ChevronDown } from "lucide-react";
-import useTheme from "../hooks/useTheme.js";
 import { useI18n } from "../i18n/index.js";
 import { AUTH_CSS } from "./AuthStyle.js";
 import { AUTH_COPY } from "./authCopy.js";
+import { LOGO_STAR } from "./logoStar.js";
 
 const LANGS = [
   ["vi", "🇻🇳", "Tiếng Việt"],
@@ -13,22 +13,21 @@ const LANGS = [
 ];
 
 const DARK_Q = "(prefers-color-scheme: dark)";
-const KEY = "nxx-auth-theme"; // "dark" | "light"; chưa có = theo thiết bị
+const KEY = "theme_mode"; // cùng khóa với hooks/useTheme.js: "light" | "dark" | "system"
 
 const sysDark = () =>
   typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(DARK_Q).matches;
 
-const readPref = () => {
+const readMode = () => {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "dark" || v === "light" ? v : null;
+    return v === "dark" || v === "light" || v === "system" ? v : "system";
   } catch {
-    return null;
+    return "system";
   }
 };
 
 export default function AuthShell({ title, subtitle, footer, children }) {
-  const { setThemeMode } = useTheme();
   const i18n = useI18n();
   const lang = i18n.lang === "en" ? "en" : "vi";
   const setLang = i18n.setLang || i18n.setLanguage || i18n.changeLanguage;
@@ -37,8 +36,8 @@ export default function AuthShell({ title, subtitle, footer, children }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // lựa chọn của người dùng: đọc ngay lúc tạo trang (không bị nháy sáng rồi mới tối)
-  const [pref, setPref] = useState(readPref);
+  // lựa chọn đã lưu: đọc ngay lúc tạo trang nên không bị nháy sáng rồi mới tối
+  const [mode, setMode] = useState(readMode);
 
   // chế độ của thiết bị, cập nhật trực tiếp khi thiết bị đổi
   const [sys, setSys] = useState(sysDark);
@@ -55,12 +54,13 @@ export default function AuthShell({ title, subtitle, footer, children }) {
     };
   }, []);
 
-  // đã chọn thì theo lựa chọn, chưa chọn thì theo thiết bị
-  const dark = pref ? pref === "dark" : sys;
+  // light/dark là lựa chọn rõ ràng, system hoặc chưa chọn thì theo thiết bị
+  const dark = mode === "dark" ? true : mode === "light" ? false : sys;
 
-  // báo cho nút Google biết đang sáng hay tối (đặt trước khi vẽ nút)
+  // áp dụng ngay trước khi vẽ: class "dark" trên <html> (như useTheme) + báo cho nút Google
   useLayoutEffect(() => {
     const el = document.documentElement;
+    el.classList.toggle("dark", dark);
     el.dataset.auTheme = dark ? "dark" : "light";
     return () => {
       delete el.dataset.auTheme;
@@ -79,14 +79,12 @@ export default function AuthShell({ title, subtitle, footer, children }) {
 
   const toggleTheme = () => {
     const next = dark ? "light" : "dark";
-    setPref(next);
+    setMode(next);
     try {
       localStorage.setItem(KEY, next);
     } catch {
       /* trình duyệt chặn lưu: vẫn đổi được trong lần này */
     }
-    // đồng bộ cho phần còn lại của web
-    if (typeof setThemeMode === "function") setThemeMode(next);
   };
 
   const cur = LANGS.find((l) => l[0] === lang) || LANGS[0];
@@ -142,10 +140,14 @@ export default function AuthShell({ title, subtitle, footer, children }) {
         </div>
 
         <div className="au-brand">
-          <Link to="/" className="au-logo">
-  NXX315 <span>Studio</span>
-</Link>
-          </div>
+          <Link to="/" className="au-logo" aria-label="NXX315.Studio">
+            <img className="au-star" src={LOGO_STAR} alt="" aria-hidden="true" />
+            <span>
+              NXX315<em>.Studio</em>
+            </span>
+          </Link>
+          <p className="au-tag">{c.tagline}</p>
+        </div>
 
         <div className="au-card">
           <h1 className="au-h1">{title}</h1>
@@ -156,4 +158,4 @@ export default function AuthShell({ title, subtitle, footer, children }) {
       </main>
     </div>
   );
-    }
+      }
