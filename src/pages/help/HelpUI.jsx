@@ -1,13 +1,30 @@
-// src/pages/help/HelpUI.jsx — icon + thành phần dùng chung + giao dịch gần đây
+// src/pages/help/HelpUI.jsx — icon + thành phần dùng chung + đơn gần đây
 import React from "react";
 import { ORDER_STATUS, fmtDate, fmtCoins } from "./helpData.js";
+import { Chev } from "./HelpArt.jsx";
 
-/* Ảnh minh hoạ: tải lên Supabase Storage (bucket công khai) rồi dán link vào đây.
-   rocket = hình phía sau đầu trang (nên dùng PNG/WebP nền trong suốt). Để trống = không hiện. */
+/* ============ ẢNH MINH HOẠ — CHỖ DÁN LINK ẢNH CỦA BẠN ============
+   Tải ảnh lên Supabase Storage (bucket công khai) rồi dán link vào đúng dòng bên dưới.
+   Để trống "" thì trang tự vẽ tranh pixel có sẵn, nên chưa có ảnh cũng không bị trống.
+
+   hero    Ảnh đầu trang, phủ kín cả màn hình. Nên là tranh pixel / minh hoạ phong cảnh ngập nắng, ngang 3:2 (khoảng 1800x1200).
+           Phần TRỜI phía trên để thoáng cho dòng chữ nhỏ, góc DƯỚI TRÁI để yên tĩnh vì có ô kính chữ nằm đè lên.
+   cardRequest, cardHistory, cardZalo
+           Ba ảnh bìa nhỏ cho 3 thẻ liên hệ. Khung 8:7 (khoảng 800x700). Nền trời xanh, mây pixel, lá ở hai góc, giữa để trống.
+   invite  Khung xanh lớn "Hỏi trợ lý AI". Ngang 4:3 (khoảng 1600x1200). Trời xanh rộng, nửa TRÊN-TRÁI để trống cho chữ trắng,
+           hoa hướng dương / cây cối mọc từ mép DƯỚI và bên PHẢI.
+   flower  Một vật thể pixel đứng một mình (bông hoa). PNG nền trong suốt, dọc 2:3 (khoảng 600x900). Không có khung.
+   closing Cảnh khép trang. Rất ngang, khoảng 2400x900. Hai bên tối (xanh rêu), GIỮA sáng như đại lộ nắng; đáy tối dần.
+   rocket  Không dùng nữa, để "" (giữ lại cho các file cũ). */
 export const HELP_IMAGES = {
-  rocket: "",
   hero: "",
-  cta: "",
+  cardRequest: "",
+  cardHistory: "",
+  cardZalo: "",
+  invite: "",
+  flower: "",
+  closing: "",
+  rocket: "",
 };
 
 /* ============ ICON ============ */
@@ -63,66 +80,70 @@ export function IconBox({ name, size = 20 }) {
   );
 }
 
-export function SectionTitle({ title, hint, action, onAction }) {
+export function SectionTitle({ title, hint, action, onAction, as: Tag = "h2" }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <div>
-        <h2 className="hc-text text-[26px] font-medium leading-[1.2] tracking-[-0.02em]">{title}</h2>
-        {hint && <p className="hc-muted mt-1 text-[14px]">{hint}</p>}
+    <div className="hw-sechead">
+      <div className="min-w-0">
+        <Tag className="hw-h3">{title}</Tag>
+        {hint && <p className="hw-caption mt-1">{hint}</p>}
       </div>
       {action && (
-        <button type="button" onClick={onAction} className="hc-accent shrink-0 text-[14px] font-medium">{action}</button>
+        <button type="button" onClick={onAction} className="hw-textaction hw-textaction-ink shrink-0">
+          <span>{action}</span>
+          <Chev dark />
+        </button>
       )}
     </div>
   );
 }
 
-/* ============ GIAO DỊCH GẦN ĐÂY ============ */
+/* ============ ĐƠN GẦN ĐÂY: khung đôi (khay ngoài 24px, tờ trong 12px) ============ */
 export function OrderList({ orders, loading, signedIn, onAsk, onAll }) {
   const note = (icon, text) => (
-    <div className="flex items-center gap-3.5 px-5 py-4">
+    <div className="flex items-center gap-3.5 px-5 py-5">
       <IconBox name={icon} />
-      <p className="hc-muted text-[14px] leading-6">{text}</p>
+      <p className="hw-body">{text}</p>
     </div>
   );
   return (
-    <section>
-      <SectionTitle title="Giao dịch gần đây" hint="Chọn một đơn để báo vấn đề" action={signedIn ? "Xem tất cả" : null} onAction={onAll} />
-      <div className="hc-card overflow-hidden">
-        {loading ? (
-          [0, 1].map((i) => (
-            <div key={i} className="flex animate-pulse items-center gap-3.5 px-5 py-3.5">
-              <div className="hc-skel h-10 w-10 rounded-xl" />
-              <div className="flex-1 space-y-2">
-                <div className="hc-skel h-4 w-1/2 rounded" />
-                <div className="hc-skel h-3 w-3/4 rounded" />
+    <section className="hw-orders">
+      <SectionTitle title="Đơn gần đây" hint="Chọn một đơn để báo vấn đề" action={signedIn ? "Xem tất cả" : null} onAction={onAll} as="h3" />
+      <div className="hw-tray">
+        <div className="hw-sheet">
+          {loading ? (
+            [0, 1].map((i) => (
+              <div key={i} className="flex animate-pulse items-center gap-3.5 px-5 py-4">
+                <div className="hc-skel h-10 w-10 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <div className="hc-skel h-4 w-1/2 rounded" />
+                  <div className="hc-skel h-3 w-3/4 rounded" />
+                </div>
               </div>
-            </div>
-          ))
-        ) : !signedIn ? (
-          note("lock", "Đăng nhập để xem và báo vấn đề về các đơn đổi thưởng của bạn.")
-        ) : orders.length === 0 ? (
-          note("box", "Bạn chưa có đơn đổi thưởng nào.")
-        ) : (
-          orders.slice(0, 3).map((o) => {
-            const st = ORDER_STATUS[o.status] || { label: o.status, dot: "bg-slate-400" };
-            return (
-              <button type="button" key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })}
-                className="hc-row hc-rule flex w-full items-center gap-3.5 border-b-[0.5px] px-5 py-3.5 text-left last:border-b-0">
-                <IconBox name="box" />
-                <span className="min-w-0 flex-1">
-                  <span className="hc-text block truncate text-[15px] font-medium tracking-[-0.01em]">{o.package_name}</span>
-                  <span className="hc-muted block truncate text-[13px]">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
-                </span>
-                <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="hc-text text-[15px] font-medium">{fmtCoins(o.coins_charged)}</span>
-                  <StatusDot st={st} />
-                </span>
-              </button>
-            );
-          })
-        )}
+            ))
+          ) : !signedIn ? (
+            note("lock", "Đăng nhập để xem và báo vấn đề về các đơn đổi thưởng của bạn.")
+          ) : orders.length === 0 ? (
+            note("box", "Bạn chưa có đơn đổi thưởng nào.")
+          ) : (
+            orders.slice(0, 3).map((o) => {
+              const st = ORDER_STATUS[o.status] || { label: o.status, dot: "bg-slate-400" };
+              return (
+                <button type="button" key={o.id} onClick={() => onAsk({ category: "order", orderId: o.id })} className="hw-row">
+                  <IconBox name="box" />
+                  <span className="min-w-0 flex-1">
+                    <span className="hw-rowtitle block truncate">{o.package_name}</span>
+                    <span className="hw-caption block truncate">{o.order_code || "—"} · {fmtDate(o.created_at)}</span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="hw-rowtitle">{fmtCoins(o.coins_charged)}</span>
+                    <StatusDot st={st} />
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
       </div>
     </section>
   );
-}
+   }
