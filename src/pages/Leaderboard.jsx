@@ -10,6 +10,7 @@ import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
+import VerifiedBadge from "../components/VerifiedBadge.jsx"; // ✓
 
 const TABS = [
   { key: "week", label: "Tuần này", note: "7 ngày gần nhất" },
@@ -235,7 +236,11 @@ function Spot({ user, rank, burst, onOpen }) {
 
       <span className={`mt-2.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] ${s.label}`}>Top {rank}</span>
       <button onClick={() => onOpen(user)} className="w-full min-w-0 px-1 transition active:scale-95">
-        <span className="block truncate text-center text-[13.5px] font-extrabold text-slate-900 dark:text-white">{name}</span>
+        {/* ✓ tên + tích xanh */}
+        <span className="flex min-w-0 items-center justify-center gap-1 text-[13.5px] font-extrabold text-slate-900 dark:text-white">
+          <span className="truncate">{name}</span>
+          {user.is_verified === true && <VerifiedBadge size={14} />}
+        </span>
       </button>
 
       <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 font-mono text-[12px] font-bold text-amber-600 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300">
@@ -293,6 +298,7 @@ function RankRow({ user, rank, mine, burst, onOpen }) {
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[15px] font-bold text-slate-900 dark:text-white">{name}</span>
+          {user.is_verified === true && <VerifiedBadge size={16} />}{/* ✓ */}
           {mine && (
             <span className="shrink-0 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white">Bạn</span>
           )}
@@ -481,7 +487,11 @@ export default function Leaderboard() {
             <p className="mt-1 text-[44px] font-black leading-tight text-slate-800 dark:text-white">
               {me ? `#${myIndex + 1}` : "—"}
             </p>
-            <p className="truncate text-[17px] font-bold text-slate-800 dark:text-white">{myName}</p>
+                  {/* ✓ tên + tích xanh */}
+            <p className="flex items-center justify-center gap-1.5 text-[17px] font-bold text-slate-800 dark:text-white">
+              <span className="truncate">{myName}</span>
+              {me?.is_verified === true && <VerifiedBadge size={18} />}
+            </p>
 
             {me ? (
               <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
