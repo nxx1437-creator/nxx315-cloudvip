@@ -54,4 +54,22 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
-window.addEventListener("vite:preloadError", () => window.location.reload());
+
+// Lỗi tải file JS (thường do service worker giữ bản cũ sau deploy):
+// chỉ reload 1 lần / 30 giây, xóa service worker + cache cũ trước khi reload.
+window.addEventListener("vite:preloadError", async (e) => {
+  e.preventDefault();
+  const KEY = "preload_reload_at";
+  try {
+    const last = Number(sessionStorage.getItem(KEY) || 0);
+    if (Date.now() - last < 30000) return;
+    sessionStorage.setItem(KEY, String(Date.now()));
+  } catch {}
+  try {
+    const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
+    await Promise.all(regs.map((r) => r.unregister()));
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => caches.delete(k)));
+  } catch {}
+  window.location.reload();
+});
