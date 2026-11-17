@@ -7,6 +7,7 @@ import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { LbAvatar } from "./Leaderboard.jsx";
 import { Group, Row } from "../components/profile/SettingsParts.jsx";
+import VerifiedBadge from "../components/VerifiedBadge.jsx"; // ✓
 
 const COVER =
   "bg-[linear-gradient(135deg,#dbeafe_0%,#e0f2fe_45%,#ccfbf1_100%)] dark:bg-[linear-gradient(135deg,#0f2a44_0%,#0b3a4a_100%)]";
@@ -97,7 +98,11 @@ export default function PublicProfile() {
                     ring="ring-4 ring-white dark:ring-slate-900"
                   />
                 </div>
-                <h2 className="mt-3 truncate text-[22px] font-bold text-slate-900 dark:text-white">{data.name}</h2>
+                {/* ✓ tên + tích xanh */}
+                <h2 className="mt-3 flex min-w-0 items-center gap-2 text-[22px] font-bold text-slate-900 dark:text-white">
+                  <span className="truncate">{data.name}</span>
+                  {data.is_verified === true && <VerifiedBadge size={22} />}
+                </h2>
                 <p className="mt-0.5 text-[14px] text-slate-500">
                   Tham gia từ {new Date(data.joined_at).toLocaleDateString("vi-VN")}
                 </p>
@@ -123,5 +128,5 @@ export default function PublicProfile() {
       </main>
     </div>
   );
-}
+                    }
 
