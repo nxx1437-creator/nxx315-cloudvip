@@ -1,1 +1,1 @@
-export { FaqSection, ContactCard } from "./HelpUI.jsx";
+export { FaqSection, ContactCard } from "./HelpLanding.jsx";
