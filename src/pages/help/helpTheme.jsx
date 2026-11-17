@@ -1,9 +1,12 @@
-// helpTheme.js — chủ đề sáng/tối cho Trung tâm Trợ giúp, đọc từ profiles.theme_mode
+// helpTheme.jsx — chủ đề trắng / đen cho Trung tâm Trợ giúp.
+// Đọc đúng lựa chọn ở Hồ sơ → Cài đặt tài khoản → Giao diện
+// (khóa "theme_mode" và cột profiles.theme_mode, cùng nguồn với hooks/useTheme.js).
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import "./helpTheme.css";
+import "./helpWriter.css";
 
-const KEY = "nxx315-theme-mode";
+const KEY = "theme_mode";
 const MODES = ["light", "dark", "system"];
 
 const readCache = () => {
@@ -11,7 +14,7 @@ const readCache = () => {
 };
 let mode = readCache();
 let scopes = 0;
-let synced = false;
+let lastSync = 0;
 const subs = new Set();
 
 const prefersDark = () => !!window.matchMedia?.("(prefers-color-scheme: dark)").matches;
@@ -25,12 +28,14 @@ function emit() {
   apply();
 }
 
+/* Lấy lựa chọn đã lưu trong tài khoản (tối đa 1 lần / phút) */
 async function syncFromProfile() {
-  if (synced) return;
+  const now = Date.now();
+  if (now - lastSync < 60000) return;
+  lastSync = now;
   const { data: s } = await supabase.auth.getSession();
   const uid = s?.session?.user?.id;
   if (!uid) return;
-  synced = true;
   const { data } = await supabase.from("profiles").select("theme_mode").eq("id", uid).maybeSingle();
   if (data && MODES.includes(data.theme_mode) && data.theme_mode !== mode) {
     mode = data.theme_mode;
@@ -54,13 +59,19 @@ export function useHelpTheme() {
   const [, force] = useState(0);
   useLayoutEffect(() => {
     const f = () => force((n) => n + 1);
+    const onStorage = (e) => {
+      if (e.key === KEY) { mode = readCache(); emit(); }
+    };
+    mode = readCache(); // đọc lại: người dùng có thể vừa đổi ở trang Cài đặt
     subs.add(f);
     scopes += 1;
     apply();
+    window.addEventListener("storage", onStorage);
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
     mq?.addEventListener?.("change", apply);
     return () => {
       subs.delete(f);
+      window.removeEventListener("storage", onStorage);
       mq?.removeEventListener?.("change", apply);
       scopes -= 1;
       if (scopes === 0) document.documentElement.removeAttribute("data-help-theme");
@@ -70,7 +81,7 @@ export function useHelpTheme() {
   return resolve(mode);
 }
 
-/* Nút chọn Trắng / Đen / Theo máy: đặt trong trang hồ sơ người dùng */
+/* Nút chọn Trắng / Đen / Theo máy (hiện chưa dùng, Cài đặt đã có sẵn) */
 export function ThemeSwitch() {
   const [m, setM] = useState(mode);
   useEffect(() => {
@@ -80,15 +91,13 @@ export function ThemeSwitch() {
   }, []);
   const opts = [["light", "Trắng"], ["dark", "Đen"], ["system", "Theo máy"]];
   return (
-    <div role="radiogroup" aria-label="Giao diện" className="grid grid-cols-3 gap-2">
+    <div role="group" aria-label="Giao diện" className="grid grid-cols-3 gap-2">
       {opts.map(([v, label]) => (
-        <button key={v} role="radio" aria-checked={m === v} onClick={() => setThemeMode(v)}
-          className={`rounded-xl border px-3 py-2.5 text-[14px] font-medium transition active:scale-95 ${
-            m === v ? "border-[#08874f] bg-[#e0f4e9] text-[#10261b]" : "border-slate-200 bg-white text-slate-600"
-          }`}>
+        <button key={v} type="button" aria-pressed={m === v} onClick={() => setThemeMode(v)}
+          className="hc-chip rounded-full px-3 py-2.5 text-[14px] font-medium transition active:scale-95">
           {label}
         </button>
       ))}
     </div>
   );
-            }
+  }
