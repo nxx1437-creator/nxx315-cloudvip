@@ -1,15 +1,20 @@
 import React from "react";
 
-// Dấu tích xanh: Bootstrap Icons "patch-check" (bản viền, v1.13)
-// Prop `variant` được giữ lại để không lỗi các nơi đang gọi, nhưng mọi variant đều hiển thị cùng 1 kiểu.
-export default function VerifiedBadge({ size = 16, className = "", color = "#1DA1F2" }) {
+// Icon: Bootstrap Icons "patch-check" (v1.13)
+// Mặc định dùng currentColor để kế thừa màu từ CSS/Tailwind (text-*).
+export default function VerifiedBadge({
+  size = 16,
+  className = "",
+  color = "currentColor",
+  ...rest
+}) {
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center align-middle ${className}`}
       role="img"
       aria-label="Tài khoản đã xác minh"
-      title="Tài khoản đã xác minh"
       style={{ width: size, height: size }}
+      {...rest}
     >
       <svg width="100%" height="100%" viewBox="0 0 16 16" fill={color} aria-hidden="true">
         <path
