@@ -1,160 +1,207 @@
-// src/pages/help/HelpLanding.jsx — Hero, sân khấu liên hệ, thẻ chủ đề, FAQ, dải cuối trang (kiểu WRITER)
-import React, { useState, useMemo } from "react";
+// src/pages/help/HelpLanding.jsx — trung tâm trợ giúp kiểu "thế giới pixel": phong cảnh, khung kính, khung đôi, đường chân trời
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CATEGORIES, ZALO_URL, fold } from "./helpData.js";
-import { useHelpTheme } from "./helpTheme.jsx";
-import { Icon, SectionTitle, HELP_IMAGES } from "./HelpUI.jsx";
+import { Icon, IconBox, HELP_IMAGES } from "./HelpUI.jsx";
+import { PixelArt, PixelFlower, Chev, Stripes, Mark } from "./HelpArt.jsx";
 
-/* ============ HERO: thanh trên + lời hứa + ô tìm kiếm liền khối ============ */
-export function Hero({ query, onQuery, name, onBack, topics = [], onTopic, canSearch = true }) {
-  useHelpTheme();
+const SUPPORT_EMAIL = "support@nxx315.com";
 
-  const handleSearch = () => {
-    if (!canSearch) return;
-    document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth" });
-  };
-
+/* ============ THANH ĐIỀU HƯỚNG NỔI (vừa khít nội dung) ============ */
+export function FloatingNav({ onBack, onRequest }) {
+  const [light, setLight] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const h = document.getElementById("hw-hero");
+      setLight(h ? h.getBoundingClientRect().bottom < 72 : window.scrollY > 480);
+    };
+    check();
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, []);
   return (
-    <header className="hc-hero relative overflow-hidden pb-12">
-      {HELP_IMAGES.hero && (
-        <img src={HELP_IMAGES.hero} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-30" />
-      )}
-      {HELP_IMAGES.rocket && <img src={HELP_IMAGES.rocket} alt="" className="hc-rocket" />}
+    <nav className={`hw-nav ${light ? "is-light" : ""}`} aria-label="Điều hướng trợ giúp">
+      <button type="button" onClick={onBack} aria-label="Quay lại" className="hw-nav-back">
+        <Icon name="back" size={17} />
+      </button>
+      <span className="hw-nav-mark" aria-hidden="true"><Mark size={20} /></span>
+      <Link to="/guide" className="hw-nav-link">Hướng dẫn</Link>
+      <Link to="/contact" className="hw-nav-link">Liên hệ</Link>
+      <button type="button" onClick={() => onRequest()} className="hw-btn">
+        <span>Gửi yêu cầu</span>
+        <Chev />
+      </button>
+    </nav>
+  );
+}
 
-      <div className="relative z-10 mx-auto max-w-md px-4 md:max-w-4xl">
-        <div className="hc-herobar flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <button type="button" onClick={onBack} aria-label="Quay lại" className="hc-roundbtn">
-              <Icon name="back" size={18} />
+/* ============ MÀN ĐẦU: phong cảnh + ô kính ở góc dưới trái ============ */
+export function Hero({ query, onQuery, name, canSearch = true, compact = false, onChat }) {
+  const go = (e) => {
+    e?.preventDefault();
+    if (!canSearch) return;
+    document.getElementById("help-faq")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  return (
+    <header id="hw-hero" className={`hw-hero ${compact ? "is-compact" : ""}`}>
+      <PixelArt kind="autumn" seed={11} src={HELP_IMAGES.hero} position="50% 62%" alt="Công viên mùa thu" />
+      <div className="hw-hero-veil" />
+      <p className="hw-identity">Trung tâm trợ giúp<br />NXX315 Studio Rewards</p>
+
+      <div className="hw-glass">
+        <h1 className="hw-promise">Giải đáp mọi thắc mắc, từ xu đến đơn thưởng</h1>
+        <p className="hw-support">
+          {name ? `Chào ${name}. ` : ""}Tìm câu trả lời trong vài giây, hoặc nhờ trợ lý AI và đội ngũ NXX315 giúp bạn.
+        </p>
+        <form className="hw-field" onSubmit={go} role="search">
+          <Icon name="search" size={16} className="shrink-0 opacity-60" />
+          <input type="text" value={query} onChange={(e) => onQuery(e.target.value)}
+            placeholder="Tìm câu hỏi thường gặp" aria-label="Tìm câu hỏi thường gặp" />
+          {query && (
+            <button type="button" onClick={() => onQuery("")} aria-label="Xoá" className="hw-field-x">
+              <Icon name="x" size={14} />
             </button>
-            <span className="hc-text truncate text-[16px] font-semibold tracking-[-0.01em]">NXX315</span>
-          </div>
-          <nav className="flex shrink-0 items-center gap-4 text-[14px] font-semibold">
-            <Link to="/guide" className="hc-text2 transition active:opacity-70">Hướng dẫn</Link>
-            <Link to="/contact" className="hc-navcta">Liên hệ</Link>
-          </nav>
-        </div>
-
-        <div className="pt-10 text-center md:pt-20">
-          <p className="hc-eyebrow">Trung tâm trợ giúp</p>
-          <h1 className="hc-display mx-auto mt-4">
-            {name ? `Chào ${name}, chúng tôi có thể giúp gì cho bạn?` : "Chúng tôi có thể giúp gì cho bạn?"}
-          </h1>
-
-          <div className="hc-search mx-auto mt-8 text-left">
-            <Icon name="search" size={18} className="hc-muted shrink-0" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => onQuery(e.target.value)}
-              placeholder="Tìm câu hỏi thường gặp"
-              aria-label="Tìm câu hỏi thường gặp"
-            />
-            {query && (
-              <button type="button" onClick={() => onQuery("")} aria-label="Xoá"
-                className="hc-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                <Icon name="x" size={16} />
-              </button>
-            )}
-            <button type="button" onClick={handleSearch} disabled={!canSearch}
-              className="hc-btn-solid shrink-0 text-[16px] disabled:opacity-50">
-              Tìm
-            </button>
-          </div>
-
-          {topics.length > 0 && onTopic && (
-            <p className="hc-muted mt-5 text-[14px]">
-              Chủ đề phổ biến:{" "}
-              {topics.map((c, i) => (
-                <React.Fragment key={c.key}>
-                  <button type="button" onClick={() => onTopic(c.key)} className="hc-topic">{c.label}</button>
-                  {i < topics.length - 1 ? ", " : ""}
-                </React.Fragment>
-              ))}
-            </p>
           )}
-        </div>
+          <button type="submit" disabled={!canSearch} className="hw-btn">
+            <span>Tìm</span>
+            <Chev />
+          </button>
+        </form>
+        <button type="button" onClick={onChat} className="hw-textaction">
+          <span>Chat với trợ lý AI</span>
+          <Chev />
+        </button>
       </div>
+      <Stripes kind="dusk" />
     </header>
   );
 }
 
-/* ============ SÂN KHẤU HẠT MÀU: 3 cách liên hệ là thẻ trắng ============ */
-export function QuickActions({ onChat, onRequest, onHistory }) {
+/* ============ MẪU VẬT PIXEL + LỜI TẦM NHÌN ============ */
+export function Vision() {
+  return (
+    <section className="hw-section">
+      <div className="hw-pair">
+        <PixelFlower src={HELP_IMAGES.flower} />
+        <div>
+          <p className="hw-body hw-narrow">Chúng tôi xây NXX315 để việc nhận thưởng đơn giản như chơi một ván game.</p>
+          <p className="hw-body hw-narrow">Khi có điều gì chưa rõ, bạn không phải đoán. Câu trả lời nằm ngay đây, hoặc chỉ cách một tin nhắn.</p>
+          <h2 className="hw-h2">Có thắc mắc thì cứ hỏi, bạn không phải loay hoay một mình.</h2>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ BA "CỬA SỔ" LIÊN HỆ ============ */
+export function ContactWindows({ onRequest, onHistory }) {
   const items = [
-    { icon: "chat", title: "Chat với trợ lý AI", sub: "Phản hồi ngay, hoạt động 24/7", on: onChat, tag: "Trực tuyến" },
-    { icon: "send", title: "Gửi yêu cầu hỗ trợ", sub: "Báo lỗi, hỏi đơn hàng hoặc góp ý", on: onRequest },
-    { icon: "history", title: "Lịch sử yêu cầu", sub: "Theo dõi trạng thái và phản hồi", on: onHistory },
-  ];
+    { key: "req", title: "Gửi yêu cầu hỗ trợ", src: "Báo lỗi, hỏi đơn hàng hoặc góp ý", img: HELP_IMAGES.cardRequest, seed: 3, on: () => onRequest() },
+    { key: "his", title: "Lịch sử yêu cầu", src: "Theo dõi trạng thái và phản hồi", img: HELP_IMAGES.cardHistory, seed: 5, on: () => onHistory() },
+    ZALO_URL ? { key: "zalo", title: "Nhắn Zalo", src: "Trò chuyện trực tiếp với đội ngũ", img: HELP_IMAGES.cardZalo, seed: 9, href: ZALO_URL } : null,
+  ].filter(Boolean);
   return (
-    <section className="hc-stage">
-      <div className="relative z-10 grid gap-3 md:grid-cols-3">
-        {items.map((it) => (
-          <button type="button" key={it.title} onClick={() => it.on()} className="hc-wcard">
-            <span className="hc-wicon"><Icon name={it.icon} size={22} /></span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[17px] font-medium leading-6 tracking-[-0.01em]">{it.title}</span>
-              <span className="hc-wsub block text-[13px] leading-5">{it.sub}</span>
-            </span>
-            {it.tag && <span className="hc-wtag">{it.tag}</span>}
-            <Icon name="chevR" size={16} className="hc-wsub hc-wchev shrink-0" />
-          </button>
-        ))}
+    <section className="hw-section hw-section-tight">
+      <div className="hw-wide">
+        <div className="hw-sechead hw-sechead-lg">
+          <h2 className="hw-h2">Chọn cách liên hệ bạn thích</h2>
+        </div>
+        <div className="hw-windows">
+          {items.map((it) => {
+            const inner = (
+              <>
+                <PixelArt kind="cover" seed={it.seed} src={it.img} />
+                <span className="hw-cap">
+                  <span className="hw-cap-title">{it.title}</span>
+                  <span className="hw-cap-src">{it.src}</span>
+                </span>
+              </>
+            );
+            return it.href ? (
+              <a key={it.key} href={it.href} target="_blank" rel="noopener noreferrer" className="hw-win">{inner}</a>
+            ) : (
+              <button key={it.key} type="button" onClick={it.on} className="hw-win">{inner}</button>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
 }
 
-/* ============ CÂU HỎI NỔI BẬT (dải tràn bề ngang) ============ */
-export function PopularFaqs({ faqs, onPick }) {
-  const items = faqs.slice(0, 6);
-  if (!items.length) return null;
-  return (
-    <section className="hc-band">
-      <div className="mx-auto max-w-md px-4 md:max-w-4xl">
-        <p className="hc-eyebrow text-center">Phổ biến</p>
-        <h2 className="hc-text mt-2 text-center text-[30px] font-medium leading-[1.2] tracking-[-0.02em]">Câu hỏi nổi bật</h2>
-        <ul className="mt-8 grid gap-x-10 md:grid-cols-3">
-          {items.map((f) => (
-            <li key={f.id}>
-              <button type="button" onClick={() => onPick(f)} className="hc-link">{f.question}</button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* ============ THẺ CHỦ ĐỀ (đen: thẻ than, trắng: mảng màu phấn) ============ */
-export function CategoryCards({ faqs, active, onPick }) {
+/* ============ CHỦ ĐỀ: khung đôi, mỗi chủ đề là một dòng ============ */
+export function TopicFrame({ faqs, active, onPick, children }) {
   const counts = useMemo(() => {
     const m = Object.create(null);
     for (const c of CATEGORIES) m[c.key] = 0;
     for (const f of faqs) m[f.category] = (m[f.category] || 0) + 1;
     return m;
   }, [faqs]);
-
   return (
-    <section>
-      <div className="grid grid-cols-3 gap-3">
-        {CATEGORIES.map((c, i) => {
-          const on = active === c.key;
-          return (
-            <button type="button" key={c.key} aria-pressed={on}
-              onClick={() => onPick(on ? null : c.key)} className={`hc-tile hc-tile-${i % 6}`}>
-              <Icon name={c.icon} size={30} stroke={1.5} />
-              <span className="text-[13px] font-medium leading-tight">{c.label}</span>
-              <span className="hc-tile-sub text-[11px]">{counts[c.key] || 0} câu hỏi</span>
-            </button>
-          );
-        })}
+    <section className="hw-section">
+      <div className="hw-split">
+        <div className="hw-split-copy">
+          <p className="hw-caption hw-figure">Chủ đề</p>
+          <h2 className="hw-h2">Chọn chủ đề bạn đang quan tâm.</h2>
+          <p className="hw-body hw-narrow mt-6">Mỗi chủ đề gom những câu hỏi thường gặp nhất, để bạn đi thẳng đến câu trả lời.</p>
+        </div>
+        <div className="hw-split-body">
+          <div className="hw-tray">
+            <div className="hw-sheet">
+              {CATEGORIES.map((c) => {
+                const on = active === c.key;
+                return (
+                  <button type="button" key={c.key} aria-pressed={on} onClick={() => onPick(on ? null : c.key)} className="hw-row">
+                    <IconBox name={c.icon} />
+                    <span className="min-w-0 flex-1">
+                      <span className="hw-rowtitle block">{c.label}</span>
+                      <span className="hw-caption block">{c.desc}</span>
+                    </span>
+                    <span className="hw-count">{counts[c.key] || 0}</span>
+                    <Chev dark />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+export const CategoryCards = TopicFrame;
+
+/* ============ KHUNG XANH LỚN: hỏi trợ lý AI ============ */
+export function InviteBanner({ onChat }) {
+  return (
+    <section className="hw-invite">
+      <PixelArt kind="sunflowers" seed={4} src={HELP_IMAGES.invite} position="100% 100%" />
+      <div className="hw-invite-copy">
+        <h2 className="hw-display">Hỏi trợ lý AI, nhận câu trả lời ngay</h2>
+        <p className="hw-support">Trợ lý trả lời về đơn hàng, xu và tài khoản bất cứ lúc nào, kể cả ban đêm.</p>
+        <button type="button" onClick={onChat} className="hw-btn hw-btn-glass">
+          <span>Chat với trợ lý AI</span>
+          <Chev />
+        </button>
+        <p className="hw-aside"><Icon name="chat" size={18} /><span>Trực tuyến 24/7.<br />Cần người thật thì gửi yêu cầu.</span></p>
+      </div>
+      <div className="hw-notif" aria-hidden="true">
+        <span className="hw-notif-icon"><Icon name="chat" size={16} /></span>
+        <span>
+          <b>Trợ lý AI NXX315</b>
+          <em>Đơn của bạn đang được xử lý. Với Robux, thường trong 24 giờ làm việc.</em>
+        </span>
       </div>
     </section>
   );
 }
 
-/* ============ FAQ phẳng, kẻ mảnh (không phải thanh bo tròn lớn) ============ */
+/* ============ FAQ phẳng, kẻ mảnh ============ */
 function Hl({ text, q }) {
   const fq = fold((q || "").trim());
   if (!fq) return text;
@@ -167,11 +214,7 @@ function Hl({ text, q }) {
     const j = ft.indexOf(fq, i);
     if (j < 0) { parts.push(text.slice(i)); break; }
     if (j > i) parts.push(text.slice(i, j));
-    parts.push(
-      <mark key={`${j}-${k++}`} className="rounded-sm px-0.5" style={{ background: "var(--h-accent-soft2)", color: "inherit" }}>
-        {text.slice(j, j + fq.length)}
-      </mark>
-    );
+    parts.push(<mark key={`${j}-${k++}`} className="hw-mark">{text.slice(j, j + fq.length)}</mark>);
     i = j + fq.length;
   }
   return <>{parts}</>;
@@ -179,32 +222,31 @@ function Hl({ text, q }) {
 
 function FaqItem({ faq, open, onToggle, query, onAsk }) {
   const [vote, setVote] = useState(null);
-  const vbtn = "hc-chip rounded-full px-4 py-1.5 text-[14px] font-medium transition active:scale-95";
   return (
-    <div className="hc-rule border-b-[0.5px] last:border-b-0">
-      <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-4 px-1 py-5 text-left">
-        <span className="hc-text flex-1 text-[18px] font-medium leading-7 tracking-[-0.01em]"><Hl text={faq.question} q={query} /></span>
-        <Icon name="chevD" size={18} className={`hc-accent mt-1.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+    <div className="hw-faq">
+      <button type="button" onClick={onToggle} aria-expanded={open} className="hw-faq-q">
+        <span className="flex-1"><Hl text={faq.question} q={query} /></span>
+        <Chev dark className={`hw-faq-chev ${open ? "is-open" : ""}`} />
       </button>
-      <div className={`grid transition-[grid-template-rows] duration-200 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+      <div className={`hw-faq-a ${open ? "is-open" : ""}`}>
         <div className="overflow-hidden">
-          <div className="px-1 pb-6">
-            <p className="hc-text2 whitespace-pre-line text-[16px] leading-[1.6]">{faq.answer}</p>
+          <div className="hw-faq-body">
+            <p className="hw-body hw-faq-text">{faq.answer}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {vote === "yes" ? (
-                <span className="hc-text text-[14px] font-medium">Cảm ơn bạn đã phản hồi.</span>
+                <span className="hw-body">Cảm ơn bạn đã phản hồi.</span>
               ) : (
                 <>
-                  <span className="hc-muted mr-1 text-[14px]">Câu trả lời này có hữu ích không?</span>
-                  <button type="button" onClick={() => setVote("yes")} className={vbtn}>Có</button>
-                  <button type="button" onClick={() => setVote("no")} className={vbtn}>Không</button>
+                  <span className="hw-caption mr-1">Câu trả lời này có hữu ích không?</span>
+                  <button type="button" onClick={() => setVote("yes")} className="hw-mini">Có</button>
+                  <button type="button" onClick={() => setVote("no")} className="hw-mini">Không</button>
                 </>
               )}
             </div>
             {vote === "no" && (
-              <button type="button" onClick={() => onAsk({ category: faq.category, about: faq.question })}
-                className="hc-accent mt-4 text-[15px] font-medium">
-                Gửi yêu cầu hỗ trợ
+              <button type="button" onClick={() => onAsk({ category: faq.category, about: faq.question })} className="hw-textaction hw-textaction-ink mt-3">
+                <span>Gửi yêu cầu hỗ trợ</span>
+                <Chev dark />
               </button>
             )}
           </div>
@@ -219,70 +261,98 @@ export function FaqSection({ faqs, loading, cat, setCat, query, openId, setOpenI
   const q = query.trim();
   const filtering = !!q || !!cat;
   const openIdx = openId ? faqs.findIndex((f) => f.id === openId) : -1;
-  const showAll = filtering || expanded || openIdx >= 5;
-  const shown = showAll ? faqs : faqs.slice(0, 5);
+  const showAll = filtering || expanded || openIdx >= 6;
+  const shown = showAll ? faqs : faqs.slice(0, 6);
   const catLabel = CATEGORIES.find((c) => c.key === cat)?.label;
 
   return (
-    <section id="help-faq" className="scroll-mt-4">
-      <SectionTitle
-        title={q ? `Kết quả cho “${q}”` : catLabel || "Tất cả câu hỏi"}
-        hint={filtering && !loading ? `${faqs.length} câu hỏi` : null}
-        action={cat && !q ? "Xoá bộ lọc" : null}
-        onAction={() => setCat(null)}
-      />
-      <div className="hc-flat">
-        {loading ? (
-          <div className="animate-pulse space-y-5 py-5">
-            {[0, 1, 2].map((i) => <div key={i} className="hc-skel h-4 rounded" />)}
+    <section id="help-faq" className="hw-section hw-faqsec">
+      <div className="hw-faqwrap">
+        <div className="hw-sechead hw-sechead-lg">
+          <div>
+            <h2 className="hw-h2">{q ? `Kết quả cho “${q}”` : catLabel || "Câu hỏi thường gặp"}</h2>
+            {filtering && !loading && <p className="hw-caption mt-3">{faqs.length} câu hỏi</p>}
           </div>
-        ) : shown.length === 0 ? (
-          <div className="px-5 py-10 text-center">
-            <p className="hc-text text-[18px] font-medium tracking-[-0.01em]">Không tìm thấy câu hỏi phù hợp</p>
-            <p className="hc-muted mt-1 text-[14px]">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
-            <button type="button" onClick={() => onAsk({ category: cat || null, description: q })}
-              className="hc-btn-solid mt-5 h-12 px-6 text-[15px]">
-              Gửi yêu cầu hỗ trợ
-            </button>
-          </div>
-        ) : (
-          shown.map((f) => (
-            <FaqItem key={f.id} faq={f} open={openId === f.id}
-              onToggle={() => setOpenId(openId === f.id ? null : f.id)} query={query} onAsk={onAsk} />
-          ))
-        )}
-        {!filtering && !loading && faqs.length > 5 && openIdx < 5 && (
-          <button type="button" onClick={() => setExpanded(!expanded)}
-            className="hc-accent flex w-full items-center justify-center gap-1.5 py-4 text-[15px] font-medium">
-            {expanded ? "Thu gọn" : `Xem thêm ${faqs.length - 5} câu hỏi`}
-            <Icon name="chevD" size={15} className={expanded ? "rotate-180" : ""} />
-          </button>
-        )}
-      </div>
-    </section>
-  );
-}
+        </div>
 
-/* ============ DẢI CUỐI TRANG: lời hứa ngắn + cặp nút tương phản ============ */
-export function ContactCard({ onRequest }) {
-  return (
-    <section className="hc-close">
-      {HELP_IMAGES.cta && (
-        <img src={HELP_IMAGES.cta} alt="" loading="lazy"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20" />
-      )}
-      <div className="relative mx-auto max-w-md px-6 text-center md:max-w-4xl">
-        <h3 className="hc-closehead">Cần thêm trợ giúp?</h3>
-        <p className="hc-closesub mx-auto mt-4 max-w-[420px]">
-          Kết nối với đội ngũ NXX315. Chúng tôi luôn sẵn sàng hỗ trợ bạn.
-        </p>
-        <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <button type="button" onClick={() => onRequest()} className="hc-act hc-act-1">Gửi yêu cầu</button>
-          {ZALO_URL ? (
-            <a href={ZALO_URL} target="_blank" rel="noopener noreferrer" className="hc-act hc-act-2">Nhắn Zalo</a>
-          ) : null}
+        {!q && (
+          <div className="hw-tabs" role="tablist" aria-label="Lọc theo chủ đề">
+            <button type="button" role="tab" aria-selected={!cat} onClick={() => setCat(null)} className="hw-tab">Tất cả</button>
+            {CATEGORIES.map((c) => (
+              <button type="button" role="tab" key={c.key} aria-selected={cat === c.key} onClick={() => setCat(cat === c.key ? null : c.key)} className="hw-tab">{c.label}</button>
+            ))}
+          </div>
+        )}
+
+        <div className="hw-faqlist">
+          {loading ? (
+            <div className="animate-pulse space-y-5 py-5">
+              {[0, 1, 2].map((i) => <div key={i} className="hc-skel h-4 rounded" />)}
+            </div>
+          ) : shown.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="hw-card-heading">Không tìm thấy câu hỏi phù hợp</p>
+              <p className="hw-body mt-2">Gửi yêu cầu để đội ngũ hỗ trợ giúp bạn.</p>
+              <button type="button" onClick={() => onAsk({ category: cat || null, description: q })} className="hw-btn mt-6">
+                <span>Gửi yêu cầu hỗ trợ</span>
+                <Chev />
+              </button>
+            </div>
+          ) : (
+            shown.map((f) => (
+              <FaqItem key={f.id} faq={f} open={openId === f.id}
+                onToggle={() => setOpenId(openId === f.id ? null : f.id)} query={query} onAsk={onAsk} />
+            ))
+          )}
+          {!filtering && !loading && faqs.length > 6 && openIdx < 6 && (
+            <button type="button" onClick={() => setExpanded(!expanded)} className="hw-textaction hw-textaction-ink hw-more">
+              <span>{expanded ? "Thu gọn" : `Xem thêm ${faqs.length - 6} câu hỏi`}</span>
+              <Chev dark className={expanded ? "is-up" : "is-down"} />
+            </button>
+          )}
         </div>
       </div>
     </section>
   );
 }
+
+/* ============ KHÉP TRANG: lời mời nhẹ nhàng, hàng link nhỏ, sọc mint, đại lộ nắng ============ */
+export function ContactCard({ onRequest }) {
+  const links = [
+    ["/guide", "Hướng dẫn"], ["/contact", "Liên hệ"], ["/terms", "Điều khoản"],
+    ["/privacy", "Chính sách bảo mật"], ["/redemption-policy", "Quy định đổi thưởng"], ["/fraud", "Cảnh báo lừa đảo"],
+  ];
+  return (
+    <>
+      <section className="hw-closeband">
+        <span className="hw-emblem" aria-hidden="true"><Mark size={26} /></span>
+        <h2 className="hw-h2 hw-center">Nếu bạn cần người thật,<br />cứ nhắn cho chúng tôi</h2>
+        <p className="hw-body hw-center-p">
+          Đội ngũ NXX315 luôn sẵn lòng giúp.{" "}
+          <button type="button" onClick={() => onRequest()} className="hw-inline-link">Gửi yêu cầu hỗ trợ</button>
+          {ZALO_URL ? (<>{" "}hoặc{" "}<a href={ZALO_URL} target="_blank" rel="noopener noreferrer" className="hw-inline-link">nhắn Zalo</a></>) : null}.
+        </p>
+        <div className="hw-util">
+          <ul className="hw-util-links">
+            {links.map(([to, label]) => (
+              <li key={to}><Link to={to} className="hw-util-link">{label}</Link></li>
+            ))}
+          </ul>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="hw-mailfield">
+            <span>{SUPPORT_EMAIL}</span>
+            <Chev dark />
+          </a>
+        </div>
+      </section>
+      <Stripes kind="closing" />
+      <footer className="hw-horizon">
+        <PixelArt kind="avenue" seed={6} src={HELP_IMAGES.closing} position="50% 50%" alt="Đại lộ ngập nắng" />
+        <div className="hw-horizon-veil" />
+        <div className="hw-credits">
+          <span>© 2026 NXX315 Studio Rewards</span>
+          <span>Không liên kết với Roblox hay Garena</span>
+        </div>
+      </footer>
+    </>
+  );
+    }
