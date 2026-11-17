@@ -3,7 +3,8 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import BottomNav from "../components/BottomNav.jsx";
-import { Hero, PopularFaqs, QuickActions, OrderList, CategoryCards } from "./help/HelpUI.jsx";
+import { OrderList } from "./help/HelpUI.jsx";
+import { Hero, PopularFaqs, QuickActions, CategoryCards } from "./help/HelpLanding.jsx";
 import { FaqSection, ContactCard } from "./help/HelpFaq.jsx";
 import { RequestScreen, HistoryFlow } from "./help/HelpRequest.jsx";
 import { CATEGORIES, fold } from "./help/helpData.js";
@@ -184,7 +185,7 @@ export default function HelpCenter() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="hc-wrap">
       <Hero
         query={query}
         onQuery={setQuery}
@@ -196,13 +197,13 @@ export default function HelpCenter() {
       />
 
       {!searching && (
-        <main className="mx-auto max-w-md space-y-4 px-4 pt-2 md:max-w-4xl">
-          <CategoryCards faqs={faqs} active={cat} onPick={pickCategory} />
+                <main className="mx-auto max-w-md space-y-6 px-4 pt-2 md:max-w-4xl">
           <QuickActions
             onChat={() => navigate("/support")}
             onRequest={() => openRequest()}
             onHistory={openHistory}
           />
+          <CategoryCards faqs={faqs} active={cat} onPick={pickCategory} />
         </main>
       )}
 
