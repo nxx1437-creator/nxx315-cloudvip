@@ -70,7 +70,7 @@ export function HelpChapter() {
   );
 }
 
-export function HelpInvite() {
+export function HelpInvite({ onRequest }) {
   return (
     <section style={{ paddingBottom: 200 }}>
       <div className="gic-invite">
@@ -78,7 +78,7 @@ export function HelpInvite() {
         <div className="gic-invite-in">
           <h2>{HELP_COPY.invite}</h2>
           <p className="gic-p">{HELP_COPY.inviteP}</p>
-          <Link className="gic-btn glass" to={HELP_LINKS.support}>Gửi yêu cầu hỗ trợ</Link>
+          <button type="button" className="gic-btn glass" onClick={() => onRequest()}>Gửi yêu cầu hỗ trợ</button>
         </div>
         <div className="gic-aside">Cần gấp? Viết thẳng cho {HELP_LINKS.email}</div>
       </div>
@@ -108,4 +108,3 @@ export function HelpTopics({ counts, onOpen }) {
 }
 
 export const HomeStripes = () => <Stripes />;
-
