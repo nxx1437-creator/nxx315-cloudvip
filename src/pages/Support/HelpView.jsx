@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { HELP_CATEGORIES, HELP_LINKS } from "../../lib/helpData";
 import { HELP_ARTICLES, searchArticles } from "../../lib/helpArticles";
-import { Chev } from "./HelpParts";
+import { Chev } from "../help/HelpParts";
 
 const catName = (id) => HELP_CATEGORIES.find((c) => c.id === id)?.title || "";
 
