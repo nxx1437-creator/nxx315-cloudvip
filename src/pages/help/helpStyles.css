@@ -178,3 +178,10 @@
 .gic-related h3{margin:0 0 8px;font-size:13px;color:var(--subtle);font-weight:500}
 
 .gic-hero > .gic-art{top:auto;bottom:0;height:auto;aspect-ratio:16/9;min-height:62%}
+
+/* chữ trong nút không bị .gic a{color:inherit} đè */
+.gic .gic-btn{color:var(--btn-ink)}
+.gic .gic-btn.glass{color:#fff}
+.gic .gic-link.lt{color:#fff}
+.gic button.gic-btn{font:inherit}
+  
