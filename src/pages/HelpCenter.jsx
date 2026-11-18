@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import { HELP_ARTICLES } from "../lib/helpArticles";
 import { HelpNav, Closing, Landscape, Stripes, useHelpTheme } from "./help/HelpParts";
 import { HelpHero, HelpVision, HelpChapter, HelpInvite, HelpTopics } from "./help/HelpHome";
-import { ListView, ArticleView } from "./help/HelpViews";
+import { ListView, ArticleView } from "./help/HelpArticleViews";
 import { RequestScreen, HistoryFlow } from "./help/HelpRequest.jsx";
 import "./help/helpTheme.css";
 import "./help/helpWriter.css";
@@ -92,5 +92,4 @@ export default function HelpCenter() {
       {r === "history" && <HistoryFlow onClose={closeRequest} onNew={() => openRequest()} />}
     </div>
   );
-              }
-
+            }
