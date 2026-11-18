@@ -54,14 +54,14 @@ const Sun = () => (
   <svg className="mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" /></svg>
 );
 
-export function HelpNav({ on, onHome, onTopics }) {
+export function HelpNav({ on, onHome, onTopics, onRequest }) {
   return (
     <header className="gic-nav" data-on={on}>
       <button type="button" onClick={onHome} aria-label="Trang chủ trợ giúp" style={{ background: "none", border: 0, padding: 0, display: "flex" }}><Sun /></button>
       <button type="button" className="l" onClick={onTopics} style={{ background: "none", border: 0, padding: 0 }}>Chủ đề</button>
       <Link className="l hide" to={HELP_LINKS.contact}>Liên hệ</Link>
       <Link className="l hide" to={HELP_LINKS.home}>Về web</Link>
-      <Link className="gic-btn" to={HELP_LINKS.support}>Gửi yêu cầu <Chev /></Link>
+      <button type="button" className="gic-btn" onClick={() => onRequest()}>Gửi yêu cầu <Chev /></button>
     </header>
   );
 }
@@ -92,7 +92,7 @@ export function Schematic({ step }) {
 }
 
 /* ---- Kết thúc: dải trắng + sọc mint; phong cảnh nằm cố định bên dưới ---- */
-export function Closing() {
+export function Closing({ onRequest }) {
   return (
     <>
       <footer className="gic-close">
@@ -100,7 +100,7 @@ export function Closing() {
           <svg className="gic-emblem" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" /></svg>
           <h2 className="gic-serif gic-h">{HELP_COPY.closing}</h2>
           <p className="gic-p">Chúng mình trả lời trong ứng dụng, thường là trong ngày.{" "}
-            <Link className="gic-link" to={HELP_LINKS.support} style={{ height: "auto", color: "inherit" }}><u>Gửi yêu cầu</u></Link></p>
+            <button type="button" className="gic-link" onClick={() => onRequest()} style={{ height: "auto", color: "inherit", background: "none", border: 0, padding: 0 }}><u>Gửi yêu cầu</u></button></p>
         </div>
         <div className="gic-utility">
           <nav>
@@ -121,5 +121,6 @@ export function Landscape() {
       <div className="gic-credit"><span>© Nxx315 Studio</span><span>Trung tâm trợ giúp</span></div>
     </div>
   );
-}
+         }
+       
  
