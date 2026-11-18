@@ -1,4 +1,4 @@
- // src/pages/HelpCenter.jsx — trang chính, ghép các phần (URL: /help, /help?c=tasks, /help?a=t1, /help?q=xu)
+// src/pages/HelpCenter.jsx — trang chính, ghép các phần (URL: /help, /help?c=tasks, /help?a=t1, /help?q=xu)
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { HELP_ARTICLES } from "../lib/helpArticles";
@@ -19,8 +19,8 @@ export default function HelpCenter() {
   const go = (params) => { setSp(params); window.scrollTo({ top: 0 }); };
   const toHome = () => { setQ(""); go({}); };
   const toTopics = () => {
-    if (!home) { setQ(""); setSp({}); setTimeout(() => document.getElementById("hc-topics")?.scrollIntoView({ behavior: "smooth" }), 60); }
-    else document.getElementById("hc-topics")?.scrollIntoView({ behavior: "smooth" });
+    if (!home) { setQ(""); setSp({}); setTimeout(() => document.getElementById("gic-topics")?.scrollIntoView({ behavior: "smooth" }), 60); }
+    else document.getElementById("gic-topics")?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -31,9 +31,9 @@ export default function HelpCenter() {
   }, [home]);
 
   return (
-    <div className="hc" data-theme={theme}>
+    <div className="gic" data-theme={theme}>
       <HelpNav on={onArt ? "art" : "canvas"} onHome={toHome} onTopics={toTopics} />
-      <main className="hc-main">
+      <main className="gic-main">
         {home && (
           <>
             <HelpHero q={q} setQ={setQ} onSearch={(v) => v.trim() && go({ q: v.trim() })} />
