@@ -32,38 +32,36 @@ export function useHelpTheme() {
 }
 
 export const Chev = ({ dk }) => (
-  <span className={"hc-chev" + (dk ? " dk" : "")} aria-hidden="true">
+  <span className={"gic-chev" + (dk ? " dk" : "")} aria-hidden="true">
     <svg viewBox="0 0 6 10"><path d="M0 0l6 5-6 5z" /></svg>
   </span>
 );
 
 export const Stripes = ({ kind }) => {
   const c = kind === "mint" ? ["#e7f5f3", "#d0ebe8", "#a0d7d1"] : ["#334444", "#576a6a", "#728383", "#a5afaf", "#cfd3cf"];
-  return <div className="hc-stripes" aria-hidden="true">{c.map((x) => <i key={x} style={{ background: x }} />)}</div>;
+  return <div className="gic-stripes" aria-hidden="true">{c.map((x) => <i key={x} style={{ background: x }} />)}</div>;
 };
 
 /* Ảnh người dùng tự up; trống thì dùng tranh pixel */
 export function ArtSlot({ slot, kind, seed, alt = "" }) {
   const url = imgUrl(HELP_IMAGES[slot]?.src);
   return url
-    ? <img className="hc-art" src={url} alt={alt} loading="lazy" decoding="async" />
-    : <PixelScene className="hc-art" kind={kind} seed={seed} />;
+    ? <img className="gic-art" src={url} alt={alt} loading="lazy" decoding="async" />
+    : <PixelScene className="gic-art" kind={kind} seed={seed} />;
 }
 
 const Sun = () => (
-  <svg className="mark" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
-    <path d="M2 14h14v2H2zM5 11h8v2H5zM7 8h4v2H7zM8 2h2v3H8zM2 6l2-1 1 2-2 1zM16 6l-2-1-1 2 2 1z" />
-  </svg>
+  <svg className="mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" /></svg>
 );
 
 export function HelpNav({ on, onHome, onTopics }) {
   return (
-    <header className="hc-nav" data-on={on}>
+    <header className="gic-nav" data-on={on}>
       <button type="button" onClick={onHome} aria-label="Trang chủ trợ giúp" style={{ background: "none", border: 0, padding: 0, display: "flex" }}><Sun /></button>
       <button type="button" className="l" onClick={onTopics} style={{ background: "none", border: 0, padding: 0 }}>Chủ đề</button>
       <Link className="l hide" to={HELP_LINKS.contact}>Liên hệ</Link>
       <Link className="l hide" to={HELP_LINKS.home}>Về web</Link>
-      <Link className="hc-btn" to={HELP_LINKS.support}>Gửi yêu cầu <Chev /></Link>
+      <Link className="gic-btn" to={HELP_LINKS.support}>Gửi yêu cầu <Chev /></Link>
     </header>
   );
 }
@@ -97,19 +95,19 @@ export function Schematic({ step }) {
 export function Closing() {
   return (
     <>
-      <footer className="hc-close">
+      <footer className="gic-close">
         <div className="center">
-          <svg className="hc-emblem" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><path d="M2 14h14v2H2zM5 11h8v2H5zM7 8h4v2H7zM8 2h2v3H8z" /></svg>
-          <h2 className="hc-serif hc-h">{HELP_COPY.closing}</h2>
-          <p className="hc-p">Chúng mình trả lời trong ứng dụng, thường là trong ngày.{" "}
-            <Link className="hc-link" to={HELP_LINKS.support} style={{ height: "auto", color: "inherit" }}><u>Gửi yêu cầu</u></Link></p>
+          <svg className="gic-emblem" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" /></svg>
+          <h2 className="gic-serif gic-h">{HELP_COPY.closing}</h2>
+          <p className="gic-p">Chúng mình trả lời trong ứng dụng, thường là trong ngày.{" "}
+            <Link className="gic-link" to={HELP_LINKS.support} style={{ height: "auto", color: "inherit" }}><u>Gửi yêu cầu</u></Link></p>
         </div>
-        <div className="hc-utility">
+        <div className="gic-utility">
           <nav>
             <Link to={HELP_LINKS.home}>Trang chủ</Link><Link to={HELP_LINKS.terms}>Điều khoản</Link>
             <Link to={HELP_LINKS.privacy}>Bảo mật</Link><Link to={HELP_LINKS.about}>Về chúng tôi</Link>
           </nav>
-          <a className="hc-mailbox" href={`mailto:${HELP_LINKS.email}`}>{HELP_LINKS.email}<Chev dk /></a>
+          <a className="gic-mailbox" href={`mailto:${HELP_LINKS.email}`}>{HELP_LINKS.email}<Chev dk /></a>
         </div>
       </footer>
       <Stripes kind="mint" />
@@ -118,9 +116,10 @@ export function Closing() {
 }
 export function Landscape() {
   return (
-    <div className="hc-land" aria-hidden="true">
+    <div className="gic-land" aria-hidden="true">
       <ArtSlot slot="closing" kind="avenue" seed={7} />
-      <div className="hc-credit"><span>© Nxx315 Studio</span><span>Trung tâm trợ giúp</span></div>
+      <div className="gic-credit"><span>© Nxx315 Studio</span><span>Trung tâm trợ giúp</span></div>
     </div>
   );
 }
+ 
