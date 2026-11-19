@@ -6,7 +6,8 @@ import { getGreeting, getSuggestions } from "./helpers.js";
 import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
 import HomeGuides from "./HomeGuides.jsx";
-import { SupportTiles, Statement, DemoCard, Features, FinalCard } from "./HomeSections.jsx";
+import { SupportTiles, Statement, Features, FinalCard } from "./HomeSections.jsx";
+import HomeDemo from "./HomeDemo.jsx";
 import { PixelScene } from "../help/HelpPixel.jsx";
 import "./chat-effects.css";
 import "./home-input.css";
@@ -138,7 +139,7 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
         <SupportTiles />
       </div>
       <Statement />
-      <DemoCard onTry={tryExample} />
+      <HomeDemo onTry={tryExample} />
       <Features onStart={focusComposer} />
 
       <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => send(title, catId)} />
@@ -168,4 +169,5 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#2b2b2b]" />}
     </button>
   );
-}
+               }
+      
