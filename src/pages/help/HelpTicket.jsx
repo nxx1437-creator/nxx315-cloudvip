@@ -304,7 +304,7 @@ export function ChatScreen({ ticket, onClose }) {
             <div className="py-5"><TicketSteps status={status} /></div>
             <div className={row}><span className="hc-muted">Mã yêu cầu</span><span className="hc-text hc-mono font-medium">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="hc-muted">Thời gian gửi</span><span className="hc-text font-medium">{fmtDate(ticket.created_at)}</span></div>
-            <div className={row}><span className="hc-muted">Trạng thái</span><StatusPill st={statusOf(status)} /></div>
+    
           </Card>
 
           {closed && (
