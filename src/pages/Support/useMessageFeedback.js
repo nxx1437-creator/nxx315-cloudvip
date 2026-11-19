@@ -92,4 +92,4 @@ export default function useMessageFeedback(conversation, user) {
     submitFeedback,
     resetFeedback,
   };
-          }
+}
