@@ -330,22 +330,9 @@
           observer.observe(rootEl, { childList: true, subtree: true });
         }
 
-        // Tự động tắt màn hình chờ sau 12 giây nếu có lỗi
+        // Tự động tắt màn hình chờ sau 12 giây nếu có lỗi (để không bị treo)
         setTimeout(hideLoader, 12000);
-
-        // Bắt lỗi JS và hiện lên màn hình đỏ để dễ fix
-        window.addEventListener("error", function (e) {
-          hideLoader();
-          var box = document.createElement("div");
-          box.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:999999;background:#b91c1c;color:#fff;padding:12px;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all;max-height:60vh;overflow:auto";
-          box.textContent = "❌ Lỗi: " + (e.message || "Không xác định") + "\n\nFile: " + (e.filename || "") + "\nDòng: " + (e.lineno || "");
-          document.body.appendChild(box);
-        });
       })();
     </script>
-
-    <!-- ===== VCONSOLE: Bật bảng điều khiển trên điện thoại ===== -->
-    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-    <script>new VConsole();</script>
   </body>
-</html>
+  </html>
