@@ -1,5 +1,5 @@
 // src/pages/help/HelpParts.jsx — mảnh ghép dùng chung
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { HELP_IMAGES, HELP_LINKS, HELP_COPY, imgUrl } from "../../lib/helpData";
 import { PixelScene } from "./HelpPixel";
@@ -45,10 +45,32 @@ export const Stripes = ({ kind }) => {
 /* Ảnh người dùng tự up; trống thì dùng tranh pixel */
 export function ArtSlot({ slot, kind, seed, alt = "" }) {
   const url = imgUrl(HELP_IMAGES[slot]?.src);
+  const [ok, setOk] = useState(false);
   const [bad, setBad] = useState(false);
-  return url && !bad
-    ? <img className="gic-art" src={url} alt={alt} loading="lazy" decoding="async" onError={() => setBad(true)} />
-    : <PixelScene className="gic-art" kind={kind} seed={seed} />;
+  const ref = useRef(null);
+  // ảnh đã có trong cache thì hiện ngay, không chạy hiệu ứng
+  useEffect(() => {
+    const el = ref.current;
+    if (el && el.complete && el.naturalWidth > 0) setOk(true);
+  }, [url]);
+  return (
+    <>
+      {/* lớp tạm: tranh pixel hiện ngay, ảnh thật mờ dần đè lên khi tải xong */}
+      <PixelScene className="gic-art" kind={kind} seed={seed} />
+      {url && !bad && (
+        <img
+          ref={ref}
+          className="gic-art"
+          src={url}
+          alt={alt}
+          decoding="async"
+          onLoad={() => setOk(true)}
+          onError={() => setBad(true)}
+          style={{ opacity: ok ? 1 : 0, transition: "opacity .5s cubic-bezier(.4,0,.2,1)" }}
+        />
+      )}
+    </>
+  );
 }
 
 const Sun = () => (
@@ -123,8 +145,7 @@ export function Landscape() {
       <div className="gic-credit"><span>© Nxx315 Studio</span><span>Trung tâm trợ giúp</span></div>
     </div>
   );
-         }
-                                     
-             
+                           }
+   
        
  
