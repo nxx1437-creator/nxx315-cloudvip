@@ -2,7 +2,6 @@
 import React from "react";
 
 const pad2 = (n) => String(n).padStart(2, "0");
-
 const isValidDate = (d) => d instanceof Date && !Number.isNaN(d.getTime());
 
 export const fmtTime = (iso) => {
@@ -13,16 +12,13 @@ export const fmtTime = (iso) => {
 
 // "> trích dẫn\n\nnội dung" -> { quote, body }
 export function splitQuote(text) {
-  // Chuẩn hoá CRLF -> LF, bỏ \r còn sót
   const normalized = String(text ?? "").replace(/\r\n?/g, "\n");
   const lines = normalized.split("\n");
   const q = [];
-
   while (lines.length && lines[0].startsWith("> ")) {
     q.push(lines.shift().slice(2).replace(/\s+$/, ""));
   }
   while (lines.length && lines[0].trim() === "") lines.shift();
-
   return { quote: q.join("\n"), body: lines.join("\n") };
 }
 
@@ -90,4 +86,4 @@ export function DaySeparator({ iso }) {
       {label} {fmtTime(iso)}
     </div>
   );
-          }
+}
