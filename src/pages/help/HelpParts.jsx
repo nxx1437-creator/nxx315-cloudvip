@@ -54,11 +54,12 @@ const Sun = () => (
   <svg className="mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" /></svg>
 );
 
-export function HelpNav({ on, onHome, onTopics, onRequest }) {
+export function HelpNav({ on, onHome, onTopics, onRequest, onHistory }) {
   return (
     <header className="gic-nav" data-on={on}>
       <button type="button" onClick={onHome} aria-label="Trang chủ trợ giúp" style={{ background: "none", border: 0, padding: 0, display: "flex" }}><Sun /></button>
       <button type="button" className="l" onClick={onTopics} style={{ background: "none", border: 0, padding: 0 }}>Chủ đề</button>
+      <button type="button" className="l" onClick={onHistory} style={{ background: "none", border: 0, padding: 0 }}>Lịch sử</button>
       <Link className="l hide" to={HELP_LINKS.contact}>Liên hệ</Link>
       <Link className="l hide" to={HELP_LINKS.home}>Về web</Link>
       <button type="button" className="gic-btn" onClick={() => onRequest()}>Gửi yêu cầu <Chev /></button>
@@ -121,6 +122,7 @@ export function Landscape() {
       <div className="gic-credit"><span>© Nxx315 Studio</span><span>Trung tâm trợ giúp</span></div>
     </div>
   );
-         }
+      }
+             
        
  
