@@ -43,12 +43,12 @@ export const HELP_IMAGES = {
     guide:
       "Đại lộ công viên pixel: hai bên tối (xanh teal đậm), giữa sáng rực như nắng, có vài người nhỏ và chú chó. Phần sáng ở giữa, đáy ảnh sẽ được phủ tối nhẹ tự động.",
   },
-  cat_start: { src: "", size: "800 × 700 px", guide: "Bìa danh mục 'Bắt đầu': trời xanh, mây pixel khối, lá xanh ở hai góc dưới, chừa trời ở giữa." },
-  cat_tasks: { src: "", size: "800 × 700 px", guide: "Bìa 'Nhiệm vụ & xu': trời xanh, vài đồng xu/bông hoa pixel nhỏ ở giữa, lá ở hai góc." },
-  cat_store: { src: "", size: "800 × 700 px", guide: "Bìa 'Đổi thưởng': trời xanh, một hộp quà pixel ở giữa, mây và lá ở góc." },
-  cat_withdraw: { src: "", size: "800 × 700 px", guide: "Bìa 'Rút tiền': trời xanh, chiếc ví pixel ở giữa, lá ở góc." },
-  cat_account: { src: "", size: "800 × 700 px", guide: "Bìa 'Tài khoản': trời xanh, ổ khóa hoặc chiếc chìa pixel ở giữa, lá ở góc." },
-  cat_creator: { src: "", size: "800 × 700 px", guide: "Bìa 'Creator': trời xanh, khung phim/máy quay pixel ở giữa, lá ở góc." },
+  cat_start: { src: "help_start.png", size: "800 × 700 px", guide: "Bìa danh mục 'Bắt đầu': trời xanh, mây pixel khối, lá xanh ở hai góc dưới, chừa trời ở giữa." },
+  cat_tasks: { src: "help_tasks.png", size: "800 × 700 px", guide: "Bìa 'Nhiệm vụ & xu': trời xanh, vài đồng xu/bông hoa pixel nhỏ ở giữa, lá ở hai góc." },
+  cat_store: { src: "help_store.png", size: "800 × 700 px", guide: "Bìa 'Đổi thưởng': trời xanh, một hộp quà pixel ở giữa, mây và lá ở góc." },
+  cat_withdraw: { src: "help_withdraw.png", size: "800 × 700 px", guide: "Bìa 'Rút tiền': trời xanh, chiếc ví pixel ở giữa, lá ở góc." },
+  cat_account: { src: "help_account.png", size: "800 × 700 px", guide: "Bìa 'Tài khoản': trời xanh, ổ khóa hoặc chiếc chìa pixel ở giữa, lá ở góc." },
+  cat_creator: { src: "help_creator.png", size: "800 × 700 px", guide: "Bìa 'Creator': trời xanh, khung phim/máy quay pixel ở giữa, lá ở góc." },
 };
 
 export const HELP_CATEGORIES = [
