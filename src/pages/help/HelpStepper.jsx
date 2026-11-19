@@ -19,16 +19,30 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.ts-n,.ts-c,.ts-l{animation:none!important;transition:none!important}}
 `;
 
-export default function TicketSteps({ status }) {
+const keyOf = (id) => `nxx_ticket_step_${id}`;
+const readSeen = (id) => {
+  if (id == null) return null;
+  try { const v = localStorage.getItem(keyOf(id)); return v === null ? null : Number(v); } catch (e) { return null; }
+};
+
+// Chỉ chạy hiệu ứng khi có bước MỚI mà người dùng chưa thấy. Mở lại yêu cầu cũ thì hiện thẳng, không chạy lại.
+export default function TicketSteps({ status, id }) {
   const target = stepOf(status);
-  const [shown, setShown] = useState(-1); // bước đang hiển thị: chạy lần lượt từng bước cho đến target
+  const [shown, setShown] = useState(() => {
+    const seen = readSeen(id);
+    return seen === null || Number.isNaN(seen) ? target : Math.min(seen, target);
+  });
+  const [base] = useState(shown); // các bước <= base đã hiện sẵn, không chạy hiệu ứng
 
   useEffect(() => {
-    if (shown === target) return undefined;
+    if (shown === target) {
+      if (id != null) { try { localStorage.setItem(keyOf(id), String(target)); } catch (e) { /* bỏ qua */ } }
+      return undefined;
+    }
     if (shown > target) { setShown(target); return undefined; }
-    const t = setTimeout(() => setShown((s) => s + 1), shown < 0 ? 250 : 650);
+    const t = setTimeout(() => setShown((x) => x + 1), 650);
     return () => clearTimeout(t);
-  }, [shown, target]);
+  }, [shown, target, id]);
 
   return (
     <div className="flex items-start px-1" role="list" aria-label="Tiến trình xử lý">
@@ -36,7 +50,8 @@ export default function TicketSteps({ status }) {
       {STEPS.map((label, i) => {
         const done = i <= shown;
         const current = i === shown;
-        const working = current && i < 3; // bước đang chờ: chấm trắng + vòng nhịp thở
+        const working = current && i < 3;
+        const fresh = done && i > base; // vừa mới đạt trong lần xem này // bước đang chờ: chấm trắng + vòng nhịp thở
         return (
           <div key={label} role="listitem" className="relative flex flex-1 flex-col items-center">
             {i > 0 && (
@@ -53,7 +68,7 @@ export default function TicketSteps({ status }) {
               style={{
                 background: done ? BLUE : "rgba(203,213,225,.75)",
                 transition: `background .35s ${EASE}`,
-                animation: done ? "tsPop .5s " + EASE : "none",
+                animation: fresh ? "tsPop .5s " + EASE : "none",
               }}
             >
               {working ? (
@@ -63,7 +78,7 @@ export default function TicketSteps({ status }) {
                 </>
               ) : (
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12.5l4.5 4.5L19 7.5" strokeDasharray="24" style={{ animation: done ? "tsDraw .45s .1s both " + EASE : "none", strokeDashoffset: done ? undefined : 24 }} />
+                  <path d="M5 12.5l4.5 4.5L19 7.5" strokeDasharray="24" style={{ animation: fresh ? "tsDraw .45s .1s both " + EASE : "none", strokeDashoffset: done ? 0 : 24 }} />
                 </svg>
               )}
             </span>
@@ -78,6 +93,7 @@ export default function TicketSteps({ status }) {
       })}
     </div>
   );
-            }
+              }
+
 
 
