@@ -55,6 +55,17 @@ function build(kind, seed) {
     sky("#0081c0", "#5fb8e4"); clouds(4, 48, 14);
     flower(122, 46, 13); flower(146, 62, 9); flower(98, 66, 8); flower(64, 76, 7); flower(24, 82, 6);
     leaves(80, 88, 170, 8, 70, GREEN);
+  } else if (kind === "meadow") {
+    sky("#1d86d8", "#8fcdf2"); clouds(4, 6, 22);
+    for (let i = 0; i < 11; i++) {
+      const x = 22 + i * 11 + r() * 3, w = 6 + r() * 5, h = 10 + r() * 22;
+      R(x, 56 - h, w, h + 4, pick(["#5f87b4", "#7399c2", "#4f77a3"]));
+      for (let k = 0; k < 3; k++) R(x + 1 + r() * (w - 2), 56 - h + 2 + r() * (h - 4), 1, 1, "#d6e8f7");
+    }
+    for (let y = 56; y < H; y++) { const t = (y - 56) / (H - 56); R(0, y, W, 1, mix("#6cc25a", "#2f8f46", t)); }
+    for (let i = 0; i < 140; i++) R(r() * W, 58 + r() * 30, 2, 1, pick(["#8fd05a", "#3aa655", "#1f6b3a"]));
+    leaves(6, 50, 22, 18, 40, GREEN); leaves(154, 50, 22, 18, 40, GREEN);
+    flower(80, 66, 9);
   } else if (kind === "avenue") {
     R(0, 0, W, H, "#0b3333");
     for (let i = 0; i <= 14; i++) {
@@ -94,5 +105,6 @@ export function PixelFlower({ className = "" }) {
     return o.join("");
   }, []);
   return <svg className={className} viewBox="0 0 60 90" shapeRendering="crispEdges" aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />;
-      }
-                                             
+    }
+        
+    
