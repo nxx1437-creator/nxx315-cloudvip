@@ -1,9 +1,9 @@
 // src/pages/Support/HomeSections.jsx — các khối giới thiệu trên trang chủ chat AI (kiểu Cofounder)
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ArrowRight, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PixelScene } from "../help/HelpPixel.jsx";
-import { SUPPORT, SUGGESTIONS_BY_CATEGORY } from "./constants.js";
+import { SUPPORT } from "./constants.js";
 
 export const SupportTiles = () => (
   <div className="nxh-tiles">
@@ -25,46 +25,6 @@ export const Statement = () => (
     </h2>
   </div>
 );
-
-const DEMOS = [
-  { id: "order", tab: "Đơn hàng", ai: "Đơn của bạn đang ở bước **chuẩn bị giao**. Có cập nhật mới mình sẽ báo ngay nha." },
-  { id: "payment", tab: "Thanh toán", ai: "Bạn gửi giúp mình ảnh biên lai hoặc mã giao dịch, mình kiểm tra ngay nhé." },
-  { id: "account", tab: "Tài khoản", ai: "Bạn dùng chức năng Quên mật khẩu ở trang đăng nhập, hoặc đăng nhập bằng Google nếu từng đăng ký như vậy." },
-  { id: "bug", tab: "Báo lỗi", ai: "Bạn chụp màn hình lỗi gửi vào đây giúp mình, mình xem và hướng dẫn cách xử lý." },
-];
-const bold = (s) => s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
-
-export function DemoCard({ onTry }) {
-  const [i, setI] = useState(0);
-  const [hold, setHold] = useState(false);
-  useEffect(() => {
-    if (hold) return undefined;
-    const t = setInterval(() => setI((x) => (x + 1) % DEMOS.length), 6500);
-    return () => clearInterval(t);
-  }, [hold]);
-  const d = DEMOS[i];
-  const q = SUGGESTIONS_BY_CATEGORY[d.id]?.[0] || "";
-  return (
-    <div className="nxh-sec" style={{ paddingTop: 48 }}>
-      <div className="nxh-eyebrow">Xem NXX trả lời thế nào</div>
-      <div className="nxh-demo" onTouchStart={() => setHold(true)} onMouseEnter={() => setHold(true)}>
-        <div className="nxh-tabs" role="tablist">
-          {DEMOS.map((x, k) => (
-            <button key={x.id} type="button" role="tab" aria-selected={k === i} onClick={() => { setHold(true); setI(k); }}>{x.tab}</button>
-          ))}
-        </div>
-        <div className="nxh-demo-body" key={d.id}>
-          <div className="nxh-b me">{q}</div>
-          <div className="nxh-b ai">{bold(d.ai)}</div>
-          <button type="button" className="nxh-try" onClick={() => onTry({ text: q, category: d.id })}>
-            Hỏi câu này <ArrowRight size={15} />
-          </button>
-        </div>
-      </div>
-      <p className="nxh-cap" style={{ marginTop: 8, fontSize: 12.5, color: "#a2a29b" }}>Ví dụ minh họa. Câu trả lời thật phụ thuộc vào đơn và tài khoản của bạn.</p>
-    </div>
-  );
-}
 
 export const Features = ({ onStart }) => (
   <div className="nxh-sec" style={{ paddingTop: 44 }}>
@@ -99,3 +59,4 @@ export const FinalCard = ({ onStart }) => (
     </div>
   </>
 );
+
