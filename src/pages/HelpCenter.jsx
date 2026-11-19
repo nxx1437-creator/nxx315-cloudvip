@@ -10,6 +10,8 @@ import { RequestScreen, HistoryFlow } from "./help/HelpRequest.jsx";
 import "./help/helpTheme.css";
 import "./help/helpWriter.css";
 import "./help/helpStyles.css";
+import "./help/helpOverlay.css";
+import "../pages/help/helpOverlay.css";
 
 export default function HelpCenter() {
   const theme = useHelpTheme();
@@ -92,5 +94,6 @@ export default function HelpCenter() {
       {r === "history" && <HistoryFlow onClose={closeRequest} onNew={() => openRequest()} />}
     </div>
   );
-            }
+        }
+    
 
