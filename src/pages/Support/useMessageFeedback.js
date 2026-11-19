@@ -6,7 +6,6 @@ export default function useMessageFeedback(conversation, user) {
   const [feedback, setFeedback] = useState({});
   const [feedbackTarget, setFeedbackTarget] = useState(null);
 
-  // Tự reset khi đổi conversation (phòng khi caller quên gọi resetFeedback)
   useEffect(() => {
     setFeedback({});
     setFeedbackTarget(null);
@@ -18,7 +17,6 @@ export default function useMessageFeedback(conversation, user) {
       const current = feedback[message.id];
       if (current?.status === "sent" || current?.status === "sending") return;
 
-      // Xoá draft cũ nếu đang mở target khác
       if (feedbackTarget && feedbackTarget.message.id !== message.id) {
         const oldId = feedbackTarget.message.id;
         setFeedback((prev) => {
@@ -57,30 +55,23 @@ export default function useMessageFeedback(conversation, user) {
       const { message, rating } = feedbackTarget;
       const id = message.id;
 
-      // Đánh dấu đang gửi (không cho openFeedback override)
       setFeedback((prev) => ({ ...prev, [id]: { rating, status: "sending" } }));
       setFeedbackTarget(null);
 
       try {
-        const { error } = await supabase.from("support_message_feedback").upsert(
-          {
-            message_id: String(id),
-            conversation_id: String(conversation.id),
-            user_id: user?.id ?? null,
-            rating,
-            reasons,
-            comment: comment || null,
-          },
-          { onConflict: "message_id,user_id" }
-        );
-
+        const { error } = await supabase.from("support_message_feedback").insert({
+          message_id: String(id),
+          conversation_id: String(conversation.id),
+          user_id: user?.id ?? null,
+          rating,
+          reasons,
+          comment: comment || null,
+        });
         if (error) throw error;
-
         setFeedback((prev) => ({ ...prev, [id]: { rating, status: "sent" } }));
         return { ok: true };
       } catch (e) {
         console.warn("[Feedback] submit failed:", e);
-        // Rollback về draft để user thử lại
         setFeedback((prev) => ({ ...prev, [id]: { rating, status: "draft" } }));
         return { ok: false, error: e };
       }
@@ -101,4 +92,4 @@ export default function useMessageFeedback(conversation, user) {
     submitFeedback,
     resetFeedback,
   };
-    }
+          }
