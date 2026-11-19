@@ -29,46 +29,23 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // ✅ KHÔNG precache index.html và version.json
-        //    để luôn lấy từ network
-        globPatterns: [
-          "**/*.{css,ico,png,svg,woff,woff2,ttf,otf,webp}",
-        ],
-
-        // ✅ SW mới thay SW cũ ngay lập tức
+        globPatterns: ["**/*.{css,ico,png,svg,woff,woff2,ttf,otf,webp,js}"],
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-
-        // ✅ QUAN TRỌNG: KHÔNG dùng navigateFallback
-        //    → Không cache index.html → luôn lấy từ server
-        navigateFallback: null,
-
-        // ✅ Không cache index.html và version.json
+        // ✅ Bật lại navigateFallback để nó trả về index.html khi vào link
+        navigateFallback: "index.html",
+        // ✅ Loại trừ các API ra khỏi fallback
         navigateFallbackDenylist: [
-          /^\/index\.html$/,
-          /^\/version\.json$/,
           /^\/api/,
           /^\/task\/callback/,
-          /^\/history\/order\//,
-          /^\/store\//,
-          /^\/minigames\//,
+          /^\/version\.json$/,
         ],
-
-        // ✅ Loại trừ file HTML khỏi precache
-        globIgnores: [
-          "**/index.html",
-          "**/version.json",
-        ],
-
         runtimeCaching: [
-          // ✅ version.json: LUÔN lấy từ network
           {
             urlPattern: /\/version\.json$/,
             handler: "NetworkOnly",
           },
-
-          // ✅ JS/CSS bundle: NetworkFirst để lấy bundle mới
           {
             urlPattern: /\/assets\/.*\.(js|css)$/,
             handler: "NetworkFirst",
@@ -78,8 +55,6 @@ export default defineConfig({
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
             },
           },
-
-          // Supabase API
           {
             urlPattern: /^https:\/\/rwglwovohbyqmbbzdvdj\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
@@ -89,8 +64,6 @@ export default defineConfig({
               expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 },
             },
           },
-
-          // Hình ảnh
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
             handler: "CacheFirst",
@@ -102,8 +75,6 @@ export default defineConfig({
               },
             },
           },
-
-          // Google Fonts
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
             handler: "CacheFirst",
