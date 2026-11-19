@@ -282,7 +282,7 @@ export default function MessageBubble({
                   label="Chưa hữu ích"
                   pressed={feedback?.rating === "down"}
                   disabled={fbLocked}
-                  onClick={() => onFeedback?.("down")}
+                  onClick={() => onFeedback?.(message, "down")}
                   className={`!h-8 !w-8 ${feedbackClass(feedback, "down")}`}
                 >
                   <ThumbsDown size={16} strokeWidth={1.8} />
@@ -291,7 +291,7 @@ export default function MessageBubble({
                   label="Hữu ích"
                   pressed={feedback?.rating === "up"}
                   disabled={fbLocked}
-                  onClick={() => onFeedback?.("up")}
+                  onClick={() => onFeedback?.(message, "up")}
                   className={`!h-8 !w-8 ${feedbackClass(feedback, "up")}`}
                 >
                   <ThumbsUp size={16} strokeWidth={1.8} />
@@ -312,4 +312,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-}
+      }
