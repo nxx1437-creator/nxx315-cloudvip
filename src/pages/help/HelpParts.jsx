@@ -45,8 +45,9 @@ export const Stripes = ({ kind }) => {
 /* Ảnh người dùng tự up; trống thì dùng tranh pixel */
 export function ArtSlot({ slot, kind, seed, alt = "" }) {
   const url = imgUrl(HELP_IMAGES[slot]?.src);
-  return url
-    ? <img className="gic-art" src={url} alt={alt} loading="lazy" decoding="async" />
+  const [bad, setBad] = useState(false);
+  return url && !bad
+    ? <img className="gic-art" src={url} alt={alt} loading="lazy" decoding="async" onError={() => setBad(true)} />
     : <PixelScene className="gic-art" kind={kind} seed={seed} />;
 }
 
@@ -122,7 +123,8 @@ export function Landscape() {
       <div className="gic-credit"><span>© Nxx315 Studio</span><span>Trung tâm trợ giúp</span></div>
     </div>
   );
-      }
+         }
+                                     
              
        
  
