@@ -62,7 +62,7 @@ export default function HelpCenter() {
 
   return (
     <div className="gic" data-theme={theme}>
-      <HelpNav on={onArt ? "art" : "canvas"} onHome={toHome} onTopics={toTopics} onRequest={() => openRequest()} />
+      <HelpNav on={onArt ? "art" : "canvas"} onHome={toHome} onTopics={toTopics} onRequest={() => openRequest()} onHistory={() => withR("history")} />
       <main className="gic-main">
         {home && (
           <>
@@ -93,3 +93,4 @@ export default function HelpCenter() {
     </div>
   );
             }
+
