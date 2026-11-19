@@ -233,11 +233,8 @@
 
       /* =====================================================
          REDUCED MOTION — Cách 1
-         Tắt bong bóng nền (gây mỏi mắt), NHƯNG giữ bóng chính
-         chạy vì đây là tín hiệu "đang tải" quan trọng.
          ===================================================== */
       @media (prefers-reduced-motion: reduce) {
-        /* Tắt bong bóng + sheen nền */
         #initial-loader::after { animation: none; }
         #initial-loader::before {
           background:
@@ -247,7 +244,6 @@
               rgba(255,255,255,0) 34%);
         }
 
-        /* Bóng chính VẪN CHẠY — chậm hơn chút cho dịu mắt */
         .ball-blue {
           animation: ball-blue-move 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
         }
@@ -255,11 +251,11 @@
           animation: ball-green-move 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
         }
 
-        /* Loader fade vẫn giữ nhưng rút ngắn */
         #initial-loader { transition: opacity 0.3s ease; }
       }
     </style>
-        <!-- ===== Structured Data (JSON-LD) — ORGANIZATION ===== -->
+    
+    <!-- ===== Structured Data (JSON-LD) — ORGANIZATION ===== -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -305,6 +301,7 @@
       <p class="loader-hint">Đang tải...</p>
     </div>
 
+    <!-- Dòng script chính gọi React -->
     <script type="module" src="/src/main.jsx"></script>
 
     <script>
@@ -333,13 +330,23 @@
           observer.observe(rootEl, { childList: true, subtree: true });
         }
 
+        // Tự động tắt màn hình chờ sau 12 giây nếu có lỗi
         setTimeout(hideLoader, 12000);
+
+        // Bắt lỗi JS và hiện lên màn hình đỏ để dễ fix
+        window.addEventListener("error", function (e) {
+          hideLoader();
+          var box = document.createElement("div");
+          box.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:999999;background:#b91c1c;color:#fff;padding:12px;font:12px/1.4 monospace;white-space:pre-wrap;word-break:break-all;max-height:60vh;overflow:auto";
+          box.textContent = "❌ Lỗi: " + (e.message || "Không xác định") + "\n\nFile: " + (e.filename || "") + "\nDòng: " + (e.lineno || "");
+          document.body.appendChild(box);
+        });
       })();
     </script>
 
-    <!-- ===== ERUDA: Console on mobile — XOÁ SAU KHI DEBUG XONG ===== -->
+    <!-- ===== VCONSOLE: Bật bảng điều khiển trên điện thoại ===== -->
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>new VConsole();</script>
-    <!-- ============================================================ -->
   </body>
-</html>
+  </html>
+
