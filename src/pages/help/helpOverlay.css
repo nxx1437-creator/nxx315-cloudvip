@@ -52,3 +52,8 @@ html[data-help-theme="dark"] .hc-canvas{
 .hc-canvas .hc-chip[aria-pressed="true"]{background:var(--h-accent);color:var(--h-on-accent);box-shadow:none}
 .hc-canvas .hc-input{background:var(--h-input);border:1px solid var(--h-line);border-radius:8px}
 .hc-canvas .hc-input:focus{border-color:var(--h-text);box-shadow:none}
+
+/* gọn nhẹ hơn: tiêu đề thẻ nhỏ lại, thẻ phẳng hơn */
+.hc-canvas .hc-card{box-shadow:0 1px 1px rgba(0,0,0,.04)}
+.hc-canvas .hc-card > button .hc-text{font-size:17px;font-weight:500}
+.hc-canvas .hc-text2.text-\[12px\]{letter-spacing:.04em}
