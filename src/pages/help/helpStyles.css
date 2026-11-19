@@ -184,4 +184,5 @@
 .gic .gic-btn.glass{color:#fff}
 .gic .gic-link.lt{color:#fff}
 .gic button.gic-btn{font:inherit}
-  
+.gic-invite h2,.gic-invite .gic-p,.gic-identity{text-shadow:0 1px 12px rgba(0,50,100,.35)}
+                                 
