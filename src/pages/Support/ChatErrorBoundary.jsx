@@ -2,7 +2,7 @@
 import React from "react";
 import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = import.meta.env?.DEV ?? false;
 
 export default class ChatErrorBoundary extends React.Component {
   constructor(props) {
@@ -17,18 +17,15 @@ export default class ChatErrorBoundary extends React.Component {
     return {
       hasError: true,
       error,
-      // ID ngắn để user báo support, không lộ chi tiết
       errorId: `NXX-${Date.now().toString(36).toUpperCase()}`,
     };
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log để debug — có thể thay bằng Sentry.captureException
     console.error("[ChatErrorBoundary]", error, errorInfo);
   }
 
   componentDidUpdate(prevProps) {
-    // Reset khi đổi conversation hoặc resetKey
     if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
       this.handleReset();
     }
@@ -60,24 +57,16 @@ export default class ChatErrorBoundary extends React.Component {
               ? this.state.error?.message || "Lỗi không xác định"
               : "Rất tiếc, có lỗi xảy ra. Bạn thử lại hoặc liên hệ hỗ trợ kèm mã lỗi bên dưới."}
           </p>
-
-          {isDev && this.state.error?.stack && (
-            <pre className="mt-3 max-h-40 max-w-full overflow-auto rounded bg-red-100 p-2 text-left text-[11px] text-red-700">
-              {this.state.error.stack}
-            </pre>
-          )}
-
           {this.state.errorId && (
             <p className="mt-2 text-[12px] text-red-500/80">
               Mã lỗi: <b>{this.state.errorId}</b>
             </p>
           )}
-
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white"
             >
               <RotateCcw size={16} aria-hidden="true" />
               Thử lại
@@ -85,14 +74,14 @@ export default class ChatErrorBoundary extends React.Component {
             <button
               type="button"
               onClick={this.handleReload}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-red-600 transition active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-red-600"
             >
               Tải lại trang
             </button>
             <button
               type="button"
               onClick={this.handleGoHome}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-red-600 transition active:scale-[0.98]"
+              className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-red-600"
             >
               <Home size={16} aria-hidden="true" />
               Về trang chủ
@@ -101,7 +90,6 @@ export default class ChatErrorBoundary extends React.Component {
         </div>
       );
     }
-
     return this.props.children;
   }
-        }
+  }
