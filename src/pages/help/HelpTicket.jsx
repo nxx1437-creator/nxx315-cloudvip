@@ -5,6 +5,7 @@ import { Icon } from "./HelpUI.jsx";
 import { MAX_IMAGES, MAX_MB, statusOf } from "./HelpScreen.jsx";
 import { ATTACH_BUCKET, CATEGORIES, CSKH_AVATAR, CSKH_NAME, fmtDate } from "./helpData.js";
 import { useHelpTheme } from "./helpTheme.jsx";
+import TicketSteps from "./HelpStepper.jsx";
 
 const CLOSED = ["resolved", "closed"];
 const QUALITY = { 1: "Không hài lòng", 2: "Bình thường", 3: "Hài lòng", 4: "Rất hài lòng" };
@@ -300,6 +301,7 @@ export function ChatScreen({ ticket, onClose }) {
           </div>
 
           <Card title={typeLabel} open={info} onToggle={() => setInfo(!info)}>
+            <div className="py-5"><TicketSteps status={status} /></div>
             <div className={row}><span className="hc-muted">Mã yêu cầu</span><span className="hc-text hc-mono font-medium">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="hc-muted">Thời gian gửi</span><span className="hc-text font-medium">{fmtDate(ticket.created_at)}</span></div>
             <div className={row}><span className="hc-muted">Trạng thái</span><StatusPill st={statusOf(status)} /></div>
