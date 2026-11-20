@@ -1,17 +1,26 @@
 // src/pages/Support/HomeDemo.jsx — thẻ minh họa tự chạy kiểu Cofounder: vòng sơ đồ + khung ứng dụng có tab
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUp, Check, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowUp } from "lucide-react";
 import { SUGGESTIONS_BY_CATEGORY } from "./constants.js";
 
+// Luồng mỗi tình huống: Bước 1 -> Phản hồi 1 -> "Đang kiểm tra..." -> Phản hồi 2
 const SCENES = [
-  { id: "order", tab: "Đơn hàng", node: "Đơn hàng", steps: [["Tra cứu đơn", "Tìm đơn trong hệ thống"], ["Soạn câu trả lời", "Tóm tắt trạng thái cho bạn"]],
-    reply: "Đơn của bạn đang ở bước **chuẩn bị giao**. Có cập nhật mới mình sẽ báo ngay, bạn không cần hỏi lại." },
-  { id: "payment", tab: "Thanh toán", node: "Thanh toán", steps: [["Kiểm tra thanh toán", "Đối chiếu giao dịch của bạn"], ["Soạn hướng dẫn", "Chuẩn bị các bước tiếp theo"]],
-    reply: "Bạn gửi giúp mình **ảnh biên lai hoặc mã giao dịch**, mình sẽ đối chiếu và báo kết quả ngay trong khung chat này." },
-  { id: "account", tab: "Tài khoản", node: "Tài khoản", steps: [["Xác định vấn đề", "Quên mật khẩu hay lỗi đăng nhập"], ["Soạn hướng dẫn", "Các bước đặt lại mật khẩu"]],
-    reply: "Bạn bấm **Quên mật khẩu** ở trang đăng nhập, hoặc đăng nhập bằng Google nếu từng đăng ký như vậy." },
-  { id: "bug", tab: "Báo lỗi", node: "Báo lỗi", steps: [["Đọc mô tả lỗi", "Phân tích nội dung bạn gửi"], ["Soạn hướng dẫn", "Cách xử lý nhanh nhất"]],
-    reply: "Bạn **chụp màn hình lỗi** gửi vào đây giúp mình. Mình xem ảnh rồi hướng dẫn cách xử lý." },
+  { id: "order", tab: "Đơn hàng", node: "Đơn hàng",
+    step: "Bước 1: Tra cứu đơn trong hệ thống",
+    r1: "Mình đã tìm thấy đơn của bạn trong hệ thống.",
+    r2: "Đơn đang ở bước **chuẩn bị giao**. Có cập nhật mới mình sẽ báo ngay, bạn không cần hỏi lại." },
+  { id: "payment", tab: "Thanh toán", node: "Thanh toán",
+    step: "Bước 1: Đọc thông tin thanh toán",
+    r1: "Bạn gửi giúp mình **ảnh biên lai hoặc mã giao dịch** nhé.",
+    r2: "Mình đối chiếu xong rồi, giao dịch hợp lệ. Kết quả sẽ báo ngay trong khung chat này." },
+  { id: "account", tab: "Tài khoản", node: "Tài khoản",
+    step: "Bước 1: Xác định vấn đề đăng nhập",
+    r1: "Có vẻ bạn quên mật khẩu hoặc đăng nhập bị lỗi.",
+    r2: "Bạn bấm **Quên mật khẩu** ở trang đăng nhập, hoặc đăng nhập bằng Google nếu từng đăng ký như vậy." },
+  { id: "bug", tab: "Báo lỗi", node: "Báo lỗi",
+    step: "Bước 1: Đọc mô tả lỗi",
+    r1: "Mình đã nhận được mô tả lỗi của bạn.",
+    r2: "Bạn **chụp màn hình lỗi** gửi vào đây giúp mình. Mình xem ảnh rồi hướng dẫn cách xử lý." },
 ];
 
 // 8 nút nằm trên một vòng elip quanh tâm
@@ -22,7 +31,7 @@ const NODES = ["Đơn hàng", "Thanh toán", "Tài khoản", "Hoàn tiền", "B�
 });
 const bold = (s) => s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
 const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
-const INIT = { typed: "", sent: false, steps: [], reply: false, fade: false };
+const INIT = { typed: "", sent: false, step: false, r1: false, check: false, r2: false, fade: false };
 
 function usePlay(scene, restart, onEnd) {
   const [s, set] = useState(INIT);
@@ -34,18 +43,16 @@ function usePlay(scene, restart, onEnd) {
     let t = 700;
     for (let i = 1; i <= q.length; i++) at(t + i * 30, () => set((p) => ({ ...p, typed: q.slice(0, i) })));
     t += q.length * 30 + 400;
-    at(t, () => set((p) => ({ ...p, typed: "", sent: true, steps: ["run", "wait"] }))); t += 1100;
-    at(t, () => set((p) => ({ ...p, steps: ["done", "run"] }))); t += 1100;
-    at(t, () => set((p) => ({ ...p, steps: ["done", "done"] }))); t += 450;
-    at(t, () => set((p) => ({ ...p, reply: true }))); t += 4200;
+    at(t, () => set((p) => ({ ...p, typed: "", sent: true, step: true }))); t += 900;   // Bước 1
+    at(t, () => set((p) => ({ ...p, r1: true }))); t += 1000;                            // Phản hồi 1
+    at(t, () => set((p) => ({ ...p, check: true }))); t += 2000;                         // Đang kiểm tra...
+    at(t, () => set((p) => ({ ...p, check: false, r2: true }))); t += 4200;              // Phản hồi 2
     at(t, () => set((p) => ({ ...p, fade: true }))); t += 450;
     at(t, onEnd);
     return () => timers.forEach(clearTimeout);
   }, [scene, restart]); // eslint-disable-line react-hooks/exhaustive-deps
   return s;
 }
-
-const LABEL = { run: "Đang chạy", wait: "Chờ", done: "Xong" };
 
 export default function HomeDemo({ onTry }) {
   const [i, setI] = useState(0);
@@ -54,7 +61,7 @@ export default function HomeDemo({ onTry }) {
   const s = usePlay(scene, restart, () => setI((x) => (x + 1) % SCENES.length));
   const bodyRef = useRef(null);
   const pinned = useRef(true);
-  const running = s.steps.includes("run");
+  const running = s.step && !s.r2;
   const q = questionOf(scene.id);
 
   // tự cuộn xuống tin mới; nếu người dùng kéo lên xem lại thì không giật về
@@ -66,7 +73,7 @@ export default function HomeDemo({ onTry }) {
   useEffect(() => {
     const el = bodyRef.current;
     if (el && pinned.current) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [s.sent, s.steps, s.reply]);
+  }, [s.sent, s.step, s.r1, s.check, s.r2]);
 
   return (
     <div className="nxh-sec" style={{ paddingTop: 48 }}>
@@ -104,24 +111,16 @@ export default function HomeDemo({ onTry }) {
             ))}
           </div>
           <div className="nxh-wbwrap">
-           <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
-            <div className="nxh-wflow" data-fade={s.fade}>
-              {!s.sent && <p className="nxh-ai nxh-in"><span className="nxh-dots" />Chào bạn, NXX giúp gì cho bạn nè?</p>}
-              {s.sent && <div className="nxh-b me nxh-in">{q}</div>}
-              {s.sent && !s.reply && s.steps.length > 0 && (
-                <div className="nxh-steps nxh-in">
-                  {scene.steps.map(([name, desc], k) => (
-                    <div key={name} className="nxh-step">
-                      <span className="nxh-stepic" data-st={s.steps[k]}>{s.steps[k] === "done" ? <Check size={12} strokeWidth={3} /> : s.steps[k] === "run" ? <Loader2 size={12} className="animate-spin" /> : <i />}</span>
-                      <span className="nxh-stepx"><b>{name}</b><em>{desc}</em></span>
-                      <span className="nxh-badge" data-st={s.steps[k]}>{LABEL[s.steps[k]]}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {s.reply && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(scene.reply)}</p>}
+            <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
+              <div className="nxh-wflow" data-fade={s.fade}>
+                {!s.sent && <p className="nxh-ai nxh-in"><span className="nxh-dots" />Chào bạn, NXX giúp gì cho bạn nè?</p>}
+                {s.sent && <div className="nxh-b me nxh-in">{q}</div>}
+                {s.step && <p className="nxh-stp nxh-in">{scene.step}</p>}
+                {s.r1 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(scene.r1)}</p>}
+                {s.check && <p className="nxh-shim nxh-in">Đang kiểm tra...</p>}
+                {s.r2 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(scene.r2)}</p>}
+              </div>
             </div>
-           </div>
           </div>
           <div className="nxh-winput">
             <span className={s.typed ? "typed" : ""}>{s.typed || "Hỏi NXX về đơn hàng, thanh toán…"}{s.typed && <i className="nxh-caret" />}</span>
@@ -134,5 +133,5 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-      }
+   }
                 
