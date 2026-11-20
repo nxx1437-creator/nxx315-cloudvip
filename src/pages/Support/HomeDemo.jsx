@@ -170,5 +170,5 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-    }
+        }
                 
