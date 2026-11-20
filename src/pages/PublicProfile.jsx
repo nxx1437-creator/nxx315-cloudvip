@@ -1,7 +1,7 @@
 // src/pages/PublicProfile.jsx — trang cá nhân của người khác (từ bảng xếp hạng): /u/:userId
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Coins } from "lucide-react";
+import { ArrowLeft, Calendar, Coins, TrendingUp } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
@@ -76,6 +76,7 @@ export default function PublicProfile() {
               { Icon: Calendar, text: `Tham gia ${new Date(data.joined_at).toLocaleDateString("vi-VN")}` },
               { Icon: Coins, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
               { Icon: Coins, text: `Kiếm ${fmt(data.earned_month)} coin trong 30 ngày` },
+              { Icon: TrendingUp, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
             ]}
             badges={getBadges(data).filter((b) => b.earned)}
           />
