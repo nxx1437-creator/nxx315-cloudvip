@@ -50,7 +50,8 @@ export default function useProfileExtras(session, profile = {}, userLevel) {
           lifetime_coins: userLevel?.lifetime_coins ?? stats?.lifetime_coins,
         }).filter((b) => b.earned); // chưa đạt thì ẩn
 
-  return {
+    return {
+    stats,
     cover: coverUrl || stats?.cover_url || profile.cover_url || null,
     coverBusy,
     coverErr,
