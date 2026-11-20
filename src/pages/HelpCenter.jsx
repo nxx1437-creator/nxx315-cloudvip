@@ -61,6 +61,16 @@ export default function HelpCenter() {
     on(); window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, [home]);
+  
+    // /help?s=topics → vào trang là tự cuộn xuống phần chủ đề (nút "Chủ đề trợ giúp" ở trang Hồ sơ)
+  useEffect(() => {
+    if (sp.get("s") !== "topics" || !home) return undefined;
+    const t = setTimeout(
+      () => document.getElementById("gic-topics")?.scrollIntoView({ behavior: "smooth" }),
+      450
+    );
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="gic" data-theme={theme}>
