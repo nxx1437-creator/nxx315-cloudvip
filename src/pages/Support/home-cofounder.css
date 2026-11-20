@@ -112,3 +112,331 @@
 .nxh-wsend{display:flex;width:34px;height:34px;flex:none;align-items:center;justify-content:center;border-radius:10px;background:#2b2b2b;color:#fff}
 .nxh-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;vertical-align:text-bottom;background:var(--ink);animation:nxxBlink 1s infinite}
 @media (prefers-reduced-motion:reduce){.nxh-in,.nxh-ln.on,.nxh-caret{animation:none}}
+/* =========================================
+   NXX AI DEMO — COFOUNDER STYLE
+========================================= */
+
+.nxh-demo .nxh-stage {
+  position: relative;
+  margin-top: 22px;
+  padding-bottom: 14px;
+  background: #f2f2ef;
+  border: 1px solid #e5e5df;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+/* AI network */
+
+.nxh-demo .nxh-graph {
+  height: auto;
+  aspect-ratio: 360 / 300;
+  padding: 2px 0;
+}
+
+/* Floating chat window */
+
+.nxh-demo .nxh-win {
+  margin: -36px 12px 0;
+  border-radius: 23px;
+  background: #fff;
+  border: 1px solid #e5e5df;
+
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, .04),
+    0 14px 35px rgba(0, 0, 0, .08);
+
+  position: relative;
+  z-index: 5;
+}
+
+/* Tabs */
+
+.nxh-demo .nxh-wtabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+
+  padding: 12px 10px 8px;
+
+  border-bottom: 1px solid #f0f0ed;
+}
+
+.nxh-demo .nxh-wtabs button {
+  flex: 1;
+  min-width: 0;
+
+  padding: 7px 3px;
+
+  border-radius: 9px;
+  border: 0;
+
+  background: transparent;
+
+  color: #777;
+  font-size: 12.5px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+.nxh-demo .nxh-wtabs button.active {
+  background: #ededeb;
+  color: #292929;
+}
+
+/* Chat area */
+
+.nxh-demo .nxh-wbody {
+  height: 230px;
+}
+
+.nxh-demo .nxh-wflow {
+  padding: 15px 14px 12px;
+  gap: 13px;
+}
+
+.nxh-demo .nxh-ai {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.nxh-demo .nxh-ai b {
+  color: #262626;
+  font-weight: 600;
+}
+
+/* User message */
+
+.nxh-demo .nxh-b.me {
+  max-width: 94%;
+
+  padding: 10px 13px;
+
+  border-radius: 12px;
+
+  background: #f0f0ed;
+
+  color: #333;
+
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* Agent list */
+
+.nxh-demo .nxh-agents {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.nxh-demo .nxh-agent {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  min-height: 43px;
+
+  padding: 8px 10px;
+
+  border: 1px solid #e9e9e5;
+  border-radius: 12px;
+
+  background: #fff;
+
+  transition:
+    background .3s,
+    border-color .3s,
+    transform .3s;
+}
+
+/* Agent running */
+
+.nxh-demo .nxh-agent[data-st="running"] {
+  background: #f9fbfd;
+  border-color: #dcecf8;
+}
+
+/* Agent completed */
+
+.nxh-demo .nxh-agent[data-st="done"] {
+  background: #fcfdfc;
+}
+
+/* Agent icon */
+
+.nxh-demo .nxh-agent-icon {
+  width: 19px;
+  height: 19px;
+
+  flex: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f0f0ed;
+  color: #888;
+}
+
+.nxh-demo .nxh-agent[data-st="running"]
+.nxh-agent-icon {
+  background: #e5f2fc;
+  color: #1684ce;
+}
+
+.nxh-demo .nxh-agent[data-st="done"]
+.nxh-agent-icon {
+  background: #e5f5eb;
+  color: #219653;
+}
+
+/* Agent information */
+
+.nxh-demo .nxh-agent-info {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.nxh-demo .nxh-agent-info b {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.nxh-demo .nxh-agent-info span {
+  font-size: 11px;
+  color: #999;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status */
+
+.nxh-demo .nxh-agent-status {
+  flex: none;
+
+  padding: 4px 8px;
+
+  border-radius: 7px;
+
+  font-size: 10.5px;
+  font-weight: 500;
+
+  color: #777;
+  background: #f0f0ed;
+}
+
+.nxh-demo .nxh-agent[data-st="running"]
+.nxh-agent-status {
+  background: #e5f2fc;
+  color: #2780c0;
+}
+
+.nxh-demo .nxh-agent[data-st="done"]
+.nxh-agent-status {
+  background: #e5f5eb;
+  color: #21864c;
+}
+
+/* Queued dot */
+
+.nxh-demo .nxh-agent-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #b7b7b1;
+}
+
+/* Input */
+
+.nxh-demo .nxh-winput {
+  margin: 0 10px 10px;
+
+  min-height: 54px;
+
+  padding: 9px 8px 8px 13px;
+
+  border: 1px solid #e7e7e2;
+  border-radius: 13px;
+
+  background: #fff;
+
+  box-shadow: 0 2px 7px rgba(0, 0, 0, .035);
+}
+
+.nxh-demo .nxh-winput > span:first-child {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #aaa;
+
+  padding-bottom: 6px;
+}
+
+.nxh-demo .nxh-winput .typed {
+  color: #333;
+}
+
+/* Send button */
+
+.nxh-demo .nxh-wsend {
+  width: 30px;
+  height: 30px;
+
+  border-radius: 9px;
+
+  background: #303030;
+}
+
+/* Smooth agent transition */
+
+.nxh-demo .nxh-agent {
+  animation: nxhAgentIn .35s ease both;
+}
+
+@keyframes nxhAgentIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 380px) {
+  .nxh-demo .nxh-wtabs button {
+    font-size: 11px;
+    padding: 7px 1px;
+  }
+
+  .nxh-demo .nxh-agent-info b {
+    font-size: 11.5px;
+  }
+
+  .nxh-demo .nxh-agent-info span {
+    font-size: 10px;
+  }
+
+  .nxh-demo .nxh-agent-status {
+    font-size: 9.5px;
+    padding: 3px 6px;
+  }
+  }
