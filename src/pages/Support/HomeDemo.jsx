@@ -15,17 +15,17 @@ const SCENES = [
 ];
 
 const NODES = [
-  ["Đơn hàng", 62, 40], ["Thanh toán", 180, 22], ["Tài khoản", 298, 40],
-  ["Báo lỗi", 44, 112], ["Hình ảnh", 316, 112], ["Zalo", 180, 150],
+  ["Đơn hàng", 70, 46], ["Thanh toán", 180, 24], ["Tài khoản", 290, 46],
+  ["Báo lỗi", 52, 128], ["Hình ảnh", 308, 128], ["Zalo", 180, 218],
 ];
-const CX = 180, CY = 88;
+const CX = 180, CY = 128;
 const bold = (s) => s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
 const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
 
 function usePlay(scene, restart, onEnd) {
-  const [s, set] = useState({ typed: "", sent: false, steps: [], reply: false });
+  const [s, set] = useState({ typed: "", sent: false, steps: [], reply: false, fade: false });
   useEffect(() => {
-    set({ typed: "", sent: false, steps: [], reply: false });
+    set({ typed: "", sent: false, steps: [], reply: false, fade: false });
     const timers = [];
     const at = (ms, fn) => timers.push(setTimeout(fn, ms));
     const q = questionOf(scene.id);
@@ -38,7 +38,8 @@ function usePlay(scene, restart, onEnd) {
       at(t, () => set((p) => ({ ...p, steps: [...p.steps, "run"] }))); t += 1000;
       at(t, () => set((p) => ({ ...p, steps: p.steps.map((x, k) => (k === i ? "done" : x)) }))); t += 300;
     });
-    at(t, () => set((p) => ({ ...p, reply: true }))); t += 4200;
+    at(t, () => set((p) => ({ ...p, reply: true }))); t += 3800;
+    at(t, () => set((p) => ({ ...p, fade: true }))); t += 450;
     at(t, onEnd);
     return () => timers.forEach(clearTimeout);
   }, [scene, restart]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -57,18 +58,20 @@ export default function HomeDemo({ onTry }) {
     <div className="nxh-sec" style={{ paddingTop: 48 }}>
       <div className="nxh-eyebrow">Xem NXX làm việc</div>
       <div className="nxh-stage">
-        <svg className="nxh-graph" viewBox="0 0 360 170" fill="none" aria-hidden="true">
+        <svg className="nxh-graph" viewBox="0 0 360 270" fill="none" aria-hidden="true">
+          <ellipse cx={CX} cy={CY} rx="128" ry="86" className="nxh-orbit" />
+          <ellipse cx={CX} cy={CY} rx="64" ry="42" className="nxh-orbit" />
           {NODES.map(([name, x, y]) => {
             const on = running && name === scene.node;
             return (
               <g key={name}>
                 <line x1={CX} y1={CY} x2={x} y2={y} className={on ? "nxh-ln on" : "nxh-ln"} />
-                <rect x={x - 36} y={y - 11} width="72" height="22" rx="6" className={on ? "nxh-nd on" : "nxh-nd"} />
-                <text x={x} y={y + 4} textAnchor="middle" className={on ? "nxh-nt on" : "nxh-nt"}>{name}</text>
+                <rect x={x - 39} y={y - 13} width="78" height="26" rx="7" className={on ? "nxh-nd on" : "nxh-nd"} />
+                <text x={x} y={y + 4.5} textAnchor="middle" className={on ? "nxh-nt on" : "nxh-nt"}>{name}</text>
               </g>
             );
           })}
-          <path transform={`translate(${CX - 11} ${CY - 11}) scale(.92)`} d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" fill="#f2a516" />
+          <path transform={`translate(${CX - 17} ${CY - 17}) scale(1.4)`} d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" fill="#f2a516" />
         </svg>
 
         <div className="nxh-win">
@@ -78,12 +81,13 @@ export default function HomeDemo({ onTry }) {
             ))}
           </div>
           <div className="nxh-wbody">
-            <div className="nxh-wflow">
+            <div className="nxh-wflow" data-fade={s.fade}>
+              {!s.sent && <div className="nxh-b ai nxh-in">Chào bạn, NXX giúp gì cho bạn nè?</div>}
               {s.sent && <div className="nxh-b me nxh-in">{q}</div>}
-              {scene.steps.map(([name, desc], k) => s.steps[k] && (
+              {scene.steps.map(([name], k) => s.steps[k] && (
                 <div key={name} className="nxh-step nxh-in">
                   <span className="nxh-stepic">{s.steps[k] === "done" ? <Check size={13} strokeWidth={3} /> : <Loader2 size={13} className="animate-spin" />}</span>
-                  <span className="nxh-stepx"><b>{name}</b><small>{desc}</small></span>
+                  <span className="nxh-stepx">{name}</span>
                   <span className={`nxh-badge ${s.steps[k] === "done" ? "" : "run"}`}>{s.steps[k] === "done" ? "Xong" : "Đang chạy"}</span>
                 </div>
               ))}
@@ -101,4 +105,5 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-}
+       }
+            
