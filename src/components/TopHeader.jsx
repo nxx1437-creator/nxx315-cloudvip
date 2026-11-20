@@ -32,7 +32,9 @@ const SEARCH_INDEX = [
   { labelKey: "nav.review", path: "/account-review", icon: ShieldCheck, keywords: "flag nghi ngo da tai khoan review" },
 ];
 
-export default function TopHeader() {
+// variant: "default" (thanh xanh mint như cũ) | "gh" (kiểu GitHub, dùng cho trang hồ sơ)
+export default function TopHeader({ variant = "default" }) {
+  const gh = variant === "gh";
   const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
   const { session } = useSession();
@@ -169,27 +171,43 @@ export default function TopHeader() {
     return new Date(dateStr).toLocaleDateString(lang === "en" ? "en-US" : "vi-VN");
   };
 
-  const iconBtn =
-    "flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-white";
+  const iconBtn = gh
+    ? "flex h-9 w-9 items-center justify-center rounded-md border border-[#d0d7de] bg-white text-[#1f2328] transition active:scale-95 dark:border-[#30363d] dark:bg-[#21262d] dark:text-[#e6edf3]"
+    : "flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-white";
+  const ic = gh ? 18 : 22;
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#eefaf7]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3 md:max-w-5xl">
+      <header
+        className={
+          gh
+            ? "sticky top-0 z-30 border-b border-[#d0d7de] bg-[#f6f8fa]/95 backdrop-blur dark:border-[#30363d] dark:bg-[#161b22]/95"
+            : "sticky top-0 z-30 bg-[#eefaf7]/90 backdrop-blur"
+        }
+      >
+        <div
+          className={`mx-auto flex max-w-md items-center justify-between gap-2 px-4 md:max-w-5xl ${
+            gh ? "py-3.5" : "py-3"
+          }`}
+        >
           <button
             onClick={() => navigate("/dashboard")}
-            className="shrink-0 text-[22px] font-extrabold leading-none tracking-tight text-slate-900"
+            className={
+              gh
+                ? "shrink-0 text-[18px] font-bold leading-none tracking-tight text-[#1f2328] dark:text-[#e6edf3]"
+                : "shrink-0 text-[22px] font-extrabold leading-none tracking-tight text-slate-900"
+            }
           >
             Nxx315 <span className="text-emerald-600">Studio</span>
           </button>
 
-          <div className="flex items-center gap-0.5">
+          <div className={`flex items-center ${gh ? "gap-1.5" : "gap-0.5"}`}>
             <button
               onClick={() => setShowSearch((v) => !v)}
               aria-label="Search"
               className={iconBtn}
             >
-              <Search size={22} />
+              <Search size={ic} />
             </button>
 
             {/* Chuông */}
@@ -199,12 +217,15 @@ export default function TopHeader() {
                 aria-label="Notifications"
                 className={`relative ${iconBtn}`}
               >
-                <Bell size={22} />
-                {unreadCount > 0 && (
-                  <span className="absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
+                <Bell size={ic} />
+                {unreadCount > 0 &&
+                  (gh ? (
+                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#0969da]" />
+                  ) : (
+                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  ))}
               </button>
 
             {notifOpen && (
@@ -287,19 +308,19 @@ export default function TopHeader() {
               aria-label="Language"
               className={iconBtn}
             >
-              <Globe size={22} />
+              <Globe size={ic} />
             </button>
 
             <button
               onClick={() => setSidebarOpen(true)}
               aria-label="Menu"
-              className="ml-1.5 rounded-full"
+              className={`rounded-full ${gh ? "ml-0.5" : "ml-1.5"}`}
             >
               <Avatar
                 src={avatarUrl}
                 name={displayName}
-                size={40}
-                className="ring-2 ring-emerald-200"
+                size={gh ? 36 : 40}
+                className={gh ? "ring-1 ring-[#d0d7de] dark:ring-[#30363d]" : "ring-2 ring-emerald-200"}
               />
             </button>
           </div>
@@ -377,5 +398,5 @@ export default function TopHeader() {
       />
     </>
   );
-    }
+  }
       
