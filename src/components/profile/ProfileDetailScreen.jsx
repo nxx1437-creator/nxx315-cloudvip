@@ -1,6 +1,7 @@
-// src/components/profile/ProfileDetailScreen.jsx — "Trang cá nhân" kiểu GitHub (có thanh tab)
+// src/components/profile/ProfileDetailScreen.jsx — "Trang cá nhân" kiểu GitHub (TopHeader + tab)
 import React, { useState } from "react";
 import { ArrowLeft, Calendar, Lock, Settings, Star } from "lucide-react";
+import TopHeader from "../TopHeader.jsx";
 import GhProfile, { BadgeList, GH_BTN, GH_INK, GH_LINE, GhTabs, StatList, statItems } from "./GhProfile.jsx";
 import useProfileExtras from "../../hooks/useProfileExtras.js";
 
@@ -39,17 +40,21 @@ export default function ProfileDetailScreen({
 
   return (
     <div className="min-h-screen bg-white pb-10 font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
-        <header className={`flex items-center gap-1 border-b px-2 py-2 ${GH_LINE}`}>
-          <button
-            onClick={onClose}
-            aria-label="Quay lại"
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
-        </header>
+      <TopHeader />
+
+      <header className={`flex items-center gap-1 border-b px-2 py-2 ${GH_LINE}`}>
+        <button
+          onClick={onClose}
+          aria-label="Quay lại"
+          className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
+      </header>
+
+      {/* tab dính ngay dưới TopHeader (cao 64px) */}
+      <div className="sticky top-[64px] z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
         <GhTabs tabs={tabs} value={tab} onChange={setTab} />
       </div>
 
@@ -94,4 +99,4 @@ export default function ProfileDetailScreen({
       </main>
     </div>
   );
-}
+        }
