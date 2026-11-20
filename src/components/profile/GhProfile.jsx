@@ -1,4 +1,4 @@
-// src/components/profile/GhProfile.jsx — khung hồ sơ kiểu GitHub: bìa, avatar, tên, số liệu, thông tin, huy hiệu (chỉ hiện cái đã đạt)
+// src/components/profile/GhProfile.jsx — khung hồ sơ kiểu GitHub: (bìa nếu có), avatar, tên, số liệu, thông tin, huy hiệu
 import React, { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import VerifiedBadge from "../VerifiedBadge.jsx";
@@ -8,6 +8,14 @@ export const GH_INK = "text-[#1f2328] dark:text-[#e6edf3]";
 export const GH_MUTED = "text-[#59636e] dark:text-[#9198a1]";
 export const GH_BTN =
   "flex h-9 items-center justify-center gap-1.5 rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 text-[14px] font-semibold whitespace-nowrap text-[#1f2328] transition active:scale-[0.98] dark:border-[#30363d] dark:bg-[#21262d] dark:text-[#e6edf3]";
+
+// màu avatar chữ cái: cố định theo tên
+const AVATAR_COLORS = ["#0969da", "#1a7f37", "#8250df", "#bf3989", "#bc4c00", "#cf222e", "#0a7ea4"];
+const colorOf = (s = "") => {
+  let h = 0;
+  for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+};
 
 function Achievements({ badges }) {
   const [pick, setPick] = useState(null);
@@ -52,78 +60,101 @@ function Achievements({ badges }) {
 export default function GhProfile({
   cover, onPickCover, coverBusy = false, coverErr = "",
   avatarUrl, initial = "T", onAvatar,
-  name, verified = false, sub,
+  name = "", verified = false, sub,
   stats = [], meta = [], badges = [], actions,
 }) {
   const fileRef = useRef(null);
   const Avatar = onAvatar ? "button" : "div";
-  const hasBackdrop = !cover && !!avatarUrl; // chưa có bìa → lấy avatar làm nền mờ
+  const hasCover = !!cover; // không có ảnh bìa thì không vẽ khung bìa (như GitHub)
+
+  const busyIcon = coverBusy ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />;
 
   return (
     <div className="pb-4">
-      {/* ẢNH BÌA */}
-      <div
-        className={`relative h-36 w-full overflow-hidden ${
-          cover || hasBackdrop ? "bg-[#d0d7de] dark:bg-[#21262d]" : "bg-gradient-to-br from-accent-400 to-accent-600"
-        }`}
-      >
-        {cover && <img src={cover} alt="" className="h-full w-full object-cover" />}
-        {hasBackdrop && (
-          <>
-            <img src={avatarUrl} alt="" aria-hidden="true" className="h-full w-full scale-125 object-cover opacity-70 blur-2xl" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/25" />
-          </>
-        )}
-        {onPickCover && (
-          <>
+      {onPickCover && (
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) onPickCover(f);
+          }}
+        />
+      )}
+
+      {/* ẢNH BÌA (chỉ khi đã có) */}
+      {hasCover && (
+        <div className="relative h-36 w-full overflow-hidden bg-[#d0d7de] dark:bg-[#21262d]">
+          <img src={cover} alt="" className="h-full w-full object-cover" />
+          {onPickCover && (
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={coverBusy}
               className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2.5 py-1.5 text-[12.5px] font-semibold text-white backdrop-blur transition active:scale-95 disabled:opacity-60"
             >
-              {coverBusy ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+              {busyIcon}
               {coverBusy ? "Đang tải..." : "Đổi ảnh bìa"}
             </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                e.target.value = "";
-                if (f) onPickCover(f);
-              }}
-            />
-          </>
-        )}
-        {coverErr && (
-          <p className="absolute inset-x-3 bottom-2 rounded-md bg-rose-600/90 px-3 py-1.5 text-[12px] font-medium text-white">
+          )}
+          {coverErr && (
+            <p className="absolute inset-x-3 bottom-2 rounded-md bg-rose-600/90 px-3 py-1.5 text-[12px] font-medium text-white">
+              {coverErr}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="px-4">
+        <div className={`flex items-start justify-between gap-3 ${hasCover ? "" : "pt-5"}`}>
+          {/* AVATAR */}
+          <Avatar
+            {...(onAvatar ? { type: "button", onClick: onAvatar, "aria-label": "Đổi ảnh đại diện" } : {})}
+            className={`relative block h-24 w-24 shrink-0 rounded-full bg-white dark:bg-[#0d1117] ${
+              hasCover
+                ? "z-10 -mt-12 ring-4 ring-white dark:ring-[#0d1117]"
+                : "ring-1 ring-[#d0d7de] dark:ring-[#30363d]"
+            }`}
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
+            ) : (
+              <span
+                className="flex h-full w-full items-center justify-center rounded-full text-4xl font-bold text-white"
+                style={{ backgroundColor: colorOf(name) }}
+              >
+                {initial}
+              </span>
+            )}
+            {onAvatar && (
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-[#d0d7de] bg-[#f6f8fa] text-[#59636e] dark:border-[#30363d] dark:bg-[#21262d] dark:text-[#9198a1]">
+                <Camera size={13} />
+              </span>
+            )}
+          </Avatar>
+
+          {/* chưa có bìa: nút nhỏ để thêm (chỉ hiện ở trang của chính mình) */}
+          {!hasCover && onPickCover && (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={coverBusy}
+              className={`${GH_BTN} !h-8 !px-2.5 !text-[13px] disabled:opacity-60`}
+            >
+              {busyIcon}
+              {coverBusy ? "Đang tải..." : "Thêm ảnh bìa"}
+            </button>
+          )}
+        </div>
+
+        {!hasCover && coverErr && (
+          <p className="mt-2 rounded-md bg-rose-50 px-3 py-1.5 text-[12.5px] font-medium text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
             {coverErr}
           </p>
         )}
-      </div>
-
-      <div className="px-4">
-        {/* AVATAR */}
-        <Avatar
-          {...(onAvatar ? { type: "button", onClick: onAvatar, "aria-label": "Đổi ảnh đại diện" } : {})}
-          className="relative z-10 -mt-12 block h-24 w-24 rounded-full bg-white ring-4 ring-white dark:bg-[#0d1117] dark:ring-[#0d1117]"
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center rounded-full bg-accent-500 text-4xl font-bold text-white">
-              {initial}
-            </span>
-          )}
-          {onAvatar && (
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-[#d0d7de] bg-[#f6f8fa] text-[#59636e] dark:border-[#30363d] dark:bg-[#21262d] dark:text-[#9198a1]">
-              <Camera size={13} />
-            </span>
-          )}
-        </Avatar>
 
         {/* TÊN */}
         <h1 className={`mt-3 flex min-w-0 items-center gap-1.5 text-[24px] font-semibold leading-8 ${GH_INK}`}>
@@ -170,7 +201,7 @@ export default function GhProfile({
       <Achievements badges={badges} />
     </div>
   );
-              }
+}
 
 const fmtNum = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -252,4 +283,4 @@ export function StatList({ items = [] }) {
       ))}
     </ul>
   );
-}
+        }
