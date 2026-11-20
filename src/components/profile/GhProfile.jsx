@@ -6,6 +6,8 @@ import VerifiedBadge from "../VerifiedBadge.jsx";
 export const GH_LINE = "border-[#d0d7de] dark:border-[#30363d]";
 export const GH_INK = "text-[#1f2328] dark:text-[#e6edf3]";
 export const GH_MUTED = "text-[#59636e] dark:text-[#9198a1]";
+export const GH_CARD =
+  "overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-[#30363d] dark:bg-[#0d1117]";
 export const GH_BTN =
   "flex h-9 items-center justify-center gap-1.5 rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 text-[14px] font-semibold whitespace-nowrap text-[#1f2328] transition active:scale-[0.98] dark:border-[#30363d] dark:bg-[#21262d] dark:text-[#e6edf3]";
 
