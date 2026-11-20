@@ -80,7 +80,6 @@ const STATUS = {
   done: "Completed",
 };
 
-// Viết lại hàm usePlay bằng requestAnimationFrame để không bị chặn
 function usePlay(scene, restart, onEnd) {
   const [state, setState] = useState({ typed: "", sent: false, agents: [], reply: false, fade: false });
   const onEndRef = useRef(onEnd);
@@ -99,27 +98,22 @@ function usePlay(scene, restart, onEnd) {
       if (!isActive) return;
       const elapsed = time - start;
 
-      // 1. Gõ chữ (0s - 1.5s)
       const typeDuration = q.length * 25 + 500;
       if (elapsed < typeDuration) {
         const charCount = Math.min(q.length, Math.floor((elapsed / 25)));
         setState({ typed: q.slice(0, charCount), sent: false, agents: [], reply: false, fade: false });
       } 
-      // 2. Đã gửi & AI trả lời (1.5s - 2.3s)
       else if (elapsed < typeDuration + 800) {
         setState({ typed: "", sent: true, agents: [], reply: true, fade: false });
       } 
-      // 3. Agent chạy (2.3s - 5.3s)
       else if (elapsed < typeDuration + 800 + 3000) {
         const agentElapsed = elapsed - (typeDuration + 800);
         const agents = agentElapsed < 1500 ? ["running", "queued"] : ["done", "running"];
         setState({ typed: "", sent: true, agents, reply: true, fade: false });
       } 
-      // 4. Xong hết, chờ đọc (5.3s - 9.3s)
       else if (elapsed < typeDuration + 800 + 3000 + 4000) {
         setState({ typed: "", sent: true, agents: ["done", "done"], reply: true, fade: false });
       } 
-      // 5. Mờ dần & chuyển cảnh
       else {
         setState((p) => ({ ...p, fade: true }));
         setTimeout(() => {
@@ -245,7 +239,6 @@ export default function HomeDemo({ onTry }) {
                   <div className="nxh-b me nxh-in">{q}</div>
                 )}
 
-                {/* AI TRẢ LỜI NGAY LẬP TỨC */}
                 {s.reply && (
                   <div className="nxh-ai nxh-in">
                     <span className="nxh-dots" />
@@ -253,7 +246,6 @@ export default function HomeDemo({ onTry }) {
                   </div>
                 )}
 
-                {/* AGENT CHẠY PHÍA SAU ĐỂ KIỂM TRA */}
                 {s.sent && s.agents.length > 0 && (
                   <div className="nxh-agents nxh-in" style={{ marginTop: 8 }}>
                     {scene.agents.map((agent, k) => {
@@ -298,16 +290,17 @@ export default function HomeDemo({ onTry }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mt-2">
+      {/* SỬA LẠI NÚT BẤM ĐỂ KHÔNG BỊ VỠ GIAO DIỆN */}
+      <div className="flex items-center gap-4 mt-3">
         <button type="button" className="nxh-more" onClick={() => onTry({ text: q, category: scene.id })}>
           Thử hỏi câu này <ArrowRight size={15} />
         </button>
         
-        <button type="button" onClick={() => setRestart(r => r + 1)} className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-black transition">
-          <RotateCcw size={13} /> Chạy lại
+        <button type="button" onClick={() => setRestart(r => r + 1)} className="flex items-center gap-1.5 text-[14.5px] font-medium text-gray-500 hover:text-black transition-colors bg-transparent border-0 p-0 cursor-pointer">
+          <RotateCcw size={15} /> Chạy lại
         </button>
       </div>
 
     </div>
   );
-  }
+}
