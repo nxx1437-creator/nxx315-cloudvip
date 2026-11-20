@@ -1,107 +1,46 @@
-// src/components/profile/SettingsParts.jsx — khối UI cho trang Cài đặt tài khoản (kiểu MoMo)
+// src/components/profile/AppSettingsCard.jsx — pháp lý + đăng xuất / xóa tài khoản (kiểu GitHub)
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FileText, Lock } from "lucide-react";
+import { GH_BTN, GH_INK, GH_LINE, GH_MUTED } from "./GhProfile.jsx";
 
-export function Group({ id, title, children }) {
+export default function AppSettingsCard({ onTerms, onPrivacy, onLogout, onDelete }) {
+  const rows = [
+    { Icon: FileText, label: "Điều khoản sử dụng", sub: "Quy định khi dùng dịch vụ", onClick: onTerms },
+    { Icon: Lock, label: "Chính sách quyền riêng tư", sub: "Cách chúng tôi bảo vệ dữ liệu", onClick: onPrivacy },
+  ];
+
   return (
-    <section id={id ? `grp-${id}` : undefined} className="scroll-mt-24">
-      <h2 className="px-1 pb-2 pt-6 text-[17px] font-semibold text-slate-900 dark:text-white">
-        {title}
+    <section className={`overflow-hidden rounded-lg border bg-white dark:bg-[#0d1117] ${GH_LINE}`}>
+      <h2 className={`border-b bg-[#f6f8fa] px-4 py-3 text-[15px] font-semibold leading-5 dark:bg-[#161b22] ${GH_INK} ${GH_LINE}`}>
+        Cài đặt ứng dụng
       </h2>
-      <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white dark:divide-slate-800 dark:bg-slate-900">
-        {children}
+
+      <ul>
+        {rows.map(({ Icon, label, sub, onClick }) => (
+          <li key={label} className={`border-b ${GH_LINE}`}>
+            <button
+              onClick={onClick}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-[#f6f8fa] dark:active:bg-[#161b22]"
+            >
+              <Icon size={18} className={`shrink-0 ${GH_MUTED}`} />
+              <span className="min-w-0 flex-1">
+                <span className={`block text-[14.5px] font-semibold leading-5 ${GH_INK}`}>{label}</span>
+                <span className={`block text-[12.5px] leading-5 ${GH_MUTED}`}>{sub}</span>
+              </span>
+              <ChevronRight size={16} className={`shrink-0 ${GH_MUTED}`} />
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <div className="grid grid-cols-2 gap-2 p-3">
+        <button onClick={onLogout} className={`${GH_BTN} w-full`}>
+          Đăng xuất
+        </button>
+        <button onClick={onDelete} className={`${GH_BTN} w-full !text-[#cf222e] dark:!text-[#f85149]`}>
+          Xóa tài khoản
+        </button>
       </div>
     </section>
-  );
-}
-
-// right: undefined + có onClick => hiện mũi tên; truyền node để thay thế
-export function Row({ icon: Icon, title, sub, right, onClick, danger, disabled, children }) {
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      type={onClick ? "button" : undefined}
-      onClick={onClick}
-      disabled={onClick ? disabled : undefined}
-      className={`flex w-full items-center gap-3.5 px-4 py-4 text-left ${
-        onClick ? "transition active:bg-slate-50 dark:active:bg-slate-800/50" : ""
-      } ${disabled ? "opacity-60" : ""}`}
-    >
-      {Icon && (
-        <Icon
-          size={24}
-          strokeWidth={1.7}
-          className={`shrink-0 ${danger ? "text-rose-500" : "text-slate-800 dark:text-slate-200"}`}
-        />
-      )}
-      <span className="min-w-0 flex-1">
-        <span
-          className={`block text-[16px] font-semibold leading-5 ${
-            danger ? "text-rose-600 dark:text-rose-400" : "text-slate-900 dark:text-white"
-          }`}
-        >
-          {title}
-        </span>
-        {sub && (
-          <span className="mt-0.5 block text-[14px] leading-5 text-slate-500 dark:text-slate-400">
-            {sub}
-          </span>
-        )}
-        {children}
-      </span>
-      {right === undefined ? (
-        onClick ? <ChevronRight size={20} className="shrink-0 text-slate-400" /> : null
-      ) : (
-        right
-      )}
-    </Tag>
-  );
-}
-
-export function Switch({ checked, onChange, disabled, label }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={!!checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`relative h-8 w-[52px] shrink-0 rounded-full transition disabled:opacity-50 ${
-        checked ? "bg-accent-500" : "bg-slate-300 dark:bg-slate-700"
-      }`}
-    >
-      <span
-        className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${
-          checked ? "left-[24px]" : "left-1"
-        }`}
-      />
-    </button>
-  );
-}
-
-export function Badge({ on, onText, offText }) {
-  return (
-    <span
-      className={`shrink-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold ${
-        on
-          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10"
-          : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-      }`}
-    >
-      {on ? onText : offText}
-    </span>
-  );
-}
-
-export function PillButton({ children, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="shrink-0 rounded-xl border border-accent-500 px-4 py-2 text-[14px] font-semibold text-accent-600 transition active:scale-95"
-    >
-      {children}
-    </button>
   );
 }
