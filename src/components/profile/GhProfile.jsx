@@ -15,25 +15,33 @@ function Achievements({ badges }) {
   const sel = badges.find((b) => b.id === pick);
   return (
     <div className={`mt-5 border-t px-4 pt-4 ${GH_LINE}`}>
-      <h2 className={`text-[16px] font-semibold ${GH_INK}`}>Huy hiệu</h2>
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className="flex items-baseline justify-between">
+        <h2 className={`text-[16px] font-semibold ${GH_INK}`}>Huy hiệu</h2>
+        <span className={`text-[12.5px] ${GH_MUTED}`}>{badges.length}</span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-4">
         {badges.map(({ id, name, Icon, grad }) => (
           <button
             key={id}
             type="button"
-            title={name}
-            aria-label={name}
             onClick={() => setPick(pick === id ? null : id)}
-            className={`flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${grad} text-white shadow-sm ring-2 ring-offset-2 ring-offset-white transition active:scale-95 dark:ring-offset-[#0d1117] ${
-              pick === id ? "ring-[#0969da]" : "ring-transparent"
-            }`}
+            className="flex flex-col items-center gap-1.5 active:scale-95"
           >
-            <Icon size={28} strokeWidth={2} />
+            <span
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br ${grad} text-white shadow-sm ring-2 ring-offset-2 ring-offset-white transition dark:ring-offset-[#0d1117] ${
+                pick === id ? "ring-[#0969da]" : "ring-transparent"
+              }`}
+            >
+              <Icon size={25} strokeWidth={2} />
+            </span>
+            <span className={`line-clamp-2 text-center text-[11.5px] leading-tight ${GH_MUTED}`}>{name}</span>
           </button>
         ))}
       </div>
+
       {sel && (
-        <p className={`mt-3 text-[13.5px] leading-5 ${GH_MUTED}`}>
+        <p className={`mt-4 rounded-md bg-[#f6f8fa] px-3 py-2.5 text-[13.5px] leading-5 dark:bg-[#161b22] ${GH_MUTED}`}>
           <b className={`font-semibold ${GH_INK}`}>{sel.name}</b> · {sel.desc}
         </p>
       )}
@@ -49,16 +57,23 @@ export default function GhProfile({
 }) {
   const fileRef = useRef(null);
   const Avatar = onAvatar ? "button" : "div";
+  const hasBackdrop = !cover && !!avatarUrl; // chưa có bìa → lấy avatar làm nền mờ
 
   return (
     <div className="pb-4">
       {/* ẢNH BÌA */}
       <div
         className={`relative h-36 w-full overflow-hidden ${
-          cover ? "bg-[#d0d7de] dark:bg-[#21262d]" : "bg-gradient-to-br from-accent-400 to-accent-600"
+          cover || hasBackdrop ? "bg-[#d0d7de] dark:bg-[#21262d]" : "bg-gradient-to-br from-accent-400 to-accent-600"
         }`}
       >
         {cover && <img src={cover} alt="" className="h-full w-full object-cover" />}
+        {hasBackdrop && (
+          <>
+            <img src={avatarUrl} alt="" aria-hidden="true" className="h-full w-full scale-125 object-cover opacity-70 blur-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/25" />
+          </>
+        )}
         {onPickCover && (
           <>
             <button
@@ -155,4 +170,4 @@ export default function GhProfile({
       <Achievements badges={badges} />
     </div>
   );
-        }
+              }
