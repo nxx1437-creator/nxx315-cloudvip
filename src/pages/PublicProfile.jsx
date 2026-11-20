@@ -5,8 +5,10 @@ import { ArrowLeft, Calendar, Coins } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
+import { getBadges } from "../lib/profileBadges.js";
 import { LbAvatar } from "./Leaderboard.jsx";
 import { Group, Row } from "../components/profile/SettingsParts.jsx";
+import BadgeGrid from "../components/profile/BadgeGrid.jsx";
 import VerifiedBadge from "../components/VerifiedBadge.jsx"; // ✓
 
 const COVER =
@@ -81,14 +83,20 @@ export default function PublicProfile() {
         {data && (
           <>
             <section className="rounded-2xl bg-white p-3 shadow-sm dark:bg-slate-900">
-              <div className={`relative h-32 overflow-hidden rounded-xl ${COVER}`}>
-                <Sparkle className="absolute left-5 top-4 text-white/80" size={26} />
-                <Sparkle className="absolute right-6 top-8 text-white/70" size={38} />
-                <Sparkle className="absolute bottom-3 right-24 text-white/60" size={18} />
+              <div className={`relative h-36 overflow-hidden rounded-xl ${data.cover_url ? "bg-slate-200 dark:bg-slate-800" : COVER}`}>
+                {data.cover_url ? (
+                  <img src={data.cover_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <>
+                    <Sparkle className="absolute left-5 top-4 text-white/80" size={26} />
+                    <Sparkle className="absolute right-6 top-8 text-white/70" size={38} />
+                    <Sparkle className="absolute bottom-3 right-24 text-white/60" size={18} />
+                  </>
+                )}
               </div>
 
               <div className="px-2 pb-1">
-                {/* relative z-10: đưa avatar lên trên cover (cover là relative nên vẽ đè lên phần tử chưa định vị) */}
+                {/* relative z-10: đưa avatar lên trên cover */}
                 <div className="relative z-10 -mt-12 w-fit">
                   <LbAvatar
                     src={data.avatar_url}
@@ -115,6 +123,8 @@ export default function PublicProfile() {
                 </div>
               </div>
             </section>
+
+            <BadgeGrid badges={getBadges(data)} />
 
             <div className="-mt-2">
               <Group title="Thành tích">
