@@ -17,11 +17,6 @@ import "./home-cofounder.css";
 const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
 const FALLBACK_CATEGORY = CATEGORIES.find((c) => c.label === "Khác")?.id || null;
 
-const FOCUS_GLOW_CSS = `
-.nxx-composer--hero:focus-within .nxx-glow { opacity: 1; }
-.nxx-composer--hero:focus-within .nxx-glow::before { animation-play-state: running; }
-`;
-
 export default function HomeView({ user, onOpenHelp, onStartChat }) {
   const [text, setText] = useState("");
   const [category, setCategory] = useState(null);
@@ -39,6 +34,7 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
+  
   const handleChange = (e) => {
     setText(e.target.value);
     resize(e.target);
@@ -52,7 +48,6 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
     setErr("");
     const catId = (overrideCat !== undefined ? overrideCat : category) || FALLBACK_CATEGORY;
 
-    // Timeout an toàn
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -132,7 +127,6 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
 
   return (
     <div className="nxx-skin nxh min-h-[calc(100vh-72px)] pb-6">
-      <style>{FOCUS_GLOW_CSS}</style>
       {SYSTEM_BANNER.enabled && <BannerNotice />}
 
       <div className="px-3 pt-2">
@@ -257,4 +251,4 @@ function SheetRow({ label, Icon, color, selected, onClick }) {
       {selected && <Check size={18} className="text-[#2b2b2b]" />}
     </button>
   );
-                  }
+  }
