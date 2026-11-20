@@ -1,7 +1,7 @@
-// src/components/profile/ProfileDetailScreen.jsx — "Trang cá nhân" kiểu GitHub
-import React from "react";
+// src/components/profile/ProfileDetailScreen.jsx — "Trang cá nhân" kiểu GitHub (có thanh tab)
+import React, { useState } from "react";
 import { ArrowLeft, Calendar, Lock, Settings, Star } from "lucide-react";
-import GhProfile, { GH_BTN, GH_INK, GH_LINE } from "./GhProfile.jsx";
+import GhProfile, { BadgeList, GH_BTN, GH_INK, GH_LINE, GhTabs, StatList, statItems } from "./GhProfile.jsx";
 import useProfileExtras from "../../hooks/useProfileExtras.js";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
@@ -10,6 +10,8 @@ export default function ProfileDetailScreen({
   onClose, session, profile, userLevel, onAvatarClick, onEdit, onOpenSettings, onPrivacy, onOpenLevel,
 }) {
   const x = useProfileExtras(session, profile, userLevel);
+  const [tab, setTab] = useState("overview");
+
   const displayName = profile.username || "Thành viên";
   const email = session?.user?.email || "";
   const memberSince = session?.user?.created_at
@@ -21,53 +23,74 @@ export default function ProfileDetailScreen({
     meta.push({ Icon: Star, text: `Cấp ${userLevel.level} · ${userLevel.label}`, onClick: onOpenLevel });
   }
 
+  const tabs = [
+    { id: "overview", label: "Tổng quan" },
+    { id: "badges", label: "Huy hiệu", count: x.badges.length },
+    { id: "stats", label: "Thống kê" },
+  ];
+
+  const statSrc = {
+    ...(x.stats || {}),
+    level: profile.level ?? x.stats?.level,
+    streak_days: profile.streak_days ?? x.stats?.streak_days,
+    streak_record: profile.streak_record ?? x.stats?.streak_record,
+    lifetime_coins: userLevel?.lifetime_coins ?? x.stats?.lifetime_coins,
+  };
+
   return (
     <div className="min-h-screen bg-white pb-10 font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
-      <header className={`sticky top-0 z-20 flex items-center gap-1 border-b bg-white/95 px-2 py-2 backdrop-blur dark:bg-[#0d1117]/95 ${GH_LINE}`}>
-        <button
-          onClick={onClose}
-          aria-label="Quay lại"
-          className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
-      </header>
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
+        <header className={`flex items-center gap-1 border-b px-2 py-2 ${GH_LINE}`}>
+          <button
+            onClick={onClose}
+            aria-label="Quay lại"
+            className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
+        </header>
+        <GhTabs tabs={tabs} value={tab} onChange={setTab} />
+      </div>
 
       <main className="mx-auto max-w-md md:max-w-3xl">
-        <GhProfile
-          cover={x.cover}
-          onPickCover={x.pickCover}
-          coverBusy={x.coverBusy}
-          coverErr={x.coverErr}
-          avatarUrl={profile.avatar_url}
-          initial={displayName.charAt(0).toUpperCase()}
-          onAvatar={onAvatarClick}
-          name={displayName}
-          verified={profile.is_verified === true}
-          sub={email}
-          stats={[
-            { value: `Lv.${profile.level || 1}`, label: "cấp độ" },
-            { value: profile.streak_days || 0, label: "chuỗi ngày" },
-            { value: `${profile.exp || 0}/${profile.exp_target || 100}`, label: "EXP" },
-            { value: fmt(profile.coins), label: "coin" },
-          ]}
-          meta={meta}
-          badges={x.badges}
-          actions={
-            <div className="flex gap-2">
-              <button type="button" onClick={onEdit} className={`${GH_BTN} flex-1`}>
-                Sửa thông tin
-              </button>
-              <button type="button" onClick={onPrivacy} aria-label="Quyền riêng tư" className={`${GH_BTN} w-9 !px-0`}>
-                <Lock size={16} />
-              </button>
-              <button type="button" onClick={onOpenSettings} aria-label="Cài đặt tài khoản" className={`${GH_BTN} w-9 !px-0`}>
-                <Settings size={16} />
-              </button>
-            </div>
-          }
-        />
+        {tab === "overview" && (
+          <GhProfile
+            cover={x.cover}
+            onPickCover={x.pickCover}
+            coverBusy={x.coverBusy}
+            coverErr={x.coverErr}
+            avatarUrl={profile.avatar_url}
+            initial={displayName.charAt(0).toUpperCase()}
+            onAvatar={onAvatarClick}
+            name={displayName}
+            verified={profile.is_verified === true}
+            sub={email}
+            stats={[
+              { value: `Lv.${profile.level || 1}`, label: "cấp độ" },
+              { value: profile.streak_days || 0, label: "chuỗi ngày" },
+              { value: `${profile.exp || 0}/${profile.exp_target || 100}`, label: "EXP" },
+              { value: fmt(profile.coins), label: "coin" },
+            ]}
+            meta={meta}
+            badges={x.badges}
+            actions={
+              <div className="flex gap-2">
+                <button type="button" onClick={onEdit} className={`${GH_BTN} flex-1`}>
+                  Sửa thông tin
+                </button>
+                <button type="button" onClick={onPrivacy} aria-label="Quyền riêng tư" className={`${GH_BTN} w-9 !px-0`}>
+                  <Lock size={16} />
+                </button>
+                <button type="button" onClick={onOpenSettings} aria-label="Cài đặt tài khoản" className={`${GH_BTN} w-9 !px-0`}>
+                  <Settings size={16} />
+                </button>
+              </div>
+            }
+          />
+        )}
+        {tab === "badges" && <BadgeList badges={x.badges} />}
+        {tab === "stats" && <StatList items={statItems(statSrc)} />}
       </main>
     </div>
   );
