@@ -48,6 +48,16 @@ const NODES = ["Đơn hàng", "Thanh toán", "Tài khoản", "Hoàn tiền", "B�
   return { name, x: CX + RX * Math.cos(a), y: CY + RY * Math.sin(a) };
 });
 const bold = (s) => s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
+// câu trả lời hiện dần từng chữ (vẫn giữ **in đậm**)
+const Words = ({ text }) => {
+  let n = 0;
+  return text.split("**").map((seg, i) => {
+    const kids = seg.split(/(\s+)/).map((w, j) =>
+      /^\s*$/.test(w) ? w : <span key={j} className="nxh-w" style={{ animationDelay: `${n++ * 45}ms` }}>{w}</span>
+    );
+    return i % 2 ? <b key={i}>{kids}</b> : <React.Fragment key={i}>{kids}</React.Fragment>;
+  });
+};
 const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
 // câu đầu ưu tiên lấy từ constants.js (để khớp nút "Thử hỏi câu này")
 const turnsOf = (scene) => scene.turns.map((t, k) => (k === 0 ? { ...t, q: questionOf(scene.id) || t.q } : t));
@@ -71,7 +81,7 @@ function usePlay(scene, restart, onEnd) {
       at(t, () => set((p) => ({ ...p, typed: "", turns: [...p.turns, { q, stage: 0 }] }))); t += 500;
       at(t, () => setStage(1)); t += 1200;   // Đang suy nghĩ...
       at(t, () => setStage(2)); t += 1600;   // Đang kiểm tra...
-      at(t, () => setStage(3)); t += 1800;   // Hoàn tất + trả lời
+      at(t, () => setStage(3)); t += 2600;   // Hoàn tất + trả lời
     });
     t += 1800;
     at(t, () => set((p) => ({ ...p, fade: true }))); t += 450;
@@ -176,7 +186,7 @@ export default function HomeDemo({ onTry }) {
                           {turn.stage === 1 ? "Đang suy nghĩ..." : turn.stage === 2 ? d.think : d.done}
                         </p>
                       )}
-                      {turn.stage >= 3 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(d.a)}</p>}
+                      {turn.stage >= 3 && <p className="nxh-ai"><span className="nxh-dots" /><Words text={d.a} /></p>}
                     </React.Fragment>
                   );
                 })}
