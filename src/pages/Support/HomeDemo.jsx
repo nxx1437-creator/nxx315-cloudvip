@@ -87,20 +87,43 @@ export default function HomeDemo({ onTry }) {
   const scene = SCENES[i];
   const s = usePlay(scene, restart, () => setI((x) => (x + 1) % SCENES.length));
   const bodyRef = useRef(null);
-  const pinned = useRef(true);
+  const flowRef = useRef(null);
+  const pinned = useRef(true);      // đang bám đáy thì tự cuộn theo tin mới
+  const userRef = useRef(false);    // true khi người dùng đang chạm/lăn thật
+  const userT = useRef(0);
   const running = s.turns.some((x) => x.stage === 1 || x.stage === 2);
   const q = questionOf(scene.id) || scene.turns[0].q;
 
-  // tự cuộn xuống tin mới; nếu người dùng kéo lên xem lại thì không giật về
+  // chỉ coi là "kéo lên xem lại" khi có thao tác thật của người dùng
+  const touch = () => {
+    userRef.current = true;
+    clearTimeout(userT.current);
+    userT.current = setTimeout(() => { userRef.current = false; }, 900);
+  };
   const onBodyScroll = () => {
     const el = bodyRef.current;
-    if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+    if (el && userRef.current) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
   };
-  useEffect(() => { pinned.current = true; if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [i, restart]);
-  useEffect(() => {
+  const toBottom = () => {
     const el = bodyRef.current;
     if (el && pinned.current) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  };
+
+  // về đầu khi đổi tab
+  useEffect(() => { pinned.current = true; if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [i, restart]);
+  // nội dung dài ra lúc nào là cuộn xuống đáy lúc đó (không bị cắt dòng cuối)
+  useEffect(() => {
+    const flow = flowRef.current;
+    if (!flow || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(toBottom);
+    ro.observe(flow);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    const id = requestAnimationFrame(toBottom);
+    return () => cancelAnimationFrame(id);
   }, [s.turns]);
+  useEffect(() => () => clearTimeout(userT.current), []);
 
   return (
     <div className="nxh-sec" style={{ paddingTop: 48 }}>
@@ -138,8 +161,9 @@ export default function HomeDemo({ onTry }) {
             ))}
           </div>
           <div className="nxh-wbwrap">
-            <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
-              <div className="nxh-wflow" data-fade={s.fade}>
+            <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}
+              onTouchStart={touch} onTouchMove={touch} onTouchEnd={touch} onWheel={touch} onMouseDown={touch}>
+              <div className="nxh-wflow" ref={flowRef} data-fade={s.fade}>
                 {s.turns.length === 0 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />Chào bạn, NXX giúp gì cho bạn nè?</p>}
                 {s.turns.map((turn, k) => {
                   const d = scene.turns[k];
@@ -170,5 +194,5 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-        }
+}
                 
