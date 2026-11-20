@@ -174,14 +174,15 @@ export default function GhProfile({
 
 const fmtNum = (n) => Number(n || 0).toLocaleString("vi-VN");
 
-// thanh tab kiểu GitHub: gạch chân cam ở tab đang chọn
-export function GhTabs({ tabs, value, onChange }) {
+// thanh tab kiểu GitHub: gạch chân cam ở tab đang chọn; leading = nút đặt ở đầu hàng (vd. quay lại)
+export function GhTabs({ tabs, value, onChange, leading }) {
   return (
     <nav
       role="tablist"
-      className={`flex overflow-x-auto border-b bg-[#f6f8fa] px-2 dark:bg-[#161b22] ${GH_LINE}`}
+      className={`flex items-stretch overflow-x-auto border-b bg-[#f6f8fa] pr-2 dark:bg-[#161b22] ${GH_LINE}`}
       style={{ scrollbarWidth: "none" }}
     >
+      {leading}
       {tabs.map((t) => {
         const on = t.id === value;
         return (
