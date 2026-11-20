@@ -115,4 +115,10 @@
 .nxh-winput .typed{color:var(--ink)}
 .nxh-wsend{display:flex;width:34px;height:34px;flex:none;align-items:center;justify-content:center;border-radius:10px;background:#2b2b2b;color:#fff}
 .nxh-caret{display:inline-block;width:1.5px;height:16px;margin-left:1px;vertical-align:text-bottom;background:var(--ink);animation:nxxBlink 1s infinite}
-@media (prefers-reduced-motion:reduce){.nxh-in,.nxh-ln.on,.nxh-caret{animation:none}}
+@media (prefers-reduced-motion:reduce){.nxh-in,.nxh-ln.on,.nxh-caret,.nxh-w,.nxh-dots{animation:none}}
+
+/* câu trả lời hiện dần từng chữ */
+.nxh-w{display:inline-block;animation:nxhWord .45s cubic-bezier(.4,0,.2,1) both}
+@keyframes nxhWord{from{opacity:0;transform:translateY(4px);filter:blur(3px)}to{opacity:1;transform:none;filter:blur(0)}}
+.nxh-dots{animation:nxhFade .4s ease both}
+@keyframes nxhFade{from{opacity:0}to{opacity:1}}
