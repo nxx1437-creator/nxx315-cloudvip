@@ -1,5 +1,5 @@
 // src/pages/Support/HomeDemo.jsx — thẻ minh họa tự chạy kiểu Cofounder: vòng sơ đồ + khung ứng dụng có tab
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUp, Check, Loader2 } from "lucide-react";
 import { SUGGESTIONS_BY_CATEGORY } from "./constants.js";
 
@@ -14,11 +14,11 @@ const SCENES = [
     reply: "Bạn **chụp màn hình lỗi** gửi vào đây giúp mình. Mình xem ảnh rồi hướng dẫn cách xử lý." },
 ];
 
-// 8 nút nằm trên một vòng tròn quanh tâm
-const CX = 180, CY = 138, R = 108;
+// 8 nút nằm trên một vòng elip quanh tâm
+const CX = 180, CY = 140, RX = 132, RY = 94;
 const NODES = ["Đơn hàng", "Thanh toán", "Tài khoản", "Hoàn tiền", "Báo lỗi", "Nhiệm vụ", "Hình ảnh", "Zalo"].map((name, k) => {
   const a = (-90 + k * 45) * (Math.PI / 180);
-  return { name, x: CX + R * Math.cos(a), y: CY + R * Math.sin(a) };
+  return { name, x: CX + RX * Math.cos(a), y: CY + RY * Math.sin(a) };
 });
 const bold = (s) => s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
 const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
@@ -52,17 +52,28 @@ export default function HomeDemo({ onTry }) {
   const [restart, setRestart] = useState(0);
   const scene = SCENES[i];
   const s = usePlay(scene, restart, () => setI((x) => (x + 1) % SCENES.length));
+  const bodyRef = useRef(null);
+  const pinned = useRef(true);
   const running = s.steps.includes("run");
   const q = questionOf(scene.id);
+
+  // tự cuộn xuống tin mới; nếu người dùng kéo lên xem lại thì không giật về
+  const onBodyScroll = () => {
+    const el = bodyRef.current;
+    if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+  };
+  useEffect(() => { pinned.current = true; if (bodyRef.current) bodyRef.current.scrollTop = 0; }, [i, restart]);
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (el && pinned.current) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [s.sent, s.steps, s.reply]);
 
   return (
     <div className="nxh-sec" style={{ paddingTop: 48 }}>
       <div className="nxh-eyebrow">Xem NXX làm việc</div>
       <div className="nxh-stage">
         <svg className="nxh-graph" viewBox="0 0 360 300" fill="none" aria-hidden="true">
-          <line x1="0" y1="86" x2="360" y2="86" className="nxh-ln" /><line x1="0" y1="190" x2="360" y2="190" className="nxh-ln" />
-          <rect x="-12" y="68" width="40" height="36" rx="8" className="nxh-ghost" /><rect x="332" y="68" width="40" height="36" rx="8" className="nxh-ghost" />
-          <circle cx={CX} cy={CY} r={R} className="nxh-orbit" />
+          <ellipse cx={CX} cy={CY} rx={RX} ry={RY} className="nxh-orbit" />
           {NODES.map(({ name, x, y }) => {
             const on = running && name === scene.node;
             return (
@@ -74,13 +85,13 @@ export default function HomeDemo({ onTry }) {
           })}
           <rect x={CX - 34} y={CY - 15} width="68" height="30" rx="8" className="nxh-core" />
           <text x={CX} y={CY + 4.5} textAnchor="middle" className="nxh-nt core">NXX</text>
-          <path transform={`translate(${CX - 11} ${CY - 46}) scale(.92)`} d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" fill="#f2a516" />
+          <path transform={`translate(${CX - 11} ${CY - 44}) scale(.92)`} d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z" fill="#f2a516" />
           {NODES.map(({ name, x, y }) => {
             const on = running && name === scene.node;
             return (
               <g key={name}>
-                <rect x={x - 37} y={y - 13} width="74" height="26" rx="8" className={on ? "nxh-nd on" : "nxh-nd"} />
-                <text x={x} y={y + 4.5} textAnchor="middle" className={on ? "nxh-nt on" : "nxh-nt"}>{name}</text>
+                <rect x={x - 34} y={y - 12} width="68" height="24" rx="8" className={on ? "nxh-nd on" : "nxh-nd"} />
+                <text x={x} y={y + 4} textAnchor="middle" className={on ? "nxh-nt on" : "nxh-nt"}>{name}</text>
               </g>
             );
           })}
@@ -92,7 +103,8 @@ export default function HomeDemo({ onTry }) {
               <button key={x.id} type="button" role="tab" aria-selected={k === i} onClick={() => { setI(k); setRestart((r) => r + 1); }}>{x.tab}</button>
             ))}
           </div>
-          <div className="nxh-wbody">
+          <div className="nxh-wbwrap">
+           <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
             <div className="nxh-wflow" data-fade={s.fade}>
               {!s.sent && <p className="nxh-ai nxh-in"><span className="nxh-dots" />Chào bạn, NXX giúp gì cho bạn nè?</p>}
               {s.sent && <div className="nxh-b me nxh-in">{q}</div>}
@@ -109,6 +121,7 @@ export default function HomeDemo({ onTry }) {
               )}
               {s.reply && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(scene.reply)}</p>}
             </div>
+           </div>
           </div>
           <div className="nxh-winput">
             <span className={s.typed ? "typed" : ""}>{s.typed || "Hỏi NXX về đơn hàng, thanh toán…"}{s.typed && <i className="nxh-caret" />}</span>
@@ -121,6 +134,7 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-          }
+}
+              
             
             
