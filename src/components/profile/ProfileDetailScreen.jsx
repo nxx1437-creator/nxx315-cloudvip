@@ -40,7 +40,7 @@ export default function ProfileDetailScreen({
 
   return (
     <div className="min-h-screen bg-white pb-10 font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
-      <TopHeader />
+      <TopHeader variant="gh" />
 
       {/* hàng tab dính ngay dưới TopHeader (cao 64px), nút quay lại nằm đầu hàng */}
       <div className="sticky top-[64px] z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
