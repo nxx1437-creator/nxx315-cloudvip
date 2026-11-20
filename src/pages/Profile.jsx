@@ -122,10 +122,13 @@ export default function ProfilePage() {
     navigate("/");
   };
 
-  // chat AI nằm ở /support; câu hỏi thường gặp, gửi yêu cầu, lịch sử nằm ở /help
+    // chat AI nằm ở /support; còn lại đi thẳng tới đúng chỗ trong /help
   const openHelp = (open) => {
     if (open === "chat") return navigate("/support");
-    navigate("/help", { state: { open } });
+    if (open === "idea") return navigate("/help?r=new"); // form gửi yêu cầu hỗ trợ
+    if (open === "topics") return navigate("/help?s=topics"); // cuộn xuống các chủ đề
+    if (open === "history") return navigate("/help?r=history"); // lịch sử yêu cầu
+    navigate("/help");
   };
 
   const dialogs = (
