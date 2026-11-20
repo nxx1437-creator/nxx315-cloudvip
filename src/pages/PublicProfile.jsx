@@ -6,29 +6,9 @@ import { ArrowLeft, Calendar, Coins } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { getBadges } from "../lib/profileBadges.js";
-import { LbAvatar } from "./Leaderboard.jsx";
-import { Group, Row } from "../components/profile/SettingsParts.jsx";
-import BadgeGrid from "../components/profile/BadgeGrid.jsx";
-import VerifiedBadge from "../components/VerifiedBadge.jsx"; // ✓
+import GhProfile, { GH_INK, GH_LINE } from "../components/profile/GhProfile.jsx";
 
-const COVER =
-  "bg-[linear-gradient(135deg,#dbeafe_0%,#e0f2fe_45%,#ccfbf1_100%)] dark:bg-[linear-gradient(135deg,#0f2a44_0%,#0b3a4a_100%)]";
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
-
-const Sparkle = ({ className = "", size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-    <path d="M12 1c.6 5.4 3.6 9.4 11 11-7.4 1.6-10.4 5.6-11 11-.6-5.4-3.6-9.4-11-11 7.4-1.6 10.4-5.6 11-11z" />
-  </svg>
-);
-
-function Stat({ value, label }) {
-  return (
-    <div className="min-w-0 px-1 text-center">
-      <p className="truncate text-[20px] font-bold leading-7 text-slate-900 dark:text-white">{value}</p>
-      <p className="text-[12.5px] text-slate-500">{label}</p>
-    </div>
-  );
-}
 
 export default function PublicProfile() {
   const { userId } = useParams();
@@ -55,88 +35,53 @@ export default function PublicProfile() {
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/leaderboard"));
 
   return (
-    <div className="min-h-screen bg-[#eef2f9] pb-10 dark:bg-slate-950">
-      <header className="sticky top-0 z-20 flex items-center gap-3 bg-[#eef2f9]/95 px-4 pb-3 pt-4 backdrop-blur dark:bg-slate-950/95">
+    <div className="min-h-screen bg-white pb-10 dark:bg-[#0d1117]">
+      <header className={`sticky top-0 z-20 flex items-center gap-1 border-b bg-white/95 px-2 py-2 backdrop-blur dark:bg-[#0d1117]/95 ${GH_LINE}`}>
         <button
           onClick={back}
           aria-label="Quay lại"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white"
+          className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-[19px] font-bold text-slate-900 dark:text-white">Trang cá nhân</h1>
+        <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
       </header>
 
-      <main className="mx-auto max-w-md space-y-4 px-4 md:max-w-3xl">
-        {data === undefined && <div className="h-80 animate-pulse rounded-2xl bg-white dark:bg-slate-900" />}
+      <main className="mx-auto max-w-md md:max-w-3xl">
+        {data === undefined && <div className="m-4 h-80 animate-pulse rounded-lg bg-[#eaeef2] dark:bg-[#161b22]" />}
 
         {data === null && (
-          <div className="rounded-2xl bg-white px-6 py-12 text-center dark:bg-slate-900">
-            <p className="text-[18px] font-bold text-slate-900 dark:text-white">Không tìm thấy người dùng</p>
+          <div className="px-6 py-16 text-center">
+            <p className={`text-[18px] font-semibold ${GH_INK}`}>Không tìm thấy người dùng</p>
             <p className="mt-1 text-[14px] text-slate-500">Tài khoản này không tồn tại hoặc không còn hiển thị.</p>
-            <button onClick={back} className="mt-5 rounded-xl bg-accent-500 px-6 py-3 text-[15px] font-semibold text-white">
+            <button onClick={back} className="mt-5 rounded-md bg-accent-500 px-6 py-2.5 text-[14px] font-semibold text-white">
               Quay lại
             </button>
           </div>
         )}
 
         {data && (
-          <>
-            <section className="rounded-2xl bg-white p-3 shadow-sm dark:bg-slate-900">
-              <div className={`relative h-36 overflow-hidden rounded-xl ${data.cover_url ? "bg-slate-200 dark:bg-slate-800" : COVER}`}>
-                {data.cover_url ? (
-                  <img src={data.cover_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <>
-                    <Sparkle className="absolute left-5 top-4 text-white/80" size={26} />
-                    <Sparkle className="absolute right-6 top-8 text-white/70" size={38} />
-                    <Sparkle className="absolute bottom-3 right-24 text-white/60" size={18} />
-                  </>
-                )}
-              </div>
-
-              <div className="px-2 pb-1">
-                {/* relative z-10: đưa avatar lên trên cover */}
-                <div className="relative z-10 -mt-12 w-fit">
-                  <LbAvatar
-                    src={data.avatar_url}
-                    name={data.name}
-                    size="h-[96px] w-[96px]"
-                    text="text-4xl"
-                    ring="ring-4 ring-white dark:ring-slate-900"
-                  />
-                </div>
-                {/* ✓ tên + tích xanh */}
-                <h2 className="mt-3 flex min-w-0 items-center gap-2 text-[22px] font-bold text-slate-900 dark:text-white">
-                  <span className="truncate">{data.name}</span>
-                  {data.is_verified === true && <VerifiedBadge size={22} />}
-                </h2>
-                <p className="mt-0.5 text-[14px] text-slate-500">
-                  Tham gia từ {new Date(data.joined_at).toLocaleDateString("vi-VN")}
-                </p>
-
-                <div className="mt-4 grid grid-cols-4 divide-x divide-slate-100 dark:divide-slate-800">
-                  <Stat value={`Lv.${data.level || 1}`} label="Cấp độ" />
-                  <Stat value={data.streak_days || 0} label="Chuỗi ngày" />
-                  <Stat value={fmt(data.tasks_done)} label="Nhiệm vụ" />
-                  <Stat value={fmt(data.earned_week)} label="Coin tuần" />
-                </div>
-              </div>
-            </section>
-
-            <BadgeGrid badges={getBadges(data)} />
-
-            <div className="-mt-2">
-              <Group title="Thành tích">
-                <Row icon={Coins} title="Coin kiếm tuần này" sub={`${fmt(data.earned_week)} Coin trong 7 ngày gần nhất`} />
-                <Row icon={Coins} title="Coin kiếm tháng này" sub={`${fmt(data.earned_month)} Coin trong 30 ngày gần nhất`} />
-                <Row icon={Calendar} title="Thành viên từ" sub={new Date(data.joined_at).toLocaleDateString("vi-VN")} />
-              </Group>
-            </div>
-          </>
+          <GhProfile
+            cover={data.cover_url}
+            avatarUrl={data.avatar_url}
+            initial={(data.name || "T").charAt(0).toUpperCase()}
+            name={data.name}
+            verified={data.is_verified === true}
+            stats={[
+              { value: `Lv.${data.level || 1}`, label: "cấp độ" },
+              { value: data.streak_days || 0, label: "chuỗi ngày" },
+              { value: fmt(data.tasks_done), label: "nhiệm vụ" },
+            ]}
+            meta={[
+              { Icon: Calendar, text: `Tham gia ${new Date(data.joined_at).toLocaleDateString("vi-VN")}` },
+              { Icon: Coins, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
+              { Icon: Coins, text: `Kiếm ${fmt(data.earned_month)} coin trong 30 ngày` },
+            ]}
+            badges={getBadges(data).filter((b) => b.earned)}
+          />
         )}
       </main>
     </div>
   );
-                    }
+            }
 
