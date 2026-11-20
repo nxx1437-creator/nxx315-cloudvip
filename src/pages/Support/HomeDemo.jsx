@@ -1,6 +1,6 @@
 // src/pages/Support/HomeDemo.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUp, Check, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, Loader2, RotateCcw } from "lucide-react";
 import { SUGGESTIONS_BY_CATEGORY } from "./constants.js";
 
 const SCENES = [
@@ -74,58 +74,72 @@ const bold = (s) =>
 
 const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
 
-const INIT = { typed: "", sent: false, agents: [], reply: false, fade: false };
-
-function usePlay(scene, restart, onEnd) {
-  const [state, setState] = useState(INIT);
-
-  useEffect(() => {
-    setState(INIT);
-    const timers = [];
-    const at = (ms, fn) => timers.push(setTimeout(fn, ms));
-    const q = questionOf(scene.id);
-
-    let t = 600;
-
-    // 1. Gõ câu hỏi
-    for (let i = 1; i <= q.length; i++) {
-      at(t + i * 25, () => setState((p) => ({ ...p, typed: q.slice(0, i) })));
-    }
-    t += q.length * 25 + 500;
-
-    // 2. Gửi tin nhắn & hiện câu trả lời của AI NGAY LẬP TỨC
-    at(t, () => setState((p) => ({ ...p, typed: "", sent: true, reply: true })));
-    t += 800; // Đợi 1 chút xong mới hiện Agent (giống kiểu AI đang suy nghĩ)
-
-    // 3. Hiện Agent 1 đang chạy
-    at(t, () => setState((p) => ({ ...p, agents: ["running", "queued"] })));
-    t += 1500;
-
-    // 4. Agent 1 xong, Agent 2 chạy
-    at(t, () => setState((p) => ({ ...p, agents: ["done", "running"] })));
-    t += 1500;
-
-    // 5. Agent 2 xong
-    at(t, () => setState((p) => ({ ...p, agents: ["done", "done"] })));
-    t += 4000; // Đứng im 4 giây để người dùng đọc
-
-    // 6. Mờ dần để chuyển cảnh
-    at(t, () => setState((p) => ({ ...p, fade: true })));
-    t += 500;
-
-    at(t, onEnd);
-
-    return () => timers.forEach(clearTimeout);
-  }, [scene, restart, onEnd]);
-
-  return state;
-}
-
 const STATUS = {
   running: "Running",
   queued: "Queued",
   done: "Completed",
 };
+
+// Viết lại hàm usePlay bằng requestAnimationFrame để không bị chặn
+function usePlay(scene, restart, onEnd) {
+  const [state, setState] = useState({ typed: "", sent: false, agents: [], reply: false, fade: false });
+  const onEndRef = useRef(onEnd);
+  
+  useEffect(() => {
+    onEndRef.current = onEnd;
+  }, [onEnd]);
+
+  useEffect(() => {
+    let start = performance.now();
+    let isActive = true;
+    const q = questionOf(scene.id);
+    let animId;
+
+    const loop = (time) => {
+      if (!isActive) return;
+      const elapsed = time - start;
+
+      // 1. Gõ chữ (0s - 1.5s)
+      const typeDuration = q.length * 25 + 500;
+      if (elapsed < typeDuration) {
+        const charCount = Math.min(q.length, Math.floor((elapsed / 25)));
+        setState({ typed: q.slice(0, charCount), sent: false, agents: [], reply: false, fade: false });
+      } 
+      // 2. Đã gửi & AI trả lời (1.5s - 2.3s)
+      else if (elapsed < typeDuration + 800) {
+        setState({ typed: "", sent: true, agents: [], reply: true, fade: false });
+      } 
+      // 3. Agent chạy (2.3s - 5.3s)
+      else if (elapsed < typeDuration + 800 + 3000) {
+        const agentElapsed = elapsed - (typeDuration + 800);
+        const agents = agentElapsed < 1500 ? ["running", "queued"] : ["done", "running"];
+        setState({ typed: "", sent: true, agents, reply: true, fade: false });
+      } 
+      // 4. Xong hết, chờ đọc (5.3s - 9.3s)
+      else if (elapsed < typeDuration + 800 + 3000 + 4000) {
+        setState({ typed: "", sent: true, agents: ["done", "done"], reply: true, fade: false });
+      } 
+      // 5. Mờ dần & chuyển cảnh
+      else {
+        setState((p) => ({ ...p, fade: true }));
+        setTimeout(() => {
+            if (isActive) onEndRef.current();
+        }, 500);
+        return; 
+      }
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+    return () => {
+      isActive = false;
+      cancelAnimationFrame(animId);
+    };
+  }, [scene, restart]);
+
+  return state;
+}
 
 export default function HomeDemo({ onTry }) {
   const [index, setIndex] = useState(0);
@@ -284,10 +298,16 @@ export default function HomeDemo({ onTry }) {
         </div>
       </div>
 
-      <button type="button" className="nxh-more" onClick={() => onTry({ text: q, category: scene.id })}>
-        Thử hỏi câu này
-        <ArrowRight size={15} />
-      </button>
+      <div className="flex items-center gap-4 mt-2">
+        <button type="button" className="nxh-more" onClick={() => onTry({ text: q, category: scene.id })}>
+          Thử hỏi câu này <ArrowRight size={15} />
+        </button>
+        
+        <button type="button" onClick={() => setRestart(r => r + 1)} className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-black transition">
+          <RotateCcw size={13} /> Chạy lại
+        </button>
+      </div>
+
     </div>
   );
-             }
+  }
