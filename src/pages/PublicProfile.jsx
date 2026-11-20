@@ -6,7 +6,7 @@ import { ArrowLeft, Calendar, Coins, TrendingUp } from "lucide-react";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { getBadges } from "../lib/profileBadges.js";
-import GhProfile, { GH_INK, GH_LINE } from "../components/profile/GhProfile.jsx";
+import GhProfile, { BadgeList, GH_INK, GH_LINE, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -15,6 +15,7 @@ export default function PublicProfile() {
   const navigate = useNavigate();
   const { session } = useSession();
   const [data, setData] = useState(undefined); // undefined = đang tải, null = không có
+  const [tab, setTab] = useState("overview");
 
   useEffect(() => {
     if (!userId) return;
@@ -23,6 +24,7 @@ export default function PublicProfile() {
       return;
     }
     let alive = true;
+    setTab("overview");
     (async () => {
       const { data: d, error } = await supabase.rpc("get_public_profile", { p_user_id: userId });
       if (alive) setData(error ? null : d);
@@ -33,19 +35,28 @@ export default function PublicProfile() {
   }, [userId, session?.user?.id]);
 
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/leaderboard"));
+  const badges = data ? getBadges(data).filter((b) => b.earned) : [];
+  const tabs = [
+    { id: "overview", label: "Tổng quan" },
+    { id: "badges", label: "Huy hiệu", count: badges.length },
+    { id: "stats", label: "Thống kê" },
+  ];
 
   return (
     <div className="min-h-screen bg-white pb-10 dark:bg-[#0d1117]">
-      <header className={`sticky top-0 z-20 flex items-center gap-1 border-b bg-white/95 px-2 py-2 backdrop-blur dark:bg-[#0d1117]/95 ${GH_LINE}`}>
-        <button
-          onClick={back}
-          aria-label="Quay lại"
-          className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
-      </header>
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
+        <header className={`flex items-center gap-1 border-b px-2 py-2 ${GH_LINE}`}>
+          <button
+            onClick={back}
+            aria-label="Quay lại"
+            className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
+        </header>
+        {data && <GhTabs tabs={tabs} value={tab} onChange={setTab} />}
+      </div>
 
       <main className="mx-auto max-w-md md:max-w-3xl">
         {data === undefined && <div className="m-4 h-80 animate-pulse rounded-lg bg-[#eaeef2] dark:bg-[#161b22]" />}
@@ -60,7 +71,7 @@ export default function PublicProfile() {
           </div>
         )}
 
-        {data && (
+        {data && tab === "overview" && (
           <GhProfile
             cover={data.cover_url}
             avatarUrl={data.avatar_url}
@@ -74,15 +85,16 @@ export default function PublicProfile() {
             ]}
             meta={[
               { Icon: Calendar, text: `Tham gia ${new Date(data.joined_at).toLocaleDateString("vi-VN")}` },
-              { Icon: Coins, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
-              { Icon: Coins, text: `Kiếm ${fmt(data.earned_month)} coin trong 30 ngày` },
               { Icon: TrendingUp, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
+              { Icon: Coins, text: `Kiếm ${fmt(data.earned_month)} coin trong 30 ngày` },
             ]}
-            badges={getBadges(data).filter((b) => b.earned)}
+            badges={badges}
           />
         )}
+        {data && tab === "badges" && <BadgeList badges={badges} />}
+        {data && tab === "stats" && <StatList items={statItems(data)} />}
       </main>
     </div>
   );
-            }
+}
 
