@@ -45,7 +45,7 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-white pb-10 dark:bg-[#0d1117]">
-      <TopHeader />
+      <TopHeader variant="gh" />
 
       {/* hàng tab luôn hiện (kể cả lúc đang tải / không tìm thấy) nên nút quay lại không bao giờ mất */}
       <div className="sticky top-[64px] z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
