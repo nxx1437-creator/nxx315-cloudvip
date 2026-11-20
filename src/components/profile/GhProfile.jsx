@@ -171,3 +171,84 @@ export default function GhProfile({
     </div>
   );
               }
+
+const fmtNum = (n) => Number(n || 0).toLocaleString("vi-VN");
+
+// thanh tab kiểu GitHub: gạch chân cam ở tab đang chọn
+export function GhTabs({ tabs, value, onChange }) {
+  return (
+    <nav
+      role="tablist"
+      className={`flex overflow-x-auto border-b bg-[#f6f8fa] px-2 dark:bg-[#161b22] ${GH_LINE}`}
+      style={{ scrollbarWidth: "none" }}
+    >
+      {tabs.map((t) => {
+        const on = t.id === value;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            onClick={() => onChange(t.id)}
+            className={`relative flex shrink-0 items-center gap-2 px-3 py-3 text-[14.5px] transition ${
+              on ? `font-semibold ${GH_INK}` : GH_MUTED
+            }`}
+          >
+            {t.label}
+            {t.count != null && (
+              <span className={`rounded-full bg-[#818b98]/20 px-2 text-[12px] font-medium ${GH_INK}`}>{t.count}</span>
+            )}
+            {on && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#fd8c73]" />}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+// tab "Huy hiệu": danh sách huy hiệu đã đạt
+export function BadgeList({ badges = [] }) {
+  if (!badges.length) {
+    return <p className={`px-4 py-12 text-center text-[14px] ${GH_MUTED}`}>Chưa có huy hiệu nào.</p>;
+  }
+  return (
+    <ul className="px-4 py-1">
+      {badges.map(({ id, name, desc, Icon, grad }) => (
+        <li key={id} className={`flex items-center gap-3 border-b py-3.5 last:border-b-0 ${GH_LINE}`}>
+          <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${grad} text-white shadow-sm`}>
+            <Icon size={22} strokeWidth={2} />
+          </span>
+          <span className="min-w-0">
+            <b className={`block text-[15px] font-semibold ${GH_INK}`}>{name}</b>
+            <span className={`block text-[13px] leading-5 ${GH_MUTED}`}>{desc}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// tab "Thống kê"
+export const statItems = (s = {}) => [
+  { label: "Cấp độ", value: `Lv.${s.level || 1}` },
+  { label: "Chuỗi ngày hiện tại", value: `${s.streak_days || 0} ngày` },
+  { label: "Chuỗi dài nhất", value: `${Math.max(s.streak_record || 0, s.streak_days || 0)} ngày` },
+  { label: "Nhiệm vụ đã hoàn thành", value: fmtNum(s.tasks_done) },
+  { label: "Coin kiếm trong 7 ngày", value: fmtNum(s.earned_week) },
+  { label: "Coin kiếm trong 30 ngày", value: fmtNum(s.earned_month) },
+  { label: "Tổng coin đã kiếm", value: fmtNum(s.lifetime_coins) },
+];
+
+export function StatList({ items = [] }) {
+  return (
+    <ul className="px-4 py-1">
+      {items.map((it) => (
+        <li key={it.label} className={`flex items-center justify-between gap-3 border-b py-3.5 last:border-b-0 ${GH_LINE}`}>
+          <span className={`text-[14.5px] ${GH_MUTED}`}>{it.label}</span>
+          <b className={`text-[15px] font-semibold ${GH_INK}`}>{it.value}</b>
+        </li>
+      ))}
+    </ul>
+  );
+}
