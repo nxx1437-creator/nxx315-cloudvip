@@ -87,23 +87,29 @@ function usePlay(scene, restart, onEnd) {
 
     let t = 600;
 
+    // 1. Gõ câu hỏi
     for (let i = 1; i <= q.length; i++) {
       at(t + i * 25, () => setState((p) => ({ ...p, typed: q.slice(0, i) })));
     }
     t += q.length * 25 + 500;
 
-    at(t, () => setState((p) => ({ ...p, typed: "", sent: true, agents: ["running", "queued"] })));
-    t += 1300;
+    // 2. Gửi tin nhắn & hiện câu trả lời của AI NGAY LẬP TỨC
+    at(t, () => setState((p) => ({ ...p, typed: "", sent: true, reply: true })));
+    t += 800; // Đợi 1 chút xong mới hiện Agent (giống kiểu AI đang suy nghĩ)
 
+    // 3. Hiện Agent 1 đang chạy
+    at(t, () => setState((p) => ({ ...p, agents: ["running", "queued"] })));
+    t += 1500;
+
+    // 4. Agent 1 xong, Agent 2 chạy
     at(t, () => setState((p) => ({ ...p, agents: ["done", "running"] })));
-    t += 1200;
+    t += 1500;
 
+    // 5. Agent 2 xong
     at(t, () => setState((p) => ({ ...p, agents: ["done", "done"] })));
-    t += 600;
+    t += 4000; // Đứng im 4 giây để người dùng đọc
 
-    at(t, () => setState((p) => ({ ...p, reply: true })));
-    t += 4000;
-
+    // 6. Mờ dần để chuyển cảnh
     at(t, () => setState((p) => ({ ...p, fade: true })));
     t += 500;
 
@@ -126,7 +132,6 @@ export default function HomeDemo({ onTry }) {
   const [restart, setRestart] = useState(0);
 
   const scene = SCENES[index];
-
   const s = usePlay(scene, restart, () => setIndex((x) => (x + 1) % SCENES.length));
 
   const bodyRef = useRef(null);
@@ -214,6 +219,7 @@ export default function HomeDemo({ onTry }) {
           <div className="nxh-wbwrap">
             <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
               <div className="nxh-wflow" data-fade={s.fade}>
+                
                 {!s.sent && (
                   <div className="nxh-ai nxh-in">
                     <span className="nxh-dots" />
@@ -225,8 +231,17 @@ export default function HomeDemo({ onTry }) {
                   <div className="nxh-b me nxh-in">{q}</div>
                 )}
 
-                {s.sent && !s.reply && s.agents.length > 0 && (
-                  <div className="nxh-agents nxh-in">
+                {/* AI TRẢ LỜI NGAY LẬP TỨC */}
+                {s.reply && (
+                  <div className="nxh-ai nxh-in">
+                    <span className="nxh-dots" />
+                    {bold(scene.reply)}
+                  </div>
+                )}
+
+                {/* AGENT CHẠY PHÍA SAU ĐỂ KIỂM TRA */}
+                {s.sent && s.agents.length > 0 && (
+                  <div className="nxh-agents nxh-in" style={{ marginTop: 8 }}>
                     {scene.agents.map((agent, k) => {
                       const status = s.agents[k];
                       return (
@@ -253,12 +268,6 @@ export default function HomeDemo({ onTry }) {
                   </div>
                 )}
 
-                {s.reply && (
-                  <div className="nxh-ai nxh-in">
-                    <span className="nxh-dots" />
-                    {bold(scene.reply)}
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -281,7 +290,4 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-                }
-              
-            
-            
+             }
