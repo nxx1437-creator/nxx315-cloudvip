@@ -7,7 +7,7 @@ import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { getBadges } from "../lib/profileBadges.js";
 import TopHeader from "../components/TopHeader.jsx";
-import GhProfile, { BadgeList, GH_INK, GH_LINE, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
+import GhProfile, { BadgeList, GH_INK, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -47,22 +47,23 @@ export default function PublicProfile() {
     <div className="min-h-screen bg-white pb-10 dark:bg-[#0d1117]">
       <TopHeader />
 
-      <header className={`flex items-center gap-1 border-b px-2 py-2 ${GH_LINE}`}>
-        <button
-          onClick={back}
-          aria-label="Quay lại"
-          className={`flex h-10 w-10 items-center justify-center rounded-full ${GH_INK}`}
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className={`text-[16px] font-semibold ${GH_INK}`}>Trang cá nhân</h1>
-      </header>
-
-      {data && (
-        <div className="sticky top-[64px] z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
-          <GhTabs tabs={tabs} value={tab} onChange={setTab} />
-        </div>
-      )}
+      {/* hàng tab luôn hiện (kể cả lúc đang tải / không tìm thấy) nên nút quay lại không bao giờ mất */}
+      <div className="sticky top-[64px] z-20 bg-white/95 backdrop-blur dark:bg-[#0d1117]/95">
+        <GhTabs
+          tabs={data ? tabs : []}
+          value={tab}
+          onChange={setTab}
+          leading={
+            <button
+              onClick={back}
+              aria-label="Quay lại"
+              className={`flex w-12 shrink-0 items-center justify-center py-3 ${GH_INK}`}
+            >
+              <ArrowLeft size={20} />
+            </button>
+          }
+        />
+      </div>
 
       <main className="mx-auto max-w-md md:max-w-3xl">
         {data === undefined && <div className="m-4 h-80 animate-pulse rounded-lg bg-[#eaeef2] dark:bg-[#161b22]" />}
@@ -102,5 +103,5 @@ export default function PublicProfile() {
       </main>
     </div>
   );
-}
+               }
 
