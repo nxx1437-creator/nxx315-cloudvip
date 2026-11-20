@@ -3,24 +3,42 @@ import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUp } from "lucide-react";
 import { SUGGESTIONS_BY_CATEGORY } from "./constants.js";
 
-// Luồng mỗi tình huống: Bước 1 -> Phản hồi 1 -> "Đang kiểm tra..." -> Phản hồi 2
+// Mỗi tab chat liên tiếp nhiều câu; câu đầu lấy từ constants.js, các câu sau viết ở đây.
+// think: dòng trạng thái thứ 2 (dòng thứ 1 luôn là "Đang suy nghĩ...")
+// done: chữ hiện khi hoàn tất
 const SCENES = [
-  { id: "order", tab: "Đơn hàng", node: "Đơn hàng",
-    step: "Bước 1: Tra cứu đơn trong hệ thống",
-    r1: "Mình đã tìm thấy đơn của bạn trong hệ thống.",
-    r2: "Đơn đang ở bước **chuẩn bị giao**. Có cập nhật mới mình sẽ báo ngay, bạn không cần hỏi lại." },
-  { id: "payment", tab: "Thanh toán", node: "Thanh toán",
-    step: "Bước 1: Đọc thông tin thanh toán",
-    r1: "Bạn gửi giúp mình **ảnh biên lai hoặc mã giao dịch** nhé.",
-    r2: "Mình đối chiếu xong rồi, giao dịch hợp lệ. Kết quả sẽ báo ngay trong khung chat này." },
-  { id: "account", tab: "Tài khoản", node: "Tài khoản",
-    step: "Bước 1: Xác định vấn đề đăng nhập",
-    r1: "Có vẻ bạn quên mật khẩu hoặc đăng nhập bị lỗi.",
-    r2: "Bạn bấm **Quên mật khẩu** ở trang đăng nhập, hoặc đăng nhập bằng Google nếu từng đăng ký như vậy." },
-  { id: "bug", tab: "Báo lỗi", node: "Báo lỗi",
-    step: "Bước 1: Đọc mô tả lỗi",
-    r1: "Mình đã nhận được mô tả lỗi của bạn.",
-    r2: "Bạn **chụp màn hình lỗi** gửi vào đây giúp mình. Mình xem ảnh rồi hướng dẫn cách xử lý." },
+  { id: "order", tab: "Đơn hàng", node: "Đơn hàng", turns: [
+    { q: "Đơn của mình đang ở trạng thái nào?", think: "Đang kiểm tra đơn hàng...", done: "Đã kiểm tra đơn hàng",
+      a: "Đơn của bạn đang ở bước **chuẩn bị giao**. Có cập nhật mới mình sẽ báo ngay." },
+    { q: "Khi nào mình nhận được hàng?", think: "Đang tra thời gian giao...", done: "Đã tra thời gian giao",
+      a: "Dự kiến **1–2 ngày** nữa là tới. Đơn xuất kho mình sẽ nhắn bạn liền." },
+    { q: "Mình đổi địa chỉ nhận được không?", think: "Đang kiểm tra khả năng đổi...", done: "Đã kiểm tra khả năng đổi",
+      a: "Đơn chưa giao nên **đổi được**. Bạn gửi địa chỉ mới vào đây giúp mình nhé." },
+  ] },
+  { id: "payment", tab: "Thanh toán", node: "Thanh toán", turns: [
+    { q: "Mình thanh toán rồi mà chưa thấy cập nhật.", think: "Đang kiểm tra thanh toán...", done: "Đã kiểm tra thanh toán",
+      a: "Bạn gửi giúp mình **ảnh biên lai hoặc mã giao dịch**, mình sẽ đối chiếu ngay." },
+    { q: "Mình vừa gửi mã giao dịch rồi đó.", think: "Đang đối chiếu giao dịch...", done: "Đã đối chiếu giao dịch",
+      a: "Mình thấy giao dịch rồi, đang **chờ ngân hàng xác nhận**. Thường mất vài phút." },
+    { q: "Có bị trừ tiền hai lần không?", think: "Đang kiểm tra lịch sử giao dịch...", done: "Đã kiểm tra lịch sử giao dịch",
+      a: "Không có giao dịch trùng. Nếu có phát sinh, mình sẽ **hoàn lại** cho bạn." },
+  ] },
+  { id: "account", tab: "Tài khoản", node: "Tài khoản", turns: [
+    { q: "Mình quên mật khẩu, đăng nhập không được.", think: "Đang xác định vấn đề...", done: "Đã xác định vấn đề",
+      a: "Bạn bấm **Quên mật khẩu** ở trang đăng nhập để đặt lại nhé." },
+    { q: "Mình không nhận được email đặt lại.", think: "Đang kiểm tra email đăng ký...", done: "Đã kiểm tra email đăng ký",
+      a: "Bạn xem thêm mục **Thư rác (Spam)**, hoặc đăng nhập bằng Google nếu từng đăng ký như vậy." },
+    { q: "Mình muốn đổi email tài khoản.", think: "Đang kiểm tra tài khoản...", done: "Đã kiểm tra tài khoản",
+      a: "Bạn vào **Cài đặt tài khoản** để đổi email. Cần hỗ trợ thì cứ nhắn mình." },
+  ] },
+  { id: "bug", tab: "Báo lỗi", node: "Báo lỗi", turns: [
+    { q: "Trang bị lỗi, mình không bấm được nút.", think: "Đang đọc mô tả lỗi...", done: "Đã đọc mô tả lỗi",
+      a: "Bạn **chụp màn hình lỗi** gửi vào đây giúp mình nhé." },
+    { q: "Mình gửi ảnh rồi nè.", think: "Đang phân tích hình ảnh...", done: "Đã phân tích hình ảnh",
+      a: "Mình thấy rồi, có vẻ do **trang chưa tải xong**. Bạn thử tải lại trang xem sao." },
+    { q: "Tải lại rồi mà vẫn lỗi.", think: "Đang tìm cách xử lý...", done: "Đã tìm cách xử lý",
+      a: "Bạn **thoát và đăng nhập lại**. Nếu vẫn lỗi, mình chuyển cho bộ phận kỹ thuật." },
+  ] },
 ];
 
 // 8 nút nằm trên một vòng elip quanh tâm
@@ -31,7 +49,11 @@ const NODES = ["Đơn hàng", "Thanh toán", "Tài khoản", "Hoàn tiền", "B�
 });
 const bold = (s) => s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
 const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
-const INIT = { typed: "", sent: false, step: false, r1: false, check: false, r2: false, fade: false };
+// câu đầu ưu tiên lấy từ constants.js (để khớp nút "Thử hỏi câu này")
+const turnsOf = (scene) => scene.turns.map((t, k) => (k === 0 ? { ...t, q: questionOf(scene.id) || t.q } : t));
+
+// stage: 0 = vừa gửi câu hỏi, 1 = "Đang suy nghĩ...", 2 = đang kiểm tra, 3 = hoàn tất + trả lời
+const INIT = { typed: "", turns: [], fade: false };
 
 function usePlay(scene, restart, onEnd) {
   const [s, set] = useState(INIT);
@@ -39,14 +61,19 @@ function usePlay(scene, restart, onEnd) {
     set(INIT);
     const timers = [];
     const at = (ms, fn) => timers.push(setTimeout(fn, ms));
-    const q = questionOf(scene.id);
+    const list = turnsOf(scene);
     let t = 700;
-    for (let i = 1; i <= q.length; i++) at(t + i * 30, () => set((p) => ({ ...p, typed: q.slice(0, i) })));
-    t += q.length * 30 + 400;
-    at(t, () => set((p) => ({ ...p, typed: "", sent: true, step: true }))); t += 900;   // Bước 1
-    at(t, () => set((p) => ({ ...p, r1: true }))); t += 1000;                            // Phản hồi 1
-    at(t, () => set((p) => ({ ...p, check: true }))); t += 2000;                         // Đang kiểm tra...
-    at(t, () => set((p) => ({ ...p, check: false, r2: true }))); t += 4200;              // Phản hồi 2
+    list.forEach((turn, k) => {
+      const q = turn.q;
+      const setStage = (n) => set((p) => ({ ...p, turns: p.turns.map((x, j) => (j === k ? { ...x, stage: n } : x)) }));
+      for (let i = 1; i <= q.length; i++) at(t + i * 30, () => set((p) => ({ ...p, typed: q.slice(0, i) })));
+      t += q.length * 30 + 400;
+      at(t, () => set((p) => ({ ...p, typed: "", turns: [...p.turns, { q, stage: 0 }] }))); t += 500;
+      at(t, () => setStage(1)); t += 1200;   // Đang suy nghĩ...
+      at(t, () => setStage(2)); t += 1600;   // Đang kiểm tra...
+      at(t, () => setStage(3)); t += 1800;   // Hoàn tất + trả lời
+    });
+    t += 1800;
     at(t, () => set((p) => ({ ...p, fade: true }))); t += 450;
     at(t, onEnd);
     return () => timers.forEach(clearTimeout);
@@ -61,8 +88,8 @@ export default function HomeDemo({ onTry }) {
   const s = usePlay(scene, restart, () => setI((x) => (x + 1) % SCENES.length));
   const bodyRef = useRef(null);
   const pinned = useRef(true);
-  const running = s.step && !s.r2;
-  const q = questionOf(scene.id);
+  const running = s.turns.some((x) => x.stage === 1 || x.stage === 2);
+  const q = questionOf(scene.id) || scene.turns[0].q;
 
   // tự cuộn xuống tin mới; nếu người dùng kéo lên xem lại thì không giật về
   const onBodyScroll = () => {
@@ -73,7 +100,7 @@ export default function HomeDemo({ onTry }) {
   useEffect(() => {
     const el = bodyRef.current;
     if (el && pinned.current) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [s.sent, s.step, s.r1, s.check, s.r2]);
+  }, [s.turns]);
 
   return (
     <div className="nxh-sec" style={{ paddingTop: 48 }}>
@@ -113,12 +140,22 @@ export default function HomeDemo({ onTry }) {
           <div className="nxh-wbwrap">
             <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
               <div className="nxh-wflow" data-fade={s.fade}>
-                {!s.sent && <p className="nxh-ai nxh-in"><span className="nxh-dots" />Chào bạn, NXX giúp gì cho bạn nè?</p>}
-                {s.sent && <div className="nxh-b me nxh-in">{q}</div>}
-                {s.step && <p className="nxh-stp nxh-in">{scene.step}</p>}
-                {s.r1 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(scene.r1)}</p>}
-                {s.check && <p className="nxh-shim nxh-in">Đang kiểm tra...</p>}
-                {s.r2 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(scene.r2)}</p>}
+                {s.turns.length === 0 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />Chào bạn, NXX giúp gì cho bạn nè?</p>}
+                {s.turns.map((turn, k) => {
+                  const d = scene.turns[k];
+                  const run = turn.stage === 1 || turn.stage === 2;
+                  return (
+                    <React.Fragment key={k}>
+                      <div className="nxh-b me nxh-in">{turn.q}</div>
+                      {turn.stage >= 1 && (
+                        <p key={turn.stage} className={run ? "nxh-st run" : "nxh-st nxh-in"}>
+                          {turn.stage === 1 ? "Đang suy nghĩ..." : turn.stage === 2 ? d.think : d.done}
+                        </p>
+                      )}
+                      {turn.stage >= 3 && <p className="nxh-ai nxh-in"><span className="nxh-dots" />{bold(d.a)}</p>}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -133,5 +170,5 @@ export default function HomeDemo({ onTry }) {
       </button>
     </div>
   );
-   }
+    }
                 
