@@ -1,293 +1,260 @@
- // src/pages/Support/HomeDemo.jsx
-import React, { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUp, Check, Loader2 } from "lucide-react";
-import { SUGGESTIONS_BY_CATEGORY } from "./constants.js";
+// src/pages/Support/HomeView.jsx — trang chủ chat AI (giao diện kiểu Cofounder)
+import React, { useRef, useState } from "react";
+import { ArrowLeft, ArrowUp, Check, ChevronDown, Headphones, Loader2, Sparkles, User, CreditCard, Package, Bug, MoreHorizontal } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient.js";
+import { getGreeting, getSuggestions } from "./helpers.js";
+import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
+import BannerNotice from "./BannerNotice.jsx";
+import HomeGuides from "./HomeGuides.jsx";
+import { SupportTiles, Statement, Features, FinalCard } from "./HomeSections.jsx";
+import HomeDemo from "./HomeDemo.jsx";
+import { PixelScene } from "../help/HelpPixel.jsx";
+import "./chat-effects.css";
+import "./home-input.css";
+import "./chat-cofounder.css";
+import "./home-cofounder.css";
 
-const SCENES = [
-  {
-    id: "order",
-    tab: "Đơn hàng",
-    node: "Đơn hàng",
-    agents: [
-      { name: "Order Agent", desc: "Đang kiểm tra trạng thái đơn..." },
-      { name: "Support Agent", desc: "Đang chuẩn bị phản hồi..." },
-    ],
-    reply:
-      "Đơn hàng của bạn đang ở bước **chuẩn bị giao**. Mình đã kiểm tra trạng thái và sẽ thông báo nếu có cập nhật mới.",
-  },
-  {
-    id: "payment",
-    tab: "Thanh toán",
-    node: "Thanh toán",
-    agents: [
-      { name: "Payment Agent", desc: "Đang đối chiếu giao dịch..." },
-      { name: "Support Agent", desc: "Đang tổng hợp thông tin..." },
-    ],
-    reply:
-      "Mình có thể kiểm tra giao dịch giúp bạn. Hãy gửi **mã giao dịch hoặc ảnh biên lai** để mình xác minh chính xác.",
-  },
-  {
-    id: "account",
-    tab: "Tài khoản",
-    node: "Tài khoản",
-    agents: [
-      { name: "Account Agent", desc: "Đang xác định vấn đề..." },
-      { name: "Support Agent", desc: "Đang tìm hướng xử lý..." },
-    ],
-    reply:
-      "Bạn thử chọn **Quên mật khẩu** tại trang đăng nhập nhé. Nếu vẫn không được, gửi mình ảnh lỗi để kiểm tra tiếp.",
-  },
-  {
-    id: "bug",
-    tab: "Báo lỗi",
-    node: "Báo lỗi",
-    agents: [
-      { name: "Diagnostic Agent", desc: "Đang phân tích lỗi..." },
-      { name: "Support Agent", desc: "Đang đề xuất giải pháp..." },
-    ],
-    reply:
-      "Mình đã xác định được thông tin cần kiểm tra. Bạn gửi thêm **ảnh chụp màn hình lỗi** để mình hướng dẫn chính xác hơn.",
-  },
-];
+const ICON_COMPONENTS = { User, CreditCard, Package, Bug, MoreHorizontal };
+const FALLBACK_CATEGORY = CATEGORIES.find((c) => c.label === "Khác")?.id || null;
 
-const NODES = [
-  "Đơn hàng", "Thanh toán", "Tài khoản", "Hoàn tiền",
-  "Báo lỗi", "Nhiệm vụ", "Hình ảnh", "Zalo",
-];
+const FOCUS_GLOW_CSS = `
+.nxx-composer--hero:focus-within .nxx-glow { opacity: 1; }
+.nxx-composer--hero:focus-within .nxx-glow::before { animation-play-state: running; }
+`;
 
-const CX = 180;
-const CY = 140;
-const RX = 132;
-const RY = 94;
+export default function HomeView({ user, onOpenHelp, onStartChat }) {
+  const [text, setText] = useState("");
+  const [category, setCategory] = useState(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [err, setErr] = useState("");
+  const taRef = useRef(null);
 
-const NODE_POSITIONS = NODES.map((name, k) => {
-  const a = (-90 + k * 45) * (Math.PI / 180);
-  return {
-    name,
-    x: CX + RX * Math.cos(a),
-    y: CY + RY * Math.sin(a),
+  const cat = CATEGORIES.find((c) => c.id === category) || null;
+  const PillIcon = (cat && ICON_COMPONENTS[cat.icon]) || Sparkles;
+  const canSend = text.trim().length > 0 && !sending;
+
+  const resize = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   };
-});
+  const handleChange = (e) => {
+    setText(e.target.value);
+    resize(e.target);
+  };
 
-const bold = (s) =>
-  s.split("**").map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
+  const send = async (overrideText, overrideCat) => {
+    const msg = (typeof overrideText === "string" ? overrideText : text).trim();
+    if (!msg || sending) return;
 
-const questionOf = (id) => SUGGESTIONS_BY_CATEGORY[id]?.[0] || "";
+    setSending(true);
+    setErr("");
+    const catId = (overrideCat !== undefined ? overrideCat : category) || FALLBACK_CATEGORY;
 
-const INIT = { typed: "", sent: false, agents: [], reply: false, fade: false };
+    // Timeout an toàn
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-function usePlay(scene, restart, onEnd) {
-  const [state, setState] = useState(INIT);
+    try {
+      const fnToCall = typeof onStartChat === "function"
+        ? onStartChat
+        : async (payload) => {
+            if (!user?.id) throw new Error("Chưa đăng nhập.");
+            const { data: conv, error: convError } = await supabase
+              .from("support_conversations")
+              .insert({
+                user_id: user.id,
+                title: payload.category ? `Hỗ trợ ${payload.category}` : "Cuộc trò chuyện mới",
+                category: payload.category,
+                status: "ai",
+              })
+              .select()
+              .single();
+            if (convError) throw new Error("Lỗi tạo chat: " + convError.message);
 
-  useEffect(() => {
-    setState(INIT);
-    const timers = [];
-    const at = (ms, fn) => timers.push(setTimeout(fn, ms));
-    const q = questionOf(scene.id);
+            const { error: msgError } = await supabase.from("support_messages").insert({
+              conversation_id: conv.id,
+              user_id: user.id,
+              message: getGreeting(payload.category),
+              sender_type: "ai",
+              suggestions: getSuggestions(payload.category),
+            });
+            if (msgError) throw new Error("Lỗi tạo tin nhắn: " + msgError.message);
 
-    let t = 600;
+            window.dispatchEvent(
+              new CustomEvent("nxx-start-chat", {
+                detail: { conversation: conv, category: payload.category, firstText: payload.text },
+              })
+            );
+            return { ok: true };
+          };
 
-    // 1. Gõ câu hỏi
-    for (let i = 1; i <= q.length; i++) {
-      at(t + i * 25, () => setState((p) => ({ ...p, typed: q.slice(0, i) })));
-    }
-    t += q.length * 25 + 500;
-
-    // 2. Gửi tin nhắn & hiện câu trả lời của AI NGAY LẬP TỨC
-    at(t, () => setState((p) => ({ ...p, typed: "", sent: true, reply: true })));
-    t += 800; // Đợi 1 chút xong mới hiện Agent (giống kiểu AI đang suy nghĩ)
-
-    // 3. Hiện Agent 1 đang chạy
-    at(t, () => setState((p) => ({ ...p, agents: ["running", "queued"] })));
-    t += 1500;
-
-    // 4. Agent 1 xong, Agent 2 chạy
-    at(t, () => setState((p) => ({ ...p, agents: ["done", "running"] })));
-    t += 1500;
-
-    // 5. Agent 2 xong
-    at(t, () => setState((p) => ({ ...p, agents: ["done", "done"] })));
-    t += 4000; // Đứng im 4 giây để người dùng đọc
-
-    // 6. Mờ dần để chuyển cảnh
-    at(t, () => setState((p) => ({ ...p, fade: true })));
-    t += 500;
-
-    at(t, onEnd);
-
-    return () => timers.forEach(clearTimeout);
-  }, [scene, restart, onEnd]);
-
-  return state;
-}
-
-const STATUS = {
-  running: "Running",
-  queued: "Queued",
-  done: "Completed",
-};
-
-export default function HomeDemo({ onTry }) {
-  const [index, setIndex] = useState(0);
-  const [restart, setRestart] = useState(0);
-
-  const scene = SCENES[index];
-  const s = usePlay(scene, restart, () => setIndex((x) => (x + 1) % SCENES.length));
-
-  const bodyRef = useRef(null);
-  const pinned = useRef(true);
-
-  const running = s.agents.includes("running");
-  const q = questionOf(scene.id);
-
-  const onBodyScroll = () => {
-    const el = bodyRef.current;
-    if (el) {
-      pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+      const r = await fnToCall({ text: msg, category: catId, signal: controller.signal });
+      if (r && r.error) setErr("LỖI: " + r.error);
+    } catch (e) {
+      if (e.name === "AbortError") {
+        setErr("LỖI: Quá 8 giây không phản hồi. Vui lòng kiểm tra mạng và thử lại.");
+      } else {
+        setErr("LỖI HỆ THỐNG: " + e.message);
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setSending(false);
     }
   };
 
-  useEffect(() => {
-    pinned.current = true;
-    if (bodyRef.current) {
-      bodyRef.current.scrollTop = 0;
+  const handleKeyDown = (e) => {
+    if (e.nativeEvent.isComposing) return;
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
     }
-  }, [index, restart]);
+  };
 
-  useEffect(() => {
-    const el = bodyRef.current;
-    if (el && pinned.current) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-    }
-  }, [s.sent, s.agents, s.reply]);
+  const pick = (id) => {
+    setCategory(id);
+    setSheetOpen(false);
+    taRef.current?.focus();
+  };
+
+  const focusComposer = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => taRef.current?.focus({ preventScroll: true }), 380);
+  };
+
+  const tryExample = ({ text: t, category: c }) => {
+    setText(t);
+    setCategory(c);
+    setTimeout(() => resize(taRef.current), 0);
+    focusComposer();
+  };
 
   return (
-    <div className="nxh-sec nxh-demo">
-      <div className="nxh-eyebrow">Xem NXX làm việc</div>
+    <div className="nxx-skin nxh min-h-[calc(100vh-72px)] pb-6">
+      <style>{FOCUS_GLOW_CSS}</style>
+      {SYSTEM_BANNER.enabled && <BannerNotice />}
 
-      <div className="nxh-stage">
-        {/* AI NETWORK */}
-        <svg className="nxh-graph" viewBox="0 0 360 300" fill="none" aria-hidden="true">
-          <ellipse cx={CX} cy={CY} rx={RX} ry={RY} className="nxh-orbit" />
-
-          {NODE_POSITIONS.map(({ name, x, y }) => {
-            const on = running && name === scene.node;
-            return (
-              <g key={name}>
-                <line x1={CX} y1={CY} x2={x} y2={y} className={on ? "nxh-ln on" : "nxh-ln"} />
-                {on && (
-                  <circle r="3" fill="#1686d6">
-                    <animateMotion dur="1.2s" repeatCount="indefinite" path={`M${CX} ${CY} L${x} ${y}`} />
-                  </circle>
-                )}
-              </g>
-            );
-          })}
-
-          <rect x={CX - 34} y={CY - 15} width="68" height="30" rx="8" className="nxh-core" />
-          <text x={CX} y={CY + 4.5} textAnchor="middle" className="nxh-nt core">NXX</text>
-          
-          <path
-            transform={`translate(${CX - 11} ${CY - 44}) scale(.92)`}
-            d="M12 0C12 6.6 17.4 12 24 12 17.4 12 12 17.4 12 24 12 17.4 6.6 12 0 12 6.6 12 12 6.6 12 0Z"
-            fill="#f2a516"
-          />
-
-          {NODE_POSITIONS.map(({ name, x, y }) => {
-            const on = running && name === scene.node;
-            return (
-              <g key={name}>
-                <rect x={x - 34} y={y - 12} width="68" height="24" rx="8" className={on ? "nxh-nd on" : "nxh-nd"} />
-                <text x={x} y={y + 4} textAnchor="middle" className={on ? "nxh-nt on" : "nxh-nt"}>
-                  {name}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* CHAT WINDOW */}
-        <div className="nxh-win">
-          <div className="nxh-wtabs">
-            {["Home", "Company", "Cofounder", "Work", "Context"].map((tab, k) => (
-              <button key={tab} type="button" className={k === 0 ? "active" : ""}>
-                {tab}
+      <div className="px-3 pt-2">
+        <section className="nxh-hero">
+          <PixelScene className="nxh-art" kind="meadow" seed={5} />
+          <div className="nxh-hero-in">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.history.back()}
+                aria-label="Quay lại"
+                className="nxx-sqbtn"
+                style={{ background: "rgba(255,255,255,.2)", borderColor: "rgba(255,255,255,.4)", color: "#fff" }}
+              >
+                <ArrowLeft size={19} strokeWidth={2.2} />
               </button>
-            ))}
-          </div>
+              <span className="text-[17px] font-medium tracking-[-0.01em]">NXX Support</span>
+            </div>
 
-          <div className="nxh-wbwrap">
-            <div className="nxh-wbody" ref={bodyRef} onScroll={onBodyScroll}>
-              <div className="nxh-wflow" data-fade={s.fade}>
-                
-                {!s.sent && (
-                  <div className="nxh-ai nxh-in">
-                    <span className="nxh-dots" />
-                    Chào bạn, NXX có thể giúp gì cho bạn hôm nay?
-                  </div>
-                )}
+            <div className="mt-6 flex flex-col gap-3.5">
+              <h1>NXX giải quyết vấn đề của bạn trong vài phút.</h1>
+              <p>Hỏi nhanh hoặc chọn chủ đề, trợ lý AI sẽ hỗ trợ bạn chính xác hơn.</p>
+            </div>
 
-                {s.sent && (
-                  <div className="nxh-b me nxh-in">{q}</div>
-                )}
-
-                {/* AI TRẢ LỜI NGAY LẬP TỨC */}
-                {s.reply && (
-                  <div className="nxh-ai nxh-in">
-                    <span className="nxh-dots" />
-                    {bold(scene.reply)}
-                  </div>
-                )}
-
-                {/* AGENT CHẠY PHÍA SAU ĐỂ KIỂM TRA */}
-                {s.sent && s.agents.length > 0 && (
-                  <div className="nxh-agents nxh-in" style={{ marginTop: 8 }}>
-                    {scene.agents.map((agent, k) => {
-                      const status = s.agents[k];
-                      return (
-                        <div key={agent.name + k} className="nxh-agent" data-st={status}>
-                          <div className="nxh-agent-icon">
-                            {status === "done" ? (
-                              <Check size={13} strokeWidth={3} />
-                            ) : status === "running" ? (
-                              <Loader2 size={13} className="animate-spin" />
-                            ) : (
-                              <span className="nxh-agent-dot" />
-                            )}
-                          </div>
-
-                          <div className="nxh-agent-info">
-                            <b>{agent.name}</b>
-                            <span>{agent.desc}</span>
-                          </div>
-
-                          <span className="nxh-agent-status">{STATUS[status]}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
+            <div className="nxh-glasscard mt-2">
+              <div
+                className={`nxx-composer nxx-composer--hero ${sending ? "is-busy" : ""}`}
+                style={{ minHeight: 0, padding: "14px 14px 10px", gap: 6, border: 0, boxShadow: "none", background: "transparent" }}
+              >
+                <span className="nxx-glow" />
+                <textarea
+                  ref={taRef}
+                  value={text}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  rows={1}
+                  enterKeyHint="send"
+                  placeholder="Mô tả vấn đề hoặc đặt câu hỏi"
+                  className="block max-h-[120px] min-h-[44px] w-full flex-1 resize-none bg-transparent text-[16px] leading-6 text-[#2b2b2b] outline-none placeholder:text-[#a2a29b]"
+                />
+                <div className="flex items-center justify-between">
+                  <button type="button" onClick={() => setSheetOpen(true)} className="nxx-chip">
+                    <PillIcon size={17} strokeWidth={2.2} style={{ color: cat?.color || "#8a5cff" }} />
+                    {cat ? cat.label : "Chọn chủ đề"}
+                    <ChevronDown size={16} className="text-[#8b8b84]" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => send()}
+                    disabled={!canSend}
+                    aria-label="Gửi"
+                    className={`nxx-iconbtn h-10 w-10 text-white ${canSend ? "bg-[#2b2b2b]" : "bg-[#cfcfc8]"}`}
+                  >
+                    {sending ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={18} strokeWidth={2.6} />}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="nxh-winput">
-            <span className={s.typed ? "typed" : ""}>
-              {s.typed || "Ask cofounder to spin up new tasks agents..."}
-              {s.typed && <i className="nxh-caret" />}
-            </span>
-            <span className="nxh-wsend">
-              <ArrowUp size={15} strokeWidth={2.6} />
-            </span>
+            {err && (
+              <p
+                className="rounded-xl bg-red-50 p-3 text-center text-[14px] font-bold leading-5 !text-red-600"
+                style={{ textShadow: "none" }}
+              >
+                {err}
+              </p>
+            )}
+
+            <div>
+              <a href={SUPPORT.zaloUrl} target="_blank" rel="noopener noreferrer" className="nxh-btn glass">
+                <Headphones size={17} />
+                Gặp nhân viên qua Zalo
+              </a>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      <button type="button" className="nxh-more" onClick={() => onTry({ text: q, category: scene.id })}>
-        Thử hỏi câu này
-        <ArrowRight size={15} />
-      </button>
+      <div className="nxh-sec" style={{ paddingTop: 40 }}>
+        <div className="nxh-eyebrow">Hỗ trợ {SUPPORT.hours}</div>
+        <SupportTiles />
+      </div>
+      <Statement />
+      <HomeDemo onTry={tryExample} />
+      <Features onStart={focusComposer} />
+
+      <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => send(title, catId)} />
+      <FinalCard onStart={focusComposer} />
+
+      {sheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <button type="button" aria-label="Đóng" onClick={() => setSheetOpen(false)} className="nxx-fade absolute inset-0 bg-slate-900/30" />
+          <div className="nxx-sheet-in relative w-full max-w-2xl rounded-t-[28px] bg-[#fbfbf8] px-3 pb-8 pt-3 shadow-[0_-8px_32px_rgba(17,20,24,0.12)]">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200" />
+            <SheetRow label="Tất cả chủ đề" Icon={Sparkles} color="#8a5cff" selected={!cat} onClick={() => pick(null)} />
+            {CATEGORIES.map((c) => (
+              <SheetRow
+                key={c.id}
+                label={c.label}
+                Icon={ICON_COMPONENTS[c.icon] || Sparkles}
+                color={c.color}
+                selected={category === c.id}
+                onClick={() => pick(c.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
-                         }
+}
+
+function SheetRow({ label, Icon, color, selected, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-[14px] px-4 py-3.5 text-left transition active:opacity-70 ${selected ? "bg-[#f2f2ee]" : ""}`}
+    >
+      <Icon size={20} strokeWidth={2.1} style={{ color }} />
+      <span className="flex-1 text-[15px] font-medium text-[#2b2b2b]">{label}</span>
+      {selected && <Check size={18} className="text-[#2b2b2b]" />}
+    </button>
+  );
+    }
