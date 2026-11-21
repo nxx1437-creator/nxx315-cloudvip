@@ -60,8 +60,8 @@ const CSS = `
 .nl .serif{font-family:var(--serif);font-weight:300}
 .nl em{font-style:italic}
 .nl .mono{font-family:"Roboto Mono",monospace}
+.nl .h1{font-size:clamp(48px,8vw,96px);line-height:1.15}
 .nl .h1,.nl .h2{text-wrap:balance}
-.nl .h2{font-size:clamp(44px,6.6vw,80px);line-height:1;letter-spacing:-.01em;color:#fafafa}
 .nl .h3{font-size:clamp(32px,4vw,48px);line-height:1.15}
 .nl .h4{font-size:38px;line-height:.9}
 .nl .btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:8px;background:#fff;color:#000;cursor:pointer;font:500 12px/2 "Roboto Mono",monospace;letter-spacing:.021em;text-transform:uppercase;transition:background-color .2s}
