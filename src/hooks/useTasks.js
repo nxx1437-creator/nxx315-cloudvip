@@ -99,7 +99,8 @@ export default function useTasks(userId) {
       const mapped = taskRows.map((t) => {
         const times = timesMap[t.id] || [];
         const done = times.length;
-        const remaining = Math.max(0, t.daily_limit - done);
+       const everDone = t.once_only && doneEver.has(t.id);
+        const remaining = everDone ? 0 : Math.max(0, t.daily_limit - done);
 
         // Khi hết lượt: lượt sớm nhất sẽ hồi sau 24 giờ kể từ lúc hoàn thành
         let nextRefillAt = null;
