@@ -35,6 +35,8 @@ export default function TaskCallback() {
   const [redirectCountdown, setRedirectCountdown] = useState(5);
   const [userRank, setUserRank] = useState(null);
   const [streakBusy, setStreakBusy] = useState(true);
+  const [direct, setDirect] = useState(null); // { url } khi là nhiệm vụ like / đăng ký
+  const [wait, setWait] = useState(15);
 
   const widgetIdRef = useRef(null);
   const timerRef = useRef(null);
@@ -84,6 +86,31 @@ export default function TaskCallback() {
       reward: 0,
     });
   };
+
+  // Nhiệm vụ trực tiếp: lấy link YouTube từ bảng tasks (không đọc từ URL để tránh bị gắn link lạ)
+  useEffect(() => {
+    if (!taskId) return;
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("tasks")
+        .select("kind, url")
+        .eq("id", taskId)
+        .maybeSingle();
+      if (alive && data?.kind === "direct" && /^https:\/\//.test(data.url || "")) {
+        setDirect({ url: data.url });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [taskId]);
+
+  // Máy chủ yêu cầu ở lại tối thiểu 15 giây, nên khóa nút trong lúc đó
+  useEffect(() => {
+    const id = setInterval(() => setWait((w) => (w > 0 ? w - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Mark redirected
   useEffect(() => {
@@ -262,7 +289,7 @@ export default function TaskCallback() {
       setState({ status: "error", message: err.message, reward: 0 });
     }
   };
-    return (
+  return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 via-white to-white px-6 py-6 text-center font-[Be_Vietnam_Pro]">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
         {/* ================= IDLE ================= */}
@@ -287,12 +314,34 @@ export default function TaskCallback() {
               </p>
             </div>
 
+            {direct && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left">
+                <p className="text-sm font-semibold text-slate-800">Cách làm</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-[13px] text-slate-600">
+                  <li>Bấm nút bên dưới để mở YouTube.</li>
+                  <li>Làm đúng yêu cầu nhiệm vụ (Like hoặc Đăng ký kênh).</li>
+                  <li>Quay lại trang này và bấm “Xác minh và thưởng”.</li>
+                </ol>
+                <a
+                  href={direct.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex w-full items-center justify-center rounded-xl bg-rose-500 px-6 py-3 text-sm font-semibold text-white"
+                >
+                  Mở YouTube
+                </a>
+              </div>
+            )}
+
             <button
               onClick={handleStartVerify}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110"
+              disabled={direct && wait > 0}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition hover:brightness-110 disabled:opacity-50"
             >
               <CheckCircle2 size={18} />
-              Xác minh và thưởng
+              {direct && wait > 0
+                ? `Xác minh và thưởng (${wait}s)`
+                : "Xác minh và thưởng"}
             </button>
           </>
         )}
@@ -457,4 +506,4 @@ export default function TaskCallback() {
       )}
     </div>
   );
-        }
+                                                   }
