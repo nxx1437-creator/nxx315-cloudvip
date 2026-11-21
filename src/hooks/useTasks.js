@@ -31,6 +31,7 @@ export default function useTasks(userId) {
       }
 
       const timesMap = {}; // task_id -> [thời điểm hoàn thành, tăng dần]
+      const doneEver = new Set(); // task_id đã từng hoàn thành (dùng cho nhiệm vụ chỉ làm 1 lần)
       let completed = 0;
 
       if (userId) {
@@ -46,6 +47,7 @@ export default function useTasks(userId) {
         if (allErr) console.error("completions error:", allErr);
 
         const list = allCompletions || [];
+        list.forEach((c) => doneEver.add(c.task_id));
 
         // Các lượt trong 24 giờ qua
         list
@@ -99,7 +101,7 @@ export default function useTasks(userId) {
       const mapped = taskRows.map((t) => {
         const times = timesMap[t.id] || [];
         const done = times.length;
-       const everDone = t.once_only && doneEver.has(t.id);
+        const everDone = !!t.once_only && doneEver.has(t.id);
         const remaining = everDone ? 0 : Math.max(0, t.daily_limit - done);
 
         // Khi hết lượt: lượt sớm nhất sẽ hồi sau 24 giờ kể từ lúc hoàn thành
@@ -135,4 +137,4 @@ export default function useTasks(userId) {
   }, [reload]);
 
   return { tasks, loading, completedToday, reload };
-            }
+                  }
