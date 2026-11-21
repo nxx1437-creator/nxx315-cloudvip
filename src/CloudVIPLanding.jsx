@@ -9,10 +9,14 @@ import { COPY, CREATOR_URL } from "./lib/landingData.js";
 import { FX } from "./lib/landingFxCopy.js";
 import { timeAgo, scrollToId } from "./components/LandingBits.jsx";
 
-/* Ảnh nền. Ảnh thiên nhiên thật: dán link ảnh vào đây (để "" thì dùng gradient). */
-const HERO_IMAGE_URL = "https://i.postimg.cc/SspRfjP1/2820b7c3993087b1613784521f440e45.jpg";
+/* Logo ngôi sao (đầu trang và chân trang) */
+const STAR_URL = "https://i.postimg.cc/HLL0BmN7/1ef9365fbb1cd959265e9bf9ba8c45fb.png";
+/* Hero: video tự phát. HERO_IMAGE_URL để "" thì hiện bầu trời gradient trong lúc video tải. */
+const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Video-hero.mp4";
+const HERO_IMAGE_URL = "";
 const MEADOW_URL = "";
-const FLOWERS_URL = "";
+/* Ảnh lời kêu gọi cuối trang */
+const FLOWERS_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hoa-cuc.jpg";
 
 const SKY = "radial-gradient(60% 40% at 20% 15%,rgba(255,255,255,.5),transparent 70%),radial-gradient(50% 35% at 80% 30%,rgba(255,255,255,.35),transparent 70%),linear-gradient(#1673d1,#5ab0f2 70%,#9fd2f7)";
 const MEADOW = "radial-gradient(80% 60% at 50% 110%,#61a133,transparent 70%),linear-gradient(#0e2a12,#2f6a1c)";
@@ -36,6 +40,7 @@ const EXTRA = {
     gameTitle: "Nạp game *bằng Coin*.", gameText: "Dùng Coin nạp thẳng vào các game bạn chơi mỗi ngày.",
     gameCap: "6 game",
     mockRows: ["Video #1", "Video #2", "Video #3"], mockOk: "Đã duyệt",
+    bottom: "Roblox · Creator",
   },
   en: {
     fCap: "On the site", fTitle: "Everything in *one account*.",
@@ -50,6 +55,7 @@ const EXTRA = {
     gameTitle: "Top up games *with Coins*.", gameText: "Use Coins to top up the games you play every day.",
     gameCap: "6 games",
     mockRows: ["Video #1", "Video #2", "Video #3"], mockOk: "Approved",
+    bottom: "Roblox · Creator",
   },
 };
 
@@ -62,6 +68,7 @@ const CSS = `
 .nl .mono{font-family:"Roboto Mono",monospace}
 .nl .h1{font-size:clamp(48px,8vw,96px);line-height:1.15}
 .nl .h1,.nl .h2{text-wrap:balance}
+.nl .h2{font-size:clamp(44px,6.6vw,80px);line-height:1;letter-spacing:-.01em;color:#fafafa}
 .nl .h3{font-size:clamp(32px,4vw,48px);line-height:1.15}
 .nl .h4{font-size:38px;line-height:.9}
 .nl .btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:8px;background:#fff;color:#000;cursor:pointer;font:500 12px/2 "Roboto Mono",monospace;letter-spacing:.021em;text-transform:uppercase;transition:background-color .2s}
@@ -84,6 +91,11 @@ const CSS = `
 .nl summary::after{content:"+";font-family:"Roboto Mono",monospace;color:#9b9b9b}
 .nl details[open] summary::after{content:"−"}
 .nl details p{padding-bottom:20px;color:#9b9b9b;max-width:640px;line-height:1.5}
+.nl .fh{font:500 13px/1.4 "Roboto Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:12px}
+.nl .fl{list-style:none;margin:0;padding:0}
+.nl .fl li{font-size:17px;line-height:2.3;color:#9b9b9b}
+.nl .fl a,.nl .fl button{color:inherit;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-align:left;transition:color .2s}
+.nl .fl a:hover,.nl .fl button:hover{color:#fff}
 @keyframes drift{from{transform:translate3d(-3%,0,0) scale(1)}to{transform:translate3d(3%,-2%,0) scale(1.08)}}
 @keyframes slide{to{transform:translateX(-50%)}}
 @keyframes pulse{50%{opacity:.35}}
@@ -99,6 +111,10 @@ const rt = (s) => s.split(/(\*[^*]+\*)/g).map((x, i) => (x.length > 2 && x.start
 const story = (s) => s.split(" ").map((w, i) => (w.startsWith("*") ? <em key={i}>{w.slice(1)} </em> : <span key={i}>{w} </span>));
 const nf = (n, lang) => Number(n).toLocaleString(lang === "en" ? "en-US" : "vi-VN");
 
+const Logo = ({ size = 32 }) => (
+  <img src={STAR_URL} alt="NXX315 Studio" width={size} height={size} style={{ width: size, height: size, objectFit: "contain", display: "block" }} />
+);
+
 function Rise({ children, className = "", delay = 0 }) {
   const ref = useRef(null);
   const [on, setOn] = useState(false);
@@ -112,11 +128,11 @@ function Rise({ children, className = "", delay = 0 }) {
   return <div ref={ref} className={`rise ${on ? "in" : ""} ${className}`} style={{ transitionDelay: `${delay}ms` }}>{children}</div>;
 }
 
-const Head = ({ cap, a, b, sub, center }) => (
-  <Rise className={center ? "text-center" : ""}>
+const Head = ({ cap, a, b, sub }) => (
+  <Rise>
     <p className="cap">{cap}</p>
-    <h2 className={`serif h2 mt-4 max-w-[900px] ${center ? "mx-auto" : ""}`}>{a} <em>{b}</em></h2>
-    {sub && <p className={`sup mt-5 max-w-[460px] leading-normal ${center ? "mx-auto" : ""}`}>{sub}</p>}
+    <h2 className="serif h2 mt-4 max-w-[900px]">{a} <em>{b}</em></h2>
+    {sub && <p className="sup mt-5 max-w-[460px] leading-normal">{sub}</p>}
   </Rise>
 );
 
@@ -141,6 +157,16 @@ export default function CloudVIPLanding() {
   const x = EXTRA[lang];
   const [board, setBoard] = useState(undefined);
   const [orders, setOrders] = useState(undefined);
+  const heroVid = useRef(null);
+
+  /* Ép video hero tự phát (một số trình duyệt điện thoại cần gọi play()) */
+  useEffect(() => {
+    const v = heroVid.current;
+    if (!v) return;
+    v.muted = true;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  }, []);
 
   useEffect(() => {
     let off = false;
@@ -170,9 +196,9 @@ export default function CloudVIPLanding() {
       <style>{CSS}</style>
 
       {/* THANH ĐIỀU HƯỚNG */}
-            <header className="fixed inset-x-0 top-0 z-50" style={{ background: "rgba(5,5,5,.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+      <header className="fixed inset-x-0 top-0 z-50" style={{ background: "rgba(5,5,5,.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
         <div className="wrap flex h-16 items-center justify-between gap-6">
-          <Link to="/" className="mono text-[12px] font-medium tracking-[.021em]">NXX315<span className="serif text-[18px] italic">.Studio</span></Link>
+          <Link to="/" aria-label="NXX315 Studio"><Logo size={34} /></Link>
           <nav className="links flex gap-6" aria-label="Main">
             {c.nav.map(([id, l]) => <button key={id} type="button" className="nav" onClick={() => scrollToId(id)}>{l}</button>)}
           </nav>
@@ -187,6 +213,12 @@ export default function CloudVIPLanding() {
       <main>
         {/* 1. MỞ ĐẦU */}
         <section className="relative overflow-hidden pt-40 text-center" style={{ background: bg(HERO_IMAGE_URL, SKY, 0.2) }}>
+          {HERO_VIDEO_URL && (
+            <>
+              <video ref={heroVid} className="absolute inset-0 h-full w-full object-cover" src={HERO_VIDEO_URL} autoPlay muted loop playsInline preload="auto" aria-hidden="true" />
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,.2)" }} />
+            </>
+          )}
           <div className="wrap relative">
             <h1 className="serif h1 mx-auto max-w-[830px]">
               {c.h1a} <em>{c.h1b}</em>,<br />{c.h1c.toLowerCase()}, {c.h1d}
@@ -248,12 +280,12 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* 4. TRÊN WEB (nội dung mới) */}
+        {/* 4. TRÊN WEB */}
         <section id="features" className="sec pt-0">
           <div className="wrap">
-            <Head cap={x.fCap} a="" b="" center />
-            <Rise className="-mt-[88px] mb-16 text-center">
-              <h2 className="serif h2 mx-auto max-w-[900px]">{rt(x.fTitle)}</h2>
+            <Rise className="mb-16 text-center">
+              <p className="cap">{x.fCap}</p>
+              <h2 className="serif h2 mx-auto mt-4 max-w-[900px]">{rt(x.fTitle)}</h2>
               <p className="sup mx-auto mt-5 max-w-[460px] leading-normal">{x.fSub}</p>
             </Rise>
 
@@ -298,7 +330,7 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        {/* 6. XẾP HẠNG */}
+                {/* 6. XẾP HẠNG */}
         <section id="rank" className="relative overflow-hidden sec">
           <div className="drift pointer-events-none absolute -top-40 left-1/2 h-[400px] w-[900px] -translate-x-1/2 opacity-30 blur-3xl" style={{ background: "radial-gradient(closest-side,#847dff,transparent)" }} />
           <div className="wrap relative">
@@ -340,7 +372,7 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-              {/* 7. ĐƠN ĐÃ DUYỆT (tường chứng minh phẳng trên nền đen) */}
+        {/* 7. ĐƠN ĐÃ DUYỆT */}
         <section id="orders" className="sec">
           <div className="wrap">
             <Head cap={c.oLabel} a={c.oTitleA} b={c.oTitleB} sub={c.oSub} />
@@ -376,7 +408,7 @@ export default function CloudVIPLanding() {
                 </Rise>
               ))}
             </div>
-            <h3 className="serif h4 mt-28 mb-8">{c.faqTitle}</h3>
+            <h3 className="serif h4 mb-8 mt-28">{c.faqTitle}</h3>
             <div className="max-w-[860px]">
               {c.faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}
             </div>
@@ -424,15 +456,15 @@ export default function CloudVIPLanding() {
         </section>
       </main>
 
-      {/* LỜI KÊU GỌI CUỐI */}
+      {/* LỜI KÊU GỌI CUỐI + CHÂN TRANG */}
       <footer>
-        <section className="relative overflow-hidden py-48 text-center" style={{ background: bg(FLOWERS_URL, FLOWERS) }}>
+        <section className="relative overflow-hidden py-48 text-center" style={{ background: bg(FLOWERS_URL, FLOWERS, 0.3) }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(#050505,transparent 25%,transparent 60%,#050505)" }} />
           <div className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(90deg,transparent,#219ff8,#847dff,transparent)" }} />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-40 blur-2xl" style={{ background: "linear-gradient(90deg,transparent,#219ff8,#847dff,transparent)" }} />
           <div className="wrap relative">
-            <h2 className="serif mx-auto max-w-[900px] text-[clamp(52px,9vw,96px)] leading-[.9]">{c.closeA} <em>{c.closeB}</em></h2>
-            <p className="mx-auto mt-6 max-w-[420px]" style={{ color: "rgba(255,255,255,.92)" }}>{c.closeSub}</p>
+            <h2 className="serif h2 mx-auto max-w-[900px] !text-[clamp(52px,9vw,96px)] !leading-[.9]">{c.closeA} <em>{c.closeB}</em></h2>
+            <p className="mx-auto mt-6 max-w-[420px] text-lg" style={{ color: "rgba(255,255,255,.92)" }}>{c.closeSub}</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link to="/register" className="btn">{c.ctaAccount}<span aria-hidden>→</span></Link>
               <a href={CREATOR_URL} className="btn btn2">{c.ctaCreator}<span aria-hidden>→</span></a>
@@ -440,40 +472,44 @@ export default function CloudVIPLanding() {
           </div>
         </section>
 
-        <div className="wrap pb-10 pt-8">
-          <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="wrap pb-12 pt-10">
+          <div className="flex flex-col gap-5 md:max-w-[460px]">
+            <Logo size={44} />
+            <p className="text-lg leading-[1.5]" style={{ color: "#c9c9c9" }}>{c.manifesto}</p>
+          </div>
+
+          <div className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
             <div>
-              <p className="mono text-[12px] font-medium tracking-[.021em]">NXX315<span className="serif text-[18px] italic">.Studio</span></p>
-              <p className="mt-4 max-w-[300px] text-[12px] leading-[1.41] sup">{c.manifesto}</p>
-            </div>
-            <div>
-              <h4 className="text-[12px] leading-[1.41]">{c.fCols[0]}</h4>
-              <ul className="mt-3 text-[12px] leading-[2] sup">
-                {c.fExplore.map(([id, l]) => <li key={id}><button type="button" className="text-left" style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }} onClick={() => scrollToId(id)}>{l}</button></li>)}
+              <h4 className="fh">{c.fCols[0]}</h4>
+              <ul className="fl">
+                {c.fExplore.map(([id, l]) => <li key={id}><button type="button" onClick={() => scrollToId(id)}>{l}</button></li>)}
               </ul>
             </div>
             <div>
-              <h4 className="text-[12px] leading-[1.41]">{c.fCols[1]}</h4>
-              <ul className="mt-3 text-[12px] leading-[2] sup">{c.fAccount.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
-              <h4 className="mt-6 text-[12px] leading-[1.41]">{c.fCols[2]}</h4>
-              <ul className="mt-3 text-[12px] leading-[2] sup">{c.fLegal.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
+              <h4 className="fh">{c.fCols[1]}</h4>
+              <ul className="fl">{c.fAccount.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
             </div>
             <div>
-              <h4 className="text-[12px] leading-[1.41]">{c.fCols[3]}</h4>
-              <ul className="mt-3 text-[12px] leading-[2] sup">
+              <h4 className="fh">{c.fCols[2]}</h4>
+              <ul className="fl">{c.fLegal.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
+            </div>
+            <div>
+              <h4 className="fh">{c.fCols[3]}</h4>
+              <ul className="fl">
                 {SITE?.youtube && <li><a href={SITE.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></li>}
                 {SITE?.zaloUrl && <li><a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer">Zalo</a></li>}
-                {SITE?.email && <li><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>}
+                {SITE?.email && <li><a href={`mailto:${SITE.email}`} className="break-all">{SITE.email}</a></li>}
                 <li><a href={CREATOR_URL}>Creator</a></li>
               </ul>
             </div>
           </div>
-          <div className="mono mt-12 flex flex-wrap justify-between gap-4 border-t border-white/[.14] pt-6 text-[11px] uppercase tracking-[.1em] sup">
+
+          <div className="mono mt-14 flex flex-wrap justify-between gap-3 border-t border-white/[.14] pt-6 text-[13px] uppercase tracking-[.08em] sup">
             <span>© {new Date().getFullYear()} Nxx315 Studio</span>
-            <span>Roblox · Creator · Rewards</span>
+            <span>{x.bottom}</span>
           </div>
         </div>
       </footer>
     </div>
   );
-                      }
+                }
