@@ -357,7 +357,7 @@ export default function Tasks() {
 
     try {
       const { data, error } = await Promise.race([
-        supabase.functions.invoke("start-task", {
+        supabase.functions.invoke(task.kind === "direct" ? "start-direct-task" : "start-task", {
           body: { task_id: task.id },
         }),
         timeoutPromise,
