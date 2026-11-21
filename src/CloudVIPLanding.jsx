@@ -103,6 +103,36 @@ const CSS = `
 .nl .track{display:flex;width:max-content;animation:slide 40s linear infinite}
 .nl .dot{animation:pulse 2s infinite}
 @media(prefers-reduced-motion:reduce){.nl .drift,.nl .track,.nl .dot{animation:none}.nl .rise{transform:none;transition:opacity .3s}}
+/* === HEADER MỚI === */
+.nl .topbar-wrap { padding-top: 16px; padding-left: 16px; padding-right: 16px; }
+.nl .topbar { 
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 999px; padding: 6px 6px 6px 16px; border: 1px solid #e6e6df; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.nl .topbar-logo { display: flex; align-items: center; gap: 10px; color: #2b2b2b; text-decoration: none; }
+.nl .topbar-logo img { width: 28px; height: 28px; border-radius: 50%; background: #f2f2ee; padding: 4px; }
+.nl .topbar-logo span { font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+.nl .topbar-menu { display: flex; align-items: center; gap: 8px; }
+.nl .topbar-link { 
+  font-size: 14px; font-weight: 500; color: #555; padding: 8px 14px; border-radius: 999px; 
+  transition: background 0.2s, color 0.2s; cursor: pointer; background: none; border: 0;
+}
+.nl .topbar-link:hover { background: #f2f2ee; color: #000; }
+.nl .topbar-btn { 
+  display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 18px; 
+  border-radius: 999px; background: #2b2b2b; color: #fff; font-size: 13px; font-weight: 600; 
+  text-transform: uppercase; letter-spacing: 0.05em; transition: transform 0.15s;
+}
+.nl .topbar-btn:active { transform: scale(0.95); }
+
+@media (max-width: 767px) {
+  .nl .topbar-wrap { padding-top: 12px; padding-left: 12px; padding-right: 12px; }
+  .nl .topbar-logo span { display: none; } /* Ẩn chữ trên mobile, chỉ giữ logo */
+  .nl .topbar-menu { gap: 4px; }
+  .nl .topbar-link { font-size: 12px; padding: 6px 10px; }
+  .nl .topbar-btn { height: 32px; padding: 0 14px; font-size: 11px; }
+}
 @media(max-width:767px){.nl .wrap{padding:0 20px}.nl .sec{padding:80px 0}.nl .links{display:none}}
 `;
 
@@ -194,25 +224,31 @@ export default function CloudVIPLanding() {
     <div className="nl">
       <style>{CSS}</style>
 
-      {/* THANH ĐIỀU HƯỚNG */}
-      <header className="fixed inset-x-0 top-0 z-50" style={{ background: "rgba(5,5,5,.94)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
-        <div className="wrap flex h-16 items-center justify-between gap-6">
-          <Link to="/" aria-label="NXX315 Studio" className="flex items-center gap-3">
-            <Logo size={34} />
-            <span className="mono text-[13px] font-medium uppercase tracking-[.08em]">NXX315 Studio</span>
-          </Link>
-          <nav className="links flex gap-6" aria-label="Main">
-            {c.nav.map(([id, l]) => <button key={id} type="button" className="nav" onClick={() => scrollToId(id)}>{l}</button>)}
-          </nav>
-          <div className="flex items-center gap-4">
-            {typeof setLang === "function" && <button type="button" className="nav sup" onClick={() => setLang(lang === "vi" ? "en" : "vi")}>{c.langBtn}</button>}
-            <Link to="/login" className="nav">{c.login}</Link>
-            <Link to="/register" className="btn sm">{c.start}</Link>
-          </div>
-        </div>
-      </header>
+      {/* THANH ĐIỀU HƯỚNG MỚI (Dạng viên thuốc bo tròn) */}
+<div className="topbar-wrap fixed inset-x-0 top-0 z-50 flex justify-center pointer-events-none">
+  <div className="topbar pointer-events-auto w-full max-w-[1280px]">
+    <Link to="/" aria-label="NXX315 Studio" className="topbar-logo">
+      <Logo size={28} />
+      <span>NXX315 Studio</span>
+    </Link>
+    
+    <nav className="hidden md:flex items-center gap-1" aria-label="Main">
+      {c.nav.map(([id, l]) => (
+        <button key={id} type="button" className="topbar-link" onClick={() => scrollToId(id)}>{l}</button>
+      ))}
+    </nav>
 
-      <main>
+    <div className="topbar-menu">
+      {typeof setLang === "function" && (
+        <button type="button" className="topbar-link" onClick={() => setLang(lang === "vi" ? "en" : "vi")}>
+          {c.langBtn}
+        </button>
+      )}
+      <Link to="/login" className="topbar-link">{c.login}</Link>
+      <Link to="/register" className="topbar-btn">{c.start}</Link>
+    </div>
+  </div>
+</div>
         {/* 1. MỞ ĐẦU */}
         <section className="relative overflow-hidden pt-40 text-center" style={{ background: bg(HERO_IMAGE_URL, SKY, 0.2) }}>
           {HERO_VIDEO_URL && (
