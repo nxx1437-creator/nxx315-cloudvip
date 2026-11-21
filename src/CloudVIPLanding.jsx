@@ -60,7 +60,7 @@ const CSS = `
 .nl .serif{font-family:var(--serif);font-weight:300}
 .nl em{font-style:italic}
 .nl .mono{font-family:"Roboto Mono",monospace}
-.nl .h1{font-size:clamp(48px,8vw,96px);line-height:1.15}
+.nl .h1,.nl .h2{text-wrap:balance}
 .nl .h2{font-size:clamp(44px,6.6vw,80px);line-height:1;letter-spacing:-.01em;color:#fafafa}
 .nl .h3{font-size:clamp(32px,4vw,48px);line-height:1.15}
 .nl .h4{font-size:38px;line-height:.9}
@@ -170,7 +170,7 @@ export default function CloudVIPLanding() {
       <style>{CSS}</style>
 
       {/* THANH ĐIỀU HƯỚNG */}
-      <header className="fixed inset-x-0 top-0 z-50" style={{ background: "linear-gradient(rgba(5,5,5,.6),transparent)" }}>
+            <header className="fixed inset-x-0 top-0 z-50" style={{ background: "rgba(5,5,5,.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
         <div className="wrap flex h-16 items-center justify-between gap-6">
           <Link to="/" className="mono text-[12px] font-medium tracking-[.021em]">NXX315<span className="serif text-[18px] italic">.Studio</span></Link>
           <nav className="links flex gap-6" aria-label="Main">
