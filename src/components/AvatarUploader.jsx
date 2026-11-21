@@ -9,6 +9,7 @@ const CROP_SIZE = 280;
 const CIRCLE_SIZE = 220;
 // Kích thước ảnh đầu ra (px) - Ảnh vuông
 const OUTPUT_SIZE = 400;
+const MAX_ZOOM = 3;
 
 export default function AvatarUploader({ userId, currentUrl, initial, onUploaded }) {
   const fileRef = useRef(null);
@@ -21,10 +22,14 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
   // State cho phần cắt ảnh
   const [imageSrc, setImageSrc] = useState(null);
   const [zoom, setZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
+
+  // Cử chỉ chạm: kéo 1 ngón, chụm 2 ngón
+  const pointers = useRef(new Map());
+  const dragRef = useRef(null);
+  const pinchRef = useRef(null);
 
   useEffect(() => {
     if (currentUrl && !preview) setPreview(currentUrl);
@@ -37,17 +42,20 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     });
   }, [userId, success]);
 
-  // Giới hạn kéo: ảnh luôn phủ kín vòng tròn
+  // Tỉ lệ gốc: ảnh phủ kín khung CROP_SIZE (zoom = 1)
+  const getBaseScale = (dims = imgDimensions) =>
+    Math.max(CROP_SIZE / dims.width, CROP_SIZE / dims.height);
+
+  const clampZoom = (z) => Math.min(MAX_ZOOM, Math.max(minZoom, z));
+
+  // Giới hạn kéo: ảnh to hơn vòng tròn thì luôn phủ kín vòng,
+  // ảnh nhỏ hơn vòng tròn thì luôn nằm gọn trong vòng
   const getBounds = (z) => {
     if (!imgDimensions.width) return { maxX: 0, maxY: 0 };
-    const baseScale = Math.max(
-      CROP_SIZE / imgDimensions.width,
-      CROP_SIZE / imgDimensions.height
-    );
-    const finalScale = baseScale * z;
+    const s = getBaseScale() * z;
     return {
-      maxX: Math.max(0, (imgDimensions.width * finalScale - CIRCLE_SIZE) / 2),
-      maxY: Math.max(0, (imgDimensions.height * finalScale - CIRCLE_SIZE) / 2),
+      maxX: Math.abs(imgDimensions.width * s - CIRCLE_SIZE) / 2,
+      maxY: Math.abs(imgDimensions.height * s - CIRCLE_SIZE) / 2,
     };
   };
 
@@ -83,7 +91,16 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       reader.addEventListener("load", () => {
         const img = new Image();
         img.onload = () => {
-          setImgDimensions({ width: img.width, height: img.height });
+          const dims = { width: img.width, height: img.height };
+          // Mức thu nhỏ tối đa: thấy trọn cả ảnh trong vòng tròn
+          const base = getBaseScale(dims);
+          const contain = CIRCLE_SIZE / Math.max(dims.width, dims.height);
+          const mz = Math.max(0.15, Math.min(1, contain / base));
+          pointers.current.clear();
+          dragRef.current = null;
+          pinchRef.current = null;
+          setImgDimensions(dims);
+          setMinZoom(mz);
           setImageSrc(reader.result);
           setZoom(1);
           setOffset({ x: 0, y: 0 });
@@ -97,28 +114,71 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
     }
   };
 
-  // Kéo thả ảnh
+  // ---- Kéo / chụm ảnh ----
   const handlePointerDown = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 1) {
+      dragRef.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+    } else {
+      dragRef.current = null;
+      pinchRef.current = null;
+    }
   };
 
   const handlePointerMove = (e) => {
-    if (!isDragging) return;
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.current.size >= 2) {
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (!pinchRef.current) {
+        pinchRef.current = { dist, zoom };
+        return;
+      }
+      const z = clampZoom(pinchRef.current.zoom * (dist / pinchRef.current.dist));
+      setZoom(z);
+      setOffset((o) => clampOffset(o, z));
+      return;
+    }
+
+    if (!dragRef.current) return;
     setOffset(
       clampOffset(
-        { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y },
+        { x: e.clientX - dragRef.current.x, y: e.clientY - dragRef.current.y },
         zoom
       )
     );
   };
 
-  const handlePointerUp = () => setIsDragging(false);
+  const handlePointerUp = (e) => {
+    pointers.current.delete(e.pointerId);
+    pinchRef.current = null;
+    if (pointers.current.size === 1) {
+      const p = [...pointers.current.values()][0];
+      dragRef.current = { x: p.x - offset.x, y: p.y - offset.y };
+    } else {
+      dragRef.current = null;
+    }
+  };
 
-  const handleZoomChange = (e) => {
-    const z = Number(e.target.value);
+  const handleWheel = (e) => {
+    const z = clampZoom(zoom - e.deltaY * 0.002);
     setZoom(z);
     setOffset((o) => clampOffset(o, z));
+  };
+
+  const handleZoomChange = (e) => {
+    const z = clampZoom(Number(e.target.value));
+    setZoom(z);
+    setOffset((o) => clampOffset(o, z));
+  };
+
+  const setZoomPreset = (z) => {
+    const zz = clampZoom(z);
+    setZoom(zz);
+    setOffset({ x: 0, y: 0 });
   };
 
   // Cắt ảnh & Upload
@@ -138,10 +198,7 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       img.src = imageSrc;
       await new Promise((resolve) => (img.onload = resolve));
 
-      // Ảnh gốc được scale để vừa khung CROP_SIZE, sau đó nhân với zoom
-      const baseScale = Math.max(CROP_SIZE / imgDimensions.width, CROP_SIZE / imgDimensions.height);
-      const finalScale = baseScale * zoom;
-
+      const finalScale = getBaseScale() * zoom;
       const scaledWidth = imgDimensions.width * finalScale;
       const scaledHeight = imgDimensions.height * finalScale;
 
@@ -149,18 +206,24 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       const left = (CROP_SIZE - scaledWidth) / 2 + offset.x;
       const top = (CROP_SIZE - scaledHeight) / 2 + offset.y;
 
-      // Chỉ cắt phần nằm trong vòng tròn (căn giữa trong khung 280)
+      // Vòng tròn căn giữa trong khung crop
       const circleLeft = (CROP_SIZE - CIRCLE_SIZE) / 2;
       const circleTop = (CROP_SIZE - CIRCLE_SIZE) / 2;
+      const k = OUTPUT_SIZE / CIRCLE_SIZE;
 
-      const sourceX = (circleLeft - left) / finalScale;
-      const sourceY = (circleTop - top) / finalScale;
-      const sourceWidth = CIRCLE_SIZE / finalScale;
-      const sourceHeight = CIRCLE_SIZE / finalScale;
+      // Nền trắng (khi thu nhỏ ảnh sẽ có chỗ trống quanh ảnh)
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(
+        img,
+        (left - circleLeft) * k,
+        (top - circleTop) * k,
+        scaledWidth * k,
+        scaledHeight * k
+      );
 
-      ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
-
-      const croppedBlob = await new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9));
+      const croppedBlob = await new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.92));
       if (!croppedBlob) throw new Error("Không thể xử lý ảnh.");
 
       const croppedFile = new File([croppedBlob], `avatar_${userId}_${Date.now()}.jpg`, { type: "image/jpeg" });
@@ -255,8 +318,9 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
             {/* Vùng Crop ảnh */}
             <div className="relative flex justify-center px-4">
               <div
-                className="relative h-[280px] w-[280px] overflow-hidden rounded-2xl bg-slate-900"
+                className="relative h-[280px] w-[280px] overflow-hidden rounded-2xl bg-white"
                 style={{ touchAction: "none" }}
+                onWheel={handleWheel}
               >
                 {/* Ảnh kéo thả & zoom */}
                 <img
@@ -266,12 +330,13 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
                   onPointerDown={handlePointerDown}
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
-                  onPointerLeave={handlePointerUp}
-                  className="absolute top-1/2 left-1/2 max-w-none cursor-grab active:cursor-grabbing"
+                  onPointerCancel={handlePointerUp}
+                  className="absolute top-1/2 left-1/2 max-w-none cursor-grab select-none active:cursor-grabbing"
                   style={{
                     transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${zoom})`,
                     width: imgDimensions.width > imgDimensions.height ? "auto" : "100%",
                     height: imgDimensions.height >= imgDimensions.width ? "auto" : "100%",
+                    touchAction: "none",
                   }}
                 />
 
@@ -290,15 +355,31 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
                 <input
                   type="range"
                   value={zoom}
-                  min={1}
-                  max={3}
-                  step={0.1}
+                  min={minZoom}
+                  max={MAX_ZOOM}
+                  step={0.01}
                   onChange={handleZoomChange}
                   className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 dark:bg-slate-700"
                 />
                 <ZoomIn size={18} className="text-slate-400" />
               </div>
-              <p className="mt-2 text-center text-[11px] text-slate-500">Kéo ảnh để di chuyển • dùng thanh trượt để phóng to</p>
+              <div className="mt-3 flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setZoomPreset(minZoom)}
+                  className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Vừa ảnh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZoomPreset(1)}
+                  className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Đầy khung
+                </button>
+              </div>
+              <p className="mt-2 text-center text-[11px] text-slate-500">Kéo ảnh để di chuyển • chụm hai ngón hoặc dùng thanh trượt để phóng to / thu nhỏ</p>
             </div>
 
             {/* Nút Hủy / Lưu */}
@@ -323,4 +404,4 @@ export default function AvatarUploader({ userId, currentUrl, initial, onUploaded
       )}
     </div>
   );
-                }
+        }
