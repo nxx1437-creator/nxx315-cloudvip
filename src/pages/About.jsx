@@ -74,7 +74,7 @@ const CSS = `
 .ab em{font-style:italic}
 .ab .mono{font-family:"Roboto Mono",monospace}
 .ab .h1{font-size:clamp(48px,8vw,96px);line-height:1.15}
-.ab .h2{font-size:clamp(44px,6.6vw,80px);line-height:1;letter-spacing:-.01em;color:#fafafa}
+.ab .h1,.ab .h2{text-wrap:balance}
 .ab .h3{font-size:clamp(32px,4vw,48px);line-height:1.15}
 .ab .h4{font-size:38px;line-height:.9}
 .ab .btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border-radius:8px;background:#fff;color:#000;font:500 12px/2 "Roboto Mono",monospace;letter-spacing:.021em;text-transform:uppercase;transition:background-color .2s}
@@ -228,7 +228,7 @@ export default function About() {
       <style>{CSS}</style>
 
       {/* THANH ĐẦU */}
-      <header className="fixed inset-x-0 top-0 z-50" style={{ background: "linear-gradient(rgba(5,5,5,.55),transparent)" }}>
+            <header className="fixed inset-x-0 top-0 z-50" style={{ background: "rgba(5,5,5,.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
         <div className="wrap flex h-16 items-center justify-between">
           <Link to="/" aria-label="NXX315" className="flex h-10 w-10 items-center justify-center text-white"><StarMark /></Link>
           <nav className="flex items-center gap-5" aria-label="Main">
