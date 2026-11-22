@@ -12,10 +12,14 @@ import {
 import { StoreHistoryPreview } from "../components/store/StoreExtras.jsx";
 import CardBanner from "../components/store/CardBanner.jsx";
 import ForYouPackages from "../components/store/ForYouPackages.jsx";
-import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx"; 
+import ScanAIIntroModal from "../components/store/ScanAIIntroModal.jsx";
 
 import useProfile from "../hooks/useProfile.js";
-import { GAMES, trackGameView, getImageUrl } from "../lib/storeData.js";
+import useStoreRanking, {
+  gameKeyOf,
+  trackStoreGameView,
+} from "../hooks/useStoreRanking.js";
+import { trackGameView, getImageUrl } from "../lib/storeData.js";
 import { useI18n } from "../i18n/index.js";
 
 export default function Store() {
@@ -24,7 +28,10 @@ export default function Store() {
   const navigate = useNavigate();
   const { profile } = useProfile();
   const [activeTab, setActiveTab] = useState("all");
-  
+
+  // Game đã xếp theo lượt bấm xem + đơn hoàn thành, kèm cờ hot theo điểm
+  const games = useStoreRanking();
+
   const [showScanAI, setShowScanAI] = useState(false);
 
   // Chỉ hiển thị Modal 1 lần duy nhất
@@ -38,43 +45,55 @@ export default function Store() {
 
   const handleCloseScanAI = () => {
     setShowScanAI(false);
-    // Lưu trạng thái đã xem vào trình duyệt
-    localStorage.setItem("hasSeenScanAI", "true"); 
+    localStorage.setItem("hasSeenScanAI", "true");
   };
 
   const tabs = useMemo(
     () => [
-      { id: "all", key: "st.tabAll", count: GAMES.length },
-      { id: "hot", key: "st.tabHot", count: GAMES.filter((g) => g.hot).length },
+      { id: "all", key: "st.tabAll", count: games.length },
+      { id: "hot", key: "st.tabHot", count: games.filter((g) => g.hot).length },
       {
         id: "mobile",
         key: "st.tabMobile",
-        count: GAMES.filter((g) => g.category === "mobile").length,
+        count: games.filter((g) => g.category === "mobile").length,
       },
       {
         id: "pc",
         key: "st.tabPc",
-        count: GAMES.filter((g) => g.category === "pc").length,
+        count: games.filter((g) => g.category === "pc").length,
       },
     ],
-    []
+    [games]
   );
 
   const filteredGames = useMemo(
     () =>
-      GAMES.filter((game) =>
+      games.filter((game) =>
         activeTab === "all"
           ? true
           : activeTab === "hot"
           ? game.hot
           : game.category === activeTab
       ),
-    [activeTab]
+    [games, activeTab]
   );
 
-  const handleGameClick = (game) => {
+  // 1 lượt bấm xem: local (gợi ý "Dành cho bạn") + Supabase (xếp hạng chung)
+  const recordView = (game) => {
     trackGameView(game.id);
+    trackStoreGameView(gameKeyOf(game));
+  };
+
+  const handleGameClick = (game) => {
+    recordView(game);
     navigate(game.path);
+  };
+
+  // Bấm thẻ "Nổi bật" cũng tính 1 lượt xem
+  const handleFeaturedNavigate = (path) => {
+    const game = games.find((g) => g.path === path);
+    if (game) recordView(game);
+    navigate(path);
   };
 
   return (
@@ -83,7 +102,8 @@ export default function Store() {
 
       <main className="mx-auto max-w-5xl space-y-7 px-4 py-4">
         <FeaturedRow
-          navigate={navigate}
+          games={games}
+          navigate={handleFeaturedNavigate}
           onTitleClick={() =>
             document
               .getElementById("store-list")
@@ -93,7 +113,7 @@ export default function Store() {
 
         <ForYouPackages
           coins={profile?.coins}
-          games={GAMES}
+          games={games}
           navigate={navigate}
         />
 
@@ -147,14 +167,13 @@ export default function Store() {
 
       <BottomNav />
 
-      {/* Component Modal Giới thiệu */}
       <ScanAIIntroModal
         isOpen={showScanAI}
         onClose={handleCloseScanAI}
-        description="Nxx315 Studio chính thức ra mắt giao diện Store mới. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực." 
-        imageSrc={getImageUrl("store-preview.png")} 
+        description="Nxx315 Studio chính thức ra mắt giao diện Store mới. Tối ưu hóa nạp thẻ, thêm danh sách đề xuất các gói, hỗ trợ rút tiền qua Ngân hàng/MoMo/ZaloPay và theo dõi lịch sử giao dịch minh bạch theo thời gian thực."
+        imageSrc={getImageUrl("store-preview.png")}
         buttonText="Đã hiểu"
       />
     </div>
   );
-          }
+}
