@@ -258,15 +258,15 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
           </li>
           <li>
             Đặt giá game pass đúng{" "}
-            <b>{pkg ? `${pkg.passPrice} Robux` : "15 Robux (gói 10) hoặc 29 Robux (gói 20)"}</b>
+            <b>{pkg ? `${pkg.passPrice} Robux` :"10 Robux (gói 10) hoặc 20 Robux (gói 20)"}</b>
             , bật bán rồi lưu.
           </li>
           <li>Dán link game pass vào ô bên dưới. Hệ thống sẽ tự kiểm tra giá.</li>
         </ol>
         <p className="mt-3 rounded-[14px] bg-gray-50 p-3 text-[12px] leading-5 text-gray-500">
-          Giá game pass đã tính sẵn phí 30% của Roblox nên bạn nhận đủ{" "}
-          {pkg ? `${pkg.robux} Robux` : "10 hoặc 20 Robux"}. Robux sẽ về tài khoản sau
-          khoảng 3–7 ngày vì Roblox giữ lại để chống gian lận.
+          Roblox thu phí 30% mỗi giao dịch nên bạn nhận về khoảng{" "}
+          {pkg ? `${Math.floor(pkg.robux * 0.7)} Robux` : "7 hoặc 14 Robux"}. Robux sẽ
+          về tài khoản sau khoảng 3–7 ngày vì Roblox giữ lại để chống gian lận.
         </p>
       </Panel>
 
