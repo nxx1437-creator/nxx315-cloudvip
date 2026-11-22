@@ -110,14 +110,16 @@ function FeaturedCard({ item, onClick }) {
 }
 
 // ===== Hàng "Nổi bật" cuộn ngang =====
-export function FeaturedRow({ navigate, onTitleClick }) {
+export function FeaturedRow({ games = GAMES, navigate, onTitleClick }) {
   const { lang } = useI18n();
   const en = lang === "en";
 
   const items = BANNERS.map((b) => ({
     ...b,
-    game: GAMES.find((g) => g.path === b.path),
-  })).filter((b) => b.game);
+    game: games.find((g) => g.path === b.path),
+  }))
+    .filter((b) => b.game)
+    .sort((a, b) => games.indexOf(a.game) - games.indexOf(b.game));
 
   if (items.length === 0) return null;
 
