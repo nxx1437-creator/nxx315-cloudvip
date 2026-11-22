@@ -124,9 +124,6 @@ const EXTRA = {
 
 const GAMES = ["Free Fire", "Liên Quân", "Play Together", "Valorant", "FC Mobile", "Roblox"];
 
-/* Lưu ý: font đã được khai báo trong index.html qua <link preconnect + stylesheet>.
-   Không dùng @import trong CSS string để tránh chặn render. */
-phần cứng */
 const CSS = `
 .cp{--f:"Jokker","DM Sans",sans-serif;--m:"Matter Variable","Inter",sans-serif;--muted:#597caa;--ink:#11263b;--lm:#7f8ba4;background:#000814;color:#e6e6e8;font-family:var(--f);font-weight:500;overflow-x:hidden;min-height:100vh;-webkit-font-smoothing:antialiased}
 .cp a{color:inherit;text-decoration:none}
