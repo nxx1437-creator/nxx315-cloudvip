@@ -14,9 +14,9 @@ const STAR_URL = "https://i.postimg.cc/HLL0BmN7/1ef9365fbb1cd959265e9bf9ba8c45fb
 const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Video-hero.mp4";
 /* Ảnh thiên nhiên cho các khung: dán link ảnh (để "" thì dùng nền gradient có ánh sáng dưới đáy). */
 const NATURE = {
-  flowers: "",
-  meadow: "",
-  dunes: "",
+  flowers: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/flowers.jpg",
+  meadow: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/meadow.jpg",
+  dunes: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/dunes.jpg",
   closing: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hoa-cuc.jpg",
 };
 const FALLBACK = {
