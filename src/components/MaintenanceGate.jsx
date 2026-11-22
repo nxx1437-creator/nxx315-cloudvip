@@ -2,18 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
-// segment đầu của đường dẫn -> page_key trong bảng site_maintenance
-const ROUTE_KEYS = {
-  store: "store",
-  tasks: "tasks",
-  wallet: "wallet",
-  withdraw: "withdraw",
-  feed: "feed",
-  guide: "guide",
-  "shop-earn": "shop-earn",
-  profile: "profile",
-};
-
 // Các trang KHÔNG bị chặn khi bật bảo trì 'all'
 const ALWAYS_OPEN = [
   "", "login", "register", "auth", "forgot-password", "verify-email",
@@ -28,6 +16,25 @@ function fmt(d) {
   } catch {
     return "";
   }
+}
+
+// page_key khớp theo đường dẫn: 'store/roblox' -> /store/roblox (và con của nó)
+function findHit(pages, pathname) {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  const matches = pages
+    .filter((p) => p.page_key !== "all")
+    .filter((p) => {
+      const base = "/" + p.page_key;
+      return path === base || path.startsWith(base + "/");
+    })
+    .sort((a, b) => b.page_key.length - a.page_key.length);
+  if (matches[0]) return matches[0];
+
+  const seg = path.split("/")[1] || "";
+  if (!ALWAYS_OPEN.includes(seg)) {
+    return pages.find((p) => p.page_key === "all") || null;
+  }
+  return null;
 }
 
 export default function MaintenanceGate({ children }) {
@@ -76,59 +83,89 @@ export default function MaintenanceGate({ children }) {
     load();
   }, [pathname, load]);
 
-  const seg = pathname.split("/")[1] || "";
-  const key = ROUTE_KEYS[seg];
-  const hit =
-    state.pages.find((p) => key && p.page_key === key) ||
-    (!ALWAYS_OPEN.includes(seg)
-      ? state.pages.find((p) => p.page_key === "all")
-      : null);
+  const hit = findHit(state.pages, pathname);
+  const blocked = !!(state.loaded && hit && !state.isAdmin);
 
-  const blocked = state.loaded && hit && !state.isAdmin;
-  if (!blocked) return children;
+  // khóa cuộn trang phía sau khi đang hiện popup
+  useEffect(() => {
+    if (!blocked) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [blocked]);
 
   const goHome = () =>
     navigate(state.loggedIn ? "/dashboard" : "/", { replace: true });
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-sm rounded-3xl border border-white/60 bg-white/90 p-6 text-center shadow-2xl">
-        <button
-          onClick={goHome}
-          aria-label="Đóng"
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 active:scale-95"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
+    <>
+      {children}
 
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-400 text-white">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z" />
-          </svg>
+      {blocked && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-5"
+          style={{
+            background: "rgba(15, 23, 42, 0.28)",
+            backdropFilter: "blur(3px)",
+            WebkitBackdropFilter: "blur(3px)",
+            animation: "mtFade .2s ease-out",
+          }}
+        >
+          <style>{`
+            @keyframes mtFade{from{opacity:0}to{opacity:1}}
+            @keyframes mtPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+          `}</style>
+
+          <div
+            className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/70 bg-white/80 p-6 text-center shadow-2xl"
+            style={{
+              backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
+              animation: "mtPop .28s cubic-bezier(.2,.9,.3,1)",
+            }}
+          >
+            <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-cyan-300/40 blur-3xl" />
+
+            <button
+              onClick={goHome}
+              aria-label="Đóng"
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/5 text-slate-500 active:scale-95"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+
+            <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-400 text-white shadow-lg shadow-sky-300/50">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z" />
+              </svg>
+            </div>
+
+            <h2 className="relative text-xl font-bold text-slate-800">
+              {hit.title || "Đang bảo trì"}
+            </h2>
+            <p className="relative mt-2 text-sm leading-relaxed text-slate-600">
+              {hit.message ||
+                "Trang này đang được nâng cấp. Bạn vui lòng quay lại sau nhé!"}
+            </p>
+            {hit.ends_at && (
+              <p className="relative mt-3 inline-block rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
+                Dự kiến xong: {fmt(hit.ends_at)}
+              </p>
+            )}
+
+            <button
+              onClick={goHome}
+              className="relative mt-5 w-full rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 py-3 text-sm font-semibold text-white shadow-md shadow-sky-300/40 active:scale-95"
+            >
+              Về trang chủ
+            </button>
+          </div>
         </div>
-
-        <h2 className="text-xl font-bold text-slate-800">
-          {hit.title || "Đang bảo trì"}
-        </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          {hit.message ||
-            "Trang này đang được nâng cấp. Bạn vui lòng quay lại sau nhé!"}
-        </p>
-        {hit.ends_at && (
-          <p className="mt-3 text-xs font-medium text-sky-600">
-            Dự kiến xong: {fmt(hit.ends_at)}
-          </p>
-        )}
-
-        <button
-          onClick={goHome}
-          className="mt-5 w-full rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 py-3 text-sm font-semibold text-white active:scale-95"
-        >
-          Về trang chủ
-        </button>
-      </div>
-    </div>
+      )}
+    </>
   );
-}
+              }
