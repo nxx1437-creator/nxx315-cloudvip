@@ -4,11 +4,18 @@ import { useI18n } from "../../i18n/index.js";
 import { SectionTitle } from "./StoreCards.jsx";
 import {
   PACKAGES as ROBLOX,
+  GAME_INFO,
   DRAFT_KEY,
   formatCoin,
 } from "../../lib/robloxData.js";
 import { PACKAGES as LIENQUAN } from "../../lib/lienquanData.js";
 import { PACKAGES as FREEFIRE } from "../../lib/freefireData.js";
+
+// Gói đổi qua Game Pass (chỉ để hiển thị, giá thật do máy chủ quyết định)
+const PASS = [
+  { id: "pass-10", robux: 10, price: 3500 },
+  { id: "pass-20", robux: 20, price: 7000 },
+];
 
 const ITEMS = [
   ...ROBLOX.map((p) => ({
@@ -20,6 +27,17 @@ const ITEMS = [
     price: p.price,
     image: p.image,
     draftId: p.id,
+  })),
+  // Mỗi gói Game Pass tự thành một nhóm để cả 10 và 20 Robux đều được đề xuất
+  ...PASS.map((p) => ({
+    key: p.id,
+    group: p.id,
+    game: "Roblox Game Pass",
+    path: `/store/roblox?tab=pass&pkg=${p.id}`,
+    title: `${p.robux} Robux`,
+    sub: "Roblox · Game Pass",
+    price: p.price,
+    image: GAME_INFO.icon,
   })),
   ...LIENQUAN.map((p) => ({
     key: p.id,
@@ -49,11 +67,12 @@ export default function ForYouPackages({ coins, navigate }) {
   if (coins == null) return null;
   const balance = Number(coins) || 0;
 
-  // Gói lớn nhất đổi được cho mỗi game (hiện mặc định)
+  // Gói lớn nhất đổi được cho mỗi nhóm (hiện mặc định)
   const best = {};
   for (const it of ITEMS) {
-    if (it.price <= balance && (!best[it.game] || it.price > best[it.game].price)) {
-      best[it.game] = it;
+    const g = it.group || it.game;
+    if (it.price <= balance && (!best[g] || it.price > best[g].price)) {
+      best[g] = it;
     }
   }
   const bestPerGame = Object.values(best).sort((a, b) => b.price - a.price);
@@ -171,4 +190,4 @@ export default function ForYouPackages({ coins, navigate }) {
       </div>
     </section>
   );
-                            }
+            }
