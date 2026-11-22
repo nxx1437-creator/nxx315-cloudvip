@@ -36,6 +36,7 @@ const Withdraw = lazy(() => import("./pages/Withdraw.jsx"));
 const WithdrawHistory = lazy(() => import("./pages/WithdrawHistory.jsx"));
 const HistoryPage = lazy(() => import("./pages/History.jsx"));
 const HistoryDetail = lazy(() => import("./pages/HistoryDetail.jsx"));
+const OrderNotReceived = lazy(() => import("./pages/OrderNotReceived.jsx"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard.jsx"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile.jsx"));
 const MiniGames = lazy(() => import("./pages/MiniGames.jsx"));
@@ -155,6 +156,7 @@ export default function App() {
                 <Route path="/u/:userId" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
                 <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
                 <Route path="/history/order/:id" element={<ProtectedRoute><HistoryDetail /></ProtectedRoute>} />
+                <Route path="/history/order/:id/not-received" element={<ProtectedRoute><OrderNotReceived /></ProtectedRoute>} />
                 <Route path="/shop-earn" element={<ProtectedRoute><ShopEarn /></ProtectedRoute>} />
 
                 {/* Store games */}
