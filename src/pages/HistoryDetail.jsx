@@ -15,7 +15,7 @@ import {
 
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
-import OrderProgressTracker from "../components/OrderProgressTracker.jsx";
+import OrderProgressTracker, { displayStep } from "../components/OrderProgressTracker.jsx";
 import { supabase } from "../lib/supabaseClient.js";
 import {
   formatDate,
@@ -298,8 +298,18 @@ export default function HistoryDetail() {
     };
   }, [order?.id, order?.__source]);
 
+    const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
   const statusKey = String(order?.status || "").toLowerCase();
-  const status = statusInfo(order?.status);
+  const step = order ? displayStep(order, now) : 0;
+  const inFlight = ["pending", "paid", "processing"].includes(statusKey);
+  const shownStatus =
+    step === 1 && inFlight ? "paid" : step === 2 && inFlight ? "processing" : order?.status;
+  const status = statusInfo(shownStatus);
   const StatusIcon = status.icon;
 
   const title = order ? getOrderTitle(order) : "";
@@ -458,11 +468,7 @@ export default function HistoryDetail() {
                 </section>
               )}
 
-              {/* Tiến độ + tin nhắn admin + trả lời */}
-              <OrderProgressTracker
-                order={order}
-                onReplied={(patch) => setOrder((prev) => (prev ? { ...prev, ...patch } : prev))}
-              />
+          
             </>
           )}
         </div>
