@@ -4,6 +4,7 @@ import {
   Btn, Card, EmptyState, ErrorState, FilterPills, Loading, Modal, SearchBox, SectionHeader,
   StatusBadge, fmtNum, fmtTime, useAdminList,
 } from "../components/admin/AdminUI";
+import OrderMessageModal from "../components/OrderMessageModal";
 
 const loadOrders = () =>
   supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
@@ -33,6 +34,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
   const [rejectOrder, setRejectOrder] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const [deliverTarget, setDeliverTarget] = useState(null);
 
   const shown = useMemo(() => {
     const kw = search.trim().toLowerCase();
@@ -123,7 +125,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
 
               {o.status === "paid" && (
                 <div className="mt-3 flex gap-2">
-                  <Btn className="flex-1" disabled={busyId === o.id} onClick={() => update(o, { status: "delivered" })}>
+                  <Btn className="flex-1" disabled={busyId === o.id} onClick={() => setDeliverTarget(o)}
                     {busyId === o.id ? "Đang xử lý..." : "Đã giao"}
                   </Btn>
                   <Btn variant="ghost" className="flex-1" disabled={busyId === o.id} onClick={() => setRejectOrder(o)}>
@@ -134,6 +136,21 @@ export default function AdminGameOrdersTab({ onChanged }) {
             </Card>
           ))}
         </div>
+      )}
+      {deliverTarget && (
+        <OrderMessageModal
+          key={deliverTarget.id}
+          order={deliverTarget}
+          table="orders"
+          title="Hoàn tất đơn hàng"
+          confirmLabel="Xác nhận đã giao"
+          lockedStep={3}
+          onClose={() => setDeliverTarget(null)}
+          onSubmit={async (fields) => {
+            const ok = await update(deliverTarget, { ...fields, status: "delivered" });
+            return ok ? null : "Không lưu được, thử lại.";
+          }}
+        />
       )}
 
       {rejectOrder && (
