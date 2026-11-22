@@ -3,10 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Check,
-  CheckCircle2,
-  Clock3,
   Copy,
-  CreditCard,
   FileText,
   Package,
   RefreshCw,
@@ -30,99 +27,8 @@ import {
   statusInfo,
 } from "../lib/orderView.js";
 
-const NOTICE_TONE = {
-  amber: { box: "border-amber-100 bg-amber-50", icon: "text-amber-500", title: "text-amber-700", text: "text-amber-600" },
-  blue: { box: "border-blue-100 bg-blue-50", icon: "text-blue-500", title: "text-blue-700", text: "text-blue-600" },
-  indigo: { box: "border-indigo-100 bg-indigo-50", icon: "text-indigo-500", title: "text-indigo-700", text: "text-indigo-600" },
-  emerald: { box: "border-emerald-100 bg-emerald-50", icon: "text-emerald-500", title: "text-emerald-700", text: "text-emerald-600" },
-  rose: { box: "border-rose-100 bg-rose-50", icon: "text-rose-500", title: "text-rose-700", text: "text-rose-600" },
-};
-
 const VALID_SOURCES = ["orders", "redemption_orders"];
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function getNotice(order, statusKey) {
-  const method = String(order?.payment_method || "").toLowerCase();
-  const coin = isCoinPayment(order);
-
-  if (statusKey === "pending") {
-    return {
-      tone: "amber",
-      Icon: Clock3,
-      title: "Chờ thanh toán",
-      text: "Đơn hàng đang chờ thanh toán. Hãy hoàn tất thanh toán theo hướng dẫn của đơn hàng.",
-    };
-  }
-
-  if (statusKey === "paid") {
-    return {
-      tone: "blue",
-      Icon: CreditCard,
-      title: coin
-        ? "Đã trừ xu"
-        : method === "card"
-        ? "Đã ghi nhận thẻ cào"
-        : method === "bank"
-        ? "Đã ghi nhận chuyển khoản"
-        : "Đã ghi nhận thanh toán",
-      text: coin
-        ? "Hệ thống đã trừ xu từ ví của bạn. Đơn hàng đang chờ admin kiểm tra và duyệt trong 24h."
-        : method === "card"
-        ? "Hệ thống đã ghi nhận thẻ cào. Đơn hàng đang chờ admin kiểm tra trong 24h."
-        : method === "bank"
-        ? "Hệ thống đã ghi nhận chuyển khoản. Đơn hàng đang chờ admin kiểm tra."
-        : "Hệ thống đang chờ kiểm tra giao dịch. Khi được xác nhận, trạng thái đơn sẽ được cập nhật.",
-    };
-  }
-
-  if (statusKey === "processing") {
-    return {
-      tone: "indigo",
-      Icon: RefreshCw,
-      title: "Đang xử lý đơn hàng",
-      text: "Đơn đã được duyệt và đang được xử lý để giao.",
-    };
-  }
-
-  if (statusKey === "delivered") {
-    return {
-      tone: "emerald",
-      Icon: CheckCircle2,
-      title: "Đơn hàng đã giao",
-      text: "Đơn hàng đã được quản trị viên xác nhận giao thành công.",
-    };
-  }
-
-  if (["success", "completed", "done"].includes(statusKey)) {
-    return {
-      tone: "emerald",
-      Icon: CheckCircle2,
-      title: "Đơn hàng đã hoàn thành",
-      text: "Giao dịch đã được xác nhận thành công.",
-    };
-  }
-
-  if (statusKey === "rejected") {
-    return {
-      tone: "rose",
-      Icon: XCircle,
-      title: "Đơn hàng đã bị từ chối",
-      text: "Quản trị viên đã từ chối giao dịch này.",
-      reason: order?.note,
-    };
-  }
-
-  if (["failed", "cancelled", "canceled"].includes(statusKey)) {
-    return {
-      tone: "rose",
-      Icon: XCircle,
-      title: "Giao dịch không thành công",
-      text: "Giao dịch này hiện không thể tiếp tục. Nếu bạn cho rằng đây là lỗi, hãy liên hệ quản trị viên.",
-    };
-  }
-
-  return null;
-}
 
 function InfoRow({ label, value, copy = false }) {
   const [copied, setCopied] = useState(false);
@@ -200,6 +106,7 @@ export default function HistoryDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imgErr, setImgErr] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -258,10 +165,7 @@ export default function HistoryDetail() {
 
       setOrder({ ...foundOrder, __source: foundTable });
 
-      if (
-        foundOrder.package_id &&
-        UUID_RE.test(String(foundOrder.package_id))
-      ) {
+      if (foundOrder.package_id && UUID_RE.test(String(foundOrder.package_id))) {
         const { data: packageData } = await supabase
           .from("redemption_packages")
           .select("*")
@@ -309,7 +213,7 @@ export default function HistoryDetail() {
     };
   }, [order?.id, order?.__source]);
 
-  const [now, setNow] = useState(() => Date.now());
+  // Đồng hồ để huy hiệu trạng thái tự đổi theo tiến độ
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 10000);
     return () => clearInterval(timer);
@@ -328,8 +232,7 @@ export default function HistoryDetail() {
   const gameName = order ? getGameName(order) : null;
   const image = order ? getOrderImage(order) || pkg?.image_url || null : null;
   const amountText = order ? getAmountText(order, pkg) : "";
-  const notice = order ? getNotice(order, shownStatusKey) : null;
-  const tone = notice ? NOTICE_TONE[notice.tone] : null;
+  const showImage = image && !imgErr;
 
   const rows = order
     ? [
@@ -346,8 +249,6 @@ export default function HistoryDetail() {
         .filter(Boolean)
         .filter((r) => r.value !== null && r.value !== undefined && r.value !== "")
     : [];
-
-  const showImage = image && !imgErr;
 
   return (
     <div className="min-h-screen bg-white pb-28 text-gray-900">
@@ -388,7 +289,7 @@ export default function HistoryDetail() {
 
           {!loading && !error && order && (
             <>
-              {/* Thẻ sản phẩm */}
+              {/* 1. Ảnh gói + tên gói + giá trị + trạng thái */}
               <section className="rounded-2xl border border-gray-200 bg-white p-5">
                 <div className="flex items-start gap-4">
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
@@ -434,7 +335,13 @@ export default function HistoryDetail() {
                 </div>
               </section>
 
-              {/* Thông tin đơn hàng */}
+              {/* 2. Theo dõi đơn hàng */}
+              <OrderProgressTracker
+                order={order}
+                onReplied={(patch) => setOrder((prev) => (prev ? { ...prev, ...patch } : prev))}
+              />
+
+              {/* 3. Thông tin đơn hàng */}
               <section className="mt-3 rounded-2xl border border-gray-200 bg-white px-5 pb-2 pt-4">
                 <div className="mb-1 flex items-center gap-2">
                   <FileText size={16} className="text-gray-400" />
@@ -450,35 +357,6 @@ export default function HistoryDetail() {
                   />
                 ))}
               </section>
-
-              {/* Thông báo theo trạng thái */}
-              {notice && (
-                <section className={`mt-3 rounded-2xl border p-5 ${tone.box}`}>
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white ${tone.icon}`}
-                    >
-                      <notice.Icon size={20} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-bold ${tone.title}`}>{notice.title}</p>
-                      <p className={`mt-1 text-xs leading-5 ${tone.text}`}>{notice.text}</p>
-
-                      {notice.reason && (
-                        <div className="mt-3 rounded-xl border border-rose-200 bg-white p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500">
-                            Lý do từ chối
-                          </p>
-                          <p className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold leading-6 text-rose-800">
-                            {notice.reason}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </section>
-              )}
             </>
           )}
         </div>
@@ -487,4 +365,5 @@ export default function HistoryDetail() {
       <BottomNav />
     </div>
   );
-    }
+        }
+
