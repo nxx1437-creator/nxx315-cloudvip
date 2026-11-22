@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { BadgeCheck, Check, X } from "lucide-react";
+import { BadgeCheck, Check, Clock3, User, X } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
+import { canReply, formatDate, getReplyDeadline } from "../lib/orderView.js";
 
 // Dán ID (uuid) của tài khoản NXX315 admin vào đây
-const ADMIN_USER_ID = "46b2fbbc-dc4a-411d-b140-7c67e8680695";
-const ADMIN_FALLBACK_NAME = "NXX315 ";
+const ADMIN_USER_ID = "";
+const ADMIN_FALLBACK_NAME = "NXX315 Admin";
 
 export const STEPS = ["Đã nhận đơn", "Kiểm tra", "Xử lý", "Hoàn tất"];
 
@@ -25,17 +26,6 @@ const TONE = {
   red: { fill: "bg-rose-400", dot: "bg-rose-500 text-white", ring: "ring-rose-200", text: "text-rose-600" },
 };
 
-function fmt(value) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("vi-VN", {
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
-
-// Lấy tên + ảnh từ hồ sơ NXX315, lưu tạm để không gọi lại nhiều lần
 let adminCache = null;
 
 function useAdminProfile() {
@@ -88,8 +78,28 @@ function AdminAvatar({ src, name }) {
   );
 }
 
-export default function OrderProgressTracker({ order }) {
+function timeLeftText(deadline, now) {
+  const left = Math.max(deadline - now, 0);
+  const h = Math.floor(left / 3600000);
+  const m = Math.floor((left % 3600000) / 60000);
+  if (h > 0) return `Còn ${h} giờ ${m} phút để trả lời`;
+  return `Còn ${Math.max(m, 1)} phút để trả lời`;
+}
+
+export default function OrderProgressTracker({ order, onReplied }) {
   const admin = useAdminProfile();
+
+  const [now, setNow] = useState(() => Date.now());
+  const [replying, setReplying] = useState(false);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
+  // Cập nhật đồng hồ để nút "Trả lời" tự ẩn khi hết 23 giờ
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   if (!order) return null;
 
@@ -100,13 +110,45 @@ export default function OrderProgressTracker({ order }) {
   const tone = TONE[failed ? "red" : complete ? "green" : "blue"];
   const proofs = Array.isArray(order.proof_urls) ? order.proof_urls : [];
   const note = order.progress_note;
+  const hasMessage = Boolean(note) || proofs.length > 0;
+
+  const replyable = hasMessage && canReply(order, now);
+  const deadline = getReplyDeadline(order);
+
+  const sendReply = async () => {
+    const content = text.trim();
+    if (!content || sending) return;
+
+    setSending(true);
+    setError("");
+
+    const { data, error: err } = await supabase.rpc("reply_to_order", {
+      p_source: order.__source,
+      p_order_id: String(order.id),
+      p_text: content,
+    });
+
+    setSending(false);
+
+    if (err || data?.success === false) {
+      setError(err?.message || data?.error || "Không gửi được, thử lại sau.");
+      return;
+    }
+
+    onReplied?.({
+      user_reply: content,
+      user_reply_at: data?.user_reply_at || new Date().toISOString(),
+    });
+    setReplying(false);
+    setText("");
+  };
 
   return (
-    <section className="mt-3 rounded-3xl border border-blue-50 bg-white p-5 shadow-sm">
-      <h2 className="mb-5 text-sm font-black text-slate-900">Tiến độ đơn hàng</h2>
+    <section className="mt-3 rounded-2xl border border-gray-200 bg-white p-5">
+      <h2 className="mb-5 text-sm font-bold text-gray-900">Tiến độ đơn hàng</h2>
 
       <div className="relative">
-        <div className="absolute left-[12.5%] right-[12.5%] top-[13px] h-1 rounded-full bg-slate-100">
+        <div className="absolute left-[12.5%] right-[12.5%] top-[13px] h-1 rounded-full bg-gray-100">
           <div
             className={`h-full rounded-full transition-all duration-700 ease-out ${tone.fill}`}
             style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }}
@@ -121,25 +163,27 @@ export default function OrderProgressTracker({ order }) {
             return (
               <div key={label} className="flex flex-col items-center gap-2">
                 <div
-                  className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-xs font-black transition-all duration-500 ${
+                  className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-xs font-bold transition-all duration-500 ${
                     done
                       ? tone.dot
                       : current
                       ? `${tone.dot} ring-4 ${tone.ring}`
-                      : "bg-slate-100 text-slate-400"
+                      : "bg-gray-100 text-gray-400"
                   }`}
                 >
                   {current && failed ? (
                     <X size={15} />
-                  ) : done || current ? (
+                  ) : current ? (
+                    <Clock3 size={15} />
+                  ) : done ? (
                     <Check size={15} />
                   ) : (
                     i + 1
                   )}
                 </div>
                 <span
-                  className={`text-center text-[11px] font-bold leading-tight ${
-                    done || current ? tone.text : "text-slate-400"
+                  className={`text-center text-[11px] font-semibold leading-tight ${
+                    done || current ? tone.text : "text-gray-400"
                   }`}
                 >
                   {label}
@@ -150,14 +194,14 @@ export default function OrderProgressTracker({ order }) {
         </div>
       </div>
 
-      {(note || proofs.length > 0) && (
-        <div className="mt-6 border-t border-slate-100 pt-5">
+      {hasMessage && (
+        <div className="mt-6 border-t border-gray-100 pt-5">
           <div className="flex gap-3">
             <AdminAvatar key={admin.avatar} src={admin.avatar} name={admin.name} />
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1">
-                <span className="truncate text-sm font-black text-slate-900">
+                <span className="truncate text-sm font-bold text-gray-900">
                   {admin.name}
                 </span>
                 <BadgeCheck
@@ -168,34 +212,102 @@ export default function OrderProgressTracker({ order }) {
               </div>
 
               {note && (
-                <p className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-6 text-slate-700">
+                <p className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-6 text-gray-700">
                   {note}
                 </p>
               )}
 
               {proofs.length > 0 && (
-                <div className="mt-3">
-                  <p className="mb-2 text-[11px] font-bold text-slate-400">
-                    Giao dịch thành công từ nhà phát hành
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {proofs.map((url) => (
-                      <a
-                        key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block aspect-square overflow-hidden rounded-xl border border-slate-100 bg-slate-50"
-                      >
-                        <img src={url} alt="Minh chứng giao dịch" className="h-full w-full object-cover" />
-                      </a>
-                    ))}
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {proofs.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block aspect-square overflow-hidden rounded-xl border border-gray-100 bg-gray-50"
+                    >
+                      <img src={url} alt="Ảnh đính kèm" className="h-full w-full object-cover" />
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              <p className="mt-2 text-xs text-gray-400">
+                {formatDate(order.progress_msg_at || order.progress_updated_at)}
+              </p>
+
+              {order.user_reply && (
+                <div className="mt-4 flex gap-2.5 border-l-2 border-gray-100 pl-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                    <User size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-bold text-gray-900">Bạn</p>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-6 text-gray-700">
+                      {order.user_reply}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      {formatDate(order.user_reply_at)}
+                    </p>
                   </div>
                 </div>
               )}
 
-              {order.progress_updated_at && (
-                <p className="mt-2 text-xs text-slate-400">{fmt(order.progress_updated_at)}</p>
+              {replyable && !replying && (
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReplying(true)}
+                    className="rounded-full border border-gray-200 px-4 py-1.5 text-xs font-bold text-gray-700 active:bg-gray-50"
+                  >
+                    Trả lời
+                  </button>
+                  <span className="text-[11px] text-gray-400">
+                    {timeLeftText(deadline, now)}
+                  </span>
+                </div>
+              )}
+
+              {replyable && replying && (
+                <div className="mt-4 space-y-2">
+                  <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    maxLength={500}
+                    rows={3}
+                    autoFocus
+                    placeholder="Nhập nội dung trả lời admin..."
+                    className="w-full rounded-xl border border-gray-200 p-3 text-[13px] outline-none focus:border-gray-900"
+                  />
+
+                  {error && <p className="text-xs text-rose-500">{error}</p>}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={sendReply}
+                      disabled={sending || !text.trim()}
+                      className="rounded-full bg-gray-900 px-5 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      {sending ? "Đang gửi..." : "Gửi"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReplying(false);
+                        setText("");
+                        setError("");
+                      }}
+                      className="rounded-full px-4 py-1.5 text-xs font-bold text-gray-500"
+                    >
+                      Hủy
+                    </button>
+                    <span className="ml-auto text-[11px] text-gray-400">
+                      {text.length}/500
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -203,4 +315,4 @@ export default function OrderProgressTracker({ order }) {
       )}
     </section>
   );
-    }
+                                        }
