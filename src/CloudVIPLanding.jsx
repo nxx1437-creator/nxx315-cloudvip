@@ -25,12 +25,12 @@ const CAPS = [
 ];
 
 const HERO_CAPS = [
-  { i: 0, top: "5%", left: "-5%", rot: -18, blur: 3, s: 0.7 },
-  { i: 1, top: "3%", right: "-7%", rot: 16, blur: 2, s: 0.7 },
-  { i: 2, top: "41%", left: "-24%", rot: -14, blur: 4, s: 0.7 },
-  { i: 3, top: "57%", right: "-22%", rot: 20, blur: 3, s: 0.7 },
-  { i: 4, bottom: "13%", left: "-9%", rot: 14, blur: 3, s: 0.7 },
-  { i: 5, bottom: "7%", right: "-5%", rot: -16, blur: 2, s: 0.7 },
+  { i: 0, top: "5%", left: "-5%", rot: -18, blur: 2 },
+  { i: 1, top: "3%", right: "-7%", rot: 16, blur: 2 },
+  { i: 2, top: "41%", left: "-24%", rot: -14, blur: 3, mid: true },
+  { i: 3, top: "57%", right: "-22%", rot: 20, blur: 2, mid: true },
+  { i: 4, bottom: "13%", left: "-9%", rot: 14, blur: 2 },
+  { i: 5, bottom: "7%", right: "-5%", rot: -16, blur: 2 },
 ];
 
 /* [capIndex, rot, offsetX] — capIndex luôn % CAPS.length */
@@ -126,6 +126,7 @@ const GAMES = ["Free Fire", "Liên Quân", "Play Together", "Valorant", "FC Mobi
 
 /* Lưu ý: font đã được khai báo trong index.html qua <link preconnect + stylesheet>.
    Không dùng @import trong CSS string để tránh chặn render. */
+phần cứng */
 const CSS = `
 .cp{--f:"Jokker","DM Sans",sans-serif;--m:"Matter Variable","Inter",sans-serif;--muted:#597caa;--ink:#11263b;--lm:#7f8ba4;background:#000814;color:#e6e6e8;font-family:var(--f);font-weight:500;overflow-x:hidden;min-height:100vh;-webkit-font-smoothing:antialiased}
 .cp a{color:inherit;text-decoration:none}
@@ -140,7 +141,7 @@ const CSS = `
 
 /* thanh đầu: hai đảo kính */
 .cp .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 0;pointer-events:none}
-.cp .isle{pointer-events:auto;display:flex;align-items:center;gap:4px;height:48px;padding:0 6px;border-radius:16px;background:rgba(8,27,54,.62);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(28,108,255,.2)}
+.cp .isle{pointer-events:auto;display:flex;align-items:center;gap:4px;height:48px;padding:0 6px;border-radius:16px;background:rgba(5,16,36,.94);border:1px solid rgba(28,108,255,.2)}
 .cp .isle-l{width:48px;padding:0;justify-content:center;border-radius:999px}
 .cp .nl-link{display:none;padding:6px 12px;font:500 16px/1.6 var(--f);letter-spacing:-.01em;color:rgba(255,255,255,.9);background:none;border:0;cursor:pointer;white-space:nowrap;transition:color .4s cubic-bezier(.44,0,.56,1)}
 .cp .nl-link:hover{color:var(--muted)}
@@ -156,7 +157,7 @@ const CSS = `
 .cp .mark{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#eef3fb;flex-shrink:0}
 
 /* viên nang bóng */
-.cp .capsule{--s:.7;display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--s)*12px);border-radius:40px;padding:calc(var(--s)*16px) calc(var(--s)*32px) calc(var(--s)*16px) calc(var(--s)*24px);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:rgba(255,255,255,.16) 0 24px 64px -12px inset,rgba(0,0,0,.16) 0 -24px 40px -12px inset,rgba(255,255,255,.16) 0 .6px 1.1px -.5px inset,rgba(255,255,255,.17) 0 1.9px 3.5px -1px inset,rgba(255,255,255,.19) 0 5.1px 9.2px -1.5px inset,rgba(255,255,255,.24) 0 16px 28.8px -2px inset;white-space:nowrap}
+.cp .capsule{--s:.7;display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--s)*12px);border-radius:40px;padding:calc(var(--s)*16px) calc(var(--s)*32px) calc(var(--s)*16px) calc(var(--s)*24px);box-shadow:rgba(255,255,255,.16) 0 24px 64px -12px inset,rgba(0,0,0,.16) 0 -24px 40px -12px inset,rgba(255,255,255,.19) 0 5.1px 9.2px -1.5px inset,rgba(255,255,255,.24) 0 16px 28.8px -2px inset;white-space:nowrap}
 .cp .capsule b{font:700 calc(var(--s)*28px)/1 "Inter",sans-serif;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.7));-webkit-background-clip:text;background-clip:text;color:transparent}
 .cp .capsule i{font-style:normal;font-size:calc(var(--s)*44px);line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.28))}
 
@@ -165,6 +166,9 @@ const CSS = `
 .cp .display{font:600 clamp(40px,11vw,132px)/.9 var(--f);letter-spacing:-.02em;margin:0 auto;max-width:1000px;background:linear-gradient(#dfe4ed 15%,#8795ad 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.08em}
 .cp .h-line{display:block}
 .cp .hero-cap{position:absolute;pointer-events:none}
+.cp .hero-cap .capsule{--s:.55}
+.cp .hero-cap.mid{display:none}
+@media(max-width:767px){.cp .hero-cap .capsule{filter:none!important}.cp .rise{transform:none}}
 
 /* khối thiết bị */
 .cp .scene{position:relative;max-width:900px;margin:56px auto 0;padding-bottom:72px}
@@ -181,10 +185,11 @@ const CSS = `
 
 /* bento */
 .cp .bento{display:grid;gap:16px;grid-template-columns:1fr}
-.cp .panel{position:relative;display:flex;flex-direction:column;overflow:hidden;min-height:320px;padding:28px 32px 0 32px;border-radius:24px;background:radial-gradient(79% 75% at 79% 82.5%,#000f24 0%,#000d1f 100%);border:1px solid rgba(28,108,255,.14);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.cp .panel{position:relative;display:flex;flex-direction:column;overflow:hidden;min-height:320px;padding:28px 32px 0 32px;border-radius:24px;background:radial-gradient(79% 75% at 79% 82.5%,#000f24 0%,#000d1f 100%);border:1px solid rgba(28,108,255,.14);}
 .cp .panel h3{font:600 24px/1.2 var(--f);margin:0;color:#e6e6e8}
 .cp .panel p.d{font:500 16px/1.4 var(--f);color:var(--muted);margin:8px 0 0;max-width:360px}
-.cp .frag{margin-top:auto;padding-top:24px;display:grid;gap:8px;-webkit-mask-image:linear-gradient(#000 72%,transparent);mask-image:linear-gradient(#000 72%,transparent);padding-bottom:0;max-height:210px;overflow:hidden}
+.cp .frag{margin-top:auto;padding-top:24px;display:grid;gap:8px;position:relative;padding-bottom:0;max-height:210px;overflow:hidden}
+.cp .frag:after{content:"";position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(rgba(0,13,31,0),#000d1f);pointer-events:none}
 .cp .ui{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.045);font:500 14px/1.2 var(--f);color:#dfe4ed}
 .cp .sq{width:28px;height:28px;border-radius:8px;flex-shrink:0}
 .cp .chip{margin-left:auto;border-radius:8px;padding:4px 8px;background:rgba(89,204,51,.16);color:#7ee05a;font:600 12px/1 var(--f);white-space:nowrap}
@@ -202,7 +207,7 @@ const CSS = `
 .cp .steps p{font:500 16px/1.4 var(--f);color:var(--muted);margin:0;max-width:340px}
 
 /* tường đánh giá */
-.cp .wall{columns:1;column-gap:16px;margin-top:56px;-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
+.cp .wall{columns:1;column-gap:16px;margin-top:56px;}
 .cp .rev{break-inside:avoid;margin-bottom:16px;border-radius:20px;overflow:hidden;background:radial-gradient(79% 75% at 79% 82.5%,#01122d 0%,#000f24 100%);border:1px solid rgba(28,108,255,.12)}
 .cp .rev-h{display:flex;align-items:center;gap:12px;padding:16px 20px}
 .cp .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a66ff,#5c6f8a);font:600 14px var(--f);color:#fff}
@@ -247,6 +252,8 @@ const CSS = `
   .cp .light{font-size:17px}
   .cp .h-line{white-space:nowrap}
   .cp .capsule{--s:.9}
+  .cp .hero-cap .capsule{--s:.9}
+  .cp .hero-cap.mid{display:block}
   .cp .bento{grid-template-columns:repeat(4,1fr)}
   .cp .s2{grid-column:span 2}
   .cp .steps{grid-template-columns:repeat(3,1fr)}
@@ -257,10 +264,10 @@ const CSS = `
   .cp .fbrand{grid-column:auto}
   .cp .pile{height:260px}
 }
-@media(min-width:1100px){.cp .capsule{--s:1}}
+@media(min-width:1100px){.cp .capsule{--s:1}.cp .hero-cap .capsule{--s:1}}
 @media(prefers-reduced-motion:reduce){.cp .rise{transform:none;transition:opacity .3s}.cp .dot{animation:none}}
 `;
-
+  
 /* strip markdown nhẹ: bỏ *, _, `, ~ và escape HTML cơ bản không cần vì React tự escape */
 const plain = (s = "") => String(s).replace(/[*_`~]/g, "");
 
@@ -511,19 +518,13 @@ const FaqItem = ({ q, a }) => (
       <main>
         {/* 1. MỞ ĐẦU: lời hứa bạc khổng lồ + viên nang */}
         <section className="hero">
-          {HERO_CAPS.map((p, k) => (
+            {HERO_CAPS.map((p, k) => (
             <span
               key={k}
-              className="hero-cap"
+              className={p.mid ? "hero-cap mid" : "hero-cap"}
               style={{ top: p.top, bottom: p.bottom, left: p.left, right: p.right }}
             >
-              <Capsule
-                i={p.i}
-                label={labels[p.i]}
-                rot={p.rot}
-                blur={p.blur}
-                s={p.s}
-              />
+              <Capsule i={p.i} label={labels[p.i]} rot={p.rot} blur={p.blur} />
             </span>
           ))}
           <div className="stage" style={{ position: "relative" }}>
