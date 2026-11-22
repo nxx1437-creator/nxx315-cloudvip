@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import { AlertCircle, RefreshCw, Search } from "lucide-react";
 import RobloxOrderCard from "./RobloxOrderCard.jsx";
 import { StatCard } from "./RobloxOrderParts.jsx";
+import OrderMessageModal from "../components/OrderMessageModal";
 
 const isPassOrder = (o) => o.receive_method === "gamepass";
 
@@ -18,6 +19,7 @@ export default function RobloxOrdersTab() {
   const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState("");
   const [copiedKey, setCopiedKey] = useState("");
+  const [deliverTarget, setDeliverTarget] = useState(null);
 
   const handleCopy = async (text, key) => {
     try {
@@ -98,7 +100,7 @@ export default function RobloxOrdersTab() {
     };
   }, []);
 
-  const updateOrderStatus = async (order, expectedStatus, nextStatus, note) => {
+  const updateOrderStatus = async (order, expectedStatus, nextStatus, note, extra = {}) => {
     if (updatingId !== null) return false;
 
     setUpdatingId(order.id);
@@ -108,9 +110,9 @@ export default function RobloxOrdersTab() {
       const updateData = {
         status: nextStatus,
         updated_at: new Date().toISOString(),
+        ...extra,
       };
       if (note !== undefined) updateData.note = note;
-
       const { data, error: updateError } = await supabase
         .from("orders")
         .update(updateData)
@@ -156,9 +158,21 @@ export default function RobloxOrdersTab() {
     return updateOrderStatus(order, "paid", "processing");
   };
 
-  const deliverOrder = (order) => {
+    const deliverOrder = (order) => {
     if (order.status !== "processing") return;
-    return updateOrderStatus(order, "processing", "delivered");
+    setDeliverTarget(order);
+  };
+
+  const submitDeliver = async (fields) => {
+    if (!deliverTarget) return "Thiếu thông tin đơn";
+    const ok = await updateOrderStatus(
+      deliverTarget,
+      "processing",
+      "delivered",
+      undefined,
+      fields
+    );
+    return ok ? null : "Không lưu được, xem thông báo lỗi phía trên.";
   };
 
   const openReject = (order) => {
@@ -325,6 +339,18 @@ export default function RobloxOrdersTab() {
             />
           ))}
         </div>
+      )}
+            {deliverTarget && (
+        <OrderMessageModal
+          key={deliverTarget.id}
+          order={deliverTarget}
+          table="orders"
+          title="Hoàn tất đơn hàng"
+          confirmLabel="Xác nhận đã giao"
+          lockedStep={3}
+          onClose={() => setDeliverTarget(null)}
+          onSubmit={submitDeliver}
+        />
       )}
 
       {rejectOrder && (
