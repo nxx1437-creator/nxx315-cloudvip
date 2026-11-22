@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { BadgeCheck, Check, Clock3, User, X } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { canReply, formatDate, getReplyDeadline } from "../lib/orderView.js";
+import { canReply, getReplyDeadline } from "../lib/orderView.js";
 
 // Dán ID (uuid) của tài khoản NXX315 admin vào đây
-const ADMIN_USER_ID = "";
-const ADMIN_FALLBACK_NAME = "NXX315 Admin";
+const ADMIN_USER_ID = "46b2fbbc-dc4a-411d-b140-7c67e8680695";
+const ADMIN_FALLBACK_NAME = "NXX315";
 
 export const STEPS = ["Đã nhận đơn", "Kiểm tra", "Xử lý", "Hoàn tất"];
 
@@ -20,12 +20,6 @@ export function deriveStep(order) {
   return 0;
 }
 
-const TONE = {
-  blue: { fill: "bg-blue-500", dot: "bg-blue-500 text-white", ring: "ring-blue-200", text: "text-blue-600" },
-  green: { fill: "bg-emerald-500", dot: "bg-emerald-500 text-white", ring: "ring-emerald-200", text: "text-emerald-600" },
-  red: { fill: "bg-rose-400", dot: "bg-rose-500 text-white", ring: "ring-rose-200", text: "text-rose-600" },
-};
-
 let adminCache = null;
 
 function useAdminProfile() {
@@ -34,7 +28,6 @@ function useAdminProfile() {
   useEffect(() => {
     if (!ADMIN_USER_ID || adminCache) return;
     let alive = true;
-
     (async () => {
       try {
         const { data, error } = await supabase.rpc("get_public_profile", {
@@ -48,7 +41,6 @@ function useAdminProfile() {
         if (alive) setAdmin(adminCache);
       } catch {}
     })();
-
     return () => {
       alive = false;
     };
@@ -59,23 +51,35 @@ function useAdminProfile() {
 
 function AdminAvatar({ src, name }) {
   const [failed, setFailed] = useState(false);
-
   if (src && !failed) {
     return (
       <img
         src={src}
         alt={name}
         onError={() => setFailed(true)}
-        className="h-10 w-10 shrink-0 rounded-full border border-slate-100 object-cover"
+        className="h-8 w-8 shrink-0 rounded-full border border-gray-100 object-cover"
       />
     );
   }
-
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-black text-white">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white">
       {(name || "N").charAt(0).toUpperCase()}
     </div>
   );
+}
+
+function parts(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return {
+    day: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+    time: d.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }),
+  };
 }
 
 function timeLeftText(deadline, now) {
@@ -86,16 +90,206 @@ function timeLeftText(deadline, now) {
   return `Còn ${Math.max(m, 1)} phút để trả lời`;
 }
 
-export default function OrderProgressTracker({ order, onReplied }) {
-  const admin = useAdminProfile();
+// Tạo danh sách mốc, mới nhất nằm trên cùng (giống TikTok Shop)
+function buildEvents(order, step, failed) {
+  const created = order.created_at;
+  const updated = order.progress_updated_at || order.updated_at;
+  const events = [];
 
-  const [now, setNow] = useState(() => Date.now());
+  if (failed) {
+    const s = String(order.status || "").toLowerCase();
+    events.push({
+      title: s === "rejected" ? "Đã từ chối" : "Giao dịch không thành công",
+      desc: order.note || "Đơn hàng này không thể tiếp tục.",
+      time: updated,
+      tone: "red",
+    });
+  } else if (step >= 3) {
+    events.push({
+      title: "Đã giao",
+      desc: "Đơn hàng của bạn đã được giao thành công.",
+      time: order.delivered_at || updated,
+    });
+  }
+
+  if (!failed && step >= 2) {
+    events.push({
+      title: "Đang xử lý",
+      desc: "Admin đang xử lý để giao đơn hàng cho bạn.",
+      time: step === 2 ? updated : null,
+    });
+  }
+
+  if (!failed && step >= 1) {
+    events.push({
+      title: "Đã kiểm tra thanh toán",
+      desc: "Hệ thống đã ghi nhận giao dịch của bạn.",
+      time: step === 1 ? updated : null,
+    });
+  }
+
+  events.push({
+    title: "Đã đặt hàng",
+    desc: "Đơn hàng của bạn đã được tạo.",
+    time: created,
+  });
+
+  return events;
+}
+
+function AdminMessage({ order, admin, now, onReplied }) {
   const [replying, setReplying] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
-  // Cập nhật đồng hồ để nút "Trả lời" tự ẩn khi hết 23 giờ
+  const proofs = Array.isArray(order.proof_urls) ? order.proof_urls : [];
+  const note = order.progress_note;
+  if (!note && proofs.length === 0) return null;
+
+  const replyable = canReply(order, now);
+  const deadline = getReplyDeadline(order);
+  const sent = parts(order.progress_msg_at || order.progress_updated_at);
+
+  const sendReply = async () => {
+    const content = text.trim();
+    if (!content || sending) return;
+    setSending(true);
+    setError("");
+
+    const { data, error: err } = await supabase.rpc("reply_to_order", {
+      p_source: order.__source,
+      p_order_id: String(order.id),
+      p_text: content,
+    });
+    setSending(false);
+
+    if (err || data?.success === false) {
+      setError(err?.message || data?.error || "Không gửi được, thử lại sau.");
+      return;
+    }
+    onReplied?.({
+      user_reply: content,
+      user_reply_at: data?.user_reply_at || new Date().toISOString(),
+    });
+    setReplying(false);
+    setText("");
+  };
+
+  return (
+    <div className="mt-3 rounded-xl bg-gray-50 p-3">
+      <div className="flex items-center gap-2">
+        <AdminAvatar key={admin.avatar} src={admin.avatar} name={admin.name} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1">
+            <span className="truncate text-[13px] font-bold text-gray-900">{admin.name}</span>
+            <BadgeCheck size={15} className="shrink-0 fill-blue-500 text-white" />
+          </div>
+          {sent && (
+            <p className="text-[11px] text-gray-400">
+              {sent.time} · {sent.day}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {note && (
+        <p className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-6 text-gray-700">
+          {note}
+        </p>
+      )}
+
+      {proofs.length > 0 && (
+        <>
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
+            {proofs.map((url) => (
+              <a
+                key={url}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="block aspect-square overflow-hidden rounded-lg bg-gray-100"
+              >
+                <img src={url} alt="Ảnh từ admin" className="h-full w-full object-cover" />
+              </a>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11px] text-gray-400">Hình ảnh từ admin</p>
+        </>
+      )}
+
+      {order.user_reply && (
+        <div className="mt-3 border-l-2 border-gray-200 pl-3">
+          <p className="text-[12px] font-bold text-gray-900">Bạn</p>
+          <p className="mt-0.5 whitespace-pre-wrap break-words text-[13px] leading-6 text-gray-700">
+            {order.user_reply}
+          </p>
+          {parts(order.user_reply_at) && (
+            <p className="mt-0.5 text-[11px] text-gray-400">
+              {parts(order.user_reply_at).time} · {parts(order.user_reply_at).day}
+            </p>
+          )}
+        </div>
+      )}
+
+      {replyable && !replying && (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setReplying(true)}
+            className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-xs font-bold text-gray-800 active:bg-gray-100"
+          >
+            Trả lời
+          </button>
+          <span className="text-[11px] text-gray-400">{timeLeftText(deadline, now)}</span>
+        </div>
+      )}
+
+      {replyable && replying && (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={500}
+            rows={3}
+            autoFocus
+            placeholder="Nhập nội dung trả lời admin..."
+            className="w-full rounded-xl border border-gray-200 bg-white p-3 text-[13px] outline-none focus:border-gray-900"
+          />
+          {error && <p className="text-xs text-rose-500">{error}</p>}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={sendReply}
+              disabled={sending || !text.trim()}
+              className="rounded-full bg-gray-900 px-5 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+            >
+              {sending ? "Đang gửi..." : "Gửi"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setReplying(false);
+                setText("");
+                setError("");
+              }}
+              className="rounded-full px-4 py-1.5 text-xs font-bold text-gray-500"
+            >
+              Hủy
+            </button>
+            <span className="ml-auto text-[11px] text-gray-400">{text.length}/500</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function OrderProgressTracker({ order, onReplied }) {
+  const admin = useAdminProfile();
+  const [now, setNow] = useState(() => Date.now());
+
+  // Đồng hồ chạy để nút "Trả lời" tự biến mất khi hết 23 giờ
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(timer);
@@ -106,213 +300,71 @@ export default function OrderProgressTracker({ order, onReplied }) {
   const status = String(order.status || "").toLowerCase();
   const failed = ["rejected", "failed", "cancelled", "canceled"].includes(status);
   const step = deriveStep(order);
-  const complete = !failed && step === STEPS.length - 1;
-  const tone = TONE[failed ? "red" : complete ? "green" : "blue"];
-  const proofs = Array.isArray(order.proof_urls) ? order.proof_urls : [];
-  const note = order.progress_note;
-  const hasMessage = Boolean(note) || proofs.length > 0;
-
-  const replyable = hasMessage && canReply(order, now);
-  const deadline = getReplyDeadline(order);
-
-  const sendReply = async () => {
-    const content = text.trim();
-    if (!content || sending) return;
-
-    setSending(true);
-    setError("");
-
-    const { data, error: err } = await supabase.rpc("reply_to_order", {
-      p_source: order.__source,
-      p_order_id: String(order.id),
-      p_text: content,
-    });
-
-    setSending(false);
-
-    if (err || data?.success === false) {
-      setError(err?.message || data?.error || "Không gửi được, thử lại sau.");
-      return;
-    }
-
-    onReplied?.({
-      user_reply: content,
-      user_reply_at: data?.user_reply_at || new Date().toISOString(),
-    });
-    setReplying(false);
-    setText("");
-  };
+  const events = buildEvents(order, step, failed);
 
   return (
-    <section className="mt-3 rounded-2xl border border-gray-200 bg-white p-5">
-      <h2 className="mb-5 text-sm font-bold text-gray-900">Tiến độ đơn hàng</h2>
+    <section className="mt-3 rounded-2xl border border-gray-200 bg-white px-4 pb-2 pt-5">
+      <h2 className="mb-4 text-sm font-bold text-gray-900">Theo dõi đơn hàng</h2>
 
-      <div className="relative">
-        <div className="absolute left-[12.5%] right-[12.5%] top-[13px] h-1 rounded-full bg-gray-100">
-          <div
-            className={`h-full rounded-full transition-all duration-700 ease-out ${tone.fill}`}
-            style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }}
-          />
-        </div>
+      {events.map((ev, i) => {
+        const latest = i === 0;
+        const last = i === events.length - 1;
+        const t = parts(ev.time);
+        const dot =
+          ev.tone === "red"
+            ? "bg-rose-500"
+            : latest
+            ? "bg-emerald-500"
+            : "bg-gray-300";
 
-        <div className="relative grid grid-cols-4">
-          {STEPS.map((label, i) => {
-            const done = i < step || (i === step && complete);
-            const current = i === step && !complete;
-
-            return (
-              <div key={label} className="flex flex-col items-center gap-2">
-                <div
-                  className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-xs font-bold transition-all duration-500 ${
-                    done
-                      ? tone.dot
-                      : current
-                      ? `${tone.dot} ring-4 ${tone.ring}`
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  {current && failed ? (
-                    <X size={15} />
-                  ) : current ? (
-                    <Clock3 size={15} />
-                  ) : done ? (
-                    <Check size={15} />
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <span
-                  className={`text-center text-[11px] font-semibold leading-tight ${
-                    done || current ? tone.text : "text-gray-400"
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {hasMessage && (
-        <div className="mt-6 border-t border-gray-100 pt-5">
-          <div className="flex gap-3">
-            <AdminAvatar key={admin.avatar} src={admin.avatar} name={admin.name} />
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
-                <span className="truncate text-sm font-bold text-gray-900">
-                  {admin.name}
-                </span>
-                <BadgeCheck
-                  size={17}
-                  className="shrink-0 fill-blue-500 text-white"
-                  aria-label="Tài khoản đã xác minh"
-                />
-              </div>
-
-              {note && (
-                <p className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-6 text-gray-700">
-                  {note}
-                </p>
+        return (
+          <div key={ev.title} className="flex gap-3">
+            <div className="w-11 shrink-0 pt-0.5 text-right text-[11px] leading-4 text-gray-400">
+              {t && (
+                <>
+                  <p>{t.day}</p>
+                  <p>{t.time}</p>
+                </>
               )}
+            </div>
 
-              {proofs.length > 0 && (
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {proofs.map((url) => (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block aspect-square overflow-hidden rounded-xl border border-gray-100 bg-gray-50"
-                    >
-                      <img src={url} alt="Ảnh đính kèm" className="h-full w-full object-cover" />
-                    </a>
-                  ))}
-                </div>
-              )}
+            <div className="flex w-4 shrink-0 flex-col items-center">
+              <div className={`mt-1 h-3.5 w-3.5 rounded-full ${dot}`} />
+              {!last && <div className="mt-1 w-px flex-1 bg-gray-200" />}
+            </div>
 
-              <p className="mt-2 text-xs text-gray-400">
-                {formatDate(order.progress_msg_at || order.progress_updated_at)}
+            <div className="min-w-0 flex-1 pb-6">
+              <p
+                className={`text-[15px] font-bold ${
+                  ev.tone === "red"
+                    ? "text-rose-600"
+                    : latest
+                    ? "text-gray-900"
+                    : "text-gray-400"
+                }`}
+              >
+                {ev.title}
+              </p>
+              <p
+                className={`mt-0.5 text-[13px] leading-5 ${
+                  latest ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                {ev.desc}
               </p>
 
-              {order.user_reply && (
-                <div className="mt-4 flex gap-2.5 border-l-2 border-gray-100 pl-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-                    <User size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-bold text-gray-900">Bạn</p>
-                    <p className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-6 text-gray-700">
-                      {order.user_reply}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      {formatDate(order.user_reply_at)}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {replyable && !replying && (
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setReplying(true)}
-                    className="rounded-full border border-gray-200 px-4 py-1.5 text-xs font-bold text-gray-700 active:bg-gray-50"
-                  >
-                    Trả lời
-                  </button>
-                  <span className="text-[11px] text-gray-400">
-                    {timeLeftText(deadline, now)}
-                  </span>
-                </div>
-              )}
-
-              {replyable && replying && (
-                <div className="mt-4 space-y-2">
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    maxLength={500}
-                    rows={3}
-                    autoFocus
-                    placeholder="Nhập nội dung trả lời admin..."
-                    className="w-full rounded-xl border border-gray-200 p-3 text-[13px] outline-none focus:border-gray-900"
-                  />
-
-                  {error && <p className="text-xs text-rose-500">{error}</p>}
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={sendReply}
-                      disabled={sending || !text.trim()}
-                      className="rounded-full bg-gray-900 px-5 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                    >
-                      {sending ? "Đang gửi..." : "Gửi"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReplying(false);
-                        setText("");
-                        setError("");
-                      }}
-                      className="rounded-full px-4 py-1.5 text-xs font-bold text-gray-500"
-                    >
-                      Hủy
-                    </button>
-                    <span className="ml-auto text-[11px] text-gray-400">
-                      {text.length}/500
-                    </span>
-                  </div>
-                </div>
+              {latest && (
+                <AdminMessage
+                  order={order}
+                  admin={admin}
+                  now={now}
+                  onReplied={onReplied}
+                />
               )}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })}
     </section>
   );
-                                        }
+            }
