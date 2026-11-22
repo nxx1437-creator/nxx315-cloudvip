@@ -19,6 +19,7 @@ import {
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import { supabase } from "../lib/supabaseClient.js";
+import OrderProgressTracker from "../components/OrderProgressTracker.jsx";
 
 const STORAGE_URL =
   "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos";
@@ -522,6 +523,31 @@ export default function HistoryDetail() {
     loadOrder();
   }, [id, source]);
 
+  useEffect(() => {
+  if (!order?.id || !order?.__source) return;
+
+  const channel = supabase
+    .channel(`order-progress-${order.__source}-${order.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: order.__source,
+        filter: `id=eq.${order.id}`,
+      },
+      (payload) =>
+        setOrder((prev) =>
+          prev ? { ...prev, ...payload.new, __source: prev.__source } : prev
+        )
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [order?.id, order?.__source]);
+
   const status = getStatus(order?.status);
   const StatusIcon = status.Icon;
 
@@ -1023,7 +1049,7 @@ export default function HistoryDetail() {
                 </section>
               )}
 
-              {["success", "completed", "done"].includes(statusKey) && (
+                            {["success", "completed", "done"].includes(statusKey) && (
                 <section className="mt-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-500">
@@ -1042,6 +1068,8 @@ export default function HistoryDetail() {
                   </div>
                 </section>
               )}
+
+              <OrderProgressTracker order={order} />
             </>
           )}
         </div>
