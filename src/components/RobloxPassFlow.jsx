@@ -23,11 +23,9 @@ import {
 } from "./pay/DimensionKit.jsx";
 import { LAST_USERNAME_KEY, formatCoin } from "../lib/robloxData.js";
 
-// passPrice = giá phải đặt cho game pass (đã cộng phí 30% của Roblox)
-// Giá thật do máy chủ quyết định (create-roblox-order)
 const PASS_PACKAGES = [
-  { id: "pass-10", robux: 10, price: 3500, passPrice: 15 },
-  { id: "pass-20", robux: 20, price: 7000, passPrice: 29 },
+  { id: "pass-10", robux: 10, price: 3500, passPrice: 10 },
+  { id: "pass-20", robux: 20, price: 7000, passPrice: 20 },
 ];
 
 const PASS_RE =
