@@ -35,6 +35,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
   const [rejectReason, setRejectReason] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [deliverTarget, setDeliverTarget] = useState(null);
+  const [msgTarget, setMsgTarget] = useState(null);
 
   const shown = useMemo(() => {
     const kw = search.trim().toLowerCase();
@@ -133,6 +134,22 @@ export default function AdminGameOrdersTab({ onChanged }) {
                   </Btn>
                 </div>
               )}
+                            {o.user_reply && (
+                <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[13px] text-blue-800">
+                  <span className="font-semibold">Người dùng trả lời: </span>
+                  {o.user_reply}
+                </div>
+              )}
+
+              {(o.progress_note || o.user_reply || o.status === "delivered") && (
+                <button
+                  type="button"
+                  onClick={() => setMsgTarget(o)}
+                  className="mt-3 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] font-semibold text-[#242424]"
+                >
+                  Trả lời người dùng
+                </button>
+              )}
             </Card>
           ))}
         </div>
@@ -148,6 +165,22 @@ export default function AdminGameOrdersTab({ onChanged }) {
           onClose={() => setDeliverTarget(null)}
           onSubmit={async (fields) => {
             const ok = await update(deliverTarget, { ...fields, status: "delivered" });
+            return ok ? null : "Không lưu được, thử lại.";
+          }}
+        />
+      )}
+
+            {msgTarget && (
+        <OrderMessageModal
+          key={`msg-${msgTarget.id}`}
+          order={msgTarget}
+          table="orders"
+          title="Trả lời người dùng"
+          confirmLabel="Gửi"
+          lockedStep={msgTarget.status === "delivered" ? 3 : null}
+          onClose={() => setMsgTarget(null)}
+          onSubmit={async (fields) => {
+            const ok = await update(msgTarget, fields);
             return ok ? null : "Không lưu được, thử lại.";
           }}
         />
