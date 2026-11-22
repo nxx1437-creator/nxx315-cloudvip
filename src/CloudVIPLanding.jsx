@@ -11,7 +11,7 @@ import { timeAgo, scrollToId } from "./components/LandingBits.jsx";
 
 const STAR_URL = "https://i.postimg.cc/HLL0BmN7/1ef9365fbb1cd959265e9bf9ba8c45fb.png";
 /* Video bầu trời ở hero: hiện nguyên bản, căn giữa, KHÔNG phủ lớp mờ. Nên dùng file 1080p. */
-const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Video-hero1.mp4";
+const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Video-hero2.mp4";
 /* Ảnh thiên nhiên cho các khung: dán link ảnh (để "" thì dùng nền gradient có ánh sáng dưới đáy). */
 const NATURE = {
   flowers: "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/flowers.jpg",
