@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ChevronDown, User } from "lucide-react";
+import { ArrowLeft, ChevronDown, MapPin } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { getAccountRows } from "../lib/orderView.js";
 
 const VALID_SOURCES = ["orders", "redemption_orders"];
 const ID_RE = /^[0-9a-zA-Z-]{1,64}$/;
 
+// Tinh chỉnh lại component Step cho giống ảnh mẫu
 function Step({ n, title, children }) {
   return (
     <section className="border-b border-gray-100 px-5 py-5">
-      <div className="flex items-baseline gap-2.5">
-        <span className="text-[22px] font-semibold text-rose-500">
+      <div className="flex items-baseline gap-2.5 mb-2">
+        <span className="text-[20px] font-semibold text-rose-500 tracking-tight">
           {String(n).padStart(2, "0")}
         </span>
-        <h2 className="text-[19px] font-semibold leading-snug text-gray-900">{title}</h2>
+        <h2 className="text-[18px] font-semibold leading-snug text-gray-900">{title}</h2>
       </div>
-      <div className="mt-1.5 text-[15px] leading-6 text-gray-500">{children}</div>
+      <div className="text-[15px] leading-relaxed text-gray-500">{children}</div>
     </section>
   );
 }
@@ -76,23 +77,15 @@ export default function OrderNotReceived() {
 
   return (
     <div className="min-h-screen bg-white pb-32 text-gray-900">
-      <header className="sticky top-0 z-10 flex items-center border-b border-gray-200 bg-white px-4 py-3">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full active:bg-gray-100"
-          aria-label="Quay lại"
-        >
-          <ArrowLeft size={22} />
-        </button>
-        <h1 className="flex-1 pr-9 text-center text-[17px] font-bold">
-          Không nhận được hàng?
+      {/* Header giống ảnh mẫu: Không có nút back, chữ căn giữa */}
+      <header className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-100 bg-white px-4 py-4">
+        <h1 className="text-[18px] font-bold text-gray-800">
+          Không thể tìm thấy...
         </h1>
       </header>
 
       <Step n={1} title="Kiểm tra bằng chứng giao hàng">
-        Xem ghi chú và hình ảnh admin gửi trong phần Theo dõi đơn hàng để biết đơn đã được
-        giao như thế nào.
+        Xem hình ảnh nhân viên chuyển phát cung cấp để định vị kiện hàng
         {proofs.length > 0 && (
           <div className="mt-3 grid grid-cols-3 gap-2">
             {proofs.map((url) => (
@@ -107,23 +100,29 @@ export default function OrderNotReceived() {
         )}
       </Step>
 
-      <Step n={2} title="Kiểm tra tài khoản nhận hàng">
-        Đơn đã được giao đến thông tin bạn cung cấp khi đặt hàng. Hãy chắc chắn thông tin
-        này đúng.
+      <Step n={2} title="Kiểm tra địa chỉ giao hàng">
+        Kiện hàng đã giao đến địa chỉ bạn cung cấp
+        {/* Khối hiển thị thông tin người nhận giống ảnh mẫu */}
         <button
           type="button"
           onClick={() => rows.length > 0 && setOpen((v) => !v)}
-          className="mt-3 flex w-full items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-left"
+          className="mt-3 flex w-full items-start gap-3 rounded-xl bg-gray-50/80 px-4 py-3.5 text-left transition-colors hover:bg-gray-100"
         >
-          <User size={20} className="mt-0.5 shrink-0 text-gray-900" />
+          <MapPin size={20} className="mt-0.5 shrink-0 text-gray-800" />
           <div className="min-w-0 flex-1">
             {first ? (
               <>
                 <p className="truncate text-[15px] font-semibold text-gray-900">
-                  {first.label}: {first.value}
+                  {first.label} {first.value}
                 </p>
+                {/* Hiển thị thêm thông tin phụ (như địa chỉ) nếu có */}
+                {first.subValue && (
+                  <p className="mt-0.5 truncate text-[13px] text-gray-500">
+                    {first.subValue}
+                  </p>
+                )}
                 {open && (
-                  <div className="mt-2 space-y-1.5">
+                  <div className="mt-2 space-y-1.5 border-t border-gray-200 pt-2">
                     {rows.slice(1).map((r) => (
                       <p key={r.label} className="break-all text-[13px] text-gray-500">
                         {r.label}: <span className="text-gray-800">{r.value}</span>
@@ -133,7 +132,7 @@ export default function OrderNotReceived() {
                 )}
               </>
             ) : (
-              <p className="text-[14px] text-gray-400">Đang tải thông tin đơn hàng...</p>
+              <p className="text-[14px] text-gray-400">Đang tải thông tin...</p>
             )}
           </div>
           {rows.length > 1 && (
@@ -147,35 +146,27 @@ export default function OrderNotReceived() {
         </button>
       </Step>
 
-      <Step n={3} title="Kiểm tra lại trong game">
-        Mở game và xem lại số dư (Robux, Kim Cương, Quân Huy...). Một số game cần đăng nhập
-        lại hoặc chờ vài phút mới cập nhật.
+      <Step n={3} title="Kiểm tra với người nhận">
+        Hỏi hàng xóm hoặc thành viên trong gia đình xem họ có nhận hàng thay bạn không
       </Step>
 
-      <Step n={4} title="Kiểm tra thông báo từ admin">
-        Xem chuông thông báo trên web, email hoặc Zalo/Discord bạn đã dùng khi đặt hàng xem
-        admin có nhắn gì không.
-        <button
-          type="button"
-          onClick={() => navigate("/notifications")}
-          className="mt-2 block text-[15px] font-semibold text-teal-600"
-        >
-          Mở thông báo
-        </button>
+      <Step n={4} title="Kiểm tra thông báo của đơn vị vận chuyển">
+        Kiểm tra email hoặc tin nhắn xem có thông báo giao hàng từ đơn vị vận chuyển hay không. Bạn cũng có thể liên hệ với họ.
       </Step>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-100 bg-white px-5 pb-6 pt-3">
-        <p className="mb-2 text-center text-[12px] text-gray-400">
+      {/* Vùng Footer cố định */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-100 bg-white px-5 pb-6 pt-4">
+        <p className="mb-3 text-center text-[13px] text-gray-500">
           Đã kiểm tra đủ các bước mà vẫn chưa nhận được hàng?
         </p>
         <button
           type="button"
-          onClick={() => navigate("/support")}
-          className="w-full rounded-full bg-gray-900 py-3.5 text-[15px] font-bold text-white active:opacity-80"
+          onClick={() => navigate("/help?r=new")}
+          className="w-full rounded-xl bg-gray-900 py-3.5 text-[15px] font-bold text-white active:opacity-80"
         >
           Tạo yêu cầu để được hỗ trợ
         </button>
       </div>
     </div>
   );
-    }
+        }
