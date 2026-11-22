@@ -2,6 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
+/* Chỉnh 2 số này cho khớp chiều cao thanh trên / thanh dưới của web (px).
+   Vùng này KHÔNG bị chặn bấm, thẻ bảo trì cũng nằm phía trên thanh dưới. */
+const NAV_TOP = 60;
+const NAV_BOTTOM = 76;
+
 // Các trang KHÔNG bị chặn khi bật bảo trì 'all'
 const ALWAYS_OPEN = [
   "", "login", "register", "auth", "forgot-password", "verify-email",
@@ -86,7 +91,7 @@ export default function MaintenanceGate({ children }) {
   const hit = findHit(state.pages, pathname);
   const blocked = !!(state.loaded && hit && !state.isAdmin);
 
-  // khóa cuộn trang phía sau khi đang hiện popup
+  // khóa cuộn trang phía sau khi đang hiện thẻ
   useEffect(() => {
     if (!blocked) return undefined;
     const prev = document.body.style.overflow;
@@ -104,68 +109,99 @@ export default function MaintenanceGate({ children }) {
       {children}
 
       {blocked && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-5"
-          style={{
-            background: "rgba(15, 23, 42, 0.28)",
-            backdropFilter: "blur(3px)",
-            WebkitBackdropFilter: "blur(3px)",
-            animation: "mtFade .2s ease-out",
-          }}
-        >
+        <>
           <style>{`
             @keyframes mtFade{from{opacity:0}to{opacity:1}}
-            @keyframes mtPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+            @keyframes mtUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
           `}</style>
 
+          {/* Lớp chặn bấm vào trang, chừa thanh trên và thanh dưới */}
           <div
-            className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-white/70 bg-white/80 p-6 text-center shadow-2xl"
+            className="fixed left-0 right-0 z-[9998]"
             style={{
-              backdropFilter: "blur(18px)",
-              WebkitBackdropFilter: "blur(18px)",
-              animation: "mtPop .28s cubic-bezier(.2,.9,.3,1)",
+              top: NAV_TOP,
+              bottom: NAV_BOTTOM,
+              background: "rgba(15, 23, 42, 0.22)",
+              animation: "mtFade .2s ease-out",
+            }}
+          />
+
+          {/* Thẻ bảo trì ở góc dưới */}
+          <div
+            className="fixed left-4 right-4 z-[9999] sm:left-auto sm:right-6 sm:w-[380px]"
+            style={{
+              bottom: `calc(${NAV_BOTTOM}px + 12px + env(safe-area-inset-bottom, 0px))`,
+              animation: "mtUp .32s cubic-bezier(.2,.9,.3,1)",
             }}
           >
-            <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-cyan-300/40 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[28px] bg-[#0f1115] shadow-2xl ring-1 ring-white/10">
+              {/* khung minh họa */}
+              <div
+                className="relative flex h-36 items-center justify-center overflow-hidden"
+                style={{
+                  background:
+                    "radial-gradient(70% 90% at 50% 20%, #22d3ee 0%, #0ea5e9 38%, #0b2a4a 75%, #0f1115 100%)",
+                }}
+              >
+                <div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(rgba(255,255,255,.55) 1px, transparent 1.2px)",
+                    backgroundSize: "10px 10px",
+                  }}
+                />
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm">
+                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z" />
+                  </svg>
+                </div>
 
-            <button
-              onClick={goHome}
-              aria-label="Đóng"
-              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/5 text-slate-500 active:scale-95"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
+                <button
+                  onClick={goHome}
+                  aria-label="Đóng"
+                  className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-white/90 active:scale-95"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </div>
 
-            <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-400 text-white shadow-lg shadow-sky-300/50">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z" />
-              </svg>
+              {/* nội dung */}
+              <div className="px-5 pb-5 pt-4">
+                <h2 className="text-[22px] font-bold leading-tight text-white">
+                  {hit.title || "Đang bảo trì"}
+                </h2>
+                <p className="mt-2 text-[15px] leading-relaxed text-slate-400">
+                  {hit.message ||
+                    "Trang này đang được nâng cấp. Bạn vui lòng quay lại sau nhé!"}
+                </p>
+                {hit.ends_at && (
+                  <p className="mt-3 inline-block rounded-full bg-sky-500/15 px-3 py-1 text-xs font-medium text-sky-300">
+                    Dự kiến xong: {fmt(hit.ends_at)}
+                  </p>
+                )}
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => navigate("/support")}
+                    className="rounded-2xl border border-white/15 bg-transparent py-3 text-[15px] font-semibold text-white active:scale-95"
+                  >
+                    Hỗ trợ
+                  </button>
+                  <button
+                    onClick={goHome}
+                    className="rounded-2xl bg-white py-3 text-[15px] font-semibold text-[#0f1115] active:scale-95"
+                  >
+                    Về trang chủ
+                  </button>
+                </div>
+              </div>
             </div>
-
-            <h2 className="relative text-xl font-bold text-slate-800">
-              {hit.title || "Đang bảo trì"}
-            </h2>
-            <p className="relative mt-2 text-sm leading-relaxed text-slate-600">
-              {hit.message ||
-                "Trang này đang được nâng cấp. Bạn vui lòng quay lại sau nhé!"}
-            </p>
-            {hit.ends_at && (
-              <p className="relative mt-3 inline-block rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600">
-                Dự kiến xong: {fmt(hit.ends_at)}
-              </p>
-            )}
-
-            <button
-              onClick={goHome}
-              className="relative mt-5 w-full rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 py-3 text-sm font-semibold text-white shadow-md shadow-sky-300/40 active:scale-95"
-            >
-              Về trang chủ
-            </button>
           </div>
-        </div>
+        </>
       )}
     </>
   );
-              }
+          }
