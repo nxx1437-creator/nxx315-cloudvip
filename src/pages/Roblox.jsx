@@ -46,7 +46,11 @@ export default function Roblox() {
   // Khôi phục lựa chọn dở dang (khi tải lại trang) + nhớ username lần trước
   const [draft] = useState(loadDraft);
 
-  const [mode, setMode] = useState("normal"); // normal | pass
+    // Mở thẳng tab Game Pass khi vào từ "Gói dành cho bạn": /store/roblox?tab=pass&pkg=pass-10
+  const query = new URLSearchParams(window.location.search);
+  const [mode, setMode] = useState(
+    query.get("tab") === "pass" ? "pass" : "normal"
+  ); // normal | pass
   const [step, setStep] = useState("package"); // package | account | payment
   const [selectedId, setSelectedId] = useState(draft.packageId || "");
   const [username, setUsername] = useState(draft.username || lastUsername());
