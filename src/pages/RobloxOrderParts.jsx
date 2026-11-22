@@ -14,8 +14,8 @@ import {
   XCircle,
 } from "lucide-react";
 
-// Phí Roblox 30%: khách nhận N Robux thì pass phải đặt giá ceil(N / 0.7)
-export const passPriceFor = (robux) => Math.ceil(Number(robux || 0) / 0.7);
+// Chưa tính phí 30%: pass đặt giá đúng bằng số Robux của gói
+export const passPriceFor = (robux) => Number(robux || 0);
 
 export function getStatusInfo(status, paymentMethod, isPass = false) {
   const isBank = paymentMethod === "bank" || paymentMethod === "banking";
@@ -166,7 +166,7 @@ export function PassBox({ order, onCopy, copiedKey }) {
           {need} R$
         </span>
         <span className="text-xs text-gray-500">
-          (khách nhận {order.robux} R$ sau phí 30%)
+         (khách nhận khoảng {Math.floor(order.robux * 0.7)} R$ sau phí 30%)
         </span>
       </div>
 
