@@ -14,7 +14,13 @@ const FILTERS = [
   { id: "all", label: "Tất cả" },
 ];
 
-const GAME = { freefire: "Free Fire", pubg: "PUBG Mobile", fco: "FC Online", valorant: "Valorant" };
+const GAME = {
+  roblox: "Roblox",
+  freefire: "Free Fire",
+  pubg: "PUBG Mobile",
+  fco: "FC Online",
+  valorant: "Valorant",
+};
 
 // Các cột hiển thị trong phần chi tiết (bỏ cột trống)
 const DETAIL_KEYS = [
@@ -23,8 +29,49 @@ const DETAIL_KEYS = [
   "riot_id", "vp", "receive_method", "contact_value", "payment_method", "note",
 ];
 
-const whoOf = (o) =>
-  o.roblox_username || o.fco_character_id || o.riot_id || o.ff_uid || o.pubg_uid || o.pt_uid || o.uid || "-";
+// Label tiếng Việt cho từng field
+const DETAIL_LABELS = {
+  roblox_username: "Tên Roblox",
+  roblox_user_id: "ID Roblox",
+  package_id: "Gói",
+  robux: "Robux",
+  uid: "UID",
+  quanhuy: "Quân huy",
+  pt_uid: "UID PTC",
+  pt_gold: "Gold PTC",
+  ff_uid: "UID Free Fire",
+  ff_diamond: "Kim cương FF",
+  pubg_uid: "UID PUBG",
+  pubg_uc: "UC PUBG",
+  pubg_bonus: "UC Bonus",
+  fco_character_id: "ID nhân vật FCO",
+  fco_fc: "FC",
+  riot_id: "Riot ID",
+  vp: "VP",
+  receive_method: "Cách nhận",
+  contact_value: "Liên hệ",
+  payment_method: "Thanh toán",
+  note: "Ghi chú",
+};
+
+const whoOf = (o) => {
+  const v =
+    o.roblox_username ||
+    o.fco_character_id ||
+    o.riot_id ||
+    o.ff_uid ||
+    o.pubg_uid ||
+    o.pt_uid ||
+    o.uid;
+  const s = v != null ? String(v).trim() : "";
+  return s || "-";
+};
+
+const noteWithReject = (oldNote, reason) => {
+  const r = (reason || "").trim() || "Đơn bị từ chối";
+  const o = (oldNote || "").trim();
+  return o ? `${o} | ${r}` : r;
+};
 
 export default function AdminGameOrdersTab({ onChanged }) {
   const { data: orders, loading, error, reload } = useAdminList(loadOrders);
@@ -43,7 +90,15 @@ export default function AdminGameOrdersTab({ onChanged }) {
       (o) =>
         (filter === "all" || o.status === "paid") &&
         (!kw ||
-          [o.order_code, o.game, whoOf(o), o.package_id, o.contact_value]
+          [
+            o.order_code,
+            o.game,
+            whoOf(o),
+            o.package_id,
+            o.contact_value,
+            o.user_reply,
+            o.progress_note,
+          ]
             .filter(Boolean)
             .some((v) => String(v).toLowerCase().includes(kw)))
     );
@@ -67,7 +122,11 @@ export default function AdminGameOrdersTab({ onChanged }) {
   };
 
   const reject = async () => {
-    const ok = await update(rejectOrder, { status: "rejected", note: rejectReason.trim() || "Đơn bị từ chối" });
+    const patch = {
+      status: "rejected",
+      note: noteWithReject(rejectOrder.note, rejectReason),
+    };
+    const ok = await update(rejectOrder, patch);
     if (ok) {
       setRejectOrder(null);
       setRejectReason("");
@@ -94,7 +153,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
                 <div className="min-w-0">
                   <p className="text-[17px] font-semibold text-[#242424]">{GAME[o.game] || "Roblox / khác"}</p>
                   <p className="mt-0.5 text-[13px] text-[#6b7280]">
-                    #{o.order_code || String(o.id).slice(0, 8)} · {fmtNum(o.amount)}đ · {fmtTime(o.created_at)}
+                    #{o.order_code || String(o.id).slice(0, 8)} · {fmtNum(o.amount || 0)}đ · {fmtTime(o.created_at)}
                   </p>
                 </div>
                 <StatusBadge status={o.status} />
@@ -117,7 +176,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
                 <div className="mt-2 space-y-1 text-[13px] text-[#242424]">
                   {DETAIL_KEYS.filter((k) => o[k] !== null && o[k] !== undefined && o[k] !== "").map((k) => (
                     <p key={k}>
-                      <span className="text-[#6b7280]">{k}: </span>
+                      <span className="text-[#6b7280]">{DETAIL_LABELS[k] || k}: </span>
                       {String(o[k])}
                     </p>
                   ))}
@@ -134,7 +193,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
                   </Btn>
                 </div>
               )}
-                            {o.user_reply && (
+              {o.user_reply && (
                 <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[13px] text-blue-800">
                   <span className="font-semibold">Người dùng trả lời: </span>
                   {o.user_reply}
@@ -154,6 +213,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
           ))}
         </div>
       )}
+
       {deliverTarget && (
         <OrderMessageModal
           key={deliverTarget.id}
@@ -165,12 +225,13 @@ export default function AdminGameOrdersTab({ onChanged }) {
           onClose={() => setDeliverTarget(null)}
           onSubmit={async (fields) => {
             const ok = await update(deliverTarget, { ...fields, status: "delivered" });
+            if (ok) setDeliverTarget(null);
             return ok ? null : "Không lưu được, thử lại.";
           }}
         />
       )}
 
-            {msgTarget && (
+      {msgTarget && (
         <OrderMessageModal
           key={`msg-${msgTarget.id}`}
           order={msgTarget}
@@ -181,6 +242,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
           onClose={() => setMsgTarget(null)}
           onSubmit={async (fields) => {
             const ok = await update(msgTarget, fields);
+            if (ok) setMsgTarget(null);
             return ok ? null : "Không lưu được, thử lại.";
           }}
         />
@@ -195,7 +257,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
           }}
         >
           <p className="mb-3 text-[14px] text-[#6b7280]">
-            Đơn đã thanh toán {fmtNum(rejectOrder.amount)}đ, bạn cần hoàn tiền cho khách riêng.
+            Đơn đã thanh toán {fmtNum(rejectOrder.amount || 0)}đ, bạn cần hoàn tiền cho khách riêng.
           </p>
           <textarea
             value={rejectReason}
@@ -211,4 +273,4 @@ export default function AdminGameOrdersTab({ onChanged }) {
       )}
     </div>
   );
-}
+        }
