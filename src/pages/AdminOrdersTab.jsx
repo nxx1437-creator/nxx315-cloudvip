@@ -4,6 +4,7 @@ import {
   Btn, Card, EmptyState, ErrorState, FilterPills, Loading, Modal, SearchBox, SectionHeader,
   StatusBadge, fmtNum, fmtTime, useAdminList,
 } from "../components/admin/AdminUI";
+import OrderProgressAdmin from "../components/OrderProgressAdmin";
 
 const ADMIN_CHAT_ID = import.meta.env.VITE_ADMIN_CHAT_ID;
 
@@ -114,6 +115,8 @@ export default function AdminOrdersTab({ onChanged }) {
                 {o.delivery_target || "-"}
               </div>
               {o.admin_note && <p className="mt-2 text-[13px] text-[#6b7280]">Ghi chú: {o.admin_note}</p>}
+
+              <OrderProgressAdmin order={o} table="redemption_orders" onSaved={refresh} />
 
               {o.status === "pending" && (
                 <div className="mt-3 flex gap-2">
