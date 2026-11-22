@@ -3,6 +3,7 @@ import { BadgeCheck } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { canReply, getReplyDeadline } from "../lib/orderView.js";
 import NotReceivedBox from "./NotReceivedBox.jsx";
+import { useNavigate } from "react-router-dom";
 
 // Dán ID (uuid) của tài khoản NXX315 admin vào đây
 const ADMIN_USER_ID = "46b2fbbc-dc4a-411d-b140-7c67e8680695";
@@ -176,7 +177,8 @@ function AdminMessage({ order, admin, now, onReplied }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-   const [viewUrl, setViewUrl] = useState(null);
+  const navigate = useNavigate();
+  const [viewUrl, setViewUrl] = useState(null);
 
   const proofs = Array.isArray(order.proof_urls) ? order.proof_urls : [];
   const note = order.progress_note;
@@ -289,7 +291,11 @@ function AdminMessage({ order, admin, now, onReplied }) {
       )}
 
        {replyable && !replying && (
-        <NotReceivedBox onOpen={() => setReplying(true)} />
+                <NotReceivedBox
+          onOpen={() =>
+            navigate(`/history/order/${order.id}/not-received?source=${order.__source}`)
+          }
+        />
       )}
 
       {replyable && replying && (
