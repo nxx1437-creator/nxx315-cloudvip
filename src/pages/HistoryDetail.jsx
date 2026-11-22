@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -37,6 +37,9 @@ const NOTICE_TONE = {
   emerald: { box: "border-emerald-100 bg-emerald-50", icon: "text-emerald-500", title: "text-emerald-700", text: "text-emerald-600" },
   rose: { box: "border-rose-100 bg-rose-50", icon: "text-rose-500", title: "text-rose-700", text: "text-rose-600" },
 };
+
+const VALID_SOURCES = ["orders", "redemption_orders"];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function getNotice(order, statusKey) {
   const method = String(order?.payment_method || "").toLowerCase();
@@ -196,12 +199,21 @@ export default function HistoryDetail() {
   const [pkg, setPkg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [imgErr, setImgErr] = useState(false);
 
-  async function loadOrder() {
+  const loadOrder = useCallback(async () => {
     setLoading(true);
     setError("");
+    setOrder(null);
+    setPkg(null);
+    setImgErr(false);
 
     try {
+      if (!id || !UUID_RE.test(String(id))) {
+        setError("Mã đơn không hợp lệ.");
+        return;
+      }
+
       const {
         data: { user },
         error: userError,
@@ -214,7 +226,8 @@ export default function HistoryDetail() {
         return;
       }
 
-      const tables = source ? [source] : ["orders", "redemption_orders"];
+      const tables =
+        source && VALID_SOURCES.includes(source) ? [source] : VALID_SOURCES;
       let foundOrder = null;
       let foundTable = null;
 
@@ -247,9 +260,7 @@ export default function HistoryDetail() {
 
       if (
         foundOrder.package_id &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          String(foundOrder.package_id)
-        )
+        UUID_RE.test(String(foundOrder.package_id))
       ) {
         const { data: packageData } = await supabase
           .from("redemption_packages")
@@ -266,11 +277,11 @@ export default function HistoryDetail() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id, source, navigate]);
 
   useEffect(() => {
     loadOrder();
-  }, [id, source]);
+  }, [loadOrder]);
 
   // Admin cập nhật tiến độ / gửi tin nhắn thì trang tự đổi, không cần tải lại
   useEffect(() => {
@@ -298,7 +309,7 @@ export default function HistoryDetail() {
     };
   }, [order?.id, order?.__source]);
 
-    const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 10000);
     return () => clearInterval(timer);
@@ -309,6 +320,7 @@ export default function HistoryDetail() {
   const inFlight = ["pending", "paid", "processing"].includes(statusKey);
   const shownStatus =
     step === 1 && inFlight ? "paid" : step === 2 && inFlight ? "processing" : order?.status;
+  const shownStatusKey = String(shownStatus || "").toLowerCase();
   const status = statusInfo(shownStatus);
   const StatusIcon = status.icon;
 
@@ -316,7 +328,7 @@ export default function HistoryDetail() {
   const gameName = order ? getGameName(order) : null;
   const image = order ? getOrderImage(order) || pkg?.image_url || null : null;
   const amountText = order ? getAmountText(order, pkg) : "";
-  const notice = order ? getNotice(order, statusKey) : null;
+  const notice = order ? getNotice(order, shownStatusKey) : null;
   const tone = notice ? NOTICE_TONE[notice.tone] : null;
 
   const rows = order
@@ -329,11 +341,13 @@ export default function HistoryDetail() {
         { label: isCoinPayment(order) ? "Số xu" : "Số tiền", value: amountText },
         ...getAccountRows(order),
         order.delivery_target && { label: "Thông tin nhận", value: order.delivery_target },
-        order.note && statusKey !== "rejected" && { label: "Ghi chú", value: order.note },
+        order.note && shownStatusKey !== "rejected" && { label: "Ghi chú", value: order.note },
       ]
         .filter(Boolean)
         .filter((r) => r.value !== null && r.value !== undefined && r.value !== "")
     : [];
+
+  const showImage = image && !imgErr;
 
   return (
     <div className="min-h-screen bg-white pb-28 text-gray-900">
@@ -378,14 +392,12 @@ export default function HistoryDetail() {
               <section className="rounded-2xl border border-gray-200 bg-white p-5">
                 <div className="flex items-start gap-4">
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-                    {image ? (
+                    {showImage ? (
                       <img
                         src={image}
                         alt={title}
                         className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
+                        onError={() => setImgErr(true)}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
@@ -467,8 +479,6 @@ export default function HistoryDetail() {
                   </div>
                 </section>
               )}
-
-          
             </>
           )}
         </div>
@@ -477,4 +487,4 @@ export default function HistoryDetail() {
       <BottomNav />
     </div>
   );
-      }
+    }
