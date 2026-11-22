@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BadgeCheck } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { canReply, getReplyDeadline } from "../lib/orderView.js";
+import NotReceivedBox from "./NotReceivedBox.jsx";
 
 // Dán ID (uuid) của tài khoản NXX315 admin vào đây
 const ADMIN_USER_ID = "46b2fbbc-dc4a-411d-b140-7c67e8680695";
@@ -287,17 +288,8 @@ function AdminMessage({ order, admin, now, onReplied }) {
         </div>
       )}
 
-      {replyable && !replying && (
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setReplying(true)}
-            className="rounded-full border border-gray-300 bg-white px-4 py-1.5 text-xs font-bold text-gray-800 active:bg-gray-100"
-          >
-            Trả lời
-          </button>
-          <span className="text-[11px] text-gray-400">{timeLeftText(deadline, now)}</span>
-        </div>
+       {replyable && !replying && (
+        <NotReceivedBox onOpen={() => setReplying(true)} />
       )}
 
       {replyable && replying && (
@@ -308,7 +300,7 @@ function AdminMessage({ order, admin, now, onReplied }) {
             maxLength={500}
             rows={3}
             autoFocus
-            placeholder="Nhập nội dung trả lời admin..."
+                        placeholder="Mô tả vấn đề bạn gặp, ví dụ: chưa nhận được hàng..."
             className="w-full rounded-xl border border-gray-200 bg-white p-3 text-[13px] outline-none focus:border-gray-900"
           />
           {error && <p className="text-xs text-rose-500">{error}</p>}
