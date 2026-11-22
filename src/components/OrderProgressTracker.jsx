@@ -175,6 +175,7 @@ function AdminMessage({ order, admin, now, onReplied }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+   const [viewUrl, setViewUrl] = useState(null);
 
   const proofs = Array.isArray(order.proof_urls) ? order.proof_urls : [];
   const note = order.progress_note;
@@ -212,6 +213,27 @@ function AdminMessage({ order, admin, now, onReplied }) {
 
   return (
     <div className="mt-3 rounded-xl bg-gray-50 p-3">
+            {viewUrl && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setViewUrl(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setViewUrl(null)}
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-xl text-white"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+          <img
+            src={viewUrl}
+            alt="Ảnh từ admin"
+            className="max-h-full max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <AdminAvatar key={admin.avatar} src={admin.avatar} name={admin.name} />
         <div className="min-w-0 flex-1">
@@ -237,15 +259,14 @@ function AdminMessage({ order, admin, now, onReplied }) {
         <>
           <div className="mt-2 grid grid-cols-3 gap-1.5">
             {proofs.map((url) => (
-              <a
+              <button
                 key={url}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
+                type="button"
+                onClick={() => setViewUrl(url)}
                 className="block aspect-square overflow-hidden rounded-lg bg-gray-100"
               >
                 <img src={url} alt="Ảnh từ admin" className="h-full w-full object-cover" />
-              </a>
+              </button>
             ))}
           </div>
           <p className="mt-1.5 text-[11px] text-gray-400">Hình ảnh từ admin</p>
