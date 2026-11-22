@@ -15,7 +15,6 @@ import PaymentSection from "./RobloxPayment.jsx";
 import TermsCheckbox from "./TermsCheckbox.jsx";
 import {
   Caption,
-  GhostButton,
   IconBox,
   Panel,
   PillButton,
@@ -24,10 +23,11 @@ import {
 } from "./pay/DimensionKit.jsx";
 import { LAST_USERNAME_KEY, formatCoin } from "../lib/robloxData.js";
 
-// Giá thật do máy chủ quyết định (create-roblox-order), đây chỉ để hiển thị
+// passPrice = giá phải đặt cho game pass (đã cộng phí 30% của Roblox)
+// Giá thật do máy chủ quyết định (create-roblox-order)
 const PASS_PACKAGES = [
-  { id: "pass-10", robux: 10, price: 3500 },
-  { id: "pass-20", robux: 20, price: 7000 },
+  { id: "pass-10", robux: 10, price: 3500, passPrice: 15 },
+  { id: "pass-20", robux: 20, price: 7000, passPrice: 29 },
 ];
 
 const PASS_RE =
@@ -46,6 +46,8 @@ function lastUsername() {
     return "";
   }
 }
+
+const num = (n) => new Intl.NumberFormat("vi-VN").format(n);
 
 export default function RobloxPassFlow({ coins = 0, onEarn }) {
   const [view, setView] = useState("form"); // form | payment
@@ -91,7 +93,6 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
     }
   };
 
-  // Có sẵn username lần trước -> tự kiểm tra 1 lần
   useEffect(() => {
     if (username.trim() && !robloxUser) checkUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,7 +194,7 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
         <div className="mb-1 flex items-center justify-between rounded-full border border-gray-200 bg-gray-50 px-5 py-3">
           <span className="text-[13px] text-gray-600">Coin của bạn</span>
           <span className="text-[15px] font-semibold text-gray-900">
-            {new Intl.NumberFormat("vi-VN").format(coins)} Coin
+            {num(coins)} Coin
           </span>
         </div>
         {PASS_PACKAGES.map((p) => {
@@ -222,16 +223,15 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
                 <p className="mt-1 text-[16px] font-semibold text-gray-900">
                   {formatCoin(p.price)}
                 </p>
+                <p className="mt-1 text-[12px] text-gray-500">
+                  Đặt giá game pass: {p.passPrice} Robux
+                </p>
                 <p
-                  className={`mt-1 text-[12px] ${
+                  className={`mt-0.5 text-[12px] ${
                     enough ? "text-gray-700" : "text-gray-400"
                   }`}
                 >
-                  {enough
-                    ? "✓ Đủ Coin"
-                    : `Thiếu ${new Intl.NumberFormat("vi-VN").format(
-                        p.price - coins
-                      )} Coin`}
+                  {enough ? "✓ Đủ Coin" : `Thiếu ${num(p.price - coins)} Coin`}
                 </p>
               </div>
               <span
@@ -255,19 +255,20 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
         </div>
         <ol className="list-decimal space-y-1.5 pl-5 text-[13px] leading-5 text-gray-600">
           <li>
-            Vào Roblox Creator Hub, chọn game của bạn, mở Monetization rồi Passes
-            và tạo một game pass.
+            Vào Roblox Creator Hub, chọn game do chính bạn tạo (không dùng game của
+            nhóm), mở Monetization rồi Passes và tạo một game pass.
           </li>
           <li>
-            Đặt giá game pass bằng số Robux của gói bạn chọn
-            {pkg ? ` (${pkg.robux} Robux)` : ""}, bật bán rồi lưu.
+            Đặt giá game pass đúng{" "}
+            <b>{pkg ? `${pkg.passPrice} Robux` : "15 Robux (gói 10) hoặc 29 Robux (gói 20)"}</b>
+            , bật bán rồi lưu.
           </li>
-          <li>Dán link game pass vào ô bên dưới.</li>
+          <li>Dán link game pass vào ô bên dưới. Hệ thống sẽ tự kiểm tra giá.</li>
         </ol>
         <p className="mt-3 rounded-[14px] bg-gray-50 p-3 text-[12px] leading-5 text-gray-500">
-          Roblox thu phí 30% mỗi giao dịch nên Robux thực nhận khoảng 70% giá game
-          pass. Robux sẽ về tài khoản sau khoảng 3–7 ngày vì Roblox giữ lại để
-          chống gian lận.
+          Giá game pass đã tính sẵn phí 30% của Roblox nên bạn nhận đủ{" "}
+          {pkg ? `${pkg.robux} Robux` : "10 hoặc 20 Robux"}. Robux sẽ về tài khoản sau
+          khoảng 3–7 ngày vì Roblox giữ lại để chống gian lận.
         </p>
       </Panel>
 
@@ -384,7 +385,7 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
           <PillButton onClick={createOrder} disabled={missing.length > 0 || creating}>
             {creating ? (
               <>
-                <Loader2 size={16} className="animate-spin" /> Đang tạo đơn...
+                <Loader2 size={16} className="animate-spin" /> Đang kiểm tra và tạo đơn...
               </>
             ) : (
               <>
@@ -397,4 +398,4 @@ export default function RobloxPassFlow({ coins = 0, onEarn }) {
       </Panel>
     </div>
   );
-        }
+    }
