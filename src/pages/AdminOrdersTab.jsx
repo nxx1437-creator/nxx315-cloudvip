@@ -4,7 +4,7 @@ import {
   Btn, Card, EmptyState, ErrorState, FilterPills, Loading, Modal, SearchBox, SectionHeader,
   StatusBadge, fmtNum, fmtTime, useAdminList,
 } from "../components/admin/AdminUI";
-import OrderProgressAdmin from "../components/OrderProgressAdmin";
+import OrderMessageModal from "../components/OrderMessageModal";
 
 const ADMIN_CHAT_ID = import.meta.env.VITE_ADMIN_CHAT_ID;
 
@@ -36,6 +36,8 @@ export default function AdminOrdersTab({ onChanged }) {
   const [rejectOrder, setRejectOrder] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [busyId, setBusyId] = useState(null);
+  // { order, mode: "deliver" | "update" }
+  const [msgModal, setMsgModal] = useState(null);
 
   const shown = useMemo(() => {
     const kw = search.trim().toLowerCase();
@@ -54,17 +56,28 @@ export default function AdminOrdersTab({ onChanged }) {
     onChanged?.();
   };
 
-  const deliver = async (order) => {
-    if (busyId) return;
-    setBusyId(order.id);
+  // Gửi từ cửa sổ ghi chú + ảnh. "deliver" thì đồng thời chuyển đơn sang đã giao
+  const submitMessage = async (fields) => {
+    if (!msgModal) return "Thiếu thông tin đơn";
+    const { order, mode } = msgModal;
+
+    const payload =
+      mode === "deliver"
+        ? { ...fields, status: "delivered", delivered_at: new Date().toISOString() }
+        : fields;
+
     const { error: err } = await supabase
       .from("redemption_orders")
-      .update({ status: "delivered", delivered_at: new Date().toISOString() })
+      .update(payload)
       .eq("id", order.id);
-    setBusyId(null);
-    if (err) return alert("Có lỗi: " + err.message);
-    notifyTelegram(`✅ Đơn #${order.order_code || order.id} đã giao thành công.`);
+
+    if (err) return err.message;
+
+    if (mode === "deliver") {
+      notifyTelegram(`✅ Đơn #${order.order_code || order.id} đã giao thành công.`);
+    }
     await refresh();
+    return null;
   };
 
   // Từ chối bằng hàm reject_order trên Supabase: hoàn xu cho người dùng
@@ -114,23 +127,61 @@ export default function AdminOrdersTab({ onChanged }) {
                 <span className="text-[#6b7280]">{o.delivery_method || "Nhận qua"}: </span>
                 {o.delivery_target || "-"}
               </div>
+
               {o.admin_note && <p className="mt-2 text-[13px] text-[#6b7280]">Ghi chú: {o.admin_note}</p>}
 
-              <OrderProgressAdmin order={o} table="redemption_orders" onSaved={refresh} />
+              {o.progress_note && (
+                <p className="mt-2 text-[13px] text-[#6b7280]">
+                  Tin nhắn đã gửi: {o.progress_note}
+                  {(o.proof_urls || []).length > 0 && ` (+${o.proof_urls.length} ảnh)`}
+                </p>
+              )}
+
+              {o.user_reply && (
+                <div className="mt-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-[13px] text-blue-800">
+                  <span className="font-semibold">Người dùng trả lời: </span>
+                  {o.user_reply}
+                </div>
+              )}
 
               {o.status === "pending" && (
                 <div className="mt-3 flex gap-2">
-                  <Btn className="flex-1" disabled={busyId === o.id} onClick={() => deliver(o)}>
-                    {busyId === o.id ? "Đang xử lý..." : "Đã giao"}
+                  <Btn
+                    className="flex-1"
+                    disabled={busyId === o.id}
+                    onClick={() => setMsgModal({ order: o, mode: "deliver" })}
+                  >
+                    Đã giao
                   </Btn>
                   <Btn variant="ghost" className="flex-1" disabled={busyId === o.id} onClick={() => setRejectOrder(o)}>
                     Từ chối
                   </Btn>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => setMsgModal({ order: o, mode: "update" })}
+                className="mt-3 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] font-semibold text-[#242424]"
+              >
+                Gửi tin nhắn / cập nhật tiến độ
+              </button>
             </Card>
           ))}
         </div>
+      )}
+
+      {msgModal && (
+        <OrderMessageModal
+          key={`${msgModal.order.id}-${msgModal.mode}`}
+          order={msgModal.order}
+          table="redemption_orders"
+          title={msgModal.mode === "deliver" ? "Hoàn tất đơn hàng" : "Gửi tin nhắn cho người dùng"}
+          confirmLabel={msgModal.mode === "deliver" ? "Xác nhận đã giao" : "Lưu và gửi"}
+          lockedStep={msgModal.mode === "deliver" ? 3 : null}
+          onClose={() => setMsgModal(null)}
+          onSubmit={submitMessage}
+        />
       )}
 
       {rejectOrder && (
@@ -158,4 +209,6 @@ export default function AdminOrdersTab({ onChanged }) {
       )}
     </div>
   );
-}
+                  }
+
+
