@@ -77,20 +77,17 @@ export default function OrderNotReceived() {
   return (
     <div className="min-h-screen bg-white pb-32 text-gray-900">
       
-      {/* HEADER LƠ LỬNG, KHÔNG NỀN, GỌN GÀNG */}
+      {/* HEADER LƠ LỬNG */}
       <header className="sticky top-0 z-20 w-full px-4 pt-4 pb-2 bg-white/90 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
-          {/* Nút Logo */}
           <button
             type="button"
             onClick={() => navigate("/")}
             className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] active:bg-gray-50"
-            aria-label="Trang chủ"
           >
             <Sparkles size={20} className="text-gray-800" />
           </button>
 
-          {/* Thanh điều hướng */}
           <div className="flex h-[44px] flex-1 items-center justify-between rounded-full bg-white border border-gray-100 px-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             <button
               type="button"
@@ -112,17 +109,18 @@ export default function OrderNotReceived() {
         </div>
       </header>
 
-      {/* Nội dung các bước */}
+      {/* NỘI DUNG CÁC BƯỚC ĐÃ ĐƯỢC ĐỔI CHO PHÙ HỢP DỊCH VỤ SỐ/GAME */}
       <div className="mt-2">
-        <Step n={1} title="Kiểm tra bằng chứng giao hàng">
-          Xem hình ảnh Admin cung cấp để kiểm tra
+        <Step n={1} title="Đối soát thông tin nhận hàng">
+          Đảm bảo bạn đã nhập chính xác UID, Tên nhân vật hoặc thông tin tài khoản cần nạp. Nếu sai lệch, vui lòng kiểm tra lại lịch sử đơn hàng.
+          {/* Vẫn giữ phần hiển thị ảnh minh chứng nếu có */}
           {proofs.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2">
               {proofs.map((url) => (
                 <img
                   key={url}
                   src={url}
-                  alt="Bằng chứng "
+                  alt="Minh chứng"
                   className="aspect-square w-full rounded-xl border border-gray-100 object-cover"
                 />
               ))}
@@ -130,8 +128,8 @@ export default function OrderNotReceived() {
           )}
         </Step>
 
-        <Step n={2} title="Kiểm tra thông tin đơn hàng">
-          đơn hàng đã giao đến tài khoản bạn cung cấp
+        <Step n={2} title="Xác nhận tài khoản / UID nhận">
+          Hệ thống đã ghi nhận thông tin nhận hàng của bạn. Hãy chắc chắn tài khoản này đang hoạt động bình thường.
           <button
             type="button"
             onClick={() => rows.length > 0 && setOpen((v) => !v)}
@@ -174,23 +172,23 @@ export default function OrderNotReceived() {
           </button>
         </Step>
 
-        <Step n={3} title="Kiểm tra lại thông tin">
-          kiểm tra thông tin mình đã nhập đúng chưa 
+        <Step n={3} title="Chờ hệ thống cập nhật">
+          Đối với nạp game hoặc mua tài khoản, đôi khi hệ thống cần từ 5 - 15 phút để xử lý. Bạn hãy thử đăng nhập lại game hoặc tải lại trang để kiểm tra.
         </Step>
 
-        <Step n={4} title="Kiểm tra thông báo của admin">
-          Kiểm tra email hoặc tin nhắn xem có thông báo từ admin hay không.
+        <Step n={4} title="Kiểm tra hộp thư / thông báo">
+          Xem lại tin nhắn trong mục Thông báo của web hoặc email đăng ký, xem có thông báo hoàn tất đơn hàng hay yêu cầu bổ sung thông tin từ Admin không.
         </Step>
       </div>
 
       {/* Vùng Footer cố định */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-100 bg-white px-5 pb-6 pt-4">
         <p className="mb-3 text-center text-[13px] text-gray-500">
-          Đã kiểm tra đủ các bước mà vẫn chưa nhận được hàng?
+          Đã kiểm tra kỹ mà vẫn chưa nhận được hàng?
         </p>
         <button
           type="button"
-          onClick={() => navigate("/help?r=new")} // Đã sửa đường dẫn theo yêu cầu
+          onClick={() => navigate("/help?r=new")}
           className="w-full rounded-xl bg-gray-900 py-3.5 text-[15px] font-bold text-white active:opacity-80"
         >
           Tạo yêu cầu để được hỗ trợ
@@ -198,4 +196,4 @@ export default function OrderNotReceived() {
       </div>
     </div>
   );
-            }
+          }
