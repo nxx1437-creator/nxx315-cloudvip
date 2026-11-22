@@ -1,5 +1,5 @@
-// src/CloudVIPLanding.jsx
-import React, { useEffect, useRef, useState, useMemo } from "react";
+// src/CloudVIPLanding.jsx — phong cách "midnight optimism" (Copilot Money)
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient.js";
 import { SITE } from "./lib/siteInfo.js";
@@ -9,120 +9,190 @@ import { COPY, CREATOR_URL } from "./lib/landingData.js";
 import { FX } from "./lib/landingFxCopy.js";
 import { timeAgo, scrollToId } from "./components/LandingBits.jsx";
 
-/* Logo ngôi sao (đầu trang và chân trang) */
 const STAR_URL = "https://i.postimg.cc/HLL0BmN7/1ef9365fbb1cd959265e9bf9ba8c45fb.png";
-/* Hero: video tự phát. HERO_IMAGE_URL để "" thì hiện bầu trời gradient trong lúc video tải. */
-const HERO_VIDEO_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Video-hero.mp4";
-const HERO_IMAGE_URL = "";
-const MEADOW_URL = "";
-/* Ảnh lời kêu gọi cuối trang */
-const FLOWERS_URL = "https://rwglwovohbyqmbbzdvdj.supabase.co/storage/v1/object/public/game_logos/Hoa-cuc.jpg";
+/* Video nền hero (tuỳ chọn). Để "" là tắt. Nếu bật, video chỉ hiện mờ ~22% trên nền xanh đêm. */
+const HERO_VIDEO_URL = "";
 
-const SKY = "radial-gradient(60% 40% at 20% 15%,rgba(255,255,255,.5),transparent 70%),radial-gradient(50% 35% at 80% 30%,rgba(255,255,255,.35),transparent 70%),linear-gradient(#1673d1,#5ab0f2 70%,#9fd2f7)";
-const MEADOW = "radial-gradient(80% 60% at 50% 110%,#61a133,transparent 70%),linear-gradient(#0e2a12,#2f6a1c)";
-const FLOWERS = "radial-gradient(70% 50% at 30% 70%,rgba(255,255,255,.3),transparent 70%),radial-gradient(60% 50% at 75% 80%,#cc7c01,transparent 70%),linear-gradient(#0a1f0d,#2f6a1c)";
-const bg = (url, fb, shade) => (url ? `${shade ? `linear-gradient(rgba(0,0,0,${shade}),rgba(0,0,0,${shade})),` : ""}url(${url}) center/cover, ${fb}` : fb);
+/* Viên nang trang trí: [màu, emoji] theo thứ tự fx.marquee */
+const CAPS = [["#ff33aa", "🎮"], ["#f27f0c", "🪙"], ["#9019e6", "⚔️"], ["#59cc33", "✅"], ["#5c6f8a", "💎"], ["#e83030", "🎬"]];
+const HERO_CAPS = [
+  { i: 0, top: "5%", left: "-5%", rot: -18, blur: 3, s: 0.7 },
+  { i: 1, top: "3%", right: "-7%", rot: 16, blur: 2, s: 0.7 },
+  { i: 2, top: "41%", left: "-24%", rot: -14, blur: 4, s: 0.7 },
+  { i: 3, top: "57%", right: "-22%", rot: 20, blur: 3, s: 0.7 },
+  { i: 4, bottom: "13%", left: "-9%", rot: 14, blur: 3, s: 0.7 },
+  { i: 5, bottom: "7%", right: "-5%", rot: -16, blur: 2, s: 0.7 },
+];
+const FOOT_CAPS = [[5, -22, -2], [0, 14, 4], [1, -8, 2], [2, 20, 0], [3, -14, 3], [4, 26, 1], [5, -30, 4], [0, 12, 2]];
 
-const GAMES = ["Free Fire", "Liên Quân", "Play Together", "Valorant", "FC Mobile", "Roblox"];
-
-/* Nội dung mới giới thiệu về web (chỉ ghi những gì web có) */
 const EXTRA = {
   vi: {
-    fCap: "Trên web", fTitle: "Mọi thứ trong *một tài khoản*.",
-    fSub: "Làm nhiệm vụ, nạp game, đổi quà và theo dõi đơn, tất cả ở nxx315.com.",
-    cards: [
-      ["Nhiệm vụ mỗi ngày", "Nhận xu miễn phí hằng ngày hoặc tham gia các sự kiện."],
-      ["Đổi quà thật", "Robux, Quân Huy, Kim Cương và nhiều quà khác. Đơn được kiểm tra trước khi giao."],
-      ["Tài khoản gọn nhẹ", "Đăng nhập bằng Google hoặc liên kết gửi qua email, không cần mật khẩu."],
-      ["Minh bạch", "Biết ai vận hành, xu đến từ đâu, hoàn tiền và khiếu nại thế nào."],
-    ],
+    brand: "NXX315 Studio",
+    mSub: "Dùng ngay trên điện thoại và máy tính, tại nxx315.com.",
+    bTitle: "Một nơi cho nhiệm vụ, xu và quà.",
+    tasks: ["Nhiệm vụ mỗi ngày", "Nhận xu miễn phí hằng ngày hoặc tham gia các sự kiện.", ["Nhiệm vụ hằng ngày", "Nhiệm vụ đối tác", "Sự kiện"], "+ xu"],
+    games: ["Nạp game bằng Coin", "Dùng Coin nạp thẳng vào các game bạn chơi mỗi ngày."],
+    gifts: ["Đổi quà thật", "Robux, Quân Huy, Kim Cương và nhiều quà khác. Đơn được kiểm tra trước khi giao.", ["Robux", "Quân Huy", "Kim Cương"]],
+    about: [["Minh bạch", "Biết ai vận hành, xu đến từ đâu, hoàn tiền và khiếu nại thế nào."], ["Tài khoản gọn nhẹ", "Đăng nhập bằng Google hoặc liên kết gửi qua email, không cần mật khẩu."]],
     aboutLink: "Đọc trang Giới thiệu",
-    gameTitle: "Nạp game *bằng Coin*.", gameText: "Dùng Coin nạp thẳng vào các game bạn chơi mỗi ngày.",
-    gameCap: "6 game",
-    mockRows: ["Video #1", "Video #2", "Video #3"], mockOk: "Đã duyệt",
-    bottom: "Roblox · Creator",
+    demo: "Minh họa", rows: ["Video #1", "Video #2", "Video #3"], ok: "Đã duyệt",
+    footCaps: ["TOP 1", "XẾP HẠNG"],
+    legal: "Nxx315 Studio",
   },
   en: {
-    fCap: "On the site", fTitle: "Everything in *one account*.",
-    fSub: "Do tasks, top up games, redeem rewards and track orders, all at nxx315.com.",
-    cards: [
-      ["Daily tasks", "Earn free coins every day or join events."],
-      ["Real rewards", "Robux, game currency and more. Orders are checked before delivery."],
-      ["Light account", "Sign in with Google or an emailed link, no password needed."],
-      ["Transparent", "Know who runs it, where coins come from, and how refunds and complaints work."],
-    ], 
+    brand: "NXX315 Studio",
+    mSub: "Use it right on your phone or computer, at nxx315.com.",
+    bTitle: "One place for tasks, coins and rewards.",
+    tasks: ["Daily tasks", "Earn free coins every day or join events.", ["Daily task", "Partner task", "Event"], "+ coins"],
+    games: ["Top up games with Coins", "Use Coins to top up the games you play every day."],
+    gifts: ["Real rewards", "Robux, game currency and more. Orders are checked before delivery.", ["Robux", "Game currency", "More rewards"]],
+    about: [["Transparent", "Know who runs it, where coins come from, and how refunds and complaints work."], ["Light account", "Sign in with Google or an emailed link, no password needed."]],
     aboutLink: "Read the About page",
-    gameTitle: "Top up games *with Coins*.", gameText: "Use Coins to top up the games you play every day.",
-    gameCap: "6 games",
-    mockRows: ["Video #1", "Video #2", "Video #3"], mockOk: "Approved",
-    bottom: "Roblox · Creator",
+    demo: "Demo", rows: ["Video #1", "Video #2", "Video #3"], ok: "Approved",
+    footCaps: ["TOP 1", "LEADERBOARD"],
+    legal: "Nxx315 Studio",
   },
 };
+const GAMES = ["Free Fire", "Liên Quân", "Play Together", "Valorant", "FC Mobile", "Roblox"];
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Inter:wght@300;400&family=Roboto+Mono:wght@400;500&display=swap');
-.nl{--serif:"Lyondisplay App","Cormorant Garamond",Georgia,serif;background:#050505;color:#fff;font-family:"Inter",Arial,sans-serif;font-weight:300;overflow-x:hidden;min-height:100vh;-webkit-font-smoothing:antialiased}
-.nl a{color:inherit;text-decoration:none}
-.nl .serif{font-family:var(--serif);font-weight:300}
-.nl em{font-style:italic}
-.nl .mono{font-family:"Roboto Mono",monospace}
-.nl .h1{font-size:clamp(48px,8vw,96px);line-height:1.15}
-.nl .h1,.nl .h2{text-wrap:balance}
-.nl .h2{font-size:clamp(44px,6.6vw,80px);line-height:1;letter-spacing:-.01em;color:#fafafa}
-.nl .h3{font-size:clamp(32px,4vw,48px);line-height:1.15}
-.nl .h4{font-size:38px;line-height:.9}
-.nl .btn{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 20px;border:0;border-radius:8px;background:#fff;color:#000;cursor:pointer;font:500 12px/2 "Roboto Mono",monospace;letter-spacing:.021em;text-transform:uppercase;transition:background-color .2s}
-.nl .btn:hover{background:#e6e6e6}
-.nl .btn2{background:#131313;color:#fff;border:1px solid rgba(255,255,255,.08)}
-.nl .btn2:hover{background:#222}
-.nl .sm{height:36px;padding:0 14px}
-.nl .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:24px}
-.nl .nav{font:400 12px/1.5 "Roboto Mono",monospace;letter-spacing:.021em;text-transform:uppercase;background:none;border:0;color:#fff;cursor:pointer;padding:0}
-.nl .cap{font:400 11px/1.4 "Roboto Mono",monospace;letter-spacing:.182em;text-transform:uppercase;color:#9b9b9b}
-.nl .wrap{max-width:1280px;margin:0 auto;padding:0 32px}
-.nl .sup{color:#9b9b9b}
-.nl .sec{padding:112px 0}
-.nl .rise{opacity:0;transform:translate3d(0,18px,0);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
-.nl .rise.in{opacity:1;transform:none}
-.nl details{border-top:1px solid rgba(255,255,255,.14)}
-.nl details:last-child{border-bottom:1px solid rgba(255,255,255,.14)}
-.nl summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;padding:20px 0;font-weight:400}
-.nl summary::-webkit-details-marker{display:none}
-.nl summary::after{content:"+";font-family:"Roboto Mono",monospace;color:#9b9b9b}
-.nl details[open] summary::after{content:"−"}
-.nl details p{padding-bottom:20px;color:#9b9b9b;max-width:640px;line-height:1.5}
-.nl .fh{font:500 13px/1.4 "Roboto Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin-bottom:12px}
-.nl .fl{list-style:none;margin:0;padding:0}
-.nl .fl li{font-size:17px;line-height:2.3;color:#9b9b9b}
-.nl .fl a,.nl .fl button{color:inherit;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-align:left;transition:color .2s}
-.nl .fl a:hover,.nl .fl button:hover{color:#fff}
-@keyframes drift{from{transform:translate3d(-3%,0,0) scale(1)}to{transform:translate3d(3%,-2%,0) scale(1.08)}}
-@keyframes slide{to{transform:translateX(-50%)}}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Inter:wght@100;200;300;700&display=swap');
+.cp{--f:"Jokker","DM Sans",sans-serif;--m:"Matter Variable","Inter",sans-serif;--muted:#597caa;--ink:#11263b;--lm:#7f8ba4;background:#000814;color:#e6e6e8;font-family:var(--f);font-weight:500;overflow-x:hidden;min-height:100vh;-webkit-font-smoothing:antialiased}
+.cp a{color:inherit;text-decoration:none}
+.cp button{font-family:inherit}
+.cp .stage{max-width:1200px;margin:0 auto;padding:0 20px}
+.cp .sec{padding:96px 0}
+.cp .hd{font:600 clamp(34px,6vw,64px)/1.05 var(--f);color:#e6e6e8;margin:0;text-wrap:balance}
+.cp .lead{font:500 clamp(18px,3vw,32px)/1.2 var(--f);color:#ccced0;margin:0}
+.cp .sub{font:400 clamp(16px,2.2vw,24px)/1.4 var(--f);color:var(--muted);margin:0}
+.cp .rise{opacity:0;transform:translate3d(0,18px,0);transition:opacity .6s cubic-bezier(.44,0,.56,1),transform .6s cubic-bezier(.44,0,.56,1)}
+.cp .rise.in{opacity:1;transform:none}
+
+/* thanh đầu: hai đảo kính */
+.cp .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 0;pointer-events:none}
+.cp .isle{pointer-events:auto;display:flex;align-items:center;gap:4px;height:48px;padding:0 6px;border-radius:16px;background:rgba(8,27,54,.62);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(28,108,255,.2)}
+.cp .isle-l{width:48px;padding:0;justify-content:center;border-radius:999px}
+.cp .nl-link{display:none;padding:6px 12px;font:500 16px/1.6 var(--f);letter-spacing:-.01em;color:rgba(255,255,255,.9);background:none;border:0;cursor:pointer;white-space:nowrap;transition:color .4s cubic-bezier(.44,0,.56,1)}
+.cp .nl-link:hover{color:var(--muted)}
+.cp .isle .nl-always{display:inline-flex}
+.cp .brand-t{display:none;font:600 17px/1 var(--f);letter-spacing:-.01em;padding-right:10px}
+.cp .light{display:inline-flex;align-items:center;white-space:nowrap;padding:6px 12px;border-radius:14px;background:linear-gradient(#f9fafb,#f6f7f9);color:var(--ink);font:500 15px/1.6 var(--f);letter-spacing:-.01em}
+
+/* nút xanh như phím phần cứng */
+.cp .rim{display:inline-flex;padding:2px;border-radius:22px;background:rgba(0,71,204,.4)}
+.cp .key{display:flex;align-items:center;gap:12px;background:#1a66ff;color:#fff;border-radius:20px;padding:16px 18px 16px 16px;font:500 clamp(18px,4.6vw,24px)/1 var(--f);box-shadow:rgba(255,255,255,.16) 4px 4px 16px -4px inset,rgba(0,0,0,.2) -4px -4px 16px -4px inset,rgba(255,255,255,.08) 4px 4px 8px 0 inset,rgba(255,255,255,.4) 1px 1px 1px -.5px inset;white-space:nowrap}
+.cp .key.sm{border-radius:16px;padding:12px 16px 12px 14px;gap:10px;font:500 20px/24px var(--f)}
+.cp .rim.sm{border-radius:18px}
+.cp .mark{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#eef3fb;flex-shrink:0}
+
+/* viên nang bóng */
+.cp .capsule{--s:.7;display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--s)*12px);border-radius:40px;padding:calc(var(--s)*16px) calc(var(--s)*32px) calc(var(--s)*16px) calc(var(--s)*24px);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:rgba(255,255,255,.16) 0 24px 64px -12px inset,rgba(0,0,0,.16) 0 -24px 40px -12px inset,rgba(255,255,255,.16) 0 .6px 1.1px -.5px inset,rgba(255,255,255,.17) 0 1.9px 3.5px -1px inset,rgba(255,255,255,.19) 0 5.1px 9.2px -1.5px inset,rgba(255,255,255,.24) 0 16px 28.8px -2px inset;white-space:nowrap}
+.cp .capsule b{font:700 calc(var(--s)*28px)/1 "Inter",sans-serif;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,.7));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cp .capsule i{font-style:normal;font-size:calc(var(--s)*44px);line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.28))}
+
+/* hero */
+.cp .hero{position:relative;overflow:hidden;text-align:center;padding:150px 0 120px;background:radial-gradient(60% 45% at 50% 0%,#00265c 0%,rgba(0,8,20,0) 70%),radial-gradient(50% 50% at 50% 55%,rgba(0,85,204,.14) 0%,rgba(0,85,204,0) 100%),#000814}
+.cp .display{font:600 clamp(40px,11vw,132px)/.9 var(--f);letter-spacing:-.02em;margin:0 auto;max-width:1000px;background:linear-gradient(#dfe4ed 15%,#8795ad 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.08em}
+.cp .h-line{display:block}
+.cp .hero-cap{position:absolute;pointer-events:none}
+
+/* khối thiết bị */
+.cp .scene{position:relative;max-width:900px;margin:56px auto 0;padding-bottom:72px}
+.cp .win{border-radius:16px;overflow:hidden;background:#000d1f;border:1px solid rgba(28,108,255,.22);text-align:left}
+.cp .win-bar{display:flex;align-items:center;gap:6px;padding:12px 14px;background:#010d1e;border-bottom:1px solid rgba(28,108,255,.14)}
+.cp .win-bar i{width:9px;height:9px;border-radius:50%;background:#1a2a44}
+.cp .win-bar span{margin-left:10px;font:500 12px var(--f);color:var(--muted)}
+.cp .win-body{padding:18px;display:grid;gap:8px}
+.cp .phone{position:absolute;right:-6px;bottom:0;width:min(250px,56%);border-radius:36px;border:8px solid #0b1424;background:#000814;padding:30px 16px 18px;text-align:left;box-shadow:0 0 0 1px rgba(28,108,255,.25)}
+.cp .phone:before{content:"";position:absolute;top:8px;left:50%;width:70px;height:18px;margin-left:-35px;border-radius:99px;background:#000}
+.cp .phone .tag{font:500 11px var(--f);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cp .phone .t{font:600 22px/1.15 var(--f);margin:8px 0 6px;color:#e6e6e8}
+.cp .phone .n{font:400 13px/1.4 var(--f);color:var(--muted);margin:0}
+
+/* bento */
+.cp .bento{display:grid;gap:16px;grid-template-columns:1fr}
+.cp .panel{position:relative;display:flex;flex-direction:column;overflow:hidden;min-height:320px;padding:28px 32px 0 32px;border-radius:24px;background:radial-gradient(79% 75% at 79% 82.5%,#000f24 0%,#000d1f 100%);border:1px solid rgba(28,108,255,.14);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.cp .panel h3{font:600 24px/1.2 var(--f);margin:0;color:#e6e6e8}
+.cp .panel p.d{font:500 16px/1.4 var(--f);color:var(--muted);margin:8px 0 0;max-width:360px}
+.cp .frag{margin-top:auto;padding-top:24px;display:grid;gap:8px;-webkit-mask-image:linear-gradient(#000 72%,transparent);mask-image:linear-gradient(#000 72%,transparent);padding-bottom:0;max-height:210px;overflow:hidden}
+.cp .ui{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.045);font:500 14px/1.2 var(--f);color:#dfe4ed}
+.cp .sq{width:28px;height:28px;border-radius:8px;flex-shrink:0}
+.cp .chip{margin-left:auto;border-radius:8px;padding:4px 8px;background:rgba(89,204,51,.16);color:#7ee05a;font:600 12px/1 var(--f);white-space:nowrap}
+.cp .rk{width:22px;font:600 13px var(--f);color:var(--muted)}
+.cp .num{font:100 clamp(44px,8vw,56px)/1.2 var(--m);letter-spacing:.01em;color:#e6e6e8;font-feature-settings:"ss07"}
+.cp .dot{animation:pulse 2s infinite}
 @keyframes pulse{50%{opacity:.35}}
-.nl .drift{animation:drift 24s ease-in-out infinite alternate}
-.nl .track{display:flex;width:max-content;animation:slide 40s linear infinite}
-.nl .dot{animation:pulse 2s infinite}
-@media(prefers-reduced-motion:reduce){.nl .drift,.nl .track,.nl .dot{animation:none}.nl .rise{transform:none;transition:opacity .3s}}
-/* === THANH ĐẦU THU GỌN === */
-.nl .tb{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:center;gap:8px;pointer-events:none;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px 0}
-.nl .tb>*{pointer-events:auto}
-.nl .tb-glass{background:rgba(253,253,253,.92);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:.5px solid rgba(0,0,0,.08);color:#0f1012}
-.nl .tb-logo{display:flex;height:44px;width:44px;align-items:center;justify-content:center;border-radius:9999px;flex-shrink:0}
-.nl .tb-bar{display:flex;align-items:center;gap:2px;height:44px;border-radius:12px;padding:0 6px}
-.nl .tb-links{align-items:center;gap:2px}
-.nl .tb-link{display:inline-flex;align-items:center;padding:8px 12px;border-radius:8px;font:400 14px/1 "Inter",Arial,sans-serif;white-space:nowrap;color:#0f1012;background:none;border:0;cursor:pointer}
-.nl .tb-link:hover{background:rgba(0,0,0,.05)}
-.nl .tb-cta{display:inline-flex;align-items:center;height:32px;padding:0 14px;margin-left:4px;border-radius:8px;background:#0f1012;color:#fff;font:500 13px/1 "Inter",Arial,sans-serif;white-space:nowrap}
-@media(min-width:640px){.nl .tb{padding-top:calc(env(safe-area-inset-top,0px) + 24px)}.nl .tb-link{font-size:15px}}
-@media(max-width:767px){.nl .wrap{padding:0 20px}.nl .sec{padding:80px 0}.nl .links{display:none}}
+
+/* các bước, không đóng khung */
+.cp .steps{display:grid;gap:48px;grid-template-columns:1fr;margin-top:64px}
+.cp .pic{display:flex;width:44px;height:44px;border-radius:14px;align-items:center;justify-content:center;background:rgba(223,228,237,.1);font:600 16px var(--f);color:#dfe4ed}
+.cp .steps h3{font:600 24px/1.2 var(--f);margin:16px 0 8px}
+.cp .steps p{font:500 16px/1.4 var(--f);color:var(--muted);margin:0;max-width:340px}
+
+/* tường đánh giá */
+.cp .wall{columns:1;column-gap:16px;margin-top:56px;-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
+.cp .rev{break-inside:avoid;margin-bottom:16px;border-radius:20px;overflow:hidden;background:radial-gradient(79% 75% at 79% 82.5%,#01122d 0%,#000f24 100%);border:1px solid rgba(28,108,255,.12)}
+.cp .rev-h{display:flex;align-items:center;gap:12px;padding:16px 20px}
+.cp .av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a66ff,#5c6f8a);font:600 14px var(--f);color:#fff}
+.cp .rev-b{padding:0 20px 20px;font:100 16px/1.4 var(--m);color:#e6e6e8}
+.cp .rev-b strong{display:block;font:300 20px/1.3 var(--m);margin-bottom:6px}
+
+/* dải sáng tương phản */
+.cp .pale{background:linear-gradient(160deg,#f9fafb 0%,#f6f7f9 100%);border-radius:32px;padding:56px 20px;color:var(--ink)}
+.cp .pale .hd{color:var(--ink)}
+.cp .pgrid{display:grid;gap:16px;grid-template-columns:1fr;margin-top:48px}
+.cp .porc{border-radius:24px;padding:28px 32px 40px 32px;background:linear-gradient(135deg,#fff 0%,#fcfcfd 100%);box-shadow:rgba(0,0,0,.03) 0 .5px 1.3px -1px,rgba(0,0,0,.04) 0 4px 10.4px -2px}
+.cp .porc h3{font:600 24px/1.2 var(--f);margin:0;color:var(--ink)}
+.cp .porc p{font:500 16px/1.4 var(--f);color:var(--lm);margin:12px 0 0}
+.cp .porc a{display:inline-block;margin-top:14px;font:600 15px var(--f);color:#1a66ff}
+
+/* hỏi đáp */
+.cp details{border-top:1px solid rgba(89,124,170,.25)}
+.cp details:last-child{border-bottom:1px solid rgba(89,124,170,.25)}
+.cp summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;padding:20px 0;font:500 18px/1.3 var(--f);color:#e6e6e8}
+.cp summary::-webkit-details-marker{display:none}
+.cp summary:after{content:"+";color:var(--muted);font-size:22px;line-height:1}
+.cp details[open] summary:after{content:"−"}
+.cp details p{margin:0;padding:0 0 20px;font:500 16px/1.5 var(--f);color:var(--muted);max-width:640px}
+
+/* chân trang */
+.cp footer{position:relative;background:#010d1e;padding-top:80px;overflow:hidden}
+.cp .fgrid{display:grid;gap:40px;grid-template-columns:1fr 1fr}
+.cp .fbrand{grid-column:1/-1}
+.cp .fh{font:500 17px/1.4 var(--f);color:#e6e6e8;margin:0 0 12px}
+.cp .fl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.cp .fl a,.cp .fl button{font:500 17px/1.4 var(--f);color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-align:left;transition:color .3s}
+.cp .fl a:hover,.cp .fl button:hover{color:rgba(255,255,255,.8)}
+.cp .pile{position:relative;height:230px;margin-top:40px}
+.cp .pile .capsule{position:absolute;bottom:-34px}
+
+@media(min-width:768px){
+  .cp .stage{padding:0 32px}
+  .cp .sec{padding:112px 0}
+  .cp .nl-link{display:inline-flex}
+  .cp .isle-l{width:auto;padding:0 6px;border-radius:16px;justify-content:flex-start}
+  .cp .brand-t{display:block}
+  .cp .light{font-size:17px}
+  .cp .h-line{white-space:nowrap}
+  .cp .capsule{--s:.9}
+  .cp .bento{grid-template-columns:repeat(4,1fr)}
+  .cp .s2{grid-column:span 2}
+  .cp .steps{grid-template-columns:repeat(3,1fr)}
+  .cp .wall{columns:3}
+  .cp .pale{padding:80px 56px}
+  .cp .pgrid{grid-template-columns:repeat(3,1fr)}
+  .cp .fgrid{grid-template-columns:1.4fr 1fr 1fr 1fr 1fr}
+  .cp .fbrand{grid-column:auto}
+  .cp .pile{height:260px}
+}
+@media(min-width:1100px){.cp .capsule{--s:1}}
+@media(prefers-reduced-motion:reduce){.cp .rise{transform:none;transition:opacity .3s}.cp .dot{animation:none}}
 `;
 
-const Em = ({ t }) => { const w = t.split(" "); return <>{w.slice(0, -1).join(" ")}{w.length > 1 ? " " : ""}<em>{w[w.length - 1]}</em></>; };
-const rt = (s) => s.split(/(\*[^*]+\*)/g).map((x, i) => (x.length > 2 && x.startsWith("*") && x.endsWith("*") ? <em key={i}>{x.slice(1, -1)}</em> : x));
-const story = (s) => s.split(" ").map((w, i) => (w.startsWith("*") ? <em key={i}>{w.slice(1)} </em> : <span key={i}>{w} </span>));
 const nf = (n, lang) => Number(n).toLocaleString(lang === "en" ? "en-US" : "vi-VN");
+const plain = (s) => s.replace(/\*/g, "");
 
-const Logo = ({ size = 32 }) => (
+const Logo = ({ size = 26 }) => (
   <img src={STAR_URL} alt="NXX315 Studio" width={size} height={size} style={{ width: size, height: size, objectFit: "contain", display: "block" }} />
 );
 
@@ -139,24 +209,20 @@ function Rise({ children, className = "", delay = 0 }) {
   return <div ref={ref} className={`rise ${on ? "in" : ""} ${className}`} style={{ transitionDelay: `${delay}ms` }}>{children}</div>;
 }
 
-const Head = ({ cap, a, b, sub }) => (
-  <Rise>
-    <p className="cap">{cap}</p>
-    <h2 className="serif h2 mt-4 max-w-[900px]">{a} <em>{b}</em></h2>
-    {sub && <p className="sup mt-5 max-w-[460px] leading-normal">{sub}</p>}
-  </Rise>
+const Capsule = ({ i, label, rot = 0, blur = 0, s, style }) => (
+  <span className="capsule" aria-hidden="true" style={{ background: CAPS[i % CAPS.length][0], transform: `rotate(${rot}deg)`, filter: blur ? `blur(${blur}px)` : undefined, ...(s ? { "--s": s } : null), ...style }}>
+    <i>{CAPS[i % CAPS.length][1]}</i><b>{label}</b>
+  </span>
 );
 
-function Scene({ bgImage, glow, title, text, children }) {
-  return (
-    <div className="relative flex min-h-[460px] flex-col justify-between overflow-hidden rounded-3xl p-8" style={{ background: bgImage }}>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2" style={{ background: `radial-gradient(70% 100% at 50% 100%,${glow},transparent)`, opacity: 0.6 }} />
-      <h3 className="serif h3 relative mt-4 text-center">{rt(title)}</h3>
-      <div className="relative">{children}</div>
-      <p className="relative mx-auto max-w-[420px] text-center text-xl leading-[1.35] tracking-[-.01em]" style={{ color: "rgba(255,255,255,.92)" }}>{text}</p>
-    </div>
+const Key = ({ to, href, children, sm }) => {
+  const inner = (
+    <span className={`rim ${sm ? "sm" : ""}`}>
+      <span className={`key ${sm ? "sm" : ""}`}><span className="mark"><Logo size={18} /></span>{children}</span>
+    </span>
   );
-}
+  return to ? <Link to={to}>{inner}</Link> : <a href={href}>{inner}</a>;
+};
 
 export default function CloudVIPLanding() {
   useTheme();
@@ -168,11 +234,10 @@ export default function CloudVIPLanding() {
   const x = EXTRA[lang];
   const [board, setBoard] = useState(undefined);
   const [orders, setOrders] = useState(undefined);
-  const heroVid = useRef(null);
+  const vid = useRef(null);
 
-  /* Ép video hero tự phát (một số trình duyệt điện thoại cần gọi play()) */
   useEffect(() => {
-    const v = heroVid.current;
+    const v = vid.current;
     if (!v) return;
     v.muted = true;
     const p = v.play();
@@ -197,334 +262,231 @@ export default function CloudVIPLanding() {
     return () => { off = true; };
   }, []);
 
-  const top3 = Array.isArray(board) ? board.slice(0, 3) : [];
-  const rest = Array.isArray(board) ? board.slice(3) : [];
   const st = (v) => (v === undefined ? "load" : v === null ? "err" : v.length ? "ok" : "empty");
-  
-  // Tối ưu: Memoize mảng marquee để không tạo lại mỗi lần render
-  const marquee = useMemo(() => [...fx.marquee, ...fx.marquee], [fx.marquee]);
+  const rows = Array.isArray(board) ? board.slice(0, 4) : [];
+  const labels = fx.marquee;
+  const footLabels = useMemo(() => [...labels, ...x.footCaps], [labels, x.footCaps]);
+  const rankTitle = `${c.rTitleA} ${c.rTitleB}`;
+
+  const Skel = ({ n = 3 }) => Array.from({ length: n }).map((_, k) => <div key={k} className="ui dot"><span className="sq" style={{ background: "#0c2140" }} /><span style={{ height: 8, width: `${50 + k * 12}%`, background: "#0c2140", borderRadius: 4 }} /></div>);
+  const RankRows = () => (st(board) === "ok" ? rows.map((r) => (
+    <div key={r.rank} className="ui"><span className="rk">{String(r.rank).padStart(2, "0")}</span><span>{r.name}</span><span className="chip" style={{ background: "rgba(26,102,255,.18)", color: "#8fb3ff" }}>{nf(r.coins, lang)} {c.unit}</span></div>
+  )) : <Skel n={4} />);
 
   return (
-    <div className="nl">
+    <div className="cp">
       <style>{CSS}</style>
 
-      {/* THANH ĐẦU THU GỌN */}
-      <header className="tb">
-        <Link to="/" aria-label="NXX315 Studio" className="tb-glass tb-logo"><Logo size={26} /></Link>
-        <nav className="tb-glass tb-bar" aria-label="Main">
-          <span className="tb-links hidden md:flex">
-            {c.nav.map(([id, l]) => (
-              <button key={id} type="button" className="tb-link" onClick={() => scrollToId(id)}>{l}</button>
-            ))}
-          </span>
-          {typeof setLang === "function" && (
-            <button type="button" className="tb-link" onClick={() => setLang(lang === "vi" ? "en" : "vi")}>{c.langBtn}</button>
-          )}
-          <Link to="/login" className="tb-link">{c.login}</Link>
-          <Link to="/register" className="tb-cta">{c.start}</Link>
-        </nav>
+      {/* THANH ĐẦU: hai đảo kính */}
+      <header className="nav">
+        <div className="isle isle-l">
+          <Link to="/" aria-label="NXX315 Studio" style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 4px" }}><Logo size={28} /><span className="brand-t">{x.brand}</span></Link>
+          {c.nav.map(([id, l]) => <button key={id} type="button" className="nl-link" onClick={() => scrollToId(id)}>{l}</button>)}
+        </div>
+        <div className="isle">
+          {typeof setLang === "function" && <button type="button" className="nl-link nl-always" onClick={() => setLang(lang === "vi" ? "en" : "vi")} style={{ color: "#597caa" }}>{c.langBtn}</button>}
+          <Link to="/login" className="nl-link nl-always">{c.login}</Link>
+          <Link to="/register" className="light">{c.start}</Link>
+        </div>
       </header>
 
       <main>
-        {/* 1. MỞ ĐẦU */}
-        <section className="relative overflow-hidden pt-40 text-center" style={{ background: bg(HERO_IMAGE_URL, SKY, 0.2) }}>
-          {HERO_VIDEO_URL && (
-            <>
-              <video ref={heroVid} className="absolute inset-0 h-full w-full object-cover" src={HERO_VIDEO_URL} autoPlay muted loop playsInline preload="auto" aria-hidden="true" />
-              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,.2)" }} />
-            </>
-          )}
-          <div className="wrap relative">
-            <h1 className="serif h1 mx-auto max-w-[830px]">
-              {c.h1a} <em>{c.h1b}</em>,<br />{c.h1c.toLowerCase()}, {c.h1d}
+             {/* 1. MỞ ĐẦU: lời hứa bạc khổng lồ + viên nang */}
+        <section className="hero">
+          {HERO_VIDEO_URL && <video ref={vid} src={HERO_VIDEO_URL} autoPlay muted loop playsInline preload="auto" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.22 }} />}
+          {HERO_CAPS.map((p, k) => <span key={k} className="hero-cap" style={{ top: p.top, bottom: p.bottom, left: p.left, right: p.right }}><Capsule i={p.i} label={labels[p.i]} rot={p.rot} blur={p.blur} s={p.s} /></span>)}
+          <div className="stage" style={{ position: "relative" }}>
+            <h1 className="display">
+              <span className="h-line">{c.h1a} {c.h1b},</span>
+              <span className="h-line">{c.h1c.toLowerCase()},</span>
+              <span className="h-line">{c.h1d}</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-[420px] leading-normal" style={{ color: "rgba(255,255,255,.92)" }}>{c.heroSub}</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link to="/register" className="btn">{c.ctaAccount}<span aria-hidden>→</span></Link>
-              <a href={CREATOR_URL} className="btn btn2">{c.ctaCreator}<span aria-hidden>→</span></a>
-            </div>
+            <p className="lead" style={{ margin: "32px auto 0", maxWidth: 560 }}>{c.heroSub}</p>
+            <div style={{ marginTop: 40, display: "flex", justifyContent: "center" }}><Key to="/register">{c.ctaAccount}</Key></div>
+          </div>
+        </section>
 
-            <div className="relative mx-auto mt-16 h-[340px] w-[min(560px,92vw)] overflow-hidden rounded-t-[56px] border-[10px] border-b-0 border-[#0b0b0b] bg-[#050505] text-left">
-              <div className="absolute left-1/2 top-3 h-6 w-24 -translate-x-1/2 rounded-full border border-white/10 bg-black" />
-              <div className="px-7 pt-20">
-                <p className="cap flex items-center gap-2"><i className="dot inline-block h-1.5 w-1.5 rounded-full bg-[#61a133]" />{c.ticketMeta}</p>
-                <p className="serif mt-4 text-[40px] leading-[1.1]"><Em t={c.ticketTitle} /></p>
-                <p className="mt-3 text-base leading-normal sup">{c.ticketNote}</p>
-                {top3[0] && (
-                  <div className="card mt-5 flex items-center justify-between p-4">
-                    <span className="mono text-[12px] uppercase tracking-[.021em]">TOP 1 · {c.week}</span>
-                    <span className="text-sm">{top3[0].name} · {nf(top3[0].coins, lang)} {c.unit}</span>
-                  </div>
-                )}
+        {/* 2. TUYÊN NGÔN + THIẾT BỊ */}
+        <section className="stage" style={{ padding: "64px 20px 0", textAlign: "center" }}>
+          <Rise>
+            <span className="mark" style={{ margin: "0 auto 32px", width: 44, height: 44, borderRadius: 14 }}><Logo size={26} /></span>
+            <p className="hd" style={{ fontWeight: 500, lineHeight: 1.2, maxWidth: 880, margin: "0 auto" }}>{plain(fx.story)}</p>
+            <p className="lead" style={{ marginTop: 48 }}>{x.mSub}</p>
+          </Rise>
+          <Rise>
+            <div className="scene">
+              <div className="win">
+                <div className="win-bar"><i /><i /><i /><span>nxx315.com</span></div>
+                <div className="win-body">
+                  <p style={{ margin: "0 0 6px", font: "600 15px var(--f)", color: "#dfe4ed" }}>{rankTitle}</p>
+                  <RankRows />
+                </div>
+              </div>
+              <div className="phone">
+                <span className="tag">{c.ticketMeta}</span>
+                <p className="t">{plain(c.ticketTitle)}</p>
+                <p className="n">{c.ticketNote}</p>
               </div>
             </div>
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24" style={{ background: "linear-gradient(transparent,#050505)" }} />
+          </Rise>
         </section>
 
-        {/* 2. CÂU DẪN */}
-        <section className="wrap py-32 text-center">
-          <Rise><p className="serif h3 mx-auto max-w-[820px]">{story(fx.story)}</p></Rise>
+        {/* 3. BẮT ĐẦU: các bước, không đóng khung */}
+        <section id="onboarding" className="sec stage">
+          <Rise><p className="sub" style={{ marginBottom: 16 }}>{c.obLabel}</p><h2 className="hd" style={{ maxWidth: 820 }}>{c.obTitleA} {c.obTitleB}</h2><p className="sub" style={{ marginTop: 16, maxWidth: 560, fontSize: 20 }}>{c.obBody}</p></Rise>
+          <div className="steps">
+            {c.obSteps.map(([n, t, d], k) => (
+              <Rise key={n} delay={k * 80}><div className="pic">{n}</div><h3>{t}</h3><p>{d}</p></Rise>
+            ))}
+          </div>
+          <div style={{ marginTop: 48 }}><Key to="/register" sm>{c.obCta}</Key></div>
         </section>
 
-        {/* CHỮ CHẠY NGANG */}
-        <div className="overflow-hidden border-y border-white/[.08] py-6" aria-hidden="true">
-          <div className="track">
-            {marquee.map((m, i) => <span key={i} className="serif px-8 text-[38px] leading-[.9]" style={{ color: "rgba(255,255,255,.32)" }}>{m}</span>)}
-          </div>
-        </div>
+        {/* 4. BENTO: mỗi thẻ một mảnh giao diện khác nhau */}
+        <section className="stage" style={{ paddingBottom: 96 }}>
+          <Rise><h2 className="hd" style={{ textAlign: "center", maxWidth: 820, margin: "0 auto 56px" }}>{x.bTitle}</h2></Rise>
+          <div className="bento">
+            <Rise className="s2"><div className="panel" style={{ height: "100%" }}>
+              <h3>{x.tasks[0]}</h3><p className="d">{x.tasks[1]}</p>
+              <div className="frag">
+                {x.tasks[2].map((t, k) => (
+                  <div key={t} className="ui"><span className="sq" style={{ background: ["#1a66ff", "#9019e6", "#f27f0c"][k] }} /><span>{t}</span><span className="chip">{x.tasks[3]}</span></div>
+                ))}
+              </div>
+            </div></Rise>
 
-        {/* 3. BẮT ĐẦU */}
-        <section id="onboarding" className="sec">
-          <div className="wrap">
-            <Head cap={c.obLabel} a={c.obTitleA} b={c.obTitleB} sub={c.obBody} />
-            <div className="mt-16 grid gap-6 md:grid-cols-3">
-              {c.obSteps.map(([n, t, d], i) => (
-                <Rise key={n} delay={i * 80}>
-                  <div className="card flex h-full min-h-[260px] flex-col justify-between p-6">
-                    <span className="cap">{n}</span>
-                    <div>
-                      <h3 className="serif h4"><Em t={t} /></h3>
-                      <p className="mt-4 text-base leading-normal sup">{d}</p>
-                    </div>
-                  </div>
-                </Rise>
+            <Rise className="s2" delay={80}><div id="rank" className="panel" style={{ height: "100%", scrollMarginTop: 90 }}>
+              <h3>{rankTitle}</h3><p className="d">{c.rSub}</p>
+              <div className="frag"><RankRows /></div>
+            </div></Rise>
+
+            <Rise delay={80}><div className="panel" style={{ height: "100%" }}>
+              <h3>{x.games[0]}</h3><p className="d">{x.games[1]}</p>
+              <div className="frag" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                {GAMES.map((g) => <div key={g} className="ui" style={{ fontSize: 13 }}>{g}</div>)}
+              </div>
+            </div></Rise>
+
+            <Rise delay={160}><div className="panel" style={{ height: "100%" }}>
+              <h3>{x.gifts[0]}</h3><p className="d">{x.gifts[1]}</p>
+              <div className="frag">
+                {x.gifts[2].map((g, k) => <div key={g} className="ui"><span className="sq" style={{ background: ["#e83030", "#f27f0c", "#59cc33"][k] }} /><span>{g}</span><span className="chip">{x.ok}</span></div>)}
+              </div>
+            </div></Rise>
+
+            <Rise className="s2" delay={80}><div id="invite" className="panel" style={{ height: "100%", scrollMarginTop: 90, paddingBottom: 32 }}>
+              <h3>{c.iTitleA} {c.iTitleB}</h3><p className="d">{c.iBody}</p>
+              <div style={{ marginTop: "auto", paddingTop: 24, display: "grid", gap: 16, gridTemplateColumns: `repeat(${c.iCols.length},1fr)` }}>
+                {c.iCols.map(([big, d]) => (
+                  <div key={big}><div className="num">{big}</div><p style={{ margin: "4px 0 0", font: "500 13px/1.3 var(--f)", color: "var(--muted)" }}>{d}</p></div>
+                ))}
+              </div>
+            </div></Rise>
+          </div>
+        </section>
+
+        {/* 5. TƯỜNG ĐƠN ĐÃ DUYỆT */}
+        <section id="orders" className="stage" style={{ paddingBottom: 96 }}>
+          <Rise style={{ textAlign: "center" }}><h2 className="hd" style={{ textAlign: "center", maxWidth: 820, margin: "0 auto" }}>{c.oTitleA} {c.oTitleB}</h2><p className="sub" style={{ textAlign: "center", margin: "16px auto 0", maxWidth: 520, fontSize: 20 }}>{c.oSub}</p></Rise>
+          {st(orders) === "ok" && (
+            <div className="wall">
+              {orders.map((o, k) => (
+                <div key={`${o.approved_at}-${k}`} className="rev">
+                  <div className="rev-h"><span className="av">{String(o.name || "?").charAt(0).toUpperCase()}</span>
+                    <div><div style={{ font: "600 15px/1.2 var(--f)" }}>{o.name}</div><div style={{ font: "500 12px/1.4 var(--f)", color: "var(--muted)" }}>{timeAgo(o.approved_at, c.ago)}</div></div>
+                    <span className="chip" style={{ marginLeft: "auto" }}>{c.approved}</span></div>
+                  <div className="rev-b"><strong>{o.item}</strong></div>
+                </div>
               ))}
             </div>
-            <div className="mt-10"><Link to="/register" className="btn">{c.obCta}<span aria-hidden>→</span></Link></div>
+          )}
+          {st(orders) === "load" && <p className="sub" style={{ textAlign: "center", marginTop: 48 }}>…</p>}
+          {(st(orders) === "empty" || st(orders) === "err") && <p className="sub" style={{ textAlign: "center", marginTop: 48 }}>{st(orders) === "err" ? c.failed : c.empty}</p>}
+        </section>
+
+        {/* 6. CREATOR: thẻ nổi bật có mảnh giao diện bị cắt */}
+        <section id="creator" className="stage" style={{ paddingBottom: 96 }}>
+          <Rise>
+            <div className="panel" style={{ minHeight: 0, padding: "40px 32px 0", display: "grid", gap: 32 }}>
+              <div>
+                <p className="sub" style={{ fontSize: 16 }}>{c.cLabel}</p>
+                <h2 className="hd" style={{ marginTop: 8 }}>{c.cTitleA} {c.cTitleB}</h2>
+                <p className="lead" style={{ fontSize: 22, marginTop: 16, color: "#ccced0" }}>{c.cH3}</p>
+                <p className="sub" style={{ fontSize: 16, marginTop: 12, maxWidth: 520 }}>{c.cBody}</p>
+                <ul style={{ listStyle: "none", margin: "20px 0 0", padding: 0, display: "grid", gap: 8 }}>
+                  {c.cPerks.map((t) => <li key={t} style={{ font: "500 16px/1.4 var(--f)", color: "#ccced0", display: "flex", gap: 10 }}><span style={{ color: "#59cc33" }}>✓</span>{t}</li>)}
+                </ul>
+                <div style={{ marginTop: 32 }}><Key href={CREATOR_URL} sm>{c.cCta}</Key></div>
+              </div>
+              <div className="win" style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, marginBottom: 0, alignSelf: "end" }}>
+                <div className="win-bar"><i /><i /><i /><span>creator.nxx315.com · {x.demo}</span></div>
+                <div className="win-body">
+                  {x.rows.map((r) => <div key={r} className="ui"><span className="sq" style={{ background: "#1a66ff" }} /><span>{r}</span><span className="chip">{x.ok}</span></div>)}
+                  <div className="ui" style={{ background: "rgba(26,102,255,.14)", color: "#8fb3ff" }}>+ {c.mockGift}</div>
+                </div>
+              </div>
+            </div>
+          </Rise>
+        </section>
+
+        {/* 7. DẢI SÁNG: chi tiết + minh bạch */}
+        <section id="details" className="stage" style={{ paddingBottom: 96 }}>
+          <Rise>
+            <div className="pale">
+              <h2 className="hd" style={{ textAlign: "center", maxWidth: 820, margin: "0 auto" }}>{c.dTitleA} {c.dTitleB}</h2>
+              <div className="pgrid">
+                {c.dItems.map(([t, d]) => <div key={t} className="porc"><h3>{t}</h3><p>{d}</p></div>)}
+                {x.about.map(([t, d], k) => <div key={t} className="porc"><h3>{t}</h3><p>{d}</p>{k === 0 && <Link to="/about">{x.aboutLink} →</Link>}</div>)}
+              </div>
+            </div>
+          </Rise>
+          <div style={{ maxWidth: 860, margin: "88px auto 0" }}>
+            <h3 className="hd" style={{ fontSize: "clamp(30px,5vw,48px)", marginBottom: 32 }}>{c.faqTitle}</h3>
+            {c.faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}
           </div>
         </section>
 
-        {/* 4. TRÊN WEB */}
-        <section id="features" className="sec pt-0">
-          <div className="wrap">
-            <Rise className="mb-16 text-center">
-              <p className="cap">{x.fCap}</p>
-              <h2 className="serif h2 mx-auto mt-4 max-w-[900px]">{rt(x.fTitle)}</h2>
-              <p className="sup mx-auto mt-5 max-w-[460px] leading-normal">{x.fSub}</p>
+        {/* 8. KẾT: lời kêu gọi */}
+        <section style={{ position: "relative", textAlign: "center", padding: "96px 0 120px", background: "radial-gradient(50% 50% at 50% 50%,rgba(0,85,204,.12) 0%,rgba(0,85,204,0) 100%)" }}>
+          <div className="stage">
+            <Rise>
+              <span className="mark" style={{ margin: "0 auto 32px", width: 44, height: 44, borderRadius: 14 }}><Logo size={26} /></span>
+              <h2 className="hd" style={{ maxWidth: 820, margin: "0 auto" }}>{c.closeA} {c.closeB}</h2>
+              <p className="sub" style={{ margin: "20px auto 0", maxWidth: 520 }}>{c.closeSub}</p>
+              <div style={{ marginTop: 40, display: "flex", justifyContent: "center" }}><Key to="/register" sm>{c.ctaAccount}</Key></div>
             </Rise>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <Scene bgImage={bg(MEADOW_URL, MEADOW)} glow="#61a133" title={x.gameTitle} text={x.gameText}>
-                <p className="cap mb-3 text-center" style={{ color: "rgba(255,255,255,.8)" }}>{x.gameCap}</p>
-                <div className="mx-auto grid max-w-[360px] grid-cols-2 gap-2">
-                  {GAMES.map((g) => <div key={g} className="rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-center text-sm backdrop-blur-sm">{g}</div>)}
-                </div>
-              </Scene>
-              <div className="grid gap-6 sm:grid-cols-2">
-                {x.cards.map(([t, d], i) => (
-                  <Rise key={t} delay={i * 80} className="h-full">
-                    <div className="card flex h-full min-h-[220px] flex-col justify-between p-6">
-                      <span className="cap">{String(i + 1).padStart(2, "0")}</span>
-                      <div>
-                        <h3 className="serif text-[28px] leading-[1]">{t}</h3>
-                        <p className="mt-3 text-[15px] leading-snug sup">{d}</p>
-                        {i === 3 && <Link to="/about" className="mt-3 inline-block text-sm underline underline-offset-4">{x.aboutLink} →</Link>}
-                      </div>
-                    </div>
-                  </Rise>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 5. MỜI BẠN */}
-        <section id="invite" className="sec">
-          <div className="wrap">
-            <Head cap={c.iLabel} a={c.iTitleA} b={c.iTitleB} sub={c.iBody} />
-            <div className="mt-16 grid gap-12 md:grid-cols-3">
-              {c.iCols.map(([big, d], i) => (
-                <Rise key={big} delay={i * 80}>
-                  <div className="text-[50px] font-normal leading-[1.1]">{big}</div>
-                  <p className="mt-2 text-xl leading-normal sup">{d}</p>
-                </Rise>
-              ))}
-            </div>
-            <div className="mt-12"><Link to="/register" className="btn btn2">{c.iCta}<span aria-hidden>→</span></Link></div>
-          </div>
-        </section>
-
-        {/* 6. XẾP HẠNG */}
-        <section id="rank" className="relative overflow-hidden sec">
-          <div className="drift pointer-events-none absolute -top-40 left-1/2 h-[400px] w-[900px] -translate-x-1/2 opacity-30 blur-3xl" style={{ background: "radial-gradient(closest-side,#847dff,transparent)" }} />
-          <div className="wrap relative">
-            <Head cap={c.rLabel} a={c.rTitleA} b={c.rTitleB} sub={c.rSub} />
-            {st(board) === "load" && (
-              <div className="mt-16 grid gap-6 md:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="card dot h-[240px]" />)}</div>
-            )}
-            {st(board) === "ok" && (
-              <div className="mt-16 grid gap-6 md:grid-cols-3">
-                {top3.map((r, i) => (
-                  <Rise key={r.rank} delay={i * 80}>
-                    <div className="card flex h-full min-h-[240px] flex-col justify-between p-6">
-                      <div className="flex items-start justify-between">
-                        <span className="cap">TOP {r.rank} · {c.week}</span>
-                        <span className="serif text-[64px] leading-[.9]" style={{ color: "rgba(255,255,255,.2)" }}>0{r.rank}</span>
-                      </div>
-                      <div>
-                        <p className="text-xl leading-tight">{r.name}</p>
-                        <p className="mt-2 text-[50px] font-normal leading-[1.1]">{nf(r.coins, lang)}</p>
-                        <p className="sup">{c.unit}</p>
-                      </div>
-                    </div>
-                  </Rise>
-                ))}
-              </div>
-            )}
-            {(st(board) === "empty" || st(board) === "err") && <p className="sup mt-12">{st(board) === "err" ? c.failed : c.empty}</p>}
-            {rest.length > 0 && (
-              <div className="mt-10 border-t border-white/[.14]">
-                {rest.map((r) => (
-                  <div key={r.rank} className="flex items-center gap-4 border-b border-white/[.14] py-4">
-                    <span className="mono w-8 text-[12px] sup">{String(r.rank).padStart(2, "0")}</span>
-                    <span className="flex-1 text-base">{r.name}</span>
-                    <span className="text-base sup">{nf(r.coins, lang)} {c.unit}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* 7. ĐƠN ĐÃ DUYỆT */}
-        <section id="orders" className="sec">
-          <div className="wrap">
-            <Head cap={c.oLabel} a={c.oTitleA} b={c.oTitleB} sub={c.oSub} />
-            {st(orders) === "ok" && (
-              <div className="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-                {orders.map((o, i) => (
-                  <Rise key={`${o.approved_at}-${i}`} delay={(i % 4) * 60}>
-                    <p className="mono flex items-center gap-2 text-[12px] uppercase tracking-[.021em]" style={{ color: "#61a133" }}>
-                      <i className="inline-block h-1.5 w-1.5 rounded-full bg-[#61a133]" />{c.approved}
-                    </p>
-                    <p className="mt-3 text-xl leading-snug">{o.item}</p>
-                    <p className="mt-2 text-sm sup">{o.name} · {timeAgo(o.approved_at, c.ago)}</p>
-                  </Rise>
-                ))}
-              </div>
-            )}
-            {st(orders) === "load" && <p className="sup mt-12">…</p>}
-            {(st(orders) === "empty" || st(orders) === "err") && <p className="sup mt-12">{st(orders) === "err" ? c.failed : c.empty}</p>}
-          </div>
-        </section>
-
-        {/* 8. CHI TIẾT + HỎI ĐÁP */}
-        <section id="details" className="sec">
-          <div className="wrap">
-            <Head cap={c.dLabel} a={c.dTitleA} b={c.dTitleB} />
-            <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {c.dItems.map(([t, d], i) => (
-                <Rise key={t} delay={i * 80}>
-                  <div className="card h-full p-6">
-                    <h3 className="text-xl leading-tight tracking-[-.01em]">{t}</h3>
-                    <p className="mt-3 text-base leading-snug sup">{d}</p>
-                  </div>
-                </Rise>
-              ))}
-            </div>
-            <h3 className="serif h4 mb-8 mt-28">{c.faqTitle}</h3>
-            <div className="max-w-[860px]">
-              {c.faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}
-            </div>
-          </div>
-        </section>
-
-        {/* 9. CREATOR */}
-        <section id="creator" className="sec">
-          <div className="wrap">
-            <div className="card relative overflow-hidden p-8 md:p-14">
-              <div className="drift pointer-events-none absolute -right-20 -top-20 h-[360px] w-[360px] opacity-30 blur-3xl" style={{ background: "radial-gradient(closest-side,#847dff,transparent)" }} />
-              <div className="relative">
-                <p className="cap">{c.cLabel}</p>
-                <h2 className="serif h2 mt-4 max-w-[800px]">{c.cTitleA} <em>{c.cTitleB}</em></h2>
-              </div>
-              <div className="relative mt-14 grid items-center gap-12 md:grid-cols-2">
-                <div>
-                  <h3 className="serif h4">{c.cH3}</h3>
-                  <p className="mt-5 text-base leading-normal sup">{c.cBody}</p>
-                  <ul className="mt-6 space-y-2.5">
-                    {c.cPerks.map((t) => (
-                      <li key={t} className="flex gap-3 text-base leading-normal sup"><span className="mt-[10px] h-1 w-1 shrink-0 rounded-full bg-white/60" />{t}</li>
-                    ))}
-                  </ul>
-                  <div className="mt-8"><a href={CREATOR_URL} className="btn">{c.cCta}<span aria-hidden>→</span></a></div>
-                </div>
-                <div className="rounded-3xl border border-white/[.08] bg-[#0f0f0f] p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="mono text-[12px] sup">creator.nxx315.com</span>
-                    <span className="cap">{c.mockTag}</span>
-                  </div>
-                  <div className="mt-5 space-y-2">
-                    {x.mockRows.map((r) => (
-                      <div key={r} className="card !rounded-xl flex items-center justify-between px-4 py-3 text-sm">
-                        <span>{r}</span>
-                        <span className="mono text-[12px] uppercase tracking-[.021em]" style={{ color: "#61a133" }}>{x.mockOk}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mono mt-5 inline-block rounded-lg bg-white px-3 py-2 text-[12px] uppercase tracking-[.021em] text-black">+ {c.mockGift}</p>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </main>
 
-      {/* LỜI KÊU GỌI CUỐI + CHÂN TRANG */}
+      {/* CHÂN TRANG + ĐỐNG VIÊN NANG */}
       <footer>
-        <section className="relative overflow-hidden py-48 text-center" style={{ background: bg(FLOWERS_URL, FLOWERS, 0.3) }}>
-          <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(#050505,transparent 25%,transparent 60%,#050505)" }} />
-          <div className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(90deg,transparent,#219ff8,#847dff,transparent)" }} />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-40 blur-2xl" style={{ background: "linear-gradient(90deg,transparent,#219ff8,#847dff,transparent)" }} />
-          <div className="wrap relative">
-            <h2 className="serif h2 mx-auto max-w-[900px] !text-[clamp(52px,9vw,96px)] !leading-[.9]">{c.closeA} <em>{c.closeB}</em></h2>
-            <p className="mx-auto mt-6 max-w-[420px] text-lg" style={{ color: "rgba(255,255,255,.92)" }}>{c.closeSub}</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link to="/register" className="btn">{c.ctaAccount}<span aria-hidden>→</span></Link>
-              <a href={CREATOR_URL} className="btn btn2">{c.ctaCreator}<span aria-hidden>→</span></a>
+        <div className="stage">
+          <div className="fgrid">
+            <div className="fbrand">
+              <Logo size={40} />
+              <p style={{ font: "500 16px/1.5 var(--f)", color: "var(--muted)", margin: "16px 0 0", maxWidth: 300 }}>{c.manifesto}</p>
+              <p style={{ font: "500 14px/1.4 var(--f)", color: "var(--muted)", margin: "20px 0 0" }}>© {new Date().getFullYear()} {x.legal}</p>
             </div>
-          </div>
-        </section>
-
-        <div className="wrap pb-12 pt-10">
-          <div className="flex flex-col gap-5 md:max-w-[460px]">
-            <Logo size={44} />
-            <p className="text-lg leading-[1.5]" style={{ color: "#c9c9c9" }}>{c.manifesto}</p>
-          </div>
-
-          <div className="mt-14 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
-            <div>
-              <h4 className="fh">{c.fCols[0]}</h4>
-              <ul className="fl">
-                {c.fExplore.map(([id, l]) => <li key={id}><button type="button" onClick={() => scrollToId(id)}>{l}</button></li>)}
-              </ul>
-            </div>
-            <div>
-              <h4 className="fh">{c.fCols[1]}</h4>
-              <ul className="fl">{c.fAccount.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
-            </div>
-            <div>
-              <h4 className="fh">{c.fCols[2]}</h4>
-              <ul className="fl">{c.fLegal.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul>
-            </div>
-            <div>
-              <h4 className="fh">{c.fCols[3]}</h4>
+            <div><h4 className="fh">{c.fCols[0]}</h4><ul className="fl">{c.fExplore.map(([id, l]) => <li key={id}><button type="button" onClick={() => scrollToId(id)}>{l}</button></li>)}</ul></div>
+            <div><h4 className="fh">{c.fCols[1]}</h4><ul className="fl">{c.fAccount.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul></div>
+            <div><h4 className="fh">{c.fCols[2]}</h4><ul className="fl">{c.fLegal.map(([to, l]) => <li key={to}><Link to={to}>{l}</Link></li>)}</ul></div>
+            <div><h4 className="fh">{c.fCols[3]}</h4>
               <ul className="fl">
                 {SITE?.youtube && <li><a href={SITE.youtube} target="_blank" rel="noopener noreferrer">YouTube</a></li>}
                 {SITE?.zaloUrl && <li><a href={SITE.zaloUrl} target="_blank" rel="noopener noreferrer">Zalo</a></li>}
-                {SITE?.email && <li><a href={`mailto:${SITE.email}`} className="break-all">{SITE.email}</a></li>}
+                {SITE?.email && <li><a href={`mailto:${SITE.email}`} style={{ wordBreak: "break-all" }}>{SITE.email}</a></li>}
                 <li><a href={CREATOR_URL}>Creator</a></li>
               </ul>
             </div>
           </div>
-
-          <div className="mono mt-14 flex flex-wrap justify-between gap-3 border-t border-white/[.14] pt-6 text-[13px] uppercase tracking-[.08em] sup">
-            <span>© {new Date().getFullYear()} Nxx315 Studio</span>
-            <span>{x.bottom}</span>
-          </div>
+        </div>
+        <div className="pile" aria-hidden="true">
+          {FOOT_CAPS.map(([ci, rot, ox], k) => (
+            <Capsule key={k} i={ci} label={footLabels[k % footLabels.length]} rot={rot} s={1} style={{ left: `${k * 13 - 4 + ox}%`, zIndex: k % 3 }} />
+          ))}
         </div>
       </footer>
     </div>
   );
-}
+                                                                                                                                                                                                                                                    }
