@@ -8,6 +8,7 @@ import BottomNav from "../components/BottomNav.jsx";
 import { PageShell, Panel } from "../components/pay/DimensionKit.jsx";
 import useProfile from "../hooks/useProfile.js";
 import PaymentSection from "../components/RobloxPayment.jsx";
+import RobloxPassFlow from "../components/RobloxPassFlow.jsx";
 import {
   Stepper,
   PackageStep,
@@ -45,6 +46,7 @@ export default function Roblox() {
   // Khôi phục lựa chọn dở dang (khi tải lại trang) + nhớ username lần trước
   const [draft] = useState(loadDraft);
 
+  const [mode, setMode] = useState("normal"); // normal | pass
   const [step, setStep] = useState("package"); // package | account | payment
   const [selectedId, setSelectedId] = useState(draft.packageId || "");
   const [username, setUsername] = useState(draft.username || lastUsername());
@@ -165,6 +167,13 @@ export default function Roblox() {
     }
   };
 
+  const tabCls = (on) =>
+    `flex-1 rounded-full px-4 py-2.5 text-[14px] transition ${
+      on
+        ? "bg-gray-900 text-white shadow-sm"
+        : "text-gray-600 hover:bg-gray-100"
+    }`;
+
   return (
     <div className="min-h-screen bg-white">
       <PageShell>
@@ -176,7 +185,9 @@ export default function Roblox() {
             <button
               type="button"
               onClick={() =>
-                step === "account"
+                mode === "pass"
+                  ? navigate("/store")
+                  : step === "account"
                   ? goStep("package")
                   : step === "payment"
                   ? goStep("account")
@@ -202,48 +213,76 @@ export default function Roblox() {
             </div>
           </Panel>
 
-          {/* Các bước */}
-          <Panel className="mb-4 px-4 py-4">
-            <Stepper step={step} onJump={goStep} />
-          </Panel>
-
-          {step === "package" && (
-            <PackageStep
-              selected={selectedPackage}
-              onSelect={(pkg) => setSelectedId(pkg.id)}
-              onNext={() => goStep("account")}
-              coins={coins}
-            />
+          {/* Chuyển giữa nạp thường và đổi Game Pass (ẩn khi đang thanh toán) */}
+          {!(mode === "normal" && step === "payment") && (
+            <Panel className="mb-4 flex gap-1 p-1.5">
+              <button
+                type="button"
+                onClick={() => setMode("normal")}
+                className={tabCls(mode === "normal")}
+              >
+                Nạp Robux
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("pass")}
+                className={tabCls(mode === "pass")}
+              >
+                Đổi Game Pass
+              </button>
+            </Panel>
           )}
 
-          {step === "account" && (
-            <AccountStep
-              pkg={selectedPackage}
-              username={username}
-              setUsername={setUsername}
-              robloxUser={robloxUser}
-              setRobloxUser={setRobloxUser}
-              receiveMethod={receiveMethod}
-              setReceiveMethod={setReceiveMethod}
-              contactValue={contactValue}
-              setContactValue={setContactValue}
-              agreed={agreed}
-              setAgreed={setAgreed}
-              onBack={() => goStep("package")}
-              onCreate={createOrder}
-              creating={creating}
-              error={error}
-              setError={setError}
-            />
+          {mode === "pass" && (
+            <RobloxPassFlow coins={coins} onEarn={() => navigate("/tasks")} />
           )}
 
-          {step === "payment" && (
-            <PaymentSection
-              order={order}
-              onBack={() => goStep("account")}
-              onPaid={(updated) => setOrder(updated)}
-              onEarn={() => navigate("/tasks")}
-            />
+          {mode === "normal" && (
+            <>
+              {/* Các bước */}
+              <Panel className="mb-4 px-4 py-4">
+                <Stepper step={step} onJump={goStep} />
+              </Panel>
+
+              {step === "package" && (
+                <PackageStep
+                  selected={selectedPackage}
+                  onSelect={(pkg) => setSelectedId(pkg.id)}
+                  onNext={() => goStep("account")}
+                  coins={coins}
+                />
+              )}
+
+              {step === "account" && (
+                <AccountStep
+                  pkg={selectedPackage}
+                  username={username}
+                  setUsername={setUsername}
+                  robloxUser={robloxUser}
+                  setRobloxUser={setRobloxUser}
+                  receiveMethod={receiveMethod}
+                  setReceiveMethod={setReceiveMethod}
+                  contactValue={contactValue}
+                  setContactValue={setContactValue}
+                  agreed={agreed}
+                  setAgreed={setAgreed}
+                  onBack={() => goStep("package")}
+                  onCreate={createOrder}
+                  creating={creating}
+                  error={error}
+                  setError={setError}
+                />
+              )}
+
+              {step === "payment" && (
+                <PaymentSection
+                  order={order}
+                  onBack={() => goStep("account")}
+                  onPaid={(updated) => setOrder(updated)}
+                  onEarn={() => navigate("/tasks")}
+                />
+              )}
+            </>
           )}
         </main>
 
@@ -251,4 +290,4 @@ export default function Roblox() {
       </PageShell>
     </div>
   );
-}
+            }
