@@ -9,7 +9,7 @@ const ID_RE = /^[0-9a-zA-Z-]{1,64}$/;
 
 function Step({ n, title, children }) {
   return (
-    <section className="border-b border-gray-100 px-5 py-5">
+    <section className="border-b border-gray-100 px-5 py-6">
       <div className="flex items-baseline gap-2.5 mb-2">
         <span className="text-[20px] font-semibold text-rose-500 tracking-tight">
           {String(n).padStart(2, "0")}
@@ -75,36 +75,36 @@ export default function OrderNotReceived() {
   const proofs = Array.isArray(order?.proof_urls) ? order.proof_urls : [];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-32 text-gray-900">
-      {/* HEADER MỚI THEO YÊU CẦU */}
-      <header className="sticky top-0 z-10 bg-[#f8f9fa] px-4 pt-4 pb-2">
-        <div className="flex items-center gap-3">
-          {/* Nút Logo (Hình tròn) */}
+    <div className="min-h-screen bg-white pb-32 text-gray-900">
+      
+      {/* HEADER LƠ LỬNG, KHÔNG NỀN, GỌN GÀNG */}
+      <header className="sticky top-0 z-20 w-full px-4 pt-4 pb-2 bg-white/90 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          {/* Nút Logo */}
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm active:bg-gray-50"
+            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] active:bg-gray-50"
             aria-label="Trang chủ"
           >
-            {/* Bạn có thể thay <Sparkles> bằng <img src="link_logo_cua_ban" /> */}
-            <Sparkles size={24} className="text-gray-800" />
+            <Sparkles size={20} className="text-gray-800" />
           </button>
 
-          {/* Thanh điều hướng (Bo tròn) */}
-          <div className="flex h-[52px] flex-1 items-center justify-between rounded-full border border-gray-200 bg-white px-2 shadow-sm">
+          {/* Thanh điều hướng */}
+          <div className="flex h-[44px] flex-1 items-center justify-between rounded-full bg-white border border-gray-100 px-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex h-full items-center gap-1.5 rounded-full px-3 text-[15px] font-medium text-gray-700 active:bg-gray-100"
+              className="flex h-full items-center gap-1.5 rounded-full px-3 text-[14px] font-medium text-gray-700 active:bg-gray-100"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
               Quay lại
             </button>
             
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="flex h-full items-center rounded-full px-4 text-[15px] font-medium text-gray-700 active:bg-gray-100"
+              className="flex h-full items-center rounded-full px-3 text-[14px] font-medium text-gray-700 active:bg-gray-100"
             >
               Trang chủ
             </button>
@@ -112,17 +112,17 @@ export default function OrderNotReceived() {
         </div>
       </header>
 
-      {/* Nội dung bên dưới giữ nguyên */}
-      <div className="mt-2 bg-white">
+      {/* Nội dung các bước */}
+      <div className="mt-2">
         <Step n={1} title="Kiểm tra bằng chứng giao hàng">
-          Xem hình ảnh nhân viên chuyển phát cung cấp để định vị kiện hàng
+          Xem hình ảnh Admin cung cấp để kiểm tra
           {proofs.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2">
               {proofs.map((url) => (
                 <img
                   key={url}
                   src={url}
-                  alt="Bằng chứng giao hàng"
+                  alt="Bằng chứng "
                   className="aspect-square w-full rounded-xl border border-gray-100 object-cover"
                 />
               ))}
@@ -130,8 +130,8 @@ export default function OrderNotReceived() {
           )}
         </Step>
 
-        <Step n={2} title="Kiểm tra địa chỉ giao hàng">
-          Kiện hàng đã giao đến địa chỉ bạn cung cấp
+        <Step n={2} title="Kiểm tra thông tin đơn hàng">
+          đơn hàng đã giao đến tài khoản bạn cung cấp
           <button
             type="button"
             onClick={() => rows.length > 0 && setOpen((v) => !v)}
@@ -174,22 +174,23 @@ export default function OrderNotReceived() {
           </button>
         </Step>
 
-        <Step n={3} title="Kiểm tra với người nhận">
-          Hỏi hàng xóm hoặc thành viên trong gia đình xem họ có nhận hàng thay bạn không
+        <Step n={3} title="Kiểm tra lại thông tin">
+          kiểm tra thông tin mình đã nhập đúng chưa 
         </Step>
 
-        <Step n={4} title="Kiểm tra thông báo của đơn vị vận chuyển">
-          Kiểm tra email hoặc tin nhắn xem có thông báo giao hàng từ đơn vị vận chuyển hay không. Bạn cũng có thể liên hệ với họ.
+        <Step n={4} title="Kiểm tra thông báo của admin">
+          Kiểm tra email hoặc tin nhắn xem có thông báo từ admin hay không.
         </Step>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-100 bg-white px-5 pb-6 pt-4">
+      {/* Vùng Footer cố định */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-100 bg-white px-5 pb-6 pt-4">
         <p className="mb-3 text-center text-[13px] text-gray-500">
           Đã kiểm tra đủ các bước mà vẫn chưa nhận được hàng?
         </p>
         <button
           type="button"
-          onClick={() => navigate("/help?r=new")}
+          onClick={() => navigate("/help?r=new")} // Đã sửa đường dẫn theo yêu cầu
           className="w-full rounded-xl bg-gray-900 py-3.5 text-[15px] font-bold text-white active:opacity-80"
         >
           Tạo yêu cầu để được hỗ trợ
@@ -197,4 +198,4 @@ export default function OrderNotReceived() {
       </div>
     </div>
   );
-      }
+            }
