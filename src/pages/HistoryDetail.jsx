@@ -29,6 +29,8 @@ import {
 
 const VALID_SOURCES = ["orders", "redemption_orders"];
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Mã đơn có thể là số (bảng orders) hoặc UUID (bảng redemption_orders)
+const ID_RE = /^[0-9a-zA-Z-]{1,64}$/;
 
 function InfoRow({ label, value, copy = false }) {
   const [copied, setCopied] = useState(false);
@@ -116,7 +118,7 @@ export default function HistoryDetail() {
     setImgErr(false);
 
     try {
-      if (!id || !UUID_RE.test(String(id))) {
+      if (!id || !ID_RE.test(String(id))) {
         setError("Mã đơn không hợp lệ.");
         return;
       }
@@ -365,5 +367,4 @@ export default function HistoryDetail() {
       <BottomNav />
     </div>
   );
-        }
-
+              }
