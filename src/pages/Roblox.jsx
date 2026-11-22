@@ -238,7 +238,11 @@ export default function Roblox() {
           )}
 
           {mode === "pass" && (
-            <RobloxPassFlow coins={coins} onEarn={() => navigate("/tasks")} />
+                        <RobloxPassFlow
+              coins={coins}
+              initialPkgId={query.get("pkg") || ""}
+              onEarn={() => navigate("/tasks")}
+            />
           )}
 
           {mode === "normal" && (
