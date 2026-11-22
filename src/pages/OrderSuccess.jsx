@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Check, CheckCircle2, Copy, Loader2, Zap } from "lucide-react";
- 
+
 import { supabase } from "../lib/supabaseClient.js";
 import TopHeader from "../components/TopHeader.jsx";
 import BottomNav from "../components/BottomNav.jsx";
@@ -47,9 +47,34 @@ export default function OrderSuccess() {
   const [loading, setLoading] = useState(!state);
   const [copied, setCopied] = useState(false);
 
+  // Đã xem rồi thì không cho xem lại (đọc 1 lần lúc mở trang)
+  const seenKey = `order_success_seen_${orderId}`;
+  const [alreadySeen] = useState(() => {
+    try {
+      return localStorage.getItem(seenKey) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  // Đã xem -> chuyển sang chi tiết đơn, thay thế luôn mục trong lịch sử
+  useEffect(() => {
+    if (alreadySeen) {
+      navigate(`/history/order/${orderId}`, { replace: true });
+    }
+  }, [alreadySeen, navigate, orderId]);
+
+  // Nội dung hiển thị xong thì đánh dấu đã xem
+  useEffect(() => {
+    if (alreadySeen || loading || !info) return;
+    try {
+      localStorage.setItem(seenKey, "1");
+    } catch {}
+  }, [alreadySeen, loading, info, seenKey]);
+
   // Tải lại trang (mất state) -> lấy đơn từ database
   useEffect(() => {
-    if (state) return;
+    if (state || alreadySeen) return;
     let cancelled = false;
 
     (async () => {
@@ -77,7 +102,7 @@ export default function OrderSuccess() {
     return () => {
       cancelled = true;
     };
-  }, [orderId, state]);
+  }, [orderId, state, alreadySeen]);
 
   const copyCode = async () => {
     try {
@@ -86,6 +111,9 @@ export default function OrderSuccess() {
       setTimeout(() => setCopied(false), 1500);
     } catch {}
   };
+
+  // Đã xem rồi: không vẽ gì, đang chuyển sang trang chi tiết đơn
+  if (alreadySeen) return null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -206,4 +234,4 @@ export default function OrderSuccess() {
       </PageShell>
     </div>
   );
-}
+         }
