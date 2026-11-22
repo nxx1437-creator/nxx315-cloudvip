@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
-/* Chỉnh 2 số này cho khớp chiều cao thanh trên / thanh dưới của web (px).
-   Vùng này KHÔNG bị chặn bấm, thẻ bảo trì cũng nằm phía trên thanh dưới. */
+/* Chiều cao thanh trên / thanh dưới của web (px).
+   Vùng này không bị chặn bấm, thẻ nằm phía trên thanh dưới. */
 const NAV_TOP = 60;
 const NAV_BOTTOM = 76;
 
@@ -91,7 +91,7 @@ export default function MaintenanceGate({ children }) {
   const hit = findHit(state.pages, pathname);
   const blocked = !!(state.loaded && hit && !state.isAdmin);
 
-  // khóa cuộn trang phía sau khi đang hiện thẻ
+  // khóa cuộn trang phía sau
   useEffect(() => {
     if (!blocked) return undefined;
     const prev = document.body.style.overflow;
@@ -112,96 +112,73 @@ export default function MaintenanceGate({ children }) {
         <>
           <style>{`
             @keyframes mtFade{from{opacity:0}to{opacity:1}}
-            @keyframes mtUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+            @keyframes mtUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
           `}</style>
 
-          {/* Lớp chặn bấm vào trang, chừa thanh trên và thanh dưới */}
+          {/* Lớp chặn bấm vào trang (mờ nhẹ), chừa thanh trên và thanh dưới */}
           <div
             className="fixed left-0 right-0 z-[9998]"
             style={{
               top: NAV_TOP,
               bottom: NAV_BOTTOM,
-              background: "rgba(15, 23, 42, 0.22)",
+              background: "rgba(15, 23, 42, 0.12)",
               animation: "mtFade .2s ease-out",
             }}
           />
 
-          {/* Thẻ bảo trì ở góc dưới */}
+          {/* Thẻ nhỏ ở góc dưới bên phải */}
           <div
-            className="fixed left-4 right-4 z-[9999] sm:left-auto sm:right-6 sm:w-[380px]"
+            className="fixed z-[9999]"
             style={{
-              bottom: `calc(${NAV_BOTTOM}px + 12px + env(safe-area-inset-bottom, 0px))`,
-              animation: "mtUp .32s cubic-bezier(.2,.9,.3,1)",
+              right: 12,
+              width: "min(300px, calc(100vw - 24px))",
+              bottom: `calc(${NAV_BOTTOM}px + 10px + env(safe-area-inset-bottom, 0px))`,
+              animation: "mtUp .28s cubic-bezier(.2,.9,.3,1)",
             }}
           >
-            <div className="relative overflow-hidden rounded-[28px] bg-[#0f1115] shadow-2xl ring-1 ring-white/10">
-              {/* khung minh họa */}
-              <div
-                className="relative flex h-36 items-center justify-center overflow-hidden"
-                style={{
-                  background:
-                    "radial-gradient(70% 90% at 50% 20%, #22d3ee 0%, #0ea5e9 38%, #0b2a4a 75%, #0f1115 100%)",
-                }}
+            <div className="relative rounded-2xl bg-[#0f1115] p-3.5 shadow-2xl ring-1 ring-white/10">
+              <button
+                onClick={goHome}
+                aria-label="Đóng"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 active:scale-95"
               >
-                <div
-                  className="absolute inset-0 opacity-30"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(rgba(255,255,255,.55) 1px, transparent 1.2px)",
-                    backgroundSize: "10px 10px",
-                  }}
-                />
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm">
-                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+
+              <div className="flex items-start gap-3 pr-7">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-cyan-400 text-white">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z" />
                   </svg>
                 </div>
-
-                <button
-                  onClick={goHome}
-                  aria-label="Đóng"
-                  className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-white/90 active:scale-95"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* nội dung */}
-              <div className="px-5 pb-5 pt-4">
-                <h2 className="text-[22px] font-bold leading-tight text-white">
-                  {hit.title || "Đang bảo trì"}
-                </h2>
-                <p className="mt-2 text-[15px] leading-relaxed text-slate-400">
-                  {hit.message ||
-                    "Trang này đang được nâng cấp. Bạn vui lòng quay lại sau nhé!"}
-                </p>
-                {hit.ends_at && (
-                  <p className="mt-3 inline-block rounded-full bg-sky-500/15 px-3 py-1 text-xs font-medium text-sky-300">
-                    Dự kiến xong: {fmt(hit.ends_at)}
+                <div className="min-w-0">
+                  <h2 className="text-[15px] font-bold leading-tight text-white">
+                    {hit.title || "Đang bảo trì"}
+                  </h2>
+                  <p className="mt-1 text-[13px] leading-snug text-slate-400">
+                    {hit.message ||
+                      "Trang này đang được nâng cấp. Bạn quay lại sau nhé!"}
                   </p>
-                )}
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => navigate("/support")}
-                    className="rounded-2xl border border-white/15 bg-transparent py-3 text-[15px] font-semibold text-white active:scale-95"
-                  >
-                    Hỗ trợ
-                  </button>
-                  <button
-                    onClick={goHome}
-                    className="rounded-2xl bg-white py-3 text-[15px] font-semibold text-[#0f1115] active:scale-95"
-                  >
-                    Về trang chủ
-                  </button>
+                  {hit.ends_at && (
+                    <p className="mt-1.5 text-[11px] font-medium text-sky-300">
+                      Dự kiến xong: {fmt(hit.ends_at)}
+                    </p>
+                  )}
                 </div>
               </div>
+
+              <button
+                onClick={goHome}
+                className="mt-3 w-full rounded-xl bg-white py-2 text-[13px] font-semibold text-[#0f1115] active:scale-95"
+              >
+                Về trang chủ
+              </button>
             </div>
           </div>
         </>
       )}
     </>
   );
-          }
+                  }
