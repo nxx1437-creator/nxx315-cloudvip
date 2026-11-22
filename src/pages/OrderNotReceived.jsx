@@ -7,7 +7,6 @@ import { getAccountRows } from "../lib/orderView.js";
 const VALID_SOURCES = ["orders", "redemption_orders"];
 const ID_RE = /^[0-9a-zA-Z-]{1,64}$/;
 
-// Tinh chỉnh lại component Step cho giống ảnh mẫu
 function Step({ n, title, children }) {
   return (
     <section className="border-b border-gray-100 px-5 py-5">
@@ -77,11 +76,21 @@ export default function OrderNotReceived() {
 
   return (
     <div className="min-h-screen bg-white pb-32 text-gray-900">
-      {/* Header giống ảnh mẫu: Không có nút back, chữ căn giữa */}
-      <header className="sticky top-0 z-10 flex items-center justify-center border-b border-gray-100 bg-white px-4 py-4">
-        <h1 className="text-[18px] font-bold text-gray-800">
+      {/* Đã khôi phục nút Back và căn giữa tiêu đề */}
+      <header className="sticky top-0 z-10 flex items-center border-b border-gray-100 bg-white px-4 py-3">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 absolute left-2"
+          aria-label="Quay lại"
+        >
+          <ArrowLeft size={24} className="text-gray-800" />
+        </button>
+        <h1 className="flex-1 text-center text-[17px] font-semibold text-gray-900">
           Không thể tìm thấy...
         </h1>
+        {/* Thẻ div rỗng để cân bằng lại layout do nút back dùng absolute */}
+        <div className="w-10"></div>
       </header>
 
       <Step n={1} title="Kiểm tra bằng chứng giao hàng">
@@ -102,20 +111,19 @@ export default function OrderNotReceived() {
 
       <Step n={2} title="Kiểm tra địa chỉ giao hàng">
         Kiện hàng đã giao đến địa chỉ bạn cung cấp
-        {/* Khối hiển thị thông tin người nhận giống ảnh mẫu */}
         <button
           type="button"
           onClick={() => rows.length > 0 && setOpen((v) => !v)}
-          className="mt-3 flex w-full items-start gap-3 rounded-xl bg-gray-50/80 px-4 py-3.5 text-left transition-colors hover:bg-gray-100"
+          className="mt-3 flex w-full items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5 text-left transition-colors hover:bg-gray-100"
         >
           <MapPin size={20} className="mt-0.5 shrink-0 text-gray-800" />
           <div className="min-w-0 flex-1">
             {first ? (
               <>
                 <p className="truncate text-[15px] font-semibold text-gray-900">
-                  {first.label} {first.value}
+                  {first.label}: {first.value}
                 </p>
-                {/* Hiển thị thêm thông tin phụ (như địa chỉ) nếu có */}
+                {/* Giả sử API trả về trường subValue cho địa chỉ chi tiết giống ảnh */}
                 {first.subValue && (
                   <p className="mt-0.5 truncate text-[13px] text-gray-500">
                     {first.subValue}
@@ -154,7 +162,6 @@ export default function OrderNotReceived() {
         Kiểm tra email hoặc tin nhắn xem có thông báo giao hàng từ đơn vị vận chuyển hay không. Bạn cũng có thể liên hệ với họ.
       </Step>
 
-      {/* Vùng Footer cố định */}
       <div className="fixed inset-x-0 bottom-0 z-10 border-t border-gray-100 bg-white px-5 pb-6 pt-4">
         <p className="mb-3 text-center text-[13px] text-gray-500">
           Đã kiểm tra đủ các bước mà vẫn chưa nhận được hàng?
@@ -169,4 +176,4 @@ export default function OrderNotReceived() {
       </div>
     </div>
   );
-        }
+          }
