@@ -5,7 +5,7 @@ import { canReply, getReplyDeadline } from "../lib/orderView.js";
 
 // Dán ID (uuid) của tài khoản NXX315 admin vào đây
 const ADMIN_USER_ID = "46b2fbbc-dc4a-411d-b140-7c67e8680695";
-const ADMIN_FALLBACK_NAME = "NXX315 Admin";
+const ADMIN_FALLBACK_NAME = "NXX315";
 
 // Sau bao nhiêu phút kể từ lúc đặt hàng thì tự chuyển bước (đổi số ở đây)
 export const AUTO_CHECK_MIN = 1; // -> Đang kiểm tra thanh toán
