@@ -125,7 +125,7 @@ export default function AdminGameOrdersTab({ onChanged }) {
 
               {o.status === "paid" && (
                 <div className="mt-3 flex gap-2">
-                  <Btn className="flex-1" disabled={busyId === o.id} onClick={() => setDeliverTarget(o)}
+                  <Btn className="flex-1" disabled={busyId === o.id} onClick={() => setDeliverTarget(o)}>
                     {busyId === o.id ? "Đang xử lý..." : "Đã giao"}
                   </Btn>
                   <Btn variant="ghost" className="flex-1" disabled={busyId === o.id} onClick={() => setRejectOrder(o)}>
