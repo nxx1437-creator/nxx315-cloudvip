@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
@@ -14,13 +14,11 @@ const ALWAYS_OPEN = [
 ];
 
 function fmt(d) {
-  try {
-    return new Date(d).toLocaleString("vi-VN", {
-      hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit",
-    });
-  } catch {
-    return "";
-  }
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "";
+  return dt.toLocaleString("vi-VN", {
+    hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit",
+  });
 }
 
 // page_key khớp theo đường dẫn: 'store/roblox' -> /store/roblox (và con của nó)
@@ -55,7 +53,11 @@ export default function MaintenanceGate({ children }) {
         supabase.rpc("get_maintenance"),
         supabase.auth.getSession(),
       ]);
-      if (error || !data) return;
+      if (error || !data) {
+        // fail-open: không chặn nếu RPC lỗi, nhưng đánh dấu loaded để không kẹt loading
+        setState((s) => ({ ...s, loaded: true }));
+        return;
+      }
       setState({
         loaded: true,
         isAdmin: !!data.is_admin,
@@ -64,9 +66,11 @@ export default function MaintenanceGate({ children }) {
       });
     } catch (e) {
       console.warn("[Maintenance] lỗi:", e);
+      setState((s) => ({ ...s, loaded: true }));
     }
   }, []);
 
+  // Poll định kỳ + theo dõi visibility + auth
   useEffect(() => {
     load();
     const t = setInterval(load, 60000);
@@ -83,15 +87,23 @@ export default function MaintenanceGate({ children }) {
     };
   }, [load]);
 
-  // kiểm tra lại mỗi lần đổi trang
+  // Kiểm tra lại mỗi lần đổi trang (bỏ qua lần mount đầu để tránh double-call)
+  const firstPathRun = useRef(true);
   useEffect(() => {
+    if (firstPathRun.current) {
+      firstPathRun.current = false;
+      return;
+    }
     load();
   }, [pathname, load]);
 
-  const hit = findHit(state.pages, pathname);
+  const hit = useMemo(
+    () => findHit(state.pages, pathname),
+    [state.pages, pathname]
+  );
   const blocked = !!(state.loaded && hit && !state.isAdmin);
 
-  // khóa cuộn trang phía sau
+  // Khóa cuộn trang phía sau
   useEffect(() => {
     if (!blocked) return undefined;
     const prev = document.body.style.overflow;
@@ -106,7 +118,9 @@ export default function MaintenanceGate({ children }) {
 
   return (
     <>
-      {children}
+      <div aria-hidden={blocked || undefined} inert={blocked ? "" : undefined}>
+        {children}
+      </div>
 
       {blocked && (
         <>
@@ -181,4 +195,4 @@ export default function MaintenanceGate({ children }) {
       )}
     </>
   );
-                  }
+       }
