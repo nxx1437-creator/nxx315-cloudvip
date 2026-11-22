@@ -47,9 +47,11 @@ function lastUsername() {
 
 const num = (n) => new Intl.NumberFormat("vi-VN").format(n);
 
-export default function RobloxPassFlow({ coins = 0, onEarn }) {
+export default function RobloxPassFlow({ coins = 0, onEarn, initialPkgId = "" }) {
   const [view, setView] = useState("form"); // form | payment
-  const [pkgId, setPkgId] = useState("");
+  const [pkgId, setPkgId] = useState(() =>
+    PASS_PACKAGES.some((p) => p.id === initialPkgId) ? initialPkgId : ""
+  );
   const [username, setUsername] = useState(lastUsername);
   const [robloxUser, setRobloxUser] = useState(null);
   const [link, setLink] = useState("");
