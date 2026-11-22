@@ -10,7 +10,6 @@ import useProfile from "../hooks/useProfile.js";
 import PaymentSection from "../components/RobloxPayment.jsx";
 import RobloxPassFlow from "../components/RobloxPassFlow.jsx";
 import {
-  Stepper,
   PackageStep,
   AccountStep,
 } from "../components/RobloxSteps.jsx";
@@ -46,7 +45,7 @@ export default function Roblox() {
   // Khôi phục lựa chọn dở dang (khi tải lại trang) + nhớ username lần trước
   const [draft] = useState(loadDraft);
 
-    // Mở thẳng tab Game Pass khi vào từ "Gói dành cho bạn": /store/roblox?tab=pass&pkg=pass-10
+  // Mở thẳng tab Game Pass khi vào từ "Gói dành cho bạn": /store/roblox?tab=pass&pkg=pass-10
   const query = new URLSearchParams(window.location.search);
   const [mode, setMode] = useState(
     query.get("tab") === "pass" ? "pass" : "normal"
@@ -238,7 +237,7 @@ export default function Roblox() {
           )}
 
           {mode === "pass" && (
-                        <RobloxPassFlow
+            <RobloxPassFlow
               coins={coins}
               initialPkgId={query.get("pkg") || ""}
               onEarn={() => navigate("/tasks")}
@@ -247,11 +246,6 @@ export default function Roblox() {
 
           {mode === "normal" && (
             <>
-              {/* Các bước */}
-              <Panel className="mb-4 px-4 py-4">
-                <Stepper step={step} onJump={goStep} />
-              </Panel>
-
               {step === "package" && (
                 <PackageStep
                   selected={selectedPackage}
@@ -298,4 +292,4 @@ export default function Roblox() {
       </PageShell>
     </div>
   );
-            }
+}
