@@ -1,5 +1,10 @@
-import React from "react";
-import { Check, ShieldCheck, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { BadgeCheck, Check, X } from "lucide-react";
+import { supabase } from "../lib/supabaseClient.js";
+
+// Dán ID (uuid) của tài khoản NXX315 admin vào đây
+const ADMIN_USER_ID = "46b2fbbc-dc4a-411d-b140-7c67e8680695";
+const ADMIN_FALLBACK_NAME = "NXX315 ";
 
 export const STEPS = ["Đã nhận đơn", "Kiểm tra", "Xử lý", "Hoàn tất"];
 
@@ -30,7 +35,62 @@ function fmt(value) {
   });
 }
 
+// Lấy tên + ảnh từ hồ sơ NXX315, lưu tạm để không gọi lại nhiều lần
+let adminCache = null;
+
+function useAdminProfile() {
+  const [admin, setAdmin] = useState(adminCache);
+
+  useEffect(() => {
+    if (!ADMIN_USER_ID || adminCache) return;
+    let alive = true;
+
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc("get_public_profile", {
+          p_user_id: ADMIN_USER_ID,
+        });
+        if (error || !data) return;
+        adminCache = {
+          name: data.name || ADMIN_FALLBACK_NAME,
+          avatar: data.avatar_url || "",
+        };
+        if (alive) setAdmin(adminCache);
+      } catch {}
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return admin || { name: ADMIN_FALLBACK_NAME, avatar: "" };
+}
+
+function AdminAvatar({ src, name }) {
+  const [failed, setFailed] = useState(false);
+
+  if (src && !failed) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        onError={() => setFailed(true)}
+        className="h-10 w-10 shrink-0 rounded-full border border-slate-100 object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-black text-white">
+      {(name || "N").charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 export default function OrderProgressTracker({ order }) {
+  const admin = useAdminProfile();
+
   if (!order) return null;
 
   const status = String(order.status || "").toLowerCase();
@@ -93,16 +153,18 @@ export default function OrderProgressTracker({ order }) {
       {(note || proofs.length > 0) && (
         <div className="mt-6 border-t border-slate-100 pt-5">
           <div className="flex gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
-              <ShieldCheck size={19} />
-            </div>
+            <AdminAvatar key={admin.avatar} src={admin.avatar} name={admin.name} />
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-black text-slate-900">NXX315 Admin</span>
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-900 text-white">
-                  <Check size={10} strokeWidth={3} />
+              <div className="flex items-center gap-1">
+                <span className="truncate text-sm font-black text-slate-900">
+                  {admin.name}
                 </span>
+                <BadgeCheck
+                  size={17}
+                  className="shrink-0 fill-blue-500 text-white"
+                  aria-label="Tài khoản đã xác minh"
+                />
               </div>
 
               {note && (
@@ -141,4 +203,4 @@ export default function OrderProgressTracker({ order }) {
       )}
     </section>
   );
-}
+    }
