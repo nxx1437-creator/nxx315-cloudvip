@@ -91,9 +91,6 @@ function Card({ title, open, onToggle, children }) {
 
 const AUTO_REPLY = "Xin chào bạn,\nNXX315 đã nhận được yêu cầu của bạn. Đội ngũ CSKH sẽ phản hồi tại đây sớm nhất có thể. Bạn có thể nhắn thêm thông tin bất cứ lúc nào.";
 
-const followUpText = (name) =>
-  `Xin chào bạn${name ? ` ${name}` : ""},\nNếu bạn vẫn cần trợ giúp về vấn đề trên, hãy để lại phản hồi để đội ngũ CSKH của Nxx315 Studio kịp thời hỗ trợ bạn nhé.\n\nTrong 12 giờ tiếp theo, Nxx315 Studio xin được phép đóng yêu cầu trợ giúp này nếu không có thêm phản hồi nào khác từ bạn. Cảm ơn bạn đã sử dụng dịch vụ!`;
-
 export function ChatScreen({ ticket, onClose }) {
   useHelpTheme();
   const [msgs, setMsgs] = useState([]);
@@ -104,7 +101,6 @@ export function ChatScreen({ ticket, onClose }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [status, setStatus] = useState(ticket.status);
-  const [name, setName] = useState("");
   const [rating, setRating] = useState({ q: ticket.rating_quality ?? null, r: ticket.rating_resolved ?? null, done: !!ticket.rated_at });
   const [pickQ, setPickQ] = useState(null);
   const [pickR, setPickR] = useState(null);
@@ -123,18 +119,6 @@ export function ChatScreen({ ticket, onClose }) {
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data: s } = await supabase.auth.getSession();
-      const uid = s?.session?.user?.id;
-      if (!uid) return;
-      const { data } = await supabase.from("profiles").select("display_name,username").eq("id", uid).maybeSingle();
-      if (alive && data) setName(data.display_name || data.username || "");
-    })();
-    return () => { alive = false; };
   }, []);
 
   // làm mới trạng thái + đánh giá mỗi lần mở phiếu
@@ -195,10 +179,6 @@ export function ChatScreen({ ticket, onClose }) {
   useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs.length, imgs.length]);
 
   const closed = CLOSED.includes(status);
-  const last = msgs[msgs.length - 1];
-  const lastIsStaff = last ? last.sender !== "user" : !!ticket.admin_reply;
-  const showFollowUp = !closed && lastIsStaff;
-  const followUpTime = last?.created_at || ticket.updated_at || ticket.created_at;
   const typeLabel = ticket.type === "idea" ? "Góp ý ý tưởng" : CATEGORIES.find((c) => c.key === ticket.category)?.label || "Hỗ trợ";
 
   const addFiles = (list) => {
@@ -304,7 +284,6 @@ export function ChatScreen({ ticket, onClose }) {
             <div className="py-5"><TicketSteps status={status} id={ticket.id} /></div>
             <div className={row}><span className="hc-muted">Mã yêu cầu</span><span className="hc-text hc-mono font-medium">#{ticket.ticket_code}</span></div>
             <div className={row}><span className="hc-muted">Thời gian gửi</span><span className="hc-text font-medium">{fmtDate(ticket.created_at)}</span></div>
-    
           </Card>
 
           {closed && (
@@ -351,13 +330,18 @@ export function ChatScreen({ ticket, onClose }) {
               {ticket.admin_reply && <ChatBubble>{ticket.admin_reply}</ChatBubble>}
 
               {msgs.map((m) => (
-                <ChatBubble key={m.id} mine={m.sender === "user"} time={fmtDate(m.created_at)} hasText={!!m.body && m.body.trim().length > 0}>
+                <ChatBubble
+                  key={m.id}
+                  mine={m.sender === "user"}
+                  auto={m.sender === "system"}
+                  time={fmtDate(m.created_at)}
+                  hasText={!!m.body && m.body.trim().length > 0}
+                >
                   {m.body}
                   {thumbs((m.images || []).map((p) => urls[p] || null))}
                 </ChatBubble>
               ))}
 
-              {showFollowUp && <ChatBubble auto time={fmtDate(followUpTime)}>{followUpText(name)}</ChatBubble>}
               <div ref={endRef} />
             </div>
           </Card>
@@ -401,4 +385,4 @@ export function ChatScreen({ ticket, onClose }) {
     {view && <Lightbox url={view} onClose={() => setView(null)} />}
     </>
   );
-            }
+                     }
