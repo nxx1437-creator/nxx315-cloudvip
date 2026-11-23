@@ -60,7 +60,7 @@ const CSS = `
 .og em{font-style:italic}
 .og .serif{font-family:var(--serif);font-weight:300}
 .og .wrap{max-width:1280px;margin:0 auto;padding:0 20px}
-.og .hero-t{font:300 clamp(44px,9.2vw,96px)/1.15 var(--serif);margin:0;color:#000;-webkit-text-stroke:.6px #000}
+.og .hero-t{font:300 clamp(44px,9.2vw,96px)/1.15 var(--serif);margin:0;color:#fff;text-shadow:0 2px 24px rgba(8,30,60,.35),0 1px 3px rgba(8,30,60,.25)}
 .og .chap{font:300 clamp(40px,7vw,80px)/1 var(--serif);letter-spacing:-.01em;color:#fafafa;margin:0}
 .og .small-h{font:300 38px/.9 var(--serif);margin:0;color:#fafafa}
 .og .promise{font:300 clamp(32px,4.4vw,48px)/1.15 var(--serif);margin:0;color:#fafafa}
@@ -90,11 +90,11 @@ const CSS = `
 .og .brand-t{display:none;font:400 15px/1 var(--sans);padding-right:10px}
 
 /* hero */
-.og .hero{position:relative;overflow:hidden;text-align:center;padding:150px 0 0;background:#2b7fd0}
+.og .hero-sub{max-width:420px;margin:24px auto 0;font:400 16px/1.5 var(--sans);color:#fff;text-shadow:0 1px 14px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.3)}
 .og .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
 .og .hero-in{position:relative;z-index:2}
 .og .pill{display:inline-flex;align-items:center;gap:8px;margin-bottom:24px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.6);color:#000;font:400 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}
-.og .hero-sub{max-width:420px;margin:24px auto 0;font:400 16px/1.5 var(--sans);color:#000}
+.og .pill{display:inline-flex;align-items:center;gap:8px;margin-bottom:24px;padding:6px 14px;border-radius:999px;background:rgba(8,24,44,.35);border:1px solid rgba(255,255,255,.25);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;font:400 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}
 .og .hero-fade{position:absolute;left:0;right:0;bottom:0;height:90px;z-index:4;background:linear-gradient(rgba(5,5,5,0),#050505);pointer-events:none}
 
 /* điện thoại trong suốt: chỉ có viền, cảnh vật nhìn xuyên màn hình */
