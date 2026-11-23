@@ -91,7 +91,9 @@ const CSS = `
 
 /* hero */
 .og .hero-sub{max-width:420px;margin:24px auto 0;font:400 16px/1.5 var(--sans);color:#fff;text-shadow:0 1px 14px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.3)}
+.og .hero{position:relative;overflow:hidden;text-align:center;padding:150px 0 0;background:#2b7fd0}
 .og .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+.og .hero{position:relative;overflow:hidden;text-align:center;padding:150px 0 0;background:#2b7fd0}
 .og .hero-in{position:relative;z-index:2}
 .og .pill{display:inline-flex;align-items:center;gap:8px;margin-bottom:24px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.6);color:#000;font:400 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}
 .og .pill{display:inline-flex;align-items:center;gap:8px;margin-bottom:24px;padding:6px 14px;border-radius:999px;background:rgba(8,24,44,.35);border:1px solid rgba(255,255,255,.25);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;font:400 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}
