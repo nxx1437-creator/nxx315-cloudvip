@@ -297,7 +297,12 @@ function AdminChat({ ticket, user, onBack, onStatus, onSent }) {
         </Bubble>
         {ticket.admin_reply && <Bubble staff label="CSKH">{ticket.admin_reply}</Bubble>}
         {msgs.map((m) => (
-          <Bubble key={m.id} staff={m.sender === "staff"} label={m.sender === "staff" ? "CSKH" : who} time={fmtFull(m.created_at)}>
+          <Bubble
+  key={m.id}
+  staff={m.sender !== "user"}
+  label={m.sender === "user" ? who : m.sender === "system" ? "Tin nhắn tự động" : "CSKH"}
+  time={fmtFull(m.created_at)}
+>
             {m.body}
             {thumbs(m.images)}
           </Bubble>
