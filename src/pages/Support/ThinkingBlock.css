@@ -4,6 +4,7 @@
   --ux-ink:#2b2b2b;--ux-ink-2:#6f6f68;--ux-ink-3:#a2a29b;
   --ux-line-2:#e0e0d8;--ux-accent:#2b2b2b;
   --ux-dot:#2b2b2b;
+  --ux-node:#f0f0ea;
   --ux-ease:cubic-bezier(.2,.8,.2,1);
   position:relative;max-width:100%;color:var(--ux-ink);
   -webkit-tap-highlight-color:transparent;overflow-wrap:break-word;
@@ -42,20 +43,29 @@
 .u453-pn{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.3,.9,.3,1)}
 .u453-h[aria-expanded="true"]+.u453-pn{grid-template-rows:1fr}
 .u453-in{min-height:0;overflow:hidden}
-.u453-ls{margin:6px 0 2px 8px;padding:1px 0 1px 17px;border-left:1.5px solid var(--ux-line-2);opacity:0;transform:translateY(-4px);transition:opacity .3s var(--ux-ease),transform .45s var(--ux-ease)}
+.u453-ls{margin:8px 0 2px;padding:0;opacity:0;transform:translateY(-4px);transition:opacity .3s var(--ux-ease),transform .45s var(--ux-ease)}
 .u453-h[aria-expanded="true"]+.u453-pn .u453-ls{opacity:1;transform:none;transition-delay:.06s}
-.u453-ln{position:relative;margin:0;display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(5px);filter:blur(3px);transition:grid-template-rows .45s var(--ux-ease),opacity .45s var(--ux-ease) .08s,transform .55s cubic-bezier(.3,1.4,.5,1) .08s,filter .45s var(--ux-ease) .08s}
+
+/* Dòng thời gian kiểu GitHub: nút tròn xám có icon nằm trên một đường dọc nối các bước */
+.u453-ln{position:relative;margin:0;padding-left:38px;display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(5px);filter:blur(3px);transition:grid-template-rows .45s var(--ux-ease),opacity .45s var(--ux-ease) .08s,transform .55s cubic-bezier(.3,1.4,.5,1) .08s,filter .45s var(--ux-ease) .08s}
 .u453-ln.is-on{grid-template-rows:1fr;opacity:1;transform:none;filter:none}
 .u453-ln>span{min-height:0;overflow:hidden}
-.u453-ln>span>span{display:block;padding:3px 0;font-size:13.5px;line-height:20px;color:var(--ux-ink-2);transition:color .5s var(--ux-ease)}
-.u453-ln:not(.is-now)>span>span{color:var(--ux-ink-3)}
+.u453-ln>span>span{display:block;padding:3px 0 16px;font-size:14.5px;line-height:20px;color:var(--ux-ink-2);transition:color .5s var(--ux-ease)}
+.u453-ln.is-now>span>span{color:var(--ux-ink);font-weight:500}
+.u453-ln:last-child>span>span{padding-bottom:4px}
 
-/* Đốm đánh dấu mốc, một tông duy nhất:
-   chấm đặc = bước đã xong, vòng rỗng nhấp nháy nhẹ = bước đang chạy */
-.u453-ln::before{content:"";position:absolute;left:-21.25px;top:9.5px;width:7px;height:7px;border-radius:50%;background:var(--ux-dot);transform:scale(0);transition:transform .5s cubic-bezier(.34,1.7,.5,1) .15s,background-color .4s var(--ux-ease),box-shadow .4s var(--ux-ease)}
-.u453-ln.is-on::before{transform:scale(1)}
-.u453-ln.is-now::before{background:#fbfbf8;box-shadow:inset 0 0 0 1.75px var(--ux-dot);animation:u453-ping 1.6s ease-out .6s infinite}
-@keyframes u453-ping{0%{outline:0 solid rgba(43,43,43,.28)}100%{outline:7px solid transparent}}
+/* Nút tròn chứa icon */
+.u453-nd{position:absolute;z-index:1;left:0;top:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--ux-node);color:var(--ux-ink);transform:scale(0);transition:transform .5s cubic-bezier(.34,1.7,.5,1) .15s}
+.u453-nd svg{display:block;width:14px;height:14px}
+.u453-ln.is-on .u453-nd{transform:scale(1)}
+
+/* Đường dọc nối nút này xuống nút kế tiếp (bước cuối thì không có) */
+.u453-ln::after{content:"";position:absolute;left:12.25px;top:26px;bottom:0;width:1.5px;background:var(--ux-line-2)}
+.u453-ln:last-child::after{display:none}
+
+/* Bước đang chạy: vòng xoay nhỏ trong nút tròn */
+.u453-sp{display:block;width:13px;height:13px;border-radius:50%;border:2px solid var(--ux-line-2);border-top-color:var(--ux-ink);animation:u453-rot .8s linear infinite}
+@keyframes u453-rot{to{transform:rotate(360deg)}}
 
 .u453-live{position:absolute;margin:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
@@ -69,4 +79,5 @@
   }
   .u453:not(.is-done) .u453-ic::after{animation:u453-halo-rm 2.4s ease-in-out infinite!important}
   .u453:not(.is-done) .u453-ic svg{animation:u453-star-rm 2.4s ease-in-out infinite!important}
+  .u453-sp{animation:u453-star-rm 1.2s ease-in-out infinite!important}
 }
