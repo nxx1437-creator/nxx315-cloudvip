@@ -12,7 +12,7 @@
 .u453 button{font:inherit;color:inherit;cursor:pointer}
 .u453 button:disabled{cursor:default}
 
-.u453-h{display:inline-flex;align-items:center;gap:8px;height:34px;margin-left:-9px;padding:0 9px;border:0;border-radius:11px;background:none;font-size:15px;font-weight:500;letter-spacing:-.01em;color:var(--ux-ink-2);transition:background-color .2s var(--ux-ease),color .2s var(--ux-ease)}
+.u453-h{display:inline-flex;align-items:center;gap:8px;height:34px;max-width:100%;margin-left:-9px;padding:0 9px;border:0;border-radius:11px;background:none;font-size:15px;font-weight:500;letter-spacing:-.01em;color:var(--ux-ink-2);transition:background-color .2s var(--ux-ease),color .2s var(--ux-ease)}
 /* Chỉ hover trên máy có chuột; trên điện thoại hover bị "kẹt" sau khi chạm nên thành mảng xám */
 @media (hover:hover) and (pointer:fine){
   .u453-h:not(:disabled):hover{background:color-mix(in srgb,var(--ux-ink) 6%,transparent);color:var(--ux-ink)}
@@ -27,10 +27,12 @@
 @keyframes u453-halo{0%,100%{opacity:0;transform:scale(.55)}50%{opacity:1;transform:scale(1.2)}}
 .u453.is-done .u453-ic{color:var(--ux-ink-3)}
 
-.u453-tx{display:grid}
-.u453-tx>span{grid-area:1/1;white-space:nowrap;transition:opacity .4s var(--ux-ease),transform .5s var(--ux-ease),filter .4s var(--ux-ease)}
-.u453-a{color:var(--ux-ink-3);background:linear-gradient(100deg,var(--ux-ink-3) 0 36%,var(--ux-ink) 50%,var(--ux-ink-3) 64% 100%);background-size:280% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:u453-sh 1.9s cubic-bezier(.45,0,.55,1) infinite}
+/* Chữ tiêu đề: dài quá thì cắt bằng dấu …; mỗi lần đổi bước chữ mới trượt lên */
+.u453-tx{display:grid;min-width:0}
+.u453-tx>span{grid-area:1/1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .4s var(--ux-ease),transform .5s var(--ux-ease),filter .4s var(--ux-ease)}
+.u453-a{color:var(--ux-ink-3);background:linear-gradient(100deg,var(--ux-ink-3) 0 36%,var(--ux-ink) 50%,var(--ux-ink-3) 64% 100%);background-size:280% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:u453-sh 1.9s cubic-bezier(.45,0,.55,1) infinite,u453-swap .45s var(--ux-ease) backwards}
 @keyframes u453-sh{to{background-position:0 0}}
+@keyframes u453-swap{from{opacity:0;transform:translateY(8px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 .u453-b{opacity:0;transform:translateY(7px);filter:blur(3px)}
 .u453.is-done .u453-a{opacity:0;transform:translateY(-7px);filter:blur(3px)}
 .u453.is-done .u453-b{opacity:1;transform:none;filter:none}
@@ -46,7 +48,7 @@
 .u453-ln.is-on{grid-template-rows:1fr;opacity:1;transform:none;filter:none}
 .u453-ln>span{min-height:0;overflow:hidden}
 .u453-ln>span>span{display:block;padding:3px 0;font-size:13.5px;line-height:20px;color:var(--ux-ink-2);transition:color .5s var(--ux-ease)}
-.u453.is-done .u453-ln>span>span{color:var(--ux-ink-3)}
+.u453-ln:not(.is-now)>span>span{color:var(--ux-ink-3)}
 
 /* Đốm đánh dấu mốc, một tông duy nhất:
    chấm đặc = bước đã xong, vòng rỗng nhấp nháy nhẹ = bước đang chạy */
