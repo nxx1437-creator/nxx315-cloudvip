@@ -1,11 +1,12 @@
 // src/pages/Support/StatusBubble.jsx
 // Dòng trạng thái do backend ghi (sender_type = "status"), hiện bằng "Thinking text".
-// Mỗi lần backend đổi chữ (đang tra đơn, đang tìm...), thành một dòng suy nghĩ mới.
+// Mỗi lần backend đổi chữ (đang đọc câu hỏi, đang tra đơn, đang soạn trả lời...), thành một bước mới.
 import React, { useEffect, useState } from "react";
 import ThinkingBlock from "./ThinkingBlock.jsx";
 import { beginThinking, pushThinkingLine } from "./thinkingStore.js";
 
-const SKIP = /^đang (suy nghĩ|soạn câu trả lời|phân tích câu hỏi)/i;
+// Chỉ bỏ dòng chung chung "Đang suy nghĩ..." (khối đã tự hiện chữ này khi chưa có bước nào)
+const SKIP = /^đang suy nghĩ/i;
 
 export default function StatusBubble({ message }) {
   const [lines, setLines] = useState([]);
@@ -26,5 +27,4 @@ export default function StatusBubble({ message }) {
       <ThinkingBlock lines={lines} done={false} />
     </div>
   );
-      }
-
+}
