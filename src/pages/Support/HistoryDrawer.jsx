@@ -27,9 +27,11 @@ export default function HistoryDrawer({
     console.log("[HistoryDrawer] Loading for userId:", userId);
     setLoading(true);
     try {
+      // PHẢI lấy cả `status`: thiếu cột này thì ChatView không biết chat cũ đang ở chế độ AI
+      // và sẽ không gọi AI trả lời khi người dùng nhắn tiếp.
       const { data, error } = await supabase
         .from("support_conversations")
-        .select("id, title, category, created_at, updated_at")
+        .select("id, user_id, title, category, status, created_at, updated_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
@@ -159,5 +161,3 @@ export default function HistoryDrawer({
     </>
   );
 }
-
-
