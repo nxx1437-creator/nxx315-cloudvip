@@ -1,4 +1,5 @@
 // src/pages/Support/MessageBubble.jsx — AI: chữ rộng hết khung, không bóng, nút thao tác nằm dưới (kiểu Gemini); bạn: bóng kem + nút trả lời, sao chép
+// Một câu trả lời AI có thể được tách thành nhiều tin (partIndex/partCount): chỉ tin đầu có khối suy nghĩ + ảnh, chỉ tin cuối có nút thao tác
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Copy, LogIn, Reply, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
@@ -54,6 +55,9 @@ export default function MessageBubble({
   feedback = null,
   onFeedback,
   onReply,
+  partIndex = 0,
+  partCount = 1,
+  fullText = null,
 }) {
   const navigate = useNavigate();
   const imgElRef = useRef(null);
@@ -62,11 +66,12 @@ export default function MessageBubble({
   const [lightbox, setLightbox] = useState(false);
   const [copied, setCopied] = useState(false);
   const [thinking] = useState(() =>
-    message.sender_type === "ai" && animateIn ? takeThinking(message.id) : null
+    message.sender_type === "ai" && animateIn && partIndex === 0 ? takeThinking(message.id) : null
   );
 
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
+  const isLastPart = partIndex >= partCount - 1;
   const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
   const hasMedia = Boolean(message.image_url) && !mediaError;
   const isVideo =
@@ -163,18 +168,23 @@ export default function MessageBubble({
   const isStreaming = streamingText !== null && streamingText !== undefined;
   const displayText = isStreaming ? streamingText : message.message;
 
-  const finalActions = !isStreaming
-    ? message.actions?.length
-      ? message.actions
-      : parseActionsFromText(message.message || "")
-    : [];
+  // Nút hành động / đăng nhập đọc từ TOÀN BỘ câu trả lời, nhưng chỉ hiện ở tin cuối
+  const sourceText = fullText ?? message.message ?? "";
+
+  const finalActions =
+    !isStreaming && isLastPart
+      ? message.actions?.length
+        ? message.actions
+        : parseActionsFromText(sourceText)
+      : [];
 
   const showLoginButton =
     isLastAIMessage &&
+    isLastPart &&
     !isStreaming &&
     message.suggestions?.length > 0 &&
     !isSuggestionHidden &&
-    shouldShowLoginButton(message.message || "");
+    shouldShowLoginButton(sourceText);
 
   const fbLocked = feedback?.status === "sent";
 
@@ -195,7 +205,7 @@ export default function MessageBubble({
             <ThinkingBlock done lines={thinking.lines} seconds={thinking.seconds} />
           </div>
         )}
-        {hasMedia && (
+        {hasMedia && partIndex === 0 && (
           <div className="mb-2 overflow-hidden rounded-[22px] border border-[#e6e6df] bg-[#f2f2ee]">
             {isVideo ? (
               <video
@@ -280,8 +290,8 @@ export default function MessageBubble({
           </button>
         )}
 
-        {/* Hàng nút dưới câu trả lời: hữu ích / chưa hữu ích / sao chép / trả lời, "Do AI tạo" ở bên phải */}
-        {!isStreaming && isAI && (
+        {/* Hàng nút dưới câu trả lời (chỉ ở tin cuối): hữu ích / chưa hữu ích / sao chép / trả lời, "Do AI tạo" ở bên phải */}
+        {!isStreaming && isAI && isLastPart && (
           <div className="-ml-2 mt-1 flex items-center gap-0.5">
             {showFeedback && (
               <>

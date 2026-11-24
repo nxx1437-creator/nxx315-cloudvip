@@ -6,6 +6,7 @@ import { CornerDownRight, Sparkles } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { QUICK_ACTIONS, SUPPORT } from "./constants.js";
 import { cleanAIText } from "./helpers.js";
+import { splitReply } from "./splitReply.js";
 import BannerNotice from "./BannerNotice.jsx";
 import StatusBubble from "./StatusBubble.jsx";
 import HistoryDrawer from "./HistoryDrawer.jsx";
@@ -62,7 +63,10 @@ const MemoBubble = React.memo(
     a.feedback === b.feedback &&
     a.onReply === b.onReply &&
     a.onShowLogin === b.onShowLogin &&
-    a.onFeedback === b.onFeedback
+    a.onFeedback === b.onFeedback &&
+    a.partIndex === b.partIndex &&
+    a.partCount === b.partCount &&
+    a.fullText === b.fullText
 );
 
 function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat, onOpenConversation }) {
@@ -74,6 +78,10 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const [aiTyping, setAiTyping] = useState(false);
   const [streamingMsgId, setStreamingMsgId] = useState(null);
   const [streamingText, setStreamingText] = useState("");
+  // Nhắn nhiều tin như người thật: revealed[msgId] = số tin đã hiện; playingMsgId = câu trả lời đang được "nhắn" dần
+  const [revealed, setRevealed] = useState({});
+  const [playingMsgId, setPlayingMsgId] = useState(null);
+  const [partTyping, setPartTyping] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [conv, setConv] = useState(conversation);
@@ -97,15 +105,21 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const twRaf = useRef(0);
   const twTimer = useRef(0);
   const reloadTimer = useRef(0);
+  const gapTimer = useRef(0);
+  const playRef = useRef(0);
+  const activeRef = useRef(null);
+  const doneRef = useRef(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      playRef.current += 1;
       cancelAnimationFrame(twRaf.current);
       clearTimeout(twTimer.current);
       clearTimeout(reloadTimer.current);
+      clearTimeout(gapTimer.current);
     };
   }, []);
 
@@ -121,6 +135,13 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     setStreamingText("");
     setAiTyping(false);
     setSending(false);
+    playRef.current += 1;
+    clearTimeout(gapTimer.current);
+    activeRef.current = null;
+    doneRef.current = null;
+    setRevealed({});
+    setPlayingMsgId(null);
+    setPartTyping(false);
     sentIds.current = new Set();
     freshIds.current = new Set();
     setHiddenSuggestionIds([]);
@@ -145,6 +166,11 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     if (!loading && messages.length > 0) scrollToBottom(true);
   }, [messages.length, loading, scrollToBottom]);
 
+  // Mỗi khi hiện thêm một tin trong câu trả lời nhiều tin thì cuộn xuống
+  useEffect(() => {
+    if (Object.keys(revealed).length > 0) scrollToBottom(true);
+  }, [revealed, partTyping, scrollToBottom]);
+
   useEffect(() => {
     if (!streamingMsgId) return;
     const el = scrollRef.current;
@@ -159,9 +185,14 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input]);
 
-  const runTypewriter = useCallback((msg) => {
+  // Gõ chữ dần. onDone(aborted): aborted = true khi bị một lần gõ khác chen ngang
+  const runTypewriter = useCallback((msg, onDone) => {
     cancelAnimationFrame(twRaf.current);
     clearTimeout(twTimer.current);
+    const preempted = doneRef.current;
+    const cb = onDone || null;
+    doneRef.current = cb;
+    if (preempted) preempted(true);
     setStreamingMsgId(msg.id);
     setStreamingText("");
     const full = msg.message || "";
@@ -183,11 +214,63 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
           setStreamingMsgId(null);
           setStreamingText("");
           scrollToBottom(true);
+          if (doneRef.current === cb) doneRef.current = null;
+          if (cb) cb(false);
         }, 100);
       }
     };
     twRaf.current = requestAnimationFrame(tick);
   }, [scrollToBottom]);
+
+  // Câu trả lời của AI: nếu có nhiều đoạn thì "nhắn" từng tin một (có dấu ba chấm giữa các tin), ngược lại gõ như cũ
+  const playReply = useCallback(
+    (msg) => {
+      const token = ++playRef.current;
+      clearTimeout(gapTimer.current);
+      const prev = activeRef.current;
+      if (prev) setRevealed((r) => ({ ...r, [prev.id]: prev.n }));
+      activeRef.current = null;
+      setPartTyping(false);
+
+      const parts = splitReply(cleanAIText(msg.message || ""));
+      const n = parts.length;
+      if (n < 2) {
+        setPlayingMsgId(null);
+        runTypewriter(msg);
+        return;
+      }
+      activeRef.current = { id: msg.id, n };
+      setPlayingMsgId(msg.id);
+      setRevealed((r) => ({ ...r, [msg.id]: 1 }));
+
+      const finish = () => {
+        setRevealed((r) => ({ ...r, [msg.id]: n }));
+        setPlayingMsgId((cur) => (cur === msg.id ? null : cur));
+        setPartTyping(false);
+        if (activeRef.current?.id === msg.id) activeRef.current = null;
+      };
+
+      const step = (i) => {
+        if (!mountedRef.current || playRef.current !== token) return;
+        runTypewriter({ id: i === 0 ? msg.id : `${msg.id}#${i}`, message: parts[i] }, (aborted) => {
+          if (!mountedRef.current || playRef.current !== token) return;
+          if (aborted || i + 1 >= n) {
+            finish();
+            return;
+          }
+          setPartTyping(true);
+          gapTimer.current = setTimeout(() => {
+            if (!mountedRef.current || playRef.current !== token) return;
+            setPartTyping(false);
+            setRevealed((r) => ({ ...r, [msg.id]: i + 2 }));
+            step(i + 1);
+          }, Math.min(2000, 700 + parts[i + 1].length * 14));
+        });
+      };
+      step(0);
+    },
+    [runTypewriter]
+  );
 
   const loadMessages = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -229,7 +312,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
             return [...prev.filter((m) => m.sender_type !== "status"), msg];
           return [...prev, msg];
         });
-        if (msg.sender_type === "ai" && msg.message) runTypewriter(msg);
+        if (msg.sender_type === "ai" && msg.message) playReply(msg);
         else scrollToBottom(true);
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "support_messages", filter: f }, (payload) => {
@@ -241,7 +324,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
       })
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [conversation?.id, runTypewriter, scrollToBottom]);
+  }, [conversation?.id, playReply, scrollToBottom]);
 
   const sendMessage = useCallback(async (customText) => {
     const typed = (customText || input).trim();
@@ -362,7 +445,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
             sentIds.current.add(errMsg.id);
             freshIds.current.add(errMsg.id);
             setMessages((prev) => [...prev, errMsg]);
-            runTypewriter(errMsg);
+            playReply(errMsg);
           }
         } finally {
           clearTimeout(typingTimer);
@@ -375,7 +458,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     } finally {
       if (mountedRef.current) setSending(false);
     }
-  }, [input, pendingImage, sending, user?.id, replyTo, conv.status, conv.title, conversation?.id, runTypewriter, scrollToBottom, loadMessages]);
+  }, [input, pendingImage, sending, user?.id, replyTo, conv.status, conv.title, conversation?.id, playReply, scrollToBottom, loadMessages]);
 
   useEffect(() => {
     if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
@@ -423,8 +506,20 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     [openFeedback]
   );
 
+  // Tách sẵn các tin AI nhiều đoạn (đối tượng ổn định để MemoBubble không render lại thừa)
+  const partsById = useMemo(() => {
+    const map = {};
+    for (const m of messages) {
+      if (m.sender_type === "ai" && m.message) {
+        const p = splitReply(cleanAIText(m.message));
+        if (p.length > 1) map[m.id] = p.map((text) => ({ ...m, message: text }));
+      }
+    }
+    return map;
+  }, [messages]);
+
   const hasInput = Boolean(input.trim() || pendingImage);
-  const busy = sending || aiTyping || Boolean(streamingMsgId);
+  const busy = sending || aiTyping || Boolean(streamingMsgId) || Boolean(playingMsgId);
   const hasStatusMsg = messages.some((m) => m.sender_type === "status");
   const hasUserMsg = messages.some((m) => m.sender_type === "user");
   const isHero = !loading && messages.length > 0 && !hasUserMsg && !hasStatusMsg;
@@ -537,27 +632,60 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
                     msg.created_at &&
                     (!prev?.created_at || new Date(msg.created_at) - new Date(prev.created_at) > GAP_MS);
                   const isLastAIMessage =
-                    idx === messages.length - 1 && msg.sender_type === "ai" && !streamingMsgId && !aiTyping;
+                    idx === messages.length - 1 &&
+                    msg.sender_type === "ai" &&
+                    !streamingMsgId &&
+                    !aiTyping &&
+                    !playingMsgId;
                   const hasAfters = messages
                     .slice(idx + 1)
                     .some((m) => m.sender_type === "ai" || m.sender_type === "system");
                   const seen = idx === lastUserIdx && (aiTyping || hasAfters);
+                  const parts = partsById[msg.id];
+                  const shown = parts ? Math.min(parts.length, revealed[msg.id] ?? parts.length) : 0;
                   return (
                     <React.Fragment key={msg.id}>
                       {showDay && <DaySeparator iso={msg.created_at} />}
-                      <MemoBubble
-                        message={msg}
-                        streamingText={streamingMsgId === msg.id ? streamingText : null}
-                        isLastAIMessage={isLastAIMessage}
-                        sending={sending}
-                        onShowLogin={handleShowLogin}
-                        hiddenSuggestionIds={hiddenSuggestionIds}
-                        animateIn={freshIds.current.has(msg.id)}
-                        showFeedback={msg.sender_type === "ai" && idx > 0}
-                        feedback={feedback[msg.id] || null}
-                        onFeedback={handleOpenFeedback}
-                        onReply={handleReply}
-                      />
+                      {parts ? (
+                        <div className="space-y-2">
+                          {parts.slice(0, shown).map((p, k) => {
+                            const partKey = k === 0 ? msg.id : `${msg.id}#${k}`;
+                            return (
+                              <MemoBubble
+                                key={partKey}
+                                message={p}
+                                partIndex={k}
+                                partCount={parts.length}
+                                fullText={msg.message}
+                                streamingText={streamingMsgId === partKey ? streamingText : null}
+                                isLastAIMessage={isLastAIMessage}
+                                sending={sending}
+                                onShowLogin={handleShowLogin}
+                                hiddenSuggestionIds={hiddenSuggestionIds}
+                                animateIn={freshIds.current.has(msg.id)}
+                                showFeedback={idx > 0}
+                                feedback={feedback[msg.id] || null}
+                                onFeedback={handleOpenFeedback}
+                                onReply={handleReply}
+                              />
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <MemoBubble
+                          message={msg}
+                          streamingText={streamingMsgId === msg.id ? streamingText : null}
+                          isLastAIMessage={isLastAIMessage}
+                          sending={sending}
+                          onShowLogin={handleShowLogin}
+                          hiddenSuggestionIds={hiddenSuggestionIds}
+                          animateIn={freshIds.current.has(msg.id)}
+                          showFeedback={msg.sender_type === "ai" && idx > 0}
+                          feedback={feedback[msg.id] || null}
+                          onFeedback={handleOpenFeedback}
+                          onReply={handleReply}
+                        />
+                      )}
                       {seen && (
                         <div className="nxx-read">
                           <b>Đã xem</b>
@@ -567,7 +695,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
                     </React.Fragment>
                   );
                 })}
-                {aiTyping && !streamingMsgId && !hasStatusMsg && <TypingDots />}
+                {((aiTyping && !streamingMsgId && !hasStatusMsg) || partTyping) && <TypingDots />}
               </div>
             )}
           </div>
