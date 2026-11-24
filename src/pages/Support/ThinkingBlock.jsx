@@ -7,14 +7,15 @@ const prefersReduced = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function Line({ text }) {
+// current = bước đang chạy (đốm cam nhấp nháy). Bước đã qua hiện đốm xanh lá.
+function Line({ text, current }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setOn(true), 40);
     return () => clearTimeout(id);
   }, []);
   return (
-    <p className={"u453-ln" + (on ? " is-on" : "")}>
+    <p className={"u453-ln" + (on ? " is-on" : "") + (current ? " is-now" : "")}>
       <span><span>{text}</span></span>
     </p>
   );
@@ -110,7 +111,7 @@ export default function ThinkingBlock({ lines = [], done = false, seconds }) {
         <div className="u453-in">
           <div className="u453-ls">
             {lines.map((t, i) => (
-              <Line key={i} text={t} />
+              <Line key={i} text={t} current={!done && i === lines.length - 1} />
             ))}
           </div>
         </div>
