@@ -7,6 +7,8 @@ import ImageLightbox from "./ImageLightbox.jsx";
 import { cleanAIText, shouldShowLoginButton } from "./helpers.js";
 import { parseActionsFromText } from "./bubbleActions.js";
 import { QuotedText, splitQuote } from "./ChatBits.jsx";
+import ThinkingBlock from "./ThinkingBlock.jsx";
+import { takeThinking } from "./thinkingStore.js";
 
 function SideBtn({ label, onClick, disabled, className = "", pressed, children }) {
   return (
@@ -59,6 +61,9 @@ export default function MessageBubble({
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [copied, setCopied] = useState(false);
+    const [thinking] = useState(() =>
+    message.sender_type === "ai" && animateIn ? takeThinking(message.id) : null
+  );
 
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
@@ -182,6 +187,11 @@ export default function MessageBubble({
   return (
     <div className={`flex justify-start ${animateIn ? "nxx-rise" : ""}`}>
       <div className="w-full max-w-[98%]">
+                {thinking && (
+          <div className="mb-1.5">
+            <ThinkingBlock done lines={thinking.lines} seconds={thinking.seconds} />
+          </div>
+        )}
         {hasMedia && (
           <div className="mb-2 overflow-hidden rounded-[22px] border border-[#e6e6df] bg-[#f2f2ee]">
             {isVideo ? (
