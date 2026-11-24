@@ -1,13 +1,13 @@
 // src/pages/PublicProfile.jsx — trang cá nhân của người khác (từ bảng xếp hạng): /u/:userId
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Coins, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, Coins, Loader2, TrendingUp, UserCheck, UserPlus } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { getBadges } from "../lib/profileBadges.js";
 import TopHeader from "../components/TopHeader.jsx";
-import GhProfile, { BadgeList, GH_INK, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
+import GhProfile, { BadgeList, GH_BTN, GH_INK, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -17,6 +17,9 @@ export default function PublicProfile() {
   const { session } = useSession();
   const [data, setData] = useState(undefined); // undefined = đang tải, null = không có
   const [tab, setTab] = useState("overview");
+  // null = chưa tải được / server chưa hỗ trợ theo dõi (khi đó ẩn nút, không làm hỏng trang)
+  const [follow, setFollow] = useState(null);
+  const [followBusy, setFollowBusy] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -26,14 +29,36 @@ export default function PublicProfile() {
     }
     let alive = true;
     setTab("overview");
+    setFollow(null);
     (async () => {
-      const { data: d, error } = await supabase.rpc("get_public_profile", { p_user_id: userId });
-      if (alive) setData(error ? null : d);
+      const [prof, fol] = await Promise.all([
+        supabase.rpc("get_public_profile", { p_user_id: userId }),
+        supabase.rpc("get_follow_info", { p_user_id: userId }),
+      ]);
+      if (!alive) return;
+      setData(prof.error ? null : prof.data);
+      setFollow(fol.error || !fol.data ? null : fol.data);
     })();
     return () => {
       alive = false;
     };
   }, [userId, session?.user?.id]);
+
+  // bấm Theo dõi / Đang theo dõi: đổi ngay trên màn hình, lỗi thì trả về như cũ
+  const toggleFollow = async () => {
+    if (!follow || followBusy) return;
+    const prev = follow;
+    setFollowBusy(true);
+    setFollow({
+      ...prev,
+      is_following: !prev.is_following,
+      followers: Math.max(0, Number(prev.followers || 0) + (prev.is_following ? -1 : 1)),
+    });
+    const { data: r, error } = await supabase.rpc("toggle_follow", { p_user_id: userId });
+    if (error || !r) setFollow(prev);
+    else setFollow((cur) => ({ ...cur, ...r }));
+    setFollowBusy(false);
+  };
 
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/leaderboard"));
   const badges = data ? getBadges(data).filter((b) => b.earned) : [];
@@ -85,7 +110,32 @@ export default function PublicProfile() {
             initial={(data.name || "T").charAt(0).toUpperCase()}
             name={data.name}
             verified={data.is_verified === true}
+            actions={
+              follow && (
+                <button
+                  type="button"
+                  onClick={toggleFollow}
+                  disabled={followBusy}
+                  className={`${GH_BTN} w-full disabled:opacity-60`}
+                >
+                  {followBusy ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : follow.is_following ? (
+                    <UserCheck size={16} />
+                  ) : (
+                    <UserPlus size={16} />
+                  )}
+                  {follow.is_following ? "Đang theo dõi" : "Theo dõi"}
+                </button>
+              )
+            }
             stats={[
+              ...(follow
+                ? [
+                    { value: fmt(follow.followers), label: "người theo dõi" },
+                    { value: fmt(follow.following), label: "đang theo dõi" },
+                  ]
+                : []),
               { value: `Lv.${data.level || 1}`, label: "cấp độ" },
               { value: data.streak_days || 0, label: "chuỗi ngày" },
               { value: fmt(data.tasks_done), label: "nhiệm vụ" },
@@ -103,5 +153,4 @@ export default function PublicProfile() {
       </main>
     </div>
   );
-               }
-
+}
