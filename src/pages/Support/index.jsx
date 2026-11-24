@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient.js";
 import TopHeader from "../../components/TopHeader.jsx";
 import { CATEGORIES } from "./constants.js";
@@ -8,8 +9,14 @@ import HelpView from "./HelpView.jsx";
 import ChatView from "./ChatView.jsx";
 
 export default function Index() {
+  // Cuộc trò chuyện đang mở được ghi trên URL (?c=<id>) để tải lại trang vẫn ở đúng khung chat
+  const [searchParams, setSearchParams] = useSearchParams();
+  const convParam = searchParams.get("c");
+
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [restoring, setRestoring] = useState(Boolean(convParam));
   const [conversation, setConversation] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [initialMessage, setInitialMessage] = useState(null);
@@ -19,7 +26,7 @@ export default function Index() {
   useEffect(() => {
     const initAuth = async () => {
       let { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (!error && data.user) {
@@ -29,9 +36,60 @@ export default function Index() {
         }
       }
       setUser(user);
+      setAuthReady(true);
     };
     initAuth();
   }, []);
+
+  // Khôi phục cuộc trò chuyện từ URL khi tải lại trang
+  useEffect(() => {
+    if (!restoring || !authReady) return undefined;
+    if (!user?.id || !convParam) {
+      setRestoring(false);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("support_conversations")
+          .select("*")
+          .eq("id", convParam)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (!error && data) {
+          setSelectedCategory(data.category || null);
+          setInitialMessage(null);
+          setConversation(data);
+          setView("chat");
+        }
+      } catch (err) {
+        console.error("Lỗi khôi phục chat:", err);
+      } finally {
+        if (!cancelled) setRestoring(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [restoring, authReady, user?.id, convParam]);
+
+  // Giữ URL khớp với màn hình: đang chat thì có ?c=, ra khỏi chat thì bỏ
+  useEffect(() => {
+    if (restoring) return;
+    if (view === "chat" && conversation?.id) {
+      if (convParam !== conversation.id) {
+        const next = new URLSearchParams(searchParams);
+        next.set("c", conversation.id);
+        setSearchParams(next, { replace: true });
+      }
+    } else if (convParam) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("c");
+      setSearchParams(next, { replace: true });
+    }
+  }, [view, conversation?.id, restoring, convParam, searchParams, setSearchParams]);
 
   // Lắng nghe sự kiện tạo chat thành công từ HomeView
   useEffect(() => {
@@ -59,7 +117,7 @@ export default function Index() {
     }
 
     try {
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Quá 10s không phản hồi. Vui lòng kiểm tra lại mạng!")), 10000)
       );
 
@@ -116,7 +174,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-white pb-24 text-slate-900 relative">
       <TopHeader />
-      
+
       {/* Thanh báo lỗi màu đỏ nếu có lỗi */}
       {globalError && (
         <div className="fixed top-[60px] left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-red-600 text-white p-4 rounded-xl shadow-2xl z-[9999] flex justify-between items-start">
@@ -126,21 +184,26 @@ export default function Index() {
       )}
 
       <main className="mx-auto w-full max-w-2xl">
-        {view === "home" && (
+        {restoring && (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-slate-700" />
+          </div>
+        )}
+        {!restoring && view === "home" && (
           <HomeView
             user={user} // Truyền user xuống
             onOpenHelp={openHelp}
             onStartChat={({ text, category }) => startAIChat(category, text)} // Truyền hàm tạo chat
           />
         )}
-        {view === "help" && (
+        {!restoring && view === "help" && (
           <HelpView
             category={selectedCategory}
             onBack={() => setView("home")}
             onStartChat={() => startAIChat(selectedCategory)}
           />
         )}
-        {view === "chat" && conversation && (
+        {!restoring && view === "chat" && conversation && (
           <ChatView
             key={conversation.id}
             conversation={conversation}
@@ -154,4 +217,4 @@ export default function Index() {
       </main>
     </div>
   );
-            }
+}
