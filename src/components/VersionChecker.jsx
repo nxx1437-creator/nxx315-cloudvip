@@ -14,7 +14,8 @@ const isTyping = () => {
 };
 
 export default function VersionChecker() {
-  const { pathname } = useLocation();
+  // đổi trang HOẶC đổi phần sau dấu ? (vd. mở danh sách theo dõi) đều là lúc an toàn để áp dụng bản mới
+  const { pathname, search } = useLocation();
   const pathRef = useRef(pathname);
   const pendingRef = useRef(isUpdateReady());
   const first = useRef(true);
@@ -55,7 +56,7 @@ export default function VersionChecker() {
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     tryApply();
-  }, [pathname]);
+  }, [pathname, search]);
 
   return null;
 }
