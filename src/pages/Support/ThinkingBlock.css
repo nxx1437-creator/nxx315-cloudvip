@@ -3,8 +3,6 @@
 .u453{
   --ux-ink:#2b2b2b;--ux-ink-2:#6f6f68;--ux-ink-3:#a2a29b;
   --ux-line-2:#d9d9d0;--ux-accent:#2b2b2b;
-  --ux-dot:#2b2b2b;
-  --ux-node:#ececE6;
   --ux-ease:cubic-bezier(.2,.8,.2,1);
   position:relative;max-width:100%;color:var(--ux-ink);
   -webkit-tap-highlight-color:transparent;overflow-wrap:break-word;
@@ -13,15 +11,13 @@
 .u453 button{font:inherit;color:inherit;cursor:pointer}
 .u453 button:disabled{cursor:default}
 
-/* Ngôi sao + chữ + mũi tên gom sát nhau, không còn khoảng trống ở giữa */
+/* Ngôi sao + chữ + mũi tên gom sát nhau */
 .u453-h{display:inline-flex;align-items:center;gap:5px;height:34px;max-width:100%;margin-left:-9px;padding:0 9px;border:0;border-radius:11px;background:none;font-size:15px;font-weight:500;letter-spacing:-.01em;text-align:left;color:var(--ux-ink-2);transition:background-color .2s var(--ux-ease),color .2s var(--ux-ease)}
-/* Chỉ hover trên máy có chuột; trên điện thoại hover bị "kẹt" sau khi chạm nên thành mảng xám */
 @media (hover:hover) and (pointer:fine){
   .u453-h:not(:disabled):hover{background:color-mix(in srgb,var(--ux-ink) 6%,transparent);color:var(--ux-ink)}
 }
 .u453 .u453-h:focus-visible{outline:2px solid var(--ux-accent);outline-offset:1px}
 
-/* Ngôi sao: xám đậm, quầng sáng thở rất nhẹ khi đang nghĩ */
 .u453-ic{position:relative;isolation:isolate;flex:none;width:18px;height:18px;color:var(--ux-accent);transition:color .5s var(--ux-ease)}
 .u453-ic svg{display:block;width:18px;height:18px;fill:currentColor}
 .u453-ic::after{content:"";position:absolute;inset:-7px;z-index:-1;border-radius:50%;background:radial-gradient(circle,rgba(43,43,43,.16) 0,transparent 68%);opacity:0;pointer-events:none;animation:u453-halo 1.9s ease-in-out infinite}
@@ -29,8 +25,6 @@
 @keyframes u453-halo{0%,100%{opacity:0;transform:scale(.55)}50%{opacity:1;transform:scale(1.2)}}
 .u453.is-done .u453-ic{color:var(--ux-ink-3)}
 
-/* Chữ tiêu đề: dài quá thì cắt bằng dấu …; mỗi lần đổi bước chữ mới trượt lên.
-   Căn trái; khi xong thì dòng "Đang…" co về 0 để ô chữ chỉ rộng bằng "Đã suy nghĩ Ns" */
 .u453-tx{display:grid;min-width:0;text-align:left;justify-items:start}
 .u453-tx>span{grid-area:1/1;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .4s var(--ux-ease),transform .5s var(--ux-ease),filter .4s var(--ux-ease)}
 .u453-a{color:var(--ux-ink-3);background:linear-gradient(100deg,var(--ux-ink-3) 0 36%,var(--ux-ink) 50%,var(--ux-ink-3) 64% 100%);background-size:280% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:u453-sh 1.9s cubic-bezier(.45,0,.55,1) infinite,u453-swap .45s var(--ux-ease) backwards}
@@ -44,35 +38,33 @@
 .u453-h[aria-expanded="true"] .u453-cv{transform:rotate(90deg)}
 .u453-pn{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.3,.9,.3,1)}
 .u453-h[aria-expanded="true"]+.u453-pn{grid-template-rows:1fr}
-.u453-in{min-height:0;overflow:hidden}
-.u453-ls{margin:10px 0 4px;padding:0;opacity:0;transform:translateY(-4px);transition:opacity .3s var(--ux-ease),transform .45s var(--ux-ease)}
+.u453-in{min-height:0;overflow:hidden;padding:8px 0 2px}
+
+/* Phần chi tiết gói thành một khung (cục) bo tròn, bên trong là dòng thời gian kiểu GitHub */
+.u453-ls{padding:18px 16px 8px;border:1px solid #e6e6df;border-radius:24px;background:#f7f7f2;opacity:0;transform:translateY(-4px);transition:opacity .3s var(--ux-ease),transform .45s var(--ux-ease)}
 .u453-h[aria-expanded="true"]+.u453-pn .u453-ls{opacity:1;transform:none;transition-delay:.06s}
 
-/* Dòng thời gian kiểu GitHub: nút tròn xám to có icon nằm trên đường dọc liền một nét;
-   tiêu đề mỗi bước chữ to, màu đậm */
 .u453-ln{position:relative;margin:0;padding-left:48px;display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(5px);filter:blur(3px);transition:grid-template-rows .45s var(--ux-ease),opacity .45s var(--ux-ease) .08s,transform .55s cubic-bezier(.3,1.4,.5,1) .08s,filter .45s var(--ux-ease) .08s}
 .u453-ln.is-on{grid-template-rows:1fr;opacity:1;transform:none;filter:none}
 .u453-ln>span{min-height:0;overflow:hidden}
-.u453-ln>span>span{display:block;padding:6px 0 22px;font-size:16.5px;line-height:22px;font-weight:400;color:var(--ux-ink);transition:color .5s var(--ux-ease)}
+.u453-ln>span>span{display:block;padding:6px 0 20px;font-size:16px;line-height:22px;font-weight:400;color:var(--ux-ink);transition:color .5s var(--ux-ease)}
 .u453-ln.is-now>span>span{font-weight:500}
-.u453-ln:last-child>span>span{padding-bottom:6px}
+.u453-ln:last-child>span>span{padding-bottom:10px}
 
-/* Nút tròn chứa icon */
-.u453-nd{position:absolute;z-index:1;left:0;top:0;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--ux-node);color:var(--ux-ink);transform:scale(0);transition:transform .5s cubic-bezier(.34,1.7,.5,1) .15s}
+/* Nút tròn trắng chứa icon, nằm đầu mỗi dòng */
+.u453-nd{position:absolute;z-index:1;left:0;top:0;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #e6e6df;color:var(--ux-ink);transform:scale(0);transition:transform .5s cubic-bezier(.34,1.7,.5,1) .15s}
 .u453-nd svg{display:block;width:18px;height:18px}
 .u453-ln.is-on .u453-nd{transform:scale(1)}
 
-/* Đường dọc liền một nét nối nút này xuống nút kế tiếp (bước cuối thì không có) */
+/* Đường dọc liền một nét nối các nút */
 .u453-ln::after{content:"";position:absolute;left:16px;top:38px;bottom:4px;width:2px;border-radius:1px;background:var(--ux-line-2)}
 .u453-ln:last-child::after{display:none}
 
-/* Bước đang chạy: vòng xoay nhỏ trong nút tròn */
 .u453-sp{display:block;width:16px;height:16px;border-radius:50%;border:2.5px solid #d5d5cc;border-top-color:var(--ux-ink);animation:u453-rot .8s linear infinite}
 @keyframes u453-rot{to{transform:rotate(360deg)}}
 
 .u453-live{position:absolute;margin:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-/* Máy bật "giảm chuyển động": tắt xoay/trượt nhưng vẫn giữ nhịp thở nhẹ (chỉ đổi độ sáng) để ngôi sao không đứng im */
 @keyframes u453-halo-rm{0%,100%{opacity:.2}50%{opacity:.9}}
 @keyframes u453-star-rm{0%,100%{opacity:.55}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){
