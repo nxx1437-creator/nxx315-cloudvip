@@ -2,14 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { registerSW } from "virtual:pwa-register";
+import { initUpdater } from "./lib/updater";
 
-registerSW({
-  onNeedRefresh() {},
-  onOfflineReady() {},
-  onRegisterError(e) { console.error(e); },
-  immediate: true,
-});
+initUpdater();
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
