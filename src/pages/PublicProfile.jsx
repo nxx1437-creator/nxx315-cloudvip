@@ -1,13 +1,14 @@
 // src/pages/PublicProfile.jsx — trang cá nhân của người khác (từ bảng xếp hạng): /u/:userId
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Coins, Loader2, TrendingUp, UserCheck, UserPlus } from "lucide-react";
+import { ArrowLeft, Calendar, Coins, TrendingUp } from "lucide-react";
 
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import { getBadges } from "../lib/profileBadges.js";
 import TopHeader from "../components/TopHeader.jsx";
-import GhProfile, { BadgeList, GH_BTN, GH_INK, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
+import FollowButton from "../components/profile/FollowButton.jsx";
+import GhProfile, { BadgeList, GH_INK, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -44,20 +45,33 @@ export default function PublicProfile() {
     };
   }, [userId, session?.user?.id]);
 
-  // bấm Theo dõi / Đang theo dõi: đổi ngay trên màn hình, lỗi thì trả về như cũ
-  const toggleFollow = async () => {
-    if (!follow || followBusy) return;
+  // Theo dõi / Hủy theo dõi: đổi ngay trên màn hình, lỗi thì trả về như cũ.
+  // Gọi theo kiểu "đặt thành" (không phải đảo) nên bấm nhanh nhiều lần cũng không bị lệch.
+  const applyFollow = async (want) => {
+    if (!follow || followBusy || !!follow.is_following === want) return;
     const prev = follow;
     setFollowBusy(true);
     setFollow({
       ...prev,
-      is_following: !prev.is_following,
-      followers: Math.max(0, Number(prev.followers || 0) + (prev.is_following ? -1 : 1)),
+      is_following: want,
+      nickname: want ? prev.nickname : null,
+      followers: Math.max(0, Number(prev.followers || 0) + (want ? 1 : -1)),
     });
-    const { data: r, error } = await supabase.rpc("toggle_follow", { p_user_id: userId });
+    const { data: r, error } = await supabase.rpc("set_follow", { p_user_id: userId, p_follow: want });
     if (error || !r) setFollow(prev);
     else setFollow((cur) => ({ ...cur, ...r }));
     setFollowBusy(false);
+  };
+
+  // đặt tên riêng cho người mình theo dõi (chỉ mình thấy); để trống = dùng lại tên gốc
+  const saveNickname = async (text) => {
+    const { data: r, error } = await supabase.rpc("set_follow_nickname", {
+      p_user_id: userId,
+      p_nickname: text,
+    });
+    if (error || !r) return false;
+    setFollow((cur) => ({ ...cur, nickname: r.nickname || null }));
+    return true;
   };
 
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/leaderboard"));
@@ -67,6 +81,7 @@ export default function PublicProfile() {
     { id: "badges", label: "Huy hiệu", count: badges.length },
     { id: "stats", label: "Thống kê" },
   ];
+  const nickname = follow?.is_following ? follow.nickname : null;
 
   return (
     <div className="min-h-screen bg-white pb-10 dark:bg-[#0d1117]">
@@ -108,25 +123,20 @@ export default function PublicProfile() {
             cover={data.cover_url}
             avatarUrl={data.avatar_url}
             initial={(data.name || "T").charAt(0).toUpperCase()}
-            name={data.name}
+            name={nickname || data.name}
+            sub={nickname ? data.name : undefined}
             verified={data.is_verified === true}
             actions={
               follow && (
-                <button
-                  type="button"
-                  onClick={toggleFollow}
-                  disabled={followBusy}
-                  className={`${GH_BTN} w-full disabled:opacity-60`}
-                >
-                  {followBusy ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : follow.is_following ? (
-                    <UserCheck size={16} />
-                  ) : (
-                    <UserPlus size={16} />
-                  )}
-                  {follow.is_following ? "Đang theo dõi" : "Theo dõi"}
-                </button>
+                <FollowButton
+                  following={!!follow.is_following}
+                  busy={followBusy}
+                  name={data.name}
+                  nickname={nickname || ""}
+                  onFollow={() => applyFollow(true)}
+                  onUnfollow={() => applyFollow(false)}
+                  onSaveNickname={saveNickname}
+                />
               )
             }
             stats={[
