@@ -1,4 +1,4 @@
-// src/pages/Support/MessageBubble.jsx — kiểu Cofounder: bóng xám (AI) / bóng kem (bạn) + nút trả lời, sao chép
+// src/pages/Support/MessageBubble.jsx — AI: chữ rộng hết khung, không bóng, nút thao tác nằm dưới (kiểu Gemini); bạn: bóng kem + nút trả lời, sao chép
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Copy, LogIn, Reply, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
@@ -61,7 +61,7 @@ export default function MessageBubble({
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [copied, setCopied] = useState(false);
-    const [thinking] = useState(() =>
+  const [thinking] = useState(() =>
     message.sender_type === "ai" && animateIn ? takeThinking(message.id) : null
   );
 
@@ -103,15 +103,15 @@ export default function MessageBubble({
     }
   }, [plainText]);
 
-  const sideActions = (
-    <div className="flex shrink-0 items-center">
-      <SideBtn label="Trả lời" onClick={() => onReply?.({ id: message.id, text: plainText })}>
-        <Reply size={18} strokeWidth={1.7} />
-      </SideBtn>
-      <SideBtn label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
-        {copied ? <Check size={18} strokeWidth={1.9} /> : <Copy size={17} strokeWidth={1.7} />}
-      </SideBtn>
-    </div>
+  const replyBtn = (
+    <SideBtn label="Trả lời" onClick={() => onReply?.({ id: message.id, text: plainText })}>
+      <Reply size={18} strokeWidth={1.7} />
+    </SideBtn>
+  );
+  const copyBtn = (
+    <SideBtn label={copied ? "Đã sao chép" : "Sao chép"} onClick={handleCopy}>
+      {copied ? <Check size={18} strokeWidth={1.9} /> : <Copy size={17} strokeWidth={1.7} />}
+    </SideBtn>
   );
 
   if (isUser) {
@@ -135,7 +135,10 @@ export default function MessageBubble({
         )}
         {message.message && (
           <div className="flex w-full items-center justify-end gap-0.5">
-            {sideActions}
+            <div className="flex shrink-0 items-center">
+              {replyBtn}
+              {copyBtn}
+            </div>
             <div
               className={`nxx-user-pill min-w-0 max-w-[calc(100%-80px)] rounded-[24px] px-4 py-3 ${
                 animateIn ? "is-new" : ""
@@ -186,8 +189,8 @@ export default function MessageBubble({
 
   return (
     <div className={`flex justify-start ${animateIn ? "nxx-rise" : ""}`}>
-      <div className="w-full max-w-[98%]">
-                {thinking && (
+      <div className="w-full">
+        {thinking && (
           <div className="mb-1.5">
             <ThinkingBlock done lines={thinking.lines} seconds={thinking.seconds} />
           </div>
@@ -227,17 +230,14 @@ export default function MessageBubble({
         )}
 
         {displayText && (
-          <div className="flex items-center gap-0.5">
-            <div className="nxx-ai-bubble min-w-0 max-w-[calc(100%-80px)]">
-              <MarkdownText text={displayText} />
-              {isStreaming && <span className="nxx-streaming-cursor" />}
-            </div>
-            {!isStreaming && sideActions}
+          <div className="nxx-ai-bubble min-w-0">
+            <MarkdownText text={displayText} />
+            {isStreaming && <span className="nxx-streaming-cursor" />}
           </div>
         )}
 
         {finalActions.length > 0 && (
-          <div className="nxx-rise mt-3 space-y-2 pr-[76px]">
+          <div className="nxx-rise mt-3 space-y-2">
             {finalActions.map((action, idx) => (
               <button
                 key={action.id ?? action.path ?? idx}
@@ -280,34 +280,37 @@ export default function MessageBubble({
           </button>
         )}
 
+        {/* Hàng nút dưới câu trả lời: hữu ích / chưa hữu ích / sao chép / trả lời, "Do AI tạo" ở bên phải */}
         {!isStreaming && isAI && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-3 pl-1">
-            <div className="flex items-center gap-1 opacity-80">
-              <Sparkles size={11} className="text-[#a2a29b]" strokeWidth={2.4} />
-              <span className="text-[11px] text-[#8b8b84]">Do AI tạo</span>
-            </div>
+          <div className="-ml-2 mt-1 flex items-center gap-0.5">
             {showFeedback && (
-              <div className="flex items-center gap-1">
-                <SideBtn
-                  label="Chưa hữu ích"
-                  pressed={feedback?.rating === "down"}
-                  disabled={fbLocked}
-                  onClick={() => onFeedback?.(message, "down")}
-                  className={`!h-8 !w-8 ${feedbackClass(feedback, "down")}`}
-                >
-                  <ThumbsDown size={16} strokeWidth={1.8} />
-                </SideBtn>
+              <>
                 <SideBtn
                   label="Hữu ích"
                   pressed={feedback?.rating === "up"}
                   disabled={fbLocked}
                   onClick={() => onFeedback?.(message, "up")}
-                  className={`!h-8 !w-8 ${feedbackClass(feedback, "up")}`}
+                  className={feedbackClass(feedback, "up")}
                 >
-                  <ThumbsUp size={16} strokeWidth={1.8} />
+                  <ThumbsUp size={17} strokeWidth={1.8} />
                 </SideBtn>
-              </div>
+                <SideBtn
+                  label="Chưa hữu ích"
+                  pressed={feedback?.rating === "down"}
+                  disabled={fbLocked}
+                  onClick={() => onFeedback?.(message, "down")}
+                  className={feedbackClass(feedback, "down")}
+                >
+                  <ThumbsDown size={17} strokeWidth={1.8} />
+                </SideBtn>
+              </>
             )}
+            {copyBtn}
+            {replyBtn}
+            <div className="ml-auto flex items-center gap-1 pr-1 opacity-80">
+              <Sparkles size={11} className="text-[#a2a29b]" strokeWidth={2.4} />
+              <span className="text-[11px] text-[#8b8b84]">Do AI tạo</span>
+            </div>
           </div>
         )}
 
@@ -322,4 +325,4 @@ export default function MessageBubble({
       </div>
     </div>
   );
-      }
+}
