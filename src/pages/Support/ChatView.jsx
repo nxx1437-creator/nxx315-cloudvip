@@ -27,6 +27,28 @@ const GAP_MS = 10 * 60 * 1000;
 const HERO_PHRASES = ["Hỏi NXX bất cứ điều gì", "Gửi ảnh lỗi, NXX xem giúp", "Tra đơn, hoàn tiền, đổi thưởng"];
 const RELOAD_AI_DELAY_MS = 2000;
 
+// Tiêu đề mặc định lúc tạo chat; còn là các tiêu đề này thì sẽ đổi theo câu hỏi đầu tiên
+const DEFAULT_TITLE = /^(Hỗ trợ( |$)|Cuộc trò chuyện mới$)/;
+
+// Tạo tiêu đề ngắn từ câu hỏi của người dùng (bỏ phần trích dẫn "> ...")
+function makeTitle(raw) {
+  const text = String(raw || "")
+    .split("\n")
+    .filter((line) => !line.trim().startsWith(">"))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "Hình ảnh cần hỗ trợ";
+  const MAX = 48;
+  let out = text;
+  if (text.length > MAX) {
+    const cut = text.slice(0, MAX);
+    const sp = cut.lastIndexOf(" ");
+    out = (sp > 24 ? cut.slice(0, sp) : cut).trim() + "…";
+  }
+  return out.charAt(0).toUpperCase() + out.slice(1);
+}
+
 const MemoBubble = React.memo(
   MessageBubble,
   (a, b) =>
@@ -71,6 +93,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const initialSent = useRef(false);
+  const titledRef = useRef(false);
   const twRaf = useRef(0);
   const twTimer = useRef(0);
   const reloadTimer = useRef(0);
@@ -107,6 +130,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     setReplyTo(null);
     lastScrollY.current = 0;
     initialSent.current = false;
+    titledRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation?.id]);
 
@@ -270,9 +294,48 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
       setShowFileMenu(false);
       scrollToBottom(true);
 
-      if (conv.status === "ai") {
+      // Đặt tiêu đề cuộc trò chuyện theo câu hỏi đầu tiên của người dùng
+      if (!titledRef.current && (!conv.title || DEFAULT_TITLE.test(conv.title))) {
+        titledRef.current = true;
+        const newTitle = makeTitle(content);
+        supabase
+          .from("support_conversations")
+          .update({ title: newTitle })
+          .eq("id", conversation.id)
+          .eq("user_id", user.id)
+          .then(({ error: titleErr }) => {
+            if (titleErr) console.warn("Không đặt được tiêu đề:", titleErr.message);
+            else if (mountedRef.current) setConv((c) => ({ ...c, title: newTitle }));
+          });
+      }
+
+      // Chat cũ: lấy trạng thái thật nếu chưa có (mở từ lịch sử có thể thiếu)
+      let status = conv.status;
+      if (!status) {
+        const { data: row } = await supabase
+          .from("support_conversations")
+          .select("status")
+          .eq("id", conversation.id)
+          .maybeSingle();
+        status = row?.status || "ai";
+      }
+      // Nhân viên đang xử lý thì AI không chen vào; các trạng thái còn lại (ai, closed...) vẫn cho AI trả lời
+      const humanHandling = status === "agent" || status === "pending_agent";
+
+      if (!humanHandling) {
         const typingTimer = setTimeout(() => mountedRef.current && setAiTyping(true), 600);
         try {
+          // Chat đã đóng: mở lại ở chế độ AI trước khi gọi (function chỉ trả lời khi status = "ai")
+          if (status !== "ai") {
+            const { error: reopenErr } = await supabase
+              .from("support_conversations")
+              .update({ status: "ai", updated_at: new Date().toISOString() })
+              .eq("id", conversation.id)
+              .eq("user_id", user.id);
+            if (reopenErr) throw reopenErr;
+          }
+          if (conv.status !== "ai" && mountedRef.current) setConv((c) => ({ ...c, status: "ai" }));
+
           const data = await callSupportAI(conversation.id, uploadedImageUrl, content);
           console.log(`[Support AI] Provider: ${data.provider} (${data.model})`);
           clearTimeout(reloadTimer.current);
@@ -312,7 +375,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     } finally {
       if (mountedRef.current) setSending(false);
     }
-  }, [input, pendingImage, sending, user?.id, replyTo, conv.status, conversation?.id, runTypewriter, scrollToBottom, loadMessages]);
+  }, [input, pendingImage, sending, user?.id, replyTo, conv.status, conv.title, conversation?.id, runTypewriter, scrollToBottom, loadMessages]);
 
   useEffect(() => {
     if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
@@ -507,7 +570,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
                 {aiTyping && !streamingMsgId && !hasStatusMsg && <TypingDots />}
               </div>
             )}
-                 </div>
+          </div>
         </div>
       </div>
 
