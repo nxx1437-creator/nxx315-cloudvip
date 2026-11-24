@@ -7,7 +7,10 @@ const prefersReduced = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// current = bước đang chạy (đốm cam nhấp nháy). Bước đã qua hiện đốm xanh lá.
+// "Đang tra đơn RBX-1…" -> "Đã tra đơn RBX-1" (bước đã xong)
+const pastTense = (t) => String(t).replace(/^Đang /, "Đã ").replace(/(\.{3}|…)$/, "");
+
+// current = bước đang chạy (vòng rỗng nhấp nháy). Bước đã qua là chấm đặc.
 function Line({ text, current }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
@@ -29,6 +32,9 @@ export default function ThinkingBlock({ lines = [], done = false, seconds }) {
   const iconRef = useRef(null);
   const spinRef = useRef(null);
   const startRef = useRef(Date.now());
+
+  // Chữ trên tiêu đề = bước đang chạy; chưa có bước nào thì hiện "Đang suy nghĩ…"
+  const label = lines.length ? lines[lines.length - 1] : "Đang suy nghĩ…";
 
   useEffect(() => {
     const svg = iconRef.current;
@@ -100,7 +106,8 @@ export default function ThinkingBlock({ lines = [], done = false, seconds }) {
           </svg>
         </span>
         <span className="u453-tx">
-          <span className="u453-a" aria-hidden={done}>Đang suy nghĩ…</span>
+          {/* key = label: mỗi lần đổi bước, chữ cũ trượt đi và chữ mới hiện lên */}
+          <span className="u453-a" key={label} aria-hidden={done}>{label}</span>
           <span className="u453-b" aria-hidden={!done}>Đã suy nghĩ {secs}s</span>
         </span>
         <svg className="u453-cv" viewBox="0 0 24 24" aria-hidden="true">
@@ -110,9 +117,12 @@ export default function ThinkingBlock({ lines = [], done = false, seconds }) {
       <div className="u453-pn" id={panelId}>
         <div className="u453-in">
           <div className="u453-ls">
-            {lines.map((t, i) => (
-              <Line key={i} text={t} current={!done && i === lines.length - 1} />
-            ))}
+            {lines.map((t, i) => {
+              const finished = done || i < lines.length - 1;
+              return (
+                <Line key={i} text={finished ? pastTense(t) : t} current={!done && i === lines.length - 1} />
+              );
+            })}
           </div>
         </div>
       </div>
