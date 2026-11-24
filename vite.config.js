@@ -2,11 +2,25 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Mã build, đổi mỗi lần build/deploy
+const BUILD_ID = Date.now().toString(36);
+
 export default defineConfig({
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [
     react(),
+    {
+      name: "emit-version",
+      generateBundle() {
+        this.emitFile({
+          type: "asset",
+          fileName: "version.json",
+          source: JSON.stringify({ version: BUILD_ID }),
+        });
+      },
+    },
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["favicon.ico"],
       manifest: {
         name: "NXX315 Studio Rewards",
@@ -29,13 +43,13 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{css,ico,png,svg,woff,woff2,ttf,otf,webp,js}"],
-        skipWaiting: true,
+        globPatterns: [
+          "**/*.{css,ico,png,svg,woff,woff2,ttf,otf,webp,js,html}",
+        ],
+        skipWaiting: false,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        // ✅ Bật lại navigateFallback để nó trả về index.html khi vào link
         navigateFallback: "index.html",
-        // ✅ Loại trừ các API ra khỏi fallback
         navigateFallbackDenylist: [
           /^\/api/,
           /^\/task\/callback/,
