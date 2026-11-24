@@ -1,5 +1,6 @@
 // Lucian UX/UI Prompt #453 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#453
 import { useEffect, useId, useRef, useState } from "react";
+import { Check, Gift, Image as ImageIcon, Receipt, Search, Wallet } from "lucide-react";
 import "./ThinkingBlock.css";
 
 const SPIN = 2400;
@@ -10,15 +11,30 @@ const prefersReduced = () =>
 // "Đang tra đơn RBX-1…" -> "Đã tra đơn RBX-1" (bước đã xong)
 const pastTense = (t) => String(t).replace(/^Đang /, "Đã ").replace(/(\.{3}|…)$/, "");
 
-// current = bước đang chạy (vòng rỗng nhấp nháy). Bước đã qua là chấm đặc.
+// Chọn icon theo nội dung bước (kiểu dòng thời gian GitHub): không khớp từ nào thì dùng dấu tick
+function iconFor(text) {
+  const t = String(text).toLowerCase();
+  if (/ảnh|hình/.test(t)) return ImageIcon;
+  if (/đơn/.test(t)) return Receipt;
+  if (/tiền|ví|nạp|thanh toán/.test(t)) return Wallet;
+  if (/thưởng|quà|voucher/.test(t)) return Gift;
+  if (/tra|tìm|kiểm/.test(t)) return Search;
+  return Check;
+}
+
+// current = bước đang chạy (vòng xoay nhỏ trong nút tròn). Bước đã qua = icon trong nút tròn xám.
 function Line({ text, current }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setOn(true), 40);
     return () => clearTimeout(id);
   }, []);
+  const Icon = iconFor(text);
   return (
     <p className={"u453-ln" + (on ? " is-on" : "") + (current ? " is-now" : "")}>
+      <i className="u453-nd" aria-hidden="true">
+        {current ? <span className="u453-sp" /> : <Icon size={14} strokeWidth={2} />}
+      </i>
       <span><span>{text}</span></span>
     </p>
   );
