@@ -1,8 +1,9 @@
 /* Lucian UX/UI Prompt #453 · MIT License (c) 2026 Seokwoooo */
+/* Bảng màu: chỉ dùng xám đậm trên nền kem, không có màu rực để mắt không bị rối */
 .u453{
-  --ux-ink:#2b2b2b;--ux-ink-2:#6f6f68;--ux-ink-3:#8b8b84;
-  --ux-line-2:#e0e0d8;--ux-accent:#0EA5E9;
-  --ux-dot:#119C72;--ux-dot-now:#F59E0B;
+  --ux-ink:#2b2b2b;--ux-ink-2:#6f6f68;--ux-ink-3:#a2a29b;
+  --ux-line-2:#e0e0d8;--ux-accent:#2b2b2b;
+  --ux-dot:#2b2b2b;
   --ux-ease:cubic-bezier(.2,.8,.2,1);
   position:relative;max-width:100%;color:var(--ux-ink);
   -webkit-tap-highlight-color:transparent;overflow-wrap:break-word;
@@ -12,14 +13,16 @@
 .u453 button:disabled{cursor:default}
 
 .u453-h{display:inline-flex;align-items:center;gap:8px;height:34px;margin-left:-9px;padding:0 9px;border:0;border-radius:11px;background:none;font-size:15px;font-weight:500;letter-spacing:-.01em;color:var(--ux-ink-2);transition:background-color .2s var(--ux-ease),color .2s var(--ux-ease)}
-.u453-h:not(:disabled):hover{background:color-mix(in srgb,var(--ux-ink) 6%,transparent);color:var(--ux-ink)}
+/* Chỉ hover trên máy có chuột; trên điện thoại hover bị "kẹt" sau khi chạm nên thành mảng xám */
+@media (hover:hover) and (pointer:fine){
+  .u453-h:not(:disabled):hover{background:color-mix(in srgb,var(--ux-ink) 6%,transparent);color:var(--ux-ink)}
+}
 .u453 .u453-h:focus-visible{outline:2px solid var(--ux-accent);outline-offset:1px}
 
-/* Ngôi sao: màu xanh + quầng sáng thở khi đang nghĩ */
+/* Ngôi sao: xám đậm, quầng sáng thở rất nhẹ khi đang nghĩ */
 .u453-ic{position:relative;isolation:isolate;flex:none;width:18px;height:18px;color:var(--ux-accent);transition:color .5s var(--ux-ease)}
 .u453-ic svg{display:block;width:18px;height:18px;fill:currentColor}
-.u453:not(.is-done) .u453-ic svg{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--ux-accent) 65%,transparent))}
-.u453-ic::after{content:"";position:absolute;inset:-7px;z-index:-1;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--ux-accent) 45%,transparent) 0,transparent 68%);opacity:0;pointer-events:none;animation:u453-halo 1.9s ease-in-out infinite}
+.u453-ic::after{content:"";position:absolute;inset:-7px;z-index:-1;border-radius:50%;background:radial-gradient(circle,rgba(43,43,43,.16) 0,transparent 68%);opacity:0;pointer-events:none;animation:u453-halo 1.9s ease-in-out infinite}
 .u453.is-done .u453-ic::after{animation:none;opacity:0}
 @keyframes u453-halo{0%,100%{opacity:0;transform:scale(.55)}50%{opacity:1;transform:scale(1.2)}}
 .u453.is-done .u453-ic{color:var(--ux-ink-3)}
@@ -45,11 +48,12 @@
 .u453-ln>span>span{display:block;padding:3px 0;font-size:13.5px;line-height:20px;color:var(--ux-ink-2);transition:color .5s var(--ux-ease)}
 .u453.is-done .u453-ln>span>span{color:var(--ux-ink-3)}
 
-/* Đốm màu đánh dấu mốc: xanh lá = bước đã xong, cam nhấp nháy = bước đang chạy */
-.u453-ln::before{content:"";position:absolute;left:-22.25px;top:8px;width:9px;height:9px;border-radius:50%;background:var(--ux-dot);box-shadow:0 0 0 3px color-mix(in srgb,var(--ux-dot) 22%,transparent);transform:scale(0);transition:transform .5s cubic-bezier(.34,1.7,.5,1) .15s,background-color .4s var(--ux-ease),box-shadow .4s var(--ux-ease)}
+/* Đốm đánh dấu mốc, một tông duy nhất:
+   chấm đặc = bước đã xong, vòng rỗng nhấp nháy nhẹ = bước đang chạy */
+.u453-ln::before{content:"";position:absolute;left:-21.25px;top:9.5px;width:7px;height:7px;border-radius:50%;background:var(--ux-dot);transform:scale(0);transition:transform .5s cubic-bezier(.34,1.7,.5,1) .15s,background-color .4s var(--ux-ease),box-shadow .4s var(--ux-ease)}
 .u453-ln.is-on::before{transform:scale(1)}
-.u453-ln.is-now::before{background:var(--ux-dot-now);box-shadow:0 0 0 3px color-mix(in srgb,var(--ux-dot-now) 28%,transparent);animation:u453-ping 1.5s ease-out .6s infinite}
-@keyframes u453-ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ux-dot-now) 55%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+.u453-ln.is-now::before{background:#fbfbf8;box-shadow:inset 0 0 0 1.75px var(--ux-dot);animation:u453-ping 1.6s ease-out .6s infinite}
+@keyframes u453-ping{0%{outline:0 solid rgba(43,43,43,.28)}100%{outline:7px solid transparent}}
 
 .u453-live{position:absolute;margin:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
