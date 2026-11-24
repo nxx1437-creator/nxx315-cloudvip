@@ -11,7 +11,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
 export default function ProfileDetailScreen({
-  onClose, session, profile, userLevel, onAvatarClick, onEdit, onOpenSettings, onPrivacy, onOpenLevel,
+  onClose, session, profile, userLevel, onAvatarClick, onEdit, onOpenSettings, onOpenLevel,
 }) {
   const x = useProfileExtras(session, profile, userLevel);
   const navigate = useNavigate();
@@ -110,7 +110,13 @@ export default function ProfileDetailScreen({
                   <button type="button" onClick={onEdit} className={`${GH_BTN} flex-1`}>
                     Sửa thông tin
                   </button>
-                  <button type="button" onClick={onPrivacy} aria-label="Quyền riêng tư" className={`${GH_BTN} w-9 !px-0`}>
+                  {/* ổ khóa: mở thẳng cài đặt "Quyền riêng tư" (ẩn danh sách đang theo dõi) */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/profile", { state: { screen: "privacy" } })}
+                    aria-label="Quyền riêng tư"
+                    className={`${GH_BTN} w-9 !px-0`}
+                  >
                     <Lock size={16} />
                   </button>
                   <button type="button" onClick={onOpenSettings} aria-label="Cài đặt tài khoản" className={`${GH_BTN} w-9 !px-0`}>

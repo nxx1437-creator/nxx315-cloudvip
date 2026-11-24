@@ -1,5 +1,5 @@
 // src/pages/PublicProfile.jsx — trang cá nhân của người khác: /u/:userId
-// danh sách theo dõi mở bằng /u/:userId?list=followers | following
+// danh sách theo dõi mở bằng /u/:userId?list=followers | following (giống GitHub: hồ sơ ở trên, danh sách ở dưới)
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Calendar, Coins, TrendingUp } from "lucide-react";
@@ -9,7 +9,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import { getBadges } from "../lib/profileBadges.js";
 import TopHeader from "../components/TopHeader.jsx";
 import FollowList, { FollowCounts } from "../components/profile/FollowList.jsx";
-import GhProfile, { BadgeList, GH_BTN, GH_INK, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
+import GhProfile, { BadgeList, GH_BTN, GH_INK, GH_LINE, GhTabs, StatList, statItems } from "../components/profile/GhProfile.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -50,9 +50,9 @@ export default function PublicProfile() {
     return () => {
       alive = false;
     };
-  }, [userId, session?.user?.id, inList]);
+  }, [userId, session?.user?.id]);
 
-  // Theo dõi / Bỏ theo dõi: đổi ngay trên màn hình, lỗi thì trả về như cũ.
+  // Theo dõi / Bỏ theo dõi: đổi ngay, không hiệu ứng; lỗi thì trả về như cũ.
   // Gọi theo kiểu "đặt thành" (không phải đảo) nên bấm nhanh nhiều lần cũng không bị lệch.
   const applyFollow = async (want) => {
     if (!follow || followBusy || !!follow.is_following === want) return;
@@ -86,6 +86,43 @@ export default function PublicProfile() {
     { id: "following", label: "Đang theo dõi" },
   ];
 
+  // khung hồ sơ (dùng chung cho trang chính và đầu trang danh sách)
+  const overview = data && (
+    <GhProfile
+      cover={data.cover_url}
+      avatarUrl={data.avatar_url}
+      initial={(data.name || "T").charAt(0).toUpperCase()}
+      name={data.name}
+      verified={data.is_verified === true}
+      actions={
+        follow && (
+          <div className="space-y-3">
+            <FollowCounts followers={follow.followers} following={follow.following} onOpen={openList} />
+            <button
+              type="button"
+              onClick={() => applyFollow(!follow.is_following)}
+              disabled={followBusy}
+              className={`${GH_BTN} w-full !transition-none active:!scale-100`}
+            >
+              {follow.is_following ? "Bỏ theo dõi" : "Theo dõi"}
+            </button>
+          </div>
+        )
+      }
+      stats={[
+        { value: `Lv.${data.level || 1}`, label: "cấp độ" },
+        { value: data.streak_days || 0, label: "chuỗi ngày" },
+        { value: fmt(data.tasks_done), label: "nhiệm vụ" },
+      ]}
+      meta={[
+        { Icon: Calendar, text: `Tham gia ${new Date(data.joined_at).toLocaleDateString("vi-VN")}` },
+        { Icon: TrendingUp, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
+        { Icon: Coins, text: `Kiếm ${fmt(data.earned_month)} coin trong 30 ngày` },
+      ]}
+      badges={badges}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-white pb-10 dark:bg-[#0d1117]">
       <TopHeader variant="gh" />
@@ -109,15 +146,9 @@ export default function PublicProfile() {
       </div>
 
       <main className="mx-auto max-w-md md:max-w-3xl">
-        {inList && (
-          <FollowList key={`${userId}-${list}`} userId={userId} kind={list} meId={session?.user?.id} ownerName={data?.name} />
-        )}
+        {data === undefined && <div className="m-4 h-80 animate-pulse rounded-lg bg-[#eaeef2] dark:bg-[#161b22]" />}
 
-        {!inList && data === undefined && (
-          <div className="m-4 h-80 animate-pulse rounded-lg bg-[#eaeef2] dark:bg-[#161b22]" />
-        )}
-
-        {!inList && data === null && (
+        {data === null && (
           <div className="px-6 py-16 text-center">
             <p className={`text-[18px] font-semibold ${GH_INK}`}>Không tìm thấy người dùng</p>
             <p className="mt-1 text-[14px] text-slate-500">Tài khoản này không tồn tại hoặc không còn hiển thị.</p>
@@ -127,41 +158,23 @@ export default function PublicProfile() {
           </div>
         )}
 
-        {!inList && data && tab === "overview" && (
-          <GhProfile
-            cover={data.cover_url}
-            avatarUrl={data.avatar_url}
-            initial={(data.name || "T").charAt(0).toUpperCase()}
-            name={data.name}
-            verified={data.is_verified === true}
-            actions={
-              follow && (
-                <div className="space-y-3">
-                  <FollowCounts followers={follow.followers} following={follow.following} onOpen={openList} />
-                  <button
-                    type="button"
-                    onClick={() => applyFollow(!follow.is_following)}
-                    disabled={followBusy}
-                    className={`${GH_BTN} w-full disabled:opacity-60`}
-                  >
-                    {follow.is_following ? "Bỏ theo dõi" : "Theo dõi"}
-                  </button>
-                </div>
-              )
-            }
-            stats={[
-              { value: `Lv.${data.level || 1}`, label: "cấp độ" },
-              { value: data.streak_days || 0, label: "chuỗi ngày" },
-              { value: fmt(data.tasks_done), label: "nhiệm vụ" },
-            ]}
-            meta={[
-              { Icon: Calendar, text: `Tham gia ${new Date(data.joined_at).toLocaleDateString("vi-VN")}` },
-              { Icon: TrendingUp, text: `Kiếm ${fmt(data.earned_week)} coin trong 7 ngày` },
-              { Icon: Coins, text: `Kiếm ${fmt(data.earned_month)} coin trong 30 ngày` },
-            ]}
-            badges={badges}
-          />
+        {/* TRANG DANH SÁCH: hồ sơ ở trên, danh sách (hoặc thông báo trống) ở dưới */}
+        {inList && data && (
+          <>
+            {overview}
+            <div className={`border-t ${GH_LINE}`}>
+              <FollowList
+                key={`${userId}-${list}`}
+                userId={userId}
+                kind={list}
+                meId={session?.user?.id}
+                ownerName={data.name}
+              />
+            </div>
+          </>
         )}
+
+        {!inList && data && tab === "overview" && overview}
         {!inList && data && tab === "badges" && <BadgeList badges={badges} />}
         {!inList && data && tab === "stats" && <StatList items={statItems(data)} />}
       </main>

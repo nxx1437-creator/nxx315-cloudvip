@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Lock, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient.js";
-import { GH_BTN, GH_INK, GH_MUTED } from "./GhProfile.jsx";
+import { GH_BTN, GH_INK, GH_LINE, GH_MUTED } from "./GhProfile.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -28,12 +28,13 @@ export function FollowCounts({ followers, following, onOpen }) {
   );
 }
 
+// thông báo trống kiểu GitHub: biểu tượng lớn + tiêu đề đậm giữa trang
 function Message({ icon: Icon, title, sub }) {
   return (
-    <div className="px-6 py-16 text-center">
-      <Icon size={30} className={`mx-auto ${GH_MUTED}`} />
-      <p className={`mt-3 text-[18px] font-semibold ${GH_INK}`}>{title}</p>
-      {sub && <p className={`mt-1 text-[14px] ${GH_MUTED}`}>{sub}</p>}
+    <div className="px-6 py-14 text-center">
+      <Icon size={34} strokeWidth={1.5} className={`mx-auto ${GH_MUTED}`} />
+      <p className={`mt-4 text-[22px] font-semibold leading-8 ${GH_INK}`}>{title}</p>
+      {sub && <p className={`mt-2 text-[14.5px] ${GH_MUTED}`}>{sub}</p>}
     </div>
   );
 }
@@ -68,6 +69,7 @@ export default function FollowList({ userId, kind, meId, ownerName }) {
   const patch = (id, value) =>
     setSt((s) => ({ ...s, items: s.items.map((i) => (i.id === id ? { ...i, is_following: value } : i)) }));
 
+  // đổi ngay, không hiệu ứng; lỗi thì trả về như cũ
   const toggle = async (item) => {
     if (busyId) return;
     const want = !item.is_following;
@@ -83,7 +85,7 @@ export default function FollowList({ userId, kind, meId, ownerName }) {
   if (st.loading) {
     return (
       <div className="space-y-3 p-4">
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3].map((i) => (
           <div key={i} className="h-14 animate-pulse rounded-lg bg-[#eaeef2] dark:bg-[#161b22]" />
         ))}
       </div>
@@ -104,7 +106,7 @@ export default function FollowList({ userId, kind, meId, ownerName }) {
 
   return (
     <div>
-      <ul className="divide-y divide-[#d0d7de] dark:divide-[#30363d]">
+      <ul className={`divide-y divide-[#d0d7de] dark:divide-[#30363d]`}>
         {st.items.map((it) => (
           <li key={it.id} className="flex items-center gap-3 px-4 py-3.5">
             <button
@@ -116,7 +118,7 @@ export default function FollowList({ userId, kind, meId, ownerName }) {
                 <img
                   src={it.avatar_url}
                   alt=""
-                  className="h-11 w-11 shrink-0 rounded-full border border-[#d0d7de] object-cover dark:border-[#30363d]"
+                  className={`h-11 w-11 shrink-0 rounded-full border object-cover ${GH_LINE}`}
                 />
               ) : (
                 <span
@@ -133,7 +135,7 @@ export default function FollowList({ userId, kind, meId, ownerName }) {
                 type="button"
                 onClick={() => toggle(it)}
                 disabled={busyId === it.id}
-                className={`${GH_BTN} shrink-0 !px-3 !py-1.5 !text-[13px] disabled:opacity-60`}
+                className={`${GH_BTN} shrink-0 !h-8 !px-3 !text-[13px] !transition-none active:!scale-100`}
               >
                 {it.is_following ? "Bỏ theo dõi" : "Theo dõi"}
               </button>
