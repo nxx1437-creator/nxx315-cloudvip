@@ -1,6 +1,6 @@
 // src/components/profile/AccountSettingsScreen.jsx — trang "Cài đặt tài khoản" (kiểu MoMo)
 import React, { useEffect } from "react";
-import { ArrowLeft, Bell, KeyRound, Mail, Monitor, Moon, ShieldCheck, Sun, User } from "lucide-react";
+import { ArrowLeft, Bell, KeyRound, Mail, Monitor, Moon, ShieldCheck, Sun, User, Users } from "lucide-react";
 import { IconLogoutAll, IconSpinner2, IconCheck } from "./ProfileIcons.jsx";
 import { Badge, Group, PillButton, Row, Switch } from "./SettingsParts.jsx";
 
@@ -117,6 +117,21 @@ export default function AccountSettingsScreen({
         <Group title="Cài đặt tài khoản">
           <Row icon={User} title="Tên hiển thị" sub={profile.username || "Chưa đặt"} onClick={onEditProfile} />
           <Row icon={Mail} title="Email" sub={session?.user?.email} />
+        </Group>
+
+        <Group id="privacy" title="Quyền riêng tư">
+          <Row
+            icon={Users}
+            title="Hiện người mình đang theo dõi"
+            sub="Tắt đi thì người khác không xem được danh sách bạn đang theo dõi"
+            right={
+              <Switch
+                label="Hiện người mình đang theo dõi"
+                checked={profile.show_following !== false}
+                onChange={(v) => updateNotifPref("show_following", v)}
+              />
+            }
+          />
         </Group>
 
         <Group id="notif" title="Thông báo nhận về">

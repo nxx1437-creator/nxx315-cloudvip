@@ -1,9 +1,12 @@
 // src/components/profile/ProfileDetailScreen.jsx — "Trang cá nhân" kiểu GitHub (TopHeader + hàng tab có nút quay lại)
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Lock, Settings, Star } from "lucide-react";
 import TopHeader from "../TopHeader.jsx";
 import GhProfile, { BadgeList, GH_BTN, GH_INK, GhTabs, StatList, statItems } from "./GhProfile.jsx";
+import { FollowCounts } from "./FollowList.jsx";
 import useProfileExtras from "../../hooks/useProfileExtras.js";
+import { supabase } from "../../lib/supabaseClient.js";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
@@ -11,7 +14,21 @@ export default function ProfileDetailScreen({
   onClose, session, profile, userLevel, onAvatarClick, onEdit, onOpenSettings, onPrivacy, onOpenLevel,
 }) {
   const x = useProfileExtras(session, profile, userLevel);
+  const navigate = useNavigate();
   const [tab, setTab] = useState("overview");
+  const uid = session?.user?.id;
+  const [fc, setFc] = useState(null); // số người theo dõi / đang theo dõi của chính mình
+
+  useEffect(() => {
+    if (!uid) return undefined;
+    let alive = true;
+    supabase.rpc("get_follow_info", { p_user_id: uid }).then(({ data, error }) => {
+      if (alive && !error && data) setFc(data);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [uid]);
 
   const displayName = profile.username || "Thành viên";
   const email = session?.user?.email || "";
@@ -81,16 +98,25 @@ export default function ProfileDetailScreen({
             meta={meta}
             badges={x.badges}
             actions={
-              <div className="flex gap-2">
-                <button type="button" onClick={onEdit} className={`${GH_BTN} flex-1`}>
-                  Sửa thông tin
-                </button>
-                <button type="button" onClick={onPrivacy} aria-label="Quyền riêng tư" className={`${GH_BTN} w-9 !px-0`}>
-                  <Lock size={16} />
-                </button>
-                <button type="button" onClick={onOpenSettings} aria-label="Cài đặt tài khoản" className={`${GH_BTN} w-9 !px-0`}>
-                  <Settings size={16} />
-                </button>
+              <div className="space-y-3">
+                {fc && (
+                  <FollowCounts
+                    followers={fc.followers}
+                    following={fc.following}
+                    onOpen={(kind) => navigate(`/u/${uid}?list=${kind}`)}
+                  />
+                )}
+                <div className="flex gap-2">
+                  <button type="button" onClick={onEdit} className={`${GH_BTN} flex-1`}>
+                    Sửa thông tin
+                  </button>
+                  <button type="button" onClick={onPrivacy} aria-label="Quyền riêng tư" className={`${GH_BTN} w-9 !px-0`}>
+                    <Lock size={16} />
+                  </button>
+                  <button type="button" onClick={onOpenSettings} aria-label="Cài đặt tài khoản" className={`${GH_BTN} w-9 !px-0`}>
+                    <Settings size={16} />
+                  </button>
+                </div>
               </div>
             }
           />
@@ -100,4 +126,4 @@ export default function ProfileDetailScreen({
       </main>
     </div>
   );
-      }
+}
