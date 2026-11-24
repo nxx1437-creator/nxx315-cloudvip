@@ -1,6 +1,6 @@
 // src/pages/PublicProfile.jsx — trang cá nhân của người khác: /u/:userId
 // danh sách theo dõi mở bằng /u/:userId?list=followers | following (giống GitHub: hồ sơ ở trên, danh sách ở dưới)
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Calendar, Coins, TrendingUp } from "lucide-react";
 
@@ -21,6 +21,7 @@ export default function PublicProfile() {
   const rawList = searchParams.get("list");
   const list = rawList === "followers" || rawList === "following" ? rawList : null;
   const inList = !!list;
+  const listRef = useRef(null);
 
   const [data, setData] = useState(undefined); // undefined = đang tải, null = không có
   const [tab, setTab] = useState("overview");
@@ -51,6 +52,14 @@ export default function PublicProfile() {
       alive = false;
     };
   }, [userId, session?.user?.id]);
+
+  // mở danh sách (hoặc chuyển tab Người theo dõi / Đang theo dõi) thì tự cuộn thẳng xuống phần danh sách
+  const hasData = !!data;
+  useEffect(() => {
+    if (!list || !hasData) return undefined;
+    const id = requestAnimationFrame(() => listRef.current?.scrollIntoView({ block: "start" }));
+    return () => cancelAnimationFrame(id);
+  }, [list, hasData]);
 
   // Theo dõi / Bỏ theo dõi: đổi ngay, không hiệu ứng; lỗi thì trả về như cũ.
   // Gọi theo kiểu "đặt thành" (không phải đảo) nên bấm nhanh nhiều lần cũng không bị lệch.
@@ -158,11 +167,12 @@ export default function PublicProfile() {
           </div>
         )}
 
-        {/* TRANG DANH SÁCH: hồ sơ ở trên, danh sách (hoặc thông báo trống) ở dưới */}
+        {/* TRANG DANH SÁCH: hồ sơ ở trên, danh sách (hoặc thông báo trống) ở dưới; mở ra là tự cuộn xuống đây */}
         {inList && data && (
           <>
             {overview}
-            <div className={`border-t ${GH_LINE}`}>
+            {/* scroll-mt = chiều cao TopHeader (64px) + hàng tab (48px) để danh sách không bị che */}
+            <div ref={listRef} className={`scroll-mt-[116px] border-t ${GH_LINE}`}>
               <FollowList
                 key={`${userId}-${list}`}
                 userId={userId}

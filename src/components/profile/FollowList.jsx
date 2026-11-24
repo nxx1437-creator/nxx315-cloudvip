@@ -9,17 +9,18 @@ const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
 // dòng "👥 6 người theo dõi · 0 đang theo dõi" (bấm vào từng số để mở danh sách)
 // following = null/undefined khi người đó đã ẩn danh sách đang theo dõi
+// KHÔNG đổi màu khi bấm (tránh hover bị dính màu xanh trên điện thoại); chỉ gạch chân lúc đang nhấn
 export function FollowCounts({ followers, following, onOpen }) {
   return (
     <div className={`flex flex-wrap items-center gap-x-1.5 text-[14px] ${GH_MUTED}`}>
       <Users size={16} />
-      <button type="button" onClick={() => onOpen("followers")} className="hover:text-accent-600">
+      <button type="button" onClick={() => onOpen("followers")} className="active:underline">
         <b className={GH_INK}>{fmt(followers)}</b> người theo dõi
       </button>
       {following !== null && following !== undefined && (
         <>
           <span>·</span>
-          <button type="button" onClick={() => onOpen("following")} className="hover:text-accent-600">
+          <button type="button" onClick={() => onOpen("following")} className="active:underline">
             <b className={GH_INK}>{fmt(following)}</b> đang theo dõi
           </button>
         </>
