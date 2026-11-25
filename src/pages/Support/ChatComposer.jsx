@@ -9,7 +9,7 @@ export default function ChatComposer({
   pendingImage, clearPending, replyTo, clearReply,
   chipItems, chipKey, onPickChip,
   showFileMenu, setShowFileMenu, showEmoji, setShowEmoji,
-  fileInputRef, cameraInputRef, onFile,
+  fileInputRef, cameraInputRef, onFile, askPerm,
 }) {
   const handlePickEmoji = (e) => {
     setInput((prev) => prev + e.emoji);
@@ -20,6 +20,12 @@ export default function ChatComposer({
   const handleCloseEmoji = () => setShowEmoji(false);
 
   const sendDisabled = busy || !hasInput;
+
+  // Hỏi quyền (Đồng ý / Chỉ một lần / Từ chối) rồi mới mở camera hoặc album
+  const withPerm = async (key, open) => {
+    const ok = askPerm ? await askPerm(key) : true;
+    if (ok) open();
+  };
 
   return (
     <div className="relative shrink-0 bg-[#fbfbf8]">
@@ -173,8 +179,8 @@ export default function ChatComposer({
               <h3 className="text-[19px] font-medium tracking-[-0.01em] text-[#2b2b2b]">Đính kèm</h3>
               <div className="mt-5 grid grid-cols-3 gap-4">
                 {[
-                  { l: "Chụp ảnh", i: <Camera size={30} strokeWidth={1.7} />, f: () => cameraInputRef.current?.click() },
-                  { l: "Album", i: <ImageIcon size={30} strokeWidth={1.7} />, f: () => fileInputRef.current?.click() },
+                  { l: "Chụp ảnh", i: <Camera size={30} strokeWidth={1.7} />, f: () => withPerm("camera", () => cameraInputRef.current?.click()) },
+                  { l: "Album", i: <ImageIcon size={30} strokeWidth={1.7} />, f: () => withPerm("photos", () => fileInputRef.current?.click()) },
                   { l: "Emoji", i: <Smile size={30} strokeWidth={1.7} />, f: () => setShowEmoji(true) },
                 ].map((a) => (
                   <button
@@ -213,4 +219,4 @@ export default function ChatComposer({
       )}
     </div>
   );
-              }
+}
