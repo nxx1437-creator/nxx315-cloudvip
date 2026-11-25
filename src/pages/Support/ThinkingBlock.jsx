@@ -23,6 +23,9 @@ const prefersReduced = () =>
 // "Đang tra đơn RBX-1…" -> "Đã tra đơn RBX-1" (bước đã xong)
 const pastTense = (t) => String(t).replace(/^Đang /, "Đã ").replace(/(\.{3}|…)$/, "");
 
+// Dòng "thử lại vì phản hồi chậm" do server ghi mỗi khi một máy AI trả lỗi (không chỉ khi chậm) nên chỉ gây rối cho khách, không hiện
+const HIDDEN_LINE = /thử lại vì phản hồi chậm/i;
+
 // Mỗi bước một icon riêng (như các mục trên GitHub); không khớp từ nào thì dùng dấu tick
 function iconFor(text) {
   const t = String(text).toLowerCase();
@@ -57,7 +60,8 @@ function Line({ text, current }) {
   );
 }
 
-export default function ThinkingBlock({ lines = [], done = false, seconds }) {
+export default function ThinkingBlock({ lines: allLines = [], done = false, seconds }) {
+  const lines = allLines.filter((t) => !HIDDEN_LINE.test(String(t)));
   const empty = lines.length === 0;
   const [open, setOpen] = useState(false);
   const [secs, setSecs] = useState(seconds ?? 0);

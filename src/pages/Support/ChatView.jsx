@@ -1,7 +1,7 @@
 // src/pages/Support/ChatView.jsx — màn chat với AI (giao diện kiểu Cofounder)
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CornerDownRight, Sparkles } from "lucide-react";
+import { CornerDownRight, Info, Sparkles } from "lucide-react";
 
 import { supabase } from "../../lib/supabaseClient.js";
 import { QUICK_ACTIONS, SUPPORT } from "./constants.js";
@@ -78,10 +78,12 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const [aiTyping, setAiTyping] = useState(false);
   const [streamingMsgId, setStreamingMsgId] = useState(null);
   const [streamingText, setStreamingText] = useState("");
-  // Nhắn nhiều tin như người thật: revealed[msgId] = số tin đã hiện; playingMsgId = câu trả lời đang được "nhắn" dần
+  // Nhắn nhiều tin: revealed[msgId] = số tin đã hiện; playingMsgId = câu trả lời đang "nhắn" dần
   const [revealed, setRevealed] = useState({});
   const [playingMsgId, setPlayingMsgId] = useState(null);
   const [partTyping, setPartTyping] = useState(false);
+  // Lỗi gọi AI: hiện thẻ "Thử lại" thay vì nhắn tin xin lỗi; lưu lại yêu cầu để gọi lại
+  const [aiError, setAiError] = useState(null);
   const [showEmoji, setShowEmoji] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [conv, setConv] = useState(conversation);
@@ -108,7 +110,6 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const gapTimer = useRef(0);
   const playRef = useRef(0);
   const activeRef = useRef(null);
-  const doneRef = useRef(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -138,10 +139,10 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     playRef.current += 1;
     clearTimeout(gapTimer.current);
     activeRef.current = null;
-    doneRef.current = null;
     setRevealed({});
     setPlayingMsgId(null);
     setPartTyping(false);
+    setAiError(null);
     sentIds.current = new Set();
     freshIds.current = new Set();
     setHiddenSuggestionIds([]);
@@ -166,10 +167,10 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     if (!loading && messages.length > 0) scrollToBottom(true);
   }, [messages.length, loading, scrollToBottom]);
 
-  // Mỗi khi hiện thêm một tin trong câu trả lời nhiều tin thì cuộn xuống
+  // Hiện thêm tin trong câu trả lời nhiều tin, hoặc hiện thẻ lỗi thì cuộn xuống
   useEffect(() => {
-    if (Object.keys(revealed).length > 0) scrollToBottom(true);
-  }, [revealed, partTyping, scrollToBottom]);
+    if (Object.keys(revealed).length > 0 || aiError) scrollToBottom(true);
+  }, [revealed, partTyping, aiError, scrollToBottom]);
 
   useEffect(() => {
     if (!streamingMsgId) return;
@@ -185,14 +186,10 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input]);
 
-  // Gõ chữ dần. onDone(aborted): aborted = true khi bị một lần gõ khác chen ngang
-  const runTypewriter = useCallback((msg, onDone) => {
+  // Gõ chữ dần cho câu trả lời một tin
+  const runTypewriter = useCallback((msg) => {
     cancelAnimationFrame(twRaf.current);
     clearTimeout(twTimer.current);
-    const preempted = doneRef.current;
-    const cb = onDone || null;
-    doneRef.current = cb;
-    if (preempted) preempted(true);
     setStreamingMsgId(msg.id);
     setStreamingText("");
     const full = msg.message || "";
@@ -214,15 +211,14 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
           setStreamingMsgId(null);
           setStreamingText("");
           scrollToBottom(true);
-          if (doneRef.current === cb) doneRef.current = null;
-          if (cb) cb(false);
         }, 100);
       }
     };
     twRaf.current = requestAnimationFrame(tick);
   }, [scrollToBottom]);
 
-  // Câu trả lời của AI: nếu có nhiều đoạn thì "nhắn" từng tin một (có dấu ba chấm giữa các tin), ngược lại gõ như cũ
+  // Câu trả lời của AI: 1 đoạn thì gõ chữ như cũ. Nhiều đoạn (tối đa 2 tin) thì tin đầu hiện luôn,
+  // rồi dấu ba chấm rất ngắn, tin sau hiện nguyên cả tin (không gõ từng chữ để khỏi chậm)
   const playReply = useCallback(
     (msg) => {
       const token = ++playRef.current;
@@ -239,6 +235,11 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
         runTypewriter(msg);
         return;
       }
+
+      cancelAnimationFrame(twRaf.current);
+      clearTimeout(twTimer.current);
+      setStreamingMsgId(null);
+      setStreamingText("");
       activeRef.current = { id: msg.id, n };
       setPlayingMsgId(msg.id);
       setRevealed((r) => ({ ...r, [msg.id]: 1 }));
@@ -250,22 +251,20 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
         if (activeRef.current?.id === msg.id) activeRef.current = null;
       };
 
+      // part i đã hiện; chờ một nhịp ngắn rồi hiện part i+1
       const step = (i) => {
         if (!mountedRef.current || playRef.current !== token) return;
-        runTypewriter({ id: i === 0 ? msg.id : `${msg.id}#${i}`, message: parts[i] }, (aborted) => {
+        if (i + 1 >= n) {
+          finish();
+          return;
+        }
+        setPartTyping(true);
+        gapTimer.current = setTimeout(() => {
           if (!mountedRef.current || playRef.current !== token) return;
-          if (aborted || i + 1 >= n) {
-            finish();
-            return;
-          }
-          setPartTyping(true);
-          gapTimer.current = setTimeout(() => {
-            if (!mountedRef.current || playRef.current !== token) return;
-            setPartTyping(false);
-            setRevealed((r) => ({ ...r, [msg.id]: i + 2 }));
-            step(i + 1);
-          }, Math.min(2000, 700 + parts[i + 1].length * 14));
-        });
+          setPartTyping(false);
+          setRevealed((r) => ({ ...r, [msg.id]: i + 2 }));
+          step(i + 1);
+        }, Math.min(1100, 450 + parts[i + 1].length * 7));
       };
       step(0);
     },
@@ -326,6 +325,67 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     return () => supabase.removeChannel(channel);
   }, [conversation?.id, playReply, scrollToBottom]);
 
+  // Gọi AI trả lời cho một yêu cầu. Lỗi thì hiện thẻ "Thử lại" (không ghi tin xin lỗi vào cuộc trò chuyện)
+  const runAI = useCallback(
+    async (content, imageUrl) => {
+      setAiError(null);
+      const typingTimer = setTimeout(() => mountedRef.current && setAiTyping(true), 600);
+      try {
+        // Chat cũ: lấy trạng thái thật nếu chưa có (mở từ lịch sử có thể thiếu)
+        let status = conv.status;
+        if (!status) {
+          const { data: row } = await supabase
+            .from("support_conversations")
+            .select("status")
+            .eq("id", conversation.id)
+            .maybeSingle();
+          status = row?.status || "ai";
+        }
+        // Nhân viên đang xử lý thì AI không chen vào; các trạng thái còn lại (ai, closed...) vẫn cho AI trả lời
+        if (status === "agent" || status === "pending_agent") return;
+
+        // Chat đã đóng: mở lại ở chế độ AI trước khi gọi (function chỉ trả lời khi status = "ai")
+        if (status !== "ai") {
+          const { error: reopenErr } = await supabase
+            .from("support_conversations")
+            .update({ status: "ai", updated_at: new Date().toISOString() })
+            .eq("id", conversation.id)
+            .eq("user_id", user.id);
+          if (reopenErr) throw reopenErr;
+        }
+        if (conv.status !== "ai" && mountedRef.current) setConv((c) => ({ ...c, status: "ai" }));
+
+        const data = await callSupportAI(conversation.id, imageUrl, content);
+        console.log(`[Support AI] Provider: ${data.provider} (${data.model})`);
+        clearTimeout(reloadTimer.current);
+        reloadTimer.current = setTimeout(() => {
+          if (mountedRef.current) loadMessages(true);
+        }, RELOAD_AI_DELAY_MS);
+      } catch (err) {
+        console.error("AI error:", err);
+        if (!mountedRef.current) return;
+        setMessages((prev) => prev.filter((m) => m.sender_type !== "status"));
+        const busyErr = /429|502|503|504|busy|quá lâu|timeout|kết nối/i.test(String(err?.message || ""));
+        setAiError({ content, imageUrl, busy: busyErr });
+      } finally {
+        clearTimeout(typingTimer);
+        if (mountedRef.current) setAiTyping(false);
+      }
+    },
+    [conv.status, conversation?.id, user?.id, loadMessages]
+  );
+
+  const retryAI = useCallback(async () => {
+    if (!aiError || sending) return;
+    const req = aiError;
+    setSending(true);
+    try {
+      await runAI(req.content, req.imageUrl);
+    } finally {
+      if (mountedRef.current) setSending(false);
+    }
+  }, [aiError, sending, runAI]);
+
   const sendMessage = useCallback(async (customText) => {
     const typed = (customText || input).trim();
     if ((!typed && !pendingImage) || sending) return;
@@ -338,6 +398,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     const content = snippet ? `> ${snippet}\n\n${typed}` : typed;
 
     setSending(true);
+    setAiError(null);
     let uploadedImageUrl = null;
     try {
       if (pendingImage) {
@@ -392,73 +453,14 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
           });
       }
 
-      // Chat cũ: lấy trạng thái thật nếu chưa có (mở từ lịch sử có thể thiếu)
-      let status = conv.status;
-      if (!status) {
-        const { data: row } = await supabase
-          .from("support_conversations")
-          .select("status")
-          .eq("id", conversation.id)
-          .maybeSingle();
-        status = row?.status || "ai";
-      }
-      // Nhân viên đang xử lý thì AI không chen vào; các trạng thái còn lại (ai, closed...) vẫn cho AI trả lời
-      const humanHandling = status === "agent" || status === "pending_agent";
-
-      if (!humanHandling) {
-        const typingTimer = setTimeout(() => mountedRef.current && setAiTyping(true), 600);
-        try {
-          // Chat đã đóng: mở lại ở chế độ AI trước khi gọi (function chỉ trả lời khi status = "ai")
-          if (status !== "ai") {
-            const { error: reopenErr } = await supabase
-              .from("support_conversations")
-              .update({ status: "ai", updated_at: new Date().toISOString() })
-              .eq("id", conversation.id)
-              .eq("user_id", user.id);
-            if (reopenErr) throw reopenErr;
-          }
-          if (conv.status !== "ai" && mountedRef.current) setConv((c) => ({ ...c, status: "ai" }));
-
-          const data = await callSupportAI(conversation.id, uploadedImageUrl, content);
-          console.log(`[Support AI] Provider: ${data.provider} (${data.model})`);
-          clearTimeout(reloadTimer.current);
-          reloadTimer.current = setTimeout(() => {
-            if (mountedRef.current) loadMessages(true);
-          }, RELOAD_AI_DELAY_MS);
-        } catch (err) {
-          console.error("AI error:", err);
-          if (!mountedRef.current) return;
-          setMessages((prev) => prev.filter((m) => m.sender_type !== "status"));
-          const { data: errMsg } = await supabase
-            .from("support_messages")
-            .insert({
-              conversation_id: conversation.id,
-              user_id: user.id,
-              message:
-                "Xin lỗi bạn, mình đang gặp sự cố kỹ thuật. Bạn thử lại sau hoặc liên hệ Zalo 0865245988 để được hỗ trợ trực tiếp nha 🌸",
-              sender_type: "ai",
-              suggestions: [],
-            })
-            .select()
-            .single();
-          if (errMsg && mountedRef.current) {
-            sentIds.current.add(errMsg.id);
-            freshIds.current.add(errMsg.id);
-            setMessages((prev) => [...prev, errMsg]);
-            playReply(errMsg);
-          }
-        } finally {
-          clearTimeout(typingTimer);
-          if (mountedRef.current) setAiTyping(false);
-        }
-      }
+      await runAI(content, uploadedImageUrl);
     } catch (error) {
       console.error("Send error:", error);
       if (mountedRef.current) alert("Không thể gửi tin nhắn.");
     } finally {
       if (mountedRef.current) setSending(false);
     }
-  }, [input, pendingImage, sending, user?.id, replyTo, conv.status, conv.title, conversation?.id, playReply, scrollToBottom, loadMessages]);
+  }, [input, pendingImage, sending, user?.id, replyTo, conv.title, conversation?.id, runAI, scrollToBottom]);
 
   useEffect(() => {
     if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
@@ -640,7 +642,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
                   const hasAfters = messages
                     .slice(idx + 1)
                     .some((m) => m.sender_type === "ai" || m.sender_type === "system");
-                  const seen = idx === lastUserIdx && (aiTyping || hasAfters);
+                  const seen = idx === lastUserIdx && (aiTyping || hasAfters || Boolean(aiError));
                   const parts = partsById[msg.id];
                   const shown = parts ? Math.min(parts.length, revealed[msg.id] ?? parts.length) : 0;
                   return (
@@ -696,6 +698,24 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
                   );
                 })}
                 {((aiTyping && !streamingMsgId && !hasStatusMsg) || partTyping) && <TypingDots />}
+                {aiError && !aiTyping && (
+                  <div className="nxx-rise flex items-center gap-3 rounded-[22px] border border-[#e6e6df] bg-white px-4 py-3">
+                    <Info size={20} strokeWidth={1.8} className="shrink-0 text-[#6f6f68]" />
+                    <p className="min-w-0 flex-1 text-[15px] leading-snug text-[#2b2b2b]">
+                      {aiError.busy
+                        ? "NXX hiện đang bận. Hãy thử lại sau giây lát."
+                        : "Không thể tạo phản hồi của NXX."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={retryAI}
+                      disabled={sending}
+                      className="shrink-0 rounded-full border border-[#d9d9d0] bg-white px-4 py-2 text-[14.5px] font-medium text-[#2b2b2b] transition active:scale-[0.97] disabled:opacity-50"
+                    >
+                      Thử lại
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
