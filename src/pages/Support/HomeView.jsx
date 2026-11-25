@@ -1,12 +1,11 @@
 // src/pages/Support/HomeView.jsx — trang chủ chat AI (giao diện kiểu Cofounder)
 import React, { useRef, useState } from "react";
-import { ArrowLeft, ArrowUp, Check, ChevronDown, Headphones, History, Loader2, Sparkles, User, CreditCard, Package, Bug, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, ArrowUp, Check, ChevronDown, Headphones, Loader2, Sparkles, User, CreditCard, Package, Bug, MoreHorizontal } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { getGreeting, getSuggestions } from "./helpers.js";
 import { CATEGORIES, SUPPORT, SYSTEM_BANNER } from "./constants.js";
 import BannerNotice from "./BannerNotice.jsx";
 import HomeGuides from "./HomeGuides.jsx";
-import HistoryDrawer from "./HistoryDrawer.jsx";
 import { SupportTiles, Statement, Features, FinalCard } from "./HomeSections.jsx";
 import HomeDemo from "./HomeDemo.jsx";
 import { PixelScene } from "../help/HelpPixel.jsx";
@@ -27,7 +26,6 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
   const [text, setText] = useState("");
   const [category, setCategory] = useState(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState("");
   const taRef = useRef(null);
@@ -132,15 +130,6 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
     focusComposer();
   };
 
-  // Mở lại một cuộc trò chuyện cũ: dùng cùng sự kiện mà index.jsx đang lắng nghe để chuyển sang màn chat
-  const openOldConversation = (conv) => {
-    window.dispatchEvent(
-      new CustomEvent("nxx-start-chat", {
-        detail: { conversation: { ...conv }, category: conv.category || null, firstText: null },
-      })
-    );
-  };
-
   return (
     <div className="nxx-skin nxh min-h-[calc(100vh-72px)] pb-6">
       <style>{FOCUS_GLOW_CSS}</style>
@@ -161,16 +150,6 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
                 <ArrowLeft size={19} strokeWidth={2.2} />
               </button>
               <span className="text-[17px] font-medium tracking-[-0.01em]">NXX Support</span>
-              <button
-                type="button"
-                onClick={() => setHistoryOpen(true)}
-                aria-label="Lịch sử hỗ trợ"
-                className="ml-auto inline-flex h-10 items-center gap-1.5 rounded-full border px-3.5 text-[14px] font-medium transition active:scale-95"
-                style={{ background: "rgba(255,255,255,.2)", borderColor: "rgba(255,255,255,.4)", color: "#fff" }}
-              >
-                <History size={17} strokeWidth={2.2} />
-                Lịch sử
-              </button>
             </div>
 
             <div className="mt-6 flex flex-col gap-3.5">
@@ -242,15 +221,6 @@ export default function HomeView({ user, onOpenHelp, onStartChat }) {
 
       <HomeGuides onOpenHelp={onOpenHelp} onPickTopic={(title, catId) => send(title, catId)} />
       <FinalCard onStart={focusComposer} />
-
-      <HistoryDrawer
-        open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        userId={user?.id}
-        currentConvId={null}
-        onOpenConversation={openOldConversation}
-        onNewChat={focusComposer}
-      />
 
       {sheetOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
