@@ -53,15 +53,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 // Lỗi tải file JS (thường do service worker giữ bản cũ sau deploy):
 // chỉ reload 1 lần / 30 giây, xóa service worker + cache cũ trước khi reload.
 window.addEventListener("vite:preloadError", async (e) => {
+  e.preventDefault();
   const KEY = "preload_reload_at";
   try {
     const last = Number(sessionStorage.getItem(KEY) || 0);
-    // Đã thử trong 30 giây qua: KHÔNG chặn lỗi, để ErrorBoundary hiện lỗi thật thay vì "reading 'default'"
     if (Date.now() - last < 30000) return;
     sessionStorage.setItem(KEY, String(Date.now()));
   } catch {}
-  // Chỉ chặn lỗi khi chắc chắn sẽ tự dọn cache và tải lại ngay bên dưới
-  e.preventDefault();
   try {
     const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
     await Promise.all(regs.map((r) => r.unregister()));

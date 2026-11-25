@@ -1,21 +1,9 @@
-// src/components/ErrorBoundary.jsx — bắt lỗi để không bị trắng trang; tự dọn cache + tải lại 1 lần nếu lỗi do bản build cũ (chunk)
+// src/components/ErrorBoundary.jsx — bắt lỗi để không bị trắng trang; tự tải lại 1 lần nếu lỗi do bản build cũ (chunk)
 import React from "react";
 
-// "reading 'default'" = React.lazy nhận về undefined vì file JS không tải được (bị nuốt lỗi preload)
 const CHUNK_RE =
-  /dynamically imported module|Importing a module script failed|Loading chunk|Failed to fetch dynamically|error loading dynamically|reading 'default'|Unexpected token '<'|MIME type/i;
+  /dynamically imported module|Importing a module script failed|Loading chunk|Failed to fetch dynamically|error loading dynamically/i;
 const FLAG = "nxx_chunk_reloaded";
-
-// Xóa service worker + Cache Storage rồi tải lại, để máy lấy bản mới nhất từ mạng
-async function purgeAndReload() {
-  try {
-    const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
-    await Promise.all(regs.map((r) => r.unregister()));
-    const keys = (await window.caches?.keys?.()) || [];
-    await Promise.all(keys.map((k) => window.caches.delete(k)));
-  } catch { /* ignore */ }
-  window.location.reload();
-}
 
 export default class ErrorBoundary extends React.Component {
   state = { error: null };
@@ -41,7 +29,7 @@ export default class ErrorBoundary extends React.Component {
       try {
         if (!sessionStorage.getItem(FLAG)) {
           sessionStorage.setItem(FLAG, "1");
-          purgeAndReload();
+          window.location.reload();
         }
       } catch { /* ignore */ }
     }
@@ -63,7 +51,7 @@ export default class ErrorBoundary extends React.Component {
           <button
             onClick={() => {
               try { sessionStorage.removeItem(FLAG); } catch { /* ignore */ }
-              purgeAndReload();
+              window.location.reload();
             }}
             className="rounded-xl bg-[#2b59e0] px-6 py-3 text-[15px] font-semibold text-white"
           >
