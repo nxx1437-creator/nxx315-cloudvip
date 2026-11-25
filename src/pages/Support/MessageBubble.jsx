@@ -2,10 +2,10 @@
 // Một câu trả lời AI có thể được tách thành nhiều tin (partIndex/partCount): chỉ tin đầu có khối suy nghĩ + ảnh, chỉ tin cuối có nút thao tác
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ChevronRight, Copy, LogIn, Reply, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Check, ChevronRight, Copy, Reply, Sparkles, Square, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
 import MarkdownText from "./MarkdownText.jsx";
 import ImageLightbox from "./ImageLightbox.jsx";
-import { cleanAIText, shouldShowLoginButton } from "./helpers.js";
+import { cleanAIText } from "./helpers.js";
 import { parseActionsFromText } from "./bubbleActions.js";
 import { QuotedText, splitQuote } from "./ChatBits.jsx";
 import ThinkingBlock from "./ThinkingBlock.jsx";
@@ -43,12 +43,47 @@ function getPlainText(message) {
   return cleanAIText(message.message || "");
 }
 
+// ── Đọc to bằng giọng có sẵn của trình duyệt/điện thoại (Web Speech API): miễn phí, không cần server ──
+const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
+
+// Bỏ định dạng markdown, link, emoji để giọng đọc không đọc ra ký hiệu
+function toSpeechText(raw) {
+  return String(raw || "")
+    .replace(/\[SUGGESTIONS\][\s\S]*$/i, "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/^\s*(?:[-*•]|\d+[.)])\s+/gm, "")
+    .replace(/[*_`#]/g, "")
+    .replace(/\p{Extended_Pictographic}/gu, "")
+    .replace(/\s*\n+\s*/g, ". ")
+    .replace(/\.{2,}/g, ".")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Cắt thành các câu ngắn (Chrome trên Android hay tự dừng nếu một lượt đọc quá dài)
+function speechChunks(text, max = 180) {
+  const sentences = text.match(/[^.!?…]+[.!?…]*/g) || [text];
+  const out = [];
+  let cur = "";
+  for (const s of sentences) {
+    if ((cur + s).length > max && cur) {
+      out.push(cur.trim());
+      cur = s;
+    } else {
+      cur += s;
+    }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
 export default function MessageBubble({
   message,
   streamingText,
-  isLastAIMessage,
   sending,
-  onShowLogin,
   hiddenSuggestionIds = [],
   animateIn = false,
   showFeedback = false,
@@ -61,10 +96,12 @@ export default function MessageBubble({
 }) {
   const navigate = useNavigate();
   const imgElRef = useRef(null);
+  const speakingRef = useRef(false);
   const [mediaError, setMediaError] = useState(false);
   const [mediaLoaded, setMediaLoaded] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [thinking] = useState(() =>
     message.sender_type === "ai" && animateIn && partIndex === 0 ? takeThinking(message.id) : null
   );
@@ -72,7 +109,6 @@ export default function MessageBubble({
   const isUser = message.sender_type === "user";
   const isAI = message.sender_type === "ai";
   const isLastPart = partIndex >= partCount - 1;
-  const isSuggestionHidden = hiddenSuggestionIds.includes(message.id);
   const hasMedia = Boolean(message.image_url) && !mediaError;
   const isVideo =
     message.media_type === "video" ||
@@ -84,6 +120,18 @@ export default function MessageBubble({
     const el = imgElRef.current;
     if (el && el.complete && el.naturalWidth > 0) setMediaLoaded(true);
   }, [message.image_url]);
+
+  useEffect(() => {
+    speakingRef.current = speaking;
+  }, [speaking]);
+
+  // Rời màn hình thì tắt tiếng đang đọc
+  useEffect(
+    () => () => {
+      if (speakingRef.current && canSpeak()) window.speechSynthesis.cancel();
+    },
+    []
+  );
 
   const plainText = getPlainText(message);
 
@@ -107,6 +155,31 @@ export default function MessageBubble({
       console.warn("Copy failed:", e);
     }
   }, [plainText]);
+
+  // Bấm để nghe toàn bộ câu trả lời, bấm lại để dừng
+  const handleSpeak = useCallback(() => {
+    if (!canSpeak()) return;
+    const synth = window.speechSynthesis;
+    if (speakingRef.current) {
+      synth.cancel();
+      setSpeaking(false);
+      return;
+    }
+    const chunks = speechChunks(toSpeechText(cleanAIText(fullText ?? message.message ?? "")));
+    if (chunks.length === 0) return;
+    synth.cancel();
+    const viVoice = synth.getVoices().find((v) => /^vi/i.test(v.lang || ""));
+    setSpeaking(true);
+    chunks.forEach((c, i) => {
+      const u = new SpeechSynthesisUtterance(c);
+      u.lang = "vi-VN";
+      if (viVoice) u.voice = viVoice;
+      u.rate = 1;
+      if (i === chunks.length - 1) u.onend = () => setSpeaking(false);
+      u.onerror = () => setSpeaking(false);
+      synth.speak(u);
+    });
+  }, [fullText, message.message]);
 
   const replyBtn = (
     <SideBtn label="Trả lời" onClick={() => onReply?.({ id: message.id, text: plainText })}>
@@ -168,7 +241,7 @@ export default function MessageBubble({
   const isStreaming = streamingText !== null && streamingText !== undefined;
   const displayText = isStreaming ? streamingText : message.message;
 
-  // Nút hành động / đăng nhập đọc từ TOÀN BỘ câu trả lời, nhưng chỉ hiện ở tin cuối
+  // Nút hành động đọc từ TOÀN BỘ câu trả lời, nhưng chỉ hiện ở tin cuối
   const sourceText = fullText ?? message.message ?? "";
 
   const finalActions =
@@ -177,14 +250,6 @@ export default function MessageBubble({
         ? message.actions
         : parseActionsFromText(sourceText)
       : [];
-
-  const showLoginButton =
-    isLastAIMessage &&
-    isLastPart &&
-    !isStreaming &&
-    message.suggestions?.length > 0 &&
-    !isSuggestionHidden &&
-    shouldShowLoginButton(sourceText);
 
   const fbLocked = feedback?.status === "sent";
 
@@ -278,19 +343,7 @@ export default function MessageBubble({
           </div>
         )}
 
-        {showLoginButton && (
-          <button
-            type="button"
-            onClick={onShowLogin}
-            disabled={sending}
-            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#2b2b2b] px-5 py-2.5 text-[14px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-50"
-          >
-            <LogIn size={16} strokeWidth={2.4} />
-            Đăng nhập
-          </button>
-        )}
-
-        {/* Hàng nút dưới câu trả lời (chỉ ở tin cuối): hữu ích / chưa hữu ích / sao chép / trả lời, "Do AI tạo" ở bên phải */}
+        {/* Hàng nút dưới câu trả lời (chỉ ở tin cuối): hữu ích / chưa hữu ích / nghe / sao chép / trả lời, "Do AI tạo" ở bên phải */}
         {!isStreaming && isAI && isLastPart && (
           <div className="-ml-2 mt-1 flex items-center gap-0.5">
             {showFeedback && (
@@ -314,6 +367,11 @@ export default function MessageBubble({
                   <ThumbsDown size={17} strokeWidth={1.8} />
                 </SideBtn>
               </>
+            )}
+            {canSpeak() && (
+              <SideBtn label={speaking ? "Dừng đọc" : "Nghe"} pressed={speaking} onClick={handleSpeak}>
+                {speaking ? <Square size={15} strokeWidth={2} fill="currentColor" /> : <Volume2 size={18} strokeWidth={1.7} />}
+              </SideBtn>
             )}
             {copyBtn}
             {replyBtn}
