@@ -20,6 +20,8 @@ import { DaySeparator, TypingDots, fmtTime } from "./ChatBits.jsx";
 import ErrorBoundary from "./ChatErrorBoundary.jsx";
 import { callSupportAI } from "./callSupportAI.js";
 import useMessageFeedback from "./useMessageFeedback.js";
+import { useChatLimit } from "./useChatLimit.js";
+import { usePermissionSheet } from "./PermissionSheet.jsx";
 import "./chat-effects.css";
 import "./chat-cofounder.css";
 
@@ -94,6 +96,9 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const { feedback, feedbackTarget, openFeedback, closeFeedback, submitFeedback, resetFeedback } =
     useMessageFeedback(conversation, user);
   const [replyTo, setReplyTo] = useState(null);
+  // Giới hạn lượt chat + hộp xin quyền camera/album
+  const { checkLimit, limitNotice, clearLimitNotice, notifyServerLimit } = useChatLimit(user?.id);
+  const { ask: askPerm, sheet: permSheet } = usePermissionSheet();
 
   const scrollRef = useRef(null);
   const lastScrollY = useRef(0);
@@ -393,6 +398,8 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
       alert("Vui lòng đăng nhập để gửi tin nhắn.");
       return;
     }
+    // Hết lượt thì hiện thông báo, giữ nguyên nội dung đang gõ để gửi sau
+    if (!checkLimit()) return;
 
     const snippet = replyTo ? replyTo.text.replace(/\s+/g, " ").slice(0, 160) : "";
     const content = snippet ? `> ${snippet}\n\n${typed}` : typed;
@@ -456,11 +463,14 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
       await runAI(content, uploadedImageUrl);
     } catch (error) {
       console.error("Send error:", error);
-      if (mountedRef.current) alert("Không thể gửi tin nhắn.");
+      if (mountedRef.current) {
+        // Server (trigger giới hạn) từ chối thì hiện thông báo hết lượt, lỗi khác mới báo "không thể gửi"
+        if (!notifyServerLimit(error?.message)) alert("Không thể gửi tin nhắn.");
+      }
     } finally {
       if (mountedRef.current) setSending(false);
     }
-  }, [input, pendingImage, sending, user?.id, replyTo, conv.title, conversation?.id, runAI, scrollToBottom]);
+  }, [input, pendingImage, sending, user?.id, replyTo, conv.title, conversation?.id, runAI, scrollToBottom, checkLimit, notifyServerLimit]);
 
   useEffect(() => {
     if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
@@ -722,6 +732,24 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
         </div>
       </div>
 
+      {limitNotice && (
+        <div className="shrink-0 bg-[#fbfbf8]">
+          <div className="nxx-rise mx-auto flex w-full max-w-2xl items-center gap-3 px-3.5 pb-2 pt-1">
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[22px] border border-[#e6e6df] bg-white px-4 py-3">
+              <Info size={20} strokeWidth={1.8} className="shrink-0 text-[#6f6f68]" />
+              <p className="min-w-0 flex-1 text-[15px] leading-snug text-[#2b2b2b]">{limitNotice}</p>
+              <button
+                type="button"
+                onClick={clearLimitNotice}
+                className="shrink-0 rounded-full border border-[#d9d9d0] bg-white px-4 py-2 text-[14.5px] font-medium text-[#2b2b2b] transition active:scale-[0.97]"
+              >
+                Đã hiểu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ChatComposer
         input={input}
         setInput={setInput}
@@ -748,6 +776,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
         fileInputRef={fileInputRef}
         cameraInputRef={cameraInputRef}
         onFile={handleFileSelect}
+        askPerm={askPerm}
       />
       <FeedbackSheet
         open={Boolean(feedbackTarget)}
@@ -755,6 +784,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
         onClose={closeFeedback}
         onSubmit={submitFeedback}
       />
+      {permSheet}
     </div>
   );
 }
