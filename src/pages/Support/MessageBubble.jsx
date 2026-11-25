@@ -46,6 +46,30 @@ function getPlainText(message) {
 // ── Đọc to bằng giọng có sẵn của trình duyệt/điện thoại (Web Speech API): miễn phí, không cần server ──
 const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
+// Danh sách giọng của trình duyệt tải chậm ở lần đầu (getVoices() trả rỗng) nên nạp sẵn và nhớ lại,
+// lần bấm Nghe đầu tiên không phải chờ. Ưu tiên giọng cài sẵn trong máy (không cần mạng nên bắt đầu đọc ngay)
+let viVoice = null;
+let voicesWarmed = false;
+
+function pickViVoice() {
+  if (!canSpeak()) return null;
+  const list = window.speechSynthesis.getVoices().filter((v) => /^vi/i.test(v.lang || ""));
+  if (list.length === 0) return null;
+  return list.find((v) => v.localService) || list[0];
+}
+
+function warmVoices() {
+  if (!canSpeak() || voicesWarmed) return;
+  voicesWarmed = true;
+  const synth = window.speechSynthesis;
+  viVoice = pickViVoice();
+  const refresh = () => {
+    viVoice = pickViVoice() || viVoice;
+  };
+  if (typeof synth.addEventListener === "function") synth.addEventListener("voiceschanged", refresh);
+  else synth.onvoiceschanged = refresh;
+}
+
 // Bỏ định dạng markdown, link, emoji để giọng đọc không đọc ra ký hiệu
 function toSpeechText(raw) {
   return String(raw || "")
@@ -63,20 +87,37 @@ function toSpeechText(raw) {
     .trim();
 }
 
-// Cắt thành các câu ngắn (Chrome trên Android hay tự dừng nếu một lượt đọc quá dài)
-function speechChunks(text, max = 180) {
-  const sentences = text.match(/[^.!?…]+[.!?…]*/g) || [text];
+// Cắt thành các đoạn ngắn: Chrome trên Android hay tự dừng nếu một lượt đọc quá dài,
+// và giọng online cần tải cả đoạn trước khi đọc nên đoạn ĐẦU để thật ngắn cho bắt đầu đọc nhanh
+function speechChunks(text, firstMax = 60, max = 170) {
+  const pieces = [];
+  for (const s of text.match(/[^.!?…]+[.!?…]*/g) || [text]) {
+    let rest = s.trim();
+    while (rest.length > max) {
+      const cut = rest.lastIndexOf(" ", max);
+      const at = cut > 40 ? cut : max;
+      pieces.push(rest.slice(0, at).trim());
+      rest = rest.slice(at).trim();
+    }
+    if (rest) pieces.push(rest);
+  }
+  if (pieces.length > 0 && pieces[0].length > firstMax) {
+    const f = pieces[0];
+    const i = Math.max(f.lastIndexOf(", ", firstMax), f.lastIndexOf(" ", firstMax));
+    if (i > 20) pieces.splice(0, 1, f.slice(0, i + 1).trim(), f.slice(i + 1).trim());
+  }
   const out = [];
   let cur = "";
-  for (const s of sentences) {
-    if ((cur + s).length > max && cur) {
-      out.push(cur.trim());
-      cur = s;
+  for (const p of pieces) {
+    const lim = out.length === 0 ? firstMax : max;
+    if (cur && `${cur} ${p}`.length > lim) {
+      out.push(cur);
+      cur = p;
     } else {
-      cur += s;
+      cur = cur ? `${cur} ${p}` : p;
     }
   }
-  if (cur.trim()) out.push(cur.trim());
+  if (cur) out.push(cur);
   return out;
 }
 
@@ -125,6 +166,11 @@ export default function MessageBubble({
     speakingRef.current = speaking;
   }, [speaking]);
 
+  // Nạp sẵn giọng đọc ngay khi có tin AI để lần bấm Nghe đầu tiên không bị trễ
+  useEffect(() => {
+    if (isAI) warmVoices();
+  }, [isAI]);
+
   // Rời màn hình thì tắt tiếng đang đọc
   useEffect(
     () => () => {
@@ -167,18 +213,30 @@ export default function MessageBubble({
     }
     const chunks = speechChunks(toSpeechText(cleanAIText(fullText ?? message.message ?? "")));
     if (chunks.length === 0) return;
-    synth.cancel();
-    const viVoice = synth.getVoices().find((v) => /^vi/i.test(v.lang || ""));
     setSpeaking(true);
-    chunks.forEach((c, i) => {
-      const u = new SpeechSynthesisUtterance(c);
-      u.lang = "vi-VN";
-      if (viVoice) u.voice = viVoice;
-      u.rate = 1;
-      if (i === chunks.length - 1) u.onend = () => setSpeaking(false);
-      u.onerror = () => setSpeaking(false);
-      synth.speak(u);
-    });
+
+    const start = () => {
+      const voice = viVoice || pickViVoice();
+      if (voice) viVoice = voice;
+      synth.resume(); // Android đôi khi để kẹt ở trạng thái tạm dừng
+      chunks.forEach((c, i) => {
+        const u = new SpeechSynthesisUtterance(c);
+        u.lang = "vi-VN";
+        if (voice) u.voice = voice;
+        u.rate = 1;
+        if (i === chunks.length - 1) u.onend = () => setSpeaking(false);
+        u.onerror = () => setSpeaking(false);
+        synth.speak(u);
+      });
+    };
+
+    // Chỉ huỷ khi đang đọc dở (huỷ rồi đọc ngay dễ làm Chrome trễ vài giây, nên chờ một nhịp ngắn)
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+      setTimeout(start, 80);
+    } else {
+      start();
+    }
   }, [fullText, message.message]);
 
   const replyBtn = (
