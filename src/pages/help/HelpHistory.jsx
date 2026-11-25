@@ -87,10 +87,12 @@ function GroupCard({ label, items, onOpenGroup, onOpenTicket }) {
   );
 }
 
-export function HistoryFlow({ onClose, onNew }) {
+// openId: mở thẳng chi tiết yêu cầu có id này (ví dụ bấm từ trang Hồ sơ). Bấm quay về thì gọi onClose.
+export function HistoryFlow({ onClose, onNew, openId }) {
   const [rows, setRows] = useState(null);
   const [tab, setTab] = useState("all");
   const [stack, setStack] = useState([{ s: "list" }]);
+  const [pending, setPending] = useState(Boolean(openId));
   const top = stack[stack.length - 1];
   const push = (x) => setStack((cur) => [...cur, x]);
   const pop = () => (stack.length > 1 ? setStack((cur) => cur.slice(0, -1)) : onClose());
@@ -100,7 +102,11 @@ export function HistoryFlow({ onClose, onNew }) {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
       const uid = s?.session?.user?.id;
-      if (!uid) return setRows([]);
+      if (!uid) {
+        setRows([]);
+        setPending(false);
+        return;
+      }
       const since = new Date();
       since.setMonth(since.getMonth() - 6);
       const { data } = await supabase
@@ -111,7 +117,24 @@ export function HistoryFlow({ onClose, onNew }) {
         .order("created_at", { ascending: false })
         .limit(100);
       setRows(data || []);
+
+      if (openId) {
+        let found = (data || []).find((x) => String(x.id) === String(openId));
+        if (!found) {
+          const { data: one } = await supabase
+            .from("support_tickets")
+            .select("*")
+            .eq("id", openId)
+            .eq("user_id", uid)
+            .maybeSingle();
+          found = one || null;
+        }
+        // Mở thẳng chi tiết: ngăn xếp chỉ còn một màn, nên bấm quay về sẽ gọi onClose (về trang Hồ sơ)
+        if (found) setStack([{ s: "chat", ticket: found }]);
+        setPending(false);
+      }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const groups = useMemo(() => {
@@ -123,6 +146,14 @@ export function HistoryFlow({ onClose, onNew }) {
     });
     return [...map.entries()].map(([key, items]) => ({ key, label: groupLabel(key), items }));
   }, [rows]);
+
+  if (pending) {
+    return (
+      <Screen title="Yêu cầu hỗ trợ" big={false} onClose={onClose}>
+        <div className="hc-card hc-skel h-28 animate-pulse" />
+      </Screen>
+    );
+  }
 
   if (top.s === "chat") return <ChatScreen ticket={top.ticket} onClose={pop} />;
 
@@ -167,4 +198,4 @@ export function HistoryFlow({ onClose, onNew }) {
       )}
     </Screen>
   );
-      }
+}

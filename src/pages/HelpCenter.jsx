@@ -1,6 +1,6 @@
-// src/pages/HelpCenter.jsx — URL: /help, /help?c=tasks, /help?a=t1, /help?q=xu, /help?r=new, /help?r=history
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+// src/pages/HelpCenter.jsx — URL: /help, /help?c=tasks, /help?a=t1, /help?q=xu, /help?r=new, /help?r=history, /help?r=history&t=<id>
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient.js";
 import { HELP_ARTICLES } from "../lib/helpArticles";
 import { HelpNav, Closing, Landscape, Stripes, useHelpTheme } from "./help/HelpParts";
@@ -16,12 +16,24 @@ import "../pages/help/helpOverlay.css";
 export default function HelpCenter() {
   const theme = useHelpTheme();
   const nav = useNavigate();
+  const loc = useLocation();
   const [sp, setSp] = useSearchParams();
   const [q, setQ] = useState(sp.get("q") || "");
   const [onArt, setOnArt] = useState(true);
   const [orders, setOrders] = useState([]);
   const a = sp.get("a"), c = sp.get("c"), query = sp.get("q") || "", r = sp.get("r"), about = sp.get("about") || "";
+  const ticketId = sp.get("t");
   const home = !a && !c && !query;
+
+  // Trang đã gọi /help (ví dụ /profile). Nhớ lại lúc vào trang để bấm quay về thì trở lại đúng chỗ đó
+  const fromRef = useRef(loc.state?.from || null);
+  const entryIdx = useRef(typeof window !== "undefined" ? window.history.state?.idx ?? null : null);
+  const leaveToOrigin = () => {
+    const cur = window.history.state?.idx;
+    // Quay lại đúng số bước đã đi trong /help để không để lại trang trợ giúp trong lịch sử
+    if (entryIdx.current != null && cur != null && cur >= entryIdx.current) nav(entryIdx.current - cur - 1);
+    else nav(fromRef.current, { replace: true });
+  };
 
   const counts = HELP_ARTICLES.reduce((m, x) => ((m[x.cat] = (m[x.cat] || 0) + 1), m), {});
   const go = (params) => { setSp(params); window.scrollTo({ top: 0 }); };
@@ -43,6 +55,8 @@ export default function HelpCenter() {
     ["a", "c", "q"].forEach((k) => { if (sp.get(k)) next[k] = sp.get(k); });
     setSp(next);
   };
+  // Đóng lịch sử / chi tiết yêu cầu: nếu vào từ trang khác (Hồ sơ) thì quay về trang đó, không thì về Trung tâm trợ giúp
+  const closeHistory = () => (fromRef.current ? leaveToOrigin() : closeRequest());
 
   useEffect(() => {
     if (r !== "new") return;
@@ -101,9 +115,7 @@ export default function HelpCenter() {
         <RequestScreen preset={{ about }} orders={orders} onClose={closeRequest}
           onHistory={() => withR("history")} onChat={() => nav("/support")} />
       )}
-      {r === "history" && <HistoryFlow onClose={closeRequest} onNew={() => openRequest()} />}
+      {r === "history" && <HistoryFlow openId={ticketId} onClose={closeHistory} onNew={() => openRequest()} />}
     </div>
   );
-        }
-    
-
+}

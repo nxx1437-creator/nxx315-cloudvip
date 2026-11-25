@@ -1,5 +1,6 @@
 // src/components/profile/HelpCenterCard.jsx — Trung tâm trợ giúp (mềm, gọn) + yêu cầu gần đây
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BookOpen, ChevronRight, Lightbulb, MessageCircle } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { StatusDot } from "../../pages/help/HelpUI.jsx";
@@ -22,6 +23,12 @@ const shortDate = (d) => new Date(d).toLocaleDateString("vi-VN");
 
 export default function HelpCenterCard({ userId, onOpen }) {
   const [tickets, setTickets] = useState([]);
+  const nav = useNavigate();
+  const loc = useLocation();
+
+  // Mở yêu cầu: vào thẳng chi tiết yêu cầu đó; bấm quay về thì trở lại trang Hồ sơ (from)
+  const openTicket = (id) => nav(`/help?r=history&t=${encodeURIComponent(id)}`, { state: { from: loc.pathname } });
+  const openHistory = () => nav("/help?r=history", { state: { from: loc.pathname } });
 
   useEffect(() => {
     if (!userId) return;
@@ -76,7 +83,7 @@ export default function HelpCenterCard({ userId, onOpen }) {
           <div className="flex items-center justify-between px-5 pb-1 pt-3">
             <p className={`text-[14px] font-medium ${GH_MUTED}`}>Yêu cầu gần đây</p>
             <button
-              onClick={() => onOpen("history")}
+              onClick={openHistory}
               className="text-[13.5px] font-medium text-[#0969da] dark:text-[#4493f8]"
             >
               Xem tất cả
@@ -86,7 +93,7 @@ export default function HelpCenterCard({ userId, onOpen }) {
           <ul className="px-2 pb-2">
             {tickets.slice(0, 3).map((t) => (
               <li key={t.id}>
-                <button onClick={() => onOpen("history")} className={ROW}>
+                <button onClick={() => openTicket(t.id)} className={ROW}>
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate text-[14.5px] font-medium leading-5 ${GH_INK}`}>{t.title}</span>
                     <span className={`block truncate text-[12.5px] leading-5 ${GH_MUTED}`}>
