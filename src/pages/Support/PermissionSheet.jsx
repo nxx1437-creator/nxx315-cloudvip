@@ -1,10 +1,22 @@
 // src/pages/Support/PermissionSheet.jsx — hộp xin quyền: Đồng ý / Chỉ một lần / Từ chối (kèm hướng dẫn tự làm)
-// Giao diện theo mẫu bảng "Đã tạm dừng" của Claude: nền trắng, tiêu đề serif, không icon, 3 nút bầu dục gọn
+// Giao diện theo mẫu bảng "Đã tạm dừng" của Claude: nền trắng vuông góc, tiêu đề serif, không icon, 3 nút bầu dục gọn
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, LifeBuoy, ShieldCheck } from "lucide-react";
 
 const PREFIX = "nxx_perm_";
-const SERIF = { fontFamily: '"Tiempos Headline", "Source Serif 4", Georgia, "Times New Roman", serif' };
+// Font Anthropic là bản quyền, dùng Source Serif 4 (hỗ trợ tiếng Việt) là bản miễn phí gần giống nhất
+const SERIF = { fontFamily: '"Source Serif 4", "Tiempos Headline", Georgia, "Times New Roman", serif', fontWeight: 600 };
+const FONT_ID = "nxx-font-source-serif";
+const FONT_HREF = "https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap";
+
+function ensureSerifFont() {
+  if (typeof document === "undefined" || document.getElementById(FONT_ID)) return;
+  const link = document.createElement("link");
+  link.id = FONT_ID;
+  link.rel = "stylesheet";
+  link.href = FONT_HREF;
+  document.head.appendChild(link);
+}
 
 export const PERMS = {
   camera: {
@@ -67,6 +79,10 @@ export function usePermissionSheet() {
   const [denied, setDenied] = useState(false);
   const resolver = useRef(null);
 
+  useEffect(() => {
+    ensureSerifFont();
+  }, []);
+
   const settle = useCallback((ok) => {
     const r = resolver.current;
     resolver.current = null;
@@ -117,19 +133,19 @@ export function usePermissionSheet() {
       <div
         role="dialog"
         aria-modal="true"
-        className="nxx-sheet-in fixed bottom-0 left-0 right-0 z-[70] mx-auto max-w-2xl rounded-t-[26px] bg-white px-8 pb-[max(20px,env(safe-area-inset-bottom))] pt-8"
+        className="nxx-sheet-in fixed bottom-0 left-0 right-0 z-[70] mx-auto max-w-2xl rounded-none bg-white px-8 pb-[max(20px,env(safe-area-inset-bottom))] pt-8"
       >
         {!denied ? (
           <>
             <h3
-              className="text-center text-[22px] font-semibold leading-tight tracking-[-0.01em] text-[#141413]"
+              className="text-center text-[22px] leading-tight tracking-[-0.01em] text-[#141413]"
               style={SERIF}
             >
               Yêu cầu quyền truy cập
             </h3>
             <p className="mt-4 text-center text-[15.5px] leading-[1.6] text-[#3d3d3a]">{info.desc}</p>
             <p className="mt-3 text-center text-[15.5px] text-[#141413]">
-              Quyền: <span className="font-mono text-[14.5px]">[{info.name}]</span>
+              Quyền: <span className="font-mono text-[14.5px]">{info.name}</span>
             </p>
 
             <div className="mt-6 space-y-3">
@@ -147,7 +163,7 @@ export function usePermissionSheet() {
         ) : (
           <>
             <h3
-              className="text-center text-[22px] font-semibold leading-tight tracking-[-0.01em] text-[#141413]"
+              className="text-center text-[22px] leading-tight tracking-[-0.01em] text-[#141413]"
               style={SERIF}
             >
               Bạn đã từ chối
