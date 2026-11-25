@@ -1,5 +1,6 @@
 // src/pages/Support/RatingPrompt.jsx — thẻ "Đánh giá chất lượng hỗ trợ" trong khung chat + bảng chọn mức hài lòng + bảng cảm ơn
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 
 const SERIF = { fontFamily: '"Source Serif 4", "Tiempos Headline", Georgia, "Times New Roman", serif', fontWeight: 600 };
 
@@ -85,8 +86,9 @@ function ThanksArt() {
 const primaryBtn =
   "h-[44px] w-full rounded-full bg-[#0f0f0e] text-[15.5px] font-medium text-white transition active:scale-[0.98] disabled:bg-[#cfcfc8]";
 // Bảng là thẻ nổi bo 4 góc. Chiều cao tối đa tính theo vùng nhìn thấy thật (trừ thanh trình duyệt), quá dài thì cuộn bên trong
+// z-index rất cao + render qua portal ra document.body để lớp mờ phủ kín toàn màn hình (không bị header/khung chat đè lên)
 const SHEET =
-  "nxx-sheet-in fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-3 right-3 z-[70] mx-auto max-w-2xl overflow-y-auto overscroll-contain rounded-[28px] bg-white px-6 pt-6 shadow-[0_8px_40px_rgba(0,0,0,0.16)]";
+  "nxx-sheet-in fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-3 right-3 z-[10001] mx-auto max-w-2xl overflow-y-auto overscroll-contain rounded-[28px] bg-white px-6 pt-6 shadow-[0_8px_40px_rgba(0,0,0,0.16)]";
 const sheetStyle = () => ({
   maxHeight: `${(typeof window !== "undefined" ? window.innerHeight : 700) - 40}px`,
 });
@@ -154,85 +156,87 @@ export default function RatingPrompt({ onSubmit, onDismiss, onDone }) {
         </div>
       </div>
 
-      {open && (
-        <>
-          <div className="nxx-fade fixed inset-0 z-[60] bg-black/25" onClick={closeSheet} />
-          <div role="dialog" aria-modal="true" className={SHEET} style={sheetStyle()}>
-            {!thanks ? (
-              <>
-                <h3 className="text-center text-[20px] leading-tight text-[#141413]" style={SERIF}>
-                  Đánh giá mức độ hài lòng
-                </h3>
+      {open &&
+        createPortal(
+          <>
+            <div className="nxx-fade fixed inset-0 z-[10000] bg-black/25" onClick={closeSheet} />
+            <div role="dialog" aria-modal="true" className={SHEET} style={sheetStyle()}>
+              {!thanks ? (
+                <>
+                  <h3 className="text-center text-[20px] leading-tight text-[#141413]" style={SERIF}>
+                    Đánh giá mức độ hài lòng
+                  </h3>
 
-                <div className="mt-4 flex items-center justify-between px-4">
-                  {[1, 2, 3].map((n) => (
-                    <button key={n} type="button" onClick={() => pick(n)} aria-label={LABELS[n]} aria-pressed={score === n} className="transition active:scale-90">
-                      <Face kind={n} active={score === n} size={46} />
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-1.5 text-center text-[15px] text-[#2b2b2b]">{LABELS[score]}</p>
-
-                <div className="mx-auto mt-3 h-px w-4/5 bg-[#ececE6]" />
-
-                <p className="mt-3 text-center text-[15px] font-semibold leading-snug text-[#2b2b2b]">{group.title}</p>
-                <p className="text-center text-[13px] text-[#8b8b84]">(Có thể chọn nhiều)</p>
-
-                <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
-                  {group.items.map((r) => {
-                    const on = reasons.includes(r);
-                    return (
-                      <button
-                        key={r}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => toggle(r)}
-                        className={`rounded-lg px-3 py-1.5 text-[13.5px] transition active:scale-95 ${
-                          on ? "bg-[#2b2b2b] text-white" : "bg-[#f2f2ee] text-[#55554f]"
-                        }`}
-                      >
-                        {r}
+                  <div className="mt-4 flex items-center justify-between px-4">
+                    {[1, 2, 3].map((n) => (
+                      <button key={n} type="button" onClick={() => pick(n)} aria-label={LABELS[n]} aria-pressed={score === n} className="transition active:scale-90">
+                        <Face kind={n} active={score === n} size={46} />
                       </button>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-center text-[15px] text-[#2b2b2b]">{LABELS[score]}</p>
 
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  maxLength={300}
-                  rows={2}
-                  placeholder="Hãy giúp chúng tôi hiểu hơn"
-                  className="mt-3 w-full resize-none rounded-xl bg-[#f6f6f3] px-4 py-2.5 text-[15px] leading-6 text-[#2b2b2b] outline-none placeholder:text-[#a2a29b]"
-                />
+                  <div className="mx-auto mt-3 h-px w-4/5 bg-[#ececE6]" />
 
-                {err && <p className="mt-2 text-center text-[13.5px] text-rose-600">{err}</p>}
+                  <p className="mt-3 text-center text-[15px] font-semibold leading-snug text-[#2b2b2b]">{group.title}</p>
+                  <p className="text-center text-[13px] text-[#8b8b84]">(Có thể chọn nhiều)</p>
 
-                {/* Nút gửi dính đáy bảng: luôn thấy dù bảng phải cuộn */}
-                <div className="sticky bottom-0 -mx-6 bg-white px-6 pb-5 pt-3">
-                  <button type="button" onClick={send} disabled={busy} className={primaryBtn}>
-                    {busy ? "Đang gửi..." : "Gửi đánh giá"}
-                  </button>
+                  <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
+                    {group.items.map((r) => {
+                      const on = reasons.includes(r);
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => toggle(r)}
+                          className={`rounded-lg px-3 py-1.5 text-[13.5px] transition active:scale-95 ${
+                            on ? "bg-[#2b2b2b] text-white" : "bg-[#f2f2ee] text-[#55554f]"
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    maxLength={300}
+                    rows={2}
+                    placeholder="Hãy giúp chúng tôi hiểu hơn"
+                    className="mt-3 w-full resize-none rounded-xl bg-[#f6f6f3] px-4 py-2.5 text-[15px] leading-6 text-[#2b2b2b] outline-none placeholder:text-[#a2a29b]"
+                  />
+
+                  {err && <p className="mt-2 text-center text-[13.5px] text-rose-600">{err}</p>}
+
+                  {/* Nút gửi dính đáy bảng: luôn thấy dù bảng phải cuộn */}
+                  <div className="sticky bottom-0 -mx-6 bg-white px-6 pb-5 pt-3">
+                    <button type="button" onClick={send} disabled={busy} className={primaryBtn}>
+                      {busy ? "Đang gửi..." : "Gửi đánh giá"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center pb-5 text-center">
+                  <ThanksArt />
+                  <h3 className="mt-3 text-[21px] leading-tight text-[#141413]" style={SERIF}>
+                    Cảm ơn bạn đã góp ý!
+                  </h3>
+                  <p className="mt-2.5 max-w-[22rem] text-[14.5px] leading-6 text-[#6f6f68]">{THANKS[score]}</p>
+                  <div className="mt-5 w-full">
+                    <button type="button" onClick={onDone} className={primaryBtn}>
+                      Hoàn tất
+                    </button>
+                  </div>
+                  <p className="mt-3 text-[13px] text-[#8b8b84]">Thông tin đánh giá của bạn đã được gửi tới NXX315.</p>
                 </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center pb-5 text-center">
-                <ThanksArt />
-                <h3 className="mt-3 text-[21px] leading-tight text-[#141413]" style={SERIF}>
-                  Cảm ơn bạn đã góp ý!
-                </h3>
-                <p className="mt-2.5 max-w-[22rem] text-[14.5px] leading-6 text-[#6f6f68]">{THANKS[score]}</p>
-                <div className="mt-5 w-full">
-                  <button type="button" onClick={onDone} className={primaryBtn}>
-                    Hoàn tất
-                  </button>
-                </div>
-                <p className="mt-3 text-[13px] text-[#8b8b84]">Thông tin đánh giá của bạn đã được gửi tới NXX315.</p>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+              )}
+            </div>
+          </>,
+          document.body
+        )}
     </>
   );
 }
