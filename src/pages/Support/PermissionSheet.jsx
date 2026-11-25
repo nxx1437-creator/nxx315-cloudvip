@@ -1,12 +1,14 @@
 // src/pages/Support/PermissionSheet.jsx — hộp xin quyền: Đồng ý / Chỉ một lần / Từ chối (kèm hướng dẫn tự làm)
+// Giao diện theo mẫu bảng "Đã tạm dừng" của Claude: nền trắng, tiêu đề serif, không icon, 3 nút bầu dục gọn
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, LifeBuoy, ShieldCheck } from "lucide-react";
 
 const PREFIX = "nxx_perm_";
+const SERIF = { fontFamily: '"Tiempos Headline", "Source Serif 4", Georgia, "Times New Roman", serif' };
 
 export const PERMS = {
   camera: {
-    name: "Máy ảnh",
+    name: "máy ảnh",
     desc: "NXX muốn mở máy ảnh để bạn chụp ảnh lỗi hoặc đơn hàng gửi cho hỗ trợ.",
     Icon: Camera,
     guide: [
@@ -17,7 +19,7 @@ export const PERMS = {
     ],
   },
   photos: {
-    name: "Ảnh trong máy (Album)",
+    name: "ảnh trong máy",
     desc: "NXX muốn xem ảnh bạn chọn để gửi cho hỗ trợ. NXX chỉ đọc ảnh bạn bấm chọn, không xem các ảnh khác.",
     Icon: ImageIcon,
     guide: [
@@ -28,7 +30,7 @@ export const PERMS = {
     ],
   },
   account: {
-    name: "Kiểm tra tài khoản",
+    name: "kiểm tra tài khoản",
     desc: "NXX muốn xem đơn hàng, số dư Coin và tình trạng tài khoản của bạn để trả lời chính xác. NXX chỉ đọc, không thay đổi gì.",
     Icon: ShieldCheck,
     guide: [
@@ -39,7 +41,7 @@ export const PERMS = {
     ],
   },
   ticket: {
-    name: "Tạo yêu cầu hỗ trợ",
+    name: "tạo yêu cầu hỗ trợ",
     desc: "NXX muốn tạo giúp bạn một yêu cầu hỗ trợ để nhân viên xử lý vấn đề này. Bạn sẽ nhận mã yêu cầu để theo dõi.",
     Icon: LifeBuoy,
     guide: [
@@ -104,69 +106,65 @@ export function usePermissionSheet() {
 
   const info = req ? PERMS[req.key] : null;
 
+  const primaryBtn =
+    "h-[42px] w-full rounded-full bg-[#0f0f0e] text-[15.5px] font-medium text-white transition active:scale-[0.98]";
+  const outlineBtn =
+    "h-[42px] w-full rounded-full border border-[#e4e2dc] bg-[#fbfaf8] text-[15.5px] font-medium text-[#141413] transition active:scale-[0.98]";
+
   const sheet = info ? (
     <>
-      <div className="nxx-fade fixed inset-0 z-[60] bg-black/25 backdrop-blur-sm" onClick={() => settle(false)} />
+      <div className="nxx-fade fixed inset-0 z-[60] bg-black/20" onClick={() => settle(false)} />
       <div
         role="dialog"
         aria-modal="true"
-        className="nxx-sheet-in fixed bottom-0 left-0 right-0 z-[70] mx-auto max-w-2xl rounded-t-[28px] border border-[#e6e6df] bg-[#fbfbf8] px-6 pb-[max(20px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_40px_rgba(0,0,0,0.12)]"
+        className="nxx-sheet-in fixed bottom-0 left-0 right-0 z-[70] mx-auto max-w-2xl rounded-t-[26px] bg-white px-8 pb-[max(20px,env(safe-area-inset-bottom))] pt-8"
       >
-        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-[#e3e3dc]" />
-
         {!denied ? (
           <>
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#f2f2ee] text-[#2b2b2b]">
-              <info.Icon size={30} strokeWidth={1.7} />
-            </div>
-            <h3 className="mt-4 text-center text-[19px] font-medium tracking-[-0.01em] text-[#2b2b2b]">
+            <h3
+              className="text-center text-[22px] font-semibold leading-tight tracking-[-0.01em] text-[#141413]"
+              style={SERIF}
+            >
               Yêu cầu quyền truy cập
             </h3>
-            <p className="mt-2 text-center text-[16px] font-semibold text-[#2b2b2b]">{info.name}</p>
-            <p className="mx-auto mt-1.5 max-w-[22rem] text-center text-[14.5px] leading-6 text-[#6f6f68]">{info.desc}</p>
+            <p className="mt-4 text-center text-[15.5px] leading-[1.6] text-[#3d3d3a]">{info.desc}</p>
+            <p className="mt-3 text-center text-[15.5px] text-[#141413]">
+              Quyền: <span className="font-mono text-[14.5px]">[{info.name}]</span>
+            </p>
 
-            <div className="mt-6 space-y-2.5">
-              <button
-                type="button"
-                onClick={allowAlways}
-                className="h-[52px] w-full rounded-full bg-[#2b2b2b] text-[16px] font-medium text-white transition active:scale-[0.98]"
-              >
+            <div className="mt-6 space-y-3">
+              <button type="button" onClick={allowAlways} className={primaryBtn}>
                 Đồng ý
               </button>
-              <button
-                type="button"
-                onClick={allowOnce}
-                className="h-[52px] w-full rounded-full border border-[#d9d9d0] bg-white text-[16px] font-medium text-[#2b2b2b] transition active:scale-[0.98]"
-              >
+              <button type="button" onClick={allowOnce} className={outlineBtn}>
                 Chỉ một lần
               </button>
-              <button
-                type="button"
-                onClick={deny}
-                className="h-[52px] w-full rounded-full border border-[#d9d9d0] bg-white text-[16px] font-medium text-[#2b2b2b] transition active:scale-[0.98]"
-              >
+              <button type="button" onClick={deny} className={outlineBtn}>
                 Từ chối
               </button>
             </div>
           </>
         ) : (
           <>
-            <h3 className="text-center text-[19px] font-medium tracking-[-0.01em] text-[#2b2b2b]">Bạn đã từ chối</h3>
-            <p className="mt-2 text-center text-[14.5px] leading-6 text-[#6f6f68]">
+            <h3
+              className="text-center text-[22px] font-semibold leading-tight tracking-[-0.01em] text-[#141413]"
+              style={SERIF}
+            >
+              Bạn đã từ chối
+            </h3>
+            <p className="mt-4 text-center text-[15.5px] leading-[1.6] text-[#3d3d3a]">
               Không sao nè, bạn có thể tự làm theo các bước sau:
             </p>
-            <ol className="mt-4 list-decimal space-y-2.5 rounded-[20px] bg-[#f2f2ee] py-4 pl-9 pr-5 text-[14.5px] leading-6 text-[#2b2b2b]">
+            <ol className="mt-4 list-decimal space-y-2.5 pl-5 text-[15px] leading-[1.6] text-[#3d3d3a]">
               {info.guide.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ol>
-            <button
-              type="button"
-              onClick={() => settle(false)}
-              className="mt-6 h-[52px] w-full rounded-full bg-[#2b2b2b] text-[16px] font-medium text-white transition active:scale-[0.98]"
-            >
-              Đã hiểu
-            </button>
+            <div className="mt-6">
+              <button type="button" onClick={() => settle(false)} className={primaryBtn}>
+                Đã hiểu
+              </button>
+            </div>
           </>
         )}
       </div>
