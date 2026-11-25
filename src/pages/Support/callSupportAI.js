@@ -4,7 +4,8 @@ import { AI_ENDPOINT } from "./constants.js";
 
 const TIMEOUT_MS = 60000;
 
-export async function callSupportAI(conversationId, imageUrl, messageText) {
+// consent: { allow_account_lookup, allow_create_ticket } — người dùng có đồng ý cho AI kiểm tra tài khoản / tạo yêu cầu không
+export async function callSupportAI(conversationId, imageUrl, messageText, consent = {}) {
   if (!conversationId) throw new Error("Thiếu mã cuộc trò chuyện");
 
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -23,6 +24,8 @@ export async function callSupportAI(conversationId, imageUrl, messageText) {
   const bodyPayload = {
     conversation_id: conversationId,
     user_message: userMessage,
+    allow_account_lookup: Boolean(consent.allow_account_lookup),
+    allow_create_ticket: Boolean(consent.allow_create_ticket),
   };
   if (imageUrl) bodyPayload.image_url = imageUrl;
 
@@ -75,4 +78,4 @@ export async function callSupportAI(conversationId, imageUrl, messageText) {
   } finally {
     clearTimeout(timeoutId);
   }
-    }
+}

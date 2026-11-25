@@ -1,6 +1,6 @@
 // src/pages/Support/PermissionSheet.jsx — hộp xin quyền: Đồng ý / Chỉ một lần / Từ chối (kèm hướng dẫn tự làm)
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Image as ImageIcon } from "lucide-react";
+import { Camera, Image as ImageIcon, LifeBuoy, ShieldCheck } from "lucide-react";
 
 const PREFIX = "nxx_perm_";
 
@@ -27,9 +27,31 @@ export const PERMS = {
       "Nếu trình duyệt vẫn chặn: bấm biểu tượng ổ khóa cạnh địa chỉ web > Quyền > Ảnh và tệp > Cho phép, rồi tải lại trang.",
     ],
   },
+  account: {
+    name: "Kiểm tra tài khoản",
+    desc: "NXX muốn xem đơn hàng, số dư Coin và tình trạng tài khoản của bạn để trả lời chính xác. NXX chỉ đọc, không thay đổi gì.",
+    Icon: ShieldCheck,
+    guide: [
+      "Xem đơn hàng: vào Lịch sử đơn, bấm vào đơn cần kiểm tra để xem trạng thái và mã đơn (dạng RBX-xxxxx).",
+      "Xem số dư: vào Ví để xem số Coin và các lần cộng/trừ gần đây.",
+      "Quay lại đây và gõ mã đơn hoặc nội dung bạn thấy, NXX sẽ hướng dẫn tiếp mà không cần xem tài khoản của bạn.",
+      "Muốn NXX tự kiểm tra cho nhanh: gửi lại tin nhắn và chọn Đồng ý.",
+    ],
+  },
+  ticket: {
+    name: "Tạo yêu cầu hỗ trợ",
+    desc: "NXX muốn tạo giúp bạn một yêu cầu hỗ trợ để nhân viên xử lý vấn đề này. Bạn sẽ nhận mã yêu cầu để theo dõi.",
+    Icon: LifeBuoy,
+    guide: [
+      "Vào Trung tâm trợ giúp, chọn Gửi yêu cầu, chọn nhóm vấn đề rồi mô tả chi tiết (kèm ảnh nếu có).",
+      "Ghi rõ mã đơn (RBX-xxxxx), số tiền và thời gian xảy ra để nhân viên xử lý nhanh hơn.",
+      "Cách khác: nhắn Zalo 0865245988 trong giờ hỗ trợ 12:00 - 13:00 (T2 - CN).",
+      "Muốn NXX tạo giúp: gửi lại tin nhắn và chọn Đồng ý.",
+    ],
+  },
 };
 
-function isAlwaysAllowed(key) {
+export function isAlwaysAllowed(key) {
   try {
     return localStorage.getItem(PREFIX + key) === "always";
   } catch {

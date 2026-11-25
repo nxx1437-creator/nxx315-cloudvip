@@ -21,7 +21,8 @@ import ErrorBoundary from "./ChatErrorBoundary.jsx";
 import { callSupportAI } from "./callSupportAI.js";
 import useMessageFeedback from "./useMessageFeedback.js";
 import { useChatLimit } from "./useChatLimit.js";
-import { usePermissionSheet } from "./PermissionSheet.jsx";
+import { usePermissionSheet, isAlwaysAllowed } from "./PermissionSheet.jsx";
+import { neededConsents } from "./consentRules.js";
 import "./chat-effects.css";
 import "./chat-cofounder.css";
 
@@ -96,9 +97,11 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const { feedback, feedbackTarget, openFeedback, closeFeedback, submitFeedback, resetFeedback } =
     useMessageFeedback(conversation, user);
   const [replyTo, setReplyTo] = useState(null);
-  // Giới hạn lượt chat + hộp xin quyền camera/album
+  // Giới hạn lượt chat + hộp xin quyền (camera/album, kiểm tra tài khoản, tạo yêu cầu hỗ trợ)
   const { checkLimit, limitNotice, clearLimitNotice, notifyServerLimit } = useChatLimit(user?.id);
   const { ask: askPerm, sheet: permSheet } = usePermissionSheet();
+  // Quyền người dùng đã đồng ý cho tin đang gửi, gửi kèm khi gọi AI (cả khi bấm Thử lại)
+  const consentRef = useRef({ allow_account_lookup: false, allow_create_ticket: false });
 
   const scrollRef = useRef(null);
   const lastScrollY = useRef(0);
@@ -158,6 +161,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     lastScrollY.current = 0;
     initialSent.current = false;
     titledRef.current = false;
+    consentRef.current = { allow_account_lookup: false, allow_create_ticket: false };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation?.id]);
 
@@ -360,7 +364,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
         }
         if (conv.status !== "ai" && mountedRef.current) setConv((c) => ({ ...c, status: "ai" }));
 
-        const data = await callSupportAI(conversation.id, imageUrl, content);
+        const data = await callSupportAI(conversation.id, imageUrl, content, consentRef.current);
         console.log(`[Support AI] Provider: ${data.provider} (${data.model})`);
         clearTimeout(reloadTimer.current);
         reloadTimer.current = setTimeout(() => {
@@ -398,8 +402,23 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
       alert("Vui lòng đăng nhập để gửi tin nhắn.");
       return;
     }
+
+    // Hỏi quyền trước nếu tin cần AI kiểm tra tài khoản hoặc tạo yêu cầu hỗ trợ.
+    // Từ chối thì không gửi, giữ nguyên nội dung đang gõ và hiện hướng dẫn tự làm.
+    const consent = {
+      allow_account_lookup: isAlwaysAllowed("account"),
+      allow_create_ticket: isAlwaysAllowed("ticket"),
+    };
+    for (const key of neededConsents(typed)) {
+      const ok = await askPerm(key);
+      if (!ok) return;
+      if (key === "account") consent.allow_account_lookup = true;
+      if (key === "ticket") consent.allow_create_ticket = true;
+    }
+
     // Hết lượt thì hiện thông báo, giữ nguyên nội dung đang gõ để gửi sau
     if (!checkLimit()) return;
+    consentRef.current = consent;
 
     const snippet = replyTo ? replyTo.text.replace(/\s+/g, " ").slice(0, 160) : "";
     const content = snippet ? `> ${snippet}\n\n${typed}` : typed;
@@ -470,7 +489,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
     } finally {
       if (mountedRef.current) setSending(false);
     }
-  }, [input, pendingImage, sending, user?.id, replyTo, conv.title, conversation?.id, runAI, scrollToBottom, checkLimit, notifyServerLimit]);
+  }, [input, pendingImage, sending, user?.id, replyTo, conv.title, conversation?.id, runAI, scrollToBottom, checkLimit, notifyServerLimit, askPerm]);
 
   useEffect(() => {
     if (initialMessage && !loading && messages.length > 0 && !initialSent.current) {
