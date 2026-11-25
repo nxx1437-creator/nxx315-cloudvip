@@ -19,7 +19,7 @@ function ChatHeader({ hidden, onHistory, onBack, zaloUrl }) {
       }`}
     >
       <div className="nxx-hdr mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))]">
-        <div className="relative h-[112px]">
+        <div className="relative h-[116px]">
           <button
             type="button"
             onClick={onHistory}
@@ -35,7 +35,8 @@ function ChatHeader({ hidden, onHistory, onBack, zaloUrl }) {
             <div className="nxx-hdr-avatar">
               <img src={AVATAR} alt="NXX" onError={handleAvatarError} />
             </div>
-            <div className="nxx-namepill">NXX Support</div>
+            {/* Đặt dưới avatar, không đè lên avatar nữa */}
+            <div className="nxx-namepill !mt-2.5 whitespace-nowrap">NXX Support</div>
           </div>
 
           <div className="absolute right-0 top-2 flex gap-2">

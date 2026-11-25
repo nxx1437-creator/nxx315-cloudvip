@@ -23,6 +23,8 @@ import useMessageFeedback from "./useMessageFeedback.js";
 import { useChatLimit } from "./useChatLimit.js";
 import { usePermissionSheet, isAlwaysAllowed } from "./PermissionSheet.jsx";
 import { neededConsents } from "./consentRules.js";
+import useRatingPrompt from "./useRatingPrompt.js";
+import RatingPrompt from "./RatingPrompt.jsx";
 import "./chat-effects.css";
 import "./chat-cofounder.css";
 
@@ -576,6 +578,19 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
   const heroSuggestions = isHero ? heroGreeting?.suggestions || [] : [];
   const lastUserIdx = messages.map((m) => m.sender_type).lastIndexOf("user");
 
+  // Lâu lâu mới hiện thẻ đánh giá chất lượng: sau khi AI trả lời xong và không còn đang xử lý gì
+  const userMsgCount = messages.filter((m) => m.sender_type === "user").length;
+  const ratingIdle = !loading && !busy && !aiError && lastMsg?.sender_type === "ai";
+  const rating = useRatingPrompt({
+    conversationId: conversation?.id,
+    userId: user?.id,
+    userMsgCount,
+    idle: ratingIdle,
+  });
+  useEffect(() => {
+    if (rating.visible) scrollToBottom(true);
+  }, [rating.visible, scrollToBottom]);
+
   const pickChip = useCallback(
     (item) => {
       if (item.suggestion) hideAllSuggestions();
@@ -616,7 +631,7 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
           className="nxx-noscrollbar absolute inset-0 overflow-y-auto overscroll-contain"
           style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}
         >
-          <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col px-4 pb-6 pt-[132px]">
+          <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col px-4 pb-6 pt-[136px]">
             <BannerNotice />
             {loading ? (
               <div className="flex flex-1 items-center justify-center">
@@ -744,6 +759,9 @@ function ChatViewContent({ conversation, user, initialMessage, onBack, onNewChat
                       Thử lại
                     </button>
                   </div>
+                )}
+                {rating.visible && (
+                  <RatingPrompt onSubmit={rating.submit} onDismiss={rating.finish} onDone={rating.finish} />
                 )}
               </div>
             )}

@@ -1,5 +1,5 @@
 // src/pages/Support/PermissionSheet.jsx — hộp xin quyền: Đồng ý / Chỉ một lần / Từ chối (kèm hướng dẫn tự làm)
-// Giao diện theo mẫu bảng "Đã tạm dừng" của Claude: nền trắng vuông góc, tiêu đề serif, không icon, 3 nút bầu dục gọn
+// Giao diện theo mẫu bảng "Đã tạm dừng" của Claude: thẻ trắng nổi, bo góc 4 phía, tiêu đề serif, không icon, 3 nút bầu dục gọn
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, LifeBuoy, ShieldCheck } from "lucide-react";
 
@@ -133,7 +133,7 @@ export function usePermissionSheet() {
       <div
         role="dialog"
         aria-modal="true"
-        className="nxx-sheet-in fixed bottom-0 left-0 right-0 z-[70] mx-auto max-w-2xl rounded-none bg-white px-8 pb-[max(20px,env(safe-area-inset-bottom))] pt-8"
+        className="nxx-sheet-in fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-3 right-3 z-[70] mx-auto max-h-[88vh] max-w-2xl overflow-y-auto rounded-[28px] bg-white px-7 pb-6 pt-8 shadow-[0_8px_40px_rgba(0,0,0,0.16)]"
       >
         {!denied ? (
           <>
