@@ -72,7 +72,7 @@ function Face({ kind, active = true, size = 52 }) {
 
 function ThanksArt() {
   return (
-    <svg width="150" height="120" viewBox="0 0 150 120" aria-hidden="true">
+    <svg width="130" height="104" viewBox="0 0 150 120" aria-hidden="true">
       <path d="M22 18h86a14 14 0 0 1 14 14v38a14 14 0 0 1-14 14H70l-18 18v-18H22A14 14 0 0 1 8 70V32a14 14 0 0 1 14-14z" fill="#2b2b2b" />
       <rect x="30" y="38" width="60" height="7" rx="3.5" fill="#fff" />
       <rect x="30" y="54" width="38" height="7" rx="3.5" fill="#fff" opacity=".85" />
@@ -83,9 +83,13 @@ function ThanksArt() {
 }
 
 const primaryBtn =
-  "h-[46px] w-full rounded-full bg-[#0f0f0e] text-[15.5px] font-medium text-white transition active:scale-[0.98] disabled:bg-[#cfcfc8]";
+  "h-[44px] w-full rounded-full bg-[#0f0f0e] text-[15.5px] font-medium text-white transition active:scale-[0.98] disabled:bg-[#cfcfc8]";
+// Bảng là thẻ nổi bo 4 góc. Chiều cao tối đa tính theo vùng nhìn thấy thật (trừ thanh trình duyệt), quá dài thì cuộn bên trong
 const SHEET =
-  "nxx-sheet-in fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-3 right-3 z-[70] mx-auto max-h-[88vh] max-w-2xl overflow-y-auto rounded-[28px] bg-white px-6 pb-6 pt-7 shadow-[0_8px_40px_rgba(0,0,0,0.16)]";
+  "nxx-sheet-in fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-3 right-3 z-[70] mx-auto max-w-2xl overflow-y-auto overscroll-contain rounded-[28px] bg-white px-6 pt-6 shadow-[0_8px_40px_rgba(0,0,0,0.16)]";
+const sheetStyle = () => ({
+  maxHeight: `${(typeof window !== "undefined" ? window.innerHeight : 700) - 40}px`,
+});
 
 // onSubmit({ score, reasons, comment }) -> Promise<{ ok }> ; onDismiss: bỏ qua ; onDone: xong, ẩn thẻ
 export default function RatingPrompt({ onSubmit, onDismiss, onDone }) {
@@ -153,28 +157,28 @@ export default function RatingPrompt({ onSubmit, onDismiss, onDone }) {
       {open && (
         <>
           <div className="nxx-fade fixed inset-0 z-[60] bg-black/25" onClick={closeSheet} />
-          <div role="dialog" aria-modal="true" className={SHEET}>
+          <div role="dialog" aria-modal="true" className={SHEET} style={sheetStyle()}>
             {!thanks ? (
               <>
-                <h3 className="text-center text-[21px] leading-tight text-[#141413]" style={SERIF}>
+                <h3 className="text-center text-[20px] leading-tight text-[#141413]" style={SERIF}>
                   Đánh giá mức độ hài lòng
                 </h3>
 
-                <div className="mt-5 flex items-center justify-between px-3">
+                <div className="mt-4 flex items-center justify-between px-4">
                   {[1, 2, 3].map((n) => (
                     <button key={n} type="button" onClick={() => pick(n)} aria-label={LABELS[n]} aria-pressed={score === n} className="transition active:scale-90">
-                      <Face kind={n} active={score === n} size={56} />
+                      <Face kind={n} active={score === n} size={46} />
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-center text-[16px] text-[#2b2b2b]">{LABELS[score]}</p>
+                <p className="mt-1.5 text-center text-[15px] text-[#2b2b2b]">{LABELS[score]}</p>
 
-                <div className="mx-auto mt-4 h-px w-4/5 bg-[#ececE6]" />
+                <div className="mx-auto mt-3 h-px w-4/5 bg-[#ececE6]" />
 
-                <p className="mt-4 text-center text-[16px] font-semibold leading-snug text-[#2b2b2b]">{group.title}</p>
-                <p className="text-center text-[14px] text-[#8b8b84]">(Có thể chọn nhiều)</p>
+                <p className="mt-3 text-center text-[15px] font-semibold leading-snug text-[#2b2b2b]">{group.title}</p>
+                <p className="text-center text-[13px] text-[#8b8b84]">(Có thể chọn nhiều)</p>
 
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
                   {group.items.map((r) => {
                     const on = reasons.includes(r);
                     return (
@@ -183,7 +187,7 @@ export default function RatingPrompt({ onSubmit, onDismiss, onDone }) {
                         type="button"
                         aria-pressed={on}
                         onClick={() => toggle(r)}
-                        className={`rounded-lg px-3 py-1.5 text-[14px] transition active:scale-95 ${
+                        className={`rounded-lg px-3 py-1.5 text-[13.5px] transition active:scale-95 ${
                           on ? "bg-[#2b2b2b] text-white" : "bg-[#f2f2ee] text-[#55554f]"
                         }`}
                       >
@@ -197,27 +201,28 @@ export default function RatingPrompt({ onSubmit, onDismiss, onDone }) {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={300}
-                  rows={4}
+                  rows={2}
                   placeholder="Hãy giúp chúng tôi hiểu hơn"
-                  className="mt-4 w-full resize-none rounded-xl bg-[#f6f6f3] px-4 py-3 text-[15px] leading-6 text-[#2b2b2b] outline-none placeholder:text-[#a2a29b]"
+                  className="mt-3 w-full resize-none rounded-xl bg-[#f6f6f3] px-4 py-2.5 text-[15px] leading-6 text-[#2b2b2b] outline-none placeholder:text-[#a2a29b]"
                 />
 
                 {err && <p className="mt-2 text-center text-[13.5px] text-rose-600">{err}</p>}
 
-                <div className="mt-4">
+                {/* Nút gửi dính đáy bảng: luôn thấy dù bảng phải cuộn */}
+                <div className="sticky bottom-0 -mx-6 bg-white px-6 pb-5 pt-3">
                   <button type="button" onClick={send} disabled={busy} className={primaryBtn}>
                     {busy ? "Đang gửi..." : "Gửi đánh giá"}
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center text-center">
+              <div className="flex flex-col items-center pb-5 text-center">
                 <ThanksArt />
-                <h3 className="mt-4 text-[22px] leading-tight text-[#141413]" style={SERIF}>
+                <h3 className="mt-3 text-[21px] leading-tight text-[#141413]" style={SERIF}>
                   Cảm ơn bạn đã góp ý!
                 </h3>
-                <p className="mt-3 max-w-[22rem] text-[15px] leading-6 text-[#6f6f68]">{THANKS[score]}</p>
-                <div className="mt-6 w-full">
+                <p className="mt-2.5 max-w-[22rem] text-[14.5px] leading-6 text-[#6f6f68]">{THANKS[score]}</p>
+                <div className="mt-5 w-full">
                   <button type="button" onClick={onDone} className={primaryBtn}>
                     Hoàn tất
                   </button>
