@@ -21,6 +21,18 @@ const ROW =
 
 const shortDate = (d) => new Date(d).toLocaleDateString("vi-VN");
 
+// Yêu cầu đã hoàn thành quá 3 ngày thì ẩn khỏi mục "Yêu cầu gần đây" (vẫn xem được trong Lịch sử yêu cầu)
+const DONE_STATUS = ["resolved", "closed"];
+const HIDE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+
+function isStale(t, now = Date.now()) {
+  if (!DONE_STATUS.includes(t.status)) return false;
+  // mốc hoàn thành: ưu tiên cột riêng nếu có, không có thì lấy lần cập nhật cuối
+  const doneAt = new Date(t.resolved_at || t.closed_at || t.updated_at || t.created_at).getTime();
+  if (Number.isNaN(doneAt)) return false;
+  return now - doneAt > HIDE_AFTER_MS;
+}
+
 export default function HelpCenterCard({ userId, onOpen }) {
   const [tickets, setTickets] = useState([]);
   const nav = useNavigate();
@@ -38,12 +50,14 @@ export default function HelpCenterCard({ userId, onOpen }) {
       since.setMonth(since.getMonth() - 6);
       const { data } = await supabase
         .from("support_tickets")
-        .select("id,ticket_code,title,status,created_at")
+        .select("*")
         .eq("user_id", userId)
         .gte("created_at", since.toISOString())
         .order("created_at", { ascending: false })
-        .limit(5);
-      if (alive) setTickets(data || []);
+        .limit(15);
+      if (!alive) return;
+      const now = Date.now();
+      setTickets((data || []).filter((t) => !isStale(t, now)).slice(0, 5));
     })();
     return () => {
       alive = false;
