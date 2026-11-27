@@ -63,18 +63,23 @@ export function CosmeticFrame({ userId, cosmetic, w = 3 }) {
   return null;
 }
 
-export function CosmeticAvatar({ src, size = 48, userId, cosmetic, name = "?", className = "" }) {
+// nếu không truyền src/name thì tự lấy avatar + tên từ dữ liệu cosmetics của userId
+export function CosmeticAvatar({ src, size = 48, userId, cosmetic, name, className = "" }) {
+  const own = useCosmetic(cosmetic ? null : userId);
+  const c = cosmetic || own;
+  const img = src || c?.avatar_url;
+  const label = name || c?.username || "?";
   const w = Math.max(2.5, Math.round(size * 0.07 * 10) / 10);
   return (
     <span className={`cx-avatar ${className}`} style={{ width: size, height: size }}>
-      {src ? (
-        <img className="cx-img" src={src} alt="" />
+      {img ? (
+        <img className="cx-img" src={img} alt="" />
       ) : (
         <span
           className="cx-img"
           style={{ display: "grid", placeItems: "center", background: "#e0f2fe", color: "#0369a1", fontWeight: 700, fontSize: size * 0.4 }}
         >
-          {String(name).slice(0, 1).toUpperCase()}
+          {String(label).slice(0, 1).toUpperCase()}
         </span>
       )}
       <CosmeticFrame userId={userId} cosmetic={cosmetic} w={w} />

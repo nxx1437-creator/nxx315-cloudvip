@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import CommentDrawer from "../components/community/CommentDrawer";
+import { CosmeticEffect, CosmeticFrame } from "../components/cosmetics/Cosmetics.jsx";
 import {
   fetchPosts,
   getMyReactions,
@@ -19,24 +20,29 @@ function PostCard({
   onOpenComments,
 }) {
   const author = post.author || {};
+  const authorId = post.author_id || author.id;
 
   return (
     <article className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
       {/* Author */}
-      <div className="flex items-center gap-3 p-4">
-        {author.avatar_url ? (
-          <img
-            src={author.avatar_url}
-            alt=""
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">
-            {(author.username || "?").charAt(0).toUpperCase()}
-          </div>
-        )}
+      <div className="relative flex items-center gap-3 overflow-hidden p-4">
+        <CosmeticEffect userId={authorId} count={8} />
+        <span className="relative z-[2] h-10 w-10 shrink-0">
+          {author.avatar_url ? (
+            <img
+              src={author.avatar_url}
+              alt=""
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">
+              {(author.username || "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <CosmeticFrame userId={authorId} w={3} />
+        </span>
 
-        <div className="min-w-0">
+        <div className="relative z-[2] min-w-0">
           <div className="flex items-center gap-1">
             <span className="font-semibold text-white truncate">
               {author.username || "Người dùng"}
