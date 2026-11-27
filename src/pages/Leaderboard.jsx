@@ -1,7 +1,7 @@
 // src/pages/Leaderboard.jsx — bảng xếp hạng trực tiếp (bấm avatar/tên để xem trang cá nhân)
 // - Giao diện theo trang Xếp hạng của web creator: hero chữ gradient, thẻ bo lớn, nhãn mono
 // - Tự cập nhật mỗi 8 giây; ai kiếm thêm Coin sẽ có hiệu ứng xu nhảy lên + số đếm tăng dần
-// - LbAvatar vẫn được export cho PublicProfile.jsx dùng
+// - LbAvatar vẫn được export cho PublicProfile.jsx dùng (thêm userId => hiện khung avatar đã mua)
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Coins, Crown, Flame } from "lucide-react";
@@ -11,6 +11,7 @@ import BottomNav from "../components/BottomNav.jsx";
 import useSession from "../hooks/useSession.js";
 import { supabase } from "../lib/supabaseClient.js";
 import VerifiedBadge from "../components/VerifiedBadge.jsx"; // ✓
+import { CosmeticEffect, CosmeticFrame } from "../components/cosmetics/Cosmetics.jsx";
 
 const TABS = [
   { key: "week", label: "Tuần này", note: "7 ngày gần nhất" },
@@ -65,27 +66,33 @@ const CSS = `
 }
 `;
 
-/* ---------- Avatar có chữ cái dự phòng ---------- */
-export function LbAvatar({ src, name, size = "h-12 w-12", text = "text-base", ring = "" }) {
+/* ---------- Avatar có chữ cái dự phòng (+ khung đã mua nếu có userId) ---------- */
+export function LbAvatar({ src, name, size = "h-12 w-12", text = "text-base", ring = "", userId, frameW = 3 }) {
   const [failed, setFailed] = useState(false);
   const initial = (name || "U").charAt(0).toUpperCase();
 
-  if (src && !failed) {
-    return (
+  const body =
+    src && !failed ? (
       <img
         src={src}
         alt=""
         onError={() => setFailed(true)}
         className={`${size} ${ring} shrink-0 rounded-full object-cover`}
       />
+    ) : (
+      <div
+        className={`${size} ${text} ${ring} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-slate-800`}
+      >
+        {initial}
+      </div>
     );
-  }
+
+  if (!userId) return body;
   return (
-    <div
-      className={`${size} ${text} ${ring} flex shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-slate-800`}
-    >
-      {initial}
-    </div>
+    <span className="relative inline-flex shrink-0 rounded-full">
+      {body}
+      <CosmeticFrame userId={userId} w={frameW} />
+    </span>
   );
 }
 
@@ -223,6 +230,8 @@ function Spot({ user, rank, burst, onOpen }) {
               size={s.avatar}
               text={s.text}
               ring="ring-2 ring-white dark:ring-slate-900"
+              userId={user.id}
+              frameW={rank === 1 ? 5 : 4}
             />
           </span>
           <span
@@ -294,7 +303,7 @@ function RankRow({ user, rank, mine, burst, onOpen }) {
       } ${burst ? "lb-flash" : ""}`}
     >
       <span className="w-7 shrink-0 text-center font-mono text-[15px] font-bold text-slate-400">{rank}</span>
-      <LbAvatar src={user.avatar_url} name={name} size="h-11 w-11" />
+      <LbAvatar src={user.avatar_url} name={name} size="h-11 w-11" userId={user.id} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[15px] font-bold text-slate-900 dark:text-white">{name}</span>
@@ -469,6 +478,7 @@ export default function Leaderboard() {
         {/* Hạng của bạn */}
         {!loading && myId && users.length > 0 && (
           <Card className="px-6 pb-6 pt-6 text-center">
+            <CosmeticEffect userId={myId} />
             <div className="relative mx-auto w-fit">
               <LbAvatar
                 src={myAvatar}
@@ -476,6 +486,8 @@ export default function Leaderboard() {
                 size="h-[76px] w-[76px]"
                 text="text-3xl"
                 ring="ring-4 ring-emerald-100 dark:ring-emerald-400/20"
+                userId={myId}
+                frameW={5}
               />
               <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-700 px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-white">
                 Lv.{me?.level || 1}
