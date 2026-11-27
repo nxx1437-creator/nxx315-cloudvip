@@ -55,18 +55,10 @@ const GLYPH = { snow: "•", hearts: "♥", sparkle: "✦", firefly: "●", conf
 const fileUrl = (f) => supabase.storage.from("game_logos").getPublicUrl(f).data.publicUrl;
 
 // vòng khung — cha phải có position: relative
-// khung dạng ảnh (vd. TechRingFrame): có lớp hồng nhạt ôm nhẹ quanh avatar nằm dưới ảnh, và ảnh nhỏ lại trên điện thoại (cosmetics.css)
 export function CosmeticFrame({ userId, cosmetic, w = 3 }) {
   const own = useCosmetic(cosmetic ? null : userId);
   const c = cosmetic || own;
-  if (c?.frame_image) {
-    return (
-      <>
-        <span className="cx-frame-glow" />
-        <img className="cx-frame-img" src={fileUrl(c.frame_image)} alt="" />
-      </>
-    );
-  }
+  if (c?.frame_image) return <img className="cx-frame-img" src={fileUrl(c.frame_image)} alt="" />;
   if (c?.frame_style) return <span className={`cx-ring cx-f-${c.frame_style}`} style={{ "--w": `${w}px` }} />;
   return null;
 }
@@ -100,8 +92,9 @@ export function CosmeticEffect({ userId, cosmetic, count = 14 }) {
   const c = cosmetic || own;
   if (!c?.effect_style && !c?.effect_image) return null;
   if (c.effect_image) {
+    // hiệu ứng dạng ảnh (vd. con thỏ chấm): trên điện thoại hiển thị nguyên ảnh, không cắt; có lớp hồng nhạt ôm viền (cosmetics.css)
     return (
-      <div className="cx-fx">
+      <div className="cx-fx cx-fx-pic">
         <img className="cx-fx-img" src={fileUrl(c.effect_image)} alt="" />
       </div>
     );

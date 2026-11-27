@@ -4,16 +4,6 @@
   -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--w,3px)),#000 calc(100% - var(--w,3px) + .5px));
   mask:radial-gradient(farthest-side,transparent calc(100% - var(--w,3px)),#000 calc(100% - var(--w,3px) + .5px))}
 .cx-frame-img{position:absolute;inset:-18%;width:136%;height:136%;max-width:none;object-fit:contain;pointer-events:none}
-
-/* khung ảnh: lớp hồng nhạt nằm dưới ảnh khung, chỉ ôm sát viền avatar (phần giữa trong suốt) — không lan xuống tên */
-.cx-frame-glow{position:absolute;inset:-6%;border-radius:50%;pointer-events:none;
-  background:radial-gradient(circle,rgba(251,207,232,0) 84%,rgba(251,207,232,.55) 94%,rgba(251,207,232,0) 100%);
-  box-shadow:0 0 8px 1px rgba(249,168,212,.3)}
-@media (max-width:640px){
-  /* điện thoại: thu nhỏ khung ảnh để không lấn xuống tên */
-  .cx-frame-img{inset:-8%;width:116%;height:116%}
-  .cx-frame-glow{inset:-4%}
-}
 @keyframes cx-spin{to{transform:rotate(360deg)}}
 
 .cx-f-neon{background:conic-gradient(#22d3ee,#0ea5e9,#67e8f9,#22d3ee);filter:drop-shadow(0 0 4px #22d3ee)}
@@ -29,6 +19,15 @@
 
 .cx-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit;z-index:1}
 .cx-fx-img{width:100%;height:100%;object-fit:cover;opacity:.45}
+
+/* hiệu ứng dạng ảnh: lớp hồng nhạt nằm dưới ảnh, chỉ ôm nhẹ phần viền (giữa trong suốt nên không che tên) */
+.cx-fx-pic::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(251,207,232,0) 62%,rgba(251,207,232,.35) 100%)}
+.cx-fx-pic .cx-fx-img{position:relative}
+@media (max-width:640px){
+  /* điện thoại: hiển thị nguyên ảnh (nhỏ lại cho thấy cả con thỏ), nằm giữa thẻ */
+  .cx-fx-pic .cx-fx-img{position:absolute;inset:0;margin:auto;object-fit:contain}
+}
 .cx-p{position:absolute;left:var(--x);top:-8%;font-size:var(--s);line-height:1;opacity:0;
   animation:cx-fall var(--d) linear var(--dl) infinite}
 @keyframes cx-fall{0%{top:-8%;transform:rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{top:108%;transform:rotate(360deg);opacity:0}}
