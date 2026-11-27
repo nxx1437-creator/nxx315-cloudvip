@@ -3,5 +3,6 @@ import React from "react";
 import CosmeticEditor from "../cosmetics/CosmeticEditor.jsx";
 
 export default function CosmeticPicker({ kind = "frame", onClose, onChanged }) {
-  return <CosmeticEditor initialKind={kind} onBack={onClose} onChanged={onChanged} />;
+  // overlay: phủ kín trang cá nhân bên dưới nên chỉ còn 1 thanh đầu trang
+  return <CosmeticEditor overlay initialKind={kind} onBack={onClose} onChanged={onChanged} />;
 }
