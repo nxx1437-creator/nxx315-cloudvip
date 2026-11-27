@@ -269,24 +269,28 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pb-10">
-        <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-4 sm:px-6 sm:pt-6 lg:pb-10">
+        <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-6">
           {/* ===== Xem trước ===== */}
           <aside className="space-y-4 lg:sticky lg:top-24">
             <Box title="Xem trước">
-              <div className="bg-[#f6f8fa] px-4 py-6">
+              <div className="bg-[#f6f8fa] px-4 py-5">
                 {kind === "frame" ? (
                   <button
                     type="button"
                     onClick={goToGrid}
                     aria-label="Chọn khung"
-                    className="mx-auto flex flex-col items-center gap-2 lg:cursor-default"
+                    className="mx-auto flex flex-col items-center lg:cursor-default"
                   >
-                    <div className="relative" style={{ width: "min(180px, 46vw)", height: "min(180px, 46vw)" }}>
+                    {/* m-3: chừa chỗ cho viền khung nằm ngoài avatar */}
+                    <div
+                      className="relative m-3"
+                      style={{ width: "min(150px, 40vw)", height: "min(150px, 40vw)" }}
+                    >
                       <div className="h-full w-full overflow-hidden rounded-full bg-[#eaeef2]">{avatarFill}</div>
                       <CosmeticFrame cosmetic={previewCos} w={12} />
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#0969da] lg:hidden">
+                    <span className="mt-4 inline-flex items-center gap-1 text-[12px] font-semibold text-[#0969da] lg:hidden">
                       Bấm để chọn khung <ChevronDown size={14} />
                     </span>
                   </button>
@@ -321,38 +325,41 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
               </div>
             </Box>
 
-            <Box title="Màu hồ sơ">
-              <div className="px-4 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  {SWATCHES.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      aria-label={`Màu ${c}`}
-                      onClick={() => pickColor(c)}
-                      className={`h-7 w-7 rounded-md border transition hover:scale-105 ${
-                        color.toLowerCase() === c
-                          ? "border-[#0969da] ring-2 ring-[#0969da] ring-offset-2"
-                          : "border-[#d0d7de]"
-                      }`}
-                      style={{ background: c }}
-                    />
-                  ))}
-                  <label className="relative flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-[#d0d7de] bg-white px-2 text-[12px] font-semibold hover:bg-[#f6f8fa]">
-                    <span className="h-3.5 w-3.5 rounded-sm border border-[#d0d7de]" style={{ background: color }} />
-                    Tùy chọn
-                    <input
-                      type="color"
-                      value={color}
-                      onChange={(e) => pickColor(e.target.value)}
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                      aria-label="Chọn màu tùy ý"
-                    />
-                  </label>
+            {/* Màu hồ sơ chỉ áp lên ảnh bìa nên chỉ hiện ở tab Hiệu ứng */}
+            {kind === "effect" && (
+              <Box title="Màu hồ sơ">
+                <div className="px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {SWATCHES.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        aria-label={`Màu ${c}`}
+                        onClick={() => pickColor(c)}
+                        className={`h-7 w-7 rounded-md border transition hover:scale-105 ${
+                          color.toLowerCase() === c
+                            ? "border-[#0969da] ring-2 ring-[#0969da] ring-offset-2"
+                            : "border-[#d0d7de]"
+                        }`}
+                        style={{ background: c }}
+                      />
+                    ))}
+                    <label className="relative flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-[#d0d7de] bg-white px-2 text-[12px] font-semibold hover:bg-[#f6f8fa]">
+                      <span className="h-3.5 w-3.5 rounded-sm border border-[#d0d7de]" style={{ background: color }} />
+                      Tùy chọn
+                      <input
+                        type="color"
+                        value={color}
+                        onChange={(e) => pickColor(e.target.value)}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        aria-label="Chọn màu tùy ý"
+                      />
+                    </label>
+                  </div>
+                  <p className="mt-2 text-[12px] text-[#656d76]">Màu này áp dụng cho ảnh bìa mặc định của hồ sơ.</p>
                 </div>
-                <p className="mt-2 text-[12px] text-[#656d76]">Màu này áp dụng cho ảnh bìa mặc định của hồ sơ.</p>
-              </div>
-            </Box>
+              </Box>
+            )}
 
             <div className="hidden lg:block">{SaveButton}</div>
           </aside>
