@@ -1,7 +1,10 @@
 // src/components/profile/GhProfile.jsx — khung hồ sơ kiểu GitHub: (bìa nếu có), avatar, tên, số liệu, thông tin, huy hiệu
 import React, { useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Camera, Loader2 } from "lucide-react";
 import VerifiedBadge from "../VerifiedBadge.jsx";
+import useSession from "../../hooks/useSession.js";
+import { CosmeticEffect, CosmeticFrame } from "../cosmetics/Cosmetics.jsx";
 
 export const GH_LINE = "border-[#d0d7de] dark:border-[#30363d]";
 export const GH_INK = "text-[#1f2328] dark:text-[#e6edf3]";
@@ -64,15 +67,22 @@ export default function GhProfile({
   avatarUrl, initial = "T", onAvatar,
   name = "", verified = false, sub,
   stats = [], meta = [], badges = [], actions,
+  userId: userIdProp,
 }) {
   const fileRef = useRef(null);
   const Avatar = onAvatar ? "button" : "div";
   const hasCover = !!cover; // không có ảnh bìa thì không vẽ khung bìa (như GitHub)
 
+  // chủ hồ sơ: prop > /u/:userId > chính mình (trang /profile)
+  const { userId: routeId } = useParams();
+  const { session } = useSession();
+  const uid = userIdProp || routeId || session?.user?.id;
+
   const busyIcon = coverBusy ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />;
 
   return (
-    <div className="pb-4">
+    <div className="relative overflow-hidden pb-4">
+      <CosmeticEffect userId={uid} />
       {onPickCover && (
         <input
           ref={fileRef}
@@ -87,7 +97,7 @@ export default function GhProfile({
         />
       )}
 
-      {/* ẢNH BÌA (chỉ khi đã có) */}
+      {/* ẢNH BÊA (chỉ khi đã có) */}
       {hasCover && (
         <div className="relative h-36 w-full overflow-hidden bg-[#d0d7de] dark:bg-[#21262d]">
           <img src={cover} alt="" className="h-full w-full object-cover" />
@@ -131,6 +141,7 @@ export default function GhProfile({
                 {initial}
               </span>
             )}
+            <CosmeticFrame userId={uid} w={6} />
             {onAvatar && (
               <span className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-[#d0d7de] bg-[#f6f8fa] text-[#59636e] dark:border-[#30363d] dark:bg-[#21262d] dark:text-[#9198a1]">
                 <Camera size={13} />
@@ -285,4 +296,4 @@ export function StatList({ items = [] }) {
       ))}
     </ul>
   );
-        }
+}

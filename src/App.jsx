@@ -47,6 +47,7 @@ const Notifications = lazy(() => import("./pages/Notifications.jsx"));
 const TaskCallback = lazy(() => import("./pages/TaskCallback.jsx"));
 const Feed = lazy(() => import("./pages/Feed.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
+const CosmeticsShop = lazy(() => import("./pages/CosmeticsShop.jsx"));
 
 /* Creator */
 const CreatorLayout = lazy(() => import("./pages/creator/CreatorLayout.jsx"));
@@ -135,6 +136,7 @@ export default function App() {
                 <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
                 <Route path="/store" element={<ProtectedRoute><Store /></ProtectedRoute>} />
                 <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
+                <Route path="/cosmetics" element={<ProtectedRoute><CosmeticsShop /></ProtectedRoute>} />
 
                 {/* Creator */}
                 <Route

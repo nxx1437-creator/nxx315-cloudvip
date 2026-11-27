@@ -1,5 +1,6 @@
 // src/pages/Support/MessageBubble.jsx — AI: chữ rộng hết khung, không bóng, nút thao tác nằm dưới (kiểu Gemini); bạn: bóng kem + nút trả lời, sao chép
 // Một câu trả lời AI có thể được tách thành nhiều tin (partIndex/partCount): chỉ tin đầu có khối suy nghĩ + ảnh, chỉ tin cuối có nút thao tác
+// Tin của bạn: nếu đang dùng khung avatar (mua bằng xu) thì hiện avatar nhỏ có khung bên phải bóng tin
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Copy, Reply, Sparkles, Square, ThumbsDown, ThumbsUp, Volume2 } from "lucide-react";
@@ -10,6 +11,8 @@ import { parseActionsFromText } from "./bubbleActions.js";
 import { QuotedText, splitQuote } from "./ChatBits.jsx";
 import ThinkingBlock from "./ThinkingBlock.jsx";
 import { takeThinking } from "./thinkingStore.js";
+import useSession from "../../hooks/useSession.js";
+import { CosmeticAvatar, useCosmetic } from "../../components/cosmetics/Cosmetics.jsx";
 
 function SideBtn({ label, onClick, disabled, className = "", pressed, children }) {
   return (
@@ -156,6 +159,12 @@ export default function MessageBubble({
     (typeof message.image_url === "string" &&
       /\.(mp4|webm|mov|m3u8)$/i.test(message.image_url));
 
+  // Khung avatar đã mua của chính mình (chỉ với tin của bạn)
+  const { session } = useSession();
+  const meId = isUser ? session?.user?.id : null;
+  const myCos = useCosmetic(meId);
+  const showMe = Boolean(myCos?.frame_style || myCos?.frame_image);
+
   // Đồng bộ trạng thái ảnh đã cache xong (nếu có) sau khi mount
   useEffect(() => {
     const el = imgElRef.current;
@@ -276,12 +285,17 @@ export default function MessageBubble({
               {copyBtn}
             </div>
             <div
-              className={`nxx-user-pill min-w-0 max-w-[calc(100%-80px)] rounded-[24px] px-4 py-3 ${
-                animateIn ? "is-new" : ""
-              }`}
+              className={`nxx-user-pill min-w-0 rounded-[24px] px-4 py-3 ${
+                showMe ? "max-w-[calc(100%-118px)]" : "max-w-[calc(100%-80px)]"
+              } ${animateIn ? "is-new" : ""}`}
             >
               <QuotedText text={message.message} />
             </div>
+            {showMe && (
+              <span className="ml-2 shrink-0 self-end">
+                <CosmeticAvatar userId={meId} size={30} />
+              </span>
+            )}
           </div>
         )}
         {lightbox && (
