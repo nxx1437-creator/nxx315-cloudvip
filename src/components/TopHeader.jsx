@@ -50,6 +50,8 @@ export default function TopHeader({ variant = "default" }) {
 
   const searchRef = useRef(null);
   const notifRef = useRef(null);
+  // mỗi thanh đầu trang một mã riêng → 2 thanh cùng mở không đụng kênh realtime của nhau
+  const instanceId = useRef(Math.random().toString(36).slice(2, 10));
 
   const displayName =
     profile?.username ||
@@ -90,7 +92,7 @@ export default function TopHeader({ variant = "default" }) {
     loadNotifs();
 
     const channel = supabase
-      .channel(`notifications-${session.user.id}`)
+      .channel(`notifications-${session.user.id}-${instanceId.current}`)
       .on(
         "postgres_changes",
         {
@@ -398,5 +400,4 @@ export default function TopHeader({ variant = "default" }) {
       />
     </>
   );
-  }
-      
+}
