@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Ban, Check, Coins, Lock } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import useSession from "../../hooks/useSession.js";
+import TopHeader from "../TopHeader.jsx";
 import { CosmeticEffect, CosmeticFrame, refreshCosmetics } from "./Cosmetics.jsx";
 
 const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
@@ -218,8 +219,11 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
 
   return (
     <div className="min-h-screen bg-white text-[#1f2328]" style={FONT}>
-      {/* Thanh trên cùng */}
-      <div className="border-b border-[#d0d7de] bg-[#f6f8fa]">
+      {/* Thanh đầu trang của web (logo, tìm kiếm, thông báo, ngôn ngữ, avatar) */}
+      <TopHeader variant="gh" />
+
+      {/* Thanh tiêu đề trang */}
+      <div className="border-b border-[#d0d7de] bg-white">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
           <button
             type="button"
@@ -244,7 +248,7 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
       <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pb-10">
         <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
           {/* ===== Xem trước ===== */}
-          <aside className="space-y-4 lg:sticky lg:top-6">
+          <aside className="space-y-4 lg:sticky lg:top-24">
             <Box title="Xem trước">
               <div className="bg-[#f6f8fa] px-4 py-6">
                 {kind === "frame" ? (
