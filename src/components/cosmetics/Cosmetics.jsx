@@ -92,8 +92,10 @@ export function CosmeticEffect({ userId, cosmetic, count = 14 }) {
   const c = cosmetic || own;
   if (!c?.effect_style && !c?.effect_image) return null;
   if (c.effect_image) {
+    // TechRingFrame: ảnh nhỏ lại trên điện thoại + lớp hồng nhạt bao quanh viền (xem cosmetics.css)
+    const tech = /techringframe/i.test(c.effect_image);
     return (
-      <div className="cx-fx">
+      <div className={`cx-fx${tech ? " cx-fx-tech" : ""}`}>
         <img className="cx-fx-img" src={fileUrl(c.effect_image)} alt="" />
       </div>
     );
