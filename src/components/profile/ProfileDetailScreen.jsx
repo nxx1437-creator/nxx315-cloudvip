@@ -1,10 +1,11 @@
 // src/components/profile/ProfileDetailScreen.jsx — "Trang cá nhân" kiểu GitHub (TopHeader + hàng tab có nút quay lại)
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Lock, Settings, Star } from "lucide-react";
+import { ArrowLeft, Calendar, ChevronRight, Lock, Settings, Star } from "lucide-react";
 import TopHeader from "../TopHeader.jsx";
-import GhProfile, { BadgeList, GH_BTN, GH_INK, GhTabs, StatList, statItems } from "./GhProfile.jsx";
+import GhProfile, { BadgeList, GH_BTN, GH_INK, GH_LINE, GH_MUTED, GhTabs, StatList, statItems } from "./GhProfile.jsx";
 import { FollowCounts } from "./FollowList.jsx";
+import CosmeticPicker from "./CosmeticPicker.jsx";
 import useProfileExtras from "../../hooks/useProfileExtras.js";
 import { supabase } from "../../lib/supabaseClient.js";
 
@@ -18,6 +19,8 @@ export default function ProfileDetailScreen({
   const [tab, setTab] = useState("overview");
   const uid = session?.user?.id;
   const [fc, setFc] = useState(null); // số người theo dõi / đang theo dõi của chính mình
+  const [picker, setPicker] = useState(null); // null | "frame" | "effect"
+  const [cos, setCos] = useState({ frame: null, effect: null }); // tên khung / hiệu ứng đang dùng
 
   useEffect(() => {
     if (!uid) return undefined;
@@ -29,6 +32,28 @@ export default function ProfileDetailScreen({
       alive = false;
     };
   }, [uid]);
+
+  const loadCos = useCallback(async () => {
+    if (!uid) return;
+    const { data: eq } = await supabase
+      .from("user_cosmetic_equip")
+      .select("frame_id,effect_id")
+      .eq("user_id", uid)
+      .maybeSingle();
+    const ids = [eq?.frame_id, eq?.effect_id].filter(Boolean);
+    const names = {};
+    if (ids.length) {
+      const { data } = await supabase.from("cosmetic_items").select("id,name").in("id", ids);
+      (data || []).forEach((i) => {
+        names[i.id] = i.name;
+      });
+    }
+    setCos({ frame: names[eq?.frame_id] || null, effect: names[eq?.effect_id] || null });
+  }, [uid]);
+
+  useEffect(() => {
+    loadCos();
+  }, [loadCos]);
 
   const displayName = profile.username || "Thành viên";
   const email = session?.user?.email || "";
@@ -54,6 +79,11 @@ export default function ProfileDetailScreen({
     streak_record: profile.streak_record ?? x.stats?.streak_record,
     lifetime_coins: userLevel?.lifetime_coins ?? x.stats?.lifetime_coins,
   };
+
+  const cosRows = [
+    { k: "frame", label: "Khung avatar", val: cos.frame },
+    { k: "effect", label: "Hiệu ứng hồ sơ", val: cos.effect },
+  ];
 
   return (
     <div className="min-h-screen bg-white pb-10 font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
@@ -123,6 +153,24 @@ export default function ProfileDetailScreen({
                     <Settings size={16} />
                   </button>
                 </div>
+
+                {/* Trang trí hồ sơ (mua bằng xu) — bấm để mở bảng chọn kiểu Discord */}
+                <div className={`overflow-hidden rounded-md border ${GH_LINE}`}>
+                  {cosRows.map((r) => (
+                    <button
+                      key={r.k}
+                      type="button"
+                      onClick={() => setPicker(r.k)}
+                      className={`flex w-full items-center justify-between gap-3 border-b px-3 py-3 text-left last:border-b-0 ${GH_LINE}`}
+                    >
+                      <span className="min-w-0">
+                        <b className={`block text-[14px] font-semibold ${GH_INK}`}>{r.label}</b>
+                        <span className={`block truncate text-[13px] ${GH_MUTED}`}>{r.val || "Chưa dùng · Mua bằng xu"}</span>
+                      </span>
+                      <ChevronRight size={18} className={`shrink-0 ${GH_MUTED}`} />
+                    </button>
+                  ))}
+                </div>
               </div>
             }
           />
@@ -130,6 +178,8 @@ export default function ProfileDetailScreen({
         {tab === "badges" && <BadgeList badges={x.badges} />}
         {tab === "stats" && <StatList items={statItems(statSrc)} />}
       </main>
+
+      {picker && <CosmeticPicker kind={picker} onClose={() => setPicker(null)} onChanged={loadCos} />}
     </div>
   );
 }
