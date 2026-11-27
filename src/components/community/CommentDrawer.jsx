@@ -6,6 +6,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { fetchComments, addComment } from "../../lib/community";
+import { CosmeticFrame } from "../cosmetics/Cosmetics.jsx";
 
 function formatTime(date) {
   if (!date) return "";
@@ -202,20 +203,23 @@ export default function CommentDrawer({
 
                 return (
                   <div key={c.id} className="flex items-start gap-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
-                      {author.avatar_url ? (
-                        <img
-                          src={author.avatar_url}
-                          alt={author.username}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span className="text-xs font-bold text-white">
-                          {getInitial(author.username)}
-                        </span>
-                      )}
-                    </div>
+                    <span className="relative h-8 w-8 shrink-0">
+                      <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]">
+                        {author.avatar_url ? (
+                          <img
+                            src={author.avatar_url}
+                            alt={author.username}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="text-xs font-bold text-white">
+                            {getInitial(author.username)}
+                          </span>
+                        )}
+                      </span>
+                      <CosmeticFrame userId={c.author_id || author.id} w={2.5} />
+                    </span>
 
                     <div className="min-w-0 flex-1">
                       <div className="rounded-2xl bg-slate-100 px-3.5 py-2.5">
@@ -305,4 +309,4 @@ export default function CommentDrawer({
       `}</style>
     </>
   );
-      }
+}

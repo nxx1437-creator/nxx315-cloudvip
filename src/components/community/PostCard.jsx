@@ -10,6 +10,7 @@ import {
   Check,
   Clock,
 } from "lucide-react";
+import { CosmeticEffect, CosmeticFrame } from "../cosmetics/Cosmetics.jsx";
 
 function formatTime(date) {
   if (!date) return "";
@@ -102,26 +103,30 @@ export default function PostCard({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {/* Header */}
-      <div className="flex items-start gap-3 p-4 pb-3">
-        <Link
-          to={`/profile/${post.author_id}`}
-          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]"
-        >
-          {author.avatar_url ? (
-            <img
-              src={author.avatar_url}
-              alt={author.username}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <span className="text-sm font-bold text-white">
-              {getInitial(author.username)}
-            </span>
-          )}
-        </Link>
+      <div className="relative flex items-start gap-3 overflow-hidden p-4 pb-3">
+        <CosmeticEffect userId={post.author_id} count={8} />
+        <span className="relative z-[2] h-10 w-10 shrink-0">
+          <Link
+            to={`/profile/${post.author_id}`}
+            className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#FE2C55] to-[#25F4EE]"
+          >
+            {author.avatar_url ? (
+              <img
+                src={author.avatar_url}
+                alt={author.username}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <span className="text-sm font-bold text-white">
+                {getInitial(author.username)}
+              </span>
+            )}
+          </Link>
+          <CosmeticFrame userId={post.author_id} w={3} />
+        </span>
 
-        <div className="min-w-0 flex-1">
+        <div className="relative z-[2] min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <Link
               to={`/profile/${post.author_id}`}
@@ -150,7 +155,7 @@ export default function PostCard({
         </div>
 
         {/* Menu button */}
-        <div className="relative shrink-0">
+        <div className="relative z-[2] shrink-0">
           <button
             onClick={() => setShowMenu((v) => !v)}
             className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100"
