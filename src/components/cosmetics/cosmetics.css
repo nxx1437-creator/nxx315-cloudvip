@@ -28,6 +28,10 @@
   /* điện thoại: hiển thị nguyên ảnh (nhỏ lại cho thấy cả con thỏ), nằm giữa thẻ */
   .cx-fx-pic .cx-fx-img{position:absolute;inset:0;margin:auto;object-fit:contain}
 }
+/* StrawberryFairyBunny: thu nhỏ trên điện thoại cho đỡ che nội dung hồ sơ */
+@media (max-width:640px){
+  .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{width:55%;height:55%}
+}
 .cx-p{position:absolute;left:var(--x);top:-8%;font-size:var(--s);line-height:1;opacity:0;
   animation:cx-fall var(--d) linear var(--dl) infinite}
 @keyframes cx-fall{0%{top:-8%;transform:rotate(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{top:108%;transform:rotate(360deg);opacity:0}}
