@@ -27,7 +27,7 @@ function Achievements({ badges }) {
   if (!badges.length) return null; // chưa có huy hiệu nào thì không hiện mục này
   const sel = badges.find((b) => b.id === pick);
   return (
-    <div className={`mt-5 border-t px-4 pt-4 ${GH_LINE}`}>
+    <div className={`relative z-[2] mt-5 border-t px-4 pt-4 ${GH_LINE}`}>
       <div className="flex items-baseline justify-between">
         <h2 className={`text-[16px] font-semibold ${GH_INK}`}>Huy hiệu</h2>
         <span className={`text-[12.5px] ${GH_MUTED}`}>{badges.length}</span>
@@ -82,6 +82,7 @@ export default function GhProfile({
 
   return (
     <div className="relative overflow-hidden pb-4">
+      {/* hiệu ứng nằm phía sau nội dung (nội dung bên dưới có z-[2]) */}
       <CosmeticEffect userId={uid} />
       {onPickCover && (
         <input
@@ -99,7 +100,7 @@ export default function GhProfile({
 
       {/* ẢNH BÊA (chỉ khi đã có) */}
       {hasCover && (
-        <div className="relative h-36 w-full overflow-hidden bg-[#d0d7de] dark:bg-[#21262d]">
+        <div className="relative z-[2] h-36 w-full overflow-hidden bg-[#d0d7de] dark:bg-[#21262d]">
           <img src={cover} alt="" className="h-full w-full object-cover" />
           {onPickCover && (
             <button
@@ -120,7 +121,7 @@ export default function GhProfile({
         </div>
       )}
 
-      <div className="px-4">
+      <div className="relative z-[2] px-4">
         <div className={`flex items-start justify-between gap-3 ${hasCover ? "" : "pt-5"}`}>
           {/* AVATAR */}
           <Avatar
