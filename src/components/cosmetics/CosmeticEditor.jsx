@@ -1,7 +1,8 @@
 // src/components/cosmetics/CosmeticEditor.jsx — trình chỉnh khung avatar / hiệu ứng hồ sơ (phong cách GitHub: mộc mạc, chuyên nghiệp, responsive web)
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+// overlay=true: phủ toàn màn hình (khi mở từ trang cá nhân) → chỉ còn 1 thanh đầu trang
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Ban, Check, Coins, Lock } from "lucide-react";
+import { ArrowLeft, Ban, Check, ChevronDown, Coins, Lock } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import useSession from "../../hooks/useSession.js";
 import TopHeader from "../TopHeader.jsx";
@@ -48,7 +49,7 @@ function Box({ title, right, children, className = "" }) {
   );
 }
 
-export default function CosmeticEditor({ initialKind = "frame", onBack, onChanged }) {
+export default function CosmeticEditor({ initialKind = "frame", onBack, onChanged, overlay = false }) {
   const navigate = useNavigate();
   const { session } = useSession();
   const uid = session?.user?.id;
@@ -62,6 +63,12 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const [color, setColor] = useState("#24292f");
+  const gridRef = useRef(null);
+
+  // bấm vào avatar/khung xem trước → tự cuộn xuống phần chọn khung
+  const goToGrid = () => {
+    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // màu hồ sơ: hiện lưu trên trình duyệt (chưa lưu lên server)
   useEffect(() => {
@@ -77,6 +84,16 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
       localStorage.setItem(`cx_profile_color_${uid}`, c);
     } catch {}
   };
+
+  // khi phủ toàn màn hình thì khóa cuộn trang phía sau
+  useEffect(() => {
+    if (!overlay) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [overlay]);
 
   const load = useCallback(async () => {
     if (!uid) return;
@@ -218,7 +235,14 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
   );
 
   return (
-    <div className="min-h-screen bg-white text-[#1f2328]" style={FONT}>
+    <div
+      className={
+        overlay
+          ? "fixed inset-0 z-[60] overflow-y-auto bg-white text-[#1f2328]"
+          : "min-h-screen bg-white text-[#1f2328]"
+      }
+      style={FONT}
+    >
       {/* Thanh đầu trang của web (logo, tìm kiếm, thông báo, ngôn ngữ, avatar) */}
       <TopHeader variant="gh" />
 
@@ -252,12 +276,20 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
             <Box title="Xem trước">
               <div className="bg-[#f6f8fa] px-4 py-6">
                 {kind === "frame" ? (
-                  <div className="flex justify-center">
-                    <div className="relative" style={{ width: "min(200px, 50vw)", height: "min(200px, 50vw)" }}>
+                  <button
+                    type="button"
+                    onClick={goToGrid}
+                    aria-label="Chọn khung"
+                    className="mx-auto flex flex-col items-center gap-2 lg:cursor-default"
+                  >
+                    <div className="relative" style={{ width: "min(180px, 46vw)", height: "min(180px, 46vw)" }}>
                       <div className="h-full w-full overflow-hidden rounded-full bg-[#eaeef2]">{avatarFill}</div>
                       <CosmeticFrame cosmetic={previewCos} w={12} />
                     </div>
-                  </div>
+                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#0969da] lg:hidden">
+                      Bấm để chọn khung <ChevronDown size={14} />
+                    </span>
+                  </button>
                 ) : (
                   <div className="relative mx-auto w-full max-w-[320px] overflow-hidden rounded-md border border-[#d0d7de] bg-white">
                     <div className="relative h-[84px] w-full" style={{ background: color }}>
@@ -273,6 +305,13 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
                       <div className="mt-3 h-8 rounded-md bg-[#f6f8fa]" />
                     </div>
                     <CosmeticEffect cosmetic={previewCos} count={16} />
+                    {/* lớp bấm: chạm vào thẻ → cuộn xuống chọn hiệu ứng (chỉ trên màn nhỏ) */}
+                    <button
+                      type="button"
+                      onClick={goToGrid}
+                      aria-label="Chọn hiệu ứng"
+                      className="absolute inset-0 z-10 lg:hidden"
+                    />
                   </div>
                 )}
               </div>
@@ -319,7 +358,7 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
           </aside>
 
           {/* ===== Bảng chọn ===== */}
-          <div className="min-w-0">
+          <div ref={gridRef} className="min-w-0 scroll-mt-20">
             {/* Tab gạch chân kiểu GitHub */}
             <nav className="mb-4 flex gap-1 border-b border-[#d0d7de]">
               {[
@@ -388,7 +427,7 @@ export default function CosmeticEditor({ initialKind = "frame", onBack, onChange
       )}
 
       {/* Thanh lưu cố định: chỉ hiện trên điện thoại / màn nhỏ */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[#d0d7de] bg-white px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-[65] border-t border-[#d0d7de] bg-white px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 lg:hidden">
         <div className="mx-auto max-w-md">{SaveButton}</div>
       </div>
     </div>
