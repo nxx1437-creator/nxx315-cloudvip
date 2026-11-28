@@ -19,7 +19,6 @@ import useTasks from "../hooks/useTasks.js";
 import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import IpBlockedScreen from "../components/tasks/IpBlockedScreen.jsx";
-import MonthlyMissions from "../components/tasks/MonthlyMissions.jsx";
 import TaskvnFrame from "../components/tasks/TaskvnFrame.jsx";
 import {
   StatPill,
@@ -76,8 +75,8 @@ export default function Tasks() {
   const { profile } = useProfile();
   const { tasks, loading, reload } = useTasks(user?.id);
 
-  // Hai loại nhiệm vụ: "taskvn" (nhiệm vụ Taskvn) và "links" (link rút gọn của nhà cung cấp)
-  const [category, setCategory] = useState("taskvn");
+  // Hai loại nhiệm vụ: "links" (link rút gọn của nhà cung cấp) và "taskvn" (nhiệm vụ Taskvn)
+  const [category, setCategory] = useState("links");
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [onlyAvail, setOnlyAvail] = useState(false);
@@ -629,8 +628,6 @@ export default function Tasks() {
           </div>
         </div>
 
-        <MonthlyMissions />
-
         {isBlocked && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center">
             <p className="text-sm font-semibold text-rose-700">
@@ -640,20 +637,8 @@ export default function Tasks() {
           </div>
         )}
 
-        {/* Chọn loại nhiệm vụ: Taskvn / Link rút gọn của nhà cung cấp */}
+        {/* Chọn loại nhiệm vụ: Link rút gọn của nhà cung cấp / Taskvn */}
         <div className="grid grid-cols-2 gap-1.5 rounded-full border border-emerald-100 bg-white p-1.5">
-          <button
-            type="button"
-            onClick={() => setCategory("taskvn")}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-[13px] font-bold transition ${
-              category === "taskvn"
-                ? "bg-gradient-to-r from-emerald-500 to-emerald-400 text-white"
-                : "text-slate-600 hover:bg-emerald-50"
-            }`}
-          >
-            <Zap size={14} />
-            Nhiệm vụ Taskvn
-          </button>
           <button
             type="button"
             onClick={() => setCategory("links")}
@@ -666,19 +651,21 @@ export default function Tasks() {
             <ListChecks size={14} />
             Link rút gọn
           </button>
+          <button
+            type="button"
+            onClick={() => setCategory("taskvn")}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-[13px] font-bold transition ${
+              category === "taskvn"
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-400 text-white"
+                : "text-slate-600 hover:bg-emerald-50"
+            }`}
+          >
+            <Zap size={14} />
+            Nhiệm vụ Taskvn
+          </button>
         </div>
 
-        {/* ===== Loại 1: Nhiệm vụ TASKVN (Vượt link + QC). Xu được cộng tự động qua Postback ===== */}
-        {category === "taskvn" && user?.id && !isBlocked && (
-          <section className="rounded-[2rem] border border-emerald-100 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
-            <h2 className="mb-3 px-1 text-base font-extrabold text-slate-900">
-              Nhiệm vụ Taskvn
-            </h2>
-            <TaskvnFrame userId={user.id} />
-          </section>
-        )}
-
-        {/* ===== Loại 2: Link rút gọn của nhà cung cấp ===== */}
+        {/* ===== Loại 1: Link rút gọn của nhà cung cấp ===== */}
         {category === "links" && (
           <>
             {/* Tìm kiếm + Tab */}
@@ -795,6 +782,16 @@ export default function Tasks() {
                 <HistoryList history={history} />
               ))}
           </>
+        )}
+
+        {/* ===== Loại 2: Nhiệm vụ TASKVN (Vượt link + QC). Xu được cộng tự động qua Postback ===== */}
+        {category === "taskvn" && user?.id && !isBlocked && (
+          <section className="rounded-[2rem] border border-emerald-100 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
+            <h2 className="mb-3 px-1 text-base font-extrabold text-slate-900">
+              Nhiệm vụ Taskvn
+            </h2>
+            <TaskvnFrame userId={user.id} />
+          </section>
         )}
       </main>
 
