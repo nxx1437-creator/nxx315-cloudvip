@@ -23,6 +23,13 @@ export default function useProfileExtras(session, profile = {}, userLevel) {
     };
   }, [uid]);
 
+  // ảnh bìa vừa đổi từ màn "Sửa thông tin"
+  useEffect(() => {
+    const h = (e) => e.detail && setCoverUrl(e.detail);
+    window.addEventListener("profile-cover-changed", h);
+    return () => window.removeEventListener("profile-cover-changed", h);
+  }, []);
+
   const pickCover = async (file) => {
     if (!file || !uid) return;
     setCoverErr("");

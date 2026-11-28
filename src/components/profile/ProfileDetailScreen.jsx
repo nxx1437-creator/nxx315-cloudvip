@@ -55,6 +55,12 @@ export default function ProfileDetailScreen({
     loadCos();
   }, [loadCos]);
 
+  // khung/hiệu ứng vừa đổi từ màn "Sửa thông tin"
+  useEffect(() => {
+    window.addEventListener("profile-cosmetics-changed", loadCos);
+    return () => window.removeEventListener("profile-cosmetics-changed", loadCos);
+  }, [loadCos]);
+
   const displayName = profile.username || "Thành viên";
   const email = session?.user?.email || "";
   const memberSince = session?.user?.created_at

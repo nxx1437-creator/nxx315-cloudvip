@@ -1,84 +1,36 @@
-// src/components/profile/EditProfileModal.jsx — "Chỉnh sửa trang cá nhân" (toàn màn hình, gọn kiểu GitHub / Threads)
-// Màn chính: TopHeader + nút quay lại + thẻ các dòng. Bấm một dòng → mở màn riêng (X · tiêu đề · ✓).
-// ✓ chỉ áp thay đổi vào màn chính; nút "Lưu thay đổi" ở đáy mới ghi lên server.
-// Thoát khi có thay đổi chưa lưu → hỏi "Bỏ thay đổi / Tiếp tục chỉnh sửa". Tắt hiện danh sách theo dõi → hỏi xác nhận.
-import React, { useState } from "react";
-import { ArrowLeft, Check, ChevronRight, Loader2, UserRoundPlus, X, XCircle } from "lucide-react";
+// src/components/profile/EditProfileModal.jsx — "Chỉnh sửa trang cá nhân" (toàn màn hình, gọn kiểu Threads)
+// Header: X · tiêu đề · Xong. Một thẻ bo góc gồm các dòng; bấm Tên/Tiêu đề → màn riêng (X · tiêu đề · ✓).
+// "Xong" ghi tên/tiêu đề/quyền riêng tư lên server. Ảnh bìa tải lên là lưu ngay.
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Loader2, UserRoundPlus, X, XCircle } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
-import TopHeader from "../TopHeader.jsx";
+import { uploadCover } from "../../lib/coverUpload.js";
 import { GH_INK, GH_LINE, GH_MUTED } from "./GhProfile.jsx";
+import CosmeticPicker from "./CosmeticPicker.jsx";
+import { Confirm, Divider, Row, Toggle } from "./EditProfileParts.jsx";
 
 const NAME_MAX = 20;
 const HEAD_MAX = 80;
 
-// công tắc đen/trắng
-function Toggle({ checked, onChange, label }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-        checked ? "bg-[#1f2328] dark:bg-[#e6edf3]" : "bg-[#d0d7de] dark:bg-[#30363d]"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all dark:bg-[#0d1117] ${
-          checked ? "left-[22px]" : "left-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
-// hộp thoại xác nhận nhỏ ở giữa màn hình
-function Confirm({ title, text, okLabel, okDanger, cancelLabel, onOk, onCancel }) {
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-6">
-      <div className="w-full max-w-xs overflow-hidden rounded-2xl bg-white text-center dark:bg-[#161b22]">
-        <div className="px-5 pb-4 pt-5">
-          <p className={`text-[16px] font-semibold ${GH_INK}`}>{title}</p>
-          <p className={`mt-1.5 text-[14px] leading-5 ${GH_MUTED}`}>{text}</p>
-        </div>
-        <button
-          type="button"
-          onClick={onOk}
-          className={`block w-full border-t py-3 text-[15px] font-semibold ${GH_LINE} ${
-            okDanger ? "text-[#cf222e]" : GH_INK
-          }`}
-        >
-          {okLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className={`block w-full border-t py-3 text-[15px] ${GH_LINE} ${GH_INK}`}
-        >
-          {cancelLabel}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// đường kẻ thụt vào hai bên (như ảnh mẫu)
-const Divider = () => <div className={`mx-4 border-t ${GH_LINE}`} />;
-
 export default function EditProfileModal({ profile, cooldown, onClose, onSaved, onAvatar }) {
-  // giá trị đang chỉnh (chưa lưu lên server)
   const [username, setUsername] = useState(profile.username || "");
   const [headline, setHeadline] = useState(profile.headline || "");
   const [showFollowing, setShowFollowing] = useState(profile.show_following !== false);
 
-  const [sub, setSub] = useState(null); // null | "name" | "headline" | "privacy"
-  const [tmp, setTmp] = useState(""); // nháp của màn riêng
-  const [tmpBool, setTmpBool] = useState(true);
+  const [sub, setSub] = useState(null); // null | "name" | "headline"
+  const [tmp, setTmp] = useState("");
   const [dialog, setDialog] = useState(null); // null | "discardMain" | "discardSub" | "goPrivate"
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [subError, setSubError] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [coverUrl, setCoverUrl] = useState(profile.cover_url || null);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [coverErr, setCoverErr] = useState("");
+  const [cos, setCos] = useState({ frame: null, effect: null });
+  const [picker, setPicker] = useState(null); // null | "frame" | "effect"
+  const fileRef = useRef(null);
 
   const nameLocked = !cooldown.canChange;
   const nameChanged = username.trim() !== (profile.username || "");
@@ -86,19 +38,59 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
   const privChanged = showFollowing !== (profile.show_following !== false);
   const dirty = nameChanged || headChanged || privChanged;
 
-  /* ---------- mở / đóng màn riêng ---------- */
+  /* ---------- email + khung/hiệu ứng đang dùng ---------- */
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data?.user?.email || ""));
+  }, []);
+
+  const loadCos = useCallback(async () => {
+    if (!profile.id) return;
+    const { data: eq } = await supabase
+      .from("user_cosmetic_equip")
+      .select("frame_id,effect_id")
+      .eq("user_id", profile.id)
+      .maybeSingle();
+    const ids = [eq?.frame_id, eq?.effect_id].filter(Boolean);
+    const names = {};
+    if (ids.length) {
+      const { data } = await supabase.from("cosmetic_items").select("id,name").in("id", ids);
+      (data || []).forEach((i) => {
+        names[i.id] = i.name;
+      });
+    }
+    setCos({ frame: names[eq?.frame_id] || null, effect: names[eq?.effect_id] || null });
+  }, [profile.id]);
+
+  useEffect(() => {
+    loadCos();
+  }, [loadCos]);
+
+  /* ---------- ảnh bìa (lưu ngay) ---------- */
+  const onCover = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setCoverErr("");
+    setCoverBusy(true);
+    try {
+      const url = await uploadCover(profile.id, file);
+      setCoverUrl(url);
+      window.dispatchEvent(new CustomEvent("profile-cover-changed", { detail: url }));
+    } catch (err) {
+      setCoverErr(err.message || "Không đổi được ảnh bìa.");
+    } finally {
+      setCoverBusy(false);
+    }
+  };
+
+  /* ---------- màn riêng: tên / tiêu đề ---------- */
   const openSub = (key) => {
     setSubError("");
-    if (key === "name") setTmp(username);
-    if (key === "headline") setTmp(headline);
-    if (key === "privacy") setTmpBool(showFollowing);
+    setTmp(key === "name" ? username : headline);
     setSub(key);
   };
 
-  const subDirty =
-    (sub === "name" && tmp !== username) ||
-    (sub === "headline" && tmp !== headline) ||
-    (sub === "privacy" && tmpBool !== showFollowing);
+  const subDirty = (sub === "name" && tmp !== username) || (sub === "headline" && tmp !== headline);
 
   const closeSub = () => {
     if (subDirty) setDialog("discardSub");
@@ -116,19 +108,17 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
       setUsername(n);
     }
     if (sub === "headline") setHeadline(tmp.replace(/\s+/g, " ").trim());
-    if (sub === "privacy") setShowFollowing(tmpBool);
     setSub(null);
   };
 
-  const toggleTmpPrivacy = (v) => {
-    // chuyển sang riêng tư thì hỏi xác nhận
-    if (!v) setDialog("goPrivate");
-    else setTmpBool(true);
+  const onTogglePrivacy = (v) => {
+    if (!v) setDialog("goPrivate"); // tắt → hỏi xác nhận
+    else setShowFollowing(true);
   };
 
   /* ---------- ghi lên server ---------- */
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || !dirty) return;
     const name = username.trim();
     const head = headline.replace(/\s+/g, " ").trim();
 
@@ -147,7 +137,6 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
     }
     if (headChanged) patch.headline = head || null;
     if (privChanged) patch.show_following = showFollowing;
-    if (!Object.keys(patch).length) return onClose();
 
     setSaving(true);
     setError("");
@@ -158,7 +147,6 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
       setError(updateError.message);
       return;
     }
-    // báo cho khung hồ sơ tải lại tiêu đề mới
     try {
       window.dispatchEvent(new Event("profile-headline-changed"));
     } catch {}
@@ -170,92 +158,70 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
     else onClose();
   };
 
+  const shell = "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-white font-[Be_Vietnam_Pro] dark:bg-[#0d1117]";
+  const iconBtn = `flex h-10 w-10 shrink-0 items-center justify-center rounded-md hover:bg-[#f6f8fa] dark:hover:bg-[#161b22] ${GH_INK}`;
+  const headStyle = { paddingTop: "max(12px, env(safe-area-inset-top))" };
+
   /* ---------- màn riêng (X · tiêu đề · ✓) ---------- */
   if (sub) {
     const meta = {
-      name: { title: "Chỉnh sửa tên", label: "Tên hiển thị", max: NAME_MAX, hint: nameLocked ? `Bạn có thể đổi tên sau ${cooldown.remainingText} nữa.` : "Bạn chỉ đổi được tên 1 lần mỗi 7 ngày." },
-      headline: { title: "Chỉnh sửa tiêu đề hồ sơ", label: "Tiêu đề hồ sơ", max: HEAD_MAX, hint: "Tiêu đề hiển thị công khai ngay dưới tên của bạn." },
-      privacy: { title: "Quyền riêng tư của trang cá nhân" },
+      name: {
+        title: "Chỉnh sửa tên",
+        label: "Tên hiển thị",
+        max: NAME_MAX,
+        hint: nameLocked ? `Bạn có thể đổi tên sau ${cooldown.remainingText} nữa.` : "Bạn chỉ đổi được tên 1 lần mỗi 7 ngày.",
+      },
+      headline: {
+        title: "Chỉnh sửa tiêu đề hồ sơ",
+        label: "Tiêu đề hồ sơ",
+        max: HEAD_MAX,
+        hint: "Tiêu đề hiển thị công khai ngay dưới tên của bạn.",
+      },
     }[sub];
+    const locked = sub === "name" && nameLocked;
 
     return (
-      <div className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-white font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
-        <header
-          className="flex items-center gap-3 px-3 py-3"
-          style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}
-        >
-          <button
-            type="button"
-            onClick={closeSub}
-            aria-label="Đóng"
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${GH_INK} hover:bg-[#f6f8fa] dark:hover:bg-[#161b22]`}
-          >
+      <div className={shell}>
+        <header className="flex items-center gap-3 px-3 py-3" style={headStyle}>
+          <button type="button" onClick={closeSub} aria-label="Đóng" className={iconBtn}>
             <X size={22} />
           </button>
           <h2 className={`min-w-0 flex-1 truncate text-center text-[17px] font-semibold ${GH_INK}`}>{meta.title}</h2>
-          <button
-            type="button"
-            onClick={applySub}
-            disabled={sub === "name" && nameLocked}
-            aria-label="Xong"
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md hover:bg-[#f6f8fa] disabled:opacity-30 dark:hover:bg-[#161b22] ${GH_INK}`}
-          >
+          <button type="button" onClick={applySub} disabled={locked} aria-label="Xong" className={`${iconBtn} disabled:opacity-30`}>
             <Check size={22} />
           </button>
         </header>
 
         <main className="mx-auto w-full max-w-lg px-4 pt-3">
-          {sub === "privacy" ? (
-            <>
-              <div className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 ${GH_LINE}`}>
-                <div className="min-w-0">
-                  <p className={`text-[15px] font-semibold ${GH_INK}`}>Hiện người mình đang theo dõi</p>
-                  <p className={`mt-0.5 text-[13px] ${GH_MUTED}`}>{tmpBool ? "Công khai" : "Chỉ mình tôi"}</p>
-                </div>
-                <Toggle checked={tmpBool} onChange={toggleTmpPrivacy} label="Hiện người mình đang theo dõi" />
-              </div>
-              <p className={`mt-3 px-1 text-[13px] leading-5 ${GH_MUTED}`}>
-                Khi tắt, chỉ mình bạn xem được danh sách những người bạn đang theo dõi. Số lượng người theo dõi vẫn hiển thị.
-              </p>
-            </>
-          ) : (
-            <>
-              <label className={`flex items-center gap-2 rounded-2xl border px-4 py-3 ${GH_LINE}`}>
-                <span className="min-w-0 flex-1">
-                  <span className={`block text-[14px] font-semibold ${GH_INK}`}>{meta.label}</span>
-                  <input
-                    autoFocus
-                    type="text"
-                    value={tmp}
-                    onChange={(e) => {
-                      setTmp(e.target.value.replace(/\n/g, " "));
-                      setSubError("");
-                    }}
-                    disabled={sub === "name" && nameLocked}
-                    maxLength={meta.max}
-                    className={`mt-0.5 w-full bg-transparent text-[16px] outline-none disabled:opacity-60 ${GH_INK}`}
-                  />
-                </span>
-                {tmp && !(sub === "name" && nameLocked) && (
-                  <button
-                    type="button"
-                    onClick={() => setTmp("")}
-                    aria-label="Xóa"
-                    className="shrink-0 text-[#8c959f]"
-                  >
-                    <XCircle size={20} />
-                  </button>
-                )}
-              </label>
-              <p className={`mt-2 px-1 text-[12.5px] leading-5 ${GH_MUTED}`}>
-                {meta.hint} · {tmp.length}/{meta.max}
-              </p>
-              {subError && (
-                <p className="mt-3 rounded-md border border-[#cf222e] bg-[#ffebe9] px-3 py-2 text-[13px] font-medium text-[#cf222e]">
-                  {subError}
-                </p>
-              )}
-            </>
+          <label className={`flex items-center gap-2 rounded-2xl border px-4 py-3 ${GH_LINE}`}>
+            <span className="min-w-0 flex-1">
+              <span className={`block text-[14px] font-semibold ${GH_INK}`}>{meta.label}</span>
+              <input
+                autoFocus
+                type="text"
+                value={tmp}
+                onChange={(e) => {
+                  setTmp(e.target.value.replace(/\n/g, " "));
+                  setSubError("");
+                }}
+                disabled={locked}
+                maxLength={meta.max}
+                className={`mt-0.5 w-full bg-transparent text-[16px] outline-none disabled:opacity-60 ${GH_INK}`}
+              />
+            </span>
+            {tmp && !locked && (
+              <button type="button" onClick={() => setTmp("")} aria-label="Xóa" className="shrink-0 text-[#8c959f]">
+                <XCircle size={20} />
+              </button>
+            )}
+          </label>
+          <p className={`mt-2 px-1 text-[12.5px] leading-5 ${GH_MUTED}`}>
+            {meta.hint} · {tmp.length}/{meta.max}
+          </p>
+          {subError && (
+            <p className="mt-3 rounded-md border border-[#cf222e] bg-[#ffebe9] px-3 py-2 text-[13px] font-medium text-[#cf222e]">
+              {subError}
+            </p>
           )}
         </main>
 
@@ -273,40 +239,34 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
             onCancel={() => setDialog(null)}
           />
         )}
-        {dialog === "goPrivate" && (
-          <Confirm
-            title="Chỉ mình tôi xem danh sách theo dõi?"
-            text="Người khác sẽ không còn xem được danh sách những người bạn đang theo dõi."
-            okLabel="Ok"
-            cancelLabel="Hủy"
-            onOk={() => {
-              setTmpBool(false);
-              setDialog(null);
-            }}
-            onCancel={() => setDialog(null)}
-          />
-        )}
       </div>
     );
   }
 
   /* ---------- màn chính ---------- */
   return (
-    <div className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-white font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
-      <TopHeader variant="gh" />
-
-      <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-6 pt-2">
-        {/* nút quay lại: ngay dưới TopHeader, không có thanh riêng */}
+    <div className={shell}>
+      <header className="flex items-center gap-3 px-3 py-3" style={headStyle}>
+        <button type="button" onClick={backMain} aria-label="Đóng" className={iconBtn}>
+          <X size={22} />
+        </button>
+        <h2 className={`min-w-0 flex-1 truncate text-center text-[17px] font-semibold ${GH_INK}`}>
+          Chỉnh sửa trang cá nhân
+        </h2>
         <button
           type="button"
-          onClick={backMain}
-          aria-label="Quay lại"
-          className={`-ml-2 mb-1 flex h-10 w-10 items-center justify-center rounded-md ${GH_INK} hover:bg-[#f6f8fa] dark:hover:bg-[#161b22]`}
+          onClick={handleSave}
+          disabled={saving || !dirty}
+          className={`flex h-10 min-w-[48px] shrink-0 items-center justify-center px-1 text-[16px] font-semibold ${
+            dirty ? GH_INK : "text-[#8c959f]"
+          }`}
         >
-          <ArrowLeft size={20} />
+          {saving ? <Loader2 size={18} className="animate-spin" /> : "Xong"}
         </button>
+      </header>
 
-        <div className={`overflow-hidden rounded-2xl border ${GH_LINE}`}>
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-10 pt-3">
+        <div className={`overflow-hidden rounded-3xl border ${GH_LINE}`}>
           {/* TÊN + AVATAR */}
           <div className="flex items-center gap-3 px-4 py-3.5">
             <button type="button" onClick={() => openSub("name")} className="min-w-0 flex-1 text-left">
@@ -318,7 +278,6 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
                 <span className={`block text-[12px] leading-4 ${GH_MUTED}`}>Đổi lại sau {cooldown.remainingText}</span>
               )}
             </button>
-
             <button
               type="button"
               onClick={onAvatar}
@@ -333,51 +292,69 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
             </button>
           </div>
 
-          <Divider />
-
-          {/* TIÊU ĐỀ HỒ SƠ */}
-          <button type="button" onClick={() => openSub("headline")} className="block w-full px-4 py-3.5 text-left">
-            <span className={`block text-[14px] font-semibold ${GH_INK}`}>Tiêu đề hồ sơ</span>
-            <span className={`mt-0.5 block truncate text-[15px] ${headline ? GH_INK : "text-[#8c959f]"}`}>
-              {headline || "+ Viết tiêu đề"}
-            </span>
-          </button>
+          {email && (
+            <>
+              <Divider />
+              <Row label="Email" value={email} />
+            </>
+          )}
 
           <Divider />
+          <Row label="Tiêu đề hồ sơ" value={headline} placeholder="+ Viết tiêu đề" onClick={() => openSub("headline")} />
 
-          {/* QUYỀN RIÊNG TƯ */}
-          <button type="button" onClick={() => openSub("privacy")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
-            <span className="min-w-0 flex-1">
-              <span className={`block text-[14px] font-semibold ${GH_INK}`}>Quyền riêng tư của trang cá nhân</span>
-            </span>
-            <span className={`shrink-0 text-[14px] ${GH_MUTED}`}>{showFollowing ? "Công khai" : "Chỉ mình tôi"}</span>
-            <ChevronRight size={18} className={`shrink-0 ${GH_MUTED}`} />
-          </button>
+          <Divider />
+          <Row
+            label="Ảnh bìa"
+            value={coverBusy ? "Đang tải lên..." : coverUrl ? "Đã có ảnh bìa" : ""}
+            placeholder="+ Thêm ảnh bìa"
+            onClick={() => fileRef.current?.click()}
+            disabled={coverBusy}
+            right={
+              coverUrl ? (
+                <img src={coverUrl} alt="" className="h-10 w-[72px] shrink-0 rounded-md object-cover" />
+              ) : null
+            }
+          />
+
+          <Divider />
+          <Row label="Khung avatar" value={cos.frame} placeholder="Chưa dùng · Mua bằng xu" onClick={() => setPicker("frame")} />
+
+          <Divider />
+          <Row label="Hiệu ứng hồ sơ" value={cos.effect} placeholder="Chưa dùng · Mua bằng xu" onClick={() => setPicker("effect")} />
+
+          <Divider />
+          {/* CÔNG TẮC QUYỀN RIÊNG TƯ */}
+          <div className="px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <span className={`min-w-0 flex-1 text-[14px] font-semibold ${GH_INK}`}>Hiện người mình đang theo dõi</span>
+              <Toggle checked={showFollowing} onChange={onTogglePrivacy} label="Hiện người mình đang theo dõi" />
+            </div>
+            <p className={`mt-1 pr-14 text-[13px] leading-5 ${GH_MUTED}`}>
+              {showFollowing ? "Công khai." : "Chỉ mình bạn xem được."} Khi tắt, người khác không xem được danh sách
+              bạn đang theo dõi. Số người theo dõi vẫn hiển thị.
+            </p>
+          </div>
         </div>
 
-        {error && (
+        {(error || coverErr) && (
           <p className="mt-3 rounded-md border border-[#cf222e] bg-[#ffebe9] px-3 py-2 text-[13px] font-medium text-[#cf222e]">
-            {error}
+            {error || coverErr}
           </p>
         )}
       </main>
 
-      {/* nút lưu */}
-      <div
-        className={`sticky bottom-0 border-t bg-white px-4 pt-3 dark:bg-[#0d1117] ${GH_LINE}`}
-        style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
-      >
-        <div className="mx-auto max-w-lg">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving || !dirty}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-[#1f232826] bg-[#1f2328] px-4 py-2 text-[14px] font-semibold text-white transition hover:bg-[#32383f] disabled:cursor-not-allowed disabled:border-[#d0d7de] disabled:bg-[#eaeef2] disabled:text-[#8c959f] dark:disabled:border-[#30363d] dark:disabled:bg-[#21262d]"
-          >
-            {saving ? <Loader2 size={16} className="animate-spin" /> : "Lưu thay đổi"}
-          </button>
-        </div>
-      </div>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onCover} />
+
+      {picker && (
+        <CosmeticPicker
+          kind={picker}
+          onClose={() => setPicker(null)}
+          onChanged={() => {
+            loadCos();
+            window.dispatchEvent(new Event("profile-cosmetics-changed"));
+          }}
+        />
+      )}
 
       {dialog === "discardMain" && (
         <Confirm
@@ -389,6 +366,19 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
           onOk={() => {
             setDialog(null);
             onClose();
+          }}
+          onCancel={() => setDialog(null)}
+        />
+      )}
+      {dialog === "goPrivate" && (
+        <Confirm
+          title="Chỉ mình tôi xem danh sách theo dõi?"
+          text="Người khác sẽ không còn xem được danh sách những người bạn đang theo dõi."
+          okLabel="Ok"
+          cancelLabel="Hủy"
+          onOk={() => {
+            setShowFollowing(false);
+            setDialog(null);
           }}
           onCancel={() => setDialog(null)}
         />
