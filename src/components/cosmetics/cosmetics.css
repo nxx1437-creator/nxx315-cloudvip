@@ -28,12 +28,12 @@
   /* điện thoại: hiển thị nguyên ảnh (nhỏ lại cho thấy cả con thỏ), nằm giữa thẻ */
   .cx-fx-pic .cx-fx-img{position:absolute;inset:0;margin:auto;object-fit:contain}
 }
-/* StrawberryFairyBunny trên điện thoại: nằm góc trên bên phải, cạnh avatar/tên/email, nằm hẳn phía trên
-   dòng "người theo dõi" (không chạm chữ). Cách mép phải một chút để không bị cắt, đậm hơn và giữ nét pixel.
-   Hồ sơ có ảnh bìa (div.h-36) thì đặt ngay dưới bìa. */
+/* StrawberryFairyBunny và DigitalProfileEffect trên điện thoại: nhỏ, nằm góc trên bên phải, cạnh
+   avatar/tên/email, nằm hẳn phía trên dòng "người theo dõi" (không chạm chữ). Cách mép phải một chút
+   để không bị cắt, đậm hơn và giữ nét pixel. Hồ sơ có ảnh bìa (div.h-36) thì đặt ngay dưới bìa. */
 @media (max-width:640px){
-  .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{inset:16px 3% auto auto;margin:0;width:34%;height:auto;aspect-ratio:1/1;object-position:right top;opacity:.85;image-rendering:pixelated}
-  div:has(> .h-36) .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{top:146px}
+  .cx-fx-pic .cx-fx-img:is([src*="StrawberryFairyBunny"],[src*="DigitalProfileEffect"]){inset:16px 3% auto auto;margin:0;width:34%;height:auto;aspect-ratio:1/1;object-position:right top;opacity:.85;image-rendering:pixelated}
+  div:has(> .h-36) .cx-fx-pic .cx-fx-img:is([src*="StrawberryFairyBunny"],[src*="DigitalProfileEffect"]){top:146px}
 }
 .cx-p{position:absolute;left:var(--x);top:-8%;font-size:var(--s);line-height:1;opacity:0;
   animation:cx-fall var(--d) linear var(--dl) infinite}
