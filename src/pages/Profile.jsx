@@ -122,7 +122,7 @@ export default function ProfilePage() {
     navigate("/");
   };
 
-    // chat AI nằm ở /support; còn lại đi thẳng tới đúng chỗ trong /help
+  // chat AI nằm ở /support; còn lại đi thẳng tới đúng chỗ trong /help
   const openHelp = (open) => {
     if (open === "chat") return navigate("/support");
     if (open === "idea") return navigate("/help?r=new"); // form gửi yêu cầu hỗ trợ
@@ -148,13 +148,13 @@ export default function ProfilePage() {
           profile={profile}
           cooldown={usernameCooldown}
           onClose={() => setShowEditProfile(false)}
-          onSaved={(newUsername) => {
-            setProfile((prev) => ({
-              ...prev,
-              username: newUsername,
-              last_username_change: new Date().toISOString(),
-            }));
-            setUsernameCooldown(checkUsernameChangeAllowed(new Date().toISOString()));
+          onAvatar={() => setShowAvatar(true)}
+          onSaved={(patch) => {
+            // patch: các trường vừa lưu (username, last_username_change, headline)
+            setProfile((prev) => ({ ...prev, ...patch }));
+            if (patch.last_username_change) {
+              setUsernameCooldown(checkUsernameChangeAllowed(patch.last_username_change));
+            }
             setShowEditProfile(false);
           }}
         />
@@ -304,6 +304,4 @@ export default function ProfilePage() {
       <BottomNav />
     </div>
   );
-    }
-              
-          
+}
