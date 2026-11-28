@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/taskvn-postback", "destination": "/api/taskvn-postback" },
+    {
+      "source": "/taskvn-postback",
+      "destination": "https://rwglwovohbyqmbbzdvdj.supabase.co/functions/v1/taskvn-postback"
+    },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
   "headers": [
