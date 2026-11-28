@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Coins, Flame, ExternalLink, Search, History } from "lucide-react";
+import { Coins, Flame, ExternalLink, Search, History, Link2 } from "lucide-react";
 import { useI18n } from "../../i18n/index.js";
 import {
   getProviderLogo,
@@ -10,15 +10,18 @@ import {
 } from "../../lib/taskHelpers.js";
 
 // ---------- Logo nhà cung cấp ----------
+// Chưa có logo (hoặc ảnh lỗi) thì hiện icon liên kết.
 export function ProviderLogo({ task }) {
   const [error, setError] = useState(false);
   const src = getProviderLogo(task);
-  const initials = String(task?.provider || "?").slice(0, 2).toUpperCase();
 
   if (error || !src) {
     return (
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white">
-        {initials}
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-sky-500"
+        aria-label={task?.provider || "link"}
+      >
+        <Link2 size={22} strokeWidth={2.25} />
       </div>
     );
   }
@@ -259,4 +262,4 @@ export function HistoryList({ history }) {
       </div>
     </div>
   );
-            }
+}
