@@ -1,22 +1,18 @@
 // supabase/functions/taskvn-postback/index.ts
 //
 // Nhận Postback từ TASKVN rồi cộng xu cho member (gọi hàm SQL taskvn_credit).
-// Postback URL đã cài trên TASKVN: https://nxx315.com/taskvn-postback
+// Postback URL đã cài trên TASKVN: https://www.nxx315.com/taskvn-postback
 // (vercel.json chuyển tiếp sang hàm này).
-//
-// Triển khai (không cần Supabase CLI):
-//   Supabase Dashboard -> Edge Functions -> Create a new function
-//   -> tên đúng "taskvn-postback" -> dán nội dung file này -> Deploy
-//   -> vào Settings của hàm, TẮT "Verify JWT" (Taskvn gọi vào không kèm đăng nhập;
-//      hàm vẫn an toàn nhờ kiểm tra chữ ký bằng Secret key).
 //
 // SECRETS (Edge Functions -> Manage secrets):
 //   TASKVN_SITE_KEY = pk_...
 //   TASKVN_SECRET   = sk_...   (KHÔNG để trong code/GitHub)
 //   (SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY Supabase tự có sẵn)
+// Verify JWT phải TẮT (Taskvn gọi vào không kèm đăng nhập; hàm tự kiểm tra chữ ký).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import crypto from "node:crypto";
+import { Buffer } from "node:buffer";
 
 const SITE_KEY = Deno.env.get("TASKVN_SITE_KEY") ?? "";
 const SECRET = Deno.env.get("TASKVN_SECRET") ?? "";
@@ -40,6 +36,22 @@ const text = (body: string, status = 200) =>
 const safeEqual = (a: string, b: string) =>
   a.length === b.length &&
   crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+
+// Khung nhúng gửi ID thành viên dạng rút gọn 22 ký tự (base64url của 16 byte UUID).
+// Giải mã về UUID; vẫn nhận UUID đầy đủ (bản cũ).
+function decodeSubId(s: string): string {
+  if (UUID_RE.test(s)) return s;
+  try {
+    const b = Buffer.from(s, "base64url");
+    if (b.length === 16) {
+      const h = b.toString("hex");
+      return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+    }
+  } catch {
+    /* bỏ qua */
+  }
+  return s;
+}
 
 type Postback = {
   status: string;
@@ -88,7 +100,7 @@ function parsePostback(q: Record<string, string>): Postback | null {
     }
     return {
       status: d.status,
-      subId: String(d.sub_id),
+      subId: decodeSubId(String(d.sub_id)),
       amount: Number(d.amount),
       taskId: String(d.task_id),
       reason: String(d.reason || ""),
@@ -103,7 +115,7 @@ function parsePostback(q: Record<string, string>): Postback | null {
   }
   return {
     status: q.status,
-    subId: String(q.sub_id),
+    subId: decodeSubId(String(q.sub_id)),
     amount: Number(q.amount),
     taskId: String(q.task_id),
     reason: "",
@@ -133,6 +145,7 @@ Deno.serve(async (req) => {
     console.warn("taskvn violation", pb.subId, pb.reason);
     return text("ok");
   }
+  // status=test (gửi thử) hoặc trạng thái khác: không cộng xu
   if (pb.status !== "completed") return text("ok");
 
   const amount = Math.floor(pb.amount);
