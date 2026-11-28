@@ -29,10 +29,11 @@
   .cx-fx-pic .cx-fx-img{position:absolute;inset:0;margin:auto;object-fit:contain}
 }
 /* StrawberryFairyBunny trên điện thoại: nằm góc trên bên phải, cạnh avatar/tên/email nơi không có chữ
-   (tránh đè lên chữ làm xấu hiệu ứng). Hồ sơ có ảnh bìa (div.h-36) thì hạ xuống dưới bìa. */
+   (tránh đè lên chữ làm xấu hiệu ứng). Cách mép phải một chút để không bị cắt, đậm hơn và giữ nét pixel
+   (không bị mờ khi phóng). Hồ sơ có ảnh bìa (div.h-36) thì hạ xuống dưới bìa. */
 @media (max-width:640px){
-  .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{inset:16px 0 auto auto;margin:0;width:38%;height:auto;aspect-ratio:1/1;object-position:right top}
-  div:has(> .h-36) .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{top:152px}
+  .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{inset:24px 3% auto auto;margin:0;width:36%;height:auto;aspect-ratio:1/1;object-position:right top;opacity:.85;image-rendering:pixelated}
+  div:has(> .h-36) .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{top:160px}
 }
 .cx-p{position:absolute;left:var(--x);top:-8%;font-size:var(--s);line-height:1;opacity:0;
   animation:cx-fall var(--d) linear var(--dl) infinite}
