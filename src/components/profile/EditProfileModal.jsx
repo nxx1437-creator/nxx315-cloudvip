@@ -1,5 +1,5 @@
-// src/components/profile/EditProfileModal.jsx — màn hình "Chỉnh sửa trang cá nhân" (toàn màn hình, gọn kiểu GitHub)
-// Trên cùng: TopHeader + chỉ một nút quay lại. Gồm: tên hiển thị (+ đổi avatar), tiêu đề hồ sơ, quyền riêng tư. Lưu bằng nút ở dưới.
+// src/components/profile/EditProfileModal.jsx — màn hình "Chỉnh sửa trang cá nhân" (toàn màn hình, gọn kiểu GitHub / Threads)
+// TopHeader + nút quay lại; thẻ bo góc, đường kẻ thụt vào; lưu bằng nút ở đáy.
 import React, { useState } from "react";
 import { ArrowLeft, Loader2, UserRoundPlus } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -31,10 +31,14 @@ function Toggle({ checked, onChange, label }) {
   );
 }
 
+// đường kẻ thụt vào hai bên (như ảnh mẫu)
+const Divider = () => <div className={`mx-4 border-t ${GH_LINE}`} />;
+
 export default function EditProfileModal({ profile, cooldown, onClose, onSaved, onAvatar }) {
   const [username, setUsername] = useState(profile.username || "");
   const [headline, setHeadline] = useState(profile.headline || "");
   const [showFollowing, setShowFollowing] = useState(profile.show_following !== false);
+  const [headFocus, setHeadFocus] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -86,24 +90,20 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
     <div className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-white font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
       <TopHeader variant="gh" />
 
-      {/* chỉ một nút quay lại */}
-      <div className={`border-b bg-[#f6f8fa] dark:bg-[#161b22] ${GH_LINE}`}>
-        <div className="mx-auto flex max-w-lg items-center px-2 py-1.5">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Quay lại"
-            className={`flex h-9 w-9 items-center justify-center rounded-md ${GH_INK} hover:bg-black/5 dark:hover:bg-white/10`}
-          >
-            <ArrowLeft size={20} />
-          </button>
-        </div>
-      </div>
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-6 pt-2">
+        {/* nút quay lại: ngay dưới TopHeader, không có thanh riêng */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Quay lại"
+          className={`-ml-2 mb-1 flex h-10 w-10 items-center justify-center rounded-md ${GH_INK} hover:bg-[#f6f8fa] dark:hover:bg-[#161b22]`}
+        >
+          <ArrowLeft size={20} />
+        </button>
 
-      <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-6 pt-4">
-        <div className={`overflow-hidden rounded-md border ${GH_LINE}`}>
+        <div className={`overflow-hidden rounded-2xl border ${GH_LINE}`}>
           {/* TÊN + AVATAR */}
-          <div className={`flex items-start gap-3 border-b px-4 py-3.5 ${GH_LINE}`}>
+          <div className="flex items-center gap-3 px-4 py-3.5">
             <label className="min-w-0 flex-1">
               <span className={`block text-[14px] font-semibold ${GH_INK}`}>Tên hiển thị</span>
               <input
@@ -118,11 +118,11 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
                 placeholder="Tên của bạn"
                 className={`mt-0.5 w-full bg-transparent text-[15px] outline-none placeholder:text-[#8c959f] disabled:cursor-not-allowed disabled:opacity-60 ${GH_INK}`}
               />
-              <span className={`mt-0.5 block text-[12.5px] leading-4 ${GH_MUTED}`}>
-                {nameLocked
-                  ? `Đổi tên được sau ${cooldown.remainingText} nữa.`
-                  : `Đổi được 1 lần mỗi 7 ngày · ${username.length}/${NAME_MAX}`}
-              </span>
+              {nameLocked && (
+                <span className={`block text-[12px] leading-4 ${GH_MUTED}`}>
+                  Đổi lại sau {cooldown.remainingText}
+                </span>
+              )}
             </label>
 
             <button
@@ -139,52 +139,53 @@ export default function EditProfileModal({ profile, cooldown, onClose, onSaved, 
             </button>
           </div>
 
-          {/* TIÊU ĐỀ HỒ SƠ */}
-          <label className={`block border-b px-4 py-3.5 ${GH_LINE}`}>
-            <span className={`block text-[14px] font-semibold ${GH_INK}`}>Tiêu đề hồ sơ</span>
-            <textarea
+          <Divider />
+
+          {/* TIÊU ĐỀ HỒ SƠ — một dòng, đếm ký tự chỉ hiện khi đang gõ */}
+          <label className="block px-4 py-3.5">
+            <span className="flex items-baseline justify-between">
+              <span className={`text-[14px] font-semibold ${GH_INK}`}>Tiêu đề hồ sơ</span>
+              {headFocus && (
+                <span className={`text-[12px] ${GH_MUTED}`}>
+                  {headline.length}/{HEAD_MAX}
+                </span>
+              )}
+            </span>
+            <input
+              type="text"
               value={headline}
               onChange={(e) => {
                 setHeadline(e.target.value.replace(/\n/g, " "));
                 setError("");
               }}
+              onFocus={() => setHeadFocus(true)}
+              onBlur={() => setHeadFocus(false)}
               maxLength={HEAD_MAX}
-              rows={2}
-              placeholder="+ Viết tiêu đề cho hồ sơ của bạn"
-              className={`mt-0.5 w-full resize-none bg-transparent text-[15px] leading-6 outline-none placeholder:text-[#8c959f] ${GH_INK}`}
+              placeholder="+ Viết tiêu đề"
+              className={`mt-0.5 w-full bg-transparent text-[15px] outline-none placeholder:text-[#8c959f] ${GH_INK}`}
             />
-            <span className={`block text-right text-[12px] ${GH_MUTED}`}>
-              {headline.length}/{HEAD_MAX}
-            </span>
           </label>
 
+          <Divider />
+
           {/* QUYỀN RIÊNG TƯ */}
-          <div className="px-4 py-3.5">
-            <span className={`block text-[14px] font-semibold ${GH_INK}`}>Quyền riêng tư của trang cá nhân</span>
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className={`text-[14.5px] ${GH_INK}`}>Hiện người mình đang theo dõi</p>
-                <p className={`mt-0.5 text-[12.5px] leading-4 ${GH_MUTED}`}>
-                  {showFollowing
-                    ? "Công khai: ai xem hồ sơ cũng thấy danh sách bạn đang theo dõi."
-                    : "Riêng tư: chỉ mình bạn thấy danh sách bạn đang theo dõi."}
-                </p>
-              </div>
-              <Toggle
-                checked={showFollowing}
-                onChange={(v) => {
-                  setShowFollowing(v);
-                  setError("");
-                }}
-                label="Hiện người mình đang theo dõi"
-              />
+          <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+            <div className="min-w-0">
+              <p className={`text-[14px] font-semibold ${GH_INK}`}>Quyền riêng tư của trang cá nhân</p>
+              <p className={`mt-0.5 text-[13px] ${GH_MUTED}`}>
+                Người mình theo dõi: {showFollowing ? "Công khai" : "Chỉ mình tôi"}
+              </p>
             </div>
+            <Toggle
+              checked={showFollowing}
+              onChange={(v) => {
+                setShowFollowing(v);
+                setError("");
+              }}
+              label="Hiện người mình đang theo dõi"
+            />
           </div>
         </div>
-
-        <p className={`mt-2.5 px-1 text-[12.5px] leading-5 ${GH_MUTED}`}>
-          Tiêu đề hiển thị công khai ngay dưới tên của bạn.
-        </p>
 
         {error && (
           <p className="mt-3 rounded-md border border-[#cf222e] bg-[#ffebe9] px-3 py-2 text-[13px] font-medium text-[#cf222e]">
