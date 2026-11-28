@@ -1,9 +1,10 @@
-// src/components/profile/GhProfile.jsx — khung hồ sơ kiểu GitHub: (bìa nếu có), avatar, tên, số liệu, thông tin, huy hiệu
-import React, { useRef, useState } from "react";
+// src/components/profile/GhProfile.jsx — khung hồ sơ kiểu GitHub: (bìa nếu có), avatar, tên, tiêu đề, số liệu, thông tin, huy hiệu
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Camera, Loader2 } from "lucide-react";
 import VerifiedBadge from "../VerifiedBadge.jsx";
 import useSession from "../../hooks/useSession.js";
+import { supabase } from "../../lib/supabaseClient.js";
 import { CosmeticEffect, CosmeticFrame } from "../cosmetics/Cosmetics.jsx";
 
 export const GH_LINE = "border-[#d0d7de] dark:border-[#30363d]";
@@ -77,6 +78,23 @@ export default function GhProfile({
   const { userId: routeId } = useParams();
   const { session } = useSession();
   const uid = userIdProp || routeId || session?.user?.id;
+
+  // tiêu đề hồ sơ: tự tải theo chủ hồ sơ; tải lại khi người dùng vừa sửa xong
+  const [headline, setHeadline] = useState("");
+  useEffect(() => {
+    if (!uid) return undefined;
+    let alive = true;
+    const load = () =>
+      supabase.rpc("get_public_profile", { p_user_id: uid }).then(({ data, error }) => {
+        if (alive && !error && data) setHeadline(data.headline || "");
+      });
+    load();
+    window.addEventListener("profile-headline-changed", load);
+    return () => {
+      alive = false;
+      window.removeEventListener("profile-headline-changed", load);
+    };
+  }, [uid]);
 
   const busyIcon = coverBusy ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />;
 
@@ -176,6 +194,11 @@ export default function GhProfile({
           {verified && <VerifiedBadge size={20} />}
         </h1>
         {sub && <p className={`truncate text-[16px] leading-6 ${GH_MUTED}`}>{sub}</p>}
+
+        {/* TIÊU ĐỀ HỒ SƠ do người dùng tự viết */}
+        {headline && (
+          <p className={`mt-1.5 break-words text-[15px] leading-6 ${GH_INK}`}>{headline}</p>
+        )}
 
         {/* NÚT */}
         {actions && <div className="mt-4">{actions}</div>}
