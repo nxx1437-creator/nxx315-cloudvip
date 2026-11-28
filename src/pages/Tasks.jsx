@@ -20,6 +20,7 @@ import BottomNav from "../components/BottomNav.jsx";
 import TopHeader from "../components/TopHeader.jsx";
 import IpBlockedScreen from "../components/tasks/IpBlockedScreen.jsx";
 import MonthlyMissions from "../components/tasks/MonthlyMissions.jsx";
+import TaskvnFrame from "../components/tasks/TaskvnFrame.jsx";
 import {
   StatPill,
   TaskCard,
@@ -726,6 +727,16 @@ export default function Tasks() {
                   />
                 ))}
               </div>
+            )}
+
+            {/* Khung nhiệm vụ TASKVN (Vượt link + QC). Xu được cộng tự động qua Postback */}
+            {user?.id && !isBlocked && (
+              <section className="rounded-[2rem] border border-emerald-100 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
+                <h2 className="mb-3 px-1 text-base font-extrabold text-slate-900">
+                  Nhiệm vụ Taskvn
+                </h2>
+                <TaskvnFrame userId={user.id} />
+              </section>
             )}
 
             {/* Link rút gọn Layma (phục vụ xác minh nguồn) — xóa khối này khi Layma đã duyệt xong */}
