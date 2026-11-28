@@ -28,9 +28,9 @@
   /* điện thoại: hiển thị nguyên ảnh (nhỏ lại cho thấy cả con thỏ), nằm giữa thẻ */
   .cx-fx-pic .cx-fx-img{position:absolute;inset:0;margin:auto;object-fit:contain}
 }
-/* StrawberryFairyBunny: thu nhỏ và đặt sát góc dưới bên phải trên điện thoại cho đỡ che nội dung hồ sơ */
+/* StrawberryFairyBunny: thu nhỏ, đặt bên phải và nhích lên khỏi đáy thẻ trên điện thoại cho đỡ che nội dung hồ sơ */
 @media (max-width:640px){
-  .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{inset:auto 0 0 auto;margin:0;width:50%;height:50%;object-position:right bottom}
+  .cx-fx-pic .cx-fx-img[src*="StrawberryFairyBunny"]{inset:auto 0 14% auto;margin:0;width:62%;height:62%;object-position:right bottom}
 }
 .cx-p{position:absolute;left:var(--x);top:-8%;font-size:var(--s);line-height:1;opacity:0;
   animation:cx-fall var(--d) linear var(--dl) infinite}
