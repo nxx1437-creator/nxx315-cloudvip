@@ -13,8 +13,8 @@ import { PACKAGES as FREEFIRE } from "../../lib/freefireData.js";
 
 // Gói đổi qua Game Pass (chỉ để hiển thị, giá thật do máy chủ quyết định)
 const PASS = [
-  { id: "pass-10", robux: 10, price: 3500 },
-  { id: "pass-20", robux: 20, price: 7000 },
+  { id: "pass-10", robux: 10, price: 3150 },
+  { id: "pass-20", robux: 20, price: 6300 },
 ];
 
 const ITEMS = [
@@ -190,4 +190,4 @@ export default function ForYouPackages({ coins, navigate }) {
       </div>
     </section>
   );
-            }
+}

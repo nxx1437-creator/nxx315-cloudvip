@@ -24,8 +24,8 @@ import {
 import { LAST_USERNAME_KEY, formatCoin } from "../lib/robloxData.js";
 
 const PASS_PACKAGES = [
-  { id: "pass-10", robux: 10, price: 3500, passPrice: 10 },
-  { id: "pass-20", robux: 20, price: 7000, passPrice: 20 },
+  { id: "pass-10", robux: 10, price: 3150, passPrice: 10 },
+  { id: "pass-20", robux: 20, price: 6300, passPrice: 20 },
 ];
 
 const PASS_RE =
@@ -398,4 +398,4 @@ export default function RobloxPassFlow({ coins = 0, onEarn, initialPkgId = "" })
       </Panel>
     </div>
   );
-    }
+}
