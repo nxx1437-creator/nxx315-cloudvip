@@ -1,127 +1,159 @@
-// src/components/profile/EditProfileModal.jsx — đổi tên hiển thị
+// src/components/profile/EditProfileModal.jsx — màn hình "Chỉnh sửa trang cá nhân" (toàn màn hình, kiểu thẻ bo góc có đường kẻ)
+// Gồm: tên hiển thị (+ nút đổi avatar), tiêu đề hồ sơ. Bấm "Xong" để lưu.
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { Loader2, UserRoundPlus, X } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
-import { IconWarning2, IconBulb, IconSpinner2 } from "./ProfileIcons.jsx";
+import { GH_INK, GH_LINE, GH_MUTED } from "./GhProfile.jsx";
 
-export default function EditProfileModal({ profile, cooldown, onClose, onSaved }) {
+const NAME_MAX = 20;
+const HEAD_MAX = 80;
+
+export default function EditProfileModal({ profile, cooldown, onClose, onSaved, onAvatar }) {
   const [username, setUsername] = useState(profile.username || "");
+  const [headline, setHeadline] = useState(profile.headline || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const nameChanged = username.trim() !== (profile.username || "");
+  const headChanged = headline.trim() !== (profile.headline || "");
+  const dirty = nameChanged || headChanged;
 
   const handleSave = async () => {
-    if (!username.trim()) {
-      setError("Tên hiển thị không được để trống.");
-      return;
+    if (saving) return;
+    const name = username.trim();
+    const head = headline.replace(/\s+/g, " ").trim();
+
+    if (nameChanged) {
+      if (!name) return setError("Tên hiển thị không được để trống.");
+      if (name.length < 3) return setError("Tên hiển thị phải có ít nhất 3 ký tự.");
+      if (name.length > NAME_MAX) return setError(`Tên hiển thị không được quá ${NAME_MAX} ký tự.`);
+      if (!cooldown.canChange) return setError(`Bạn chỉ có thể đổi tên sau ${cooldown.remainingText} nữa.`);
     }
-    if (username.trim().length < 3) {
-      setError("Tên hiển thị phải có ít nhất 3 ký tự.");
-      return;
+    if (head.length > HEAD_MAX) return setError(`Tiêu đề hồ sơ không được quá ${HEAD_MAX} ký tự.`);
+
+    const patch = {};
+    if (nameChanged) {
+      patch.username = name;
+      patch.last_username_change = new Date().toISOString();
     }
-    if (username.trim().length > 20) {
-      setError("Tên hiển thị không được quá 20 ký tự.");
-      return;
-    }
-    if (!nameChanged) {
-      onClose();
-      return;
-    }
-    if (!cooldown.canChange) {
-      setError(`Bạn chỉ có thể đổi tên sau ${cooldown.remainingText} nữa.`);
-      return;
-    }
+    if (headChanged) patch.headline = head || null;
+    if (!Object.keys(patch).length) return onClose();
 
     setSaving(true);
     setError("");
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        username: username.trim(),
-        last_username_change: new Date().toISOString(),
-      })
-      .eq("id", profile.id);
-
+    const { error: updateError } = await supabase.from("profiles").update(patch).eq("id", profile.id);
     setSaving(false);
 
     if (updateError) {
       setError(updateError.message);
       return;
     }
-
-    onSaved(username.trim());
+    // báo cho khung hồ sơ tải lại tiêu đề mới
+    try {
+      window.dispatchEvent(new Event("profile-headline-changed"));
+    } catch {}
+    onSaved(patch);
   };
 
+  const nameLocked = !cooldown.canChange;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
-            Chỉnh sửa hồ sơ
-          </h3>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <X size={18} />
-          </button>
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-white font-[Be_Vietnam_Pro] dark:bg-[#0d1117]">
+      {/* Thanh trên: X · tiêu đề · Xong */}
+      <header
+        className={`sticky top-0 z-10 flex items-center gap-3 border-b bg-white/95 px-4 py-3.5 backdrop-blur dark:bg-[#0d1117]/95 ${GH_LINE}`}
+        style={{ paddingTop: "max(14px, env(safe-area-inset-top))" }}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng"
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${GH_INK} hover:bg-[#f6f8fa] dark:hover:bg-[#161b22]`}
+        >
+          <X size={22} />
+        </button>
+        <h2 className={`min-w-0 flex-1 truncate text-[17px] font-semibold ${GH_INK}`}>Chỉnh sửa trang cá nhân</h2>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || !dirty}
+          className={`flex h-9 shrink-0 items-center justify-center rounded-md px-3 text-[15px] font-semibold transition ${
+            dirty && !saving ? "text-[#0969da] hover:bg-[#f6f8fa] dark:hover:bg-[#161b22]" : "text-[#8c959f]"
+          }`}
+        >
+          {saving ? <Loader2 size={18} className="animate-spin" /> : "Xong"}
+        </button>
+      </header>
+
+      <main className="mx-auto w-full max-w-lg px-4 pb-16 pt-6">
+        <div className={`overflow-hidden rounded-2xl border ${GH_LINE}`}>
+          {/* TÊN + AVATAR */}
+          <div className={`flex items-start gap-3 border-b px-4 py-4 ${GH_LINE}`}>
+            <label className="min-w-0 flex-1">
+              <span className={`block text-[15px] font-semibold ${GH_INK}`}>Tên hiển thị</span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setError("");
+                }}
+                disabled={nameLocked}
+                maxLength={NAME_MAX}
+                placeholder="Tên của bạn"
+                className={`mt-1 w-full bg-transparent text-[16px] outline-none placeholder:text-[#8c959f] disabled:cursor-not-allowed disabled:opacity-60 ${GH_INK}`}
+              />
+              <span className={`mt-1 block text-[12.5px] ${GH_MUTED}`}>
+                {nameLocked
+                  ? `Bạn có thể đổi tên sau ${cooldown.remainingText} nữa.`
+                  : `Đổi được 1 lần mỗi 7 ngày · ${username.length}/${NAME_MAX} ký tự`}
+              </span>
+            </label>
+
+            <button
+              type="button"
+              onClick={onAvatar}
+              aria-label="Đổi ảnh đại diện"
+              className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eaeef2] text-[#59636e] dark:bg-[#21262d] dark:text-[#9198a1]"
+            >
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <UserRoundPlus size={26} />
+              )}
+            </button>
+          </div>
+
+          {/* TIÊU ĐỀ HỒ SƠ */}
+          <label className="block px-4 py-4">
+            <span className={`block text-[15px] font-semibold ${GH_INK}`}>Tiêu đề hồ sơ</span>
+            <textarea
+              value={headline}
+              onChange={(e) => {
+                setHeadline(e.target.value.replace(/\n/g, " "));
+                setError("");
+              }}
+              maxLength={HEAD_MAX}
+              rows={2}
+              placeholder="+ Viết tiêu đề cho hồ sơ của bạn"
+              className={`mt-1 w-full resize-none bg-transparent text-[16px] leading-6 outline-none placeholder:text-[#8c959f] ${GH_INK}`}
+            />
+            <span className={`block text-right text-[12.5px] ${GH_MUTED}`}>
+              {headline.length}/{HEAD_MAX}
+            </span>
+          </label>
         </div>
 
-        {!cooldown.canChange && (
-          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-            <IconWarning2 size={14} />
-            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-              Bạn có thể đổi tên sau{" "}
-              <span className="font-bold">{cooldown.remainingText}</span> nữa.
-            </p>
-          </div>
-        )}
-
-        {cooldown.canChange && (
-          <div className="mt-3 flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-500/30 dark:bg-sky-500/10">
-            <IconBulb size={14} />
-            <p className="text-xs text-sky-700 dark:text-sky-300">
-              Bạn có thể đổi tên{" "}
-              <span className="font-bold">1 lần mỗi 7 ngày</span>.
-            </p>
-          </div>
-        )}
-
-        <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-          Tên hiển thị
-        </p>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          disabled={!cooldown.canChange}
-          maxLength={20}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none transition focus:border-accent-400 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-        />
-        <p className="mt-1 text-[10px] text-slate-400">
-          {username.length}/20 ký tự · tối thiểu 3 ký tự
+        <p className={`mt-3 px-1 text-[13px] leading-5 ${GH_MUTED}`}>
+          Tiêu đề hiển thị công khai ngay dưới tên của bạn, ai vào xem hồ sơ cũng thấy.
         </p>
 
-        {error && <p className="mt-2 text-xs font-bold text-rose-500">{error}</p>}
-
-        <div className="mt-5 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            Huỷ
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !cooldown.canChange || !nameChanged}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-600 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
-          >
-            {saving ? <IconSpinner2 size={15} /> : "Lưu thay đổi"}
-          </button>
-        </div>
-      </div>
+        {error && (
+          <p className="mt-4 rounded-md border border-[#cf222e] bg-[#ffebe9] px-3 py-2.5 text-[13.5px] font-medium text-[#cf222e]">
+            {error}
+          </p>
+        )}
+      </main>
     </div>
   );
 }
