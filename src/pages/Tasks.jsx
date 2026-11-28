@@ -76,6 +76,8 @@ export default function Tasks() {
   const { profile } = useProfile();
   const { tasks, loading, reload } = useTasks(user?.id);
 
+  // Hai loại nhiệm vụ: "taskvn" (nhiệm vụ Taskvn) và "links" (link rút gọn của nhà cung cấp)
+  const [category, setCategory] = useState("taskvn");
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [onlyAvail, setOnlyAvail] = useState(false);
@@ -638,129 +640,162 @@ export default function Tasks() {
           </div>
         )}
 
-        {/* Tìm kiếm + Tab */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-3">
-            <Search size={16} className="shrink-0 text-slate-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("tk.searchPh")}
-              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Chip
-              active={activeTab === "hot"}
-              onClick={() => setActiveTab("hot")}
-              icon={Flame}
-              count={hotCount}
-            >
-              {t("tk.tabHot")}
-            </Chip>
-            <Chip
-              active={activeTab === "all"}
-              onClick={() => setActiveTab("all")}
-              icon={ListChecks}
-              count={tasks.length}
-            >
-              {t("tk.tabAll")}
-            </Chip>
-            <Chip
-              active={activeTab === "history"}
-              onClick={() => setActiveTab("history")}
-              icon={History}
-            >
-              {t("tk.tabHistory")}
-            </Chip>
-            {activeTab !== "history" && (
-              <button
-                onClick={() => setOnlyAvail((v) => !v)}
-                className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                  onlyAvail
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : "border-emerald-100 bg-white text-slate-500"
-                }`}
-              >
-                {t("tk.onlyAvail")}
-              </button>
-            )}
-          </div>
-
-          {checkingIp && activeTab !== "history" && (
-            <p className="flex items-center gap-1.5 text-[12px] text-slate-400">
-              <Loader2 size={12} className="animate-spin" /> {t("tk.checking")}
-            </p>
-          )}
+        {/* Chọn loại nhiệm vụ: Taskvn / Link rút gọn của nhà cung cấp */}
+        <div className="grid grid-cols-2 gap-1.5 rounded-full border border-emerald-100 bg-white p-1.5">
+          <button
+            type="button"
+            onClick={() => setCategory("taskvn")}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-[13px] font-bold transition ${
+              category === "taskvn"
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-400 text-white"
+                : "text-slate-600 hover:bg-emerald-50"
+            }`}
+          >
+            <Zap size={14} />
+            Nhiệm vụ Taskvn
+          </button>
+          <button
+            type="button"
+            onClick={() => setCategory("links")}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-[13px] font-bold transition ${
+              category === "links"
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-400 text-white"
+                : "text-slate-600 hover:bg-emerald-50"
+            }`}
+          >
+            <ListChecks size={14} />
+            Link rút gọn
+          </button>
         </div>
 
-        {/* Tab Hot / Tất cả */}
-        {activeTab !== "history" && (
-          <>
-            {/* Khung nhiệm vụ TASKVN (Vượt link + QC) đặt lên đầu danh sách. Xu được cộng tự động qua Postback */}
-            {user?.id && !isBlocked && (
-              <section className="rounded-[2rem] border border-emerald-100 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
-                <h2 className="mb-3 px-1 text-base font-extrabold text-slate-900">
-                  Nhiệm vụ Taskvn
-                </h2>
-                <TaskvnFrame userId={user.id} />
-              </section>
-            )}
-
-            {loading && (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <TaskCardSkeleton key={i} />
-                ))}
-              </div>
-            )}
-
-            {!loading && filteredTasks.length === 0 && (
-              <EmptyState
-                title={t("tk.emptyTitle")}
-                sub={t("tk.emptySub")}
-              />
-            )}
-
-            {!loading && filteredTasks.length > 0 && (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    boosted={getBoostedReward(task.reward_coins)}
-                    isThisStarting={startingTaskId === task.id}
-                    isBlocked={isBlocked}
-                    busy={isLoading || checkingIp}
-                    onStart={handleStart}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Link rút gọn Layma (phục vụ xác minh nguồn) — xóa khối này khi Layma đã duyệt xong */}
-            <p className="px-2 pt-2 text-center text-[12px] text-slate-400">
-              Link rút gọn Layma:{" "}
-              <a
-                href="https://layma.net/9jaKc8473"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-emerald-600 underline"
-              >
-                layma.net/9jaKc8473
-              </a>
-            </p>
-          </>
+        {/* ===== Loại 1: Nhiệm vụ TASKVN (Vượt link + QC). Xu được cộng tự động qua Postback ===== */}
+        {category === "taskvn" && user?.id && !isBlocked && (
+          <section className="rounded-[2rem] border border-emerald-100 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_2px_8px_-2px_rgba(15,23,42,0.07)]">
+            <h2 className="mb-3 px-1 text-base font-extrabold text-slate-900">
+              Nhiệm vụ Taskvn
+            </h2>
+            <TaskvnFrame userId={user.id} />
+          </section>
         )}
 
-        {/* Tab Lịch sử */}
-        {activeTab === "history" &&
-          (historyLoading ? (
-            <HistorySkeleton />
-          ) : (
-            <HistoryList history={history} />
-          ))}
+        {/* ===== Loại 2: Link rút gọn của nhà cung cấp ===== */}
+        {category === "links" && (
+          <>
+            {/* Tìm kiếm + Tab */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-3">
+                <Search size={16} className="shrink-0 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("tk.searchPh")}
+                  className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Chip
+                  active={activeTab === "hot"}
+                  onClick={() => setActiveTab("hot")}
+                  icon={Flame}
+                  count={hotCount}
+                >
+                  {t("tk.tabHot")}
+                </Chip>
+                <Chip
+                  active={activeTab === "all"}
+                  onClick={() => setActiveTab("all")}
+                  icon={ListChecks}
+                  count={tasks.length}
+                >
+                  {t("tk.tabAll")}
+                </Chip>
+                <Chip
+                  active={activeTab === "history"}
+                  onClick={() => setActiveTab("history")}
+                  icon={History}
+                >
+                  {t("tk.tabHistory")}
+                </Chip>
+                {activeTab !== "history" && (
+                  <button
+                    onClick={() => setOnlyAvail((v) => !v)}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                      onlyAvail
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                        : "border-emerald-100 bg-white text-slate-500"
+                    }`}
+                  >
+                    {t("tk.onlyAvail")}
+                  </button>
+                )}
+              </div>
+
+              {checkingIp && activeTab !== "history" && (
+                <p className="flex items-center gap-1.5 text-[12px] text-slate-400">
+                  <Loader2 size={12} className="animate-spin" /> {t("tk.checking")}
+                </p>
+              )}
+            </div>
+
+            {/* Tab Hot / Tất cả */}
+            {activeTab !== "history" && (
+              <>
+                {loading && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <TaskCardSkeleton key={i} />
+                    ))}
+                  </div>
+                )}
+
+                {!loading && filteredTasks.length === 0 && (
+                  <EmptyState
+                    title={t("tk.emptyTitle")}
+                    sub={t("tk.emptySub")}
+                  />
+                )}
+
+                {!loading && filteredTasks.length > 0 && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        boosted={getBoostedReward(task.reward_coins)}
+                        isThisStarting={startingTaskId === task.id}
+                        isBlocked={isBlocked}
+                        busy={isLoading || checkingIp}
+                        onStart={handleStart}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Link rút gọn Layma (phục vụ xác minh nguồn) — xóa khối này khi Layma đã duyệt xong */}
+                <p className="px-2 pt-2 text-center text-[12px] text-slate-400">
+                  Link rút gọn Layma:{" "}
+                  <a
+                    href="https://layma.net/9jaKc8473"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-emerald-600 underline"
+                  >
+                    layma.net/9jaKc8473
+                  </a>
+                </p>
+              </>
+            )}
+
+            {/* Tab Lịch sử */}
+            {activeTab === "history" &&
+              (historyLoading ? (
+                <HistorySkeleton />
+              ) : (
+                <HistoryList history={history} />
+              ))}
+          </>
+        )}
       </main>
 
       <BottomNav />
