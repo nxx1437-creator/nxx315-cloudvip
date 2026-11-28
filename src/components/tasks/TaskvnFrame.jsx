@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 // Truyền userId = ID thành viên đang đăng nhập (Supabase auth user id).
 // Khung chỉ hiện sau khi Admin Taskvn duyệt site nxx315.com.
 const TASKVN_ORIGIN = "https://taskvn.site";
-const TASKVN_SITE_KEY = "pk_3aebd2e629e06791cff5af46"; // key công khai, được phép để trong code
+const TASKVN_SITE_KEY = "pk_7f32bf5db3e63f44e06f3397"; // key công khai, được phép để trong code
 
 export default function TaskvnFrame({ userId, height = 800 }) {
   const boxRef = useRef(null);
